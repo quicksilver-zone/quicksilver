@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+*.swp
+*.swo
+*.swl
+*.swm
+*.swn
+.vscode
+.idea
+*.pyc
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build
+vendor
+build
+bin
+tools/bin/*
+dist
+
