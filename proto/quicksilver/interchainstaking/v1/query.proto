@@ -1,0 +1,27 @@
+syntax = "proto3";
+package quicksilver.interchainstaking.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "quicksilver/interchainstaking/v1/genesis.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // RegisteredZoneInfos provide running epochInfos
+  rpc RegisteredZoneInfos(QueryRegisteredZonesInfoRequest)
+      returns (QueryRegisteredZonesInfoResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones";
+  }
+}
+
+message QueryRegisteredZonesInfoRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryRegisteredZonesInfoResponse {
+  repeated RegisteredZone zones = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

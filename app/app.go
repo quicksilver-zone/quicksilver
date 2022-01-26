@@ -105,6 +105,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/epochs"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking"
+	interchainstakingkeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func init() {
@@ -153,18 +157,20 @@ var (
 		ica.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		epochs.AppModuleBasic{},
+		interchainstaking.AppModuleBasic{},
 	)
 
 	// module account permissions
 	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:     nil,
-		distrtypes.ModuleName:          nil,
-		minttypes.ModuleName:           {authtypes.Minter},
-		stakingtypes.BondedPoolName:    {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:            {authtypes.Burner},
-		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
-		icatypes.ModuleName:            nil,
+		authtypes.FeeCollectorName:        nil,
+		distrtypes.ModuleName:             nil,
+		minttypes.ModuleName:              {authtypes.Minter},
+		stakingtypes.BondedPoolName:       {authtypes.Burner, authtypes.Staking},
+		stakingtypes.NotBondedPoolName:    {authtypes.Burner, authtypes.Staking},
+		govtypes.ModuleName:               {authtypes.Burner},
+		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
+		icatypes.ModuleName:               nil,
+		interchainstakingtypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -222,7 +228,8 @@ type Quicksilver struct {
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 
 	// Quicksilver keepers
-	EpochsKeeper epochskeeper.Keeper
+	EpochsKeeper            epochskeeper.Keeper
+	InterchainstakingKeeper interchainstakingkeeper.Keeper
 
 	// the module manager
 	mm *module.Manager
@@ -278,6 +285,7 @@ func NewQuicksilver(
 		icahosttypes.StoreKey,
 		// quicksilver keys
 		epochstypes.StoreKey,
+		interchainstakingtypes.StoreKey,
 	)
 
 	// Add the transient store key
@@ -314,7 +322,7 @@ func NewQuicksilver(
 
 	// use custom account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), nil, maccPerms,
+		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
@@ -367,12 +375,13 @@ func NewQuicksilver(
 	)
 
 	// Quicksilver Keepers
+	app.InterchainstakingKeeper = *interchainstakingkeeper.NewKeeper(appCodec, keys[interchainstakingtypes.StoreKey])
 
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	app.EpochsKeeper = *epochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 		// insert epoch hooks receivers here
-
+		// todo add interchain staking hooks here.
 		),
 	)
 
@@ -458,6 +467,7 @@ func NewQuicksilver(
 		icaModule,
 		// Quicksilver app modules
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -477,6 +487,7 @@ func NewQuicksilver(
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibchost.ModuleName,
+		interchainstakingtypes.ModuleName, // check ordering here.
 		// no-op modules
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
@@ -515,6 +526,7 @@ func NewQuicksilver(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+		interchainstakingtypes.ModuleName, // currently no-op.
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -544,6 +556,7 @@ func NewQuicksilver(
 		icatypes.ModuleName,
 		// Quicksilver modules
 		epochstypes.ModuleName,
+		interchainstakingtypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	)
@@ -580,6 +593,7 @@ func NewQuicksilver(
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper),
 	)
 
 	app.sm.RegisterStoreDecoders()
@@ -844,6 +858,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
 	// quicksilver subspaces
 	return paramsKeeper
 }

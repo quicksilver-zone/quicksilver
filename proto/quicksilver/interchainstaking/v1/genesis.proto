@@ -1,0 +1,22 @@
+syntax = "proto3";
+package quicksilver.interchainstaking.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
+
+message RegisteredZone {
+  string identifier = 1;
+  string chain_id = 2;
+  string deposit_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated string delegation_addresses = 4
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string local_denom = 5;
+  string remote_denom = 6;
+}
+
+// GenesisState defines the epochs module's genesis state.
+message GenesisState {
+  repeated RegisteredZone zones = 1 [ (gogoproto.nullable) = false ];
+}
