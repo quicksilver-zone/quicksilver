@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +15,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// RegisteredZoneInfos provide running epochInfos
+// RegisteredZoneInfos provides information about registered zones
 func (k Keeper) RegisteredZoneInfos(c context.Context, req *types.QueryRegisteredZonesInfoRequest) (*types.QueryRegisteredZonesInfoResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -22,15 +23,15 @@ func (k Keeper) RegisteredZoneInfos(c context.Context, req *types.QueryRegistere
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var epochs []types.RegisteredZone
+	var zones []types.RegisteredZone
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
-		var epoch types.RegisteredZone
-		if err := k.cdc.Unmarshal(value, &epoch); err != nil {
+		var zone types.RegisteredZone
+		if err := k.cdc.Unmarshal(value, &zone); err != nil {
 			return err
 		}
-		epochs = append(epochs, epoch)
+		zones = append(zones, zone)
 		return nil
 	})
 	if err != nil {
@@ -38,7 +39,24 @@ func (k Keeper) RegisteredZoneInfos(c context.Context, req *types.QueryRegistere
 	}
 
 	return &types.QueryRegisteredZonesInfoResponse{
-		Zones:      epochs,
+		Zones:      zones,
 		Pagination: pageRes,
+	}, nil
+}
+
+func (k Keeper) DepositAccountFromAddress(c context.Context, req *types.QueryDepositAccountForChainRequest) (*types.QueryDepositAccountForChainResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	zone, found := k.GetRegisteredZoneInfo(ctx, req.GetChainId())
+	if !found {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
+
+	return &types.QueryDepositAccountForChainResponse{
+		DepositAccountAddress: zone.DepositAddress,
 	}, nil
 }

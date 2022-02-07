@@ -10,10 +10,17 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/
 
 // Query defines the gRPC querier service.
 service Query {
-  // RegisteredZoneInfos provide running epochInfos
+  // RegisteredZoneInfos provides meta data on connected zones.
   rpc RegisteredZoneInfos(QueryRegisteredZonesInfoRequest)
       returns (QueryRegisteredZonesInfoResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones";
+  }
+  // DepositAccountFromAddress provides data on the deposit address for a
+  // connected zone.
+  rpc DepositAccountFromAddress(QueryDepositAccountForChainRequest)
+      returns (QueryDepositAccountForChainResponse) {
+    option (google.api.http).get =
+        "/quicksilver/interchainstaking/v1/zones/deposit_address";
   }
 }
 
@@ -24,4 +31,17 @@ message QueryRegisteredZonesInfoRequest {
 message QueryRegisteredZonesInfoResponse {
   repeated RegisteredZone zones = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryDepositAccountForChainRequest is the request type for the
+// Query/InterchainAccountAddress RPC
+message QueryDepositAccountForChainRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+}
+
+// QueryDepositAccountForChainResponse the response type for the
+// Query/InterchainAccountAddress RPC
+message QueryDepositAccountForChainResponse {
+  string deposit_account_address = 1
+      [ (gogoproto.moretags) = "yaml:\"deposit_account_address\"" ];
 }

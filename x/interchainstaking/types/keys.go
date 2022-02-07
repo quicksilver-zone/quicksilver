@@ -12,15 +12,25 @@ const (
 
 	// QuerierRoute defines the module's query routing key
 	QuerierRoute = ModuleName
+
+	PortID = ModuleName
+
+	Version = "ics27-1"
+
+	// this value defines the number of delegation accounts per zone. This can only ever increase.
+	DelegationAccountCount = 10
 )
 
 // prefix bytes for the epoch persistent store
 const (
-	prefixZone = iota + 1
+	prefixZone        = iota + 1
+	prefixPortMapping = iota + 1
 )
 
-// KeyPrefixZone defines prefix key for storing registered zones
-var KeyPrefixZone = []byte{prefixZone}
+var (
+	KeyPrefixZone        = []byte{prefixZone}
+	KeyPrefixPortMapping = []byte{prefixPortMapping}
+)
 
 func KeyPrefix(p string) []byte {
 	return []byte(p)

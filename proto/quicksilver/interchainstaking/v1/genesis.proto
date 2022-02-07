@@ -8,12 +8,69 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/
 
 message RegisteredZone {
   string identifier = 1;
-  string chain_id = 2;
-  string deposit_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  repeated string delegation_addresses = 4
+  string connection_id = 2;
+  string chain_id = 3;
+  string deposit_address = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated string delegation_addresses = 5
       [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  string local_denom = 5;
-  string remote_denom = 6;
+  string denom = 6;
+  string redemption_rate = 7 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  repeated Validators validators = 8;
+  repeated DelegatorIntent delegator_intent = 9;
+}
+message Validators {
+  string valoper_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string commission_rate = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string voting_power = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  repeated Delegation delegations = 4;
+}
+
+message DelegatorIntent {
+  string delegator = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated ValidatorIntent intents = 2;
+}
+
+message ValidatorIntent {
+  string valoper_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string weight = 2 [
+    (gogoproto.moretags) = "yaml:\"relative_weight\"",
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message Delegation {
+  string delegation_address = 1
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string rewards = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  int64 redelegation_end = 4;
+}
+
+message PortConnectionTuple {
+  string connection_id = 1;
+  string port_id = 2;
 }
 
 // GenesisState defines the epochs module's genesis state.

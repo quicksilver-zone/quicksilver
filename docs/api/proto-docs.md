@@ -17,16 +17,27 @@
     - [Query](#quicksilver.epochs.v1.Query)
   
 - [quicksilver/interchainstaking/v1/genesis.proto](#quicksilver/interchainstaking/v1/genesis.proto)
+    - [Delegation](#quicksilver.interchainstaking.v1.Delegation)
+    - [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent)
     - [GenesisState](#quicksilver.interchainstaking.v1.GenesisState)
+    - [PortConnectionTuple](#quicksilver.interchainstaking.v1.PortConnectionTuple)
     - [RegisteredZone](#quicksilver.interchainstaking.v1.RegisteredZone)
+    - [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent)
+    - [Validators](#quicksilver.interchainstaking.v1.Validators)
   
 - [quicksilver/interchainstaking/v1/messages.proto](#quicksilver/interchainstaking/v1/messages.proto)
     - [MsgRegisterZone](#quicksilver.interchainstaking.v1.MsgRegisterZone)
     - [MsgRegisterZoneResponse](#quicksilver.interchainstaking.v1.MsgRegisterZoneResponse)
+    - [MsgRequestRedemption](#quicksilver.interchainstaking.v1.MsgRequestRedemption)
+    - [MsgRequestRedemptionResponse](#quicksilver.interchainstaking.v1.MsgRequestRedemptionResponse)
+    - [MsgSignalIntent](#quicksilver.interchainstaking.v1.MsgSignalIntent)
+    - [MsgSignalIntentResponse](#quicksilver.interchainstaking.v1.MsgSignalIntentResponse)
   
     - [Msg](#quicksilver.interchainstaking.v1.Msg)
   
 - [quicksilver/interchainstaking/v1/query.proto](#quicksilver/interchainstaking/v1/query.proto)
+    - [QueryDepositAccountForChainRequest](#quicksilver.interchainstaking.v1.QueryDepositAccountForChainRequest)
+    - [QueryDepositAccountForChainResponse](#quicksilver.interchainstaking.v1.QueryDepositAccountForChainResponse)
     - [QueryRegisteredZonesInfoRequest](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoRequest)
     - [QueryRegisteredZonesInfoResponse](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoResponse)
   
@@ -183,6 +194,40 @@ Query defines the gRPC querier service.
 
 
 
+<a name="quicksilver.interchainstaking.v1.Delegation"></a>
+
+### Delegation
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegation_address` | [string](#string) |  |  |
+| `amount` | [string](#string) |  |  |
+| `rewards` | [string](#string) |  |  |
+| `redelegation_end` | [int64](#int64) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.DelegatorIntent"></a>
+
+### DelegatorIntent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator` | [string](#string) |  |  |
+| `intents` | [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent) | repeated |  |
+
+
+
+
+
+
 <a name="quicksilver.interchainstaking.v1.GenesisState"></a>
 
 ### GenesisState
@@ -198,6 +243,22 @@ GenesisState defines the epochs module's genesis state.
 
 
 
+<a name="quicksilver.interchainstaking.v1.PortConnectionTuple"></a>
+
+### PortConnectionTuple
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `connection_id` | [string](#string) |  |  |
+| `port_id` | [string](#string) |  |  |
+
+
+
+
+
+
 <a name="quicksilver.interchainstaking.v1.RegisteredZone"></a>
 
 ### RegisteredZone
@@ -207,11 +268,48 @@ GenesisState defines the epochs module's genesis state.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `identifier` | [string](#string) |  |  |
+| `connection_id` | [string](#string) |  |  |
 | `chain_id` | [string](#string) |  |  |
 | `deposit_address` | [string](#string) |  |  |
 | `delegation_addresses` | [string](#string) | repeated |  |
-| `local_denom` | [string](#string) |  |  |
-| `remote_denom` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
+| `redemption_rate` | [string](#string) |  |  |
+| `validators` | [Validators](#quicksilver.interchainstaking.v1.Validators) | repeated |  |
+| `delegator_intent` | [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent) | repeated |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.ValidatorIntent"></a>
+
+### ValidatorIntent
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `valoper_address` | [string](#string) |  |  |
+| `weight` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.Validators"></a>
+
+### Validators
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `valoper_address` | [string](#string) |  |  |
+| `commission_rate` | [string](#string) |  |  |
+| `voting_power` | [string](#string) |  |  |
+| `delegations` | [Delegation](#quicksilver.interchainstaking.v1.Delegation) | repeated |  |
 
 
 
@@ -237,16 +335,16 @@ GenesisState defines the epochs module's genesis state.
 <a name="quicksilver.interchainstaking.v1.MsgRegisterZone"></a>
 
 ### MsgRegisterZone
-MsgRegisterZone represents a message to send coins from one account to
-another.
+MsgRegisterZone represents a message type to register a new zone. TODO:
+deprecate in favour of governance vote.
 
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `identifier` | [string](#string) |  |  |
+| `connection_id` | [string](#string) |  |  |
 | `chain_id` | [string](#string) |  |  |
-| `local_denom` | [string](#string) |  |  |
-| `remote_denom` | [string](#string) |  |  |
+| `denom` | [string](#string) |  |  |
 | `from_address` | [string](#string) |  |  |
 
 
@@ -257,7 +355,63 @@ another.
 <a name="quicksilver.interchainstaking.v1.MsgRegisterZoneResponse"></a>
 
 ### MsgRegisterZoneResponse
-MsgRegisterZoneResponse defines the Msg/Send response type.
+MsgRegisterZoneResponse defines the MsgRegisterZone response type.
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.MsgRequestRedemption"></a>
+
+### MsgRequestRedemption
+MsgRegisterZone represents a message type to request a burn of qAssets for
+native assets.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `coin` | [string](#string) |  |  |
+| `destination_address` | [string](#string) |  |  |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.MsgRequestRedemptionResponse"></a>
+
+### MsgRequestRedemptionResponse
+MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.MsgSignalIntent"></a>
+
+### MsgSignalIntent
+MsgSignalIntent represents a message type for signalling voting intent for
+one or more validators.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `chain_id` | [string](#string) |  |  |
+| `intents` | [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent) | repeated |  |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.MsgSignalIntentResponse"></a>
+
+### MsgSignalIntentResponse
+MsgSignalIntentResponse defines the MsgSignalIntent response type.
 
 
 
@@ -277,7 +431,9 @@ Msg defines the bank Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `RegisterZone` | [MsgRegisterZone](#quicksilver.interchainstaking.v1.MsgRegisterZone) | [MsgRegisterZoneResponse](#quicksilver.interchainstaking.v1.MsgRegisterZoneResponse) | RegisterZone defines a method for sending coins from one account to another account. | |
+| `RegisterZone` | [MsgRegisterZone](#quicksilver.interchainstaking.v1.MsgRegisterZone) | [MsgRegisterZoneResponse](#quicksilver.interchainstaking.v1.MsgRegisterZoneResponse) | RegisterZone defines a method for registering a new zone. TODO: deprecate in favour of governance vote. | |
+| `RequestRedemption` | [MsgRequestRedemption](#quicksilver.interchainstaking.v1.MsgRequestRedemption) | [MsgRequestRedemptionResponse](#quicksilver.interchainstaking.v1.MsgRequestRedemptionResponse) | RequestRedemption defines a method for requesting burning of qAssets for native assets. | |
+| `SignalIntent` | [MsgSignalIntent](#quicksilver.interchainstaking.v1.MsgSignalIntent) | [MsgSignalIntentResponse](#quicksilver.interchainstaking.v1.MsgSignalIntentResponse) | SignalIntent defines a method for signalling voting intent for one or more validators. | |
 
  <!-- end services -->
 
@@ -287,6 +443,38 @@ Msg defines the bank Msg service.
 <p align="right"><a href="#top">Top</a></p>
 
 ## quicksilver/interchainstaking/v1/query.proto
+
+
+
+<a name="quicksilver.interchainstaking.v1.QueryDepositAccountForChainRequest"></a>
+
+### QueryDepositAccountForChainRequest
+QueryDepositAccountForChainRequest is the request type for the
+Query/InterchainAccountAddress RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `chain_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.QueryDepositAccountForChainResponse"></a>
+
+### QueryDepositAccountForChainResponse
+QueryDepositAccountForChainResponse the response type for the
+Query/InterchainAccountAddress RPC
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `deposit_account_address` | [string](#string) |  |  |
+
+
+
 
 
 
@@ -334,7 +522,8 @@ Query defines the gRPC querier service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `RegisteredZoneInfos` | [QueryRegisteredZonesInfoRequest](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoRequest) | [QueryRegisteredZonesInfoResponse](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoResponse) | RegisteredZoneInfos provide running epochInfos | GET|/quicksilver/interchainstaking/v1/zones|
+| `RegisteredZoneInfos` | [QueryRegisteredZonesInfoRequest](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoRequest) | [QueryRegisteredZonesInfoResponse](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoResponse) | RegisteredZoneInfos provides meta data on connected zones. | GET|/quicksilver/interchainstaking/v1/zones|
+| `DepositAccountFromAddress` | [QueryDepositAccountForChainRequest](#quicksilver.interchainstaking.v1.QueryDepositAccountForChainRequest) | [QueryDepositAccountForChainResponse](#quicksilver.interchainstaking.v1.QueryDepositAccountForChainResponse) | DepositAccountFromAddress provides data on the deposit address for a connected zone. | GET|/quicksilver/interchainstaking/v1/zones/deposit_address|
 
  <!-- end services -->
 

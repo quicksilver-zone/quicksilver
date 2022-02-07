@@ -1,17 +1,19 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// GetRegsiteredZoneInfo returns zone info by identifier
-func (k Keeper) GetRegisteredZoneInfo(ctx sdk.Context, identifier string) (types.RegisteredZone, bool) {
+// GetRegsiteredZoneInfo returns zone info by chain_id
+func (k Keeper) GetRegisteredZoneInfo(ctx sdk.Context, chain_id string) (types.RegisteredZone, bool) {
 	zone := types.RegisteredZone{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-	bz := store.Get([]byte(identifier))
+	bz := store.Get([]byte(chain_id))
 	if len(bz) == 0 {
 		return zone, false
 	}
@@ -22,15 +24,18 @@ func (k Keeper) GetRegisteredZoneInfo(ctx sdk.Context, identifier string) (types
 
 // SetRegisteredZone set zone info
 func (k Keeper) SetRegisteredZone(ctx sdk.Context, zone types.RegisteredZone) {
+
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := k.cdc.MustMarshal(&zone)
-	store.Set([]byte(zone.Identifier), bz)
+	ctx.Logger().Error(fmt.Sprintf("%v", zone))
+	store.Set([]byte(zone.ChainId), bz)
 }
 
 // DeleteRegisteredZone delete zone info
-func (k Keeper) DeleteRegisteredZone(ctx sdk.Context, identifier string) {
+func (k Keeper) DeleteRegisteredZone(ctx sdk.Context, chain_id string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-	store.Delete([]byte(identifier))
+	ctx.Logger().Error(fmt.Sprintf("Removing chain: %s", chain_id))
+	store.Delete([]byte(chain_id))
 }
 
 // IterateRegisteredZones iterate through zones

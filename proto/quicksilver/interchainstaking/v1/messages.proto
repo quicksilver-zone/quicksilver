@@ -3,28 +3,64 @@ package quicksilver.interchainstaking.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "quicksilver/interchainstaking/v1/genesis.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
 // Msg defines the bank Msg service.
 service Msg {
-  // RegisterZone defines a method for sending coins from one account to another
-  // account.
+  // RegisterZone defines a method for registering a new zone. TODO: deprecate
+  // in favour of governance vote.
   rpc RegisterZone(MsgRegisterZone) returns (MsgRegisterZoneResponse);
+  // RequestRedemption defines a method for requesting burning of qAssets for
+  // native assets.
+  rpc RequestRedemption(MsgRequestRedemption)
+      returns (MsgRequestRedemptionResponse);
+  // SignalIntent defines a method for signalling voting intent for one or more
+  // validators.
+  rpc SignalIntent(MsgSignalIntent) returns (MsgSignalIntentResponse);
 }
 
-// MsgRegisterZone represents a message to send coins from one account to
-// another.
+// MsgRegisterZone represents a message type to register a new zone. TODO:
+// deprecate in favour of governance vote.
 message MsgRegisterZone {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
   string identifier = 1 [ (gogoproto.moretags) = "yaml:\"zone_name\"" ];
-  string chain_id = 2 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
-  string local_denom = 3 [ (gogoproto.moretags) = "yaml:\"local_denom\"" ];
-  string remote_denom = 4 [ (gogoproto.moretags) = "yaml:\"remote_denom\"" ];
-  string from_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string connection_id = 2 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
+  string chain_id = 3 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  string denom = 4 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
+  string from_address = 5 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+// MsgRegisterZone represents a message type to request a burn of qAssets for
+// native assets.
+message MsgRequestRedemption {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string coin = 1 [ (gogoproto.moretags) = "yaml:\"coin\"" ];
+  string destination_address = 2
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string from_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+// MsgSignalIntent represents a message type for signalling voting intent for
+// one or more validators.
+message MsgSignalIntent {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  repeated ValidatorIntent intents = 2
+      [ (gogoproto.moretags) = "yaml:\"intents\"" ];
+  string from_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
-// MsgRegisterZoneResponse defines the Msg/Send response type.
+// MsgRegisterZoneResponse defines the MsgRegisterZone response type.
 message MsgRegisterZoneResponse {}
+
+// MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
+message MsgRequestRedemptionResponse {}
+
+// MsgSignalIntentResponse defines the MsgSignalIntent response type.
+message MsgSignalIntentResponse {}

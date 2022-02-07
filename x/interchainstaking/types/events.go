@@ -3,7 +3,7 @@ package types
 const (
 	EventTypeRegisterZone = "register_zone"
 
-	AttributeKeyChainId = "chain_id"
+	AttributeKeyConnectionId = "connection_id"
 
 	AttributeValueCategory = ModuleName
 )

@@ -2,19 +2,21 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 type msgServer struct {
-	Keeper
+	*Keeper
 }
 
 // NewMsgServerImpl returns an implementation of the bank MsgServer interface
 // for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
-	return &msgServer{Keeper: keeper}
+	return &msgServer{Keeper: &keeper}
 }
 
 var _ types.MsgServer = msgServer{}
@@ -22,47 +24,26 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZone) (*types.MsgRegisterZoneResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	zone := types.RegisteredZone{Identifier: msg.Identifier, ChainId: msg.ChainId, LocalDenom: msg.LocalDenom, RemoteDenom: msg.RemoteDenom}
-
-	// generate new deposit address
-
-	// generate delegate addresses
-
+	zone := types.RegisteredZone{Identifier: msg.Identifier, ChainId: msg.ChainId, ConnectionId: msg.ConnectionId, Denom: msg.Denom, RedemptionRate: sdk.NewDec(1)}
 	k.SetRegisteredZone(ctx, zone)
 
-	// if err := k.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
-	// 	return nil, err
-	// }
+	// generate deposit account
+	portOwner := msg.ChainId + ".deposit"
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+		return nil, err
+	}
+	portId, _ := icatypes.NewControllerPortID(portOwner)
+	k.SetConnectionForPort(ctx, msg.ConnectionId, portId)
 
-	// from, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// to, err := sdk.AccAddressFromBech32(msg.ToAddress)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// if k.BlockedAddr(to) {
-	// 	return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive funds", msg.ToAddress)
-	// }
-
-	// err = k.SendCoins(ctx, from, to, msg.Amount)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// defer func() {
-	// 	for _, a := range msg.Amount {
-	// 		if a.Amount.IsInt64() {
-	// 			telemetry.SetGaugeWithLabels(
-	// 				[]string{"tx", "msg", "send"},
-	// 				float32(a.Amount.Int64()),
-	// 				[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
-	// 			)
-	// 		}
-	// 	}
-	// }()
+	// generate delegate addresses
+	for i := 0; i < types.DelegationAccountCount; i++ {
+		portOwner := fmt.Sprintf("%s.delegate.%d", msg.ChainId, i)
+		if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, fmt.Sprintf("%s.delegate.%d", msg.ChainId, i)); err != nil {
+			return nil, err
+		}
+		portId, _ := icatypes.NewControllerPortID(portOwner)
+		k.SetConnectionForPort(ctx, msg.ConnectionId, portId)
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -71,9 +52,46 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		),
 		sdk.NewEvent(
 			types.EventTypeRegisterZone,
-			sdk.NewAttribute(types.AttributeKeyChainId, msg.ChainId),
+			sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ConnectionId),
+			sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ChainId),
 		),
 	})
 
 	return &types.MsgRegisterZoneResponse{}, nil
+}
+
+func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {
+	_ = sdk.UnwrapSDKContext(goCtx)
+
+	// ctx.EventManager().EmitEvents(sdk.Events{
+	// 	sdk.NewEvent(
+	// 		sdk.EventTypeMessage,
+	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+	// 	),
+	// 	sdk.NewEvent(
+	// 		types.EventTypeRegisterZone,
+	// 		sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ConnectionId),
+	// 		sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ChainId),
+	// 	),
+	// })
+
+	return &types.MsgRequestRedemptionResponse{}, nil
+}
+
+func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {
+	_ = sdk.UnwrapSDKContext(goCtx)
+
+	// ctx.EventManager().EmitEvents(sdk.Events{
+	// 	sdk.NewEvent(
+	// 		sdk.EventTypeMessage,
+	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+	// 	),
+	// 	sdk.NewEvent(
+	// 		types.EventTypeRegisterZone,
+	// 		sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ConnectionId),
+	// 		sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ChainId),
+	// 	),
+	// })
+
+	return &types.MsgSignalIntentResponse{}, nil
 }
