@@ -16,6 +16,20 @@
   
     - [Query](#quicksilver.epochs.v1.Query)
   
+- [quicksilver/interchainquery/v1/genesis.proto](#quicksilver/interchainquery/v1/genesis.proto)
+    - [DataPoint](#quicksilver.interchainquery.v1.DataPoint)
+    - [GenesisState](#quicksilver.interchainquery.v1.GenesisState)
+    - [PeriodicQuery](#quicksilver.interchainquery.v1.PeriodicQuery)
+    - [PeriodicQuery.QueryParametersEntry](#quicksilver.interchainquery.v1.PeriodicQuery.QueryParametersEntry)
+    - [SingleQuery](#quicksilver.interchainquery.v1.SingleQuery)
+    - [SingleQuery.QueryParametersEntry](#quicksilver.interchainquery.v1.SingleQuery.QueryParametersEntry)
+  
+- [quicksilver/interchainquery/v1/messages.proto](#quicksilver/interchainquery/v1/messages.proto)
+    - [MsgSubmitQueryResponse](#quicksilver.interchainquery.v1.MsgSubmitQueryResponse)
+    - [MsgSubmitQueryResponseResponse](#quicksilver.interchainquery.v1.MsgSubmitQueryResponseResponse)
+  
+    - [Msg](#quicksilver.interchainquery.v1.Msg)
+  
 - [quicksilver/interchainstaking/v1/genesis.proto](#quicksilver/interchainstaking/v1/genesis.proto)
     - [Delegation](#quicksilver.interchainstaking.v1.Delegation)
     - [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent)
@@ -182,6 +196,181 @@ Query defines the gRPC querier service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `EpochInfos` | [QueryEpochsInfoRequest](#quicksilver.epochs.v1.QueryEpochsInfoRequest) | [QueryEpochsInfoResponse](#quicksilver.epochs.v1.QueryEpochsInfoResponse) | EpochInfos provide running epochInfos | GET|/quicksilver/epochs/v1/epochs|
 | `CurrentEpoch` | [QueryCurrentEpochRequest](#quicksilver.epochs.v1.QueryCurrentEpochRequest) | [QueryCurrentEpochResponse](#quicksilver.epochs.v1.QueryCurrentEpochResponse) | CurrentEpoch provide current epoch of specified identifier | GET|/quicksilver/epochs/v1/current_epoch|
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/interchainquery/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/interchainquery/v1/genesis.proto
+
+
+
+<a name="quicksilver.interchainquery.v1.DataPoint"></a>
+
+### DataPoint
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `height` | [string](#string) |  |  |
+| `value` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainquery.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the epochs module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `queries` | [PeriodicQuery](#quicksilver.interchainquery.v1.PeriodicQuery) | repeated |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainquery.v1.PeriodicQuery"></a>
+
+### PeriodicQuery
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `connection_id` | [string](#string) |  |  |
+| `chain_id` | [string](#string) |  |  |
+| `query_type` | [string](#string) |  |  |
+| `query_parameters` | [PeriodicQuery.QueryParametersEntry](#quicksilver.interchainquery.v1.PeriodicQuery.QueryParametersEntry) | repeated |  |
+| `period` | [string](#string) |  |  |
+| `last_height` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainquery.v1.PeriodicQuery.QueryParametersEntry"></a>
+
+### PeriodicQuery.QueryParametersEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainquery.v1.SingleQuery"></a>
+
+### SingleQuery
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `id` | [string](#string) |  |  |
+| `connection_id` | [string](#string) |  |  |
+| `chain_id` | [string](#string) |  |  |
+| `query_type` | [string](#string) |  |  |
+| `query_parameters` | [SingleQuery.QueryParametersEntry](#quicksilver.interchainquery.v1.SingleQuery.QueryParametersEntry) | repeated |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainquery.v1.SingleQuery.QueryParametersEntry"></a>
+
+### SingleQuery.QueryParametersEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [string](#string) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/interchainquery/v1/messages.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/interchainquery/v1/messages.proto
+
+
+
+<a name="quicksilver.interchainquery.v1.MsgSubmitQueryResponse"></a>
+
+### MsgSubmitQueryResponse
+MsgSubmitQueryResponse represents a message type to fulfil a query request.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `chain_id` | [string](#string) |  |  |
+| `query_id` | [string](#string) |  |  |
+| `result` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainquery.v1.MsgSubmitQueryResponseResponse"></a>
+
+### MsgSubmitQueryResponseResponse
+MsgSubmitQueryResponseResponse defines the MsgSubmitQueryResponse response
+type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="quicksilver.interchainquery.v1.Msg"></a>
+
+### Msg
+Msg defines the interchainquery Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `SubmitQueryResponse` | [MsgSubmitQueryResponse](#quicksilver.interchainquery.v1.MsgSubmitQueryResponse) | [MsgSubmitQueryResponseResponse](#quicksilver.interchainquery.v1.MsgSubmitQueryResponseResponse) | SubmitQueryResponse defines a method for submit query responses. | |
 
  <!-- end services -->
 
@@ -427,7 +616,7 @@ MsgSignalIntentResponse defines the MsgSignalIntent response type.
 <a name="quicksilver.interchainstaking.v1.Msg"></a>
 
 ### Msg
-Msg defines the bank Msg service.
+Msg defines the interchainstaking Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |

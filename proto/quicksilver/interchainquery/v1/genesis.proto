@@ -1,0 +1,49 @@
+syntax = "proto3";
+package quicksilver.interchainquery.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/protobuf/any.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/interchainquery/types";
+
+message PeriodicQuery {
+  string id = 1;
+  string connection_id = 2;
+  string chain_id = 3;
+  string query_type = 4;
+  map<string, string> query_parameters = 5;
+  string period = 6 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string last_height = 7 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message SingleQuery {
+  string id = 1;
+  string connection_id = 2;
+  string chain_id = 3;
+  string query_type = 4;
+  map<string, string> query_parameters = 5;
+}
+
+message DataPoint {
+  string id = 1;
+  string height = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Any value = 3 [ (gogoproto.jsontag) = "result,omitempty" ];
+}
+
+// GenesisState defines the epochs module's genesis state.
+message GenesisState {
+  repeated PeriodicQuery queries = 1 [ (gogoproto.nullable) = false ];
+}

@@ -110,6 +110,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking"
 	interchainstakingkeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+
+	"github.com/ingenuity-build/quicksilver/x/interchainquery"
+	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
+	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
 func init() {
@@ -159,6 +163,7 @@ var (
 		vesting.AppModuleBasic{},
 		epochs.AppModuleBasic{},
 		interchainstaking.AppModuleBasic{},
+		interchainquery.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -172,6 +177,7 @@ var (
 		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:               nil,
 		interchainstakingtypes.ModuleName: {authtypes.Minter, authtypes.Burner},
+		interchainquerytypes.ModuleName:   nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -225,6 +231,7 @@ type Quicksilver struct {
 	// Quicksilver keepers
 	EpochsKeeper            epochskeeper.Keeper
 	InterchainstakingKeeper interchainstakingkeeper.Keeper
+	InterchainQueryKeeper   interchainquerykeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper                      capabilitykeeper.ScopedKeeper
@@ -288,6 +295,7 @@ func NewQuicksilver(
 		// quicksilver keys
 		epochstypes.StoreKey,
 		interchainstakingtypes.StoreKey,
+		interchainquerytypes.StoreKey,
 	)
 
 	// Add the transient store key
@@ -413,8 +421,12 @@ func NewQuicksilver(
 	)
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
 
-	app.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(appCodec, keys[interchainstakingtypes.StoreKey], app.ICAControllerKeeper, scopedInterchainStakingKeeper)
+	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey])
+	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper)
+
+	app.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(appCodec, keys[interchainstakingtypes.StoreKey], app.ICAControllerKeeper, scopedInterchainStakingKeeper, app.InterchainQueryKeeper)
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
+
 	interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
 
 	icaControllerIBCModule := icacontroller.NewIBCModule(app.ICAControllerKeeper, interchainstakingIBCModule)
@@ -472,6 +484,7 @@ func NewQuicksilver(
 		// Quicksilver app modules
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		interchainstakingModule,
+		interchainQueryModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -491,7 +504,8 @@ func NewQuicksilver(
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
 		ibchost.ModuleName,
-		interchainstakingtypes.ModuleName, // check ordering here.
+		interchainstakingtypes.ModuleName,
+		interchainquerytypes.ModuleName, // check ordering here.
 		// no-op modules
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
@@ -512,6 +526,7 @@ func NewQuicksilver(
 		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
+		interchainquerytypes.ModuleName,
 		epochstypes.ModuleName,
 		// no-op modules
 		ibchost.ModuleName,
@@ -530,7 +545,8 @@ func NewQuicksilver(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
-		interchainstakingtypes.ModuleName, // currently no-op.
+		interchainstakingtypes.ModuleName,
+		// currently no-op.
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -561,6 +577,7 @@ func NewQuicksilver(
 		// Quicksilver modules
 		epochstypes.ModuleName,
 		interchainstakingtypes.ModuleName,
+		interchainquerytypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	)
@@ -868,5 +885,6 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	// quicksilver subspaces
 	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
+	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
 	return paramsKeeper
 }

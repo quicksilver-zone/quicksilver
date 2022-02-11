@@ -7,7 +7,7 @@ import "quicksilver/interchainstaking/v1/genesis.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
-// Msg defines the bank Msg service.
+// Msg defines the interchainstaking Msg service.
 service Msg {
   // RegisterZone defines a method for registering a new zone. TODO: deprecate
   // in favour of governance vote.

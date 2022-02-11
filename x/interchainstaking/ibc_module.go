@@ -66,7 +66,6 @@ func (im IBCModule) OnChanOpenAck(
 	channelID string,
 	counterpartyVersion string,
 ) error {
-	ctx.Logger().Error("DEBUG: OnChanOpenAck for for port " + portID)
 	connectionId, err := im.keeper.GetConnectionForPort(ctx, portID)
 	if err != nil {
 		ctx.Logger().Error("Unable to get connection for port " + portID)
@@ -74,6 +73,7 @@ func (im IBCModule) OnChanOpenAck(
 	address, found := im.keeper.ICAControllerKeeper.GetInterchainAccountAddress(ctx, connectionId, portID)
 	if !found {
 		ctx.Logger().Error(fmt.Sprintf("Expected to find an address for %s/%s", connectionId, portID))
+		return nil
 	}
 	im.keeper.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 		if zoneInfo.GetConnectionId() == connectionId {
@@ -85,6 +85,8 @@ func (im IBCModule) OnChanOpenAck(
 			portParts := strings.Split(portID, ".")
 			if len(portParts) == 2 && portParts[1] == "deposit" {
 				zoneInfo.DepositAddress = address
+				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(5))
+				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)
 			} else if len(portParts) == 3 && portParts[1] == "delegate" {
 				for _, existing := range zoneInfo.DelegationAddresses {
 					if existing == address {
@@ -112,8 +114,6 @@ func (im IBCModule) OnChanOpenConfirm(
 	portID,
 	channelID string,
 ) error {
-	ctx.Logger().Error("DEBUG: OnChanOpenConfirm for port " + portID)
-
 	return nil
 }
 
