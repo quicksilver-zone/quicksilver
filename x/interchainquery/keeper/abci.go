@@ -31,10 +31,11 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 			)
 
 			for key, val := range queryInfo.GetQueryParameters() {
-				event.AppendAttributes(sdk.NewAttribute(types.AttributeKeyParams, fmt.Sprintf("%s:%s", key, val)))
+				event = event.AppendAttributes(sdk.NewAttribute(types.AttributeKeyParams, fmt.Sprintf("%s:%s:%s", queryInfo.Id, key, val)))
 			}
 
 			events = append(events, event)
+			fmt.Println(sdk.StringifyEvents(events.ToABCIEvents()))
 			queryInfo.LastHeight = sdk.NewInt(ctx.BlockHeight())
 			k.SetPeriodicQuery(ctx, queryInfo)
 

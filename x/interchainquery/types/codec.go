@@ -14,20 +14,18 @@ var (
 )
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSubmitQueryResponse{}, "cosmos-sdk/MsgSubmitQueryResponse", nil)
+	cdc.RegisterConcrete(&MsgSubmitQueryResponse{}, "/quicksilver.interchainquery.v1.MsgSubmitQueryResponse", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSubmitQueryResponse{},
 	)
-	// registry.RegisterImplementations(
-	// 	(*authz.Authorization)(nil),
-	// 	&SendAuthorization{},
-	// )
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 func init() {
+	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
+	amino.Seal()
 }

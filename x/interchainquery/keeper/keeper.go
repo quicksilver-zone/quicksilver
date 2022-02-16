@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -29,22 +30,23 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionId string, port string) error {
-// 	mapping := types.PortConnectionTuple{ConnectionId: connectionId, PortId: port}
-// 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
-// 	bz := k.cdc.MustMarshal(&mapping)
-// 	store.Set([]byte(port), bz)
-// 	return nil
-// }
+func (k *Keeper) SetDatapointForId(ctx sdk.Context, id string, result []byte, height sdk.Int) error {
+	mapping := types.DataPoint{Id: id, RemoteHeight: height, LocalHeight: sdk.NewInt(ctx.BlockHeight()), Value: result}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
+	bz := k.cdc.MustMarshal(&mapping)
+	store.Set([]byte(id), bz)
+	ctx.Logger().Error(fmt.Sprintf("Datapoint written for %s", id))
+	return nil
+}
 
-// func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, error) {
-// 	mapping := types.PortConnectionTuple{}
-// 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
-// 	bz := store.Get([]byte(port))
-// 	if len(bz) == 0 {
-// 		return "", fmt.Errorf("unable to find mapping for port %s", port)
-// 	}
+func (k *Keeper) GetDatapointForId(ctx sdk.Context, id string) (types.DataPoint, error) {
+	mapping := types.DataPoint{}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
+	bz := store.Get([]byte(id))
+	if len(bz) == 0 {
+		return types.DataPoint{}, fmt.Errorf("unable to find data for id %s", id)
+	}
 
-// 	k.cdc.MustUnmarshal(bz, &mapping)
-// 	return mapping.ConnectionId, nil
-// }
+	k.cdc.MustUnmarshal(bz, &mapping)
+	return mapping, nil
+}

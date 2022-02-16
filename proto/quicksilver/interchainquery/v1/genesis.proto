@@ -3,7 +3,6 @@ package quicksilver.interchainquery.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
-import "google/protobuf/any.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainquery/types";
 
@@ -35,12 +34,17 @@ message SingleQuery {
 
 message DataPoint {
   string id = 1;
-  string height = 2 [
+  string remote_height = 2 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  google.protobuf.Any value = 3 [ (gogoproto.jsontag) = "result,omitempty" ];
+  string local_height = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  bytes value = 4 [ (gogoproto.jsontag) = "result,omitempty" ];
 }
 
 // GenesisState defines the epochs module's genesis state.

@@ -53,7 +53,9 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterLegacyAminoCodec registers a legacy amino codec
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
 
 // RegisterInterfaces registers the module's interface types
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
@@ -76,7 +78,10 @@ func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Rout
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	// no-op
+	// err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	// if err != nil {
+	// 	panic(err)
+	// }
 }
 
 // GetTxCmd returns the capability module's root tx command.
@@ -141,9 +146,7 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	var genState types.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
-	ctx.Logger().Error("Init genesis start")
 	InitGenesis(ctx, am.keeper, genState)
-	ctx.Logger().Error("Init genesis end")
 	return []abci.ValidatorUpdate{}
 }
 
