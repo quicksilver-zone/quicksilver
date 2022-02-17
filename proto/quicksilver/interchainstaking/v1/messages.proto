@@ -4,21 +4,38 @@ package quicksilver.interchainstaking.v1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "quicksilver/interchainstaking/v1/genesis.proto";
+import "google/api/http.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
-// Msg defines the bank Msg service.
+// Msg defines the interchainstaking Msg service.
 service Msg {
   // RegisterZone defines a method for registering a new zone. TODO: deprecate
   // in favour of governance vote.
-  rpc RegisterZone(MsgRegisterZone) returns (MsgRegisterZoneResponse);
+  rpc RegisterZone(MsgRegisterZone) returns (MsgRegisterZoneResponse) {
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/zone"
+      body: "*"
+    };
+  };
   // RequestRedemption defines a method for requesting burning of qAssets for
   // native assets.
   rpc RequestRedemption(MsgRequestRedemption)
-      returns (MsgRequestRedemptionResponse);
+      returns (MsgRequestRedemptionResponse) {
+        option (google.api.http) = {
+          post: "/quicksilver/tx/v1/interchainstaking/redeem"
+          body: "*"
+        };
+      };
   // SignalIntent defines a method for signalling voting intent for one or more
   // validators.
-  rpc SignalIntent(MsgSignalIntent) returns (MsgSignalIntentResponse);
+  rpc SignalIntent(MsgSignalIntent) returns (MsgSignalIntentResponse){
+    option (google.api.http) = {
+      post: "/quicksilver/tx/v1/interchainstaking/intent"
+      body: "*"
+    };
+  };
 }
 
 // MsgRegisterZone represents a message type to register a new zone. TODO:
