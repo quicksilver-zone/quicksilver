@@ -22,22 +22,20 @@ var _ types.MsgServer = msgServer{}
 
 func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubmitQueryResponse) (*types.MsgSubmitQueryResponseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	fmt.Println(msg)
 	q, found := k.GetPeriodicQuery(ctx, msg.QueryId)
-	fmt.Println(q, found)
 	if found {
 		q.LastHeight = sdk.NewInt(ctx.BlockHeight())
 		k.SetPeriodicQuery(ctx, q)
 		k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height))
 
-		// } else {
-		// 	_, found2 := k.GetSingleQuery(ctx, msg.QueryId)
-		// 	if found2 {
-		// 		k.DeleteSingleQuery(ctx, msg.QueryId)
-		// 		k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height))
-		// 	} else {
-		// 		return nil, fmt.Errorf("query object no longer exists; likely deleted since query was requested")
-		// 	}
+	} else {
+		_, found2 := k.GetSingleQuery(ctx, msg.QueryId)
+		if found2 {
+			k.DeleteSingleQuery(ctx, msg.QueryId)
+			k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height))
+		} else {
+			return nil, fmt.Errorf("query object no longer exists; likely deleted since query was requested")
+		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{

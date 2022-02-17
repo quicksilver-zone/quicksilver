@@ -40,7 +40,6 @@ func (im IBCModule) OnChanOpenInit(
 	counterparty channeltypes.Counterparty,
 	version string,
 ) error {
-	ctx.Logger().Error("DEBUG: OnChanOpenInit for port " + portID)
 	return im.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
 }
 
@@ -55,7 +54,6 @@ func (im IBCModule) OnChanOpenTry(
 	counterparty channeltypes.Counterparty,
 	counterpartyVersion string,
 ) (string, error) {
-	ctx.Logger().Error("DEBUG: OnChanOpenTry for port " + portID)
 	return "", nil
 }
 
@@ -81,7 +79,7 @@ func (im IBCModule) OnChanOpenAck(
 				im.keeper.DeleteRegisteredZone(ctx, zoneInfo.ChainId)
 				return false
 			}
-			ctx.Logger().Info(fmt.Sprintf("Found address matching zone %s: %s (port: %s)", zoneInfo.ChainId, address, portID))
+			ctx.Logger().Info("Found matching address", "chain", zoneInfo.ChainId, "address", address, "port", portID)
 			portParts := strings.Split(portID, ".")
 			if len(portParts) == 2 && portParts[1] == "deposit" {
 				zoneInfo.DepositAddress = address
@@ -95,6 +93,10 @@ func (im IBCModule) OnChanOpenAck(
 					}
 				}
 				zoneInfo.DelegationAddresses = append(zoneInfo.DelegationAddresses, address)
+				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(100))
+				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)
+				delegationQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(100))
+				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *delegationQuery)
 			} else {
 				ctx.Logger().Error("unexpected channel on portID: " + portID)
 				return false

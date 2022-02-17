@@ -217,8 +217,9 @@ Query defines the gRPC querier service.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `id` | [string](#string) |  |  |
-| `height` | [string](#string) |  |  |
-| `value` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `remote_height` | [string](#string) |  |  |
+| `local_height` | [string](#string) |  |  |
+| `value` | [bytes](#bytes) |  |  |
 
 
 
@@ -338,7 +339,8 @@ MsgSubmitQueryResponse represents a message type to fulfil a query request.
 | ----- | ---- | ----- | ----------- |
 | `chain_id` | [string](#string) |  |  |
 | `query_id` | [string](#string) |  |  |
-| `result` | [google.protobuf.Any](#google.protobuf.Any) |  |  |
+| `result` | [bytes](#bytes) |  |  |
+| `height` | [int64](#int64) |  |  |
 | `from_address` | [string](#string) |  |  |
 
 
@@ -370,7 +372,7 @@ Msg defines the interchainquery Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `SubmitQueryResponse` | [MsgSubmitQueryResponse](#quicksilver.interchainquery.v1.MsgSubmitQueryResponse) | [MsgSubmitQueryResponseResponse](#quicksilver.interchainquery.v1.MsgSubmitQueryResponseResponse) | SubmitQueryResponse defines a method for submit query responses. | |
+| `SubmitQueryResponse` | [MsgSubmitQueryResponse](#quicksilver.interchainquery.v1.MsgSubmitQueryResponse) | [MsgSubmitQueryResponseResponse](#quicksilver.interchainquery.v1.MsgSubmitQueryResponseResponse) | SubmitQueryResponse defines a method for submit query responses. | POST|/interchainquery/tx/v1beta1/submitquery|
 
  <!-- end services -->
 
@@ -620,9 +622,9 @@ Msg defines the interchainstaking Msg service.
 
 | Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
-| `RegisterZone` | [MsgRegisterZone](#quicksilver.interchainstaking.v1.MsgRegisterZone) | [MsgRegisterZoneResponse](#quicksilver.interchainstaking.v1.MsgRegisterZoneResponse) | RegisterZone defines a method for registering a new zone. TODO: deprecate in favour of governance vote. | |
-| `RequestRedemption` | [MsgRequestRedemption](#quicksilver.interchainstaking.v1.MsgRequestRedemption) | [MsgRequestRedemptionResponse](#quicksilver.interchainstaking.v1.MsgRequestRedemptionResponse) | RequestRedemption defines a method for requesting burning of qAssets for native assets. | |
-| `SignalIntent` | [MsgSignalIntent](#quicksilver.interchainstaking.v1.MsgSignalIntent) | [MsgSignalIntentResponse](#quicksilver.interchainstaking.v1.MsgSignalIntentResponse) | SignalIntent defines a method for signalling voting intent for one or more validators. | |
+| `RegisterZone` | [MsgRegisterZone](#quicksilver.interchainstaking.v1.MsgRegisterZone) | [MsgRegisterZoneResponse](#quicksilver.interchainstaking.v1.MsgRegisterZoneResponse) | RegisterZone defines a method for registering a new zone. TODO: deprecate in favour of governance vote. | POST|/quicksilver/tx/v1/interchainstaking/zone|
+| `RequestRedemption` | [MsgRequestRedemption](#quicksilver.interchainstaking.v1.MsgRequestRedemption) | [MsgRequestRedemptionResponse](#quicksilver.interchainstaking.v1.MsgRequestRedemptionResponse) | RequestRedemption defines a method for requesting burning of qAssets for native assets. | POST|/quicksilver/tx/v1/interchainstaking/redeem|
+| `SignalIntent` | [MsgSignalIntent](#quicksilver.interchainstaking.v1.MsgSignalIntent) | [MsgSignalIntentResponse](#quicksilver.interchainstaking.v1.MsgSignalIntentResponse) | SignalIntent defines a method for signalling voting intent for one or more validators. | POST|/quicksilver/tx/v1/interchainstaking/intent|
 
  <!-- end services -->
 

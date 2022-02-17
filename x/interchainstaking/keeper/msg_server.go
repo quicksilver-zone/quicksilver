@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -44,6 +45,13 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		portId, _ := icatypes.NewControllerPortID(portOwner)
 		k.SetConnectionForPort(ctx, msg.ConnectionId, portId)
 	}
+
+	bondedValidatorQuery := k.ICQKeeper.NewPeriodicQuery(ctx, msg.ConnectionId, msg.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingtypes.BondStatusBonded}, sdk.NewInt(100))
+	k.ICQKeeper.SetPeriodicQuery(ctx, *bondedValidatorQuery)
+	unbondedValidatorQuery := k.ICQKeeper.NewPeriodicQuery(ctx, msg.ConnectionId, msg.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingtypes.BondStatusUnbonded}, sdk.NewInt(100))
+	k.ICQKeeper.SetPeriodicQuery(ctx, *unbondedValidatorQuery)
+	unbondingValidatorQuery := k.ICQKeeper.NewPeriodicQuery(ctx, msg.ConnectionId, msg.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingtypes.BondStatusUnbonding}, sdk.NewInt(100))
+	k.ICQKeeper.SetPeriodicQuery(ctx, *unbondingValidatorQuery)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

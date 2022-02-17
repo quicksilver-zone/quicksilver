@@ -35,7 +35,7 @@ func (k *Keeper) SetDatapointForId(ctx sdk.Context, id string, result []byte, he
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
 	bz := k.cdc.MustMarshal(&mapping)
 	store.Set([]byte(id), bz)
-	ctx.Logger().Error(fmt.Sprintf("Datapoint written for %s", id))
+	k.Logger(ctx).Error(fmt.Sprintf("Datapoint written for %s", id))
 	return nil
 }
 
@@ -49,4 +49,9 @@ func (k *Keeper) GetDatapointForId(ctx sdk.Context, id string) (types.DataPoint,
 
 	k.cdc.MustUnmarshal(bz, &mapping)
 	return mapping, nil
+}
+
+func (k *Keeper) GetDatapoint(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string) (types.DataPoint, error) {
+	id := GenerateQueryHash(connection_id, chain_id, query_type, query_params)
+	return k.GetDatapointForId(ctx, id)
 }
