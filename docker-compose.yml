@@ -1,0 +1,41 @@
+version: '3.8'
+services: 
+  quicksilver:
+    image: quicksilverzone/quicksilver:latest
+    hostname: quicksilver
+    volumes:
+      - ./data/test-1:/root/.quicksilverd
+    build:
+      context: .
+      dockerfile: Dockerfile
+  testzone:
+    image: quicksilverzone/testzone:latest
+    hostname: testzone
+    volumes:
+      - ./data/test-2:/root/.ica
+    command:
+      - icad
+      - start
+  hermes:
+    image: quicksilverzone/hermes
+    hostname: hermes
+    volumes:
+      - ./hermes.toml:/tmp/hermes.toml
+      - ./data/hermes:/root/.hermes
+    command:
+      - hermes
+      - -c
+      - /tmp/hermes.toml
+      - start
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.hermes
+  icq:
+    image: quicksilverzone/interchain-queries:latest
+    volumes:
+      - ./icq:/root/.icq
+    command:
+      - interchain-queries
+      - run
+    restart: always
