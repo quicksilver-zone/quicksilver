@@ -15,25 +15,25 @@ service Msg {
   // in favour of governance vote.
   rpc RegisterZone(MsgRegisterZone) returns (MsgRegisterZoneResponse) {
     option (google.api.http) = {
-      post: "/quicksilver/tx/v1/interchainstaking/zone"
-      body: "*"
+      post : "/quicksilver/tx/v1/interchainstaking/zone"
+      body : "*"
     };
   };
   // RequestRedemption defines a method for requesting burning of qAssets for
   // native assets.
   rpc RequestRedemption(MsgRequestRedemption)
       returns (MsgRequestRedemptionResponse) {
-        option (google.api.http) = {
-          post: "/quicksilver/tx/v1/interchainstaking/redeem"
-          body: "*"
-        };
-      };
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/interchainstaking/redeem"
+      body : "*"
+    };
+  };
   // SignalIntent defines a method for signalling voting intent for one or more
   // validators.
-  rpc SignalIntent(MsgSignalIntent) returns (MsgSignalIntentResponse){
+  rpc SignalIntent(MsgSignalIntent) returns (MsgSignalIntentResponse) {
     option (google.api.http) = {
-      post: "/quicksilver/tx/v1/interchainstaking/intent"
-      body: "*"
+      post : "/quicksilver/tx/v1/interchainstaking/intent"
+      body : "*"
     };
   };
 }

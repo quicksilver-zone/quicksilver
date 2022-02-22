@@ -57,6 +57,6 @@ func (k Keeper) DepositAccountFromAddress(c context.Context, req *types.QueryDep
 	}
 
 	return &types.QueryDepositAccountForChainResponse{
-		DepositAccountAddress: zone.DepositAddress,
+		DepositAccountAddress: zone.DepositAddress.Address,
 	}, nil
 }

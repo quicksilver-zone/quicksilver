@@ -64,6 +64,7 @@ func (im IBCModule) OnChanOpenAck(
 	channelID string,
 	counterpartyVersion string,
 ) error {
+	// TODO: is there re-entrancy risk here?
 	connectionId, err := im.keeper.GetConnectionForPort(ctx, portID)
 	if err != nil {
 		ctx.Logger().Error("Unable to get connection for port " + portID)
@@ -82,20 +83,20 @@ func (im IBCModule) OnChanOpenAck(
 			ctx.Logger().Info("Found matching address", "chain", zoneInfo.ChainId, "address", address, "port", portID)
 			portParts := strings.Split(portID, ".")
 			if len(portParts) == 2 && portParts[1] == "deposit" {
-				zoneInfo.DepositAddress = address
+				zoneInfo.DepositAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
 				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(5))
 				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)
 			} else if len(portParts) == 3 && portParts[1] == "delegate" {
 				for _, existing := range zoneInfo.DelegationAddresses {
-					if existing == address {
+					if existing.Address == address {
 						ctx.Logger().Error("unexpectedly found existing address: " + address)
 						return false
 					}
 				}
-				zoneInfo.DelegationAddresses = append(zoneInfo.DelegationAddresses, address)
-				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(100))
+				zoneInfo.DelegationAddresses = append(zoneInfo.DelegationAddresses, &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID})
+				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(25))
 				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)
-				delegationQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(100))
+				delegationQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(100)) // this can probably be less frequent, because we manage delegations ourselves.
 				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *delegationQuery)
 			} else {
 				ctx.Logger().Error("unexpected channel on portID: " + portID)

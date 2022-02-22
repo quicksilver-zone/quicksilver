@@ -18,13 +18,13 @@ func GenerateQueryHash(connection_id string, chain_id string, query_type string,
 
 // ----------------------------------------------------------------
 func (k Keeper) NewSingleQuery(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string) *types.SingleQuery {
-	return &types.SingleQuery{Id: GenerateQueryHash(connection_id, chain_id, query_type, query_params), ConnectionId: connection_id, ChainId: chain_id, QueryType: query_type, QueryParameters: query_params}
+	return &types.SingleQuery{Id: GenerateQueryHash(connection_id, chain_id, query_type, query_params), ConnectionId: connection_id, ChainId: chain_id, QueryType: query_type, QueryParameters: query_params, EmitHeight: sdk.ZeroInt()}
 }
 
 // GetSingleQuery returns query
 func (k Keeper) GetSingleQuery(ctx sdk.Context, id string) (types.SingleQuery, bool) {
 	query := types.SingleQuery{}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSingleQuery)
 	bz := store.Get([]byte(id))
 	if len(bz) == 0 {
 		return query, false
@@ -38,7 +38,7 @@ func (k Keeper) GetSingleQuery(ctx sdk.Context, id string) (types.SingleQuery, b
 func (k Keeper) SetSingleQuery(ctx sdk.Context, query types.SingleQuery) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSingleQuery)
 	bz := k.cdc.MustMarshal(&query)
-	store.Set([]byte(query.ChainId), bz)
+	store.Set([]byte(query.Id), bz)
 }
 
 // DeleteSingleQuery delete query info
