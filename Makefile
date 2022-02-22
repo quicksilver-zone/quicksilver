@@ -123,7 +123,7 @@ build-linux:
 	GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
 
 $(BUILD_TARGETS): go.sum $(BUILDDIR)/
-	go $@ $(BUILD_FLAGS) $(BUILD_ARGS) ./...
+	go $@ $(BUILD_FLAGS) $(BUILD_ARGS) ./cmd/quicksilverd
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
@@ -465,7 +465,7 @@ proto-swagger-gen:
 
 proto-format:
 	@echo "Formatting Protobuf files"
-	find ./ -not -path "./third_party/*" -name *.proto -exec clang-format -i {} \;
+	find ./ -not -path "./third_party/*" -not -path "./data/*" -name *.proto -exec clang-format -i {} \;
 
 proto-lint:
 	@$(DOCKER_BUF) lint --error-format=json
