@@ -4,7 +4,7 @@ services:
     image: quicksilverzone/quicksilver:latest
     hostname: quicksilver
     volumes:
-      - ./data/test-1:/root/.quicksilverd
+      - ./data/test-1:/quicksilver/.quicksilverd
     build:
       context: .
       dockerfile: Dockerfile
@@ -12,7 +12,7 @@ services:
     image: quicksilverzone/testzone:latest
     hostname: testzone
     volumes:
-      - ./data/test-2:/root/.ica
+      - ./data/test-2:/icad/.ica
     command:
       - icad
       - start
@@ -20,8 +20,8 @@ services:
     image: quicksilverzone/hermes
     hostname: hermes
     volumes:
-      - ./hermes.toml:/tmp/hermes.toml
-      - ./data/hermes:/root/.hermes
+      - ./scripts/config/hermes.toml:/tmp/hermes.toml
+      - ./data/hermes:/hermes/.hermes
     command:
       - hermes
       - -c
@@ -34,7 +34,7 @@ services:
   icq:
     image: quicksilverzone/interchain-queries:latest
     volumes:
-      - ./icq:/root/.icq
+      - ./data/icq:/icq/.icq
     command:
       - interchain-queries
       - run

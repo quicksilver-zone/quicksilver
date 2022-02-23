@@ -35,7 +35,6 @@ func (k *Keeper) SetDatapointForId(ctx sdk.Context, id string, result []byte, he
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
 	bz := k.cdc.MustMarshal(&mapping)
 	store.Set([]byte(id), bz)
-	k.Logger(ctx).Error(fmt.Sprintf("Datapoint written for %s", id))
 	return nil
 }
 
@@ -54,4 +53,29 @@ func (k *Keeper) GetDatapointForId(ctx sdk.Context, id string) (types.DataPoint,
 func (k *Keeper) GetDatapoint(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string) (types.DataPoint, error) {
 	id := GenerateQueryHash(connection_id, chain_id, query_type, query_params)
 	return k.GetDatapointForId(ctx, id)
+}
+
+func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string) (types.DataPoint, error) {
+	val, err := k.GetDatapoint(ctx, connection_id, chain_id, query_type, query_params)
+	if err != nil {
+		// no datapoint
+		k.MakeSingleRequest(ctx, connection_id, chain_id, query_type, query_params)
+		return types.DataPoint{}, fmt.Errorf("no data; query submitted")
+	}
+
+	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - 10)) { // this is somewhat arbitrary; TODO: make this better
+		k.MakeSingleRequest(ctx, connection_id, chain_id, query_type, query_params)
+		return types.DataPoint{}, fmt.Errorf("stale data; query submitted")
+	}
+	// check ttl
+	return val, nil
+}
+
+func (k *Keeper) MakeSingleRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string) {
+	key := GenerateQueryHash(connection_id, chain_id, query_type, query_params)
+	_, found := k.GetSingleQuery(ctx, key)
+	if !found {
+		newQuery := k.NewSingleQuery(ctx, connection_id, chain_id, query_type, query_params)
+		k.SetSingleQuery(ctx, *newQuery)
+	}
 }

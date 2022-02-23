@@ -13,4 +13,6 @@ RUN cargo build --release
 FROM debian:bullseye-slim
 
 COPY --from=build /app/src/ibc-rs/target/release/hermes /usr/local/bin/hermes
+RUN adduser --system --home /hermes --disabled-password --disabled-login hermes -u 1000
+USER hermes
 

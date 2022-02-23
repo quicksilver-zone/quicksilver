@@ -34,10 +34,12 @@
     - [Delegation](#quicksilver.interchainstaking.v1.Delegation)
     - [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent)
     - [GenesisState](#quicksilver.interchainstaking.v1.GenesisState)
+    - [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount)
     - [PortConnectionTuple](#quicksilver.interchainstaking.v1.PortConnectionTuple)
+    - [Receipt](#quicksilver.interchainstaking.v1.Receipt)
     - [RegisteredZone](#quicksilver.interchainstaking.v1.RegisteredZone)
+    - [Validator](#quicksilver.interchainstaking.v1.Validator)
     - [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent)
-    - [Validators](#quicksilver.interchainstaking.v1.Validators)
   
 - [quicksilver/interchainstaking/v1/messages.proto](#quicksilver/interchainstaking/v1/messages.proto)
     - [MsgRegisterZone](#quicksilver.interchainstaking.v1.MsgRegisterZone)
@@ -291,6 +293,7 @@ GenesisState defines the epochs module's genesis state.
 | `chain_id` | [string](#string) |  |  |
 | `query_type` | [string](#string) |  |  |
 | `query_parameters` | [SingleQuery.QueryParametersEntry](#quicksilver.interchainquery.v1.SingleQuery.QueryParametersEntry) | repeated |  |
+| `emit_height` | [string](#string) |  |  |
 
 
 
@@ -394,9 +397,9 @@ Msg defines the interchainquery Msg service.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `delegation_address` | [string](#string) |  |  |
-| `amount` | [string](#string) |  |  |
-| `rewards` | [string](#string) |  |  |
-| `redelegation_end` | [int64](#int64) |  |  |
+| `amount` | [string](#string) |  | TODO: determine whether this is Dec (shares) or Coins (tokens) |
+| `rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `redelegation_end` | [int64](#int64) |  | Delegations here? or against validator? |
 
 
 
@@ -434,6 +437,24 @@ GenesisState defines the epochs module's genesis state.
 
 
 
+<a name="quicksilver.interchainstaking.v1.ICAAccount"></a>
+
+### ICAAccount
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `address` | [string](#string) |  |  |
+| `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | balance defines the different coins this balance holds. |
+| `delegated_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `port_name` | [string](#string) |  | Delegations here? or against validator? |
+
+
+
+
+
+
 <a name="quicksilver.interchainstaking.v1.PortConnectionTuple"></a>
 
 ### PortConnectionTuple
@@ -444,6 +465,24 @@ GenesisState defines the epochs module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `connection_id` | [string](#string) |  |  |
 | `port_id` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.Receipt"></a>
+
+### Receipt
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `zone` | [RegisteredZone](#quicksilver.interchainstaking.v1.RegisteredZone) |  |  |
+| `sender` | [string](#string) |  |  |
+| `txhash` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 
@@ -461,12 +500,30 @@ GenesisState defines the epochs module's genesis state.
 | `identifier` | [string](#string) |  |  |
 | `connection_id` | [string](#string) |  |  |
 | `chain_id` | [string](#string) |  |  |
-| `deposit_address` | [string](#string) |  |  |
-| `delegation_addresses` | [string](#string) | repeated |  |
+| `deposit_address` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) |  |  |
+| `delegation_addresses` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) | repeated |  |
 | `denom` | [string](#string) |  |  |
 | `redemption_rate` | [string](#string) |  |  |
-| `validators` | [Validators](#quicksilver.interchainstaking.v1.Validators) | repeated |  |
+| `validators` | [Validator](#quicksilver.interchainstaking.v1.Validator) | repeated |  |
 | `delegator_intent` | [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent) | repeated |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.Validator"></a>
+
+### Validator
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `valoper_address` | [string](#string) |  |  |
+| `commission_rate` | [string](#string) |  |  |
+| `voting_power` | [string](#string) |  |  |
+| `delegations` | [Delegation](#quicksilver.interchainstaking.v1.Delegation) | repeated |  |
 
 
 
@@ -483,24 +540,6 @@ GenesisState defines the epochs module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `valoper_address` | [string](#string) |  |  |
 | `weight` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainstaking.v1.Validators"></a>
-
-### Validators
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `valoper_address` | [string](#string) |  |  |
-| `commission_rate` | [string](#string) |  |  |
-| `voting_power` | [string](#string) |  |  |
-| `delegations` | [Delegation](#quicksilver.interchainstaking.v1.Delegation) | repeated |  |
 
 
 

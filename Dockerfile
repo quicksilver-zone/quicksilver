@@ -16,7 +16,7 @@ FROM debian:bullseye
 RUN apt update && apt install liblz4-dev libsnappy-dev libzstd-dev libbz2-dev zlib1g-dev -y
 COPY --from=builder /src/app/build/quicksilverd /usr/local/bin/quicksilverd
 COPY --from=builder /opt/rocksdb/librocksdb.so.6.27 /usr/lib/
-#RUN adduser --system --home /quicksilver --disabled-password --disabled-login quicksilver
-#USER quicksilver
-RUN mkdir -p /root/.quicksilverd/data/snapshots/
+RUN adduser --system --home /quicksilver --disabled-password --disabled-login quicksilver -u 1000
+USER quicksilver
+RUN mkdir -p /quicksilver/.quicksilverd/data/snapshots/
 CMD ["quicksilverd", "start"]

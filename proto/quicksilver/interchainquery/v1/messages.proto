@@ -11,10 +11,11 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/interchainquery/ty
 // Msg defines the interchainquery Msg service.
 service Msg {
   // SubmitQueryResponse defines a method for submit query responses.
-  rpc SubmitQueryResponse(MsgSubmitQueryResponse) returns (MsgSubmitQueryResponseResponse) {
+  rpc SubmitQueryResponse(MsgSubmitQueryResponse)
+      returns (MsgSubmitQueryResponseResponse) {
     option (google.api.http) = {
-      post: "/interchainquery/tx/v1beta1/submitquery"
-      body: "*"
+      post : "/interchainquery/tx/v1beta1/submitquery"
+      body : "*"
     };
   };
 }
