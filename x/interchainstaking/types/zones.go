@@ -27,6 +27,18 @@ func (z RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, error
 	return nil, fmt.Errorf("invalid validator %s", valoper)
 }
 
+func (z RegisteredZone) GetDelegationsForDelegator(delegator string) []*Delegation {
+	delegations := []*Delegation{}
+	for _, v := range z.Validators {
+		delegation, err := v.GetDelegationForDelegator(delegator)
+		if err != nil {
+			continue
+		}
+		delegations = append(delegations, delegation)
+	}
+	return delegations
+}
+
 func (v Validator) GetDelegationForDelegator(delegator string) (*Delegation, error) {
 	for _, d := range v.Delegations {
 		if d.DelegationAddress == delegator {

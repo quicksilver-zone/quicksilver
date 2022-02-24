@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -137,12 +138,13 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 		return k.TransferToDelegateMulti(ctx, zone, inAmount)
 	} else {
 		eachAmount := sdk.Coins{}
+		splits := int64(math.Min(types.DelegationAccountSplit, float64(len(zone.DelegationAddresses))))
 
 		for _, asset := range inAmount {
-			thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewInt(types.DelegationAccountSplit))}
+			thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewInt(splits))}
 			eachAmount = eachAmount.Add(thisAsset)
 		}
-		accounts := zone.GetDelegationAccountsByLowestBalance(types.DelegationAccountSplit)
+		accounts := zone.GetDelegationAccountsByLowestBalance(splits)
 
 		// reverse this slice; because we want the smallest account last, so the remainder ends in it.
 		for i, j := 0, len(accounts)-1; i < j; i, j = i+1, j-1 {
@@ -169,9 +171,9 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 
 func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZone, inAmount sdk.Coins) error {
 	eachAmount := sdk.Coins{}
-
+	splits := int64(math.Min(types.DelegationAccountSplit, float64(len(zone.DelegationAddresses))))
 	for _, asset := range inAmount {
-		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewInt(types.DelegationAccountSplit))}
+		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewInt(splits))}
 		eachAmount = eachAmount.Add(thisAsset)
 	}
 
@@ -180,7 +182,7 @@ func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZ
 
 	in = append(in, bankTypes.Input{Address: zone.DepositAddress.GetAddress(), Coins: inAmount})
 
-	accounts := zone.GetDelegationAccountsByLowestBalance(types.DelegationAccountSplit)
+	accounts := zone.GetDelegationAccountsByLowestBalance(splits)
 	for _, account := range accounts {
 		out = append(out, bankTypes.Output{Address: account.GetAddress(), Coins: eachAmount})
 		inAmount = inAmount.Sub(eachAmount)

@@ -162,7 +162,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 					k.Logger(ctx).Error("Unable to unmarshal delegations info for delegate account", "delegation_address", zoneInfo.DepositAddress.GetAddress(), "err", err)
 				}
 				delegations := delegationsRes.DelegationResponses
-				daBalance := sdk.Coin{}
+				daBalance := sdk.Coin{Amount: sdk.ZeroInt(), Denom: zoneInfo.Denom}
 				for _, d := range delegations {
 					delegator := d.Delegation.DelegatorAddress
 					if delegator != da.GetAddress() {
@@ -170,6 +170,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 						//panic("Delegator address mismatch") // is this a panic()????
 					}
 					delegatedCoins := d.Balance
+					k.Logger(ctx).Error("DELEGATED COINS", "coins", delegatedCoins)
 					val, err := zoneInfo.GetValidatorByValoper(d.Delegation.ValidatorAddress)
 					if err != nil {
 						k.Logger(ctx).Error("Unable to find validator for delegation", "valoper", d.Delegation.ValidatorAddress)
@@ -179,6 +180,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 						k.Logger(ctx).Info("Adding delegation tuple", "delegator", da.GetAddress(), "validator", val.ValoperAddress, "amount", delegatedCoins.Amount)
 						val.Delegations = append(val.Delegations, &types.Delegation{
 							DelegationAddress: da.GetAddress(),
+							ValidatorAddress:  val.ValoperAddress,
 							Amount:            d.Balance.Amount.ToDec(),
 							Rewards:           sdk.Coins{},
 							RedelegationEnd:   0,
