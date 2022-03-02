@@ -60,11 +60,11 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *coretypes.ResultTx
 				}
 
 				k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
-				coin, err := sdk.ParseCoinNormalized(amount)
+				thisCoins, err := sdk.ParseCoinsNormalized(amount)
 				if err != nil {
 					k.Logger(ctx).Error("Unable to parse coin", "string", amount)
 				}
-				coins = coins.Add(coin)
+				coins = coins.Add(thisCoins...)
 			}
 		}
 	}
