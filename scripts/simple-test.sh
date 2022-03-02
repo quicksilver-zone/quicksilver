@@ -302,5 +302,13 @@ V4_DELEG=$(docker-compose exec testzone icad q staking delegations-to ${VAL_VALO
 if [[ ! $V2_DELEG -eq 46000 ]]; then echo "ERROR: val 2 delegation does not match 46000 ($V2_DELEG)"; exit 1; fi
 if [[ ! $V3_DELEG -eq 25000 ]]; then echo "ERROR: val 3 delegation does not match 25000 ($V3_DELEG)"; exit 1; fi
 if [[ ! $V4_DELEG -eq 65000 ]]; then echo "ERROR: val 4 delegation does not match 65000 ($V4_DELEG)"; exit 1; fi
+sleep 75
+
+TOTAL=0
+for i in $(docker-compose exec quicksilver quicksilverd q interchainstaking zones -o json | jq .zones[].delegation_addresses[].address -r | sort); do
+  TOTAL=$(docker-compose exec testzone icad q staking delegations ${i} --output=json | jq '.delegation_responses[].balance.amount' -r | awk "BEGIN{sum=$TOTAL} {sum+=\$0} END{print sum}")
+done
+
+if [[ ! $TOTAL -eq 136000 ]]; then echo "Total of delegation buckets does not match 136000 as expected (Actual: $TOTAL)"; exit 1; fi
 
 echo "All tests passed :)"
