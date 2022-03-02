@@ -16,6 +16,30 @@ services:
     command:
       - icad
       - start
+  testzone2:
+    image: quicksilverzone/testzone:latest
+    hostname: testzone2
+    volumes:
+      - ./data/test-2a:/icad/.ica
+    command:
+      - icad
+      - start
+  testzone3:
+    image: quicksilverzone/testzone:latest
+    hostname: testzone3
+    volumes:
+      - ./data/test-2b:/icad/.ica
+    command:
+      - icad
+      - start
+  testzone4:
+    image: quicksilverzone/testzone:latest
+    hostname: testzone4
+    volumes:
+      - ./data/test-2c:/icad/.ica
+    command:
+      - icad
+      - start
   hermes:
     image: quicksilverzone/hermes
     hostname: hermes
