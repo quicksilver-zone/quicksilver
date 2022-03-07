@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -xe
 
 QS_IMAGE=quicksilverzone/quicksilver
 QS_VERSION=latest
@@ -252,7 +252,7 @@ $TZ_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_2 -y --k
 docker-compose up --force-recreate -d icq
 
 echo "Register $CHAINID_2 on quicksilver..."
-$QS_EXEC tx interchainstaking register cosmos connection-0 $CHAINID_2 uqatom uatom --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test
+$QS_EXEC tx interchainstaking register cosmos connection-0 $CHAINID_2 uqatom uatom --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test --multi-send
 
 sleep 15
 
