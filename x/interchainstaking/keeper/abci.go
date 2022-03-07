@@ -9,8 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 // BeginBlocker of interchainstaking module
