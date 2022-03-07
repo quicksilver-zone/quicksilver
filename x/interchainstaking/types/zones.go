@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	math "math"
 	"sort"
 	"strings"
 
@@ -14,12 +15,12 @@ func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty int64) []*ICAAc
 		return delegationAccounts[i].DelegatedBalance.Amount.GT(delegationAccounts[j].DelegatedBalance.Amount)
 	})
 	if qty > 0 {
-		return delegationAccounts[:qty]
+		return delegationAccounts[:int(math.Min(float64(len(delegationAccounts)-1), float64(qty)))]
 	}
 	return delegationAccounts
 }
 
-func (z RegisteredZone) SupportMultiSend() bool { return false } // this should become part of the constructor/changable by governance
+func (z RegisteredZone) SupportMultiSend() bool { return z.MultiSend } // this should become part of the constructor/changable by governance
 
 func (z RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, error) {
 	for _, v := range z.Validators {
@@ -66,7 +67,7 @@ COINS:
 
 func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk.Coins) map[string]*ValidatorIntent {
 	// should we be return DelegatorIntent here?
-	out := make(map[string]*ValidatorIntent, 0)
+	out := make(map[string]*ValidatorIntent)
 	fmt.Println("coins", coins)
 	zoneVals := z.GetValidatorsAsSlice()
 	for _, coin := range coins {

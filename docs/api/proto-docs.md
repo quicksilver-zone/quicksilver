@@ -509,6 +509,7 @@ GenesisState defines the interchainstaking module's genesis state.
 | `redemption_rate` | [string](#string) |  |  |
 | `validators` | [Validator](#quicksilver.interchainstaking.v1.Validator) | repeated |  |
 | `delegator_intent` | [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry) | repeated |  |
+| `multi_send` | [bool](#bool) |  |  |
 
 
 
@@ -596,6 +597,7 @@ deprecate in favour of governance vote.
 | `base_denom` | [string](#string) |  |  |
 | `local_denom` | [string](#string) |  |  |
 | `from_address` | [string](#string) |  |  |
+| `multi_send` | [bool](#bool) |  |  |
 
 
 

@@ -9,6 +9,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
+const (
+	FlagMultiSend = "multi-send"
+)
+
 // GetTxCmd returns a root CLI command handler for all x/bank transaction commands.
 func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
@@ -42,13 +46,15 @@ func GetRegisterZoneTxCmd() *cobra.Command {
 			local_denom := args[3]
 			remote_denom := args[4]
 
-			msg := types.NewMsgRegisterZone(identifier, connection_id, chain_id, local_denom, remote_denom, clientCtx.GetFromAddress())
+			multi_send, _ := cmd.Flags().GetBool(FlagMultiSend)
+			msg := types.NewMsgRegisterZone(identifier, connection_id, chain_id, local_denom, remote_denom, clientCtx.GetFromAddress(), multi_send)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().Bool(FlagMultiSend, false, "multi-send support")
 
 	return cmd
 }
