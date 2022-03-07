@@ -12,16 +12,16 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *t
 
 	for _, asset := range account.Balance {
 		if asset.Denom == zone.GetBaseDenom() {
-			k.Logger(ctx).Info("Sending a MsgDelegate!", "asset", asset)
 			valoper_address, err := k.DetermineValidatorForDelegation(ctx, zone, account.Balance)
 			if err != nil {
 				panic("impossible!")
 			}
+			k.Logger(ctx).Info("Sending a MsgDelegate!", "asset", asset, "valoper", valoper_address)
 			msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: account.GetAddress(), ValidatorAddress: valoper_address, Amount: asset})
 		} else {
 			k.Logger(ctx).Info("Sending a MsgRedeemTokensforShares!", "asset", asset)
 
-			// validate this against validators?
+			// TODO: validate this against validators?
 			// if validator is not active, then redelegate msg too?
 			msgs = append(msgs, &stakingTypes.MsgRedeemTokensforShares{DelegatorAddress: account.GetAddress(), Amount: asset})
 		}

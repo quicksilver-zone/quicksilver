@@ -99,7 +99,6 @@ func (z RegisteredZone) GetValidatorsAsSlice() []string {
 }
 
 func (z RegisteredZone) DetermineStateIntentDiff(intents []DelegatorIntent) map[string]sdk.Dec {
-	fmt.Println("Calling DetermineStateIntentDiff()")
 	aggregateIntent := make(map[string]sdk.Dec)
 	totalAggregateIntent := sdk.ZeroDec()
 	currentState := make(map[string]sdk.Dec)
@@ -122,8 +121,6 @@ func (z RegisteredZone) DetermineStateIntentDiff(intents []DelegatorIntent) map[
 		totalAggregateIntent = totalAggregateIntent.Add(val)
 	}
 
-	fmt.Println("Total aggregate intent", "sum", totalAggregateIntent)
-
 	for _, i := range z.Validators {
 		stake := sdk.ZeroDec()
 		for _, delegation := range i.GetDelegations() {
@@ -133,9 +130,6 @@ func (z RegisteredZone) DetermineStateIntentDiff(intents []DelegatorIntent) map[
 		totalDelegations = totalDelegations.Add(stake)
 	}
 
-	fmt.Println("Total delegations", "sum", totalDelegations)
-
-	fmt.Println("Aggregated Intent", "vIntents", aggregateIntent)
 	ratio := totalDelegations.Quo(totalAggregateIntent) // will always be >= 1.0
 
 	for _, i := range z.Validators {
@@ -151,12 +145,7 @@ func (z RegisteredZone) DetermineStateIntentDiff(intents []DelegatorIntent) map[
 		if !thisDiff.Equal(sdk.ZeroDec()) {
 			diff[i.ValoperAddress] = thisDiff
 		}
-		fmt.Printf("DIFF: (desired: %s (mult: %s)), (current: %s), (diff: %s)\n", desired, desired.Mul(ratio), current, thisDiff)
-
 	}
 
-	fmt.Println("Aggregated Intent", "vIntents", aggregateIntent)
-	fmt.Println("Current State", "state", currentState)
-	fmt.Println("Diff", "diff", diff)
 	return diff
 }
