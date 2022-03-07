@@ -38,6 +38,7 @@
     - [PortConnectionTuple](#quicksilver.interchainstaking.v1.PortConnectionTuple)
     - [Receipt](#quicksilver.interchainstaking.v1.Receipt)
     - [RegisteredZone](#quicksilver.interchainstaking.v1.RegisteredZone)
+    - [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry)
     - [Validator](#quicksilver.interchainstaking.v1.Validator)
     - [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent)
   
@@ -397,6 +398,7 @@ Msg defines the interchainquery Msg service.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `delegation_address` | [string](#string) |  |  |
+| `validator_address` | [string](#string) |  |  |
 | `amount` | [string](#string) |  | TODO: determine whether this is Dec (shares) or Coins (tokens) |
 | `rewards` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 | `redelegation_end` | [int64](#int64) |  | Delegations here? or against validator? |
@@ -425,7 +427,7 @@ Msg defines the interchainquery Msg service.
 <a name="quicksilver.interchainstaking.v1.GenesisState"></a>
 
 ### GenesisState
-GenesisState defines the epochs module's genesis state.
+GenesisState defines the interchainstaking module's genesis state.
 
 
 | Field | Type | Label | Description |
@@ -502,10 +504,28 @@ GenesisState defines the epochs module's genesis state.
 | `chain_id` | [string](#string) |  |  |
 | `deposit_address` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) |  |  |
 | `delegation_addresses` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) | repeated |  |
-| `denom` | [string](#string) |  |  |
+| `local_denom` | [string](#string) |  |  |
+| `base_denom` | [string](#string) |  |  |
 | `redemption_rate` | [string](#string) |  |  |
 | `validators` | [Validator](#quicksilver.interchainstaking.v1.Validator) | repeated |  |
-| `delegator_intent` | [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent) | repeated |  |
+| `delegator_intent` | [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry) | repeated |  |
+| `multi_send` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry"></a>
+
+### RegisteredZone.DelegatorIntentEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent) |  |  |
 
 
 
@@ -574,8 +594,10 @@ deprecate in favour of governance vote.
 | `identifier` | [string](#string) |  |  |
 | `connection_id` | [string](#string) |  |  |
 | `chain_id` | [string](#string) |  |  |
-| `denom` | [string](#string) |  |  |
+| `base_denom` | [string](#string) |  |  |
+| `local_denom` | [string](#string) |  |  |
 | `from_address` | [string](#string) |  |  |
+| `multi_send` | [bool](#bool) |  |  |
 
 
 

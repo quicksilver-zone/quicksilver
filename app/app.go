@@ -385,15 +385,6 @@ func NewQuicksilver(
 		&stakingKeeper, govRouter,
 	)
 
-	// Quicksilver Keepers
-	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
-	app.EpochsKeeper = *epochsKeeper.SetHooks(
-		epochstypes.NewMultiEpochHooks(
-		// insert epoch hooks receivers here
-		// todo add interchain staking hooks here.
-		),
-	)
-
 	app.GovKeeper = *govKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(),
 	)
@@ -428,6 +419,14 @@ func NewQuicksilver(
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
 
 	interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
+
+	// Quicksilver Keepers
+	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
+	app.EpochsKeeper = *epochsKeeper.SetHooks(
+		epochstypes.NewMultiEpochHooks(
+			app.InterchainstakingKeeper.Hooks(),
+		),
+	)
 
 	icaControllerIBCModule := icacontroller.NewIBCModule(app.ICAControllerKeeper, interchainstakingIBCModule)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -59,11 +60,11 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *coretypes.ResultTx
 				}
 
 				k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
-				coin, err := sdk.ParseCoinNormalized(amount)
+				thisCoins, err := sdk.ParseCoinsNormalized(amount)
 				if err != nil {
 					k.Logger(ctx).Error("Unable to parse coin", "string", amount)
 				}
-				coins = coins.Add(coin)
+				coins = coins.Add(thisCoins...)
 			}
 		}
 	}
@@ -79,14 +80,19 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *coretypes.ResultTx
 		k.Logger(ctx).Error("Unable to decode sender address. Ignoring.", "sender", senderAddress)
 		return
 	}
+
+	if err := zone.ValidateCoinsForZone(ctx, coins); err != nil {
+		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before. That is okay, we'll catch it next round!)
+		k.Logger(ctx).Error("Unable to validate coins. Ignoring.", "sender", senderAddress)
+		return
+	}
+
 	var accAddress sdk.AccAddress = addressBytes
 
 	k.Logger(ctx).Info("Found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "sender", senderAddress, "local", accAddress.String(), "chain id", zone.ChainId, "amount", coins, "hash", hash)
 	// create receipt
 	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
 
-	fmt.Println(receipt)
-	// mint the thing!
 	k.UpdateIntent(ctx, accAddress, zone, coins)
 	k.MintQAsset(ctx, accAddress, zone, coins)
 	k.TransferToDelegate(ctx, zone, coins)
@@ -102,14 +108,10 @@ func attributesToMap(attrs []tmtypes.EventAttribute) map[string]string {
 }
 
 func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.RegisteredZone, inCoins sdk.Coins) error {
-	baseDenom := zone.Denom
 	outCoins := sdk.Coins{}
-	// TODO: handle SI units
-	qDenom := "q" + baseDenom
 	for _, inCoin := range inCoins {
-		// validate inCoin.Denom vs validators
 		outAmount := inCoin.Amount.ToDec().Quo(zone.RedemptionRate).TruncateInt()
-		outCoin := sdk.NewCoin(qDenom, outAmount)
+		outCoin := sdk.NewCoin(zone.LocalDenom, outAmount)
 		outCoins = outCoins.Add(outCoin)
 	}
 	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", outCoins)
@@ -127,22 +129,18 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.R
 	return nil
 }
 
-func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types.RegisteredZone, inAmount sdk.Coins) error {
-	// no-op
-	return nil
-}
-
 func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, inAmount sdk.Coins) error {
 	if zone.SupportMultiSend() {
 		return k.TransferToDelegateMulti(ctx, zone, inAmount)
 	} else {
 		eachAmount := sdk.Coins{}
+		splits := int64(math.Min(types.DelegationAccountSplit, float64(len(zone.DelegationAddresses))))
 
 		for _, asset := range inAmount {
-			thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewInt(types.DelegationAccountSplit))}
+			thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewInt(splits))}
 			eachAmount = eachAmount.Add(thisAsset)
 		}
-		accounts := zone.GetDelegationAccountsByLowestBalance(types.DelegationAccountSplit)
+		accounts := zone.GetDelegationAccountsByLowestBalance(splits)
 
 		// reverse this slice; because we want the smallest account last, so the remainder ends in it.
 		for i, j := 0, len(accounts)-1; i < j; i, j = i+1, j-1 {
@@ -169,9 +167,9 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 
 func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZone, inAmount sdk.Coins) error {
 	eachAmount := sdk.Coins{}
-
+	splits := int64(math.Min(types.DelegationAccountSplit, float64(len(zone.DelegationAddresses))))
 	for _, asset := range inAmount {
-		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewInt(types.DelegationAccountSplit))}
+		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewInt(splits))}
 		eachAmount = eachAmount.Add(thisAsset)
 	}
 
@@ -180,7 +178,7 @@ func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZ
 
 	in = append(in, bankTypes.Input{Address: zone.DepositAddress.GetAddress(), Coins: inAmount})
 
-	accounts := zone.GetDelegationAccountsByLowestBalance(types.DelegationAccountSplit)
+	accounts := zone.GetDelegationAccountsByLowestBalance(splits)
 	for _, account := range accounts {
 		out = append(out, bankTypes.Output{Address: account.GetAddress(), Coins: eachAmount})
 		inAmount = inAmount.Sub(eachAmount)

@@ -11,7 +11,6 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// set registered zones info from genesis
-	ctx.Logger().Error(string(len(genState.Queries)))
 	for _, query := range genState.Queries {
 		// Initialize empty epoch values via Cosmos SDK
 		k.SetPeriodicQuery(ctx, query)

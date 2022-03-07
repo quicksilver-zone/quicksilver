@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+set -xe
 
 QS_IMAGE=quicksilverzone/quicksilver
 QS_VERSION=latest
@@ -219,12 +219,14 @@ sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config
 
 ## add the message types ICA should allow
 jq '.app_state.interchainaccounts.host_genesis_state.params.allow_messages = ["/cosmos.bank.v1beta1.MsgSend", "/cosmos.bank.v1beta1.MsgMultiSend", "/cosmos.staking.v1beta1.MsgDelegate", "/cosmos.staking.v1beta1.MsgRedeemTokensforShares", "/cosmos.staking.v1beta1.MsgTokenizeShares", "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward"]' ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json{.new,}
+jq '.app.state.mint.minter.inflation = "2.530000000000000000"' ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json{.new,}
+jq '.app.state.mint.params.max_inflation = "2.530000000000000000"' ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json{.new,}
 cp ./${CHAIN_DIR}/${CHAINID_2}{,a}/config/genesis.json
 cp ./${CHAIN_DIR}/${CHAINID_2}{,b}/config/genesis.json
 cp ./${CHAIN_DIR}/${CHAINID_2}{,c}/config/genesis.json
 
 ## set the 'epoch' epoch to 5m interval
-jq '.app_state.epochs.epochs = [{"identifier": "epoch","start_time": "0001-01-01T00:00:00Z","duration": "300s","current_epoch": "0","current_epoch_start_time": "0001-01-01T00:00:00Z","epoch_counting_started": false,"current_epoch_start_height": "0"}]' ./${CHAIN_DIR}/${CHAINID_1}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_1}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_1}/config/genesis.json{.new,}
+jq '.app_state.epochs.epochs = [{"identifier": "epoch","start_time": "0001-01-01T00:00:00Z","duration": "600s","current_epoch": "0","current_epoch_start_time": "0001-01-01T00:00:00Z","epoch_counting_started": false,"current_epoch_start_height": "0"}]' ./${CHAIN_DIR}/${CHAINID_1}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_1}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_1}/config/genesis.json{.new,}
 
 docker-compose up --force-recreate -d quicksilver testzone testzone2 testzone3 testzone4
 echo "Chains created"
@@ -250,7 +252,7 @@ $TZ_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_2 -y --k
 docker-compose up --force-recreate -d icq
 
 echo "Register $CHAINID_2 on quicksilver..."
-$QS_EXEC tx interchainstaking register cosmos connection-0 $CHAINID_2 uatom --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test
+$QS_EXEC tx interchainstaking register cosmos connection-0 $CHAINID_2 uqatom uatom --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test --multi-send
 
 sleep 15
 
@@ -302,5 +304,13 @@ V4_DELEG=$(docker-compose exec testzone icad q staking delegations-to ${VAL_VALO
 if [[ ! $V2_DELEG -eq 46000 ]]; then echo "ERROR: val 2 delegation does not match 46000 ($V2_DELEG)"; exit 1; fi
 if [[ ! $V3_DELEG -eq 25000 ]]; then echo "ERROR: val 3 delegation does not match 25000 ($V3_DELEG)"; exit 1; fi
 if [[ ! $V4_DELEG -eq 65000 ]]; then echo "ERROR: val 4 delegation does not match 65000 ($V4_DELEG)"; exit 1; fi
+sleep 90
+
+TOTAL=0
+for i in $(docker-compose exec quicksilver quicksilverd q interchainstaking zones -o json | jq .zones[].delegation_addresses[].address -r | sort); do
+  TOTAL=$(docker-compose exec testzone icad q staking delegations ${i} --output=json | jq '.delegation_responses[].balance.amount' -r | awk "BEGIN{sum=$TOTAL} {sum+=\$0} END{print sum}")
+done
+
+if [[ ! $TOTAL -eq 136000 ]]; then echo "Total of delegation buckets does not match 136000 as expected (Actual: $TOTAL)"; exit 1; fi
 
 echo "All tests passed :)"

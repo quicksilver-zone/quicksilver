@@ -9,6 +9,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
+const (
+	FlagMultiSend = "multi-send"
+)
+
 // GetTxCmd returns a root CLI command handler for all x/bank transaction commands.
 func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
@@ -27,9 +31,9 @@ func GetTxCmd() *cobra.Command {
 // GetRegisterZoneTxCmd returns a CLI command handler for creating a MsgSend transaction.
 func GetRegisterZoneTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "register [identifier] [chain_id] [local_denom] [remote_denom]",
+		Use:   "register [identifier] [connection_id] [chain_id] [local_denom] [remote_denom]",
 		Short: `Send funds from one account to another.`,
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 
@@ -37,17 +41,20 @@ func GetRegisterZoneTxCmd() *cobra.Command {
 				return err
 			}
 			identifier := args[0]
-			chain_id := args[1]
-			local_denom := args[2]
-			remote_denom := args[3]
+			connection_id := args[1]
+			chain_id := args[2]
+			local_denom := args[3]
+			remote_denom := args[4]
 
-			msg := types.NewMsgRegisterZone(identifier, chain_id, local_denom, remote_denom, clientCtx.GetFromAddress())
+			multi_send, _ := cmd.Flags().GetBool(FlagMultiSend)
+			msg := types.NewMsgRegisterZone(identifier, connection_id, chain_id, local_denom, remote_denom, clientCtx.GetFromAddress(), multi_send)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().Bool(FlagMultiSend, false, "multi-send support")
 
 	return cmd
 }

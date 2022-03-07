@@ -68,3 +68,35 @@ func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
 	})
 	return zones
 }
+
+func (k Keeper) DetermineValidatorForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coins) (string, error) {
+	intents := k.AllOrdinalizedIntents(ctx, zone)
+
+	diffs := zone.DetermineStateIntentDiff(intents)
+	val, _, err := smallestDecFromMap(diffs) // always delegate to 'furthest away'
+	if err != nil {
+		return "", err
+	}
+	return val, nil
+}
+
+func smallestDecFromMap(numbers map[string]sdk.Dec) (string, sdk.Dec, error) {
+	if len(numbers) == 0 {
+		return "", sdk.ZeroDec(), fmt.Errorf("zero-length input")
+	}
+
+	var minKey string
+	var minNumber sdk.Dec
+
+	for minKey, minNumber = range numbers {
+		break
+	}
+
+	for v, n := range numbers {
+		if n.LT(minNumber) {
+			minNumber = n
+			minKey = v
+		}
+	}
+	return minKey, minNumber, nil
+}
