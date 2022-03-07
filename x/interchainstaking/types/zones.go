@@ -130,7 +130,7 @@ func (z RegisteredZone) DetermineStateIntentDiff(intents []DelegatorIntent) map[
 	for _, i := range z.Validators {
 		current, found := currentState[i.ValoperAddress]
 		if !found {
-			panic("this shouldfn't happen...")
+			panic("this shouldn't happen...")
 		}
 		desired, found := aggregateIntent[i.ValoperAddress]
 		if !found {
