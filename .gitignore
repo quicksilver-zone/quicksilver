@@ -20,6 +20,7 @@ build
 bin
 tools/bin/*
 dist
-
+tools-stamp
 rocksdb
 data
+

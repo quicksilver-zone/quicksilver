@@ -179,86 +179,32 @@ build-all: tools build lint test
 ###                          Tools & Dependencies                           ###
 ###############################################################################
 
-TOOLS_DESTDIR  ?= $(GOPATH)/bin
-STATIK         = $(TOOLS_DESTDIR)/statik
-RUNSIM         = $(TOOLS_DESTDIR)/runsim
+golangci-lint:
+	@echo "Installaing golangci-lint"
+	@(go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.44.2)
 
-# Install the runsim binary with a temporary workaround of entering an outside
-# directory as the "go get" command ignores the -mod option and will polute the
-# go.{mod, sum} files.
-#
-# ref: https://github.com/golang/go/issues/30515
-runsim: $(RUNSIM)
-$(RUNSIM):
+runsim:
 	@echo "Installing runsim..."
-	@(cd /tmp && ${GO_MOD} go get github.com/cosmos/tools/cmd/runsim@master)
+	@(go install github.com/cosmos/tools/cmd/runsim@master)
 
-statik: $(STATIK)
-$(STATIK):
+statik:
 	@echo "Installing statik..."
-	@(cd /tmp && go get github.com/rakyll/statik@v0.1.6)
+	@(go install github.com/rakyll/statik@v0.1.6)
 
-contract-tools:
-ifeq (, $(shell which stringer))
-	@echo "Installing stringer..."
-	@go get golang.org/x/tools/cmd/stringer
-else
-	@echo "stringer already installed; skipping..."
-endif
+misspell:
+	@echo "Installing misspell..."
+	@(go install github.com/client9/misspell/cmd/misspell@master)
 
-ifeq (, $(shell which go-bindata))
-	@echo "Installing go-bindata..."
-	@go get github.com/kevinburke/go-bindata/go-bindata
-else
-	@echo "go-bindata already installed; skipping..."
-endif
+goimports:
+	@echo "Installing goimports..."
+	@(go install golang.org/x/tools/cmd/goimports@latest)
 
-ifeq (, $(shell which gencodec))
-	@echo "Installing gencodec..."
-	@go get github.com/fjl/gencodec
-else
-	@echo "gencodec already installed; skipping..."
-endif
-
-ifeq (, $(shell which protoc-gen-go))
-	@echo "Installing protoc-gen-go..."
-	@go get github.com/fjl/gencodec github.com/golang/protobuf/protoc-gen-go
-else
-	@echo "protoc-gen-go already installed; skipping..."
-endif
-
-ifeq (, $(shell which protoc))
-	@echo "Please istalling protobuf according to your OS"
-	@echo "macOS: brew install protobuf"
-	@echo "linux: apt-get install -f -y protobuf-compiler"
-else
-	@echo "protoc already installed; skipping..."
-endif
-
-ifeq (, $(shell which solcjs))
-	@echo "Installing solcjs..."
-	@npm install -g solc@0.5.11
-else
-	@echo "solcjs already installed; skipping..."
-endif
-
-docs-tools:
-ifeq (, $(shell which yarn))
-	@echo "Installing yarn..."
-	@npm install -g yarn
-else
-	@echo "yarn already installed; skipping..."
-endif
 
 tools: tools-stamp
-tools-stamp: contract-tools docs-tools proto-tools statik runsim
-	# Create dummy file to satisfy dependency and avoid
-	# rebuilding when this Makefile target is hit twice
-	# in a row.
+tools-stamp: contract-tools docs-tools proto-tools statik runsim misspell goimports golangci-lint
 	touch $@
 
 tools-clean:
-	rm -f $(RUNSIM)
 	rm -f tools-stamp
 
 docs-tools-stamp: docs-tools
@@ -376,24 +322,24 @@ test-sim-custom-genesis-fast:
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppImportExport
+	@runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppImportExport
 
 test-sim-after-import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppSimulationAfterImport
+	@runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppSimulationAfterImport
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.$(QS_DIR)/config/genesis.json will be used."
-	@$(BINDIR)/runsim -Genesis=${HOME}/.$(QS_DIR)/config/genesis.json -SimAppPkg=$(SIMAPP) -ExitOnFail 400 5 TestFullAppSimulation
+	@runsim -Genesis=${HOME}/.$(QS_DIR)/config/genesis.json -SimAppPkg=$(SIMAPP) -ExitOnFail 400 5 TestFullAppSimulation
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation. This may take awhile!"
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestFullAppSimulation
+	@runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestFullAppSimulation
 
 test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 10 TestFullAppSimulation
+	@runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 10 TestFullAppSimulation
 
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
@@ -422,26 +368,15 @@ benchmark:
 lint:
 	golangci-lint run --out-format=tab
 
-lint-contracts:
-	@cd contracts && \
-	npm i && \
-	npm run lint
-
 lint-fix:
 	golangci-lint run --fix --out-format=tab --issues-exit-code=0
-
-lint-fix-contracts:
-	@cd contracts && \
-	npm i && \
-	npm run lint-fix
-
-.PHONY: lint lint-fix
 
 format:
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name '*.pb.go' | xargs gofmt -w -s
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name '*.pb.go' | xargs misspell -w
 	find . -name '*.go' -type f -not -path "./vendor*" -not -path "*.git*" -not -path "./client/docs/statik/statik.go" -not -name '*.pb.go' | xargs goimports -w -local github.com/ingenuity-build/quicksilver
-.PHONY: format
+
+.PHONY: format lint lint-fix
 
 ###############################################################################
 ###                                Protobuf                                 ###
