@@ -12,8 +12,7 @@ import (
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	// set registered zones info from genesis
 	for _, zone := range genState.Zones {
-		// Initialize empty epoch values via Cosmos SDK
-		// instantiate connections to ICAs based upon genesis values
+		// TODO: instantiate connections to ICAs based upon genesis values
 		k.SetRegisteredZone(ctx, zone)
 	}
 }

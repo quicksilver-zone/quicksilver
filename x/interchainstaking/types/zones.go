@@ -20,7 +20,7 @@ func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty int64) []*ICAAc
 	return delegationAccounts
 }
 
-func (z RegisteredZone) SupportMultiSend() bool { return z.MultiSend } // this should become part of the constructor/changable by governance
+func (z RegisteredZone) SupportMultiSend() bool { return z.MultiSend }
 
 func (z RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, error) {
 	for _, v := range z.Validators {
@@ -40,7 +40,6 @@ func (z RegisteredZone) GetDelegationsForDelegator(delegator string) []*Delegati
 		}
 		delegations = append(delegations, delegation)
 	}
-	fmt.Printf("GetDelegationForDelegator(%s): %v", delegator, delegations)
 	return delegations
 }
 
@@ -68,16 +67,13 @@ COINS:
 func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk.Coins) map[string]*ValidatorIntent {
 	// should we be return DelegatorIntent here?
 	out := make(map[string]*ValidatorIntent)
-	fmt.Println("coins", coins)
 	zoneVals := z.GetValidatorsAsSlice()
 	for _, coin := range coins {
 		for _, v := range zoneVals {
 			// if token share, add amount to
 			if strings.HasPrefix(coin.Denom, v) {
-				fmt.Println("Found matching val")
 				val, ok := out[v]
 				if !ok {
-					fmt.Println("No intent found (ok) adding zero intent")
 					val = &ValidatorIntent{ValoperAddress: v, Weight: sdk.ZeroDec()}
 				}
 				val.Weight = val.Weight.Add(sdk.NewDecFromInt(coin.Amount))
@@ -85,7 +81,6 @@ func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk
 			}
 		}
 	}
-	fmt.Println("intents", out)
 
 	return out
 }

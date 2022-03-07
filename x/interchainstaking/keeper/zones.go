@@ -27,7 +27,6 @@ func (k Keeper) SetRegisteredZone(ctx sdk.Context, zone types.RegisteredZone) {
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := k.cdc.MustMarshal(&zone)
-	ctx.Logger().Error(fmt.Sprintf("Writing the zone: %v", zone))
 	store.Set([]byte(zone.ChainId), bz)
 }
 

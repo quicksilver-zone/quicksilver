@@ -13,6 +13,9 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *t
 	for _, asset := range account.Balance {
 		if asset.Denom == zone.GetBaseDenom() {
 			valoper_address, err := k.DetermineValidatorForDelegation(ctx, zone, account.Balance)
+			// TODO: return multiple validators here; consider the size of the delegation too - are we going to increase balance 'too far'?
+			// given that we pass in the account balance, we should be able to return a map of valoper:balance and send the requisite MsgDelegates.
+			// this is less important for rewards, but far more important for deposits of native assets.
 			if err != nil {
 				panic("impossible!")
 			}
@@ -26,7 +29,6 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *t
 			msgs = append(msgs, &stakingTypes.MsgRedeemTokensforShares{DelegatorAddress: account.GetAddress(), Amount: asset})
 		}
 	}
-
 	return k.SubmitTx(ctx, msgs, account)
 }
 
@@ -40,7 +42,5 @@ func (k *Keeper) WithdrawDelegationRewards(ctx sdk.Context, zone types.Registere
 	if len(msgs) == 0 {
 		return nil
 	}
-	k.Logger(ctx).Info("Submitting messages", "msgs", msgs)
-
 	return k.SubmitTx(ctx, msgs, account)
 }
