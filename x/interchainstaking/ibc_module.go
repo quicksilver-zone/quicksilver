@@ -156,6 +156,8 @@ func (im IBCModule) OnAcknowledgementPacket(
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
+	// temp for debugging
+	im.keeper.Logger(ctx).Info("Received acknowledgement packet", "packet", packet.Data, "acknowledgement", acknowledgement)
 	return nil
 }
 

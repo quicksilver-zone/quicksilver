@@ -27,9 +27,9 @@ func GetTxCmd() *cobra.Command {
 // GetRegisterZoneTxCmd returns a CLI command handler for creating a MsgSend transaction.
 func GetRegisterZoneTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "register [identifier] [chain_id] [local_denom] [remote_denom]",
+		Use:   "register [identifier] [connection_id] [chain_id] [local_denom] [remote_denom]",
 		Short: `Send funds from one account to another.`,
-		Args:  cobra.ExactArgs(4),
+		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 
@@ -37,11 +37,12 @@ func GetRegisterZoneTxCmd() *cobra.Command {
 				return err
 			}
 			identifier := args[0]
-			chain_id := args[1]
-			local_denom := args[2]
-			remote_denom := args[3]
+			connection_id := args[1]
+			chain_id := args[2]
+			local_denom := args[3]
+			remote_denom := args[4]
 
-			msg := types.NewMsgRegisterZone(identifier, chain_id, local_denom, remote_denom, clientCtx.GetFromAddress())
+			msg := types.NewMsgRegisterZone(identifier, connection_id, chain_id, local_denom, remote_denom, clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

@@ -13,14 +13,15 @@ message RegisteredZone {
   string chain_id = 3;
   ICAAccount deposit_address = 4;
   repeated ICAAccount delegation_addresses = 5;
-  string denom = 6;
-  string redemption_rate = 7 [
+  string local_denom = 6;
+  string base_denom = 7;
+  string redemption_rate = 8 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  repeated Validator validators = 8;
-  repeated DelegatorIntent delegator_intent = 9;
+  repeated Validator validators = 9;
+  map<string, DelegatorIntent> delegator_intent = 10;
 }
 
 message ICAAccount {

@@ -95,7 +95,6 @@ func (k Keeper) GetPeriodicQuery(ctx sdk.Context, id string) (types.PeriodicQuer
 
 // SetPeriodicQuery set query info
 func (k Keeper) SetPeriodicQuery(ctx sdk.Context, query types.PeriodicQuery) {
-
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPeriodicQuery)
 	bz := k.cdc.MustMarshal(&query)
 	k.Logger(ctx).Info("Created/updated query", "ID", query.Id)

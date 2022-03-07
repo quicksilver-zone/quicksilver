@@ -80,14 +80,19 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *coretypes.ResultTx
 		k.Logger(ctx).Error("Unable to decode sender address. Ignoring.", "sender", senderAddress)
 		return
 	}
+
+	if err := zone.ValidateCoinsForZone(ctx, coins); err != nil {
+		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before. That is okay, we'll catch it next round!)
+		k.Logger(ctx).Error("Unable to validate coins. Ignoring.", "sender", senderAddress)
+		return
+	}
+
 	var accAddress sdk.AccAddress = addressBytes
 
 	k.Logger(ctx).Info("Found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "sender", senderAddress, "local", accAddress.String(), "chain id", zone.ChainId, "amount", coins, "hash", hash)
 	// create receipt
 	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
 
-	fmt.Println(receipt)
-	// mint the thing!
 	k.UpdateIntent(ctx, accAddress, zone, coins)
 	k.MintQAsset(ctx, accAddress, zone, coins)
 	k.TransferToDelegate(ctx, zone, coins)
@@ -103,14 +108,10 @@ func attributesToMap(attrs []tmtypes.EventAttribute) map[string]string {
 }
 
 func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.RegisteredZone, inCoins sdk.Coins) error {
-	baseDenom := zone.Denom
 	outCoins := sdk.Coins{}
-	// TODO: handle SI units
-	qDenom := "q" + baseDenom
 	for _, inCoin := range inCoins {
-		// validate inCoin.Denom vs validators
 		outAmount := inCoin.Amount.ToDec().Quo(zone.RedemptionRate).TruncateInt()
-		outCoin := sdk.NewCoin(qDenom, outAmount)
+		outCoin := sdk.NewCoin(zone.LocalDenom, outAmount)
 		outCoins = outCoins.Add(outCoin)
 	}
 	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", outCoins)
@@ -125,11 +126,6 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.R
 	}
 	k.Logger(ctx).Info("Transferred qAssets to sender", "assets", outCoins, "sender", sender)
 
-	return nil
-}
-
-func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types.RegisteredZone, inAmount sdk.Coins) error {
-	// no-op
 	return nil
 }
 

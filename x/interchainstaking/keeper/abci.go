@@ -16,6 +16,55 @@ import (
 // BeginBlocker of interchainstaking module
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+
+	if ctx.BlockHeight()%types.ValidatorSetInterval == 0 {
+		k.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
+			k.Logger(ctx).Error("Setting validators for zone", "zone", zoneInfo.ChainId)
+			// we must populate validators first, else the next piece fails :)
+			validator_data, err := k.ICQKeeper.GetDatapoint(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingTypes.BondStatusBonded})
+			if err != nil {
+				k.Logger(ctx).Error("Unable to query validators for zone", "zone", zoneInfo.ChainId)
+				return false
+			}
+			if validator_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - types.DelegateDelegationsInterval)) {
+				k.Logger(ctx).Error(fmt.Sprintf("Validators Info for zone is older than %d blocks", types.DelegateDelegationsInterval), "zone", zoneInfo.ChainId)
+				return false
+			}
+			validatorsRes := stakingTypes.QueryValidatorsResponse{}
+			err = k.cdc.UnmarshalJSON(validator_data.Value, &validatorsRes)
+			if err != nil {
+				k.Logger(ctx).Error("Unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
+			}
+			for _, validator := range validatorsRes.Validators {
+				val, err := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
+				if err != nil {
+					k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
+					zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
+						ValoperAddress: validator.OperatorAddress,
+						CommissionRate: validator.GetCommission(),
+						VotingPower:    sdk.NewDecFromInt(validator.Tokens),
+						Delegations:    []*types.Delegation{},
+					})
+				} else {
+					if val.CommissionRate != validator.GetCommission() {
+						val.CommissionRate = validator.GetCommission()
+						k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
+					}
+
+					if val.VotingPower != sdk.NewDecFromInt(validator.Tokens) {
+						val.VotingPower = sdk.NewDecFromInt(validator.Tokens)
+						k.Logger(ctx).Info("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens.ToDec())
+					}
+				}
+
+			}
+			// also do this for Unbonded and Unbonding
+			k.SetRegisteredZone(ctx, zoneInfo)
+
+			return false
+		})
+	}
+
 	// every N blocks, emit QueryAccountBalances event.
 	if ctx.BlockHeight()%types.DepositInterval == 0 {
 		k.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
@@ -104,46 +153,6 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 
 	if ctx.BlockHeight()%types.DelegateDelegationsInterval == 0 {
 		k.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
-			// we must populate validators first, else the next piece fails :)
-			validator_data, err := k.ICQKeeper.GetDatapoint(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingTypes.BondStatusBonded})
-			if err != nil {
-				k.Logger(ctx).Error("Unable to query validators for zone", "zone", zoneInfo.ChainId)
-				return false
-			}
-			if validator_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - types.DelegateDelegationsInterval)) {
-				k.Logger(ctx).Error(fmt.Sprintf("Validators Info for zone is older than %d blocks", types.DelegateDelegationsInterval), "zone", zoneInfo.ChainId)
-				return false
-			}
-			validatorsRes := stakingTypes.QueryValidatorsResponse{}
-			err = k.cdc.UnmarshalJSON(validator_data.Value, &validatorsRes)
-			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
-			}
-			for _, validator := range validatorsRes.Validators {
-				val, err := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
-				if err != nil {
-					k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
-					zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
-						ValoperAddress: validator.OperatorAddress,
-						CommissionRate: validator.GetCommission(),
-						VotingPower:    sdk.NewDecFromInt(validator.Tokens),
-						Delegations:    []*types.Delegation{},
-					})
-				} else {
-					if val.CommissionRate != validator.GetCommission() {
-						val.CommissionRate = validator.GetCommission()
-						k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
-					}
-
-					if val.VotingPower != sdk.NewDecFromInt(validator.Tokens) {
-						val.VotingPower = sdk.NewDecFromInt(validator.Tokens)
-						k.Logger(ctx).Info("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens.ToDec())
-					}
-				}
-
-			}
-			// also do this for Unbonded and Unbonding
-
 			// populate / handle delegations
 			for _, da := range zoneInfo.DelegationAddresses {
 				k.Logger(ctx).Info("DelegateAccount", "zone", zoneInfo.Identifier, "delegation_address", zoneInfo.DepositAddress.GetAddress())
@@ -162,7 +171,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 					k.Logger(ctx).Error("Unable to unmarshal delegations info for delegate account", "delegation_address", zoneInfo.DepositAddress.GetAddress(), "err", err)
 				}
 				delegations := delegationsRes.DelegationResponses
-				daBalance := sdk.Coin{Amount: sdk.ZeroInt(), Denom: zoneInfo.Denom}
+				daBalance := sdk.Coin{Amount: sdk.ZeroInt(), Denom: zoneInfo.BaseDenom}
 				for _, d := range delegations {
 					delegator := d.Delegation.DelegatorAddress
 					if delegator != da.GetAddress() {

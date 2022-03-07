@@ -6,8 +6,8 @@ func NewGenesisState(zones []RegisteredZone) *GenesisState {
 
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
-	epochs := []RegisteredZone{}
-	return NewGenesisState(epochs)
+	zones := []RegisteredZone{}
+	return NewGenesisState(zones)
 }
 
 // Validate performs basic genesis state validation returning an error upon any

@@ -27,6 +27,7 @@ func (k Keeper) SetRegisteredZone(ctx sdk.Context, zone types.RegisteredZone) {
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := k.cdc.MustMarshal(&zone)
+	ctx.Logger().Error(fmt.Sprintf("Writing the zone: %v", zone))
 	store.Set([]byte(zone.ChainId), bz)
 }
 
@@ -67,4 +68,14 @@ func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
 		return false
 	})
 	return zones
+}
+
+func (k Keeper) DetermineValidatorForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coins) (string, error) {
+	intents := k.AllOrdinalizedIntents(ctx, zone)
+
+	diffs := zone.DetermineStateIntentDiff(intents)
+	for key := range diffs {
+		return key, nil
+	}
+	return "", fmt.Errorf("Raa")
 }

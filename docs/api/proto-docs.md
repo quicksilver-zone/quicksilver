@@ -38,6 +38,7 @@
     - [PortConnectionTuple](#quicksilver.interchainstaking.v1.PortConnectionTuple)
     - [Receipt](#quicksilver.interchainstaking.v1.Receipt)
     - [RegisteredZone](#quicksilver.interchainstaking.v1.RegisteredZone)
+    - [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry)
     - [Validator](#quicksilver.interchainstaking.v1.Validator)
     - [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent)
   
@@ -503,10 +504,27 @@ GenesisState defines the interchainstaking module's genesis state.
 | `chain_id` | [string](#string) |  |  |
 | `deposit_address` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) |  |  |
 | `delegation_addresses` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) | repeated |  |
-| `denom` | [string](#string) |  |  |
+| `local_denom` | [string](#string) |  |  |
+| `base_denom` | [string](#string) |  |  |
 | `redemption_rate` | [string](#string) |  |  |
 | `validators` | [Validator](#quicksilver.interchainstaking.v1.Validator) | repeated |  |
-| `delegator_intent` | [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent) | repeated |  |
+| `delegator_intent` | [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry) | repeated |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry"></a>
+
+### RegisteredZone.DelegatorIntentEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent) |  |  |
 
 
 
@@ -575,7 +593,8 @@ deprecate in favour of governance vote.
 | `identifier` | [string](#string) |  |  |
 | `connection_id` | [string](#string) |  |  |
 | `chain_id` | [string](#string) |  |  |
-| `denom` | [string](#string) |  |  |
+| `base_denom` | [string](#string) |  |  |
+| `local_denom` | [string](#string) |  |  |
 | `from_address` | [string](#string) |  |  |
 
 

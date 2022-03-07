@@ -19,8 +19,8 @@ var _ sdk.Msg = &MsgSignalIntent{}
 
 // NewMsgRegisterZone - construct a msg to register a new zone.
 //nolint:interfacer
-func NewMsgRegisterZone(identifier string, connection_id string, chain_id string, denom string, from_address sdk.Address) *MsgRegisterZone {
-	return &MsgRegisterZone{Identifier: identifier, ConnectionId: connection_id, ChainId: chain_id, Denom: denom, FromAddress: from_address.String()}
+func NewMsgRegisterZone(identifier string, connection_id string, chain_id string, local_denom string, base_denom string, from_address sdk.Address) *MsgRegisterZone {
+	return &MsgRegisterZone{Identifier: identifier, ConnectionId: connection_id, ChainId: chain_id, LocalDenom: local_denom, BaseDenom: base_denom, FromAddress: from_address.String()}
 }
 
 // Route Implements Msg.
