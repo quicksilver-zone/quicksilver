@@ -87,7 +87,25 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 }
 
 func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {
-	_ = sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// get zone
+	zone, ok := k.GetRegisteredZoneInfo(ctx, msg.ChainId)
+	if !ok {
+		return nil, fmt.Errorf("invalid chain id \"%s\"", msg.ChainId)
+	}
+
+	// validate intents
+	if err := k.validateIntents(zone, msg.Intents); err != nil {
+		return nil, err
+	}
+
+	intent := types.DelegatorIntent{
+		Delegator: msg.FromAddress,
+		Intents:   msg.Intents,
+	}
+
+	k.SetIntent(ctx, zone, intent)
 
 	// ctx.EventManager().EmitEvents(sdk.Events{
 	// 	sdk.NewEvent(
@@ -102,4 +120,15 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	// })
 
 	return &types.MsgSignalIntentResponse{}, nil
+}
+
+func (k msgServer) validateIntents(zone types.RegisteredZone, intents []*types.ValidatorIntent) error {
+	for i, intent := range intents {
+		_, err := zone.GetValidatorByValoper(intent.ValoperAddress)
+		if err != nil {
+			return fmt.Errorf("invalid intent [%v]: %w", i, err)
+		}
+	}
+
+	return nil
 }

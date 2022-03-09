@@ -1,6 +1,9 @@
 package types
 
 import (
+	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -109,33 +112,52 @@ func (msg MsgRequestRedemption) GetSigners() []sdk.AccAddress {
 
 //----------------------------------------------------------------
 
+// IntentsFromString validates and parses the given string into a slice
+// containing pointers to ValidatorIntent. The combined weights must be 1.0 and
+// the valoper addresses must be of valid Bech32 string format.
+//
+// Tokens are comma separated, e.g.
+// "0.3cosmos1xxxxxxxxx,0.3cosmos1yyyyyyyyy,0.4cosmos1zzzzzzzzz".
 func IntentsFromString(input string) ([]*ValidatorIntent, error) {
-	out := []*ValidatorIntent{}
-	parts := strings.Split(input, ";")
-	for _, val := range parts {
-		vparts := strings.SplitN(val, ",", 2)
-		// validator should be a valoper address
-		// weight should be a float
-		// validate me please!
-		weight, err := sdk.NewDecFromStr(vparts[1])
-		if err != nil {
-			return []*ValidatorIntent{}, err
-		}
-		v := ValidatorIntent{vparts[0], weight}
-		out = append(out, &v)
+	iexpr := regexp.MustCompile(`(\d.\d+)(\w+1\w+)`)
+	pexpr := regexp.MustCompile(fmt.Sprintf("%s(,%s)*", iexpr.String(), iexpr.String()))
+	if !pexpr.MatchString(input) {
+		return nil, fmt.Errorf("invalid input string")
 	}
+
+	out := []*ValidatorIntent{}
+	wsum := 0.0
+
+	istrs := strings.Split(input, ",")
+	for i, istr := range istrs {
+		wstr := iexpr.ReplaceAllString(istr, "$1")
+		wf, _ := strconv.ParseFloat(wstr, 32)
+		weight, err := sdk.NewDecFromStr(wstr)
+		if err != nil {
+			return nil, err
+		}
+		wsum += wf
+
+		valoper, err := sdk.AccAddressFromBech32(iexpr.ReplaceAllString(istr, "$2"))
+		if err != nil {
+			return nil, fmt.Errorf("invalid address for token [%v]", i)
+		}
+
+		v := &ValidatorIntent{valoper.String(), weight}
+		out = append(out, v)
+	}
+
+	if wsum != 1.0 {
+		return nil, fmt.Errorf("incomplete intent, sum of weights must be 1.0 (got %.2f)", wsum)
+	}
+
 	return out, nil
 }
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
 //nolint:interfacer
-func NewMsgSignalIntent(chain_id string, intents string, from_address sdk.Address) *MsgSignalIntent {
-	intent_obj, err := IntentsFromString(intents)
-	if err != nil {
-		return nil
-	}
-
-	return &MsgSignalIntent{ChainId: chain_id, Intents: intent_obj, FromAddress: from_address.String()}
+func NewMsgSignalIntent(chain_id string, intents []*ValidatorIntent, from_address sdk.Address) *MsgSignalIntent {
+	return &MsgSignalIntent{ChainId: chain_id, Intents: intents, FromAddress: from_address.String()}
 }
 
 // Route Implements Msg.

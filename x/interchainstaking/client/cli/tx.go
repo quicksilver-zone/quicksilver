@@ -24,6 +24,7 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	txCmd.AddCommand(GetRegisterZoneTxCmd())
+	txCmd.AddCommand(GetSignalIntentTxCmd())
 
 	return txCmd
 }
@@ -55,6 +56,37 @@ func GetRegisterZoneTxCmd() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().Bool(FlagMultiSend, false, "multi-send support")
+
+	return cmd
+}
+
+// GetSignalIntentTxCmd returns a CLI command handler for signalling validator
+// delegation intent.
+func GetSignalIntentTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "signal-intent [chain_id] [delegation_intent]",
+		Short: `Signal validator delegation intent.`,
+		Long: `signal validator delegation intent by providing a comma seperated string
+containing a decimal weight and the bech32 validator address,
+e.g. "0.3cosmos1xxxxxxxxx,0.3cosmos1yyyyyyyyy,0.4cosmos1zzzzzzzzz"`,
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			chain_id := args[0]
+			intents, err := types.IntentsFromString(args[1])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgSignalIntent(chain_id, intents, clientCtx.GetFromAddress())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
 
 	return cmd
 }
