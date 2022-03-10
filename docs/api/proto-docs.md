@@ -53,6 +53,8 @@
     - [Msg](#quicksilver.interchainstaking.v1.Msg)
   
 - [quicksilver/interchainstaking/v1/query.proto](#quicksilver/interchainstaking/v1/query.proto)
+    - [QueryDelegatorIntentRequest](#quicksilver.interchainstaking.v1.QueryDelegatorIntentRequest)
+    - [QueryDelegatorIntentResponse](#quicksilver.interchainstaking.v1.QueryDelegatorIntentResponse)
     - [QueryDepositAccountForChainRequest](#quicksilver.interchainstaking.v1.QueryDepositAccountForChainRequest)
     - [QueryDepositAccountForChainResponse](#quicksilver.interchainstaking.v1.QueryDepositAccountForChainResponse)
     - [QueryRegisteredZonesInfoRequest](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoRequest)
@@ -698,6 +700,37 @@ Msg defines the interchainstaking Msg service.
 
 
 
+<a name="quicksilver.interchainstaking.v1.QueryDelegatorIntentRequest"></a>
+
+### QueryDelegatorIntentRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `chain_id` | [string](#string) |  |  |
+| `from_address` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.QueryDelegatorIntentResponse"></a>
+
+### QueryDelegatorIntentResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `intent` | [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent) |  |  |
+
+
+
+
+
+
 <a name="quicksilver.interchainstaking.v1.QueryDepositAccountForChainRequest"></a>
 
 ### QueryDepositAccountForChainRequest
@@ -776,6 +809,7 @@ Query defines the gRPC querier service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `RegisteredZoneInfos` | [QueryRegisteredZonesInfoRequest](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoRequest) | [QueryRegisteredZonesInfoResponse](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoResponse) | RegisteredZoneInfos provides meta data on connected zones. | GET|/quicksilver/interchainstaking/v1/zones|
 | `DepositAccountFromAddress` | [QueryDepositAccountForChainRequest](#quicksilver.interchainstaking.v1.QueryDepositAccountForChainRequest) | [QueryDepositAccountForChainResponse](#quicksilver.interchainstaking.v1.QueryDepositAccountForChainResponse) | DepositAccountFromAddress provides data on the deposit address for a connected zone. | GET|/quicksilver/interchainstaking/v1/zones/deposit_address|
+| `DelegatorIntent` | [QueryDelegatorIntentRequest](#quicksilver.interchainstaking.v1.QueryDelegatorIntentRequest) | [QueryDelegatorIntentResponse](#quicksilver.interchainstaking.v1.QueryDelegatorIntentResponse) | DelegatorIntent provides data on the intent of the delegator for the given zone. | GET|/quicksilver/interchainstaking/v1/zones/delegator_intent|
 
  <!-- end services -->
 

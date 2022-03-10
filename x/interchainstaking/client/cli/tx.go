@@ -37,10 +37,10 @@ func GetRegisterZoneTxCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
-
 			if err != nil {
 				return err
 			}
+
 			identifier := args[0]
 			connection_id := args[1]
 			chain_id := args[2]
@@ -83,10 +83,15 @@ e.g. "0.3cosmos1xxxxxxxxx,0.3cosmos1yyyyyyyyy,0.4cosmos1zzzzzzzzz"`,
 			}
 
 			msg := types.NewMsgSignalIntent(chain_id, intents, clientCtx.GetFromAddress())
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }

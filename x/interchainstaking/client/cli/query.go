@@ -70,3 +70,39 @@ func GetCmdZonesInfos() *cobra.Command {
 
 	return cmd
 }
+
+// GetDelegatorIntentCmd returns the intents of the user for the given chain_id
+// (zone).
+func GetDelegatorIntentCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "intent [chain_id]",
+		Short: "Query delegation intent for a given chain.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// args
+			chain_id := args[0]
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.QueryDelegatorIntentRequest{
+				ChainId:     chain_id,
+				FromAddress: clientCtx.GetFromAddress().String(),
+			}
+
+			res, err := queryClient.DelegatorIntent(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}

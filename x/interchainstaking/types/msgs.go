@@ -3,7 +3,6 @@ package types
 import (
 	"fmt"
 	"regexp"
-	"strconv"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -126,29 +125,20 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 	}
 
 	out := []*ValidatorIntent{}
-	wsum := 0.0
 
 	istrs := strings.Split(input, ",")
 	for i, istr := range istrs {
 		wstr := iexpr.ReplaceAllString(istr, "$1")
-		wf, _ := strconv.ParseFloat(wstr, 32)
 		weight, err := sdk.NewDecFromStr(wstr)
 		if err != nil {
-			return nil, err
-		}
-		wsum += wf
-
-		valoper, err := sdk.AccAddressFromBech32(iexpr.ReplaceAllString(istr, "$2"))
-		if err != nil {
-			return nil, fmt.Errorf("invalid address for token [%v]", i)
+			return nil, fmt.Errorf("intent token [%v]: %w", i, err)
 		}
 
-		v := &ValidatorIntent{valoper.String(), weight}
+		v := &ValidatorIntent{
+			iexpr.ReplaceAllString(istr, "$2"),
+			weight,
+		}
 		out = append(out, v)
-	}
-
-	if wsum != 1.0 {
-		return nil, fmt.Errorf("incomplete intent, sum of weights must be 1.0 (got %.2f)", wsum)
 	}
 
 	return out, nil
@@ -164,17 +154,35 @@ func NewMsgSignalIntent(chain_id string, intents []*ValidatorIntent, from_addres
 func (msg MsgSignalIntent) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (msg MsgSignalIntent) Type() string { return TypeMsgRegisterZone }
+func (msg MsgSignalIntent) Type() string { return TypeMsgSignalIntent }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSignalIntent) ValidateBasic() error {
-	// TODO: check from address
-
-	// TODO: check for valid identifier
+	errors := make(map[string]error)
+	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
+		errors["FromAddress"] = err
+	}
 
 	// TODO: check for valid chain_id
 
-	// TODO: check for valid denominations
+	want_sum := sdk.MustNewDecFromStr("1.0")
+	weight_sum := sdk.NewDec(0)
+	for i, intent := range msg.Intents {
+		if _, err := sdk.AccAddressFromBech32(intent.ValoperAddress); err != nil {
+			istr := fmt.Sprintf("Intent [%v] ValoperAddress", i)
+			errors[istr] = err
+		}
+
+		if intent.Weight.GT(want_sum) {
+			istr := fmt.Sprintf("Intent [%v] Weight", i)
+			errors[istr] = fmt.Errorf("weight exceeds maximum of 1.0")
+		}
+		weight_sum.Add(intent.Weight)
+	}
+
+	if !weight_sum.Equal(want_sum) {
+		errors["Intent Weights"] = fmt.Errorf("sum of weights is not 1.0")
+	}
 
 	return nil
 }
