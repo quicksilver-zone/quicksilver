@@ -69,7 +69,8 @@ func GetSignalIntentTxCmd() *cobra.Command {
 		Long: `signal validator delegation intent by providing a comma seperated string
 containing a decimal weight and the bech32 validator address,
 e.g. "0.3cosmos1xxxxxxxxx,0.3cosmos1yyyyyyyyy,0.4cosmos1zzzzzzzzz"`,
-		Args: cobra.ExactArgs(2),
+		Example: `signal-intent [chain_id] 0.3cosmos1xxxxxxxxx,0.3cosmos1yyyyyyyyy,0.4cosmos1zzzzzzzzz`,
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {

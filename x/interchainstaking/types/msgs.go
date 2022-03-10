@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 // interchainstaking message types
@@ -168,7 +169,7 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 	want_sum := sdk.MustNewDecFromStr("1.0")
 	weight_sum := sdk.NewDec(0)
 	for i, intent := range msg.Intents {
-		if _, err := sdk.AccAddressFromBech32(intent.ValoperAddress); err != nil {
+		if _, _, err := bech32.DecodeAndConvert(intent.ValoperAddress); err != nil {
 			istr := fmt.Sprintf("Intent [%v] ValoperAddress", i)
 			errors[istr] = err
 		}
@@ -182,6 +183,10 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 
 	if !weight_sum.Equal(want_sum) {
 		errors["Intent Weights"] = fmt.Errorf("sum of weights is not 1.0")
+	}
+
+	if len(errors) > 0 {
+		return NewMultiError(errors)
 	}
 
 	return nil

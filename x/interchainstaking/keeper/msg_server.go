@@ -95,7 +95,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 		return nil, fmt.Errorf("invalid chain id \"%s\"", msg.ChainId)
 	}
 
-	// validate intents
+	// validate intents (aggregated errors)
 	if err := k.validateIntents(zone, msg.Intents); err != nil {
 		return nil, err
 	}
@@ -123,11 +123,17 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 }
 
 func (k msgServer) validateIntents(zone types.RegisteredZone, intents []*types.ValidatorIntent) error {
+	errors := make(map[string]error)
+
 	for i, intent := range intents {
 		_, err := zone.GetValidatorByValoper(intent.ValoperAddress)
 		if err != nil {
-			return fmt.Errorf("invalid intent [%v]: %w", i, err)
+			errors[fmt.Sprintf("intent[%v]", i)] = err
 		}
+	}
+
+	if len(errors) > 0 {
+		return types.NewMultiError(errors)
 	}
 
 	return nil
