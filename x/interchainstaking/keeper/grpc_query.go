@@ -60,3 +60,23 @@ func (k Keeper) DepositAccountFromAddress(c context.Context, req *types.QueryDep
 		DepositAccountAddress: zone.DepositAddress.Address,
 	}, nil
 }
+
+func (k Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorIntentRequest) (*types.QueryDelegatorIntentResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	zone, found := k.GetRegisteredZoneInfo(ctx, req.GetChainId())
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
+
+	intent, found := k.GetIntent(ctx, zone, req.FromAddress)
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no delegation intent specified for %s", req.GetChainId()))
+	}
+
+	return &types.QueryDelegatorIntentResponse{Intent: &intent}, nil
+}

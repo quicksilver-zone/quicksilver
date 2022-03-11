@@ -2,6 +2,7 @@ syntax = "proto3";
 package quicksilver.interchainstaking.v1;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "quicksilver/interchainstaking/v1/genesis.proto";
@@ -21,6 +22,13 @@ service Query {
       returns (QueryDepositAccountForChainResponse) {
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/deposit_address";
+  }
+  // DelegatorIntent provides data on the intent of the delegator for the given
+  // zone.
+  rpc DelegatorIntent(QueryDelegatorIntentRequest)
+      returns (QueryDelegatorIntentResponse) {
+    option (google.api.http).get =
+        "/quicksilver/interchainstaking/v1/zones/delegator_intent";
   }
 }
 
@@ -44,4 +52,13 @@ message QueryDepositAccountForChainRequest {
 message QueryDepositAccountForChainResponse {
   string deposit_account_address = 1
       [ (gogoproto.moretags) = "yaml:\"deposit_account_address\"" ];
+}
+
+message QueryDelegatorIntentRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  string from_address = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+message QueryDelegatorIntentResponse {
+  DelegatorIntent intent = 1;
 }
