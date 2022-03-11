@@ -113,16 +113,18 @@ func (msg MsgRequestRedemption) GetSigners() []sdk.AccAddress {
 //----------------------------------------------------------------
 
 // IntentsFromString validates and parses the given string into a slice
-// containing pointers to ValidatorIntent. The combined weights must be 1.0 and
-// the valoper addresses must be of valid Bech32 string format.
+// containing pointers to ValidatorIntent.
+//
+// The combined weights must be 1.0 and the valoper addresses must be valid
+// bech32 strings. (what about zero weights?)
 //
 // Tokens are comma separated, e.g.
-// "0.3cosmos1xxxxxxxxx,0.3cosmos1yyyyyyyyy,0.4cosmos1zzzzzzzzz".
+// "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzzzzzzzz".
 func IntentsFromString(input string) ([]*ValidatorIntent, error) {
-	iexpr := regexp.MustCompile(`(\d.\d+)(\w+1\w+)`)
-	pexpr := regexp.MustCompile(fmt.Sprintf("%s(,%s)*", iexpr.String(), iexpr.String()))
+	iexpr := regexp.MustCompile(`(\d.\d+)(.+1\w+)`)
+	pexpr := regexp.MustCompile(fmt.Sprintf("^%s(,%s)*$", iexpr.String(), iexpr.String()))
 	if !pexpr.MatchString(input) {
-		return nil, fmt.Errorf("invalid input string")
+		return nil, fmt.Errorf("invalid intents string")
 	}
 
 	out := []*ValidatorIntent{}
@@ -170,19 +172,19 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 	weight_sum := sdk.NewDec(0)
 	for i, intent := range msg.Intents {
 		if _, _, err := bech32.DecodeAndConvert(intent.ValoperAddress); err != nil {
-			istr := fmt.Sprintf("Intent [%v] ValoperAddress", i)
+			istr := fmt.Sprintf("Intent_%02d_ValoperAddress", i)
 			errors[istr] = err
 		}
 
 		if intent.Weight.GT(want_sum) {
-			istr := fmt.Sprintf("Intent [%v] Weight", i)
-			errors[istr] = fmt.Errorf("weight exceeds maximum of 1.0")
+			istr := fmt.Sprintf("Intent_%02d_Weight", i)
+			errors[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, want_sum)
 		}
-		weight_sum.Add(intent.Weight)
+		weight_sum = weight_sum.Add(intent.Weight)
 	}
 
 	if !weight_sum.Equal(want_sum) {
-		errors["Intent Weights"] = fmt.Errorf("sum of weights is not 1.0")
+		errors["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weight_sum, want_sum)
 	}
 
 	if len(errors) > 0 {

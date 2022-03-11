@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -68,8 +70,8 @@ func GetSignalIntentTxCmd() *cobra.Command {
 		Short: `Signal validator delegation intent.`,
 		Long: `signal validator delegation intent by providing a comma seperated string
 containing a decimal weight and the bech32 validator address,
-e.g. "0.3cosmos1xxxxxxxxx,0.3cosmos1yyyyyyyyy,0.4cosmos1zzzzzzzzz"`,
-		Example: `signal-intent [chain_id] 0.3cosmos1xxxxxxxxx,0.3cosmos1yyyyyyyyy,0.4cosmos1zzzzzzzzz`,
+e.g. "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzzzzzzzz"`,
+		Example: `signal-intent [chain_id] 0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzzzzzzzz`,
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -80,7 +82,7 @@ e.g. "0.3cosmos1xxxxxxxxx,0.3cosmos1yyyyyyyyy,0.4cosmos1zzzzzzzzz"`,
 			chain_id := args[0]
 			intents, err := types.IntentsFromString(args[1])
 			if err != nil {
-				return err
+				return fmt.Errorf("%v, see example: %v", err, cmd.Example)
 			}
 
 			msg := types.NewMsgSignalIntent(chain_id, intents, clientCtx.GetFromAddress())
