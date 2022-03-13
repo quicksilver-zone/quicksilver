@@ -106,3 +106,38 @@ func GetDelegatorIntentCmd() *cobra.Command {
 
 	return cmd
 }
+
+// GetDepositAccountCmd returns the deposit account for the given chain_id
+// (zone).
+func GetDepositAccountCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "deposit-account [chain_id]",
+		Short: "Query deposit account address for a given chain.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// args
+			chain_id := args[0]
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.QueryDepositAccountForChainRequest{
+				ChainId: chain_id,
+			}
+
+			res, err := queryClient.DepositAccountFromAddress(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
