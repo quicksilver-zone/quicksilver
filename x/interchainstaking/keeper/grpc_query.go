@@ -15,7 +15,7 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// RegisteredZoneInfos provides information about registered zones
+// RegisteredZoneInfos returns information about registered zones.
 func (k Keeper) RegisteredZoneInfos(c context.Context, req *types.QueryRegisteredZonesInfoRequest) (*types.QueryRegisteredZonesInfoResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -44,6 +44,8 @@ func (k Keeper) RegisteredZoneInfos(c context.Context, req *types.QueryRegistere
 	}, nil
 }
 
+// DepositAccountFromAddress returns the deposit account address for the given
+// zone.
 func (k Keeper) DepositAccountFromAddress(c context.Context, req *types.QueryDepositAccountForChainRequest) (*types.QueryDepositAccountForChainResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -53,7 +55,7 @@ func (k Keeper) DepositAccountFromAddress(c context.Context, req *types.QueryDep
 
 	zone, found := k.GetRegisteredZoneInfo(ctx, req.GetChainId())
 	if !found {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
 
 	return &types.QueryDepositAccountForChainResponse{
@@ -61,6 +63,8 @@ func (k Keeper) DepositAccountFromAddress(c context.Context, req *types.QueryDep
 	}, nil
 }
 
+// DelegatorIntent returns information about the delegation intent of the
+// caller for the given zone.
 func (k Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorIntentRequest) (*types.QueryDelegatorIntentResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
