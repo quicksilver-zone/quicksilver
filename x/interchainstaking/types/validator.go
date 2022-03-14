@@ -17,11 +17,12 @@ func (v Validator) GetDelegationForDelegator(delegator string) (*Delegation, err
 
 func (di DelegatorIntent) AddOrdinal(multiplier sdk.Int, intents map[string]*ValidatorIntent) DelegatorIntent {
 	di.Ordinalize(multiplier)
+OUTER:
 	for _, i := range intents {
 		for _, j := range di.Intents {
 			if i.ValoperAddress == j.ValoperAddress {
 				j.Weight = j.Weight.Add(i.Weight)
-				continue
+				continue OUTER
 			}
 		}
 		di.Intents = append(di.Intents, i)
