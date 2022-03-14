@@ -62,6 +62,7 @@ func (im IBCModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
+	counterPartyChannelId string,
 	counterpartyVersion string,
 ) error {
 	// TODO: is there re-entrancy risk here?
