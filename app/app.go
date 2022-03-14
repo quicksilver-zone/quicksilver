@@ -638,7 +638,7 @@ func NewQuicksilver(
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-		IBCChannelkeeper: app.IBCKeeper.ChannelKeeper,
+		IBCKeeper: app.IBCKeeper,
 	}
 
 	app.SetAnteHandler(NewAnteHandler(options))
