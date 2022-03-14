@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -157,9 +158,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
-	// temp for debugging
-	im.keeper.Logger(ctx).Info("Received acknowledgement packet", "packet", packet.Data, "acknowledgement", acknowledgement)
-	return nil
+	return im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement)
 }
 
 // OnTimeoutPacket implements the IBCModule interface.
@@ -168,7 +167,7 @@ func (im IBCModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
-	return nil
+	return im.keeper.HandleTimeout(ctx, packet)
 }
 
 // NegotiateAppVersion implements the IBCModule interface
