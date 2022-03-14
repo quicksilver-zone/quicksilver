@@ -85,7 +85,7 @@ func (im IBCModule) OnChanOpenAck(
 			portParts := strings.Split(portID, ".")
 			if len(portParts) == 2 && portParts[1] == "deposit" {
 				zoneInfo.DepositAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
-				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(5))
+				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(types.DepositInterval))
 				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)
 			} else if len(portParts) == 3 && portParts[1] == "delegate" {
 				for _, existing := range zoneInfo.DelegationAddresses {
@@ -95,9 +95,9 @@ func (im IBCModule) OnChanOpenAck(
 					}
 				}
 				zoneInfo.DelegationAddresses = append(zoneInfo.DelegationAddresses, &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID})
-				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(25))
+				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(types.DelegateInterval))
 				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)
-				delegationQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(100)) // this can probably be less frequent, because we manage delegations ourselves.
+				delegationQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(types.DelegateDelegationsInterval)) // this can probably be less frequent, because we manage delegations ourselves.
 				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *delegationQuery)
 			} else {
 				ctx.Logger().Error("unexpected channel on portID: " + portID)
@@ -140,7 +140,7 @@ func (im IBCModule) OnChanCloseConfirm(
 }
 
 // OnRecvPacket implements the IBCModule interface. A successful acknowledgement
-// is returned if the packet data is succesfully decoded and the receive application
+// is returned if the packet data is successfully decoded and the receive application
 // logic returns without error.
 func (im IBCModule) OnRecvPacket(
 	ctx sdk.Context,
