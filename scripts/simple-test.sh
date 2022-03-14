@@ -1,4 +1,15 @@
 #!/bin/bash
+
+# add any command/tool dependencies below (space separated)
+DEPENDENCIES="jq"
+
+echo -en "\nChecking dependencies... "
+for name in $DEPENDENCIES
+do
+    [[ $(type $name 2>/dev/null) ]] || { echo -en "\n    * $name is required to run this script;";deps=1; }
+done
+[[ $deps -ne 1 ]] && echo -e "OK\n" || { echo -e "\nInstall the missing dependencies and rerun this script...\n"; exit 1; }
+
 set -xe
 
 QS_IMAGE=quicksilverzone/quicksilver
