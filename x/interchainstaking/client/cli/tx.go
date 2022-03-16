@@ -25,8 +25,10 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	txCmd.AddCommand(GetRegisterZoneTxCmd())
-	txCmd.AddCommand(GetSignalIntentTxCmd())
+	txCmd.AddCommand(
+		GetRegisterZoneTxCmd(),
+		GetSignalIntentTxCmd(),
+	)
 
 	return txCmd
 }
