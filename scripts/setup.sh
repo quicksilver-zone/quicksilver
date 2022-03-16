@@ -1,6 +1,8 @@
 #!/bin/bash
 
-source ./vars.sh
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
+source ${SCRIPT_DIR}/vars.sh
 
 docker-compose down
 
@@ -201,3 +203,5 @@ cp -fr ${CHAIN_DIR}/${CHAINID_2} ${CHAIN_DIR}/backup/${CHAINID_2}
 cp -fr ${CHAIN_DIR}/${CHAINID_2}a ${CHAIN_DIR}/backup/${CHAINID_2}a
 cp -fr ${CHAIN_DIR}/${CHAINID_2}b ${CHAIN_DIR}/backup/${CHAINID_2}b
 cp -fr ${CHAIN_DIR}/${CHAINID_2}c ${CHAIN_DIR}/backup/${CHAINID_2}c
+
+docker-compose down
