@@ -16,11 +16,15 @@ else
   rm -rf ${CHAIN_DIR}/${CHAINID_2}a
   rm -rf ${CHAIN_DIR}/${CHAINID_2}b
   rm -rf ${CHAIN_DIR}/${CHAINID_2}c
+  rm -rf ${CHAIN_DIR}/hermes &> /dev/null
+  rm -rf ${CHAIN_DIR}/icq &> /dev/null
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1} ${CHAIN_DIR}/${CHAINID_1}
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_2} ${CHAIN_DIR}/${CHAINID_2}
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_2}a ${CHAIN_DIR}/${CHAINID_2}a
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_2}b ${CHAIN_DIR}/${CHAINID_2}b
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_2}c ${CHAIN_DIR}/${CHAINID_2}c
+  mkdir ${CHAIN_DIR}/hermes ${CHAIN_DIR}/icq
+  cp ./scripts/config/icq.yaml ./${CHAIN_DIR}/icq/config.yaml
 fi
 
 VAL_ADDRESS_1=$($QS_RUN keys show val1 --keyring-backend test -a)
