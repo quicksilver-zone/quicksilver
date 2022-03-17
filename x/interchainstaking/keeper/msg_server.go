@@ -14,8 +14,8 @@ type msgServer struct {
 	*Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the bank MsgServer interface
-// for the provided Keeper.
+// NewMsgServerImpl returns an implementation of the interchainstaking
+// MsgServer interface for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: &keeper}
 }
@@ -87,6 +87,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 }
 
 func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {
+	fmt.Printf("keeper: >>> SignalIntent <<<\n")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// get zone

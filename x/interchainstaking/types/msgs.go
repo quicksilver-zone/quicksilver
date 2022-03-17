@@ -150,6 +150,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 // NewMsgRequestRedemption - construct a msg to request redemption.
 //nolint:interfacer
 func NewMsgSignalIntent(chain_id string, intents []*ValidatorIntent, from_address sdk.Address) *MsgSignalIntent {
+	fmt.Printf("types: >>> NewMsgSignalIntent <<<\n")
 	return &MsgSignalIntent{ChainId: chain_id, Intents: intents, FromAddress: from_address.String()}
 }
 

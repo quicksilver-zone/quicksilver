@@ -22,6 +22,9 @@ func NewIntegrationTestSuite(cfg network.Config) *IntegrationTestSuite {
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
+	// Use baseURL to make API HTTP requests or use val.RPCClient to make direct
+	// Tendermint RPC calls. (from testutil/network godocs)
+
 	s.T().Log("setting up integration test suite")
 
 	s.network = network.New(s.T(), s.cfg)
