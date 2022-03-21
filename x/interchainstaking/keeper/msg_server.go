@@ -87,7 +87,6 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 }
 
 func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {
-	fmt.Printf("keeper: >>> SignalIntent <<<\n")
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// get zone

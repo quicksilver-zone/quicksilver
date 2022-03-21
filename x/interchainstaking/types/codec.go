@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -21,10 +19,7 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	fmt.Printf("types: >>> RegisterInterfaces <<<\n")
-	fmt.Printf("\t%v\n", registry.ListAllInterfaces())
 	// cosmos.base.v1beta1.Msg
-	fmt.Printf("\t%v\n", registry.ListImplementations("cosmos.base.v1beta1.Msg"))
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgRegisterZone{},
