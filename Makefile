@@ -152,6 +152,8 @@ reload-docker:
 
 test-docker:
 	./scripts/simple-test.sh
+test-docker-regen:
+	./scripts/simple-test.sh -r
 build-docker-all:
 	$(DOCKERCOMPOSE) build
 
