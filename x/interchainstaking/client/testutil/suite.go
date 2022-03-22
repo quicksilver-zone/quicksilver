@@ -62,7 +62,7 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{}
+			flags := []string{"--output=json"}
 			args := append(tt.args, flags...)
 
 			cmd := cli.GetCmdZonesInfos()
@@ -124,7 +124,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{}
+			flags := []string{"--output=json"}
 			args := append(tt.args, flags...)
 
 			cmd := cli.GetDelegatorIntentCmd()
@@ -186,7 +186,7 @@ func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{}
+			flags := []string{"--output=json"}
 			args := append(tt.args, flags...)
 
 			cmd := cli.GetDepositAccountCmd()
@@ -249,7 +249,7 @@ func (s *IntegrationTestSuite) TestGetRegisterZoneTxCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{}
+			flags := []string{"-y"}
 			args := append(tt.args, flags...)
 
 			cmd := cli.GetRegisterZoneTxCmd()
@@ -362,7 +362,7 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{}
+			flags := []string{"-y"}
 			args := append(tt.args, flags...)
 
 			cmd := cli.GetSignalIntentTxCmd()
