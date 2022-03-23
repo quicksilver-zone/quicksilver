@@ -1,13 +1,18 @@
 package testutil
 
 import (
+	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/gogo/protobuf/proto"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/client/cli"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/suite"
+	tmcli "github.com/tendermint/tendermint/libs/cli"
 )
 
 type IntegrationTestSuite struct {
@@ -31,6 +36,25 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	_, err := s.network.WaitForHeight(1)
 	s.Require().NoError(err)
+
+	val := s.network.Validators[0]
+
+	out, err := MsgRegisterZoneExec(
+		val.ClientCtx,
+		val.Moniker,
+		val.NodeID,
+		s.cfg.ChainID,
+		s.cfg.BondDenom,
+		val.Address.String(),
+	)
+	s.Require().NoError(err)
+
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code, fmt.Sprintf("%v\n", txRes))
+
+	_, err = s.network.WaitForHeight(3)
+	s.Require().NoError(err)
 }
 
 func (s *IntegrationTestSuite) TearDownSuite() {
@@ -53,7 +77,9 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 			[]string{},
 			false,
 			&types.QueryRegisteredZonesInfoResponse{},
-			&types.QueryRegisteredZonesInfoResponse{},
+			&types.QueryRegisteredZonesInfoResponse{
+				Pagination: &query.PageResponse{},
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -62,7 +88,9 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{"--output=json"}
+			flags := []string{
+				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
 			args := append(tt.args, flags...)
 
 			cmd := cli.GetCmdZonesInfos()
@@ -73,7 +101,7 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
-				s.Require().Equal(tt.expected, tt.respType)
+				s.Require().Equal(tt.expected.String(), tt.respType.String(), out.String())
 			}
 		})
 	}
@@ -112,7 +140,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 		},
 		{
 			"valid",
-			[]string{s.network.Config.ChainID},
+			[]string{s.cfg.ChainID},
 			false,
 			&types.QueryDelegatorIntentResponse{},
 			&types.QueryDelegatorIntentResponse{},
@@ -124,7 +152,9 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{"--output=json"}
+			flags := []string{
+				//fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
 			args := append(tt.args, flags...)
 
 			cmd := cli.GetDelegatorIntentCmd()
@@ -174,7 +204,7 @@ func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
 		},
 		{
 			"valid",
-			[]string{s.network.Config.ChainID},
+			[]string{s.cfg.ChainID},
 			false,
 			&types.QueryDepositAccountForChainResponse{},
 			&types.QueryDepositAccountForChainResponse{},
@@ -186,7 +216,9 @@ func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{"--output=json"}
+			flags := []string{
+				//fmt.Sprintf("--%s=json", tmcli.OutputFlag),
+			}
 			args := append(tt.args, flags...)
 
 			cmd := cli.GetDepositAccountCmd()
@@ -235,8 +267,7 @@ func (s *IntegrationTestSuite) TestGetRegisterZoneTxCmd() {
 				s.cfg.ChainID,
 				s.cfg.BondDenom,
 				s.cfg.BondDenom,
-				"--from",
-				val.Address.String(),
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
 			},
 			false,
 			0,
@@ -249,8 +280,9 @@ func (s *IntegrationTestSuite) TestGetRegisterZoneTxCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{"-y"}
+			flags := []string{}
 			args := append(tt.args, flags...)
+			args = append(args, commonArgs...)
 
 			cmd := cli.GetRegisterZoneTxCmd()
 
@@ -259,10 +291,9 @@ func (s *IntegrationTestSuite) TestGetRegisterZoneTxCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
 				txResp := tt.respType.(*sdk.TxResponse)
-				s.Require().Equal(tt.expectedCode, txResp.Code)
+				s.Require().Equal(tt.expectedCode, txResp.Code, fmt.Sprintf("%v\n", txResp))
 			}
 		})
 	}
@@ -343,14 +374,22 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 		},
 		{
 			"invalid chain_id",
-			[]string{"boguschainid", "0.3A12UEL5L,0.3a12uel5l,0.4abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw", "--from", val.Address.String()},
+			[]string{
+				"boguschainid",
+				"0.3A12UEL5L,0.3a12uel5l,0.4abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+			},
 			true,
 			0,
 			&sdk.TxResponse{},
 		},
 		{
 			"valid",
-			[]string{s.network.Config.ChainID, "0.3A12UEL5L,0.3a12uel5l,0.4abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw", "--from", val.Address.String()},
+			[]string{
+				s.network.Config.ChainID,
+				"0.3A12UEL5L,0.3a12uel5l,0.4abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
+				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address),
+			},
 			false,
 			0,
 			&sdk.TxResponse{},
@@ -362,8 +401,9 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{"-y"}
+			flags := []string{}
 			args := append(tt.args, flags...)
+			args = append(args, commonArgs...)
 
 			cmd := cli.GetSignalIntentTxCmd()
 
@@ -372,10 +412,9 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
-
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
 				txResp := tt.respType.(*sdk.TxResponse)
-				s.Require().Equal(tt.expectedCode, txResp.Code)
+				s.Require().Equal(tt.expectedCode, txResp.Code, fmt.Sprintf("%v\n", txResp))
 			}
 		})
 	}
