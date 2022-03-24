@@ -2,7 +2,10 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 
+	//lint:ignore SA1019 ignore this!
 	"github.com/golang/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +14,7 @@ import (
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	"time"
 )
@@ -54,17 +58,20 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			// 	return err
 			// }
 			// k.Logger(ctx).Info("Rewards withdrawn", "response", response)
-			// noop here - we can plausibl
+			// noop here
 			continue
 		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
-			// response := stakingtypes.MsgRedeemTokensforSharesResponse{}
-			// err := proto.Unmarshal(msgData.Data, &response)
-			// if err != nil {
-			// 	k.Logger(ctx).Error("Unable to unmarshal MsgRedeemTokensforShares response", "error", err)
-			// 	return err
-			// }
-			// k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
-			// noop
+			response := stakingtypes.MsgRedeemTokensforSharesResponse{}
+			err := proto.Unmarshal(msgData.Data, &response)
+			if err != nil {
+				k.Logger(ctx).Error("Unable to unmarshal MsgRedeemTokensforShares response", "error", err)
+				return err
+			}
+			k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
+			// we should update delegation records here.
+			if err := k.HandleRedeemTokens(ctx, src); err != nil {
+				return err
+			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
 			response := stakingtypes.MsgTokenizeSharesResponse{}
@@ -75,17 +82,22 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			k.Logger(ctx).Info("Shares tokenized", "response", response)
 			// check tokenizedShareTransfers (inc. rebalance and unbond)
-			k.HandleTokenizedShares(ctx, src, response.Amount)
+			if err := k.HandleTokenizedShares(ctx, src, response.Amount); err != nil {
+				return err
+			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgDelegate":
-			// response := stakingtypes.MsgDelegateResponse{}
-			// err := proto.Unmarshal(msgData.Data, &response)
-			// if err != nil {
-			// 	k.Logger(ctx).Error("Unable to unmarshal MsgDelegate response", "error", err)
-			// 	return err
-			// }
-			// k.Logger(ctx).Info("Delegated", "response", response)
-			// no action
+			response := stakingtypes.MsgDelegateResponse{}
+			err := proto.Unmarshal(msgData.Data, &response)
+			if err != nil {
+				k.Logger(ctx).Error("Unable to unmarshal MsgDelegate response", "error", err)
+				return err
+			}
+			k.Logger(ctx).Info("Delegated", "response", response)
+			// we should update delegation records here.
+			if err := k.HandleDelegate(ctx, src); err != nil {
+				return err
+			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
 			response := stakingtypes.MsgBeginRedelegateResponse{}
@@ -139,21 +151,129 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet) erro
 //----------------------------------------------------------------
 
 func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg) error {
-
+	// if dest is a delegate address, then delegate the funds
 	return nil
 }
 
 func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
-
+	// if dest is a delegate address, then delegate the funds
 	return nil
 }
 
 func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin) error {
+	k.Logger(ctx).Info("Received MsgTokenizeShares acknowledgement")
+	// first, type assertion. we should have stakingtypes.MsgTokenizeShares
+	var err error = nil
+	tsMsg, ok := msg.(*stakingtypes.MsgTokenizeShares)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgTokenizeShares")
+		return fmt.Errorf("unable to cast source message to MsgTokenizeShares")
+	}
+	// here we are either withdrawing for a user _or_ rebalancing internally. lets check both action queues:
+	k.IterateWithdrawalRecords(ctx, tsMsg.DelegatorAddress, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+		k.Logger(ctx).Debug("iterating withdraw record", "idx", idx, "record", withdrawal)
+		if strings.HasPrefix(amount.Denom, withdrawal.Validator) {
+			k.Logger(ctx).Debug("matched the prefix", "token", amount.Denom, "denom", "val", withdrawal.Validator)
+			if amount.Amount.Equal(withdrawal.Amount.Amount) {
+				k.Logger(ctx).Debug("matched the amount", "amount", amount.Amount, "record.amount", withdrawal.Amount.Amount)
+				if withdrawal.Status == WITHDRAW_STATUS_TOKENIZE {
+					k.Logger(ctx).Info("Found matching withdrawal", "request_amount", withdrawal.Amount, "actual_amount", amount)
+					// bingo!
+					delegatorIca := k.GetICAForDelegateAccount(ctx, withdrawal.Delegator)
+					if delegatorIca == nil {
+						k.Logger(ctx).Error("unable to find delegator account for withdrawal; this shouldn't happen", err)
+						return true
+					}
+					sendMsg := &banktypes.MsgSend{FromAddress: withdrawal.Delegator, ToAddress: withdrawal.Recipient, Amount: sdk.Coins{amount}}
 
-	return nil
+					err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, delegatorIca)
+					if err != nil {
+						k.Logger(ctx).Error("error", err)
+						return true
+					}
+					k.Logger(ctx).Info("Sending funds", "from", withdrawal.Delegator, "to", withdrawal.Recipient, "amount", amount)
+					withdrawal.Status = WITHDRAW_STATUS_SEND
+					k.SetWithdrawalRecord(ctx, &withdrawal)
+					return true
+				}
+			}
+		}
+		return false
+	})
+
+	return err
 }
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time) error {
 
+	return nil
+}
+
+func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg) error {
+	k.Logger(ctx).Info("Received MsgRedeemTokensforShares acknowledgement")
+	// first, type assertion. we should have stakingtypes.MsgRedeemTokensforShares
+	redeemMsg, ok := msg.(*stakingtypes.MsgRedeemTokensforShares)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensforShares")
+		return fmt.Errorf("unable to cast source message to MsgRedeemTokensforShares")
+	}
+	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, "", redeemMsg.Amount)
+}
+
+func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
+	k.Logger(ctx).Info("Received MsgDelegate acknowledgement")
+	// first, type assertion. we should have stakingtypes.MsgDelegate
+	delegateMsg, ok := msg.(*stakingtypes.MsgDelegate)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgDelegate")
+		return fmt.Errorf("unable to cast source message to MsgDelegate")
+	}
+	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount)
+}
+
+func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin) error {
+	zone := k.GetZoneForDelegateAccount(ctx, delegatorAddress)
+	if zone == nil {
+		return fmt.Errorf("unable to fetch zone for delegate address %s", delegatorAddress)
+	}
+	var err error
+	var validator *types.Validator = nil
+
+	if validatorAddress == "" {
+		for _, val := range zone.Validators {
+			if strings.HasPrefix(amount.Denom, val.ValoperAddress) {
+				// match!
+				validatorAddress = val.ValoperAddress
+				validator = val
+				break
+			}
+		}
+		if validatorAddress == "" {
+			return fmt.Errorf("unable to find validator for token %s", amount.Denom)
+		}
+	}
+
+	if validator == nil {
+		validator, err = zone.GetValidatorByValoper(validatorAddress)
+		if err != nil {
+			return err
+		}
+	}
+
+	delegation, err := validator.GetDelegationForDelegator(delegatorAddress)
+	if err != nil {
+		k.Logger(ctx).Info("Adding delegation tuple", "delegator", delegatorAddress, "validator", validator.ValoperAddress, "amount", amount.Amount)
+		validator.Delegations = append(validator.Delegations, &types.Delegation{
+			DelegationAddress: delegatorAddress,
+			ValidatorAddress:  validator.ValoperAddress,
+			Amount:            amount.Amount.ToDec(),
+			Rewards:           sdk.Coins{},
+			RedelegationEnd:   0,
+		})
+	} else {
+		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validator.ValoperAddress, "old_amount", delegation.Amount, "inbound_amount", amount.Amount)
+		delegation.Amount = delegation.Amount.Add(amount.Amount.ToDec())
+	}
+	k.SetRegisteredZone(ctx, *zone)
 	return nil
 }

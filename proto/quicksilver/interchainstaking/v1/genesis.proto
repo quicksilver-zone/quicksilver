@@ -38,6 +38,26 @@ message ICAAccount {
   // Delegations here? or against validator?
 }
 
+message WithdrawalRecord {
+  string delegator = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string validator = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string recipient = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin amount = 4 [ 
+    (cosmos_proto.scalar) = "cosmos.Coin", 
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", 
+    (gogoproto.nullable) = false];
+  int32 status = 5;
+}
+
+message TransferRecord {
+  string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string recipient = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin amount = 3 [ 
+    (cosmos_proto.scalar) = "cosmos.Coin", 
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", 
+    (gogoproto.nullable) = false];
+}
+
 message Validator {
   string valoper_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string commission_rate = 2 [
