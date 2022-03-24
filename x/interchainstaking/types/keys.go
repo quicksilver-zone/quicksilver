@@ -31,17 +31,19 @@ const (
 
 // prefix bytes for the epoch persistent store
 const (
-	prefixZone        = iota + 1
-	prefixIntent      = iota + 1
-	prefixPortMapping = iota + 1
-	prefixReceipt     = iota + 1
+	prefixZone             = iota + 1
+	prefixIntent           = iota + 1
+	prefixPortMapping      = iota + 1
+	prefixReceipt          = iota + 1
+	prefixWithdrawalRecord = iota + 1
 )
 
 var (
-	KeyPrefixZone        = []byte{prefixZone}
-	KeyPrefixIntent      = []byte{prefixIntent}
-	KeyPrefixPortMapping = []byte{prefixPortMapping}
-	KeyPrefixReceipt     = []byte{prefixReceipt}
+	KeyPrefixZone             = []byte{prefixZone}
+	KeyPrefixIntent           = []byte{prefixIntent}
+	KeyPrefixPortMapping      = []byte{prefixPortMapping}
+	KeyPrefixReceipt          = []byte{prefixReceipt}
+	KeyPrefixWithdrawalRecord = []byte{prefixWithdrawalRecord}
 )
 
 func KeyPrefix(p string) []byte {

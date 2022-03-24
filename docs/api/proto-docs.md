@@ -39,8 +39,10 @@
     - [Receipt](#quicksilver.interchainstaking.v1.Receipt)
     - [RegisteredZone](#quicksilver.interchainstaking.v1.RegisteredZone)
     - [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry)
+    - [TransferRecord](#quicksilver.interchainstaking.v1.TransferRecord)
     - [Validator](#quicksilver.interchainstaking.v1.Validator)
     - [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent)
+    - [WithdrawalRecord](#quicksilver.interchainstaking.v1.WithdrawalRecord)
   
 - [quicksilver/interchainstaking/v1/messages.proto](#quicksilver/interchainstaking/v1/messages.proto)
     - [MsgRegisterZone](#quicksilver.interchainstaking.v1.MsgRegisterZone)
@@ -534,6 +536,23 @@ GenesisState defines the interchainstaking module's genesis state.
 
 
 
+<a name="quicksilver.interchainstaking.v1.TransferRecord"></a>
+
+### TransferRecord
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `sender` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+
+
+
+
+
+
 <a name="quicksilver.interchainstaking.v1.Validator"></a>
 
 ### Validator
@@ -562,6 +581,25 @@ GenesisState defines the interchainstaking module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `valoper_address` | [string](#string) |  |  |
 | `weight` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.WithdrawalRecord"></a>
+
+### WithdrawalRecord
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegator` | [string](#string) |  |  |
+| `validator` | [string](#string) |  |  |
+| `recipient` | [string](#string) |  |  |
+| `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `status` | [int32](#int32) |  |  |
 
 
 
