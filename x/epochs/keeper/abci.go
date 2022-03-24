@@ -28,7 +28,6 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			epochInfo = startInitialEpoch(epochInfo)
 			logger.Info("starting epoch", "identifier", epochInfo.Identifier)
 		case shouldEpochStart:
-			epochInfo = endEpoch(epochInfo)
 			logger.Info("ending epoch", "identifier", epochInfo.Identifier)
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
@@ -36,7 +35,9 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 					sdk.NewAttribute(types.AttributeEpochNumber, strconv.FormatInt(epochInfo.CurrentEpoch, 10)),
 				),
 			)
+
 			k.AfterEpochEnd(ctx, epochInfo.Identifier, epochInfo.CurrentEpoch)
+			epochInfo = endEpoch(epochInfo)
 		default:
 			// continue
 			return false
