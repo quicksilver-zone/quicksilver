@@ -13,6 +13,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -51,14 +52,16 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		src := msgs[msgIndex]
 		switch msgData.MsgType {
 		case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
-			// response := distrtypes.MsgWithdrawDelegatorRewardResponse{}
-			// err := proto.Unmarshal(msgData.Data, &response)
-			// if err != nil {
-			// 	k.Logger(ctx).Error("Unable to unmarshal MsgWithdrawDelegatorReward response", "error", err)
-			// 	return err
-			// }
-			// k.Logger(ctx).Info("Rewards withdrawn", "response", response)
-			// noop here
+			response := distrtypes.MsgWithdrawDelegatorRewardResponse{}
+			err := proto.Unmarshal(msgData.Data, &response)
+			if err != nil {
+				k.Logger(ctx).Error("Unable to unmarshal MsgWithdrawDelegatorReward response", "error", err)
+				return err
+			}
+			k.Logger(ctx).Info("Rewards withdrawn", "response", response)
+			if err := k.HandleWithdrawRewards(ctx, src, response.Amount); err != nil {
+				return err
+			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
 			response := stakingtypes.MsgRedeemTokensforSharesResponse{}
@@ -350,4 +353,23 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 	}
 	k.SetRegisteredZone(ctx, *zone)
 	return nil
+}
+
+func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.Coins) error {
+	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement")
+	// first, type assertion. we should have distrtypes.MsgWithdrawDelegatorReward
+	withdrawMsg, ok := msg.(*distrtypes.MsgWithdrawDelegatorReward)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgWithdrawDelegatorReward")
+		return fmt.Errorf("unable to cast source message to MsgWithdrawDelegatorReward")
+	}
+	zone := k.GetZoneForDelegateAccount(ctx, withdrawMsg.DelegatorAddress)
+	if zone != nil {
+		return fmt.Errorf("unable to find zone for delegator account %s", withdrawMsg.DelegatorAddress)
+	}
+	da, err := zone.GetDelegationAccountByAddress(withdrawMsg.DelegatorAddress)
+	if err != nil {
+		return err
+	}
+	return k.Delegate(ctx, *zone, da)
 }
