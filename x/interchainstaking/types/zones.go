@@ -207,7 +207,6 @@ func sortMapToSlice(numbers map[string]sdk.Int) []sortableStringInt {
 	sort.SliceStable(out, func(i, j int) bool {
 		return out[i].i.GT(out[j].i)
 	})
-	//fmt.Println(out)
 	return out
 }
 
