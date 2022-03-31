@@ -23,6 +23,9 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 var _ types.MsgServer = msgServer{}
 
 func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZone) (*types.MsgRegisterZoneResponse, error) {
+	if v := goCtx.Value("TEST"); v == "TEST" {
+		fmt.Printf("RegisterZone...\n")
+	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	zone := types.RegisteredZone{Identifier: msg.Identifier, ChainId: msg.ChainId, ConnectionId: msg.ConnectionId, LocalDenom: msg.LocalDenom, BaseDenom: msg.BaseDenom, RedemptionRate: sdk.NewDec(1), DelegatorIntent: make(map[string]*types.DelegatorIntent), MultiSend: msg.MultiSend}
@@ -64,6 +67,10 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 			sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ChainId),
 		),
 	})
+
+	if v := goCtx.Value("TEST"); v == "TEST" {
+		fmt.Printf("Success\n")
+	}
 
 	return &types.MsgRegisterZoneResponse{}, nil
 }

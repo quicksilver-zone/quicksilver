@@ -3,8 +3,10 @@ package testutil
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/ingenuity-build/quicksilver/app"
 	dbm "github.com/tendermint/tm-db"
@@ -30,7 +32,7 @@ func NewQuicksilverConstructor() network.AppConstructor {
 			0,
 			app.MakeEncodingConfig(),
 			simapp.EmptyAppOptions{},
-			//baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			//baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}
