@@ -153,12 +153,86 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet) erro
 //----------------------------------------------------------------
 
 func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg) error {
-	// if dest is a delegate address, then delegate the funds
+	k.Logger(ctx).Info("Received MsgMultiSend acknowledgement")
+	// first, type assertion. we should have banktypes.MsgMultiSend
+	sMsg, ok := msg.(*banktypes.MsgMultiSend)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgMultiSend")
+		return fmt.Errorf("unable to cast source message to MsgMultiSend")
+	}
+
+	// check for sending of tokens from deposit -> delegate.
+	zone := k.GetZoneForDelegateAccount(ctx, sMsg.Outputs[0].Address) // do this once, save multiple lookups.
+	if zone != nil {
+		for _, out := range sMsg.Outputs {
+			da, err := zone.GetDelegationAccountByAddress(out.Address)
+			if err != nil {
+				return err
+			}
+			da.Balance = da.Balance.Add(out.Coins...)
+			k.Delegate(ctx, *zone, da)
+		}
+	}
+
 	return nil
 }
 
 func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
-	// if dest is a delegate address, then delegate the funds
+	k.Logger(ctx).Info("Received MsgSend acknowledgement")
+	// first, type assertion. we should have banktypes.MsgSend
+	var err error = nil
+	var done bool = false
+	sMsg, ok := msg.(*banktypes.MsgSend)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgSend")
+		return fmt.Errorf("unable to cast source message to MsgSend")
+	}
+
+	// first check for withdrawals (if FromAddress is a DelegateAccount)
+	k.IterateWithdrawalRecords(ctx, sMsg.FromAddress, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+		k.Logger(ctx).Debug("iterating withdraw record", "idx", idx, "record", withdrawal)
+		if withdrawal.Recipient == sMsg.ToAddress {
+			k.Logger(ctx).Debug("matched the recipient", "val", withdrawal.Delegator, "recipient", withdrawal.Recipient)
+			z := k.GetZoneForDelegateAccount(ctx, withdrawal.Delegator)
+			if sMsg.Amount.AmountOf(z.BaseDenom).Equal(withdrawal.Amount.Amount) {
+				k.Logger(ctx).Debug("matched the amount", "amount", sMsg.Amount, "record.amount", withdrawal.Amount.Amount)
+				if withdrawal.Status == WITHDRAW_STATUS_SEND {
+					k.Logger(ctx).Info("Found matching withdrawal; withdrawal marked as completed")
+					k.DeleteWithdrawalRecord(ctx, withdrawal.Delegator, withdrawal.Validator, withdrawal.Recipient)
+					da, err := z.GetDelegationAccountByAddress(withdrawal.Delegator)
+					if err != nil {
+						return true
+					}
+					da.Balance = da.Balance.Sub(sMsg.Amount)
+
+					done = true
+					return true
+				}
+			}
+		}
+		return false
+	})
+	// after iteration, if we are marked done, exit cleanly.
+	if done {
+		return nil
+	}
+
+	// after iteration if we have an err, return it.
+	if err != nil {
+		return err
+	}
+
+	// second check for sending of tokens from deposit -> delegate.
+	zone := k.GetZoneForDelegateAccount(ctx, sMsg.ToAddress)
+	if zone != nil { // this _is_ a delegate account
+		da, err := zone.GetDelegationAccountByAddress(sMsg.ToAddress)
+		if err != nil {
+			return err
+		}
+		da.Balance = da.Balance.Add(sMsg.Amount...)
+		k.Delegate(ctx, *zone, da)
+	}
+
 	return nil
 }
 
