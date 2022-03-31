@@ -87,7 +87,7 @@ func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.RegisteredZone
 	return intents
 }
 
-func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.RegisteredZone) map[string]*types.ValidatorIntent {
+func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.RegisteredZone) {
 	intents := map[string]*types.ValidatorIntent{}
 	ordinalizedIntentSum := sdk.ZeroDec()
 	k.IterateIntents(ctx, zone, func(_ int64, intent types.DelegatorIntent) (stop bool) {
@@ -115,7 +115,9 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.RegisteredZone) ma
 		val.Weight = val.Weight.Quo(ordinalizedIntentSum)
 		intents[key] = val
 	}
-	return intents
+
+	zone.AggregateIntent = intents
+	k.SetRegisteredZone(ctx, zone)
 }
 
 func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types.RegisteredZone, inAmount sdk.Coins) {
