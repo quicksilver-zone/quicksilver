@@ -115,7 +115,16 @@ func (z RegisteredZone) DetermineStateIntentDiff(aggregateIntent map[string]*Val
 	}
 
 	if totalAggregateIntent.IsZero() {
-		totalAggregateIntent = sdk.OneDec()
+		// if totalAggregateIntent is zero (that is, we have no intent set - which can happen
+		// if we have only ever have native tokens staked and nbody has signalled intent) give
+		// every validator an equal intent artificially.
+
+		// this can be removed when we cache intent.
+
+		for _, val := range z.Validators {
+			aggregateIntent[val.ValoperAddress] = &ValidatorIntent{ValoperAddress: val.ValoperAddress, Weight: sdk.OneDec()}
+			totalAggregateIntent = totalAggregateIntent.Add(sdk.OneDec())
+		}
 	}
 
 	for _, i := range z.Validators {
