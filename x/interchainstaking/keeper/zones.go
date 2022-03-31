@@ -100,7 +100,7 @@ func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.Reg
 	out := make(map[string]sdk.Coin)
 
 	coinAmount := amount.Amount
-	aggregateIntents := k.AggregateIntents(ctx, zone) // move to zone.GetAggregateIntent() to use the cached version of this.
+	aggregateIntents := zone.GetAggregateIntent()
 
 	for valoper, intent := range aggregateIntents {
 		if !coinAmount.IsZero() {

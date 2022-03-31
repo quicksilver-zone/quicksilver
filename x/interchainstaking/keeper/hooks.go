@@ -15,6 +15,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	if epochIdentifier == "epoch" {
 		k.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 			for _, da := range zoneInfo.DelegationAddresses {
+				k.Logger(ctx).Info("Taking a snapshot of intents")
+				k.AggregateIntents(ctx, zoneInfo)
+				k.Logger(ctx).Info("Withdrawing rewards")
 				if err := k.WithdrawDelegationRewards(ctx, zoneInfo, da); err != nil {
 					k.Logger(ctx).Error("Unable to withdraw delegation rewards", "delegation_address", zoneInfo.DepositAddress.GetAddress(), "zone_identifier", zoneInfo.Identifier, "err", err)
 				}
