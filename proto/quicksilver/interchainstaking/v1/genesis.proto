@@ -22,7 +22,8 @@ message RegisteredZone {
   ];
   repeated Validator validators = 9;
   map<string, DelegatorIntent> delegator_intent = 10;
-  bool multi_send = 11;
+  map<string, ValidatorIntent> aggregate_intent = 11;
+  bool multi_send = 12;
 }
 
 message ICAAccount {

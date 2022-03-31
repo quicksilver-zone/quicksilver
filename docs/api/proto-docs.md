@@ -38,6 +38,7 @@
     - [PortConnectionTuple](#quicksilver.interchainstaking.v1.PortConnectionTuple)
     - [Receipt](#quicksilver.interchainstaking.v1.Receipt)
     - [RegisteredZone](#quicksilver.interchainstaking.v1.RegisteredZone)
+    - [RegisteredZone.AggregateIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.AggregateIntentEntry)
     - [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry)
     - [TransferRecord](#quicksilver.interchainstaking.v1.TransferRecord)
     - [Validator](#quicksilver.interchainstaking.v1.Validator)
@@ -513,7 +514,24 @@ GenesisState defines the interchainstaking module's genesis state.
 | `redemption_rate` | [string](#string) |  |  |
 | `validators` | [Validator](#quicksilver.interchainstaking.v1.Validator) | repeated |  |
 | `delegator_intent` | [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry) | repeated |  |
+| `aggregate_intent` | [RegisteredZone.AggregateIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.AggregateIntentEntry) | repeated |  |
 | `multi_send` | [bool](#bool) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.RegisteredZone.AggregateIntentEntry"></a>
+
+### RegisteredZone.AggregateIntentEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent) |  |  |
 
 
 
