@@ -37,7 +37,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	}
 
 	packetData := icatypes.InterchainAccountPacketData{}
-	json.Unmarshal(packet.Data, &packetData)
+	if err := json.Unmarshal(packet.Data, &packetData); err != nil {
+		return err
+	}
 	msgs, err := icatypes.DeserializeCosmosTx(k.cdc, packetData.Data)
 	if err != nil {
 		k.Logger(ctx).Info("Error decoding messages", "err", err)
@@ -75,7 +77,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			k.Logger(ctx).Info("Shares tokenized", "response", response)
 			// check tokenizedShareTransfers (inc. rebalance and unbond)
-			k.HandleTokenizedShares(ctx, src, response.Amount)
+			if err := k.HandleTokenizedShares(ctx, src, response.Amount); err != nil {
+				return err
+			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgDelegate":
 			// response := stakingtypes.MsgDelegateResponse{}

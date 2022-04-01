@@ -26,13 +26,17 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	if found {
 		q.LastHeight = sdk.NewInt(ctx.BlockHeight())
 		k.SetPeriodicQuery(ctx, q)
-		k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height))
+		if err := k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height)); err != nil {
+			return nil, err
+		}
 
 	} else {
 		_, found2 := k.GetSingleQuery(ctx, msg.QueryId)
 		if found2 {
 			k.DeleteSingleQuery(ctx, msg.QueryId)
-			k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height))
+			if err := k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height)); err != nil {
+				return nil, err
+			}
 		} else {
 			return nil, fmt.Errorf("query object no longer exists; likely deleted since query was requested")
 		}
