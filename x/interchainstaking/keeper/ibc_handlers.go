@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 
+	//lint:ignore SA1019 ignore this!
 	"github.com/golang/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
