@@ -34,7 +34,9 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		return nil, err
 	}
 	portId, _ := icatypes.NewControllerPortID(portOwner)
-	k.SetConnectionForPort(ctx, msg.ConnectionId, portId)
+	if err := k.SetConnectionForPort(ctx, msg.ConnectionId, portId); err != nil {
+		return nil, err
+	}
 
 	// generate delegate addresses
 	for i := 0; i < types.DelegationAccountCount; i++ {
@@ -43,7 +45,9 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 			return nil, err
 		}
 		portId, _ := icatypes.NewControllerPortID(portOwner)
-		k.SetConnectionForPort(ctx, msg.ConnectionId, portId)
+		if err := k.SetConnectionForPort(ctx, msg.ConnectionId, portId); err != nil {
+			return nil, err
+		}
 	}
 
 	bondedValidatorQuery := k.ICQKeeper.NewPeriodicQuery(ctx, msg.ConnectionId, msg.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingtypes.BondStatusBonded}, sdk.NewInt(types.ValidatorSetInterval))

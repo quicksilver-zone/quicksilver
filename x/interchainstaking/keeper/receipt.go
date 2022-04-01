@@ -94,8 +94,12 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *coretypes.ResultTx
 	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
 
 	k.UpdateIntent(ctx, accAddress, zone, coins)
-	k.MintQAsset(ctx, accAddress, zone, coins)
-	k.TransferToDelegate(ctx, zone, coins)
+	if err := k.MintQAsset(ctx, accAddress, zone, coins); err != nil {
+		k.Logger(ctx).Error("Unable to mint QAsset. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+	}
+	if err := k.TransferToDelegate(ctx, zone, coins); err != nil {
+		k.Logger(ctx).Error("Unable to transfer to delegate. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+	}
 	k.SetReceipt(ctx, *receipt)
 }
 
