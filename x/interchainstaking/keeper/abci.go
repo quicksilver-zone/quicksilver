@@ -130,7 +130,10 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 					da.Balance = balance
 					k.SetRegisteredZone(ctx, zoneInfo)
 					k.Logger(ctx).Info("Delegate account balance is non-zero; delegating!", "current", balance)
-					k.Delegate(ctx, zoneInfo, da)
+					err := k.Delegate(ctx, zoneInfo, da)
+					if err != nil {
+						k.Logger(ctx).Error("Unable to delegate balances", "delegation_address", zoneInfo.DepositAddress.GetAddress(), "zone_identifier", zoneInfo.Identifier, "err", err)
+					}
 				}
 			}
 			return false
