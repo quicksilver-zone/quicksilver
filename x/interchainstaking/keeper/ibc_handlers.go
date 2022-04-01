@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 
+	//nolint
 	"github.com/golang/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
