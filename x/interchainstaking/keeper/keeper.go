@@ -75,22 +75,26 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 func (k Keeper) validatorSetInterval(ctx sdk.Context) zoneItrFn {
 	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 		k.Logger(ctx).Info("Setting validators for zone", "zone", zoneInfo.ChainId)
+		fmt.Printf("Setting validators for zone: %v\n", zoneInfo.ChainId)
 
 		// we must populate validators first, else the next piece fails :)
 		validator_data, err := k.ICQKeeper.GetDatapoint(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingTypes.BondStatusBonded})
 		if err != nil {
 			k.Logger(ctx).Error("Unable to query validators for zone", "zone", zoneInfo.ChainId)
+			fmt.Printf("Unable to query validators for zone %v:\n\t%v\n", zoneInfo.ChainId, err)
 			return false
 		}
 
 		if validator_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - types.DelegateDelegationsInterval)) {
 			k.Logger(ctx).Error(fmt.Sprintf("Validators Info for zone is older than %d blocks", types.DelegateDelegationsInterval), "zone", zoneInfo.ChainId)
+			fmt.Printf("Validators Info for zone %v is older than %d blocks\n", zoneInfo.ChainId, types.DelegateDelegationsInterval)
 			return false
 		}
 		validatorsRes := stakingTypes.QueryValidatorsResponse{}
 		err = k.cdc.UnmarshalJSON(validator_data.Value, &validatorsRes)
 		if err != nil {
 			k.Logger(ctx).Error("Unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
+			fmt.Printf("Unable to unmarshal validators info for zone %v:\n\t%v\n", zoneInfo.ChainId, err)
 			return false
 		}
 
@@ -98,6 +102,7 @@ func (k Keeper) validatorSetInterval(ctx sdk.Context) zoneItrFn {
 			val, err := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
 			if err != nil {
 				k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
+				fmt.Printf("Unable to find validator - adding... %v\n", validator.OperatorAddress)
 				zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
 					ValoperAddress: validator.OperatorAddress,
 					CommissionRate: validator.GetCommission(),

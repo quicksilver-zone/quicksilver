@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
-	qsapp "github.com/ingenuity-build/quicksilver/app"
+	qapp "github.com/ingenuity-build/quicksilver/app"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -13,7 +13,7 @@ var (
 )
 
 func init() {
-	ibctesting.DefaultTestingAppInit = qsapp.SetupTestingApp
+	ibctesting.DefaultTestingAppInit = qapp.SetupTestingApp
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -29,8 +29,8 @@ type KeeperTestSuite struct {
 	chainB *ibctesting.TestChain
 }
 
-func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *qsapp.Quicksilver {
-	app, ok := chain.App.(*qsapp.Quicksilver)
+func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *qapp.Quicksilver {
+	app, ok := chain.App.(*qapp.Quicksilver)
 	if !ok {
 		panic("not Quicksilver app")
 	}

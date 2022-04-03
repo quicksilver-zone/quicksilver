@@ -93,6 +93,55 @@ func (s *KeeperTestSuite) TestRegisterZone() {
 	}
 }
 
+func (s *KeeperTestSuite) TestRequestRedemption() {
+	var (
+		path *ibctesting.Path
+		msg  icstypes.MsgRequestRedemption
+	)
+
+	tests := []struct {
+		name      string
+		malleate  func()
+		expectErr bool
+	}{
+		{
+			"valid",
+			func() {
+				msg = icstypes.MsgRequestRedemption{
+					Coin:               "uatom",
+					DestinationAddress: TestOwnerAddress,
+					FromAddress:        TestOwnerAddress,
+				}
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			s.SetupTest()
+
+			path = NewQuicksilverPath(s.chainA, s.chainB)
+			s.coordinator.SetupConnections(path)
+
+			tt.malleate()
+
+			msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.RequestRedemption(sdktypes.WrapSDKContext(s.chainA.GetContext()), &msg)
+
+			if tt.expectErr {
+				s.Require().Error(err)
+				s.Require().Nil(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotNil(res)
+			}
+		})
+	}
+}
+
 func (s *KeeperTestSuite) TestSignalIntent() {
 	var (
 		path *ibctesting.Path
@@ -107,7 +156,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 		{
 			"valid",
 			func() {
-				valAddress, err := sdktypes.ValAddressFromHex(s.chainB.Vals.Validators[1].Address.String())
+				valAddress, err := sdktypes.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
 				s.Require().NoError(err)
 				msg = icstypes.MsgSignalIntent{
 					ChainId: s.chainB.ChainID,
@@ -149,23 +198,31 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 			_, err := msgSrv.RegisterZone(sdktypes.WrapSDKContext(ctx), &zonemsg)
 			s.Require().NoError(err)
 
+			qvr := stakingtypes.QueryValidatorsResponse{
+				Validators: s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()),
+			}
+
 			icqmsgSrv := icqkeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainQueryKeeper)
-			_, err = icqmsgSrv.SubmitQueryResponse(sdktypes.WrapSDKContext(ctx),
-				&icqtypes.MsgSubmitQueryResponse{
-					ChainId: s.chainA.ChainID,
-					QueryId: icqkeeper.GenerateQueryHash(
-						path.EndpointB.ConnectionID,
-						s.chainB.ChainID,
-						"cosmos.staking.v1beta1.Query/Validators",
-						map[string]string{"status": stakingtypes.BondStatusBonded},
-					),
-					FromAddress: TestOwnerAddress,
-				},
-			)
+			qmsg := icqtypes.MsgSubmitQueryResponse{
+				// target or source chain_id?
+				ChainId: s.chainB.ChainID,
+				QueryId: icqkeeper.GenerateQueryHash(
+					path.EndpointA.ConnectionID,
+					s.chainB.ChainID,
+					"cosmos.staking.v1beta1.Query/Validators",
+					map[string]string{"status": stakingtypes.BondStatusBonded},
+				),
+				Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshalJSON(&qvr),
+				Height:      s.chainB.CurrentHeader.Height,
+				FromAddress: TestOwnerAddress,
+			}
+			_, err = icqmsgSrv.SubmitQueryResponse(sdktypes.WrapSDKContext(ctx), &qmsg)
 			s.Require().NoError(err)
 
 			s.coordinator.CommitNBlocks(s.chainA, 25)
 			s.coordinator.CommitNBlocks(s.chainB, 25)
+
+			//fmt.Printf("qmsg: %v\n", qmsg)
 
 			res, err := msgSrv.SignalIntent(sdktypes.WrapSDKContext(ctx), &msg)
 
