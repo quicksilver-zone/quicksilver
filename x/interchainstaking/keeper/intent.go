@@ -25,6 +25,7 @@ func (k Keeper) GetIntent(ctx sdk.Context, zone types.RegisteredZone, delegator 
 
 // SetIntent store the delegator intent
 func (k Keeper) SetIntent(ctx sdk.Context, zone types.RegisteredZone, intent types.DelegatorIntent) {
+	fmt.Printf("intent:\n\t%s\n", intent)
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), append(types.KeyPrefixIntent, []byte(zone.ChainId)...))
 	bz := k.cdc.MustMarshal(&intent)

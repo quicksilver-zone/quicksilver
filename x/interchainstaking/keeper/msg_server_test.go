@@ -166,6 +166,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 							Weight:         sdktypes.MustNewDecFromStr("0.3"),
 						},
 					},
+					FromAddress: TestOwnerAddress,
 				}
 			},
 			false,
