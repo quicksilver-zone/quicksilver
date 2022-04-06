@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -215,11 +216,12 @@ func (k Keeper) delegateInterval(ctx sdk.Context) zoneItrFn {
 					err := k.Delegate(ctx, zoneInfo, da)
 					if err != nil {
 						k.Logger(ctx).Error("Unable to delegate balances", "delegation_address", zoneInfo.DepositAddress.GetAddress(), "zone_identifier", zoneInfo.Identifier, "err", err)
+					}
 				}
 			}
 		}
 		return false
-	}	
+	}
 }
 
 // Delegators and delegations in this context refers to the delegation accounts
