@@ -18,6 +18,10 @@ else
   rm -rf ${CHAIN_DIR}/${CHAINID_2}c
   rm -rf ${CHAIN_DIR}/hermes &> /dev/null
   rm -rf ${CHAIN_DIR}/icq &> /dev/null
+
+  TIME=$(date --date '-1 minute' +%Y-%m-%dT%H:%m:%S.%NZ)
+  jq ".genesis_time = \"$TIME\"" ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json > ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json.new && mv ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json{.new,}
+
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1} ${CHAIN_DIR}/${CHAINID_1}
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_2} ${CHAIN_DIR}/${CHAINID_2}
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_2}a ${CHAIN_DIR}/${CHAINID_2}a
@@ -80,9 +84,9 @@ $QS_EXEC tx interchainstaking register cosmos connection-0 $CHAINID_2 uqatom uat
 sleep 15
 
 ## TODO: get val2 valoper from keys
-$TZ_EXEC tx staking tokenize-share $VAL_VALOPER_2 10000uatom $VAL_ADDRESS_2 --from val2 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test  #1
-$TZ2_EXEC tx staking tokenize-share $VAL_VALOPER_3 25000uatom $VAL_ADDRESS_3 --from val3 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test   #2
-$TZ3_EXEC tx staking tokenize-share $VAL_VALOPER_4 65000uatom $VAL_ADDRESS_4 --from val4 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test  #3
+$TZ_EXEC tx staking tokenize-share $VAL_VALOPER_2 10000000uatom $VAL_ADDRESS_2 --from val2 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test  #1
+$TZ2_EXEC tx staking tokenize-share $VAL_VALOPER_3 25000000uatom $VAL_ADDRESS_3 --from val3 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test   #2
+$TZ3_EXEC tx staking tokenize-share $VAL_VALOPER_4 65000000uatom $VAL_ADDRESS_4 --from val4 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test  #3
 
 sleep 5
 DEPOSIT_ACCOUNT=$($QS_EXEC q interchainstaking zones --output=json | jq .zones[0].deposit_address.address -r)
@@ -92,48 +96,29 @@ while [[ "$DEPOSIT_ACCOUNT" == "null" ]]; do
 done
 
 sleep 5
-$TZ_EXEC tx bank send val2 $DEPOSIT_ACCOUNT 10000${VAL_VALOPER_2}1 --chain-id $CHAINID_2 -y --keyring-backend=test
-$TZ2_EXEC tx bank send val3 $DEPOSIT_ACCOUNT 15000${VAL_VALOPER_3}2 --chain-id $CHAINID_2 -y --keyring-backend=test
+$TZ_EXEC tx bank send val2 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_2}1 --chain-id $CHAINID_2 -y --keyring-backend=test
+$TZ2_EXEC tx bank send val3 $DEPOSIT_ACCOUNT 15000000${VAL_VALOPER_3}2 --chain-id $CHAINID_2 -y --keyring-backend=test
 
 sleep 5
-$TZ_EXEC tx staking delegate ${VAL_VALOPER_2} 36000uatom --from demowallet2 --chain-id $CHAINID_2 -y --keyring-backend=test
+$TZ_EXEC tx staking delegate ${VAL_VALOPER_2} 36000000uatom --from demowallet2 --chain-id $CHAINID_2 -y --keyring-backend=test
 
 sleep 5
 
-$TZ_EXEC tx staking tokenize-share $VAL_VALOPER_2 36000uatom $VAL_ADDRESS_2 --from demowallet2 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test   #4
-$TZ2_EXEC tx bank send val3 $DEPOSIT_ACCOUNT 10000${VAL_VALOPER_3}2 --chain-id $CHAINID_2 -y --keyring-backend=test
+$TZ_EXEC tx staking tokenize-share $VAL_VALOPER_2 36000000uatom $VAL_ADDRESS_2 --from demowallet2 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test   #4
+$TZ2_EXEC tx bank send val3 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_3}2 --chain-id $CHAINID_2 -y --keyring-backend=test
 
 sleep 10
 
-$TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 20000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
-$TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 25000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test
+$TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 20000000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
+$TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 25000000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test
 
 sleep 10
 
-$TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 10000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
-$TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 15000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test
+$TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
+$TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 15000000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test
 
 sleep 10
 
-$TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 6000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
-$TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 25000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test
+$TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 6000000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
+$TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 25000000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test
 
-sleep 30
-
-V2_DELEG=$(docker-compose exec testzone icad q staking delegations-to ${VAL_VALOPER_2} --output=json | jq '.delegation_responses[].balance.amount' -r | sort -n | head -n-1 | awk '{sum+=$0} END{print sum}')
-V3_DELEG=$(docker-compose exec testzone icad q staking delegations-to ${VAL_VALOPER_3} --output=json | jq '.delegation_responses[].balance.amount' -r | sort -n | head -n-1 | awk '{sum+=$0} END{print sum}')
-V4_DELEG=$(docker-compose exec testzone icad q staking delegations-to ${VAL_VALOPER_4} --output=json | jq '.delegation_responses[].balance.amount' -r | sort -n | head -n-1 | awk '{sum+=$0} END{print sum}')
-
-if [[ ! $V2_DELEG -eq 46000 ]]; then echo "ERROR: val 2 delegation does not match 46000 ($V2_DELEG)"; exit 1; fi
-if [[ ! $V3_DELEG -eq 25000 ]]; then echo "ERROR: val 3 delegation does not match 25000 ($V3_DELEG)"; exit 1; fi
-if [[ ! $V4_DELEG -eq 65000 ]]; then echo "ERROR: val 4 delegation does not match 65000 ($V4_DELEG)"; exit 1; fi
-sleep 90
-
-TOTAL=0
-for i in $(docker-compose exec quicksilver quicksilverd q interchainstaking zones -o json | jq .zones[].delegation_addresses[].address -r | sort); do
-  TOTAL=$(docker-compose exec testzone icad q staking delegations ${i} --output=json | jq '.delegation_responses[].balance.amount' -r | awk "BEGIN{sum=$TOTAL} {sum+=\$0} END{print sum}")
-done
-
-if [[ ! $TOTAL -eq 136000 ]]; then echo "Total of delegation buckets does not match 136000 as expected (Actual: $TOTAL)"; exit 1; fi
-
-echo "All tests passed :)"
