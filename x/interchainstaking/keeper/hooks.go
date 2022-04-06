@@ -14,9 +14,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	k.Logger(ctx).Info("Handling epoch end")
 	if epochIdentifier == "epoch" {
 		k.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
+			k.Logger(ctx).Info("Taking a snapshot of intents")
+			k.AggregateIntents(ctx, zoneInfo)
 			for _, da := range zoneInfo.DelegationAddresses {
-				k.Logger(ctx).Info("Taking a snapshot of intents")
-				k.AggregateIntents(ctx, zoneInfo)
 				k.Logger(ctx).Info("Withdrawing rewards")
 				k.WithdrawDelegationRewards(ctx, zoneInfo, da)
 			}
