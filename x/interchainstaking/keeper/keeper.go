@@ -13,6 +13,8 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v3/modules/light-clients/07-tendermint/types"
 	"github.com/tendermint/tendermint/libs/log"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -28,10 +30,11 @@ type Keeper struct {
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICQKeeper           interchainquerykeeper.Keeper
 	BankKeeper          bankkeeper.Keeper
+	IBCKeeper           ibckeeper.Keeper
 }
 
 // NewKeeper returns a new instance of zones Keeper
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper) Keeper {
 	return Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
@@ -39,6 +42,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, bankKeeper bankkeeper.Kee
 		ICAControllerKeeper: icacontrollerkeeper,
 		ICQKeeper:           icqKeeper,
 		BankKeeper:          bankKeeper,
+		IBCKeeper:           ibcKeeper,
 	}
 }
 
@@ -75,26 +79,22 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 func (k Keeper) validatorSetInterval(ctx sdk.Context) zoneItrFn {
 	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 		k.Logger(ctx).Info("Setting validators for zone", "zone", zoneInfo.ChainId)
-		fmt.Printf("Setting validators for zone: %v\n", zoneInfo.ChainId)
 
 		// we must populate validators first, else the next piece fails :)
 		validator_data, err := k.ICQKeeper.GetDatapoint(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingTypes.BondStatusBonded})
 		if err != nil {
 			k.Logger(ctx).Error("Unable to query validators for zone", "zone", zoneInfo.ChainId)
-			fmt.Printf("Unable to query validators for zone %v:\n\t%v\n", zoneInfo.ChainId, err)
 			return false
 		}
 
 		if validator_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - types.DelegateDelegationsInterval)) {
 			k.Logger(ctx).Error(fmt.Sprintf("Validators Info for zone is older than %d blocks", types.DelegateDelegationsInterval), "zone", zoneInfo.ChainId)
-			fmt.Printf("Validators Info for zone %v is older than %d blocks\n", zoneInfo.ChainId, types.DelegateDelegationsInterval)
 			return false
 		}
 		validatorsRes := stakingTypes.QueryValidatorsResponse{}
 		err = k.cdc.UnmarshalJSON(validator_data.Value, &validatorsRes)
 		if err != nil {
 			k.Logger(ctx).Error("Unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
-			fmt.Printf("Unable to unmarshal validators info for zone %v:\n\t%v\n", zoneInfo.ChainId, err)
 			return false
 		}
 
@@ -102,7 +102,6 @@ func (k Keeper) validatorSetInterval(ctx sdk.Context) zoneItrFn {
 			val, err := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
 			if err != nil {
 				k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
-				fmt.Printf("Unable to find validator - adding... %v\n", validator.OperatorAddress)
 				zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
 					ValoperAddress: validator.OperatorAddress,
 					CommissionRate: validator.GetCommission(),
@@ -273,4 +272,21 @@ func (k Keeper) delegateDelegationsInterval(ctx sdk.Context) zoneItrFn {
 
 		return false
 	}
+}
+
+func (k Keeper) getChainID(ctx sdk.Context, connectionID string) (string, error) {
+	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
+	if !found {
+		return "", fmt.Errorf("invalid connection id, \"%s\" not found", connectionID)
+	}
+	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, conn.ClientId)
+	if !found {
+		return "", fmt.Errorf("client id \"%s\" not found for connection \"%s\"", conn.ClientId, connectionID)
+	}
+	client, ok := clientState.(*ibctmtypes.ClientState)
+	if !ok {
+		return "", fmt.Errorf("invalid client state for client \"%s\" on connection \"%s\"", conn.ClientId, connectionID)
+	}
+
+	return client.ChainId, nil
 }
