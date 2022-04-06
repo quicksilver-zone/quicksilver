@@ -22,7 +22,7 @@ func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty int64) []*ICAAc
 
 func (z RegisteredZone) SupportMultiSend() bool { return z.MultiSend }
 
-func (z RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, error) {
+func (z *RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, error) {
 	for _, v := range z.Validators {
 		if v.ValoperAddress == valoper {
 			return v, nil
@@ -31,7 +31,10 @@ func (z RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, error
 	return nil, fmt.Errorf("invalid validator %s", valoper)
 }
 
-func (z RegisteredZone) GetDelegationAccountByAddress(address string) (*ICAAccount, error) {
+func (z *RegisteredZone) GetDelegationAccountByAddress(address string) (*ICAAccount, error) {
+	if z.DelegationAddresses == nil {
+		return nil, fmt.Errorf("no delegation accounts set: %v", z)
+	}
 	for _, account := range z.DelegationAddresses {
 		if account.GetAddress() == address {
 			return account, nil
@@ -40,7 +43,7 @@ func (z RegisteredZone) GetDelegationAccountByAddress(address string) (*ICAAccou
 	return nil, fmt.Errorf("unable to find delegation account: %s", address)
 }
 
-func (z RegisteredZone) GetDelegationsForDelegator(delegator string) []*Delegation {
+func (z *RegisteredZone) GetDelegationsForDelegator(delegator string) []*Delegation {
 	delegations := []*Delegation{}
 	for _, v := range z.Validators {
 		delegation, err := v.GetDelegationForDelegator(delegator)
@@ -120,6 +123,9 @@ func (z RegisteredZone) DetermineStateIntentDiff(aggregateIntent map[string]*Val
 		// every validator an equal intent artificially.
 
 		// this can be removed when we cache intent.
+		if aggregateIntent == nil {
+			aggregateIntent = make(map[string]*ValidatorIntent)
+		}
 
 		for _, val := range z.Validators {
 			aggregateIntent[val.ValoperAddress] = &ValidatorIntent{ValoperAddress: val.ValoperAddress, Weight: sdk.OneDec()}
@@ -241,6 +247,43 @@ func (z *RegisteredZone) GetRedemptionTargets(requests map[string]sdk.Int, denom
 			}
 		}
 
+	}
+	return out
+}
+
+func (z *RegisteredZone) UpdateDelegatedAmount() {
+
+	sum := map[string]sdk.Dec{}
+	for _, validator := range z.Validators {
+		for _, delegation := range validator.Delegations {
+			_, ok := sum[delegation.DelegationAddress]
+			if !ok {
+				sum[delegation.DelegationAddress] = delegation.Amount
+			} else {
+				sum[delegation.DelegationAddress] = sum[delegation.DelegationAddress].Add(delegation.Amount)
+			}
+		}
+	}
+
+	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())
+	for _, da := range z.DelegationAddresses {
+		val, ok := sum[da.Address]
+		if ok {
+			delCoin := sdk.NewCoin(z.BaseDenom, val.TruncateInt())
+			if da.DelegatedBalance.IsNil() || da.DelegatedBalance.IsZero() || !da.DelegatedBalance.Equal(delCoin) {
+				// TODO: this still triggers periodically
+				fmt.Printf("[%s] Mismatch between delegated amount and delegations; zone: %v, delegations: %v\n", da.Address, da.DelegatedBalance, delCoin)
+				da.DelegatedBalance = delCoin
+			}
+			out = out.Add(da.DelegatedBalance)
+		}
+	}
+}
+
+func (z *RegisteredZone) GetDelegatedAmount() sdk.Coin {
+	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())
+	for _, da := range z.DelegationAddresses {
+		out = out.Add(da.DelegatedBalance)
 	}
 	return out
 }
