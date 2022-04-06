@@ -98,6 +98,8 @@ func (im IBCModule) OnChanOpenAck(
 				zoneInfo.DelegationAddresses = append(zoneInfo.DelegationAddresses, &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID})
 				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(types.DelegateInterval))
 				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)
+				rewardsQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.distribution.v1beta1.Query/DelegationTotalRewards", map[string]string{"delegator": address}, sdk.NewInt(types.DelegateInterval))
+				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *rewardsQuery)
 				delegationQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(types.DelegateDelegationsInterval)) // this can probably be less frequent, because we manage delegations ourselves.
 				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *delegationQuery)
 			} else {
