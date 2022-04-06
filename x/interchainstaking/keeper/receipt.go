@@ -189,10 +189,9 @@ func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZ
 	}
 
 	// ensure any remainder gets deposited in the first account (as it will have the lowest balance)
-	out[0].Coins.Add(inAmount...)
+	out[0].Coins = out[0].Coins.Add(inAmount...)
 
-	sendMsg := bankTypes.NewMsgMultiSend(in, out)
-	var msg sdk.Msg = sendMsg
+	msg := bankTypes.NewMsgMultiSend(in, out)
 	// send from deposit to accounts
 
 	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress)

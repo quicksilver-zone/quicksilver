@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -73,19 +74,138 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 }
 
 func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {
-	_ = sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// ctx.EventManager().EmitEvents(sdk.Events{
-	// 	sdk.NewEvent(
-	// 		sdk.EventTypeMessage,
-	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-	// 	),
-	// 	sdk.NewEvent(
-	// 		types.EventTypeRegisterZone,
-	// 		sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ConnectionId),
-	// 		sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ChainId),
-	// 	),
-	// })
+	// validate coins are positive
+	inCoin, err := sdk.ParseCoinNormalized(msg.Coin)
+	if err != nil {
+		return nil, err
+	}
+
+	if !inCoin.IsPositive() {
+		return nil, fmt.Errorf("invalid input coin value")
+	}
+
+	// validate recipient address
+	if len(msg.DestinationAddress) == 0 {
+		return nil, fmt.Errorf("recipient address not provided")
+	}
+
+	_, _, err = bech32.DecodeAndConvert(msg.DestinationAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: store HRP of RegisteredZone to validate destination address (don't let users do stupid things!)
+
+	var zone types.RegisteredZone
+
+	k.IterateRegisteredZones(ctx, func(_ int64, thisZone types.RegisteredZone) bool {
+		if thisZone.LocalDenom == inCoin.GetDenom() {
+			zone = thisZone
+			return true
+		}
+		return false
+	})
+	k.Logger(ctx).Error("DEBUG 6")
+
+	sender, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	if !k.BankKeeper.HasBalance(ctx, sender, inCoin) {
+		return nil, fmt.Errorf("account has insufficient balance of qasset to burn")
+	}
+	k.Logger(ctx).Error("DEBUG 7")
+
+	rate := zone.RedemptionRate
+	native_tokens := inCoin.Amount.ToDec().Mul(rate).TruncateInt()
+	k.Logger(ctx).Error("DEBUG 8")
+
+	outTokens := sdk.NewCoin(zone.BaseDenom, native_tokens)
+	k.Logger(ctx).Error("DEBUG 9", "outTokens", outTokens, "nativeTokens", native_tokens)
+
+	// lock qAssets - how are we tracking this?
+	k.BankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(msg.FromAddress), types.ModuleName, sdk.NewCoins(inCoin))
+	k.Logger(ctx).Error("DEBUG 10")
+
+	// send message
+	userIntent, found := k.GetIntent(ctx, zone, msg.FromAddress)
+	k.Logger(ctx).Error("DEBUG 11", "intent", userIntent)
+
+	if !found {
+		// here we should use the tokens the zone WANTS to get rid of!
+		// fetch cachedIntent vs  currentState from zone.
+		// for now:
+		userIntent = types.DelegatorIntent{Delegator: msg.FromAddress, Intents: []*types.ValidatorIntent{}}
+		k.Logger(ctx).Error("DEBUG 11a")
+
+	}
+
+	intentMap := userIntent.ToMap(native_tokens)
+	k.Logger(ctx).Error("DEBUG 11", "intent", intentMap)
+
+	targets := zone.GetRedemptionTargets(intentMap, zone.BaseDenom) // map[string][string]sdk.Coin
+	k.Logger(ctx).Error("DEBUG 12")
+
+	if len(targets) == 0 {
+		return nil, fmt.Errorf("targets can never be zero length")
+	}
+
+	sumAmount := sdk.NewCoins()
+
+	for delegator, validators := range targets {
+		k.Logger(ctx).Error("DEBUG 13", "delegator", delegator)
+
+		msgs := make([]sdk.Msg, 0)
+		for validator, amount := range validators {
+			k.Logger(ctx).Error("DEBUG 13a", "delegator", delegator, "validator", validator)
+			msgs = append(msgs, &stakingtypes.MsgTokenizeShares{
+				DelegatorAddress:    delegator,
+				ValidatorAddress:    validator,
+				Amount:              amount,
+				TokenizedShareOwner: msg.DestinationAddress,
+			})
+			sumAmount = sumAmount.Add(amount)
+			// what happens here if we revert below? this is stored in the KV store, so it should be rolled back. Check me.
+			k.AddWithdrawalRecord(ctx, delegator, validator, msg.DestinationAddress, amount)
+		}
+		icaAccount, err := zone.GetDelegationAccountByAddress(delegator)
+		k.Logger(ctx).Error("DEBUG 13b", "delegator", delegator, "ica", icaAccount)
+		if err != nil {
+			panic(err) // panic here because something is terribly wrong if we cann't find the delegation bucket here!!!
+		}
+		k.Logger(ctx).Error("DEBUG 13c", "msgs", msgs)
+		k.SubmitTx(ctx, msgs, icaAccount)
+	}
+	k.Logger(ctx).Error("DEBUG 14")
+
+	if !sumAmount.IsAllLTE(sdk.NewCoins(outTokens)) {
+		k.Logger(ctx).Error("Output coins > than expected!", "sum", sumAmount, "expected", outTokens)
+		panic("argh")
+	}
+	k.Logger(ctx).Error("DEBUG 15")
+
+	//msgs = append(msgs, &banktypes.MsgSend{t.DelegatorsAddress(), msg.DestinationAddress, t.Amount()})
+	// on confirmation of asset dispersal, burn qAssets?
+
+	// burn qAssets
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeRedemptionRequest,
+			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Coin),
+			sdk.NewAttribute(types.AttributeKeyRedeemAmount, sumAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
+			sdk.NewAttribute(types.AttributeKeyRecipientChain, zone.ChainId),
+			sdk.NewAttribute(types.AttributeKeyConnectionId, zone.ConnectionId),
+		),
+	})
 
 	return &types.MsgRequestRedemptionResponse{}, nil
 }
