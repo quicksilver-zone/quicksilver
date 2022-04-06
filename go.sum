@@ -562,8 +562,8 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/influxdata/influxdb v1.2.3-0.20180221223340-01288bdb0883/go.mod h1:qZna6X/4elxqT3yI9iZYdZrWWdeFOOprn86kgg4+IzY=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
-github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-1 h1:EQ/mq3kcQqUBGbThYfRKnOR9ttU7fa2K0TgEWyVCD1I=
-github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-1/go.mod h1:9oagkJ38Ww7SU7lxb88rhE9tDo69RDaumJuXN+e7xuM=
+github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-2 h1:JdEyOcJytMX6Mv6veDMbMW/QlpHI/iQZjsJOI6HBye8=
+github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-2/go.mod h1:9oagkJ38Ww7SU7lxb88rhE9tDo69RDaumJuXN+e7xuM=
 github.com/ingenuity-build/tm-db v0.6.7-0.20220220171408-3e31f49ebcc2 h1:WQunIvSW7s04ml+eO49udeQCqiHLZwdF63Hm2rjFgMM=
 github.com/ingenuity-build/tm-db v0.6.7-0.20220220171408-3e31f49ebcc2/go.mod h1:byQDzFkZV1syXr/ReXS808NxA2xvyuuVgXOJ/088L6I=
 github.com/jackpal/go-nat-pmp v1.0.2-0.20160603034137-1fa385a6f458/go.mod h1:QPH045xvCAeXUZOxsnwmrtiCoxIr9eob+4orBN1SBKc=
