@@ -126,7 +126,7 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-	github.com/cosmos/cosmos-sdk => github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-1
+	github.com/cosmos/cosmos-sdk => github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-2
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tm-db => github.com/ingenuity-build/tm-db v0.6.7-0.20220220171408-3e31f49ebcc2
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
