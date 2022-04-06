@@ -74,7 +74,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
 			// we should update delegation records here.
-			if err := k.HandleRedeemTokens(ctx, src); err != nil {
+			if err := k.HandleRedeemTokens(ctx, src, response.Amount); err != nil {
 				return err
 			}
 			continue
@@ -288,7 +288,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	return nil
 }
 
-func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg) error {
+func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin) error {
 	k.Logger(ctx).Info("Received MsgRedeemTokensforShares acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgRedeemTokensforShares
 	redeemMsg, ok := msg.(*stakingtypes.MsgRedeemTokensforShares)
@@ -296,7 +296,11 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg) error {
 		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensforShares")
 		return fmt.Errorf("unable to cast source message to MsgRedeemTokensforShares")
 	}
-	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, "", redeemMsg.Amount)
+	validatorAddress, err := k.GetValidatorForToken(ctx, redeemMsg.DelegatorAddress, redeemMsg.Amount)
+	if err != nil {
+		return err
+	}
+	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount)
 }
 
 func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
@@ -310,49 +314,71 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount)
 }
 
+func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, amount sdk.Coin) (string, error) {
+	zone := k.GetZoneForDelegateAccount(ctx, delegatorAddress)
+	if zone == nil {
+		return "", fmt.Errorf("unable to fetch zone for delegate address %s", delegatorAddress)
+	}
+
+	for _, val := range zone.Validators {
+		if strings.HasPrefix(amount.Denom, val.ValoperAddress) {
+			// match!
+			return val.ValoperAddress, nil
+		}
+	}
+
+	return "", fmt.Errorf("unable to find validator for token %s", amount.Denom)
+
+}
+
 func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin) error {
+
+	var validator *types.Validator
+	var err error
+
 	zone := k.GetZoneForDelegateAccount(ctx, delegatorAddress)
 	if zone == nil {
 		return fmt.Errorf("unable to fetch zone for delegate address %s", delegatorAddress)
 	}
-	var err error
-	var validator *types.Validator = nil
 
-	if validatorAddress == "" {
-		for _, val := range zone.Validators {
-			if strings.HasPrefix(amount.Denom, val.ValoperAddress) {
-				// match!
-				validatorAddress = val.ValoperAddress
-				validator = val
-				break
-			}
-		}
-		if validatorAddress == "" {
-			return fmt.Errorf("unable to find validator for token %s", amount.Denom)
-		}
-	}
-
-	if validator == nil {
-		validator, err = zone.GetValidatorByValoper(validatorAddress)
-		if err != nil {
-			return err
-		}
+	validator, err = zone.GetValidatorByValoper(validatorAddress)
+	if err != nil {
+		return err
 	}
 
 	delegation, err := validator.GetDelegationForDelegator(delegatorAddress)
 	if err != nil {
+		if validator.Delegations == nil {
+			validator.Delegations = []*types.Delegation{}
+		}
 		k.Logger(ctx).Info("Adding delegation tuple", "delegator", delegatorAddress, "validator", validator.ValoperAddress, "amount", amount.Amount)
-		validator.Delegations = append(validator.Delegations, &types.Delegation{
+		delegation = &types.Delegation{
 			DelegationAddress: delegatorAddress,
 			ValidatorAddress:  validator.ValoperAddress,
 			Amount:            amount.Amount.ToDec(),
 			Rewards:           sdk.Coins{},
 			RedelegationEnd:   0,
-		})
+		}
+		validator.Delegations = append(validator.Delegations, delegation)
 	} else {
 		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validator.ValoperAddress, "old_amount", delegation.Amount, "inbound_amount", amount.Amount)
 		delegation.Amount = delegation.Amount.Add(amount.Amount.ToDec())
 	}
+
+	da, err := zone.GetDelegationAccountByAddress(delegation.DelegationAddress)
+
+	if err != nil {
+		k.Logger(ctx).Error("Unable to retrieve delegation account", "delegator", delegatorAddress)
+		return err
+	}
+
+	if da.DelegatedBalance.IsNil() || da.DelegatedBalance.IsZero() {
+		da.DelegatedBalance = amount
+	} else {
+		da.DelegatedBalance = da.DelegatedBalance.Add(amount)
+	}
+
+	zone.UpdateDelegatedAmount()
 	k.SetRegisteredZone(ctx, *zone)
 	return nil
 }
@@ -366,7 +392,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.
 		return fmt.Errorf("unable to cast source message to MsgWithdrawDelegatorReward")
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, withdrawMsg.DelegatorAddress)
-	if zone != nil {
+	if zone == nil {
 		return fmt.Errorf("unable to find zone for delegator account %s", withdrawMsg.DelegatorAddress)
 	}
 	da, err := zone.GetDelegationAccountByAddress(withdrawMsg.DelegatorAddress)
