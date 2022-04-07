@@ -77,6 +77,10 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 	return mapping.ConnectionId, nil
 }
 
+// ### Interval functions >>>
+// * some of these functions (or portions thereof) may be changed to single
+//   query type functions, dependent upon callback features / capabilities;
+
 func (k Keeper) validatorSetInterval(ctx sdk.Context) zoneItrFn {
 	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 		k.Logger(ctx).Info("Setting validators for zone", "zone", zoneInfo.ChainId)
@@ -294,6 +298,8 @@ func (k Keeper) delegateDelegationsInterval(ctx sdk.Context) zoneItrFn {
 		return false
 	}
 }
+
+// <<< Interval functions ###
 
 func (k Keeper) getChainID(ctx sdk.Context, connectionID string) (string, error) {
 	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
