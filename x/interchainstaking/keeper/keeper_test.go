@@ -92,8 +92,9 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 	_, err = icqmsgSrv.SubmitQueryResponse(sdktypes.WrapSDKContext(ctx), &qmsg)
 	s.Require().NoError(err)
 
-	s.coordinator.CommitNBlocks(s.chainA, 25)
-	s.coordinator.CommitNBlocks(s.chainB, 25)
+	valsetInterval := uint64(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetParam(ctx, icstypes.KeyValidatorSetInterval))
+	s.coordinator.CommitNBlocks(s.chainA, valsetInterval)
+	s.coordinator.CommitNBlocks(s.chainB, valsetInterval)
 }
 
 func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
