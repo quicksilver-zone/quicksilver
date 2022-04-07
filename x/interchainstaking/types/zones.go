@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty int64) []*ICAAccount {
+func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty uint64) []*ICAAccount {
 	delegationAccounts := z.DelegationAddresses
 	sort.Slice(delegationAccounts, func(i, j int) bool {
 		return delegationAccounts[i].DelegatedBalance.Amount.GT(delegationAccounts[j].DelegatedBalance.Amount)

@@ -35,6 +35,7 @@
     - [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent)
     - [GenesisState](#quicksilver.interchainstaking.v1.GenesisState)
     - [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount)
+    - [Params](#quicksilver.interchainstaking.v1.Params)
     - [PortConnectionTuple](#quicksilver.interchainstaking.v1.PortConnectionTuple)
     - [Receipt](#quicksilver.interchainstaking.v1.Receipt)
     - [RegisteredZone](#quicksilver.interchainstaking.v1.RegisteredZone)
@@ -437,6 +438,7 @@ GenesisState defines the interchainstaking module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
+| `params` | [Params](#quicksilver.interchainstaking.v1.Params) |  |  |
 | `zones` | [RegisteredZone](#quicksilver.interchainstaking.v1.RegisteredZone) | repeated |  |
 
 
@@ -456,6 +458,27 @@ GenesisState defines the interchainstaking module's genesis state.
 | `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | balance defines the different coins this balance holds. |
 | `delegated_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
 | `port_name` | [string](#string) |  | Delegations here? or against validator? |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.Params"></a>
+
+### Params
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegation_account_count` | [uint64](#uint64) |  |  |
+| `delegation_account_split` | [uint64](#uint64) |  |  |
+| `deposit_interval` | [uint64](#uint64) |  |  |
+| `delegate_interval` | [uint64](#uint64) |  |  |
+| `delegations_interval` | [uint64](#uint64) |  |  |
+| `validatorset_interval` | [uint64](#uint64) |  |  |
+| `commission_rate` | [string](#string) |  |  |
 
 
 

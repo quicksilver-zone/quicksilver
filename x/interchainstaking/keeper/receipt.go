@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -138,10 +137,16 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 		return k.TransferToDelegateMulti(ctx, zone, inAmount)
 	} else {
 		eachAmount := sdk.Coins{}
-		splits := int64(math.Min(types.DelegationAccountSplit, float64(len(zone.DelegationAddresses))))
+		accountSplits := k.GetParam(ctx, types.KeyDelegateAccountCount)
+		splits := func(x, y uint64) uint64 {
+			if x > y {
+				return y
+			}
+			return x
+		}(accountSplits, uint64(len(zone.DelegationAddresses)))
 
 		for _, asset := range inAmount {
-			thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewInt(splits))}
+			thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
 			eachAmount = eachAmount.Add(thisAsset)
 		}
 		accounts := zone.GetDelegationAccountsByLowestBalance(splits)
@@ -171,9 +176,16 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 
 func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZone, inAmount sdk.Coins) error {
 	eachAmount := sdk.Coins{}
-	splits := int64(math.Min(types.DelegationAccountSplit, float64(len(zone.DelegationAddresses))))
+	accountSplits := k.GetParam(ctx, types.KeyDelegateAccountCount)
+	splits := func(x, y uint64) uint64 {
+		if x > y {
+			return y
+		}
+		return x
+	}(accountSplits, uint64(len(zone.DelegationAddresses)))
+
 	for _, asset := range inAmount {
-		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewInt(splits))}
+		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
 		eachAmount = eachAmount.Add(thisAsset)
 	}
 

@@ -12,6 +12,7 @@ import (
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
@@ -32,10 +33,15 @@ type Keeper struct {
 	ICQKeeper           interchainquerykeeper.Keeper
 	BankKeeper          bankkeeper.Keeper
 	IBCKeeper           ibckeeper.Keeper
+	paramStore          paramtypes.Subspace
 }
 
 // NewKeeper returns a new instance of zones Keeper
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, ps paramtypes.Subspace) Keeper {
+	if !ps.HasKeyTable() {
+		ps = ps.WithKeyTable(types.ParamKeyTable())
+	}
+
 	return Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
@@ -44,6 +50,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, bankKeeper bankkeeper.Kee
 		ICQKeeper:           icqKeeper,
 		BankKeeper:          bankKeeper,
 		IBCKeeper:           ibcKeeper,
+		paramStore:          ps,
 	}
 }
 
@@ -77,11 +84,28 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 	return mapping.ConnectionId, nil
 }
 
+func (k *Keeper) GetParam(ctx sdk.Context, key []byte) uint64 {
+	var out uint64
+	k.paramStore.Get(ctx, key, &out)
+	return out
+}
+
+func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
+	k.paramStore.GetParamSet(clientCtx, &params)
+	return params
+}
+
+// SetParams sets the distribution parameters to the param space.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+	k.paramStore.SetParamSet(ctx, &params)
+}
+
 // ### Interval functions >>>
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
 func (k Keeper) validatorSetInterval(ctx sdk.Context) zoneItrFn {
+	valsetInterval := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 		k.Logger(ctx).Info("Setting validators for zone", "zone", zoneInfo.ChainId)
 
@@ -92,8 +116,8 @@ func (k Keeper) validatorSetInterval(ctx sdk.Context) zoneItrFn {
 			return false
 		}
 
-		if validator_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - types.DelegateDelegationsInterval)) {
-			k.Logger(ctx).Error(fmt.Sprintf("Validators Info for zone is older than %d blocks", types.DelegateDelegationsInterval), "zone", zoneInfo.ChainId)
+		if validator_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - valsetInterval)) {
+			k.Logger(ctx).Error(fmt.Sprintf("Validators Info for zone is older than %d blocks", valsetInterval), "zone", zoneInfo.ChainId)
 			return false
 		}
 		validatorsRes := stakingTypes.QueryValidatorsResponse{}
@@ -156,14 +180,14 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 			tx_data, err := k.ICQKeeper.GetDatapointOrRequest(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.tx.v1beta1.Query/GetTxEvents", map[string]string{"transfer.recipient": zoneInfo.DepositAddress.GetAddress()})
 			if err != nil {
 				// this happens, it's okay, we fetch the data async. we'll hit this loop again next iteration :)
-				k.Logger(ctx).Info("No data yet. Ignoring...")
+				k.Logger(ctx).Info("No data yet. Ignoring...", "err", err)
 				return false
 			}
 
 			txs := coretypes.ResultTxSearch{}
 			err = json.Unmarshal(tx_data.Value, &txs)
 			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal txs for deposit account", "deposit_address", zoneInfo.DepositAddress.GetAddress())
+				k.Logger(ctx).Error("Unable to unmarshal txs for deposit account", "deposit_address", zoneInfo.DepositAddress.GetAddress(), "err", err)
 				return false
 			}
 
@@ -181,15 +205,16 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 }
 
 func (k Keeper) delegateInterval(ctx sdk.Context) zoneItrFn {
+	delegateInterval := int64(k.GetParam(ctx, types.KeyDelegateInterval))
 	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 		for _, da := range zoneInfo.DelegationAddresses {
 			balance_data, err := k.ICQKeeper.GetDatapoint(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": da.GetAddress()})
 			if err != nil {
-				k.Logger(ctx).Error("Unable to query balance for delegate account", "delegate_address", da.GetAddress())
+				k.Logger(ctx).Error("Unable to query balance for delegate account", "delegate_address", da.GetAddress(), "err", err)
 				continue
 			}
-			if balance_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - types.DelegateInterval)) {
-				k.Logger(ctx).Info(fmt.Sprintf("Balance for delegate account is older than %d blocks", types.DelegateInterval), "delegate_address", da.GetAddress())
+			if balance_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - delegateInterval)) {
+				k.Logger(ctx).Info(fmt.Sprintf("Balance for delegate account is older than %d blocks", delegateInterval), "delegate_address", da.GetAddress())
 				continue
 			}
 			balanceRes := bankTypes.QueryAllBalancesResponse{}
@@ -235,6 +260,7 @@ func (k Keeper) delegateInterval(ctx sdk.Context) zoneItrFn {
 // Delegators and delegations in this context refers to the delegation accounts
 // of the RegisteredZones and NOT to user delegators.
 func (k Keeper) delegateDelegationsInterval(ctx sdk.Context) zoneItrFn {
+	delegationsInterval := int64(k.GetParam(ctx, types.KeyDelegationsInterval))
 	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 		// populate / handle delegations
 		for _, da := range zoneInfo.DelegationAddresses {
@@ -244,8 +270,8 @@ func (k Keeper) delegateDelegationsInterval(ctx sdk.Context) zoneItrFn {
 				continue
 			}
 
-			if delegation_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - types.DelegateDelegationsInterval)) {
-				k.Logger(ctx).Info(fmt.Sprintf("Delegations Info for delegate account is older than %d blocks", types.DelegateDelegationsInterval), "delegate_address", da.GetAddress())
+			if delegation_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - delegationsInterval)) {
+				k.Logger(ctx).Info(fmt.Sprintf("Delegations Info for delegate account is older than %d blocks", delegationsInterval), "delegate_address", da.GetAddress())
 				continue
 			}
 
