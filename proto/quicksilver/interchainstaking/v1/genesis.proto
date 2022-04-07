@@ -113,7 +113,8 @@ message PortConnectionTuple {
 
 // GenesisState defines the interchainstaking module's genesis state.
 message GenesisState {
-  repeated RegisteredZone zones = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
+  repeated RegisteredZone zones = 2 [ (gogoproto.nullable) = false ];
 }
 
 message Receipt {
@@ -122,4 +123,22 @@ message Receipt {
   string txhash = 3;
   repeated cosmos.base.v1beta1.Coin amount = 4
       [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+}
+
+
+message Params {
+  option (gogoproto.equal)            = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 delegation_account_count       = 1;
+  uint64 delegation_account_split              = 2;
+  uint64 deposit_interval     = 3;
+  uint64 delegate_interval     = 4;
+  uint64 delegations_interval     = 5;
+  uint64 validatorset_interval     = 6;
+  string commission_rate = 7 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }

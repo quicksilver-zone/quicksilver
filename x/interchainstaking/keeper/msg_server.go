@@ -38,9 +38,9 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	if err := k.SetConnectionForPort(ctx, msg.ConnectionId, portId); err != nil {
 		return nil, err
 	}
-
+	delegateAccountCount := int(k.GetParam(ctx, types.KeyDelegateAccountCount))
 	// generate delegate addresses
-	for i := 0; i < types.DelegationAccountCount; i++ {
+	for i := 0; i < delegateAccountCount; i++ {
 		portOwner := fmt.Sprintf("%s.delegate.%d", msg.ChainId, i)
 		if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, fmt.Sprintf("%s.delegate.%d", msg.ChainId, i)); err != nil {
 			return nil, err
@@ -50,12 +50,12 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 			return nil, err
 		}
 	}
-
-	bondedValidatorQuery := k.ICQKeeper.NewPeriodicQuery(ctx, msg.ConnectionId, msg.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingtypes.BondStatusBonded}, sdk.NewInt(types.ValidatorSetInterval))
+	valsetInterval := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	bondedValidatorQuery := k.ICQKeeper.NewPeriodicQuery(ctx, msg.ConnectionId, msg.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingtypes.BondStatusBonded}, sdk.NewInt(valsetInterval))
 	k.ICQKeeper.SetPeriodicQuery(ctx, *bondedValidatorQuery)
-	unbondedValidatorQuery := k.ICQKeeper.NewPeriodicQuery(ctx, msg.ConnectionId, msg.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingtypes.BondStatusUnbonded}, sdk.NewInt(types.ValidatorSetInterval))
+	unbondedValidatorQuery := k.ICQKeeper.NewPeriodicQuery(ctx, msg.ConnectionId, msg.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingtypes.BondStatusUnbonded}, sdk.NewInt(valsetInterval))
 	k.ICQKeeper.SetPeriodicQuery(ctx, *unbondedValidatorQuery)
-	unbondingValidatorQuery := k.ICQKeeper.NewPeriodicQuery(ctx, msg.ConnectionId, msg.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingtypes.BondStatusUnbonding}, sdk.NewInt(types.ValidatorSetInterval))
+	unbondingValidatorQuery := k.ICQKeeper.NewPeriodicQuery(ctx, msg.ConnectionId, msg.ChainId, "cosmos.staking.v1beta1.Query/Validators", map[string]string{"status": stakingtypes.BondStatusUnbonding}, sdk.NewInt(valsetInterval))
 	k.ICQKeeper.SetPeriodicQuery(ctx, *unbondingValidatorQuery)
 
 	ctx.EventManager().EmitEvents(sdk.Events{

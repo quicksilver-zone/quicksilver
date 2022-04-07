@@ -1,18 +1,18 @@
 package types
 
-func NewGenesisState(zones []RegisteredZone) *GenesisState {
-	return &GenesisState{Zones: zones}
+func NewGenesisState(params Params, zones []RegisteredZone) *GenesisState {
+	return &GenesisState{Params: params, Zones: zones}
 }
 
-// DefaultGenesis returns the default Capability genesis state
+// DefaultGenesis returns the default ics genesis state
 func DefaultGenesis() *GenesisState {
 	zones := []RegisteredZone{}
-	return NewGenesisState(zones)
+	return NewGenesisState(DefaultParams(), zones)
 }
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
 	// TODO: validate genesis state.
-	return nil
+	return validateParams(gs.Params)
 }

@@ -10,6 +10,8 @@ import (
 // InitGenesis initializes the capability module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	k.SetParams(ctx, genState.Params)
+
 	// set registered zones info from genesis
 	for _, zone := range genState.Zones {
 		// TODO: instantiate connections to ICAs based upon genesis values
@@ -20,6 +22,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
-		Zones: k.AllRegisteredZones(ctx),
+		Params: k.GetParams(ctx),
+		Zones:  k.AllRegisteredZones(ctx),
 	}
 }

@@ -14,20 +14,20 @@ type zoneItrFn func(index int64, zoneInfo types.RegisteredZone) (stop bool)
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	if ctx.BlockHeight()%types.ValidatorSetInterval == 0 {
+	if ctx.BlockHeight()%int64(k.GetParam(ctx, types.KeyValidatorSetInterval)) == 0 {
 		k.IterateRegisteredZones(ctx, k.validatorSetInterval(ctx))
 	}
 
 	// every N blocks, emit QueryAccountBalances event.
-	if ctx.BlockHeight()%types.DepositInterval == 0 {
+	if ctx.BlockHeight()%int64(k.GetParam(ctx, types.KeyDepositInterval)) == 0 {
 		k.IterateRegisteredZones(ctx, k.depositInterval(ctx))
 	}
 
-	if ctx.BlockHeight()%types.DelegateInterval == 0 {
+	if ctx.BlockHeight()%int64(k.GetParam(ctx, types.KeyDelegateInterval)) == 0 {
 		k.IterateRegisteredZones(ctx, k.delegateInterval(ctx))
 	}
 
-	if ctx.BlockHeight()%types.DelegateDelegationsInterval == 0 {
+	if ctx.BlockHeight()%int64(k.GetParam(ctx, types.KeyDelegationsInterval)) == 0 {
 		k.IterateRegisteredZones(ctx, k.delegateDelegationsInterval(ctx))
 	}
 }
