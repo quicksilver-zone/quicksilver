@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -183,12 +184,10 @@ func (k Keeper) delegateInterval(ctx sdk.Context) zoneItrFn {
 				k.Logger(ctx).Error("Unable to query balance for delegate account", "delegate_address", da.GetAddress())
 				continue
 			}
-
 			if balance_data.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - types.DelegateInterval)) {
 				k.Logger(ctx).Info(fmt.Sprintf("Balance for delegate account is older than %d blocks", types.DelegateInterval), "delegate_address", da.GetAddress())
 				continue
 			}
-
 			balanceRes := bankTypes.QueryAllBalancesResponse{}
 			err = k.cdc.UnmarshalJSON(balance_data.Value, &balanceRes)
 			if err != nil {
@@ -198,9 +197,31 @@ func (k Keeper) delegateInterval(ctx sdk.Context) zoneItrFn {
 
 			if !balance.Empty() {
 				da.Balance = balance
+				claims := k.AllWithdrawalRecords(ctx, da.Address)
+				if len(claims) > 0 {
+					// should we reconcile here?
+					k.Logger(ctx).Info("Outstanding Withdrawal Claims", "count", len(claims))
+					for _, claim := range claims {
+						if claim.Status == WITHDRAW_STATUS_TOKENIZE {
+							// if the claim has tokenize status AND then remove any coins in the balance that match that validator.
+							// so we don't try to re-delegate any recently redeemed tokens that haven't been sent yet.
+							for _, coin := range balance {
+								if strings.HasPrefix(coin.Denom, claim.Validator) {
+									k.Logger(ctx).Info("Ignoring denom this iteration", "denom", coin.GetDenom())
+									balance = balance.Sub(sdk.NewCoins(coin))
+								}
+							}
+						}
+					}
+				}
 				k.SetRegisteredZone(ctx, zoneInfo)
-				k.Logger(ctx).Info("Delegate account balance is non-zero; delegating!", "current", balance)
-				k.Delegate(ctx, zoneInfo, da)
+				if len(balance) > 0 {
+					k.Logger(ctx).Info("Delegate account balance is non-zero; delegating!", "to_delegate", balance)
+					err := k.Delegate(ctx, zoneInfo, da)
+					if err != nil {
+						k.Logger(ctx).Error("Unable to delegate balances", "delegation_address", zoneInfo.DepositAddress.GetAddress(), "zone_identifier", zoneInfo.Identifier, "err", err)
+					}
+				}
 			}
 		}
 		return false

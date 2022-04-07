@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk v0.45.1
-	github.com/cosmos/ibc-go/v3 v3.0.0-rc2
+	github.com/cosmos/ibc-go/v3 v3.0.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
@@ -16,7 +16,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.0
 	github.com/tendermint/tendermint v0.34.16
-	github.com/tendermint/tm-db v0.6.7-0.20211203155021-4fa83b55a0b5
+	github.com/tendermint/tm-db v0.6.7
 	go.opencensus.io v0.23.0
 	google.golang.org/genproto v0.0.0-20220211171837-173942840c17
 	google.golang.org/grpc v1.44.0
@@ -126,7 +126,7 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-	github.com/cosmos/cosmos-sdk => github.com/ingenuity-build/cosmos-sdk v0.45.1-ls
+	github.com/cosmos/cosmos-sdk => github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-2
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tm-db => github.com/ingenuity-build/tm-db v0.6.7-0.20220220171408-3e31f49ebcc2
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2

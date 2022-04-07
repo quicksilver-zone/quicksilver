@@ -73,6 +73,7 @@ func (k Keeper) AllIntents(ctx sdk.Context, zone types.RegisteredZone) []types.D
 func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.RegisteredZone) []types.DelegatorIntent {
 	intents := []types.DelegatorIntent{}
 	k.IterateIntents(ctx, zone, func(_ int64, intent types.DelegatorIntent) (stop bool) {
+
 		query := bankTypes.QueryBalanceRequest{Address: intent.Delegator, Denom: zone.LocalDenom}
 		balance, err := k.BankKeeper.Balance(sdk.WrapSDKContext(ctx), &query)
 		if err != nil {
@@ -83,6 +84,39 @@ func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.RegisteredZone
 		return false
 	})
 	return intents
+}
+
+func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.RegisteredZone) {
+	intents := map[string]*types.ValidatorIntent{}
+	ordinalizedIntentSum := sdk.ZeroDec()
+	k.IterateIntents(ctx, zone, func(_ int64, intent types.DelegatorIntent) (stop bool) {
+		query := bankTypes.QueryBalanceRequest{Address: intent.Delegator, Denom: zone.LocalDenom}
+		balance, err := k.BankKeeper.Balance(sdk.WrapSDKContext(ctx), &query)
+		if err != nil {
+			panic(err)
+		}
+		baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(balance.Balance.Amount)).TruncateInt()
+		for _, vIntent := range intent.Ordinalize(baseBalance).Intents {
+			thisIntent, ok := intents[vIntent.ValoperAddress]
+			ordinalizedIntentSum = ordinalizedIntentSum.Add(vIntent.Weight)
+			if !ok {
+				intents[vIntent.ValoperAddress] = vIntent
+			} else {
+				thisIntent.Weight = thisIntent.Weight.Add(vIntent.Weight)
+				intents[vIntent.ValoperAddress] = thisIntent
+			}
+		}
+
+		return false
+	})
+
+	for key, val := range intents {
+		val.Weight = val.Weight.Quo(ordinalizedIntentSum)
+		intents[key] = val
+	}
+
+	zone.AggregateIntent = intents
+	k.SetRegisteredZone(ctx, zone)
 }
 
 func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types.RegisteredZone, inAmount sdk.Coins) {

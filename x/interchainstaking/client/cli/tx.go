@@ -28,6 +28,7 @@ func GetTxCmd() *cobra.Command {
 	txCmd.AddCommand(
 		GetRegisterZoneTxCmd(),
 		GetSignalIntentTxCmd(),
+		GetRequestRedemptionTxCmd(),
 	)
 
 	return txCmd
@@ -37,7 +38,7 @@ func GetTxCmd() *cobra.Command {
 func GetRegisterZoneTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "register [identifier] [connection_id] [chain_id] [local_denom] [remote_denom]",
-		Short: `Send funds from one account to another.`,
+		Short: `Register new zone with the chain.`,
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
@@ -88,6 +89,31 @@ e.g. "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzz
 			}
 
 			msg := types.NewMsgSignalIntent(chain_id, intents, clientCtx.GetFromAddress())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetRegisterZoneTxCmd returns a CLI command handler for creating a MsgSend transaction.
+func GetRequestRedemptionTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "redeem [coins] [destination_address]",
+		Short: `Redeem tokens.`,
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+
+			if err != nil {
+				return err
+			}
+			coins := args[0]
+			destination_address := args[1]
+
+			msg := types.NewMsgRequestRedemption(coins, destination_address, clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

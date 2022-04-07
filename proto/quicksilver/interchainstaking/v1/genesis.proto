@@ -22,7 +22,8 @@ message RegisteredZone {
   ];
   repeated Validator validators = 9;
   map<string, DelegatorIntent> delegator_intent = 10;
-  bool multi_send = 11;
+  map<string, ValidatorIntent> aggregate_intent = 11;
+  bool multi_send = 12;
 }
 
 message ICAAccount {
@@ -36,6 +37,26 @@ message ICAAccount {
       (gogoproto.nullable) = false];
   string port_name = 4;
   // Delegations here? or against validator?
+}
+
+message WithdrawalRecord {
+  string delegator = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string validator = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string recipient = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin amount = 4 [ 
+    (cosmos_proto.scalar) = "cosmos.Coin", 
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", 
+    (gogoproto.nullable) = false];
+  int32 status = 5;
+}
+
+message TransferRecord {
+  string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string recipient = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin amount = 3 [ 
+    (cosmos_proto.scalar) = "cosmos.Coin", 
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", 
+    (gogoproto.nullable) = false];
 }
 
 message Validator {
