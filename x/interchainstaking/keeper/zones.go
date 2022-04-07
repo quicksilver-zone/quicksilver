@@ -69,34 +69,81 @@ func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
 	return zones
 }
 
-func (k Keeper) DetermineValidatorForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coins) (string, error) {
-	intents := k.AllOrdinalizedIntents(ctx, zone)
-
-	diffs := zone.DetermineStateIntentDiff(intents)
-	val, _, err := smallestDecFromMap(diffs) // always delegate to 'furthest away'
-	if err != nil {
-		return "", err
-	}
-	return val, nil
+func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.RegisteredZone {
+	zone := &types.RegisteredZone{}
+	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+		for _, ica := range zoneInfo.DelegationAddresses {
+			if ica.Address == address {
+				zone = &zoneInfo
+				return true
+			}
+		}
+		return false
+	})
+	return zone
 }
 
-func smallestDecFromMap(numbers map[string]sdk.Dec) (string, sdk.Dec, error) {
-	if len(numbers) == 0 {
-		return "", sdk.ZeroDec(), fmt.Errorf("zero-length input")
+func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) *types.ICAAccount {
+	ica := &types.ICAAccount{}
+	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+		for _, delegateAccount := range zoneInfo.DelegationAddresses {
+			if delegateAccount.Address == address {
+				ica = delegateAccount
+				return true
+			}
+		}
+		return false
+	})
+	return ica
+}
+func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coin) (map[string]sdk.Coin, error) {
+	out := make(map[string]sdk.Coin)
+
+	coinAmount := amount.Amount
+	aggregateIntents := zone.GetAggregateIntent()
+
+	for valoper, intent := range aggregateIntents {
+		if !coinAmount.IsZero() {
+			// while there is some balance left to distribute
+			// calculate the int value of weight * amount to distribute.
+			thisAmount := intent.Weight.MulInt(amount.Amount).TruncateInt()
+			// set distrubtion amount
+			out[valoper] = sdk.Coin{Denom: amount.Denom, Amount: thisAmount}
+			// reduce outstanding pool
+			coinAmount = coinAmount.Sub(thisAmount)
+		}
 	}
-
-	var minKey string
-	var minNumber sdk.Dec
-
-	for minKey, minNumber = range numbers {
+	for valoper := range aggregateIntents {
+		// handle leftover amount in pool (add blindly to first validator)
+		out[valoper] = out[valoper].AddAmount(coinAmount)
 		break
 	}
 
-	for v, n := range numbers {
-		if n.LT(minNumber) {
-			minNumber = n
-			minKey = v
+	k.Logger(ctx).Info("Validator weightings without diffs", "weights", out)
+
+	// calculate diff between current state and intended state.
+	diffs := zone.DetermineStateIntentDiff(aggregateIntents)
+
+	// apply diff to distrubtion of delegation.
+	out, remaining := zone.ApplyDiffsToDistribution(out, diffs)
+	if !remaining.IsZero() {
+		for valoper, intent := range aggregateIntents {
+			thisAmount := intent.Weight.MulInt(remaining).TruncateInt()
+			thisOutAmount, ok := out[valoper]
+			if !ok {
+				thisOutAmount = sdk.NewCoin(amount.Denom, sdk.ZeroInt())
+			}
+
+			out[valoper] = thisOutAmount.AddAmount(thisAmount)
+			remaining = remaining.Sub(thisAmount)
+		}
+		for valoper := range aggregateIntents {
+			// handle leftover amount.
+			out[valoper] = out[valoper].AddAmount(remaining)
+			break
 		}
 	}
-	return minKey, minNumber, nil
+
+	k.Logger(ctx).Info("Determined validators from aggregated intents +/- rebalance diffs", "amount", amount.Amount, "out", out)
+	return out, nil
 }

@@ -94,8 +94,12 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *coretypes.ResultTx
 	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
 
 	k.UpdateIntent(ctx, accAddress, zone, coins)
-	k.MintQAsset(ctx, accAddress, zone, coins)
-	k.TransferToDelegate(ctx, zone, coins)
+	if err := k.MintQAsset(ctx, accAddress, zone, coins); err != nil {
+		k.Logger(ctx).Error("Unable to mint QAsset. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+	}
+	if err := k.TransferToDelegate(ctx, zone, coins); err != nil {
+		k.Logger(ctx).Error("Unable to transfer to delegate. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+	}
 	k.SetReceipt(ctx, *receipt)
 }
 
@@ -185,10 +189,9 @@ func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZ
 	}
 
 	// ensure any remainder gets deposited in the first account (as it will have the lowest balance)
-	out[0].Coins.Add(inAmount...)
+	out[0].Coins = out[0].Coins.Add(inAmount...)
 
-	sendMsg := bankTypes.NewMsgMultiSend(in, out)
-	var msg sdk.Msg = sendMsg
+	msg := bankTypes.NewMsgMultiSend(in, out)
 	// send from deposit to accounts
 
 	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress)

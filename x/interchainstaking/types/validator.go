@@ -49,3 +49,12 @@ func (di DelegatorIntent) Ordinalize(multiple sdk.Int) DelegatorIntent {
 	}
 	return di
 }
+
+func (di DelegatorIntent) ToMap(multiple sdk.Int) map[string]sdk.Int {
+	out := make(map[string]sdk.Int)
+	di = di.Ordinalize(multiple)
+	for _, i := range di.Intents {
+		out[i.ValoperAddress] = i.Weight.TruncateInt()
+	}
+	return out
+}
