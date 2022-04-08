@@ -26,7 +26,7 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZone) (*types.MsgRegisterZoneResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	zone := types.RegisteredZone{Identifier: msg.Identifier, ChainId: msg.ChainId, ConnectionId: msg.ConnectionId, LocalDenom: msg.LocalDenom, BaseDenom: msg.BaseDenom, RedemptionRate: sdk.NewDec(1), DelegatorIntent: make(map[string]*types.DelegatorIntent), MultiSend: msg.MultiSend}
+	zone := types.RegisteredZone{Identifier: msg.Identifier, ChainId: msg.ChainId, ConnectionId: msg.ConnectionId, LocalDenom: msg.LocalDenom, BaseDenom: msg.BaseDenom, RedemptionRate: sdk.NewDec(1), LastRedemptionRate: sdk.NewDec(1), DelegatorIntent: make(map[string]*types.DelegatorIntent), MultiSend: msg.MultiSend}
 	k.SetRegisteredZone(ctx, zone)
 
 	// generate deposit account
