@@ -24,6 +24,11 @@ message RegisteredZone {
   map<string, DelegatorIntent> delegator_intent = 10;
   map<string, ValidatorIntent> aggregate_intent = 11;
   bool multi_send = 12;
+  string last_redemption_rate = 13 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message ICAAccount {
