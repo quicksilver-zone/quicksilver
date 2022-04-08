@@ -119,7 +119,12 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 	k.Logger(ctx).Error("DEBUG 7")
 
-	rate := zone.RedemptionRate
+	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
+	var rate sdk.Dec
+	rate = zone.LastRedemptionRate
+	if zone.RedemptionRate.LT(rate) {
+		rate = zone.RedemptionRate
+	}
 	native_tokens := inCoin.Amount.ToDec().Mul(rate).TruncateInt()
 	k.Logger(ctx).Error("DEBUG 8")
 
