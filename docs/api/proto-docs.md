@@ -539,6 +539,7 @@ GenesisState defines the interchainstaking module's genesis state.
 | `delegator_intent` | [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry) | repeated |  |
 | `aggregate_intent` | [RegisteredZone.AggregateIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.AggregateIntentEntry) | repeated |  |
 | `multi_send` | [bool](#bool) |  |  |
+| `last_redemption_rate` | [string](#string) |  |  |
 
 
 
