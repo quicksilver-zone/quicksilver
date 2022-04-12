@@ -25,6 +25,8 @@ func GetQueryCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		GetCmdZonesInfos(),
+		GetDelegatorIntentCmd(),
+		GetDepositAccountCmd(),
 	)
 
 	return cmd

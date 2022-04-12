@@ -61,7 +61,8 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers the module's interface types
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
-	// RegisterInterfaces registers interfaces and implementations of the bank module.
+	// RegisterInterfaces registers interfaces and implementations of the interchainstaking module.
+	// (see types/codec.go)
 	types.RegisterInterfaces(reg)
 }
 
@@ -139,6 +140,9 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	// zanicar: this is the only I can find that clearly states that MsgServer
+	// WILL NOT expose gRPC services, and that QueryServer WILL expose gRPC
+	// services;
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }

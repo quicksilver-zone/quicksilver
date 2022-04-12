@@ -34,7 +34,6 @@ func NewMsgRegisterZone(
 	return &MsgRegisterZone{
 		Identifier:   identifier,
 		ConnectionId: connection_id,
-		ChainId:      chain_id,
 		LocalDenom:   local_denom,
 		BaseDenom:    base_denom,
 		FromAddress:  from_address.String(),

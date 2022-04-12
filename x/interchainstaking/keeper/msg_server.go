@@ -15,8 +15,8 @@ type msgServer struct {
 	*Keeper
 }
 
-// NewMsgServerImpl returns an implementation of the bank MsgServer interface
-// for the provided Keeper.
+// NewMsgServerImpl returns an implementation of the interchainstaking
+// MsgServer interface for the provided Keeper.
 func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 	return &msgServer{Keeper: &keeper}
 }
@@ -26,9 +26,21 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZone) (*types.MsgRegisterZoneResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// get chain id from connection
+	chainId, err := k.getChainID(ctx, msg.ConnectionId)
+	if err != nil {
+		return nil, fmt.Errorf("unable to obtain chain id: %w", err)
+	}
+
+	// get zone
+	_, found := k.GetRegisteredZoneInfo(ctx, chainId)
+	if found {
+		return nil, fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainId)
+	}
+
 	zone := types.RegisteredZone{
 		Identifier:         msg.Identifier,
-		ChainId:            msg.ChainId,
+		ChainId:            chainId,
 		ConnectionId:       msg.ConnectionId,
 		LocalDenom:         msg.LocalDenom,
 		BaseDenom:          msg.BaseDenom,
@@ -40,7 +52,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	k.SetRegisteredZone(ctx, zone)
 
 	// generate deposit account
-	portOwner := msg.ChainId + ".deposit"
+	portOwner := chainId + ".deposit"
 	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 		return nil, err
 	}
@@ -51,11 +63,11 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	delegateAccountCount := int(k.GetParam(ctx, types.KeyDelegateAccountCount))
 	// generate delegate addresses
 	for i := 0; i < delegateAccountCount; i++ {
-		portOwner := fmt.Sprintf("%s.delegate.%d", msg.ChainId, i)
+		portOwner := fmt.Sprintf("%s.delegate.%d", chainId, i)
 		if err := k.ICAControllerKeeper.RegisterInterchainAccount(
 			ctx,
 			zone.ConnectionId,
-			fmt.Sprintf("%s.delegate.%d", msg.ChainId, i),
+			portOwner,
 		); err != nil {
 			return nil, err
 		}
@@ -68,7 +80,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	bondedValidatorQuery := k.ICQKeeper.NewPeriodicQuery(
 		ctx,
 		msg.ConnectionId,
-		msg.ChainId,
+		chainId,
 		"cosmos.staking.v1beta1.Query/Validators",
 		map[string]string{"status": stakingtypes.BondStatusBonded},
 		sdk.NewInt(valsetInterval),
@@ -77,7 +89,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	unbondedValidatorQuery := k.ICQKeeper.NewPeriodicQuery(
 		ctx,
 		msg.ConnectionId,
-		msg.ChainId,
+		chainId,
 		"cosmos.staking.v1beta1.Query/Validators",
 		map[string]string{"status": stakingtypes.BondStatusUnbonded},
 		sdk.NewInt(valsetInterval),
@@ -86,7 +98,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	unbondingValidatorQuery := k.ICQKeeper.NewPeriodicQuery(
 		ctx,
 		msg.ConnectionId,
-		msg.ChainId,
+		chainId,
 		"cosmos.staking.v1beta1.Query/Validators",
 		map[string]string{"status": stakingtypes.BondStatusUnbonding},
 		sdk.NewInt(valsetInterval),
@@ -101,7 +113,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		sdk.NewEvent(
 			types.EventTypeRegisterZone,
 			sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ConnectionId),
-			sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ChainId),
+			sdk.NewAttribute(types.AttributeKeyConnectionId, chainId),
 		),
 	})
 

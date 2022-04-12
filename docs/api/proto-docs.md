@@ -675,7 +675,6 @@ deprecate in favour of governance vote.
 | ----- | ---- | ----- | ----------- |
 | `identifier` | [string](#string) |  |  |
 | `connection_id` | [string](#string) |  |  |
-| `chain_id` | [string](#string) |  |  |
 | `base_denom` | [string](#string) |  |  |
 | `local_denom` | [string](#string) |  |  |
 | `from_address` | [string](#string) |  |  |
