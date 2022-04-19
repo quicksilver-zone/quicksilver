@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-COSMOS_BUILD_OPTIONS="rocksdb"
+COSMOS_BUILD_OPTIONS="pebbledb"
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 DIFF_TAG=$(shell git rev-list --tags="v*" --max-count=1 --not $(shell git rev-list --tags="v*" "HEAD..origin"))
@@ -92,6 +92,11 @@ endif
 ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   BUILD_TAGS += boltdb
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=boltdb
+endif
+# handle pebbledb
+ifeq (pebbledb,$(findstring pebbledb,$(COSMOS_BUILD_OPTIONS)))
+  BUILD_TAGS += pebbledb
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 endif
 
 build_tags += $(BUILD_TAGS)
