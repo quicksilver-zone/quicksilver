@@ -29,6 +29,9 @@ message RegisteredZone {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+  ICAAccount fee_address = 14;
+  ICAAccount withdrawal_address = 15;
+  uint32 withdrawal_waitgroup = 16;
 }
 
 message ICAAccount {

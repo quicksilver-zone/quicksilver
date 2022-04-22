@@ -48,17 +48,19 @@ func (k *Keeper) WithdrawDelegationRewards(ctx sdk.Context, zone types.Registere
 	if err == nil {
 		k.cdc.MustUnmarshalJSON(delegatorRewardsDatapoint.Value, &delegatorRewards)
 	}
+	// send withdrawal msg for each delegation (delegator:validator pairs)
 	for _, delegation := range zone.GetDelegationsForDelegator(account.GetAddress()) {
-		// maybe check if there are rewards to withdraw here? if there are we can delegate them in the same tx.
 		amount := rewardsForDelegation(delegatorRewards, delegation.DelegationAddress, delegation.ValidatorAddress)
-		fmt.Printf("Rewards for %s and %s: %v\n", delegation.DelegationAddress, delegation.ValidatorAddress, amount)
+		fmt.Printf("Withdraw rewards for delegator %s from validator %s: %v\n", delegation.DelegationAddress, delegation.ValidatorAddress, amount)
 		msgs = append(msgs, &distrTypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegation.GetDelegationAddress(), ValidatorAddress: delegation.GetValidatorAddress()})
-		// send fee to fee collection account.
-		// redelegate balance.
 	}
 	if len(msgs) == 0 {
 		return nil
 	}
+	// set withdrawal waitgroup tally
+	zone.WithdrawalWaitgroup = uint32(len(msgs))
+	k.SetRegisteredZone(ctx, zone)
+
 	return k.SubmitTx(ctx, msgs, account)
 }
 

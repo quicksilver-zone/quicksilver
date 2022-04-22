@@ -16,6 +16,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		k.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 			k.Logger(ctx).Info("Taking a snapshot of intents")
 			k.AggregateIntents(ctx, zoneInfo)
+			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 			for _, da := range zoneInfo.DelegationAddresses {
 				k.Logger(ctx).Info("Withdrawing rewards")
 				if err := k.WithdrawDelegationRewards(ctx, zoneInfo, da); err != nil {
