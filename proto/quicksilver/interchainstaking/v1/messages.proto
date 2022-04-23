@@ -4,7 +4,6 @@ package quicksilver.interchainstaking.v1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "quicksilver/interchainstaking/v1/genesis.proto";
-import "google/api/http.proto";
 import "google/api/annotations.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
