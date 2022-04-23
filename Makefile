@@ -454,7 +454,7 @@ format:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-containerProtoVer=v0.2
+containerProtoVer=v0.6
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
@@ -483,7 +483,7 @@ proto-check-breaking:
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.15/proto/tendermint
 GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
-COSMOS_SDK_URL      = https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.44.5
+COSMOS_SDK_URL      = https://raw.githubusercontent.com/ingenuity-build/cosmos-sdk/v0.45.1-ls-2
 COSMOS_PROTO_URL    = https://raw.githubusercontent.com/cosmos/cosmos-proto/main/proto/cosmos_proto
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
