@@ -12,7 +12,7 @@ protoc_gen_gocosmos() {
 }
 
 protoc_gen_doc() {
-  echo 'raa' #go get -u github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc 2>/dev/null
+  go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc 2>/dev/null
 }
 
 protoc_gen_gocosmos
@@ -37,7 +37,6 @@ buf protoc \
 --doc_out=./docs/api \
 --doc_opt=./docs/protodoc-markdown.tmpl,proto-docs.md \
 $(find "$(pwd)/proto" -maxdepth 5 -name '*.proto')
-# go mod tidy
 
 # move proto files to the right places
 cp -r github.com/ingenuity-build/quicksilver/* ./
