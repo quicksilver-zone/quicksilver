@@ -35,7 +35,7 @@ account_prefix = 'quick'
 key_name = 'testkey'
 store_prefix = 'ibc'
 default_gas = 100000
-max_gas = 3000000
+max_gas = 5000000
 gas_price = { price = 0.000000, denom = 'uqck' }
 gas_adjustment = 0.1
 max_msg_num = 30
