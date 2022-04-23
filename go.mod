@@ -14,13 +14,14 @@ require (
 	github.com/spf13/cast v1.4.1
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/tendermint/tendermint v0.34.16
 	github.com/tendermint/tm-db v0.6.7
 	go.opencensus.io v0.23.0
 	google.golang.org/genproto v0.0.0-20220211171837-173942840c17
-	google.golang.org/grpc v1.44.0
+	google.golang.org/grpc v1.45.0
 	google.golang.org/protobuf v1.27.1
+	gopkg.in/yaml.v2 v2.4.0
 
 )
 
@@ -37,6 +38,11 @@ require (
 	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cockroachdb/errors v1.8.1 // indirect
+	github.com/cockroachdb/logtags v0.0.0-20190617123548-eb05cc24525f // indirect
+	github.com/cockroachdb/pebble v0.0.0-20220331191355-c6ff69042f1c // indirect
+	github.com/cockroachdb/redact v1.0.8 // indirect
+	github.com/cockroachdb/sentry-go v0.6.1-cockroachdb.2 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.0 // indirect
 	github.com/confio/ics23/go v0.7.0 // indirect
 	github.com/cosmos/btcutil v1.0.4 // indirect
@@ -80,6 +86,8 @@ require (
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/keybase/go-keychain v0.0.0-20190712205309-48d3d31d256d // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/kr/pretty v0.2.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.4 // indirect
 	github.com/libp2p/go-buffer-pool v0.0.2 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
@@ -113,13 +121,13 @@ require (
 	github.com/zondax/hid v0.9.0 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.0.0-20220214200702-86341886e292 // indirect
+	golang.org/x/exp v0.0.0-20200513190911-00229845015e // indirect
 	golang.org/x/net v0.0.0-20211208012354-db4efeb81f4b // indirect
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
+	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/ini.v1 v1.66.3 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
 )
@@ -128,6 +136,6 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
 	github.com/cosmos/cosmos-sdk => github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-2
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/tendermint/tm-db => github.com/ingenuity-build/tm-db v0.6.7-0.20220220171408-3e31f49ebcc2
+	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220413113722-16f0d618a72b
 	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )

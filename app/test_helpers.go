@@ -63,6 +63,16 @@ func Setup(isCheckTx bool) *Quicksilver {
 // SetupTestingApp initializes the IBC-go testing application
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
-	app := NewQuicksilver(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{})
+	app := NewQuicksilver(
+		log.NewNopLogger(),
+		db,
+		nil,
+		true,
+		map[int64]bool{},
+		DefaultNodeHome,
+		5,
+		MakeEncodingConfig(),
+		simapp.EmptyAppOptions{},
+	)
 	return app, NewDefaultGenesisState()
 }

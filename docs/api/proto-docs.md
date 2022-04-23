@@ -540,6 +540,9 @@ GenesisState defines the interchainstaking module's genesis state.
 | `aggregate_intent` | [RegisteredZone.AggregateIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.AggregateIntentEntry) | repeated |  |
 | `multi_send` | [bool](#bool) |  |  |
 | `last_redemption_rate` | [string](#string) |  |  |
+| `fee_address` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) |  |  |
+| `withdrawal_address` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) |  |  |
+| `withdrawal_waitgroup` | [uint32](#uint32) |  |  |
 
 
 
@@ -675,7 +678,6 @@ deprecate in favour of governance vote.
 | ----- | ---- | ----- | ----------- |
 | `identifier` | [string](#string) |  |  |
 | `connection_id` | [string](#string) |  |  |
-| `chain_id` | [string](#string) |  |  |
 | `base_denom` | [string](#string) |  |  |
 | `local_denom` | [string](#string) |  |  |
 | `from_address` | [string](#string) |  |  |

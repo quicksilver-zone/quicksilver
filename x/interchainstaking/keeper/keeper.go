@@ -15,6 +15,8 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v3/modules/light-clients/07-tendermint/types"
 	"github.com/tendermint/tendermint/libs/log"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
@@ -30,11 +32,12 @@ type Keeper struct {
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICQKeeper           interchainquerykeeper.Keeper
 	BankKeeper          bankkeeper.Keeper
+	IBCKeeper           ibckeeper.Keeper
 	paramStore          paramtypes.Subspace
 }
 
 // NewKeeper returns a new instance of zones Keeper
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ps paramtypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, ps paramtypes.Subspace) Keeper {
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
@@ -46,6 +49,7 @@ func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, bankKeeper bankkeeper.Kee
 		ICAControllerKeeper: icacontrollerkeeper,
 		ICQKeeper:           icqKeeper,
 		BankKeeper:          bankKeeper,
+		IBCKeeper:           ibcKeeper,
 		paramStore:          ps,
 	}
 }
@@ -79,6 +83,10 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 	k.cdc.MustUnmarshal(bz, &mapping)
 	return mapping.ConnectionId, nil
 }
+
+// ### Interval functions >>>
+// * some of these functions (or portions thereof) may be changed to single
+//   query type functions, dependent upon callback features / capabilities;
 
 func (k Keeper) validatorSetInterval(ctx sdk.Context) zoneItrFn {
 	valsetInterval := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
@@ -315,4 +323,21 @@ func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 // SetParams sets the distribution parameters to the param space.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramStore.SetParamSet(ctx, &params)
+}
+
+func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
+	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
+	if !found {
+		return "", fmt.Errorf("invalid connection id, \"%s\" not found", connectionID)
+	}
+	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, conn.ClientId)
+	if !found {
+		return "", fmt.Errorf("client id \"%s\" not found for connection \"%s\"", conn.ClientId, connectionID)
+	}
+	client, ok := clientState.(*ibctmtypes.ClientState)
+	if !ok {
+		return "", fmt.Errorf("invalid client state for client \"%s\" on connection \"%s\"", conn.ClientId, connectionID)
+	}
+
+	return client.ChainId, nil
 }

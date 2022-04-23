@@ -15,11 +15,15 @@ var (
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgRegisterZone{}, "cosmos-sdk/MsgRegisterZone", nil)
+	cdc.RegisterConcrete(&MsgSignalIntent{}, "cosmos-sdk/MsgSignalIntent", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
+	// cosmos.base.v1beta1.Msg
+	registry.RegisterImplementations(
+		(*sdk.Msg)(nil),
 		&MsgRegisterZone{},
+		&MsgSignalIntent{},
 	)
 	// registry.RegisterImplementations(
 	// 	(*authz.Authorization)(nil),

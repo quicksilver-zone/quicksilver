@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -76,42 +77,86 @@ func (im IBCModule) OnChanOpenAck(
 		ctx.Logger().Error(fmt.Sprintf("Expected to find an address for %s/%s", connectionId, portID))
 		return nil
 	}
-	im.keeper.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
-		if zoneInfo.GetConnectionId() == connectionId {
-			if !strings.Contains(portID, zoneInfo.ChainId) {
-				im.keeper.DeleteRegisteredZone(ctx, zoneInfo.ChainId)
-				return false
-			}
-			ctx.Logger().Info("Found matching address", "chain", zoneInfo.ChainId, "address", address, "port", portID)
-			portParts := strings.Split(portID, ".")
-			if len(portParts) == 2 && portParts[1] == "deposit" {
-				zoneInfo.DepositAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
-				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDepositInterval))))
-				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)
-			} else if len(portParts) == 3 && portParts[1] == "delegate" {
-				for _, existing := range zoneInfo.DelegationAddresses {
-					if existing.Address == address {
-						ctx.Logger().Error("unexpectedly found existing address: " + address)
-						return false
-					}
-				}
-				zoneInfo.DelegationAddresses = append(zoneInfo.DelegationAddresses, &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID})
-				balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegateInterval))))
-				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)
-				rewardsQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.distribution.v1beta1.Query/DelegationTotalRewards", map[string]string{"delegator": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegateInterval))))
-				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *rewardsQuery)
-				delegationQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegationsInterval)))) // this can probably be less frequent, because we manage delegations ourselves.
-				im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *delegationQuery)
-			} else {
-				ctx.Logger().Error("unexpected channel on portID: " + portID)
-				return false
-			}
-			// save zone
-			im.keeper.SetRegisteredZone(ctx, zoneInfo)
-			return true
+
+	// get chain id from connection
+	chainId, err := im.keeper.GetChainID(ctx, connectionId)
+	if err != nil {
+		ctx.Logger().Error(
+			fmt.Sprintf("Unable to obtain chain for given connection and port"),
+			"ConnectionID", connectionId,
+			"PortID", portID,
+			"Error", err,
+		)
+		return nil
+	}
+
+	// get zone info
+	zoneInfo, found := im.keeper.GetRegisteredZoneInfo(ctx, chainId)
+	if !found {
+		ctx.Logger().Error(fmt.Sprintf("Expected to find zone info for %v", chainId))
+		return nil
+	}
+
+	ctx.Logger().Info("Found matching address", "chain", zoneInfo.ChainId, "address", address, "port", portID)
+	fmt.Printf("Found matching address: chain = %v, address = %v, port = %v\n", zoneInfo.ChainId, address, portID)
+	portParts := strings.Split(portID, ".")
+
+	switch {
+	// deposit address
+	case len(portParts) == 2 && portParts[1] == "deposit":
+
+		zoneInfo.DepositAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
+		balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDepositInterval))))
+		im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)
+
+	// fee address
+	case len(portParts) == 2 && portParts[1] == "fee":
+
+		zoneInfo.FeeAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
+
+	// withdrawal address
+	case len(portParts) == 2 && portParts[1] == "withdrawal":
+
+		zoneInfo.WithdrawalAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
+
+		for _, da := range zoneInfo.DelegationAddresses {
+			msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: da.String(), WithdrawAddress: address}
+			im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, da)
 		}
-		return false
-	})
+
+	// delegation addresses
+	case len(portParts) == 3 && portParts[1] == "delegate":
+
+		// check for duplicate address
+		for _, existing := range zoneInfo.DelegationAddresses {
+			if existing.Address == address {
+				ctx.Logger().Error("unexpectedly found existing address: " + address)
+				return nil
+			}
+		}
+		account := &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
+		// append delegation account address
+		zoneInfo.DelegationAddresses = append(zoneInfo.DelegationAddresses, account)
+
+		// set withdrawal address if, and only if withdrawal address is already set
+		if zoneInfo.WithdrawalAddress != nil {
+			msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: address, WithdrawAddress: zoneInfo.WithdrawalAddress.String()}
+			im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, account)
+		}
+
+		/*balanceQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.bank.v1beta1.Query/AllBalances", map[string]string{"address": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegateInterval))))
+		im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *balanceQuery)*/
+		rewardsQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.distribution.v1beta1.Query/DelegationTotalRewards", map[string]string{"delegator": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegateInterval))))
+		im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *rewardsQuery)
+		delegationQuery := im.keeper.ICQKeeper.NewPeriodicQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegationsInterval)))) // this can probably be less frequent, because we manage delegations ourselves.
+		im.keeper.ICQKeeper.SetPeriodicQuery(ctx, *delegationQuery)
+
+	default:
+
+		ctx.Logger().Error("unexpected channel on portID: " + portID)
+
+	}
+	im.keeper.SetRegisteredZone(ctx, zoneInfo)
 	return nil
 }
 
