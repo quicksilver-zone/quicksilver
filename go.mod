@@ -12,15 +12,15 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/rakyll/statik v0.1.7
 	github.com/spf13/cast v1.4.1
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1
 	github.com/stretchr/testify v1.7.1
 	github.com/tendermint/tendermint v0.34.16
 	github.com/tendermint/tm-db v0.6.7
 	go.opencensus.io v0.23.0
-	google.golang.org/genproto v0.0.0-20220211171837-173942840c17
+	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac
 	google.golang.org/grpc v1.45.0
-	google.golang.org/protobuf v1.27.1
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v2 v2.4.0
 
 )
@@ -137,5 +137,4 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-2
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220413113722-16f0d618a72b
-	google.golang.org/grpc => google.golang.org/grpc v1.33.2
 )
