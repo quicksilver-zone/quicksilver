@@ -42,8 +42,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		return err
 	}
 
-	packetData := icatypes.InterchainAccountPacketData{}
-	if err := json.Unmarshal(packet.Data, &packetData); err != nil {
+	var packetData icatypes.InterchainAccountPacketData
+	err = icatypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &packetData)
+	if err != nil {
+		k.Logger(ctx).Error("Unable to unmarshal acknowledgement packet data", "error", err, "data", packetData)
 		return err
 	}
 	msgs, err := icatypes.DeserializeCosmosTx(k.cdc, packetData.Data)
