@@ -15,6 +15,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	queryKeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	"time"
@@ -41,8 +42,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		return err
 	}
 
-	packetData := icatypes.InterchainAccountPacketData{}
-	if err := json.Unmarshal(packet.Data, &packetData); err != nil {
+	var packetData icatypes.InterchainAccountPacketData
+	err = icatypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &packetData)
+	if err != nil {
+		k.Logger(ctx).Error("Unable to unmarshal acknowledgement packet data", "error", err, "data", packetData)
 		return err
 	}
 	msgs, err := icatypes.DeserializeCosmosTx(k.cdc, packetData.Data)
@@ -180,25 +183,76 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg) error {
 	return nil
 }
 
+// TODO: rework to reflect changes to HandleWithdrawRewards:
+//   1. handle MsgSend from WithdrawalAccount to FeeAccount;
+//   2. handle MsgSend from WithdrawalAccount to Delegation Accounts;
 func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
 	k.Logger(ctx).Info("Received MsgSend acknowledgement")
 	// first, type assertion. we should have banktypes.MsgSend
-	var err error = nil
-	var done bool = false
 	sMsg, ok := msg.(*banktypes.MsgSend)
 	if !ok {
-		k.Logger(ctx).Error("unable to cast source message to MsgSend")
-		return fmt.Errorf("unable to cast source message to MsgSend")
+		err := fmt.Errorf("unable to cast source message to MsgSend")
+		k.Logger(ctx).Error(err.Error())
+		return err
 	}
 
+	// get zone
+	zone, ok := k.GetRegisteredZoneInfo(ctx, ctx.ChainID())
+	if !ok {
+		err := fmt.Errorf("invalid chain id \"%s\"", ctx.ChainID())
+		k.Logger(ctx).Error(err.Error())
+		return err
+	}
+
+	// checks here are specific to ensure future extensibility;
+	switch {
+	case sMsg.FromAddress == zone.WithdrawalAddress.GetAddress() && sMsg.ToAddress == zone.FeeAddress.GetAddress():
+		// WithdrawalAddress (for rewards) only send to FeeAddress or DelegationAddresses.
+		// Target here is FeeAddress.
+		if err := k.handleFee(ctx, zone, sMsg); err != nil {
+			return err
+		}
+	case sMsg.FromAddress == zone.WithdrawalAddress.GetAddress() && sMsg.ToAddress != zone.FeeAddress.GetAddress():
+		// WithdrawalAddress (for rewards) only send to FeeAddress or DelegationAddresses.
+		// Target here is one of the DelegationAddresses.
+		if err := k.handleRewardsDelegation(ctx, zone, sMsg); err != nil {
+			return err
+		}
+	default:
+		if err := k.handleWithdrawForUser(ctx, sMsg); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (k *Keeper) handleFee(ctx sdk.Context, zone types.RegisteredZone, msg *banktypes.MsgSend) error {
+	// TODO: implement
+	return fmt.Errorf("not implemented")
+}
+
+func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.RegisteredZone, msg *banktypes.MsgSend) error {
+	da, err := zone.GetDelegationAccountByAddress(msg.ToAddress)
+	if err != nil {
+		return err
+	}
+
+	return k.Delegate(ctx, zone, da)
+}
+
+func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, msg *banktypes.MsgSend) error {
+	var err error = nil
+	var done bool = false
+
 	// first check for withdrawals (if FromAddress is a DelegateAccount)
-	k.IterateWithdrawalRecords(ctx, sMsg.FromAddress, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	k.IterateWithdrawalRecords(ctx, msg.FromAddress, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		k.Logger(ctx).Debug("iterating withdraw record", "idx", idx, "record", withdrawal)
-		if withdrawal.Recipient == sMsg.ToAddress {
+		if withdrawal.Recipient == msg.ToAddress {
 			k.Logger(ctx).Debug("matched the recipient", "val", withdrawal.Delegator, "recipient", withdrawal.Recipient)
 			z := k.GetZoneForDelegateAccount(ctx, withdrawal.Delegator)
-			if sMsg.Amount.AmountOf(z.BaseDenom).Equal(withdrawal.Amount.Amount) {
-				k.Logger(ctx).Debug("matched the amount", "amount", sMsg.Amount, "record.amount", withdrawal.Amount.Amount)
+			if msg.Amount.AmountOf(z.BaseDenom).Equal(withdrawal.Amount.Amount) {
+				k.Logger(ctx).Debug("matched the amount", "amount", msg.Amount, "record.amount", withdrawal.Amount.Amount)
 				if withdrawal.Status == WITHDRAW_STATUS_SEND {
 					k.Logger(ctx).Info("Found matching withdrawal; withdrawal marked as completed")
 					k.DeleteWithdrawalRecord(ctx, withdrawal.Delegator, withdrawal.Validator, withdrawal.Recipient)
@@ -206,7 +260,7 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
 					if err != nil {
 						return true
 					}
-					da.Balance = da.Balance.Sub(sMsg.Amount)
+					da.Balance = da.Balance.Sub(msg.Amount)
 
 					done = true
 					return true
@@ -226,13 +280,13 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
 	}
 
 	// second check for sending of tokens from deposit -> delegate.
-	zone := k.GetZoneForDelegateAccount(ctx, sMsg.ToAddress)
+	zone := k.GetZoneForDelegateAccount(ctx, msg.ToAddress)
 	if zone != nil { // this _is_ a delegate account
-		da, err := zone.GetDelegationAccountByAddress(sMsg.ToAddress)
+		da, err := zone.GetDelegationAccountByAddress(msg.ToAddress)
 		if err != nil {
 			return err
 		}
-		da.Balance = da.Balance.Add(sMsg.Amount...)
+		da.Balance = da.Balance.Add(msg.Amount...)
 		k.Delegate(ctx, *zone, da)
 	}
 
@@ -383,7 +437,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 	return nil
 }
 
-func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.Coins) error {
+/*func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.Coins) error {
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement")
 	// first, type assertion. we should have distrtypes.MsgWithdrawDelegatorReward
 	withdrawMsg, ok := msg.(*distrtypes.MsgWithdrawDelegatorReward)
@@ -400,4 +454,92 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.
 		return err
 	}
 	return k.Delegate(ctx, *zone, da)
+}*/
+
+func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.Coins) error {
+	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement")
+	// first, type assertion. we should have distrtypes.MsgWithdrawDelegatorReward
+	withdrawMsg, ok := msg.(*distrtypes.MsgWithdrawDelegatorReward)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgWithdrawDelegatorReward")
+		return fmt.Errorf("unable to cast source message to MsgWithdrawDelegatorReward")
+	}
+	zone := k.GetZoneForDelegateAccount(ctx, withdrawMsg.DelegatorAddress)
+	if zone == nil {
+		return fmt.Errorf("unable to find zone for delegator account %s", withdrawMsg.DelegatorAddress)
+	}
+	// decrement withdrawal waitgroup
+	zone.WithdrawalWaitgroup--
+	k.SetRegisteredZone(ctx, *zone)
+
+	switch zone.WithdrawalWaitgroup {
+	case 0:
+		// total rewards balance withdrawn
+		withdrawBalanceDatapoint, err := k.ICQKeeper.GetDatapointForId(
+			ctx,
+			queryKeeper.GenerateQueryHash(
+				zone.ConnectionId,
+				zone.ChainId,
+				"cosmos.bank.v1beta1.Query/BalanceRequest",
+				map[string]string{
+					"address": zone.WithdrawalAddress.GetAddress(),
+					"denom":   zone.GetBaseDenom(),
+				},
+			),
+		)
+		withdrawBalance := banktypes.QueryBalanceResponse{}
+		if err == nil {
+			k.cdc.MustUnmarshalJSON(withdrawBalanceDatapoint.Value, &withdrawBalance)
+		}
+
+		// calculate fee (fee = amount * rate)
+		fee := withdrawBalance.Balance.Amount.ToDec().
+			Mul(sdk.NewDec(int64(k.GetParam(ctx, types.KeyCommissionRate)))).
+			TruncateInt()
+		// prepare rewards distribution
+		rewards := withdrawBalance.Balance.SubAmount(fee)
+		dust, msgs := k.prepareRewardsDistributionMsgs(ctx, *zone, rewards)
+		// add dust to fee; add fee to msgs
+		fee = fee.Add(dust)
+		msgs = append(
+			msgs,
+			&banktypes.MsgSend{
+				FromAddress: zone.WithdrawalAddress.GetAddress(),
+				ToAddress:   zone.FeeAddress.GetAddress(),
+				Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, fee)),
+			},
+		)
+		// update redemption rate
+		k.updateRedemptionRate(ctx, *zone, *withdrawBalance.Balance, fee)
+		// send tx
+		k.SubmitTx(ctx, msgs, zone.WithdrawalAddress)
+
+		return nil
+	default:
+		return nil
+	}
+}
+
+func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone, balance sdk.Coin, fee sdk.Int) {
+	// TODO: implement
+}
+
+func (k *Keeper) prepareRewardsDistributionMsgs(ctx sdk.Context, zone types.RegisteredZone, rewards sdk.Coin) (sdk.Int, []sdk.Msg) {
+	var msgs []sdk.Msg
+
+	dust := rewards.Amount
+	portion := rewards.Amount.ToDec().Quo(sdk.NewDec(int64(len(zone.DelegationAddresses)))).TruncateInt()
+	for _, da := range zone.DelegationAddresses {
+		msgs = append(
+			msgs,
+			&banktypes.MsgSend{
+				FromAddress: zone.WithdrawalAddress.GetAddress(),
+				ToAddress:   da.GetAddress(),
+				Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, portion)),
+			},
+		)
+		dust.Sub(portion)
+	}
+
+	return dust, msgs
 }

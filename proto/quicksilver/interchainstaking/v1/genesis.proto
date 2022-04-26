@@ -29,17 +29,23 @@ message RegisteredZone {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+  ICAAccount fee_address = 14;
+  ICAAccount withdrawal_address = 15;
+  uint32 withdrawal_waitgroup = 16;
 }
 
 message ICAAccount {
   string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-    // balance defines the different coins this balance holds.
-  repeated cosmos.base.v1beta1.Coin balance = 2
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
-  cosmos.base.v1beta1.Coin delegated_balance = 3 [ 
-      (cosmos_proto.scalar) = "cosmos.Coin", 
-      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", 
-      (gogoproto.nullable) = false];
+  // balance defines the different coins this balance holds.
+  repeated cosmos.base.v1beta1.Coin balance = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin delegated_balance = 3 [
+    (cosmos_proto.scalar) = "cosmos.Coin",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable) = false
+  ];
   string port_name = 4;
   // Delegations here? or against validator?
 }
@@ -48,20 +54,22 @@ message WithdrawalRecord {
   string delegator = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string validator = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string recipient = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  cosmos.base.v1beta1.Coin amount = 4 [ 
-    (cosmos_proto.scalar) = "cosmos.Coin", 
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", 
-    (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 4 [
+    (cosmos_proto.scalar) = "cosmos.Coin",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable) = false
+  ];
   int32 status = 5;
 }
 
 message TransferRecord {
   string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string recipient = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  cosmos.base.v1beta1.Coin amount = 3 [ 
-    (cosmos_proto.scalar) = "cosmos.Coin", 
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin", 
-    (gogoproto.nullable) = false];
+  cosmos.base.v1beta1.Coin amount = 3 [
+    (cosmos_proto.scalar) = "cosmos.Coin",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message Validator {
@@ -97,7 +105,7 @@ message ValidatorIntent {
 message Delegation {
   string delegation_address = 1
       [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-      string validator_address = 2
+  string validator_address = 2
       [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   // TODO: determine whether this is Dec (shares) or Coins (tokens)
   string amount = 3 [
@@ -105,8 +113,10 @@ message Delegation {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  repeated cosmos.base.v1beta1.Coin rewards = 4
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin rewards = 4 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
   // Delegations here? or against validator?
   int64 redelegation_end = 5;
 }
@@ -118,7 +128,7 @@ message PortConnectionTuple {
 
 // GenesisState defines the interchainstaking module's genesis state.
 message GenesisState {
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [ (gogoproto.nullable) = false ];
   repeated RegisteredZone zones = 2 [ (gogoproto.nullable) = false ];
 }
 
@@ -126,21 +136,22 @@ message Receipt {
   RegisteredZone zone = 1;
   string sender = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string txhash = 3;
-  repeated cosmos.base.v1beta1.Coin amount = 4
-      [(gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins", (gogoproto.nullable) = false];
+  repeated cosmos.base.v1beta1.Coin amount = 4 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
 }
 
-
 message Params {
-  option (gogoproto.equal)            = true;
+  option (gogoproto.equal) = true;
   option (gogoproto.goproto_stringer) = false;
 
-  uint64 delegation_account_count       = 1;
-  uint64 delegation_account_split              = 2;
-  uint64 deposit_interval     = 3;
-  uint64 delegate_interval     = 4;
-  uint64 delegations_interval     = 5;
-  uint64 validatorset_interval     = 6;
+  uint64 delegation_account_count = 1;
+  uint64 delegation_account_split = 2;
+  uint64 deposit_interval = 3;
+  uint64 delegate_interval = 4;
+  uint64 delegations_interval = 5;
+  uint64 validatorset_interval = 6;
   string commission_rate = 7 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

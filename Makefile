@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-COSMOS_BUILD_OPTIONS="rocksdb"
+COSMOS_BUILD_OPTIONS="pebbledb"
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 DIFF_TAG=$(shell git rev-list --tags="v*" --max-count=1 --not $(shell git rev-list --tags="v*" "HEAD..origin"))
@@ -92,6 +92,11 @@ endif
 ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
   BUILD_TAGS += boltdb
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=boltdb
+endif
+# handle pebbledb
+ifeq (pebbledb,$(findstring pebbledb,$(COSMOS_BUILD_OPTIONS)))
+  BUILD_TAGS += pebbledb
+  ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 endif
 
 build_tags += $(BUILD_TAGS)
@@ -449,7 +454,7 @@ format:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-containerProtoVer=v0.2
+containerProtoVer=v0.6
 containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
@@ -478,7 +483,7 @@ proto-check-breaking:
 
 TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.15/proto/tendermint
 GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
-COSMOS_SDK_URL      = https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.44.5
+COSMOS_SDK_URL      = https://raw.githubusercontent.com/ingenuity-build/cosmos-sdk/v0.45.1-ls-2
 COSMOS_PROTO_URL    = https://raw.githubusercontent.com/cosmos/cosmos-proto/main/proto/cosmos_proto
 
 TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto

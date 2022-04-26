@@ -4,7 +4,6 @@ package quicksilver.interchainstaking.v1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "quicksilver/interchainstaking/v1/genesis.proto";
-import "google/api/http.proto";
 import "google/api/annotations.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
@@ -46,7 +45,6 @@ message MsgRegisterZone {
 
   string identifier = 1 [ (gogoproto.moretags) = "yaml:\"zone_name\"" ];
   string connection_id = 2 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
-  string chain_id = 3 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
   string base_denom = 4 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
   string local_denom = 5 [ (gogoproto.moretags) = "yaml:\"local_denom\"" ];
   string from_address = 6 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];

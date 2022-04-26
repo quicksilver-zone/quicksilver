@@ -59,6 +59,4 @@ message QueryDelegatorIntentRequest {
   string from_address = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
-message QueryDelegatorIntentResponse {
-  DelegatorIntent intent = 1;
-}
+message QueryDelegatorIntentResponse { DelegatorIntent intent = 1; }
