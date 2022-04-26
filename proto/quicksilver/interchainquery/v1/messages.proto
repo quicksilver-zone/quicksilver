@@ -3,7 +3,6 @@ package quicksilver.interchainquery.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
-import "google/api/http.proto";
 import "google/api/annotations.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainquery/types";
