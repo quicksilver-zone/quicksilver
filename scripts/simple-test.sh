@@ -19,7 +19,7 @@ else
   rm -rf ${CHAIN_DIR}/hermes &> /dev/null
   rm -rf ${CHAIN_DIR}/icq &> /dev/null
 
-  TIME=$(date --date '-1 minute' +%Y-%m-%dT%H:%m:%S.%NZ -u)
+  TIME=$(date --date '-2 minutes' +%Y-%m-%dT%H:%m:%S.%NZ -u)
   jq ".genesis_time = \"$TIME\"" ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json > ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json.new && mv ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json{.new,}
 
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1} ${CHAIN_DIR}/${CHAINID_1}
