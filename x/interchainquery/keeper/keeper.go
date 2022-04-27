@@ -13,16 +13,27 @@ import (
 
 // Keeper of this module maintains collections of registered zones.
 type Keeper struct {
-	cdc      codec.Codec
-	storeKey sdk.StoreKey
+	cdc       codec.Codec
+	storeKey  sdk.StoreKey
+	callbacks map[string]types.QueryCallbacks
 }
 
 // NewKeeper returns a new instance of zones Keeper
 func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey) Keeper {
 	return Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
+		cdc:       cdc,
+		storeKey:  storeKey,
+		callbacks: make(map[string]types.QueryCallbacks),
 	}
+}
+
+func (k *Keeper) SetCallbackHandler(module string, handler types.QueryCallbacks) error {
+	_, found := k.callbacks[module]
+	if found {
+		return fmt.Errorf("callback handler already set for %s", module)
+	}
+	k.callbacks[module] = handler
+	return nil
 }
 
 // Logger returns a module-specific logger.
@@ -55,27 +66,30 @@ func (k *Keeper) GetDatapoint(ctx sdk.Context, connection_id string, chain_id st
 	return k.GetDatapointForId(ctx, id)
 }
 
-func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string) (types.DataPoint, error) {
+func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string, max_age int64) (types.DataPoint, error) {
 	val, err := k.GetDatapoint(ctx, connection_id, chain_id, query_type, query_params)
 	if err != nil {
 		// no datapoint
-		k.MakeSingleRequest(ctx, connection_id, chain_id, query_type, query_params)
+		k.MakeRequest(ctx, connection_id, chain_id, query_type, query_params, sdk.NewInt(-1), "", nil)
 		return types.DataPoint{}, fmt.Errorf("no data; query submitted")
 	}
 
-	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - 10)) { // this is somewhat arbitrary; TODO: make this better
-		k.MakeSingleRequest(ctx, connection_id, chain_id, query_type, query_params)
+	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - max_age)) { // this is somewhat arbitrary; TODO: make this better
+		k.MakeRequest(ctx, connection_id, chain_id, query_type, query_params, sdk.NewInt(-1), "", nil)
 		return types.DataPoint{}, fmt.Errorf("stale data; query submitted")
 	}
 	// check ttl
 	return val, nil
 }
 
-func (k *Keeper) MakeSingleRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string) {
+func (k *Keeper) MakeRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string, period sdk.Int, module string, callback interface{}) {
 	key := GenerateQueryHash(connection_id, chain_id, query_type, query_params)
-	_, found := k.GetSingleQuery(ctx, key)
+	_, found := k.GetQuery(ctx, key)
 	if !found {
-		newQuery := k.NewSingleQuery(ctx, connection_id, chain_id, query_type, query_params)
-		k.SetSingleQuery(ctx, *newQuery)
+		if module != "" {
+			k.callbacks[module].AddCallback(key, callback)
+		}
+		newQuery := k.NewQuery(ctx, connection_id, chain_id, query_type, query_params, period)
+		k.SetQuery(ctx, *newQuery)
 	}
 }

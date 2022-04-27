@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainquery/types";
 
-message PeriodicQuery {
+message Query {
   string id = 1;
   string connection_id = 2;
   string chain_id = 3;
@@ -18,19 +18,6 @@ message PeriodicQuery {
     (gogoproto.nullable) = false
   ];
   string last_height = 7 [
-    (cosmos_proto.scalar) = "cosmos.Int",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
-    (gogoproto.nullable) = false
-  ];
-}
-
-message SingleQuery {
-  string id = 1;
-  string connection_id = 2;
-  string chain_id = 3;
-  string query_type = 4;
-  map<string, string> query_parameters = 5;
-  string emit_height = 6 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
@@ -54,5 +41,5 @@ message DataPoint {
 
 // GenesisState defines the epochs module's genesis state.
 message GenesisState {
-  repeated PeriodicQuery queries = 1 [ (gogoproto.nullable) = false ];
+  repeated Query queries = 1 [ (gogoproto.nullable) = false ];
 }

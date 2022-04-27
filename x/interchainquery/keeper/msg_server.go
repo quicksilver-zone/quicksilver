@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -22,24 +21,31 @@ var _ types.MsgServer = msgServer{}
 
 func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubmitQueryResponse) (*types.MsgSubmitQueryResponseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	q, found := k.GetPeriodicQuery(ctx, msg.QueryId)
+	q, found := k.GetQuery(ctx, msg.QueryId)
 	if found {
-		q.LastHeight = sdk.NewInt(ctx.BlockHeight())
-		k.SetPeriodicQuery(ctx, q)
+		for _, module := range k.callbacks {
+			if module.Has(msg.QueryId) {
+				err := module.Call(ctx, msg.QueryId, msg.Result, q)
+				if err != nil {
+					k.Logger(ctx).Error("Error in callback", err)
+					return nil, err
+				}
+			}
+		}
+		//q.LastHeight = sdk.NewInt(ctx.BlockHeight())
+
 		if err := k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height)); err != nil {
 			return nil, err
 		}
 
-	} else {
-		_, found2 := k.GetSingleQuery(ctx, msg.QueryId)
-		if found2 {
-			k.DeleteSingleQuery(ctx, msg.QueryId)
-			if err := k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height)); err != nil {
-				return nil, err
-			}
+		if q.Period.IsNegative() {
+			k.DeleteQuery(ctx, msg.QueryId)
 		} else {
-			return nil, fmt.Errorf("query object no longer exists; likely deleted since query was requested")
+			k.SetQuery(ctx, q)
 		}
+
+	} else {
+		return &types.MsgSubmitQueryResponseResponse{}, nil // technically this is an error, but will cause the entire tx to fail if we have one 'bad' message, so we can just no-op here.
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
