@@ -182,7 +182,8 @@ var (
 
 	// module accounts that are allowed to receive tokens
 	allowedReceivingModAcc = map[string]bool{
-		distrtypes.ModuleName: true,
+		distrtypes.ModuleName:             true,
+		interchainstakingtypes.ModuleName: true,
 	}
 )
 
@@ -415,10 +416,12 @@ func NewQuicksilver(
 	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey])
 	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper)
 
-	app.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(appCodec, keys[interchainstakingtypes.StoreKey], app.BankKeeper, app.ICAControllerKeeper, scopedInterchainStakingKeeper, app.InterchainQueryKeeper, *app.IBCKeeper, app.GetSubspace(interchainstakingtypes.ModuleName))
+	app.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(appCodec, keys[interchainstakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.ICAControllerKeeper, scopedInterchainStakingKeeper, app.InterchainQueryKeeper, *app.IBCKeeper, app.GetSubspace(interchainstakingtypes.ModuleName))
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
 
 	interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
+
+	app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler())
 
 	// Quicksilver Keepers
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])

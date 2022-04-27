@@ -10,12 +10,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	queryKeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
+	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	"time"
@@ -144,6 +146,19 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
+		case "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":
+			response := distrtypes.MsgSetWithdrawAddressResponse{}
+			err := proto.Unmarshal(msgData.Data, &response)
+			if err != nil {
+				k.Logger(ctx).Error("Unable to unmarshal MsgMultiSend response", "error", err)
+				return err
+			}
+			k.Logger(ctx).Info("Withdraw Address Updated", "response", response)
+			if err := k.HandleUpdatedWithdrawAddress(ctx, src); err != nil {
+				return err
+			}
+			continue
+
 		default:
 			k.Logger(ctx).Error("Unhandled acknowledgement packet", "type", msgData.MsgType)
 		}
@@ -197,11 +212,15 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
 	}
 
 	// get zone
-	zone, ok := k.GetRegisteredZoneInfo(ctx, ctx.ChainID())
-	if !ok {
-		err := fmt.Errorf("invalid chain id \"%s\"", ctx.ChainID())
-		k.Logger(ctx).Error(err.Error())
-		return err
+	var zone *types.RegisteredZone
+	zone = k.GetZoneForDelegateAccount(ctx, sMsg.ToAddress)
+	if zone == nil {
+		zone = k.GetZoneForDelegateAccount(ctx, sMsg.FromAddress)
+		if zone == nil {
+			err := fmt.Errorf("unable to find delegate account for %s or %s", sMsg.ToAddress, sMsg.FromAddress)
+			k.Logger(ctx).Error(err.Error())
+			return err
+		}
 	}
 
 	// checks here are specific to ensure future extensibility;
@@ -209,13 +228,13 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
 	case sMsg.FromAddress == zone.WithdrawalAddress.GetAddress() && sMsg.ToAddress == zone.FeeAddress.GetAddress():
 		// WithdrawalAddress (for rewards) only send to FeeAddress or DelegationAddresses.
 		// Target here is FeeAddress.
-		if err := k.handleFee(ctx, zone, sMsg); err != nil {
+		if err := k.handleFee(ctx, *zone, sMsg); err != nil {
 			return err
 		}
 	case sMsg.FromAddress == zone.WithdrawalAddress.GetAddress() && sMsg.ToAddress != zone.FeeAddress.GetAddress():
 		// WithdrawalAddress (for rewards) only send to FeeAddress or DelegationAddresses.
 		// Target here is one of the DelegationAddresses.
-		if err := k.handleRewardsDelegation(ctx, zone, sMsg); err != nil {
+		if err := k.handleRewardsDelegation(ctx, *zone, sMsg); err != nil {
 			return err
 		}
 	default:
@@ -368,6 +387,18 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount)
 }
 
+func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) error {
+	k.Logger(ctx).Info("Received MsgSetWithdrawAddress acknowledgement")
+	// first, type assertion. we should have distrtypes.MsgSetWithdrawAddress
+	_, ok := msg.(*distrtypes.MsgSetWithdrawAddress)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgSetWithdrawAddress")
+		return fmt.Errorf("unable to cast source message to MsgSetWithdrawAddress")
+	}
+
+	return nil
+}
+
 func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, amount sdk.Coin) (string, error) {
 	zone := k.GetZoneForDelegateAccount(ctx, delegatorAddress)
 	if zone == nil {
@@ -470,61 +501,110 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.
 	}
 	// decrement withdrawal waitgroup
 	zone.WithdrawalWaitgroup--
+	k.Logger(ctx).Error("Withdrawal waitgroup DOWN", "value", zone.WithdrawalWaitgroup)
+
 	k.SetRegisteredZone(ctx, *zone)
 
 	switch zone.WithdrawalWaitgroup {
 	case 0:
+		// interface assertion
+		var cb Callback = DistributeRewardsFromWithdrawAccount
+
 		// total rewards balance withdrawn
-		withdrawBalanceDatapoint, err := k.ICQKeeper.GetDatapointForId(
+		k.ICQKeeper.MakeRequest(
 			ctx,
-			queryKeeper.GenerateQueryHash(
-				zone.ConnectionId,
-				zone.ChainId,
-				"cosmos.bank.v1beta1.Query/BalanceRequest",
-				map[string]string{
-					"address": zone.WithdrawalAddress.GetAddress(),
-					"denom":   zone.GetBaseDenom(),
-				},
-			),
+			zone.ConnectionId,
+			zone.ChainId, "cosmos.bank.v1beta1.Query/AllBalances",
+			map[string]string{"address": zone.WithdrawalAddress.Address},
+			sdk.NewInt(int64(-1)),
+			types.ModuleName,
+			cb,
 		)
-		withdrawBalance := banktypes.QueryBalanceResponse{}
-		if err == nil {
-			k.cdc.MustUnmarshalJSON(withdrawBalanceDatapoint.Value, &withdrawBalance)
-		}
-
-		// calculate fee (fee = amount * rate)
-		fee := withdrawBalance.Balance.Amount.ToDec().
-			Mul(sdk.NewDec(int64(k.GetParam(ctx, types.KeyCommissionRate)))).
-			TruncateInt()
-		// prepare rewards distribution
-		rewards := withdrawBalance.Balance.SubAmount(fee)
-		dust, msgs := k.prepareRewardsDistributionMsgs(ctx, *zone, rewards)
-		// add dust to fee; add fee to msgs
-		fee = fee.Add(dust)
-		msgs = append(
-			msgs,
-			&banktypes.MsgSend{
-				FromAddress: zone.WithdrawalAddress.GetAddress(),
-				ToAddress:   zone.FeeAddress.GetAddress(),
-				Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, fee)),
-			},
-		)
-		// update redemption rate
-		k.updateRedemptionRate(ctx, *zone, *withdrawBalance.Balance, fee)
-		// send tx
-		k.SubmitTx(ctx, msgs, zone.WithdrawalAddress)
-
 		return nil
 	default:
 		return nil
 	}
 }
 
-func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone, balance sdk.Coin, fee sdk.Int) {
+func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {
+	zone, found := k.GetRegisteredZoneInfo(ctx, query.ChainId)
+	if !found {
+		return fmt.Errorf("unable to find zone for %s", query.ChainId)
+	}
+
+	// query all balances as chains can accumulate fees in different denoms.
+	withdrawBalance := banktypes.QueryAllBalancesResponse{}
+
+	err := k.cdc.UnmarshalJSON(args, &withdrawBalance)
+	if err != nil {
+		return err
+	}
+	baseDenomAmount := withdrawBalance.Balances.AmountOf(zone.BaseDenom)
+	// calculate fee (fee = amount * rate)
+
+	baseDenomFee := baseDenomAmount.ToDec().
+		Mul(k.GetCommissionRate(ctx)).
+		TruncateInt()
+
+	// prepare rewards distribution
+	rewards := sdk.NewCoin(zone.BaseDenom, baseDenomAmount.Sub(baseDenomFee))
+
+	dust, msgs := k.prepareRewardsDistributionMsgs(ctx, zone, rewards)
+
+	// subtract dust from rewards
+	rewards = rewards.SubAmount(dust)
+
+	// multiDenomFee is the balance of withdrawal account minus the redelegated rewards.
+	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards})
+
+	channelReq := channeltypes.QueryConnectionChannelsRequest{Connection: zone.ConnectionId}
+	localChannelResp, err := k.IBCKeeper.ChannelKeeper.ConnectionChannels(sdk.WrapSDKContext(ctx), &channelReq)
+	if err != nil {
+		return err
+	}
+	var remotePort string
+	var remoteChannel string
+	for _, localChannel := range localChannelResp.Channels {
+		if localChannel.PortId == "transfer" {
+			remoteChannel = localChannel.Counterparty.ChannelId
+			remotePort = localChannel.Counterparty.PortId
+			break
+		}
+	}
+	if remotePort == "" {
+		return fmt.Errorf("unable to find remote transfer connection")
+	}
+
+	for _, coin := range multiDenomFee {
+		msgs = append(
+			msgs,
+			&ibctransfertypes.MsgTransfer{
+				SourcePort:       remotePort,
+				SourceChannel:    remoteChannel,
+				Token:            coin,
+				Sender:           zone.WithdrawalAddress.Address,
+				Receiver:         k.AccountKeeper.GetModuleAddress(types.ModuleName).String(),
+				TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
+				TimeoutHeight:    clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0},
+			},
+		)
+	}
+
+	// update redemption rate
+	k.updateRedemptionRate(ctx, zone)
+
+	// send tx
+	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress)
+
+}
+
+func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone) {
 	// TODO: implement
 }
 
 func (k *Keeper) prepareRewardsDistributionMsgs(ctx sdk.Context, zone types.RegisteredZone, rewards sdk.Coin) (sdk.Int, []sdk.Msg) {
+	// todo: use multisend.
+	// todo: this will probably not want to be an equal distribution. we want to use this to even out the distribution between accounts.
 	var msgs []sdk.Msg
 
 	dust := rewards.Amount
@@ -538,7 +618,7 @@ func (k *Keeper) prepareRewardsDistributionMsgs(ctx sdk.Context, zone types.Regi
 				Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, portion)),
 			},
 		)
-		dust.Sub(portion)
+		dust = dust.Sub(portion)
 	}
 
 	return dust, msgs

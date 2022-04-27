@@ -226,7 +226,6 @@ func (z *RegisteredZone) GetRedemptionTargets(requests map[string]sdk.Int, denom
 
 		validator, err := z.GetValidatorByValoper(valoper)
 		if err != nil {
-			fmt.Println("Didn't find valoper")
 			continue
 		}
 
@@ -271,8 +270,6 @@ func (z *RegisteredZone) UpdateDelegatedAmount() {
 		if ok {
 			delCoin := sdk.NewCoin(z.BaseDenom, val.TruncateInt())
 			if da.DelegatedBalance.IsNil() || da.DelegatedBalance.IsZero() || !da.DelegatedBalance.Equal(delCoin) {
-				// TODO: this still triggers periodically
-				fmt.Printf("[%s] Mismatch between delegated amount and delegations; zone: %v, delegations: %v\n", da.Address, da.DelegatedBalance, delCoin)
 				da.DelegatedBalance = delCoin
 			}
 			out = out.Add(da.DelegatedBalance)
