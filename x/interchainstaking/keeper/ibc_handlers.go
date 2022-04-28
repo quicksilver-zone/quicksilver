@@ -220,24 +220,25 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg) error {
 	}
 
 	// check for sending of tokens from deposit -> delegate.
-	zone := k.GetZoneForDelegateAccount(ctx, sMsg.Outputs[0].Address) // do this once, save multiple lookups.
-	if zone != nil {
-		for _, out := range sMsg.Outputs {
-			da, err := zone.GetDelegationAccountByAddress(out.Address)
-			if err != nil {
-				return err
-			}
-			da.Balance = da.Balance.Add(out.Coins...)
-			k.Delegate(ctx, *zone, da)
+	zone, err := k.GetZoneFromContext(ctx)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		return err
+	}
+
+	for _, out := range sMsg.Outputs {
+		da, err := zone.GetDelegationAccountByAddress(out.Address)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			return err
 		}
+		da.Balance = da.Balance.Add(out.Coins...)
+		k.Delegate(ctx, *zone, da)
 	}
 
 	return nil
 }
 
-// TODO: rework to reflect changes to HandleWithdrawRewards:
-//   1. handle MsgSend from WithdrawalAccount to FeeAccount;
-//   2. handle MsgSend from WithdrawalAccount to Delegation Accounts;
 func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
 	k.Logger(ctx).Info("Received MsgSend acknowledgement")
 	// first, type assertion. we should have banktypes.MsgSend
@@ -249,15 +250,9 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
 	}
 
 	// get zone
-	var zone *types.RegisteredZone
-	zone = k.GetZoneForDelegateAccount(ctx, sMsg.ToAddress)
-	if zone == nil {
-		zone = k.GetZoneForDelegateAccount(ctx, sMsg.FromAddress)
-		if zone == nil {
-			err := fmt.Errorf("unable to find delegate account for %s or %s", sMsg.ToAddress, sMsg.FromAddress)
-			k.Logger(ctx).Error(err.Error())
-			return err
-		}
+	zone, err := k.GetZoneFromContext(ctx)
+	if err != nil {
+		return err
 	}
 
 	// checks here are specific to ensure future extensibility;
@@ -445,9 +440,10 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 }
 
 func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, amount sdk.Coin) (string, error) {
-	zone := k.GetZoneForDelegateAccount(ctx, delegatorAddress)
-	if zone == nil {
-		return "", fmt.Errorf("unable to fetch zone for delegate address %s", delegatorAddress)
+	zone, err := k.GetZoneFromContext(ctx)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		return "", err
 	}
 
 	for _, val := range zone.GetValidatorsAddressesAsSlice() {
@@ -494,9 +490,10 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 	var validator *types.Validator
 	var err error
 
-	zone := k.GetZoneForDelegateAccount(ctx, delegatorAddress)
-	if zone == nil {
-		return fmt.Errorf("unable to fetch zone for delegate address %s", delegatorAddress)
+	zone, err := k.GetZoneFromContext(ctx)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		return err
 	}
 
 	validator, err = zone.GetValidatorByValoper(validatorAddress)
@@ -532,15 +529,12 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 
 func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.Coins) error {
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement")
-	// first, type assertion. we should have distrtypes.MsgWithdrawDelegatorReward
-	withdrawMsg, ok := msg.(*distrtypes.MsgWithdrawDelegatorReward)
-	if !ok {
-		k.Logger(ctx).Error("unable to cast source message to MsgWithdrawDelegatorReward")
-		return fmt.Errorf("unable to cast source message to MsgWithdrawDelegatorReward")
-	}
-	zone := k.GetZoneForDelegateAccount(ctx, withdrawMsg.DelegatorAddress)
-	if zone == nil {
-		return fmt.Errorf("unable to find zone for delegator account %s", withdrawMsg.DelegatorAddress)
+	// ? we don't actually need the distrtypes.MsgWithdrawDelegatorReward here
+	// as it just returns the delegator:validator tuple that we sent ?
+	zone, err := k.GetZoneFromContext(ctx)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		return err
 	}
 	// decrement withdrawal waitgroup
 	zone.WithdrawalWaitgroup--
