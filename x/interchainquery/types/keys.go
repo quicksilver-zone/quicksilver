@@ -16,15 +16,13 @@ const (
 
 // prefix bytes for the interchainquery persistent store
 const (
-	prefixData          = iota + 1
-	prefixPeriodicQuery = iota + 1
-	prefixSingleQuery   = iota + 1
+	prefixData  = iota + 1
+	prefixQuery = iota + 1
 )
 
 var (
-	KeyPrefixData          = []byte{prefixData}
-	KeyPrefixPeriodicQuery = []byte{prefixPeriodicQuery}
-	KeyPrefixSingleQuery   = []byte{prefixSingleQuery}
+	KeyPrefixData  = []byte{prefixData}
+	KeyPrefixQuery = []byte{prefixQuery}
 )
 
 func KeyPrefix(p string) []byte {

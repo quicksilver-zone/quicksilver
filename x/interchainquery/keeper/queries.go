@@ -17,74 +17,15 @@ func GenerateQueryHash(connection_id string, chain_id string, query_type string,
 }
 
 // ----------------------------------------------------------------
-func (k Keeper) NewSingleQuery(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string) *types.SingleQuery {
-	return &types.SingleQuery{Id: GenerateQueryHash(connection_id, chain_id, query_type, query_params), ConnectionId: connection_id, ChainId: chain_id, QueryType: query_type, QueryParameters: query_params, EmitHeight: sdk.ZeroInt()}
+
+func (k Keeper) NewQuery(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string, period sdk.Int) *types.Query {
+	return &types.Query{Id: GenerateQueryHash(connection_id, chain_id, query_type, query_params), ConnectionId: connection_id, ChainId: chain_id, QueryType: query_type, QueryParameters: query_params, Period: period, LastHeight: sdk.ZeroInt()}
 }
 
-// GetSingleQuery returns query
-func (k Keeper) GetSingleQuery(ctx sdk.Context, id string) (types.SingleQuery, bool) {
-	query := types.SingleQuery{}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSingleQuery)
-	bz := store.Get([]byte(id))
-	if len(bz) == 0 {
-		return query, false
-	}
-
-	k.cdc.MustUnmarshal(bz, &query)
-	return query, true
-}
-
-// SetSingleQuery set query info
-func (k Keeper) SetSingleQuery(ctx sdk.Context, query types.SingleQuery) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSingleQuery)
-	bz := k.cdc.MustMarshal(&query)
-	store.Set([]byte(query.Id), bz)
-}
-
-// DeleteSingleQuery delete query info
-func (k Keeper) DeleteSingleQuery(ctx sdk.Context, id string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSingleQuery)
-	store.Delete([]byte(id))
-}
-
-// IterateSingleQueries iterate through querys
-func (k Keeper) IterateSingleQueries(ctx sdk.Context, fn func(index int64, queryInfo types.SingleQuery) (stop bool)) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixSingleQuery)
-	iterator := sdk.KVStorePrefixIterator(store, nil)
-	defer iterator.Close()
-
-	i := int64(0)
-	for ; iterator.Valid(); iterator.Next() {
-		query := types.SingleQuery{}
-		k.cdc.MustUnmarshal(iterator.Value(), &query)
-		stop := fn(i, query)
-		if stop {
-			break
-		}
-		i++
-	}
-}
-
-// AllSingleQueries returns every queryInfo in the store
-func (k Keeper) AllSingleQueries(ctx sdk.Context) []types.SingleQuery {
-	querys := []types.SingleQuery{}
-	k.IterateSingleQueries(ctx, func(_ int64, queryInfo types.SingleQuery) (stop bool) {
-		querys = append(querys, queryInfo)
-		return false
-	})
-	return querys
-}
-
-// ----------------------------------------------------------------
-
-func (k Keeper) NewPeriodicQuery(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string, period sdk.Int) *types.PeriodicQuery {
-	return &types.PeriodicQuery{Id: GenerateQueryHash(connection_id, chain_id, query_type, query_params), ConnectionId: connection_id, ChainId: chain_id, QueryType: query_type, QueryParameters: query_params, Period: period, LastHeight: sdk.NewInt(ctx.BlockHeight())}
-}
-
-// GetPeriodicQuery returns query
-func (k Keeper) GetPeriodicQuery(ctx sdk.Context, id string) (types.PeriodicQuery, bool) {
-	query := types.PeriodicQuery{}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPeriodicQuery)
+// GetQuery returns query
+func (k Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) {
+	query := types.Query{}
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	bz := store.Get([]byte(id))
 	if len(bz) == 0 {
 		return query, false
@@ -93,29 +34,29 @@ func (k Keeper) GetPeriodicQuery(ctx sdk.Context, id string) (types.PeriodicQuer
 	return query, true
 }
 
-// SetPeriodicQuery set query info
-func (k Keeper) SetPeriodicQuery(ctx sdk.Context, query types.PeriodicQuery) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPeriodicQuery)
+// SetQuery set query info
+func (k Keeper) SetQuery(ctx sdk.Context, query types.Query) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	bz := k.cdc.MustMarshal(&query)
 	k.Logger(ctx).Info("Created/updated query", "ID", query.Id)
 	store.Set([]byte(query.Id), bz)
 }
 
-// DeletePeriodicQuery delete query info
-func (k Keeper) DeletePeriodicQuery(ctx sdk.Context, id string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPeriodicQuery)
+// DeleteQuery delete query info
+func (k Keeper) DeleteQuery(ctx sdk.Context, id string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	store.Delete([]byte(id))
 }
 
-// IteratePeriodicQueries iterate through querys
-func (k Keeper) IteratePeriodicQueries(ctx sdk.Context, fn func(index int64, queryInfo types.PeriodicQuery) (stop bool)) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPeriodicQuery)
+// IterateQueries iterate through querys
+func (k Keeper) IterateQueries(ctx sdk.Context, fn func(index int64, queryInfo types.Query) (stop bool)) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	iterator := sdk.KVStorePrefixIterator(store, nil)
 	defer iterator.Close()
 
 	i := int64(0)
 	for ; iterator.Valid(); iterator.Next() {
-		query := types.PeriodicQuery{}
+		query := types.Query{}
 		k.cdc.MustUnmarshal(iterator.Value(), &query)
 		stop := fn(i, query)
 
@@ -126,10 +67,10 @@ func (k Keeper) IteratePeriodicQueries(ctx sdk.Context, fn func(index int64, que
 	}
 }
 
-// AllPeriodicQueries returns every queryInfo in the store
-func (k Keeper) AllPeriodicQueries(ctx sdk.Context) []types.PeriodicQuery {
-	querys := []types.PeriodicQuery{}
-	k.IteratePeriodicQueries(ctx, func(_ int64, queryInfo types.PeriodicQuery) (stop bool) {
+// AllQueries returns every queryInfo in the store
+func (k Keeper) AllQueries(ctx sdk.Context) []types.Query {
+	querys := []types.Query{}
+	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
 		querys = append(querys, queryInfo)
 		return false
 	})
