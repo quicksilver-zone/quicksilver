@@ -19,10 +19,8 @@
 - [quicksilver/interchainquery/v1/genesis.proto](#quicksilver/interchainquery/v1/genesis.proto)
     - [DataPoint](#quicksilver.interchainquery.v1.DataPoint)
     - [GenesisState](#quicksilver.interchainquery.v1.GenesisState)
-    - [PeriodicQuery](#quicksilver.interchainquery.v1.PeriodicQuery)
-    - [PeriodicQuery.QueryParametersEntry](#quicksilver.interchainquery.v1.PeriodicQuery.QueryParametersEntry)
-    - [SingleQuery](#quicksilver.interchainquery.v1.SingleQuery)
-    - [SingleQuery.QueryParametersEntry](#quicksilver.interchainquery.v1.SingleQuery.QueryParametersEntry)
+    - [Query](#quicksilver.interchainquery.v1.Query)
+    - [Query.QueryParametersEntry](#quicksilver.interchainquery.v1.Query.QueryParametersEntry)
   
 - [quicksilver/interchainquery/v1/messages.proto](#quicksilver/interchainquery/v1/messages.proto)
     - [MsgSubmitQueryResponse](#quicksilver.interchainquery.v1.MsgSubmitQueryResponse)
@@ -243,16 +241,16 @@ GenesisState defines the epochs module's genesis state.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `queries` | [PeriodicQuery](#quicksilver.interchainquery.v1.PeriodicQuery) | repeated |  |
+| `queries` | [Query](#quicksilver.interchainquery.v1.Query) | repeated |  |
 
 
 
 
 
 
-<a name="quicksilver.interchainquery.v1.PeriodicQuery"></a>
+<a name="quicksilver.interchainquery.v1.Query"></a>
 
-### PeriodicQuery
+### Query
 
 
 
@@ -262,7 +260,7 @@ GenesisState defines the epochs module's genesis state.
 | `connection_id` | [string](#string) |  |  |
 | `chain_id` | [string](#string) |  |  |
 | `query_type` | [string](#string) |  |  |
-| `query_parameters` | [PeriodicQuery.QueryParametersEntry](#quicksilver.interchainquery.v1.PeriodicQuery.QueryParametersEntry) | repeated |  |
+| `query_parameters` | [Query.QueryParametersEntry](#quicksilver.interchainquery.v1.Query.QueryParametersEntry) | repeated |  |
 | `period` | [string](#string) |  |  |
 | `last_height` | [string](#string) |  |  |
 
@@ -271,45 +269,9 @@ GenesisState defines the epochs module's genesis state.
 
 
 
-<a name="quicksilver.interchainquery.v1.PeriodicQuery.QueryParametersEntry"></a>
+<a name="quicksilver.interchainquery.v1.Query.QueryParametersEntry"></a>
 
-### PeriodicQuery.QueryParametersEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainquery.v1.SingleQuery"></a>
-
-### SingleQuery
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `id` | [string](#string) |  |  |
-| `connection_id` | [string](#string) |  |  |
-| `chain_id` | [string](#string) |  |  |
-| `query_type` | [string](#string) |  |  |
-| `query_parameters` | [SingleQuery.QueryParametersEntry](#quicksilver.interchainquery.v1.SingleQuery.QueryParametersEntry) | repeated |  |
-| `emit_height` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainquery.v1.SingleQuery.QueryParametersEntry"></a>
-
-### SingleQuery.QueryParametersEntry
+### Query.QueryParametersEntry
 
 
 

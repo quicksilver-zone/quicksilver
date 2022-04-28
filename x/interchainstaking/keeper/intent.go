@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -27,7 +25,6 @@ func (k Keeper) GetIntent(ctx sdk.Context, zone types.RegisteredZone, delegator 
 func (k Keeper) SetIntent(ctx sdk.Context, zone types.RegisteredZone, intent types.DelegatorIntent) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), append(types.KeyPrefixIntent, []byte(zone.ChainId)...))
 	bz := k.cdc.MustMarshal(&intent)
-	ctx.Logger().Error(fmt.Sprintf("Writing the intent for chain %s for delegator %s: %v", zone.ChainId, intent.Delegator, intent))
 	store.Set([]byte(intent.Delegator), bz)
 }
 

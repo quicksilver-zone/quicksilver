@@ -144,7 +144,7 @@ require (
 
 replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-	github.com/cosmos/cosmos-sdk => github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-2
+	github.com/cosmos/cosmos-sdk => github.com/ingenuity-build/cosmos-sdk v0.45.1-ls-2e
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220413113722-16f0d618a72b
 )

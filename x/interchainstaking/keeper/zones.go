@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -70,7 +71,7 @@ func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
 }
 
 func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.RegisteredZone {
-	zone := &types.RegisteredZone{}
+	var zone *types.RegisteredZone
 	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
 		for _, ica := range zoneInfo.DelegationAddresses {
 			if ica.Address == address {
@@ -84,7 +85,7 @@ func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *type
 }
 
 func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) *types.ICAAccount {
-	ica := &types.ICAAccount{}
+	var ica *types.ICAAccount
 	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
 		for _, delegateAccount := range zoneInfo.DelegationAddresses {
 			if delegateAccount.Address == address {
@@ -146,4 +147,30 @@ func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.Reg
 
 	k.Logger(ctx).Info("Determined validators from aggregated intents +/- rebalance diffs", "amount", amount.Amount, "out", out)
 	return out, nil
+}
+
+func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, address string, queryResult []byte) error {
+	queryRes := banktypes.QueryAllBalancesResponse{}
+	err := k.cdc.UnmarshalJSON(queryResult, &queryRes)
+	if err != nil {
+		k.Logger(ctx).Error("Unable to unmarshal validators info for zone", "zone", zone.ChainId, "err", err)
+		return err
+	}
+
+	switch address {
+	case zone.DepositAddress.Address:
+		zone.DepositAddress.Balance = queryRes.Balances
+	case zone.FeeAddress.Address:
+		zone.FeeAddress.Balance = queryRes.Balances
+	case zone.WithdrawalAddress.Address:
+		zone.WithdrawalAddress.Balance = queryRes.Balances
+	default:
+		icaAccount, err := zone.GetDelegationAccountByAddress(address)
+		if err != nil {
+			return err
+		}
+		icaAccount.Balance = queryRes.Balances
+	}
+	k.SetRegisteredZone(ctx, zone)
+	return nil
 }

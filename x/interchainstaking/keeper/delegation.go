@@ -1,12 +1,9 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	queryKeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -40,25 +37,35 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *t
 	return k.SubmitTx(ctx, msgs, account)
 }
 
-func (k *Keeper) WithdrawDelegationRewards(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount) error {
-	k.Logger(ctx).Debug("Withdrawing rewards for delegate account", "account", account.GetAddress(), "zone", zone.ChainId)
+// func (k *Keeper) WithdrawDelegationRewards(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount) error {
+// 	k.Logger(ctx).Debug("Withdrawing rewards for delegate account", "account", account.GetAddress(), "zone", zone.ChainId)
+// 	delegatorRewardsDatapoint, err := k.ICQKeeper.GetDatapointForId(ctx, queryKeeper.GenerateQueryHash(zone.ConnectionId, zone.ChainId, "cosmos.distribution.v1beta1.Query/DelegationTotalRewards", map[string]string{"delegator": account.GetAddress()}))
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return k.WithdrawDelegationRewardsForResponse(ctx, zone, account, delegatorRewardsDatapoint.Value)
+
+// }
+
+func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount, response []byte) error {
 	var msgs []sdk.Msg
-	delegatorRewardsDatapoint, err := k.ICQKeeper.GetDatapointForId(ctx, queryKeeper.GenerateQueryHash(zone.ConnectionId, zone.ChainId, "cosmos.distribution.v1beta1.Query/DelegationTotalRewards", map[string]string{"delegator": account.GetAddress()}))
+
 	delegatorRewards := distrTypes.QueryDelegationTotalRewardsResponse{}
-	if err == nil {
-		k.cdc.MustUnmarshalJSON(delegatorRewardsDatapoint.Value, &delegatorRewards)
+	err := k.cdc.UnmarshalJSON(response, &delegatorRewards)
+	if err != nil {
+		return err
 	}
 	// send withdrawal msg for each delegation (delegator:validator pairs)
 	for _, delegation := range zone.GetDelegationsForDelegator(account.GetAddress()) {
 		amount := rewardsForDelegation(delegatorRewards, delegation.DelegationAddress, delegation.ValidatorAddress)
-		fmt.Printf("Withdraw rewards for delegator %s from validator %s: %v\n", delegation.DelegationAddress, delegation.ValidatorAddress, amount)
+		k.Logger(ctx).Info("Withdraw rewards", "delegator", delegation.DelegationAddress, "validator", delegation.ValidatorAddress, "amount", amount)
 		msgs = append(msgs, &distrTypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegation.GetDelegationAddress(), ValidatorAddress: delegation.GetValidatorAddress()})
 	}
 	if len(msgs) == 0 {
 		return nil
 	}
 	// set withdrawal waitgroup tally
-	zone.WithdrawalWaitgroup = uint32(len(msgs))
+	zone.WithdrawalWaitgroup += uint32(len(msgs))
 	k.SetRegisteredZone(ctx, zone)
 
 	return k.SubmitTx(ctx, msgs, account)

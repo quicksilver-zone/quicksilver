@@ -27,7 +27,6 @@ OUTER:
 		}
 		di.Intents = append(di.Intents, i)
 	}
-	fmt.Println("Intents (not normalised)", "intents", di.Intents)
 
 	return di.Normalize()
 }

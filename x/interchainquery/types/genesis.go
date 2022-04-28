@@ -1,12 +1,12 @@
 package types
 
-func NewGenesisState(queries []PeriodicQuery) *GenesisState {
+func NewGenesisState(queries []Query) *GenesisState {
 	return &GenesisState{Queries: queries}
 }
 
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {
-	queries := []PeriodicQuery{}
+	queries := []Query{}
 	return NewGenesisState(queries)
 }
 

@@ -13,13 +13,13 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// set registered zones info from genesis
 	for _, query := range genState.Queries {
 		// Initialize empty epoch values via Cosmos SDK
-		k.SetPeriodicQuery(ctx, query)
+		k.SetQuery(ctx, query)
 	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
-		Queries: k.AllPeriodicQueries(ctx),
+		Queries: k.AllQueries(ctx),
 	}
 }
