@@ -105,7 +105,7 @@ func (im IBCModule) OnChanOpenAck(
 	// deposit address
 	case len(portParts) == 2 && portParts[1] == "deposit":
 
-		zoneInfo.DepositAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
+		zoneInfo.DepositAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 		var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 			zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 			if !found {
@@ -128,12 +128,12 @@ func (im IBCModule) OnChanOpenAck(
 	// fee address
 	case len(portParts) == 2 && portParts[1] == "fee":
 
-		zoneInfo.FeeAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
+		zoneInfo.FeeAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 
 	// withdrawal address
 	case len(portParts) == 2 && portParts[1] == "withdrawal":
 
-		zoneInfo.WithdrawalAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
+		zoneInfo.WithdrawalAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 
 		for _, da := range zoneInfo.DelegationAddresses {
 			msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: da.Address, WithdrawAddress: address}
@@ -150,7 +150,7 @@ func (im IBCModule) OnChanOpenAck(
 				return nil
 			}
 		}
-		account := &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.Coin{}, PortName: portID}
+		account := &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 		// append delegation account address
 		zoneInfo.DelegationAddresses = append(zoneInfo.DelegationAddresses, account)
 
@@ -160,9 +160,9 @@ func (im IBCModule) OnChanOpenAck(
 			im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, account)
 		}
 
-		// TODO: update to use callbacks
-		delegationQuery := im.keeper.ICQKeeper.NewQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegationsInterval)))) // this can probably be less frequent, because we manage delegations ourselves.
-		im.keeper.ICQKeeper.SetQuery(ctx, *delegationQuery)
+		// // TODO: update to use callbacks - we possibly want to do this here unless there is a better way to handle slashing? perhaps as part of valset update?
+		// delegationQuery := im.keeper.ICQKeeper.NewQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegationsInterval)))) // this can probably be less frequent, because we manage delegations ourselves.
+		// im.keeper.ICQKeeper.SetQuery(ctx, *delegationQuery)
 
 	default:
 		ctx.Logger().Error("unexpected channel on portID: " + portID)

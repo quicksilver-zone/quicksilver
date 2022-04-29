@@ -23,18 +23,34 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			for _, da := range zoneInfo.DelegationAddresses {
 				k.Logger(ctx).Info("Withdrawing rewards")
 
-				// if err := k.WithdrawDelegationRewards(ctx, zoneInfo, da); err != nil {
-				// 	k.Logger(ctx).Error("Unable to withdraw delegation rewards", "delegation_address", zoneInfo.DepositAddress.GetAddress(), "zone_identifier", zoneInfo.Identifier, "err", err)
-				// }
-
 				var rewardscb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 					zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 					if !found {
 						return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 					}
 
-					return k.WithdrawDelegationRewardsForResponse(ctx, zone, k.GetICAForDelegateAccount(ctx, query.QueryParameters["delegator"]), args)
+					return k.WithdrawDelegationRewardsForResponse(ctx, zone, query.QueryParameters["delegator"], args)
 				}
+
+				var delegationcb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+					zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+					if !found {
+						return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+					}
+
+					return k.UpdateDelegationRecordsForAddress(ctx, zone, query.QueryParameters["address"], args)
+				}
+
+				k.ICQKeeper.MakeRequest(
+					ctx,
+					zoneInfo.ConnectionId,
+					zoneInfo.ChainId,
+					"cosmos.staking.v1beta1.Query/DelegatorDelegations",
+					map[string]string{"address": da.Address},
+					sdk.NewInt(-1),
+					types.ModuleName,
+					delegationcb,
+				)
 
 				k.ICQKeeper.MakeRequest(
 					ctx,
@@ -47,6 +63,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					rewardscb,
 				)
 
+				zoneInfo.WithdrawalWaitgroup++
+				k.Logger(ctx).Info("Incrementing waitgroup for delegation", "value", zoneInfo.WithdrawalWaitgroup)
+				k.SetRegisteredZone(ctx, zoneInfo)
 			}
 			return false
 		})
