@@ -64,6 +64,22 @@
   
     - [Query](#quicksilver.interchainstaking.v1.Query)
   
+- [quicksilver/mint/v1beta1/mint.proto](#quicksilver/mint/v1beta1/mint.proto)
+    - [DistributionProportions](#quicksilver.mint.v1beta1.DistributionProportions)
+    - [Minter](#quicksilver.mint.v1beta1.Minter)
+    - [Params](#quicksilver.mint.v1beta1.Params)
+  
+- [quicksilver/mint/v1beta1/genesis.proto](#quicksilver/mint/v1beta1/genesis.proto)
+    - [GenesisState](#quicksilver.mint.v1beta1.GenesisState)
+  
+- [quicksilver/mint/v1beta1/query.proto](#quicksilver/mint/v1beta1/query.proto)
+    - [QueryEpochProvisionsRequest](#quicksilver.mint.v1beta1.QueryEpochProvisionsRequest)
+    - [QueryEpochProvisionsResponse](#quicksilver.mint.v1beta1.QueryEpochProvisionsResponse)
+    - [QueryParamsRequest](#quicksilver.mint.v1beta1.QueryParamsRequest)
+    - [QueryParamsResponse](#quicksilver.mint.v1beta1.QueryParamsResponse)
+  
+    - [Query](#quicksilver.mint.v1beta1.Query)
+  
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -854,6 +870,188 @@ Query defines the gRPC querier service.
 | `RegisteredZoneInfos` | [QueryRegisteredZonesInfoRequest](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoRequest) | [QueryRegisteredZonesInfoResponse](#quicksilver.interchainstaking.v1.QueryRegisteredZonesInfoResponse) | RegisteredZoneInfos provides meta data on connected zones. | GET|/quicksilver/interchainstaking/v1/zones|
 | `DepositAccountFromAddress` | [QueryDepositAccountForChainRequest](#quicksilver.interchainstaking.v1.QueryDepositAccountForChainRequest) | [QueryDepositAccountForChainResponse](#quicksilver.interchainstaking.v1.QueryDepositAccountForChainResponse) | DepositAccountFromAddress provides data on the deposit address for a connected zone. | GET|/quicksilver/interchainstaking/v1/zones/deposit_address|
 | `DelegatorIntent` | [QueryDelegatorIntentRequest](#quicksilver.interchainstaking.v1.QueryDelegatorIntentRequest) | [QueryDelegatorIntentResponse](#quicksilver.interchainstaking.v1.QueryDelegatorIntentResponse) | DelegatorIntent provides data on the intent of the delegator for the given zone. | GET|/quicksilver/interchainstaking/v1/zones/delegator_intent|
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/mint/v1beta1/mint.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/mint/v1beta1/mint.proto
+
+
+
+<a name="quicksilver.mint.v1beta1.DistributionProportions"></a>
+
+### DistributionProportions
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `staking` | [string](#string) |  | staking defines the proportion of the minted minted_denom that is to be allocated as staking rewards. |
+| `pool_incentives` | [string](#string) |  | pool_incentives defines the proportion of the minted minted_denom that is to be allocated as pool incentives. |
+| `participation_rewards` | [string](#string) |  | participation_rewards defines the proportion of the minted minted_denom that is to be allocated to participation rewards address. |
+| `community_pool` | [string](#string) |  | community_pool defines the proportion of the minted minted_denom that is to be allocated to the community pool. |
+
+
+
+
+
+
+<a name="quicksilver.mint.v1beta1.Minter"></a>
+
+### Minter
+Minter represents the minting state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `epoch_provisions` | [string](#string) |  | current epoch provisions |
+
+
+
+
+
+
+<a name="quicksilver.mint.v1beta1.Params"></a>
+
+### Params
+Params holds parameters for the mint module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `mint_denom` | [string](#string) |  | type of coin to mint |
+| `genesis_epoch_provisions` | [string](#string) |  | epoch provisions from the first epoch |
+| `epoch_identifier` | [string](#string) |  | mint epoch identifier |
+| `reduction_period_in_epochs` | [int64](#int64) |  | number of epochs take to reduce rewards |
+| `reduction_factor` | [string](#string) |  | reduction multiplier to execute on each period |
+| `distribution_proportions` | [DistributionProportions](#quicksilver.mint.v1beta1.DistributionProportions) |  | distribution_proportions defines the proportion of the minted denom |
+| `minting_rewards_distribution_start_epoch` | [int64](#int64) |  | start epoch to distribute minting rewards |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/mint/v1beta1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/mint/v1beta1/genesis.proto
+
+
+
+<a name="quicksilver.mint.v1beta1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the mint module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `minter` | [Minter](#quicksilver.mint.v1beta1.Minter) |  | minter is a space for holding current rewards information. |
+| `params` | [Params](#quicksilver.mint.v1beta1.Params) |  | params defines all the paramaters of the module. |
+| `reduction_started_epoch` | [int64](#int64) |  | current reduction period start epoch |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/mint/v1beta1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/mint/v1beta1/query.proto
+
+
+
+<a name="quicksilver.mint.v1beta1.QueryEpochProvisionsRequest"></a>
+
+### QueryEpochProvisionsRequest
+QueryEpochProvisionsRequest is the request type for the
+Query/EpochProvisions RPC method.
+
+
+
+
+
+
+<a name="quicksilver.mint.v1beta1.QueryEpochProvisionsResponse"></a>
+
+### QueryEpochProvisionsResponse
+QueryEpochProvisionsResponse is the response type for the
+Query/EpochProvisions RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `epoch_provisions` | [bytes](#bytes) |  | epoch_provisions is the current minting per epoch provisions value. |
+
+
+
+
+
+
+<a name="quicksilver.mint.v1beta1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="quicksilver.mint.v1beta1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#quicksilver.mint.v1beta1.Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="quicksilver.mint.v1beta1.Query"></a>
+
+### Query
+Query provides defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#quicksilver.mint.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#quicksilver.mint.v1beta1.QueryParamsResponse) | Params returns the total set of minting parameters. | GET|/quicksilver/mint/v1beta1/params|
+| `EpochProvisions` | [QueryEpochProvisionsRequest](#quicksilver.mint.v1beta1.QueryEpochProvisionsRequest) | [QueryEpochProvisionsResponse](#quicksilver.mint.v1beta1.QueryEpochProvisionsResponse) | EpochProvisions current minting epoch provisions value. | GET|/quicksilver/mint/v1beta1/epoch_provisions|
 
  <!-- end services -->
 
