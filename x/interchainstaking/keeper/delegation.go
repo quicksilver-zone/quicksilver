@@ -47,7 +47,7 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *t
 
 // }
 
-func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount, response []byte) error {
+func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone types.RegisteredZone, delegator string, response []byte) error {
 	var msgs []sdk.Msg
 
 	delegatorRewards := distrTypes.QueryDelegationTotalRewardsResponse{}
@@ -55,8 +55,12 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone type
 	if err != nil {
 		return err
 	}
+	account, err := zone.GetDelegationAccountByAddress(delegator)
+	if err != nil {
+		return err
+	}
 	// send withdrawal msg for each delegation (delegator:validator pairs)
-	for _, delegation := range zone.GetDelegationsForDelegator(account.GetAddress()) {
+	for _, delegation := range zone.GetDelegationsForDelegator(delegator) {
 		amount := rewardsForDelegation(delegatorRewards, delegation.DelegationAddress, delegation.ValidatorAddress)
 		k.Logger(ctx).Info("Withdraw rewards", "delegator", delegation.DelegationAddress, "validator", delegation.ValidatorAddress, "amount", amount)
 		msgs = append(msgs, &distrTypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegation.GetDelegationAddress(), ValidatorAddress: delegation.GetValidatorAddress()})
