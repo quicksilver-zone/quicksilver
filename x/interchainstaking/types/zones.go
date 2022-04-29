@@ -250,32 +250,32 @@ func (z *RegisteredZone) GetRedemptionTargets(requests map[string]sdk.Int, denom
 	return out
 }
 
-func (z *RegisteredZone) UpdateDelegatedAmount() {
+// func (z *RegisteredZone) UpdateDelegatedAmount() {
 
-	sum := map[string]sdk.Dec{}
-	for _, validator := range z.Validators {
-		for _, delegation := range validator.Delegations {
-			_, ok := sum[delegation.DelegationAddress]
-			if !ok {
-				sum[delegation.DelegationAddress] = delegation.Amount
-			} else {
-				sum[delegation.DelegationAddress] = sum[delegation.DelegationAddress].Add(delegation.Amount)
-			}
-		}
-	}
+// 	sum := map[string]sdk.Dec{}
+// 	for _, validator := range z.Validators {
+// 		for _, delegation := range validator.Delegations {
+// 			_, ok := sum[delegation.DelegationAddress]
+// 			if !ok {
+// 				sum[delegation.DelegationAddress] = delegation.Amount
+// 			} else {
+// 				sum[delegation.DelegationAddress] = sum[delegation.DelegationAddress].Add(delegation.Amount)
+// 			}
+// 		}
+// 	}
 
-	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())
-	for _, da := range z.DelegationAddresses {
-		val, ok := sum[da.Address]
-		if ok {
-			delCoin := sdk.NewCoin(z.BaseDenom, val.TruncateInt())
-			if da.DelegatedBalance.IsNil() || da.DelegatedBalance.IsZero() || !da.DelegatedBalance.Equal(delCoin) {
-				da.DelegatedBalance = delCoin
-			}
-			out = out.Add(da.DelegatedBalance)
-		}
-	}
-}
+// 	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())
+// 	for _, da := range z.DelegationAddresses {
+// 		val, ok := sum[da.Address]
+// 		if ok {
+// 			delCoin := sdk.NewCoin(z.BaseDenom, val.TruncateInt())
+// 			if da.DelegatedBalance.IsNil() || da.DelegatedBalance.IsZero() || !da.DelegatedBalance.Equal(delCoin) {
+// 				da.DelegatedBalance = delCoin
+// 			}
+// 			out = out.Add(da.DelegatedBalance)
+// 		}
+// 	}
+// }
 
 func (z *RegisteredZone) GetDelegatedAmount() sdk.Coin {
 	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())

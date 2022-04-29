@@ -84,18 +84,20 @@ func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *type
 	return zone
 }
 
-func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) *types.ICAAccount {
+func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*types.RegisteredZone, *types.ICAAccount) {
 	var ica *types.ICAAccount
+	var zone *types.RegisteredZone
 	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
 		for _, delegateAccount := range zoneInfo.DelegationAddresses {
 			if delegateAccount.Address == address {
 				ica = delegateAccount
+				zone = &zoneInfo
 				return true
 			}
 		}
 		return false
 	})
-	return ica
+	return zone, ica
 }
 func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coin) (map[string]sdk.Coin, error) {
 	out := make(map[string]sdk.Coin)

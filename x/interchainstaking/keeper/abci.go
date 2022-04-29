@@ -17,8 +17,4 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	if ctx.BlockHeight()%int64(k.GetParam(ctx, types.KeyDepositInterval)) == 0 {
 		k.IterateRegisteredZones(ctx, k.depositInterval(ctx))
 	}
-
-	if ctx.BlockHeight()%int64(k.GetParam(ctx, types.KeyDelegationsInterval)) == 0 {
-		k.IterateRegisteredZones(ctx, k.delegateDelegationsInterval(ctx))
-	}
 }
