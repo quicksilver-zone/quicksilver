@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 
-COSMOS_BUILD_OPTIONS="pebbledb"
+COSMOS_BUILD_OPTIONS=""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 DIFF_TAG=$(shell git rev-list --tags="v*" --max-count=1 --not $(shell git rev-list --tags="v*" "HEAD..origin"))
@@ -186,7 +186,7 @@ build-all: tools build lint test
 ###                          Tools & Dependencies                           ###
 ###############################################################################
 
-TOOLS_DESTDIR  ?= $(GOPATH)/bin
+TOOLS_DESTDIR  = $(GOPATH)/bin
 STATIK         = $(TOOLS_DESTDIR)/statik
 RUNSIM         = $(TOOLS_DESTDIR)/runsim
 
