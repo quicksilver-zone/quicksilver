@@ -19,6 +19,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		k.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 			k.Logger(ctx).Info("Taking a snapshot of intents")
 			k.AggregateIntents(ctx, zoneInfo)
+			if zoneInfo.WithdrawalWaitgroup > 0 {
+				k.Logger(ctx).Error("Epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!")
+				zoneInfo.WithdrawalWaitgroup = 0
+			}
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 			for _, da := range zoneInfo.DelegationAddresses {
 				k.Logger(ctx).Info("Withdrawing rewards")
@@ -65,8 +69,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 				zoneInfo.WithdrawalWaitgroup++
 				k.Logger(ctx).Info("Incrementing waitgroup for delegation", "value", zoneInfo.WithdrawalWaitgroup)
-				k.SetRegisteredZone(ctx, zoneInfo)
 			}
+			k.SetRegisteredZone(ctx, zoneInfo)
+
 			return false
 		})
 	}
