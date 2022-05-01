@@ -160,9 +160,27 @@ func (im IBCModule) OnChanOpenAck(
 			im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, account)
 		}
 
-		// // TODO: update to use callbacks - we possibly want to do this here unless there is a better way to handle slashing? perhaps as part of valset update?
-		// delegationQuery := im.keeper.ICQKeeper.NewQuery(ctx, connectionId, zoneInfo.ChainId, "cosmos.staking.v1beta1.Query/DelegatorDelegations", map[string]string{"address": address}, sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegationsInterval)))) // this can probably be less frequent, because we manage delegations ourselves.
-		// im.keeper.ICQKeeper.SetQuery(ctx, *delegationQuery)
+		// this will be the final location for this logic (which is more of a failsafe than anything else)
+		// it is currently in keeper.go, on an abci end blocker callback, because it would require a testnet reset.
+
+		// var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+		// 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+		// 	if !found {
+		// 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		// 	}
+		// 	return k.SetAccountBalance(ctx, zone, query.QueryParameters["address"], args)
+		// }
+
+		// im.keeper.ICQKeeper.MakeRequest(
+		// 	ctx,
+		// 	connectionId,
+		// 	chainId,
+		// 	"cosmos.bank.v1beta1.Query/AllBalances",
+		// 	map[string]string{"address": address},
+		// 	sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegateInterval))),
+		// 	types.ModuleName,
+		// 	cb,
+		// )
 
 	default:
 		ctx.Logger().Error("unexpected channel on portID: " + portID)
