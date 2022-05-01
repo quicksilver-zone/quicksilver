@@ -37,16 +37,6 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *t
 	return k.SubmitTx(ctx, msgs, account)
 }
 
-// func (k *Keeper) WithdrawDelegationRewards(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount) error {
-// 	k.Logger(ctx).Debug("Withdrawing rewards for delegate account", "account", account.GetAddress(), "zone", zone.ChainId)
-// 	delegatorRewardsDatapoint, err := k.ICQKeeper.GetDatapointForId(ctx, queryKeeper.GenerateQueryHash(zone.ConnectionId, zone.ChainId, "cosmos.distribution.v1beta1.Query/DelegationTotalRewards", map[string]string{"delegator": account.GetAddress()}))
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return k.WithdrawDelegationRewardsForResponse(ctx, zone, account, delegatorRewardsDatapoint.Value)
-
-// }
-
 func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone types.RegisteredZone, delegator string, response []byte) error {
 	var msgs []sdk.Msg
 

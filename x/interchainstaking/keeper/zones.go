@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -105,6 +106,10 @@ func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.Reg
 	coinAmount := amount.Amount
 	aggregateIntents := zone.GetAggregateIntent()
 
+	if len(aggregateIntents) == 0 {
+		aggregateIntents = defaultAggregateIntents(ctx, zone)
+	}
+
 	for valoper, intent := range aggregateIntents {
 		if !coinAmount.IsZero() {
 			// while there is some balance left to distribute
@@ -151,6 +156,25 @@ func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.Reg
 	return out, nil
 }
 
+func defaultAggregateIntents(ctx sdk.Context, zone types.RegisteredZone) map[string]*types.ValidatorIntent {
+	out := make(map[string]*types.ValidatorIntent)
+	for _, val := range zone.GetValidators() {
+		if val.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
+			out[val.GetValoperAddress()] = &types.ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()}
+		}
+	}
+
+	valCount := sdk.NewInt(int64(len(out)))
+
+	// normalise the array (divide everything by length of intent list)
+	for key, val := range out {
+		val.Weight = val.Weight.Quo(sdk.NewDecFromInt(valCount))
+		out[key] = val
+	}
+
+	return out
+}
+
 func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, address string, queryResult []byte) error {
 	queryRes := banktypes.QueryAllBalancesResponse{}
 	err := k.cdc.UnmarshalJSON(queryResult, &queryRes)
@@ -171,7 +195,34 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 		if err != nil {
 			return err
 		}
-		icaAccount.Balance = queryRes.Balances
+		// TODO: figure out how this impacts delegations in progress / race conditions (in most cases, the duplicate delegation will just fail)
+		if !queryRes.Balances.Empty() {
+			icaAccount.Balance = queryRes.Balances
+			claims := k.AllWithdrawalRecords(ctx, icaAccount.Address)
+			if len(claims) > 0 {
+				// should we reconcile here?
+				k.Logger(ctx).Info("Outstanding Withdrawal Claims", "count", len(claims))
+				for _, claim := range claims {
+					if claim.Status == WITHDRAW_STATUS_TOKENIZE {
+						// if the claim has tokenize status AND then remove any coins in the balance that match that validator.
+						// so we don't try to re-delegate any recently redeemed tokens that haven't been sent yet.
+						for _, coin := range queryRes.Balances {
+							if strings.HasPrefix(coin.Denom, claim.Validator) {
+								k.Logger(ctx).Info("Ignoring denom this iteration", "denom", coin.GetDenom())
+								queryRes.Balances = queryRes.Balances.Sub(sdk.NewCoins(coin))
+							}
+						}
+					}
+				}
+			}
+			if !queryRes.Balances.Empty() && !queryRes.Balances.IsZero() {
+				k.Logger(ctx).Info("Delegate account balance is non-zero; delegating!", "to_delegate", queryRes.Balances)
+				err := k.Delegate(ctx, zone, icaAccount)
+				if err != nil {
+					return err
+				}
+			}
+		}
 	}
 	k.SetRegisteredZone(ctx, zone)
 	return nil
