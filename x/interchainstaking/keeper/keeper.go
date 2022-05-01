@@ -161,36 +161,36 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 	}
 }
 
-// temporary: this callback should be registered when the delegate account is created, in ibc_module.go but is currently here to
-// avoid a testnet restart (same logic, just called in a different way).
+// // temporary: this callback should be registered when the delegate account is created, in ibc_module.go but is currently here to
+// // avoid a testnet restart (same logic, just called in a different way).
 
-func (k Keeper) delegateInterval(ctx sdk.Context) zoneItrFn {
-	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
-		for _, ica := range zoneInfo.DelegationAddresses {
-			// emit a single balance query for each delegate account
+// func (k Keeper) delegateInterval(ctx sdk.Context) zoneItrFn {
+// 	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
+// 		for _, ica := range zoneInfo.DelegationAddresses {
+// 			// emit a single balance query for each delegate account
 
-			var cb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-				zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-				if !found {
-					return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-				}
-				return k.SetAccountBalance(ctx, zone, query.QueryParameters["address"], args)
-			}
+// 			var cb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+// 				zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+// 				if !found {
+// 					return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+// 				}
+// 				return k.SetAccountBalance(ctx, zone, query.QueryParameters["address"], args)
+// 			}
 
-			k.ICQKeeper.MakeRequest(
-				ctx,
-				zoneInfo.ConnectionId,
-				zoneInfo.ChainId,
-				"cosmos.bank.v1beta1.Query/AllBalances",
-				map[string]string{"address": ica.Address},
-				sdk.NewInt(-1),
-				types.ModuleName,
-				cb,
-			)
-		}
-		return false
-	}
-}
+// 			k.ICQKeeper.MakeRequest(
+// 				ctx,
+// 				zoneInfo.ConnectionId,
+// 				zoneInfo.ChainId,
+// 				"cosmos.bank.v1beta1.Query/AllBalances",
+// 				map[string]string{"address": ica.Address},
+// 				sdk.NewInt(-1),
+// 				types.ModuleName,
+// 				cb,
+// 			)
+// 		}
+// 		return false
+// 	}
+// }
 
 func (k *Keeper) GetParam(ctx sdk.Context, key []byte) uint64 {
 	var out uint64
