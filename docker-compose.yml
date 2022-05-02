@@ -8,6 +8,22 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+  quicksilver2:
+    image: quicksilverzone/quicksilver:latest
+    hostname: quicksilver2
+    volumes:
+      - ./data/test-1a:/quicksilver/.quicksilverd
+    build:
+      context: .
+      dockerfile: Dockerfile
+  quicksilver3:
+    image: quicksilverzone/quicksilver:latest
+    hostname: quicksilver3
+    volumes:
+      - ./data/test-1b:/quicksilver/.quicksilverd
+    build:
+      context: .
+      dockerfile: Dockerfile
   testzone:
     image: quicksilverzone/testzone:latest
     hostname: testzone
