@@ -23,7 +23,7 @@ func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty uint64) []*ICAA
 func (z RegisteredZone) SupportMultiSend() bool { return z.MultiSend }
 
 func (z *RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, error) {
-	for _, v := range z.Validators {
+	for _, v := range z.GetValidatorsSorted() {
 		if v.ValoperAddress == valoper {
 			return v, nil
 		}
@@ -45,7 +45,7 @@ func (z *RegisteredZone) GetDelegationAccountByAddress(address string) (*ICAAcco
 
 func (z *RegisteredZone) GetDelegationsForDelegator(delegator string) []*Delegation {
 	delegations := []*Delegation{}
-	for _, v := range z.Validators {
+	for _, v := range z.GetValidatorsSorted() {
 		delegation, err := v.GetDelegationForDelegator(delegator)
 		if err != nil {
 			continue
@@ -57,7 +57,7 @@ func (z *RegisteredZone) GetDelegationsForDelegator(delegator string) []*Delegat
 
 func (z *RegisteredZone) ValidateCoinsForZone(ctx sdk.Context, coins sdk.Coins) error {
 
-	zoneVals := z.GetValidatorsAsSlice()
+	zoneVals := z.GetValidatorsAddressesAsSlice()
 COINS:
 	for _, coin := range coins {
 		if coin.Denom == z.BaseDenom {
@@ -79,7 +79,7 @@ COINS:
 func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk.Coins) map[string]*ValidatorIntent {
 	// should we be return DelegatorIntent here?
 	out := make(map[string]*ValidatorIntent)
-	zoneVals := z.GetValidatorsAsSlice()
+	zoneVals := z.GetValidatorsAddressesAsSlice()
 	for _, coin := range coins {
 		for _, v := range zoneVals {
 			// if token share, add amount to
@@ -97,11 +97,22 @@ func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk
 	return out
 }
 
-func (z RegisteredZone) GetValidatorsAsSlice() []string {
+func (z *RegisteredZone) GetValidatorsSorted() []*Validator {
+	vals := z.Validators
+	sort.Slice(vals, func(i, j int) bool {
+		return vals[i].ValoperAddress < vals[j].ValoperAddress
+	})
+	return vals
+}
+
+func (z RegisteredZone) GetValidatorsAddressesAsSlice() []string {
 	l := make([]string, 0)
 	for _, v := range z.Validators {
 		l = append(l, v.ValoperAddress)
 	}
+
+	sort.Strings(l)
+
 	return l
 }
 
@@ -117,6 +128,8 @@ func (z RegisteredZone) DetermineStateIntentDiff(aggregateIntent map[string]*Val
 
 	}
 
+	validators := z.GetValidatorsSorted()
+
 	if totalAggregateIntent.IsZero() {
 		// if totalAggregateIntent is zero (that is, we have no intent set - which can happen
 		// if we have only ever have native tokens staked and nbody has signalled intent) give
@@ -127,13 +140,13 @@ func (z RegisteredZone) DetermineStateIntentDiff(aggregateIntent map[string]*Val
 			aggregateIntent = make(map[string]*ValidatorIntent)
 		}
 
-		for _, val := range z.Validators {
+		for _, val := range validators {
 			aggregateIntent[val.ValoperAddress] = &ValidatorIntent{ValoperAddress: val.ValoperAddress, Weight: sdk.OneDec()}
 			totalAggregateIntent = totalAggregateIntent.Add(sdk.OneDec())
 		}
 	}
 
-	for _, i := range z.Validators {
+	for _, i := range validators {
 		stake := sdk.ZeroInt()
 		for _, delegation := range i.GetDelegations() {
 			stake = stake.Add(delegation.Amount.TruncateInt())
@@ -143,7 +156,7 @@ func (z RegisteredZone) DetermineStateIntentDiff(aggregateIntent map[string]*Val
 	}
 	ratio := totalDelegations.ToDec().Quo(totalAggregateIntent) // will always be >= 1.0
 
-	for _, i := range z.Validators {
+	for _, i := range validators {
 		current, found := currentState[i.ValoperAddress]
 		if !found {
 			// this probably can happen if we have intent for a validator not in the set
