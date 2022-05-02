@@ -175,40 +175,40 @@ func (z RegisteredZone) DetermineStateIntentDiff(aggregateIntent map[string]*Val
 	return diff
 }
 
-func (z RegisteredZone) ApplyDiffsToDistribution(distribution map[string]sdk.Coin, diffs map[string]sdk.Int) (map[string]sdk.Coin, sdk.Int) {
-	remaining := sdk.ZeroInt()
-	// sort map to ordered slice
-	for _, val := range sortMapToSlice(diffs) {
-		thisAmount, ok := distribution[val.str]
-		if !ok {
-			// no allocation to this val from intents, so skip.
-			// TODO: should we _add_ a new distribution here? We could easily, we just need to know the denom.
-			continue
-		}
+// func (z RegisteredZone) ApplyDiffsToDistribution(distribution map[string]sdk.Coin, diffs map[string]sdk.Int) (map[string]sdk.Coin, sdk.Int) {
+// 	remaining := sdk.ZeroInt()
+// 	// sort map to ordered slice
+// 	for _, val := range sortMapToSlice(diffs) {
+// 		thisAmount, ok := distribution[val.str]
+// 		if !ok {
+// 			// no allocation to this val from intents, so skip.
+// 			// TODO: should we _add_ a new distribution here? We could easily, we just need to know the denom.
+// 			continue
+// 		}
 
-		if val.i.GT(sdk.ZeroInt()) {
-			if thisAmount.Amount.LTE(val.i) { // if the new additional value is LTE the positive diff, remove it all and assign all values to remaining.
-				delete(distribution, val.str)
-				remaining = remaining.Add(thisAmount.Amount)
-			} else { // GT
-				distribution[val.str] = distribution[val.str].SubAmount(val.i)
-				remaining = remaining.Add(val.i)
-			}
-		} else {
-			// increase new amounts by diff from remaining
-			if val.i.Abs().GTE(remaining) {
-				distribution[val.str] = distribution[val.str].AddAmount(remaining) // negative addition :(
-				remaining = sdk.ZeroInt()
-				break
-			} else {
-				distribution[val.str] = distribution[val.str].SubAmount(val.i) // negative addition :(
-				remaining = remaining.Add(val.i)
-			}
-		}
-	}
+// 		if val.i.GT(sdk.ZeroInt()) {
+// 			if thisAmount.Amount.LTE(val.i) { // if the new additional value is LTE the positive diff, remove it all and assign all values to remaining.
+// 				delete(distribution, val.str)
+// 				remaining = remaining.Add(thisAmount.Amount)
+// 			} else { // GT
+// 				distribution[val.str] = distribution[val.str].SubAmount(val.i)
+// 				remaining = remaining.Add(val.i)
+// 			}
+// 		} else {
+// 			// increase new amounts by diff from remaining
+// 			if val.i.Abs().GTE(remaining) {
+// 				distribution[val.str] = distribution[val.str].AddAmount(remaining) // negative addition :(
+// 				remaining = sdk.ZeroInt()
+// 				break
+// 			} else {
+// 				distribution[val.str] = distribution[val.str].SubAmount(val.i) // negative addition :(
+// 				remaining = remaining.Add(val.i)
+// 			}
+// 		}
+// 	}
 
-	return distribution, remaining
-}
+// 	return distribution, remaining
+// }
 
 type sortableStringInt struct {
 	str string
