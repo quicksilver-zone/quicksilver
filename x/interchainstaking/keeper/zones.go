@@ -101,7 +101,7 @@ func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*type
 	})
 	return zone, ica
 }
-func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coin) (map[string]sdk.Coin, error) {
+func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coin) ([]string, map[string]sdk.Coin, error) {
 	out := make(map[string]sdk.Coin)
 
 	coinAmount := amount.Amount
@@ -154,7 +154,8 @@ func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.Reg
 	// }
 
 	//k.Logger(ctx).Info("Determined validators from aggregated intents +/- rebalance diffs", "amount", amount.Amount, "out", out)
-	return out, nil
+
+	return keys, out, nil
 }
 
 func defaultAggregateIntents(ctx sdk.Context, zone types.RegisteredZone) map[string]*types.ValidatorIntent {
