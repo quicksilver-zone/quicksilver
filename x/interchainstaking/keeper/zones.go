@@ -184,12 +184,10 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 		return err
 	}
 
-	switch address {
-	case zone.DepositAddress.Address:
+	switch true {
+	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
 		zone.DepositAddress.Balance = queryRes.Balances
-	case zone.FeeAddress.Address:
-		zone.FeeAddress.Balance = queryRes.Balances
-	case zone.WithdrawalAddress.Address:
+	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
 		zone.WithdrawalAddress.Balance = queryRes.Balances
 	default:
 		icaAccount, err := zone.GetDelegationAccountByAddress(address)
