@@ -12,6 +12,8 @@ if [[ "$1" == "-r" ]]; then
 else
   echo "Copying previously generated state."
   rm -rf ${CHAIN_DIR}/${CHAINID_1}
+  rm -rf ${CHAIN_DIR}/${CHAINID_1}a
+  rm -rf ${CHAIN_DIR}/${CHAINID_1}b
   rm -rf ${CHAIN_DIR}/${CHAINID_2}
   rm -rf ${CHAIN_DIR}/${CHAINID_2}a
   rm -rf ${CHAIN_DIR}/${CHAINID_2}b
@@ -23,6 +25,8 @@ else
   jq ".genesis_time = \"$TIME\"" ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json > ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json.new && mv ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json{.new,}
 
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1} ${CHAIN_DIR}/${CHAINID_1}
+  cp -fr ${CHAIN_DIR}/backup/${CHAINID_1}a ${CHAIN_DIR}/${CHAINID_1}a
+  cp -fr ${CHAIN_DIR}/backup/${CHAINID_1}b ${CHAIN_DIR}/${CHAINID_1}b
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_2} ${CHAIN_DIR}/${CHAINID_2}
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_2}a ${CHAIN_DIR}/${CHAINID_2}a
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_2}b ${CHAIN_DIR}/${CHAINID_2}b
@@ -34,6 +38,12 @@ fi
 VAL_ADDRESS_1=$($QS_RUN keys show val1 --keyring-backend test -a)
 DEMO_ADDRESS_1=$($QS_RUN keys show demowallet1 --keyring-backend test -a)
 RLY_ADDRESS_1=$($QS_RUN keys show rly1 --keyring-backend test -a)
+
+VAL_ADDRESS_6=$($QS2_RUN keys show val6 --keyring-backend test -a)
+DEMO_ADDRESS_6=$($QS2_RUN keys show demowallet6 --keyring-backend test -a)
+
+VAL_ADDRESS_7=$($QS3_RUN keys show val7 --keyring-backend test -a)
+DEMO_ADDRESS_7=$($QS3_RUN keys show demowallet7 --keyring-backend test -a)
 
 VAL_ADDRESS_2=$($TZ_RUN keys show val2 --keyring-backend test -a)
 DEMO_ADDRESS_2=$($TZ_RUN keys show demowallet2 --keyring-backend test -a)
@@ -55,13 +65,13 @@ VAL_VALOPER_5=$($TZ4_RUN keys show val5 --keyring-backend test --bech=val -a)
 
 #############################################################################################################################
 
-docker-compose up --force-recreate -d quicksilver testzone testzone2 testzone3 testzone4
+docker-compose up --force-recreate -d quicksilver quicksilver2 quicksilver3 testzone testzone2 testzone3 testzone4
 echo "Chains created"
-sleep 2
+sleep 10
 echo "Restoring keys"
 docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_1" test-1
 docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_2" test-2
-sleep 5
+sleep 10
 echo "Creating transfer channel"
 docker-compose run hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_1 $CHAINID_2
 echo "Tranfer channel created"
