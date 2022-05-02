@@ -24,7 +24,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				zoneInfo.WithdrawalWaitgroup = 0
 			}
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
-			for _, da := range zoneInfo.DelegationAddresses {
+			for _, da := range zoneInfo.GetDelegationAccounts() {
 				k.Logger(ctx).Info("Withdrawing rewards")
 
 				var rewardscb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {

@@ -10,8 +10,8 @@ import (
 )
 
 func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty uint64) []*ICAAccount {
-	delegationAccounts := z.DelegationAddresses
-	sort.Slice(delegationAccounts, func(i, j int) bool {
+	delegationAccounts := z.GetDelegationAccounts()
+	sort.SliceStable(delegationAccounts, func(i, j int) bool {
 		return delegationAccounts[i].DelegatedBalance.Amount.GT(delegationAccounts[j].DelegatedBalance.Amount)
 	})
 	if qty > 0 {
@@ -35,7 +35,7 @@ func (z *RegisteredZone) GetDelegationAccountByAddress(address string) (*ICAAcco
 	if z.DelegationAddresses == nil {
 		return nil, fmt.Errorf("no delegation accounts set: %v", z)
 	}
-	for _, account := range z.DelegationAddresses {
+	for _, account := range z.GetDelegationAccounts() {
 		if account.GetAddress() == address {
 			return account, nil
 		}
@@ -279,8 +279,16 @@ func (z *RegisteredZone) GetRedemptionTargets(requests map[string]sdk.Int, denom
 
 func (z *RegisteredZone) GetDelegatedAmount() sdk.Coin {
 	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())
-	for _, da := range z.DelegationAddresses {
+	for _, da := range z.GetDelegationAccounts() {
 		out = out.Add(da.DelegatedBalance)
 	}
 	return out
+}
+
+func (z *RegisteredZone) GetDelegationAccounts() []*ICAAccount {
+	delegationAccounts := z.DelegationAddresses
+	sort.Slice(delegationAccounts, func(i, j int) bool {
+		return delegationAccounts[i].Address < delegationAccounts[j].Address
+	})
+	return delegationAccounts
 }

@@ -622,7 +622,7 @@ func (k *Keeper) prepareRewardsDistributionMsgs(ctx sdk.Context, zone types.Regi
 
 	dust := rewards.Amount
 	portion := rewards.Amount.ToDec().Quo(sdk.NewDec(int64(len(zone.DelegationAddresses)))).TruncateInt()
-	for _, da := range zone.DelegationAddresses {
+	for _, da := range zone.GetDelegationAccounts() {
 		msgs = append(
 			msgs,
 			&banktypes.MsgSend{

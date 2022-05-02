@@ -75,7 +75,7 @@ func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
 func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.RegisteredZone {
 	var zone *types.RegisteredZone
 	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
-		for _, ica := range zoneInfo.DelegationAddresses {
+		for _, ica := range zoneInfo.GetDelegationAccounts() {
 			if ica.Address == address {
 				zone = &zoneInfo
 				return true
@@ -90,7 +90,7 @@ func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*type
 	var ica *types.ICAAccount
 	var zone *types.RegisteredZone
 	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
-		for _, delegateAccount := range zoneInfo.DelegationAddresses {
+		for _, delegateAccount := range zoneInfo.GetDelegationAccounts() {
 			if delegateAccount.Address == address {
 				ica = delegateAccount
 				zone = &zoneInfo

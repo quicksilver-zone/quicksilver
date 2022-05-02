@@ -143,7 +143,7 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 				return y
 			}
 			return x
-		}(accountSplits, uint64(len(zone.DelegationAddresses)))
+		}(accountSplits, uint64(len(zone.GetDelegationAccounts())))
 
 		for _, asset := range inAmount {
 			thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
@@ -182,7 +182,7 @@ func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZ
 			return y
 		}
 		return x
-	}(accountSplits, uint64(len(zone.DelegationAddresses)))
+	}(accountSplits, uint64(len(zone.GetDelegationAccounts())))
 
 	for _, asset := range inAmount {
 		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
