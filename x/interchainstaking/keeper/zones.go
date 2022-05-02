@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -110,7 +111,9 @@ func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.Reg
 		aggregateIntents = defaultAggregateIntents(ctx, zone)
 	}
 
+	keys := make([]string, 0)
 	for valoper, intent := range aggregateIntents {
+		keys = append(keys, valoper)
 		if !coinAmount.IsZero() {
 			// while there is some balance left to distribute
 			// calculate the int value of weight * amount to distribute.
@@ -121,11 +124,9 @@ func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.Reg
 			coinAmount = coinAmount.Sub(thisAmount)
 		}
 	}
-	for valoper := range aggregateIntents {
-		// handle leftover amount in pool (add blindly to first validator)
-		out[valoper] = out[valoper].AddAmount(coinAmount)
-		break
-	}
+	sort.Strings(keys)
+	v0 := keys[0]
+	out[v0] = out[v0].AddAmount(coinAmount)
 
 	k.Logger(ctx).Info("Validator weightings without diffs", "weights", out)
 
