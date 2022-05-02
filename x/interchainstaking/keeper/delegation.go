@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -10,9 +12,13 @@ import (
 func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount) error {
 	var msgs []sdk.Msg
 
-	for _, asset := range account.Balance {
+	balance := account.Balance
+	// deterministically sort balance
+	sort.Slice(balance, func(i, j int) bool { return account.Balance[i].Denom > account.Balance[j].Denom })
+
+	for _, asset := range balance {
 		if asset.Denom == zone.GetBaseDenom() {
-			validators, err := k.DetermineValidatorsForDelegation(ctx, zone, asset)
+			keys, validators, err := k.DetermineValidatorsForDelegation(ctx, zone, asset)
 			// TODO: return multiple validators here; consider the size of the delegation too - are we going to increase balance 'too far'?
 			// given that we pass in the account balance, we should be able to return a map of valoper:balance and send the requisite MsgDelegates.
 			// this is less important for rewards, but far more important for deposits of native assets.
@@ -20,7 +26,8 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *t
 				k.Logger(ctx).Error("Unable to determine validators for delegation: %v", err)
 				continue
 			}
-			for valoper_address, amount := range validators {
+			for _, valoper_address := range keys {
+				amount := validators[valoper_address]
 				if !amount.Amount.IsZero() {
 					k.Logger(ctx).Info("Sending a MsgDelegate!", "asset", amount, "valoper", valoper_address)
 					msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: account.GetAddress(), ValidatorAddress: valoper_address, Amount: amount})

@@ -413,10 +413,10 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, 
 		return "", fmt.Errorf("unable to fetch zone for delegate address %s", delegatorAddress)
 	}
 
-	for _, val := range zone.Validators {
-		if strings.HasPrefix(amount.Denom, val.ValoperAddress) {
+	for _, val := range zone.GetValidatorsAddressesAsSlice() {
+		if strings.HasPrefix(amount.Denom, val) {
 			// match!
-			return val.ValoperAddress, nil
+			return val, nil
 		}
 	}
 
@@ -622,7 +622,7 @@ func (k *Keeper) prepareRewardsDistributionMsgs(ctx sdk.Context, zone types.Regi
 
 	dust := rewards.Amount
 	portion := rewards.Amount.ToDec().Quo(sdk.NewDec(int64(len(zone.DelegationAddresses)))).TruncateInt()
-	for _, da := range zone.DelegationAddresses {
+	for _, da := range zone.GetDelegationAccounts() {
 		msgs = append(
 			msgs,
 			&banktypes.MsgSend{

@@ -75,7 +75,7 @@ func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
 func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.RegisteredZone {
 	var zone *types.RegisteredZone
 	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
-		for _, ica := range zoneInfo.DelegationAddresses {
+		for _, ica := range zoneInfo.GetDelegationAccounts() {
 			if ica.Address == address {
 				zone = &zoneInfo
 				return true
@@ -90,7 +90,7 @@ func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*type
 	var ica *types.ICAAccount
 	var zone *types.RegisteredZone
 	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
-		for _, delegateAccount := range zoneInfo.DelegationAddresses {
+		for _, delegateAccount := range zoneInfo.GetDelegationAccounts() {
 			if delegateAccount.Address == address {
 				ica = delegateAccount
 				zone = &zoneInfo
@@ -101,7 +101,7 @@ func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*type
 	})
 	return zone, ica
 }
-func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coin) (map[string]sdk.Coin, error) {
+func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coin) ([]string, map[string]sdk.Coin, error) {
 	out := make(map[string]sdk.Coin)
 
 	coinAmount := amount.Amount
@@ -124,6 +124,7 @@ func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.Reg
 			coinAmount = coinAmount.Sub(thisAmount)
 		}
 	}
+
 	sort.Strings(keys)
 	v0 := keys[0]
 	out[v0] = out[v0].AddAmount(coinAmount)
@@ -131,35 +132,35 @@ func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.Reg
 	k.Logger(ctx).Info("Validator weightings without diffs", "weights", out)
 
 	// calculate diff between current state and intended state.
-	diffs := zone.DetermineStateIntentDiff(aggregateIntents)
+	//diffs := zone.DetermineStateIntentDiff(aggregateIntents)
 
 	// apply diff to distrubtion of delegation.
-	out, remaining := zone.ApplyDiffsToDistribution(out, diffs)
-	if !remaining.IsZero() {
-		for valoper, intent := range aggregateIntents {
-			thisAmount := intent.Weight.MulInt(remaining).TruncateInt()
-			thisOutAmount, ok := out[valoper]
-			if !ok {
-				thisOutAmount = sdk.NewCoin(amount.Denom, sdk.ZeroInt())
-			}
+	// out, remaining := zone.ApplyDiffsToDistribution(out, diffs)
+	// if !remaining.IsZero() {
+	// 	for _, valoper := range keys {
+	// 		intent := aggregateIntents[valoper]
+	// 		thisAmount := intent.Weight.MulInt(remaining).TruncateInt()
+	// 		thisOutAmount, ok := out[valoper]
+	// 		if !ok {
+	// 			thisOutAmount = sdk.NewCoin(amount.Denom, sdk.ZeroInt())
+	// 		}
 
-			out[valoper] = thisOutAmount.AddAmount(thisAmount)
-			remaining = remaining.Sub(thisAmount)
-		}
-		for valoper := range aggregateIntents {
-			// handle leftover amount.
-			out[valoper] = out[valoper].AddAmount(remaining)
-			break
-		}
-	}
+	// 		out[valoper] = thisOutAmount.AddAmount(thisAmount)
+	// 		remaining = remaining.Sub(thisAmount)
+	// 	}
 
-	k.Logger(ctx).Info("Determined validators from aggregated intents +/- rebalance diffs", "amount", amount.Amount, "out", out)
-	return out, nil
+	// 	v0 := keys[0]
+	// 	out[v0] = out[v0].AddAmount(remaining)
+	// }
+
+	//k.Logger(ctx).Info("Determined validators from aggregated intents +/- rebalance diffs", "amount", amount.Amount, "out", out)
+
+	return keys, out, nil
 }
 
 func defaultAggregateIntents(ctx sdk.Context, zone types.RegisteredZone) map[string]*types.ValidatorIntent {
 	out := make(map[string]*types.ValidatorIntent)
-	for _, val := range zone.GetValidators() {
+	for _, val := range zone.GetValidatorsSorted() {
 		if val.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
 			out[val.GetValoperAddress()] = &types.ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()}
 		}
@@ -184,12 +185,10 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 		return err
 	}
 
-	switch address {
-	case zone.DepositAddress.Address:
+	switch true {
+	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
 		zone.DepositAddress.Balance = queryRes.Balances
-	case zone.FeeAddress.Address:
-		zone.FeeAddress.Balance = queryRes.Balances
-	case zone.WithdrawalAddress.Address:
+	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
 		zone.WithdrawalAddress.Balance = queryRes.Balances
 	default:
 		icaAccount, err := zone.GetDelegationAccountByAddress(address)

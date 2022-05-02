@@ -135,16 +135,16 @@ func (im IBCModule) OnChanOpenAck(
 
 		zoneInfo.WithdrawalAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 
-		for _, da := range zoneInfo.DelegationAddresses {
+		for _, da := range zoneInfo.GetDelegationAccounts() {
 			msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: da.Address, WithdrawAddress: address}
 			im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, da)
 		}
 
 	// delegation addresses
 	case len(portParts) == 3 && portParts[1] == "delegate":
-
+		delegationAccounts := zoneInfo.GetDelegationAccounts()
 		// check for duplicate address
-		for _, existing := range zoneInfo.DelegationAddresses {
+		for _, existing := range delegationAccounts {
 			if existing.Address == address {
 				ctx.Logger().Error("unexpectedly found existing address: " + address)
 				return nil
@@ -152,7 +152,7 @@ func (im IBCModule) OnChanOpenAck(
 		}
 		account := &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 		// append delegation account address
-		zoneInfo.DelegationAddresses = append(zoneInfo.DelegationAddresses, account)
+		zoneInfo.DelegationAddresses = append(delegationAccounts, account)
 
 		// set withdrawal address if, and only if withdrawal address is already set
 		if zoneInfo.WithdrawalAddress != nil {
