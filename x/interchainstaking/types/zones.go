@@ -2,11 +2,11 @@ package types
 
 import (
 	fmt "fmt"
-	math "math"
 	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty uint64) []*ICAAccount {
@@ -15,7 +15,7 @@ func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty uint64) []*ICAA
 		return delegationAccounts[i].DelegatedBalance.Amount.GT(delegationAccounts[j].DelegatedBalance.Amount)
 	})
 	if qty > 0 {
-		return delegationAccounts[:int(math.Min(float64(len(delegationAccounts)-1), float64(qty)))]
+		return delegationAccounts[:int(utils.MinU64(append([]uint64{}, uint64(len(delegationAccounts)-1), qty)))]
 	}
 	return delegationAccounts
 }

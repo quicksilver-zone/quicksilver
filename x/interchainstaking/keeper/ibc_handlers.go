@@ -14,6 +14,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -158,7 +159,18 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-
+		case "/ibc.applications.transfer.v1.MsgTransfer":
+			response := ibctransfertypes.MsgTransferResponse{}
+			err := proto.Unmarshal(msgData.Data, &response)
+			if err != nil {
+				k.Logger(ctx).Error("Unable to unmarshal MsgTransfer response", "error", err)
+				return err
+			}
+			k.Logger(ctx).Debug("MsgTranfer acknowledgement received")
+			if err := k.HandleMsgTransfer(ctx, src); err != nil {
+				return err
+			}
+			continue
 		default:
 			k.Logger(ctx).Error("Unhandled acknowledgement packet", "type", msgData.MsgType)
 		}
@@ -172,6 +184,31 @@ func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet) erro
 }
 
 //----------------------------------------------------------------
+
+func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
+	k.Logger(ctx).Info("Received MsgTransfer acknowledgement")
+	// first, type assertion. we should have ibctransfertypes.MsgTransfer
+	sMsg, ok := msg.(*ibctransfertypes.MsgTransfer)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgTransfer")
+		return fmt.Errorf("unable to cast source message to MsgTransfer")
+	}
+
+	// check if destination is interchainstaking module account (spoiler: it was)
+	if sMsg.Receiver != k.AccountKeeper.GetModuleAddress(types.ModuleName).String() {
+		k.Logger(ctx).Error("MsgTransfer to unknown account!")
+		return nil
+	}
+
+	return k.HandleDistributeFeesFromModuleAccount(ctx)
+}
+
+func (k *Keeper) HandleDistributeFeesFromModuleAccount(ctx sdk.Context) error {
+	// what do we have in the account?
+	balance := k.BankKeeper.GetAllBalances(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName))
+	k.Logger(ctx).Info("distributing collected fees to stakers", "amount", balance)
+	return k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, balance) // Fee collector name needs to be passed in to keeper constructor.
+}
 
 func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg) error {
 	k.Logger(ctx).Info("Received MsgMultiSend acknowledgement")
