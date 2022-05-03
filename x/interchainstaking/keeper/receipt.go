@@ -11,6 +11,7 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	tmtypes "github.com/tendermint/tendermint/abci/types"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
@@ -137,17 +138,20 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 		return k.TransferToDelegateMulti(ctx, zone, inAmount)
 	} else {
 		eachAmount := sdk.Coins{}
-		accountSplits := k.GetParam(ctx, types.KeyDelegateAccountCount)
-		splits := func(x, y uint64) uint64 {
-			if x > y {
-				return y
-			}
-			return x
-		}(accountSplits, uint64(len(zone.GetDelegationAccounts())))
+		splits := utils.MinU64(append([]uint64{}, k.GetParam(ctx, types.KeyDelegateAccountCount), uint64(len(zone.GetDelegationAccounts()))))
 
 		for _, asset := range inAmount {
 			thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
-			eachAmount = eachAmount.Add(thisAsset)
+			// TODO: maybe set this to some param based threshold? 5000 is an arbitrary figure to avoid distributing dust continuously.
+			// 5000 * 100 accounts == 0.5 tokens
+			if thisAsset.Amount.GT(sdk.NewInt(5000)) {
+				eachAmount = eachAmount.Add(thisAsset)
+			}
+		}
+
+		// if we don't have sufficient balance to delegate from multiple accounts; limit to a single account.
+		if eachAmount.Empty() || eachAmount.IsZero() {
+			splits = 1
 		}
 		accounts := zone.GetDelegationAccountsByLowestBalance(splits)
 
@@ -167,7 +171,9 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 			} else {
 				amount = inAmount
 			}
-			msgs = append(msgs, &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: account.GetAddress(), Amount: amount})
+			if !amount.Empty() && !amount.IsZero() {
+				msgs = append(msgs, &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: account.GetAddress(), Amount: amount})
+			}
 		}
 
 		return k.SubmitTx(ctx, msgs, zone.DepositAddress)
@@ -176,17 +182,19 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 
 func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZone, inAmount sdk.Coins) error {
 	eachAmount := sdk.Coins{}
-	accountSplits := k.GetParam(ctx, types.KeyDelegateAccountCount)
-	splits := func(x, y uint64) uint64 {
-		if x > y {
-			return y
-		}
-		return x
-	}(accountSplits, uint64(len(zone.GetDelegationAccounts())))
+	splits := utils.MinU64(append([]uint64{}, k.GetParam(ctx, types.KeyDelegateAccountCount), uint64(len(zone.GetDelegationAccounts()))))
 
 	for _, asset := range inAmount {
 		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
-		eachAmount = eachAmount.Add(thisAsset)
+		// TODO: maybe set this to some param based threshold? 5000 is an arbitrary figure to avoid distributing dust continuously.
+		// 5000 * 100 accounts == 0.5 tokens
+		if thisAsset.Amount.GT(sdk.NewInt(5000)) {
+			eachAmount = eachAmount.Add(thisAsset)
+		}
+	}
+
+	if eachAmount.Empty() || eachAmount.IsZero() {
+		splits = 1
 	}
 
 	in := []bankTypes.Input{}
