@@ -72,6 +72,20 @@ func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
 	return zones
 }
 
+func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.RegisteredZone, error) {
+	chainId, err := k.GetChainIdFromContext(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to fetch zone from context: %w", err)
+	}
+	zone, found := k.GetRegisteredZoneInfo(ctx, chainId)
+	if !found {
+		err := fmt.Errorf("unable to fetch zone from context: not found for chainId %s", chainId)
+		k.Logger(ctx).Error(err.Error())
+		return nil, err
+	}
+	return &zone, nil
+}
+
 func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.RegisteredZone {
 	var zone *types.RegisteredZone
 	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {

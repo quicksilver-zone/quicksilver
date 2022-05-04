@@ -1,6 +1,7 @@
 package interchainstaking
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -232,6 +233,14 @@ func (im IBCModule) OnAcknowledgementPacket(
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
+	connectionId, _, err := im.keeper.IBCKeeper.ChannelKeeper.GetChannelConnection(ctx, packet.SourcePort, packet.SourceChannel)
+	if err != nil {
+		err = fmt.Errorf("packet connection not found: %w", err)
+		ctx.Logger().Error(err.Error())
+		return err
+	}
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), "connectionId", connectionId))
+
 	return im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement)
 }
 

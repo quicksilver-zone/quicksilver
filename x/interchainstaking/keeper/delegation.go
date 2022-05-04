@@ -65,7 +65,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone type
 	if len(msgs) == 0 {
 		return nil
 	}
-	// set withdrawal waitgroup tally
+	// add withdrawal waitgroup tally
 	zone.WithdrawalWaitgroup += uint32(len(msgs))
 	k.SetRegisteredZone(ctx, zone)
 

@@ -230,3 +230,12 @@ func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error)
 
 	return client.ChainId, nil
 }
+
+func (k Keeper) GetChainIdFromContext(ctx sdk.Context) (string, error) {
+	connectionId := ctx.Context().Value("connectionId")
+	if connectionId == nil {
+		return "", fmt.Errorf("connectionId not in context")
+	}
+
+	return k.GetChainID(ctx, connectionId.(string))
+}
