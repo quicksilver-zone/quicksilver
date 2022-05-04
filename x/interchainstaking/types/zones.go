@@ -15,7 +15,7 @@ func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty uint64) []*ICAA
 		return delegationAccounts[i].DelegatedBalance.Amount.GT(delegationAccounts[j].DelegatedBalance.Amount)
 	})
 	if qty > 0 {
-		return delegationAccounts[:int(utils.MinU64(append([]uint64{}, uint64(len(delegationAccounts)-1), qty)))]
+		return delegationAccounts[:int(utils.MinU64(append([]uint64{}, uint64(len(delegationAccounts)), qty)))]
 	}
 	return delegationAccounts
 }
