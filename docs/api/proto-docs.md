@@ -90,6 +90,25 @@
   
     - [Query](#quicksilver.mint.v1beta1.Query)
   
+- [quicksilver/participationrewards/v1/participationrewards.proto](#quicksilver/participationrewards/v1/participationrewards.proto)
+    - [DistributionProportions](#quicksilver.participationrewards.v1.DistributionProportions)
+    - [Params](#quicksilver.participationrewards.v1.Params)
+  
+- [quicksilver/participationrewards/v1/genesis.proto](#quicksilver/participationrewards/v1/genesis.proto)
+    - [GenesisState](#quicksilver.participationrewards.v1.GenesisState)
+  
+- [quicksilver/participationrewards/v1/messages.proto](#quicksilver/participationrewards/v1/messages.proto)
+    - [MsgSubmitClaim](#quicksilver.participationrewards.v1.MsgSubmitClaim)
+    - [MsgSubmitClaimResponse](#quicksilver.participationrewards.v1.MsgSubmitClaimResponse)
+  
+    - [Msg](#quicksilver.participationrewards.v1.Msg)
+  
+- [quicksilver/participationrewards/v1/query.proto](#quicksilver/participationrewards/v1/query.proto)
+    - [QueryParamsRequest](#quicksilver.participationrewards.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#quicksilver.participationrewards.v1.QueryParamsResponse)
+  
+    - [Query](#quicksilver.participationrewards.v1.Query)
+  
 - [Scalar Value Types](#scalar-value-types)
 
 
@@ -1225,6 +1244,191 @@ Query provides defines the gRPC querier service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#quicksilver.mint.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#quicksilver.mint.v1beta1.QueryParamsResponse) | Params returns the total set of minting parameters. | GET|/quicksilver/mint/v1beta1/params|
 | `EpochProvisions` | [QueryEpochProvisionsRequest](#quicksilver.mint.v1beta1.QueryEpochProvisionsRequest) | [QueryEpochProvisionsResponse](#quicksilver.mint.v1beta1.QueryEpochProvisionsResponse) | EpochProvisions current minting epoch provisions value. | GET|/quicksilver/mint/v1beta1/epoch_provisions|
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/participationrewards/v1/participationrewards.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/participationrewards/v1/participationrewards.proto
+
+
+
+<a name="quicksilver.participationrewards.v1.DistributionProportions"></a>
+
+### DistributionProportions
+DistributionProportions defines the proportions of minted QCK that is to be
+allocated as participation rewards.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `validator_selection_allocation` | [string](#string) |  |  |
+| `pariticpation_allocation` | [string](#string) |  |  |
+| `lockup_allocation` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.participationrewards.v1.Params"></a>
+
+### Params
+Params holds parameters for the participationrewards module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `distribution_proportions` | [DistributionProportions](#quicksilver.participationrewards.v1.DistributionProportions) |  | distribution_proportions defines the proportions of the minted participation rewards; |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/participationrewards/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/participationrewards/v1/genesis.proto
+
+
+
+<a name="quicksilver.participationrewards.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the participationrewards module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#quicksilver.participationrewards.v1.Params) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/participationrewards/v1/messages.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/participationrewards/v1/messages.proto
+
+
+
+<a name="quicksilver.participationrewards.v1.MsgSubmitClaim"></a>
+
+### MsgSubmitClaim
+MsgSubmitClaim represents a message type for submitting a participation
+claim regarding the given zone (chain).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `user_address` | [string](#string) |  |  |
+| `zone` | [string](#string) |  |  |
+| `asset_type` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.participationrewards.v1.MsgSubmitClaimResponse"></a>
+
+### MsgSubmitClaimResponse
+MsgSubmitClaimResponse defines the MsgSubmitClaim response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="quicksilver.participationrewards.v1.Msg"></a>
+
+### Msg
+Msg defines the participationrewards Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `SubmitClaim` | [MsgSubmitClaim](#quicksilver.participationrewards.v1.MsgSubmitClaim) | [MsgSubmitClaimResponse](#quicksilver.participationrewards.v1.MsgSubmitClaimResponse) |  | POST|/quicksilver/tx/v1/participationrewards/claim|
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/participationrewards/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/participationrewards/v1/query.proto
+
+
+
+<a name="quicksilver.participationrewards.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="quicksilver.participationrewards.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#quicksilver.participationrewards.v1.Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="quicksilver.participationrewards.v1.Query"></a>
+
+### Query
+Query provides defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#quicksilver.participationrewards.v1.QueryParamsRequest) | [QueryParamsResponse](#quicksilver.participationrewards.v1.QueryParamsResponse) | Params returns the total set of participation rewards parameters. | GET|/quicksilver/participationrewards/v1beta1/params|
 
  <!-- end services -->
 

@@ -1,0 +1,32 @@
+syntax = "proto3";
+package quicksilver.participationrewards.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
+
+// Msg defines the participationrewards Msg service.
+service Msg {
+  rpc SubmitClaim(MsgSubmitClaim) returns (MsgSubmitClaimResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/participationrewards/claim"
+      body : "*"
+    };
+  };
+}
+
+// MsgSubmitClaim represents a message type for submitting a participation
+// claim regarding the given zone (chain).
+message MsgSubmitClaim {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string user_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string zone = 2;
+  string asset_type = 3;
+}
+
+// MsgSubmitClaimResponse defines the MsgSubmitClaim response type.
+message MsgSubmitClaimResponse {}
