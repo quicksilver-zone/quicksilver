@@ -114,6 +114,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainquery"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+
+	"github.com/ingenuity-build/quicksilver/x/participationrewards"
+	participationrewardskeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
+	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func init() {
@@ -164,6 +168,7 @@ var (
 		epochs.AppModuleBasic{},
 		interchainstaking.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
+		participationrewards.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -231,9 +236,10 @@ type Quicksilver struct {
 	TransferKeeper      ibctransferkeeper.Keeper
 
 	// Quicksilver keepers
-	EpochsKeeper            epochskeeper.Keeper
-	InterchainstakingKeeper interchainstakingkeeper.Keeper
-	InterchainQueryKeeper   interchainquerykeeper.Keeper
+	EpochsKeeper               epochskeeper.Keeper
+	InterchainstakingKeeper    interchainstakingkeeper.Keeper
+	InterchainQueryKeeper      interchainquerykeeper.Keeper
+	ParticipationRewardsKeeper participationrewardskeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper                      capabilitykeeper.ScopedKeeper
@@ -298,6 +304,7 @@ func NewQuicksilver(
 		epochstypes.StoreKey,
 		interchainstakingtypes.StoreKey,
 		interchainquerytypes.StoreKey,
+		participationrewardstypes.StoreKey,
 	)
 
 	// Add the transient store key
@@ -430,11 +437,21 @@ func NewQuicksilver(
 		epochstypes.NewMultiEpochHooks(
 			app.MintKeeper.Hooks(),
 			app.InterchainstakingKeeper.Hooks(),
+			app.ParticipationRewardsKeeper.Hooks(),
 		),
 	)
 
 	icaControllerIBCModule := icacontroller.NewIBCModule(app.ICAControllerKeeper, interchainstakingIBCModule)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
+
+	app.ParticipationRewardsKeeper = participationrewardskeeper.NewKeeper(
+		appCodec,
+		keys[participationrewardstypes.StoreKey],
+		app.GetSubspace(participationrewardstypes.ModuleName),
+		app.AccountKeeper,
+		app.InterchainstakingKeeper,
+	)
+	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
@@ -489,6 +506,7 @@ func NewQuicksilver(
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		interchainstakingModule,
 		interchainQueryModule,
+		participationrewardsModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -513,6 +531,7 @@ func NewQuicksilver(
 		// no-op modules
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		participationrewardstypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -550,6 +569,7 @@ func NewQuicksilver(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		interchainstakingtypes.ModuleName,
+		participationrewardstypes.ModuleName,
 		// currently no-op.
 	)
 
@@ -582,6 +602,7 @@ func NewQuicksilver(
 		epochstypes.ModuleName,
 		interchainstakingtypes.ModuleName,
 		interchainquerytypes.ModuleName,
+		participationrewardstypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	)
@@ -890,5 +911,6 @@ func initParamsKeeper(
 	// quicksilver subspaces
 	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
+	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
 	return paramsKeeper
 }
