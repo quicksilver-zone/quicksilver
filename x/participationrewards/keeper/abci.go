@@ -10,4 +10,9 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	// - Calculate validator choice scores and allocations; for each zone independently;
 	// - Calculate qAsset holdings scores and allocations;
 	// - QCK staking allocations via x/distribution (using ModuleAccount and auth.FeeCollector);
+
+	// hartbeat logger
+	if ctx.BlockHeight()%int64(10) == 0 {
+		k.Logger(ctx).Info("up and running")
+	}
 }

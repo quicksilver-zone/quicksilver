@@ -14,7 +14,7 @@ var (
 
 	DefaultValidatorSelectionAllocation = sdk.NewDecWithPrec(33, 2)
 	DefaultPariticpationAllocation      = sdk.NewDecWithPrec(33, 2)
-	DefaultLockupAllocation             = sdk.NewDecWithPrec(33, 2)
+	DefaultLockupAllocation             = sdk.NewDecWithPrec(34, 2)
 )
 
 // ParamTable for participationrewards module.
