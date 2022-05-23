@@ -18,14 +18,19 @@ type Keeper struct {
 	bankKeeper       types.BankKeeper
 	distrKeeper      types.DistrKeeper
 	epochKeeper      types.EpochKeeper
-	hooks            types.MintHooks
+	hooks            types.MintHooks // should probably add a setter for this somewhere
 	feeCollectorName string
 }
 
 // NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
-	cdc codec.BinaryCodec, key sdk.StoreKey, paramSpace paramtypes.Subspace,
-	ak types.AccountKeeper, bk types.BankKeeper, dk types.DistrKeeper, epochKeeper types.EpochKeeper,
+	cdc codec.BinaryCodec,
+	key sdk.StoreKey,
+	paramSpace paramtypes.Subspace,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	dk types.DistrKeeper,
+	epochKeeper types.EpochKeeper,
 	feeCollectorName string,
 ) Keeper {
 	// ensure mint module account is set
@@ -183,8 +188,11 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		return err
 	}
 
-	// call an hook after the minting and distribution of new coins
-	k.hooks.AfterDistributeMintedCoin(ctx, mintedCoin)
+	// call a hook after the minting and distribution of new coins
+	// check if hooks are set (as this requires a concrete implementation)
+	if k.hooks != nil {
+		k.hooks.AfterDistributeMintedCoin(ctx, mintedCoin)
+	}
 
 	return err
 }
