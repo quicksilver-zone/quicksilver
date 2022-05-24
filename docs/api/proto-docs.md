@@ -1183,7 +1183,7 @@ allocated as participation rewards.
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | `validator_selection_allocation` | [string](#string) |  |  |
-| `pariticpation_allocation` | [string](#string) |  |  |
+| `holdings_allocation` | [string](#string) |  |  |
 | `lockup_allocation` | [string](#string) |  |  |
 
 

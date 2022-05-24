@@ -2,17 +2,18 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 // BeginBlocker of participationrewards module
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
-	// TODO: implement
-	// - Calculate validator choice scores and allocations; for each zone independently;
-	// - Calculate qAsset holdings scores and allocations;
-	// - QCK staking allocations via x/distribution (using ModuleAccount and auth.FeeCollector);
-
-	// hartbeat logger
+	// hartbeat logger (for dev & debugging)
 	if ctx.BlockHeight()%int64(10) == 0 {
 		k.Logger(ctx).Info("up and running")
+		k.Logger(ctx).Info(
+			"module account",
+			"account", k.accountKeeper.GetModuleAccount(ctx, types.ModuleName),
+			"address", k.accountKeeper.GetModuleAddress(types.ModuleName),
+		)
 	}
 }

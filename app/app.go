@@ -184,6 +184,8 @@ var (
 		icatypes.ModuleName:               nil,
 		interchainstakingtypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		interchainquerytypes.ModuleName:   nil,
+		// TODO: Remove Burner from participationrewards - for dev/test only;
+		participationrewardstypes.ModuleName: {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -292,7 +294,7 @@ func NewQuicksilver(
 	keys := sdk.NewKVStoreKeys(
 		// SDK keys
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
-		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
+		distrtypes.StoreKey, minttypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
 		feegrant.StoreKey, authzkeeper.StoreKey,
@@ -431,6 +433,17 @@ func NewQuicksilver(
 
 	app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler())
 
+	app.ParticipationRewardsKeeper = participationrewardskeeper.NewKeeper(
+		appCodec,
+		keys[participationrewardstypes.StoreKey],
+		app.GetSubspace(participationrewardstypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.InterchainstakingKeeper,
+		authtypes.FeeCollectorName,
+	)
+	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
+
 	// Quicksilver Keepers
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	app.EpochsKeeper = *epochsKeeper.SetHooks(
@@ -443,15 +456,6 @@ func NewQuicksilver(
 
 	icaControllerIBCModule := icacontroller.NewIBCModule(app.ICAControllerKeeper, interchainstakingIBCModule)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
-
-	app.ParticipationRewardsKeeper = participationrewardskeeper.NewKeeper(
-		appCodec,
-		keys[participationrewardstypes.StoreKey],
-		app.GetSubspace(participationrewardstypes.ModuleName),
-		app.AccountKeeper,
-		app.InterchainstakingKeeper,
-	)
-	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
@@ -520,8 +524,8 @@ func NewQuicksilver(
 		capabilitytypes.ModuleName,
 		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
 		epochstypes.ModuleName,
-		minttypes.ModuleName,
 		distrtypes.ModuleName,
+		minttypes.ModuleName,
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
@@ -898,8 +902,8 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(authtypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)
 	paramsKeeper.Subspace(stakingtypes.ModuleName)
-	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)
+	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)

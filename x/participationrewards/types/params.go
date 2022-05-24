@@ -12,9 +12,9 @@ import (
 var (
 	KeyDistributionProportions = []byte("DistributionProportions")
 
-	DefaultValidatorSelectionAllocation = sdk.NewDecWithPrec(33, 2)
-	DefaultPariticpationAllocation      = sdk.NewDecWithPrec(33, 2)
-	DefaultLockupAllocation             = sdk.NewDecWithPrec(34, 2)
+	DefaultValidatorSelectionAllocation = sdk.NewDecWithPrec(34, 2)
+	DefaultHoldingsAllocation           = sdk.NewDecWithPrec(33, 2)
+	DefaultLockupAllocation             = sdk.NewDecWithPrec(33, 2)
 )
 
 // ParamTable for participationrewards module.
@@ -25,13 +25,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new ics Params instance
 func NewParams(
 	validator_selection_allocation sdk.Dec,
-	participation_allocation sdk.Dec,
+	holdings_allocation sdk.Dec,
 	lockup_allocation sdk.Dec,
 ) Params {
 	return Params{
 		DistributionProportions: DistributionProportions{
 			ValidatorSelectionAllocation: validator_selection_allocation,
-			PariticpationAllocation:      participation_allocation,
+			HoldingsAllocation:           holdings_allocation,
 			LockupAllocation:             lockup_allocation,
 		},
 	}
@@ -41,7 +41,7 @@ func NewParams(
 func DefaultParams() Params {
 	return NewParams(
 		DefaultValidatorSelectionAllocation,
-		DefaultPariticpationAllocation,
+		DefaultHoldingsAllocation,
 		DefaultLockupAllocation,
 	)
 }
@@ -63,7 +63,7 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("ValidatorSelectionAllocation distribution ratio should not be negative")
 	}
 
-	if v.PariticpationAllocation.IsNegative() {
+	if v.HoldingsAllocation.IsNegative() {
 		return errors.New("PariticpationAllocation distribution ratio should not be negative")
 	}
 
@@ -71,7 +71,7 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("LockupAllocation distribution ratio should not be negative")
 	}
 
-	totalProportions := v.ValidatorSelectionAllocation.Add(v.PariticpationAllocation).Add(v.LockupAllocation)
+	totalProportions := v.ValidatorSelectionAllocation.Add(v.HoldingsAllocation).Add(v.LockupAllocation)
 
 	if !totalProportions.Equal(sdk.NewDec(1)) {
 		return errors.New("total distributions ratio should be 1")
