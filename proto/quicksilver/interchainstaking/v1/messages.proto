@@ -43,7 +43,6 @@ message MsgRegisterZone {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string identifier = 1 [ (gogoproto.moretags) = "yaml:\"zone_name\"" ];
   string connection_id = 2 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
   string base_denom = 4 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
   string local_denom = 5 [ (gogoproto.moretags) = "yaml:\"local_denom\"" ];

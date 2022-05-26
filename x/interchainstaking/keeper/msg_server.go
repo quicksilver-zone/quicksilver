@@ -40,7 +40,6 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	}
 
 	zone := types.RegisteredZone{
-		Identifier:         msg.Identifier,
 		ChainId:            chainId,
 		ConnectionId:       msg.ConnectionId,
 		LocalDenom:         msg.LocalDenom,

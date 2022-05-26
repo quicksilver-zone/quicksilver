@@ -18,7 +18,6 @@ func (s *KeeperTestSuite) TestRegisterZone() {
 			"invalid connection",
 			func() {
 				msg = icstypes.MsgRegisterZone{
-					Identifier:   "cosmosquitto",
 					ConnectionId: "unknown",
 					LocalDenom:   "uqatom",
 					BaseDenom:    "uatom",
@@ -32,7 +31,6 @@ func (s *KeeperTestSuite) TestRegisterZone() {
 			func() {
 				s.SetupRegisteredZones()
 				msg = icstypes.MsgRegisterZone{
-					Identifier:   "cosmos",
 					ConnectionId: s.path.EndpointA.ConnectionID,
 					LocalDenom:   "uqatom",
 					BaseDenom:    "uatom",
@@ -45,7 +43,6 @@ func (s *KeeperTestSuite) TestRegisterZone() {
 			"valid",
 			func() {
 				msg = icstypes.MsgRegisterZone{
-					Identifier:   "cosmos",
 					ConnectionId: s.path.EndpointA.ConnectionID,
 					LocalDenom:   "uqatom",
 					BaseDenom:    "uatom",

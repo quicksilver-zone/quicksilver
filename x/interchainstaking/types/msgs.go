@@ -23,16 +23,13 @@ var _ sdk.Msg = &MsgSignalIntent{}
 // NewMsgRegisterZone - construct a msg to register a new zone.
 //nolint:interfacer
 func NewMsgRegisterZone(
-	identifier string,
 	connection_id string,
-	chain_id string,
 	local_denom string,
 	base_denom string,
 	from_address sdk.Address,
 	multi_send bool,
 ) *MsgRegisterZone {
 	return &MsgRegisterZone{
-		Identifier:   identifier,
 		ConnectionId: connection_id,
 		LocalDenom:   local_denom,
 		BaseDenom:    base_denom,
@@ -50,8 +47,6 @@ func (msg MsgRegisterZone) Type() string { return TypeMsgRegisterZone }
 // ValidateBasic Implements Msg.
 func (msg MsgRegisterZone) ValidateBasic() error {
 	// TODO: check from address
-
-	// TODO: check for valid identifier
 
 	// TODO: check for valid chain_id
 
@@ -88,8 +83,6 @@ func (msg MsgRequestRedemption) Type() string { return TypeMsgRegisterZone }
 // ValidateBasic Implements Msg.
 func (msg MsgRequestRedemption) ValidateBasic() error {
 	// TODO: check from address
-
-	// TODO: check for valid identifier
 
 	// TODO: check for valid chain_id
 
