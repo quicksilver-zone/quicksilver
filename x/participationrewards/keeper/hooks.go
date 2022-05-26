@@ -19,12 +19,17 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	moduleBalances := k.bankKeeper.GetAllBalances(ctx, moduleAddress)
 	k.Logger(ctx).Info("module account", "address", moduleAddress, "balances", moduleBalances)
 	// DEVTEST:
-	fmt.Printf("AfterEpochEnd >>>\n\tAddress = %v\n\tBalance = %v\n", moduleAddress, moduleBalances)
+	if ctx.Context().Value("DEVTEST") == "DEVTEST" {
+		fmt.Printf("AfterEpochEnd >>>\n\tAddress = %s\n\tBalance = %v\n", moduleAddress, moduleBalances)
+		defer fmt.Printf("<<<\n")
+	}
 
 	if moduleBalances.Empty() {
 		k.Logger(ctx).Info("nothing to distribute...")
 		// DEVTEST:
-		fmt.Println("nothing to distribute...")
+		if ctx.Context().Value("DEVTEST") == "DEVTEST" {
+			fmt.Println("\tnothing to distribute...")
+		}
 
 		return
 	}
@@ -33,7 +38,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	params := k.GetParams(ctx)
 	k.Logger(ctx).Info("module parameters", "params", params)
 	// DEVTEST:
-	fmt.Printf("\nParams:\n%v\n", params)
+	if ctx.Context().Value("DEVTEST") == "DEVTEST" {
+		fmt.Printf("\nParams:\n%v\n", params)
+	}
 
 	// split participation rewards allocations
 	validatorSelectionAllocation := sdk.NewCoins(
@@ -72,18 +79,22 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		"dust", dust,
 	)
 	// DEVTEST:
-	fmt.Printf("\tTotal:\t\t\t\t%v\n", total)
-	fmt.Printf("\tValidator Selection Allocation:\t%v\n", validatorSelectionAllocation)
-	fmt.Printf("\tHoldings Allocation:\t\t%v\n", holdingsAllocation)
-	fmt.Printf("\tLockup Allocation:\t\t%v\n", lockupAllocation)
-	fmt.Printf("\tSum:\t\t\t\t%v\n", sum)
-	fmt.Printf("\tDust:\t\t\t\t%v\n", dust)
+	if ctx.Context().Value("DEVTEST") == "DEVTEST" {
+		fmt.Printf("\tTotal:\t\t\t\t%v\n", total)
+		fmt.Printf("\tValidator Selection Allocation:\t%v\n", validatorSelectionAllocation)
+		fmt.Printf("\tHoldings Allocation:\t\t%v\n", holdingsAllocation)
+		fmt.Printf("\tLockup Allocation:\t\t%v\n", lockupAllocation)
+		fmt.Printf("\tSum:\t\t\t\t%v\n", sum)
+		fmt.Printf("\tDust:\t\t\t\t%v\n", dust)
+	}
 
 	// Add dust to validator choice allocation (favors decentralization)
 	validatorSelectionAllocation = validatorSelectionAllocation.Add(dust)
 	k.Logger(ctx).Info("add dust to validatorSelectionAllocation...")
 	// DEVTEST:
-	fmt.Printf("\n\tAdd dust to validatorSelectionAllocation...\n\n")
+	if ctx.Context().Value("DEVTEST") == "DEVTEST" {
+		fmt.Printf("\n\tAdd dust to validatorSelectionAllocation...\n\n")
+	}
 
 	if err := k.allocateValidatorChoiceRewards(ctx, validatorSelectionAllocation); err != nil {
 		k.Logger(ctx).Error(err.Error())
@@ -96,9 +107,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	if err := k.allocateLockupRewards(ctx, lockupAllocation); err != nil {
 		k.Logger(ctx).Error(err.Error())
 	}
-
-	// DEVTEST:
-	fmt.Printf("\n<<<\n")
 }
 
 // ___________________________________________________________________________________________________

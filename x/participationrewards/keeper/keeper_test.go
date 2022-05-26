@@ -1,11 +1,16 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 	qapp "github.com/ingenuity-build/quicksilver/app"
+	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/suite"
 )
 
@@ -49,6 +54,46 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.coordinator.SetupConnections(s.path)
 }
 
+func (s *KeeperTestSuite) SetupRegisteredZones() {
+	zonemsg := icstypes.MsgRegisterZone{
+		Identifier:   "cosmos",
+		ConnectionId: s.path.EndpointA.ConnectionID,
+		LocalDenom:   "uqatom",
+		BaseDenom:    "uatom",
+		FromAddress:  TestOwnerAddress,
+	}
+
+	msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
+	ctx := s.chainA.GetContext()
+	_, err := msgSrv.RegisterZone(sdktypes.WrapSDKContext(ctx), &zonemsg)
+	s.Require().NoError(err)
+
+	// Simulate "cosmos.staking.v1beta1.Query/Validators" response
+	qvr := stakingtypes.QueryValidatorsResponse{
+		Validators: s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()),
+	}
+	icqmsgSrv := icqkeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainQueryKeeper)
+	qmsg := icqtypes.MsgSubmitQueryResponse{
+		// target or source chain_id?
+		ChainId: s.chainB.ChainID,
+		QueryId: icqkeeper.GenerateQueryHash(
+			s.path.EndpointA.ConnectionID,
+			s.chainB.ChainID,
+			"cosmos.staking.v1beta1.Query/Validators",
+			map[string]string{"status": stakingtypes.BondStatusBonded},
+		),
+		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshalJSON(&qvr),
+		Height:      s.chainB.CurrentHeader.Height,
+		FromAddress: TestOwnerAddress,
+	}
+	_, err = icqmsgSrv.SubmitQueryResponse(sdktypes.WrapSDKContext(ctx), &qmsg)
+	s.Require().NoError(err)
+
+	valsetInterval := uint64(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetParam(ctx, icstypes.KeyValidatorSetInterval))
+	s.coordinator.CommitNBlocks(s.chainA, valsetInterval)
+	s.coordinator.CommitNBlocks(s.chainB, valsetInterval)
+}
+
 func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path := ibctesting.NewPath(chainA, chainB)
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
@@ -57,7 +102,6 @@ func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	return path
 }
 
-func (s *KeeperTestSuite) TestEpochEnd() {
-	fmt.Println("TestEpochEnd >>>")
-	fmt.Println("<<< TestEpochEnd")
+func (s *KeeperTestSuite) Test() {
+	s.SetupRegisteredZones()
 }
