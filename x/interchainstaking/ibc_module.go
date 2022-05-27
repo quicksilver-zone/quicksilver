@@ -126,10 +126,10 @@ func (im IBCModule) OnChanOpenAck(
 			cb,
 		)
 
-	// fee address
-	case len(portParts) == 2 && portParts[1] == "fee":
+	// performance address
+	case len(portParts) == 2 && portParts[1] == "performance":
 
-		zoneInfo.FeeAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
+		zoneInfo.PerformanceAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 
 	// withdrawal address
 	case len(portParts) == 2 && portParts[1] == "withdrawal":

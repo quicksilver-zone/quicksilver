@@ -57,7 +57,6 @@ func (s *KeeperTestSuite) SetupTest() {
 
 func (s *KeeperTestSuite) SetupRegisteredZones() {
 	zonemsg := icstypes.MsgRegisterZone{
-		Identifier:   "cosmos",
 		ConnectionId: s.path.EndpointA.ConnectionID,
 		LocalDenom:   "uqatom",
 		BaseDenom:    "uatom",

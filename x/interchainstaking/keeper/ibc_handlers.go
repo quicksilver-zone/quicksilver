@@ -257,13 +257,8 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
 
 	// checks here are specific to ensure future extensibility;
 	switch {
-	case sMsg.FromAddress == zone.WithdrawalAddress.GetAddress() && sMsg.ToAddress == zone.FeeAddress.GetAddress():
-		// WithdrawalAddress (for rewards) only send to FeeAddress or DelegationAddresses.
-		// Target here is FeeAddress.
-		// shouldn't be called.
-		panic("unexpected")
-	case sMsg.FromAddress == zone.WithdrawalAddress.GetAddress() && sMsg.ToAddress != zone.FeeAddress.GetAddress():
-		// WithdrawalAddress (for rewards) only send to FeeAddress or DelegationAddresses.
+	case sMsg.FromAddress == zone.WithdrawalAddress.GetAddress():
+		// WithdrawalAddress (for rewards) only send to DelegationAddresses.
 		// Target here is one of the DelegationAddresses.
 		if err := k.handleRewardsDelegation(ctx, *zone, sMsg); err != nil {
 			return err
