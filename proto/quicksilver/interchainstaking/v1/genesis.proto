@@ -8,29 +8,30 @@ import "cosmos/base/v1beta1/coin.proto";
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
 message RegisteredZone {
-  string connection_id = 2;
-  string chain_id = 3;
-  ICAAccount deposit_address = 4;
-  repeated ICAAccount delegation_addresses = 5;
-  string local_denom = 6;
-  string base_denom = 7;
-  string redemption_rate = 8 [
+  string connection_id = 1;
+  string chain_id = 2;
+  ICAAccount deposit_address = 3;
+  ICAAccount withdrawal_address = 4;
+  ICAAccount performance_address = 5;
+  repeated ICAAccount delegation_addresses = 6;
+  string account_prefix = 7;
+  string local_denom = 8;
+  string base_denom = 9;
+  string redemption_rate = 10 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  repeated Validator validators = 9;
-  map<string, DelegatorIntent> delegator_intent = 10;
-  map<string, ValidatorIntent> aggregate_intent = 11;
-  bool multi_send = 12;
-  string last_redemption_rate = 13 [
+  repeated Validator validators = 11;
+  map<string, DelegatorIntent> delegator_intent = 12;
+  map<string, ValidatorIntent> aggregate_intent = 13;
+  bool multi_send = 14;
+  string last_redemption_rate = 15 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  ICAAccount withdrawal_address = 15;
   uint32 withdrawal_waitgroup = 16;
-  ICAAccount performance_address = 17;
 }
 
 message ICAAccount {
@@ -47,6 +48,7 @@ message ICAAccount {
   ];
   string port_name = 4;
   // Delegations here? or against validator?
+  uint32 balance_waitgroup = 5;
 }
 
 message WithdrawalRecord {

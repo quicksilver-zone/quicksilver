@@ -414,7 +414,7 @@ func NewQuicksilver(
 	)
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
 
-	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey])
+	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
 	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper)
 
 	app.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(appCodec, keys[interchainstakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.ICAControllerKeeper, scopedInterchainStakingKeeper, app.InterchainQueryKeeper, *app.IBCKeeper, app.GetSubspace(interchainstakingtypes.ModuleName))

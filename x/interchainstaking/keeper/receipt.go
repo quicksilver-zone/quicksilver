@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	cosmostx "github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
@@ -14,13 +13,12 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	tmtypes "github.com/tendermint/tendermint/abci/types"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 )
 
-func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *coretypes.ResultTx, zone types.RegisteredZone) {
-	hash := tx.Hash.String()
+func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *sdk.TxResponse, zone types.RegisteredZone) {
+	hash := tx.TxHash
 
 	_, found := k.GetReceipt(ctx, GetReceiptKey(zone, hash))
 	if found {
@@ -28,24 +26,10 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *coretypes.ResultTx
 		return
 	}
 
-	var raw cosmostx.TxRaw
-	// replicates txDecoder logic, because it's easier than trying to inject the dependency :/
-	err := k.cdc.Unmarshal(tx.Tx, &raw)
-	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal tx_raw for deposit account receipt", "deposit_address", zone.DepositAddress.GetAddress(), "tx data", tx.Tx)
-	}
-
-	var body cosmostx.TxBody
-
-	err = k.cdc.Unmarshal(raw.BodyBytes, &body)
-	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal tx_body for deposit account receipt", "deposit_address", zone.DepositAddress.GetAddress(), "tx body", raw.BodyBytes)
-	}
-
 	senderAddress := "unset"
 	coins := sdk.Coins{}
 
-	for _, event := range tx.TxResult.Events {
+	for _, event := range tx.Events {
 		if event.Type == "transfer" {
 			attrs := attributesToMap(event.Attributes)
 			sender := attrs["sender"]

@@ -12,6 +12,7 @@ protoc_gen_gocosmos() {
 }
 
 protoc_gen_doc() {
+  go get github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc 2>/dev/null
   go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc 2>/dev/null
 }
 

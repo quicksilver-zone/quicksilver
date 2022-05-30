@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
@@ -69,7 +70,6 @@ func (im IBCModule) OnChanOpenAck(
 	counterPartyChannelId string,
 	counterpartyVersion string,
 ) error {
-	// TODO: is there re-entrancy risk here?
 	connectionId, err := im.keeper.GetConnectionForPort(ctx, portID)
 	if err != nil {
 		ctx.Logger().Error("Unable to get connection for port " + portID)
@@ -108,11 +108,19 @@ func (im IBCModule) OnChanOpenAck(
 
 		zoneInfo.DepositAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 		var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+			localAddress := address
 			zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 			if !found {
 				return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 			}
-			return k.SetAccountBalance(ctx, zone, query.QueryParameters["address"], args)
+
+			return k.SetAccountBalance(ctx, zone, localAddress, args)
+		}
+
+		balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
+		bz, err := im.keeper.GetCodec().Marshal(&balanceQuery)
+		if err != nil {
+			return err
 		}
 
 		im.keeper.ICQKeeper.MakeRequest(
@@ -120,7 +128,7 @@ func (im IBCModule) OnChanOpenAck(
 			connectionId,
 			chainId,
 			"cosmos.bank.v1beta1.Query/AllBalances",
-			map[string]string{"address": address},
+			bz,
 			sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDepositInterval))),
 			types.ModuleName,
 			cb,
@@ -166,7 +174,20 @@ func (im IBCModule) OnChanOpenAck(
 			if !found {
 				return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 			}
-			return k.SetAccountBalance(ctx, zone, query.QueryParameters["address"], args)
+			// unmarshal request
+			balanceQuery := bankTypes.QueryAllBalancesRequest{}
+			err := k.GetCodec().Unmarshal(query.Request, &balanceQuery)
+			if err == nil {
+				return err
+			}
+
+			return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
+		}
+
+		balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
+		bz, err := im.keeper.GetCodec().Marshal(&balanceQuery)
+		if err != nil {
+			return err
 		}
 
 		im.keeper.ICQKeeper.MakeRequest(
@@ -174,7 +195,7 @@ func (im IBCModule) OnChanOpenAck(
 			connectionId,
 			chainId,
 			"cosmos.bank.v1beta1.Query/AllBalances",
-			map[string]string{"address": address},
+			bz,
 			sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegateInterval))),
 			types.ModuleName,
 			cb,

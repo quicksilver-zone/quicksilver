@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -33,7 +35,14 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 						return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 					}
 
-					return k.WithdrawDelegationRewardsForResponse(ctx, zone, query.QueryParameters["delegator"], args)
+					// unmarshal request payload
+					rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
+					err := k.cdc.Unmarshal(query.Request, &rewardsQuery)
+					if err != nil {
+						return err
+					}
+
+					return k.WithdrawDelegationRewardsForResponse(ctx, zone, rewardsQuery.DelegatorAddress, args)
 				}
 
 				var delegationcb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -42,26 +51,38 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 						return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 					}
 
-					return k.UpdateDelegationRecordsForAddress(ctx, zone, query.QueryParameters["address"], args)
+					delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
+					err := k.cdc.Unmarshal(query.Request, &delegationQuery)
+					if err != nil {
+						return err
+					}
+
+					return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
 				}
+
+				delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: da.Address}
+				bz := k.cdc.MustMarshal(&delegationQuery)
 
 				k.ICQKeeper.MakeRequest(
 					ctx,
 					zoneInfo.ConnectionId,
 					zoneInfo.ChainId,
 					"cosmos.staking.v1beta1.Query/DelegatorDelegations",
-					map[string]string{"address": da.Address},
+					bz,
 					sdk.NewInt(-1),
 					types.ModuleName,
 					delegationcb,
 				)
+
+				rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: da.Address}
+				bz = k.cdc.MustMarshal(&rewardsQuery)
 
 				k.ICQKeeper.MakeRequest(
 					ctx,
 					zoneInfo.ConnectionId,
 					zoneInfo.ChainId,
 					"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
-					map[string]string{"delegator": da.Address},
+					bz,
 					sdk.NewInt(-1),
 					types.ModuleName,
 					rewardscb,

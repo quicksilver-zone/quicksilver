@@ -26,15 +26,17 @@ func NewMsgRegisterZone(
 	connection_id string,
 	local_denom string,
 	base_denom string,
+	account_prefix string,
 	from_address sdk.Address,
 	multi_send bool,
 ) *MsgRegisterZone {
 	return &MsgRegisterZone{
-		ConnectionId: connection_id,
-		LocalDenom:   local_denom,
-		BaseDenom:    base_denom,
-		FromAddress:  from_address.String(),
-		MultiSend:    multi_send,
+		ConnectionId:  connection_id,
+		LocalDenom:    local_denom,
+		BaseDenom:     base_denom,
+		AccountPrefix: account_prefix,
+		FromAddress:   from_address.String(),
+		MultiSend:     multi_send,
 	}
 }
 

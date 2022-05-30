@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -16,14 +17,16 @@ type Keeper struct {
 	cdc       codec.Codec
 	storeKey  sdk.StoreKey
 	callbacks map[string]types.QueryCallbacks
+	IBCKeeper *ibckeeper.Keeper
 }
 
 // NewKeeper returns a new instance of zones Keeper
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ibckeeper *ibckeeper.Keeper) Keeper {
 	return Keeper{
 		cdc:       cdc,
 		storeKey:  storeKey,
 		callbacks: make(map[string]types.QueryCallbacks),
+		IBCKeeper: ibckeeper,
 	}
 }
 
@@ -61,35 +64,35 @@ func (k *Keeper) GetDatapointForId(ctx sdk.Context, id string) (types.DataPoint,
 	return mapping, nil
 }
 
-func (k *Keeper) GetDatapoint(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string) (types.DataPoint, error) {
-	id := GenerateQueryHash(connection_id, chain_id, query_type, query_params)
+func (k *Keeper) GetDatapoint(ctx sdk.Context, connection_id string, chain_id string, query_type string, request []byte) (types.DataPoint, error) {
+	id := GenerateQueryHash(connection_id, chain_id, query_type, request)
 	return k.GetDatapointForId(ctx, id)
 }
 
-func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string, max_age int64) (types.DataPoint, error) {
-	val, err := k.GetDatapoint(ctx, connection_id, chain_id, query_type, query_params)
+func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, request []byte, max_age int64) (types.DataPoint, error) {
+	val, err := k.GetDatapoint(ctx, connection_id, chain_id, query_type, request)
 	if err != nil {
 		// no datapoint
-		k.MakeRequest(ctx, connection_id, chain_id, query_type, query_params, sdk.NewInt(-1), "", nil)
+		k.MakeRequest(ctx, connection_id, chain_id, query_type, request, sdk.NewInt(-1), "", nil)
 		return types.DataPoint{}, fmt.Errorf("no data; query submitted")
 	}
 
 	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - max_age)) { // this is somewhat arbitrary; TODO: make this better
-		k.MakeRequest(ctx, connection_id, chain_id, query_type, query_params, sdk.NewInt(-1), "", nil)
+		k.MakeRequest(ctx, connection_id, chain_id, query_type, request, sdk.NewInt(-1), "", nil)
 		return types.DataPoint{}, fmt.Errorf("stale data; query submitted")
 	}
 	// check ttl
 	return val, nil
 }
 
-func (k *Keeper) MakeRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string, period sdk.Int, module string, callback interface{}) {
-	key := GenerateQueryHash(connection_id, chain_id, query_type, query_params)
+func (k *Keeper) MakeRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, request []byte, period sdk.Int, module string, callback interface{}) {
+	key := GenerateQueryHash(connection_id, chain_id, query_type, request)
 	_, found := k.GetQuery(ctx, key)
 	if !found {
 		if module != "" {
 			k.callbacks[module].AddCallback(key, callback)
 		}
-		newQuery := k.NewQuery(ctx, connection_id, chain_id, query_type, query_params, period)
+		newQuery := k.NewQuery(ctx, connection_id, chain_id, query_type, request, period)
 		k.SetQuery(ctx, *newQuery)
 	}
 }

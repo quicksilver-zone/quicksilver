@@ -21,8 +21,10 @@ else
   rm -rf ${CHAIN_DIR}/hermes &> /dev/null
   rm -rf ${CHAIN_DIR}/icq &> /dev/null
 
-  TIME=$(date --date '-2 minutes' +%Y-%m-%dT%H:%m:00.00Z -u)
+  TIME=$(date --date '-2 minutes' +%Y-%m-%dT%H:%M:00Z -u)
   jq ".genesis_time = \"$TIME\"" ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json > ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json.new && mv ./${CHAIN_DIR}/backup/${CHAINID_1}/config/genesis.json{.new,}
+  jq ".genesis_time = \"$TIME\"" ./${CHAIN_DIR}/backup/${CHAINID_1}a/config/genesis.json > ./${CHAIN_DIR}/backup/${CHAINID_1}a/config/genesis.json.new && mv ./${CHAIN_DIR}/backup/${CHAINID_1}a/config/genesis.json{.new,}
+  jq ".genesis_time = \"$TIME\"" ./${CHAIN_DIR}/backup/${CHAINID_1}b/config/genesis.json > ./${CHAIN_DIR}/backup/${CHAINID_1}b/config/genesis.json.new && mv ./${CHAIN_DIR}/backup/${CHAINID_1}b/config/genesis.json{.new,}
 
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1} ${CHAIN_DIR}/${CHAINID_1}
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1}a ${CHAIN_DIR}/${CHAINID_1}a
@@ -89,7 +91,7 @@ $TZ_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_2 -y --k
 docker-compose up --force-recreate -d icq
 
 echo "Register $CHAINID_2 on quicksilver..."
-$QS_EXEC tx interchainstaking register connection-0 $CHAINID_2 uqatom uatom --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test --multi-send
+$QS_EXEC tx interchainstaking register connection-0 uqatom uatom cosmos --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test --multi-send
 
 sleep 15
 
