@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -56,7 +57,6 @@ func (s *KeeperTestSuite) SetupTest() {
 
 func (s *KeeperTestSuite) SetupRegisteredZones() {
 	zonemsg := icstypes.MsgRegisterZone{
-		Identifier:   "cosmos",
 		ConnectionId: s.path.EndpointA.ConnectionID,
 		LocalDenom:   "uqatom",
 		BaseDenom:    "uatom",
@@ -65,6 +65,8 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 
 	msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
 	ctx := s.chainA.GetContext()
+	// Set special testing context (e.g. for test / debug output)
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), "TEST", "TEST"))
 	_, err := msgSrv.RegisterZone(sdktypes.WrapSDKContext(ctx), &zonemsg)
 	s.Require().NoError(err)
 
@@ -73,6 +75,10 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 		Validators: s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()),
 	}
 	icqmsgSrv := icqkeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainQueryKeeper)
+
+	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
+	bz, err := s.GetQuicksilverApp(s.chainA).AppCodec().Marshal(&bondedQuery)
+
 	qmsg := icqtypes.MsgSubmitQueryResponse{
 		// target or source chain_id?
 		ChainId: s.chainB.ChainID,
@@ -80,7 +86,7 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 			s.path.EndpointA.ConnectionID,
 			s.chainB.ChainID,
 			"cosmos.staking.v1beta1.Query/Validators",
-			map[string]string{"status": stakingtypes.BondStatusBonded},
+			bz,
 		),
 		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshalJSON(&qvr),
 		Height:      s.chainB.CurrentHeader.Height,
