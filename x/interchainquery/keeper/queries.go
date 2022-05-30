@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -11,15 +10,14 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
-func GenerateQueryHash(connection_id string, chain_id string, query_type string, query_params map[string]string) string {
-	param_bytes, _ := json.Marshal(query_params)
-	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(connection_id+chain_id+query_type), param_bytes...)))
+func GenerateQueryHash(connection_id string, chain_id string, query_type string, request []byte) string {
+	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(connection_id+chain_id+query_type), request...)))
 }
 
 // ----------------------------------------------------------------
 
-func (k Keeper) NewQuery(ctx sdk.Context, connection_id string, chain_id string, query_type string, query_params map[string]string, period sdk.Int) *types.Query {
-	return &types.Query{Id: GenerateQueryHash(connection_id, chain_id, query_type, query_params), ConnectionId: connection_id, ChainId: chain_id, QueryType: query_type, QueryParameters: query_params, Period: period, LastHeight: sdk.ZeroInt()}
+func (k Keeper) NewQuery(ctx sdk.Context, connection_id string, chain_id string, query_type string, request []byte, period sdk.Int) *types.Query {
+	return &types.Query{Id: GenerateQueryHash(connection_id, chain_id, query_type, request), ConnectionId: connection_id, ChainId: chain_id, QueryType: query_type, Request: request, Period: period, LastHeight: sdk.ZeroInt()}
 }
 
 // GetQuery returns query
@@ -38,7 +36,6 @@ func (k Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) {
 func (k Keeper) SetQuery(ctx sdk.Context, query types.Query) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	bz := k.cdc.MustMarshal(&query)
-	k.Logger(ctx).Info("Created/updated query", "ID", query.Id)
 	store.Set([]byte(query.Id), bz)
 }
 

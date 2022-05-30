@@ -44,6 +44,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		ConnectionId:       msg.ConnectionId,
 		LocalDenom:         msg.LocalDenom,
 		BaseDenom:          msg.BaseDenom,
+		AccountPrefix:      msg.AccountPrefix,
 		RedemptionRate:     sdk.NewDec(1),
 		LastRedemptionRate: sdk.NewDec(1),
 		DelegatorIntent:    make(map[string]*types.DelegatorIntent),
@@ -66,14 +67,14 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		return nil, err
 	}
 
-	// generate fee account
-	portOwner = chainId + ".fee"
+	// generate withdrawal account
+	portOwner = chainId + ".withdrawal"
 	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 		return nil, err
 	}
 
-	// generate withdrawal account
-	portOwner = chainId + ".withdrawal"
+	// generate perf account
+	portOwner = chainId + ".performance"
 	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 		return nil, err
 	}
@@ -95,13 +96,29 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		}
 	}
 
+	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
+	bz1, err := k.cdc.Marshal(&bondedQuery)
+	if err != nil {
+		return &types.MsgRegisterZoneResponse{}, err
+	}
+	unbondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusUnbonded}
+	bz2, err := k.cdc.Marshal(&unbondedQuery)
+	if err != nil {
+		return &types.MsgRegisterZoneResponse{}, err
+	}
+	unbondingQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusUnbonding}
+	bz3, err := k.cdc.Marshal(&unbondingQuery)
+	if err != nil {
+		return &types.MsgRegisterZoneResponse{}, err
+	}
+
 	valsetInterval := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		msg.ConnectionId,
 		chainId,
 		"cosmos.staking.v1beta1.Query/Validators",
-		map[string]string{"status": stakingtypes.BondStatusBonded},
+		bz1,
 		sdk.NewInt(valsetInterval),
 		types.ModuleName,
 		cb,
@@ -111,7 +128,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		msg.ConnectionId,
 		chainId,
 		"cosmos.staking.v1beta1.Query/Validators",
-		map[string]string{"status": stakingtypes.BondStatusUnbonded},
+		bz2,
 		sdk.NewInt(valsetInterval),
 		types.ModuleName,
 		cb,
@@ -121,7 +138,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		msg.ConnectionId,
 		chainId,
 		"cosmos.staking.v1beta1.Query/Validators",
-		map[string]string{"status": stakingtypes.BondStatusUnbonding},
+		bz3,
 		sdk.NewInt(valsetInterval),
 		types.ModuleName,
 		cb,

@@ -1,14 +1,17 @@
 package keeper
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -191,27 +194,75 @@ func defaultAggregateIntents(ctx sdk.Context, zone types.RegisteredZone) map[str
 	return out
 }
 
-func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, address string, queryResult []byte) error {
-	queryRes := banktypes.QueryAllBalancesResponse{}
-	err := k.cdc.UnmarshalJSON(queryResult, &queryRes)
+var setAccountCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+	balancesStore := []byte(query.Request[1:])
+	accAddr, err := banktypes.AddressFromBalancesStore(balancesStore)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal validators info for zone", "zone", zone.ChainId, "err", err)
 		return err
 	}
 
+	coin := sdk.Coin{}
+	err = k.cdc.Unmarshal(args, &coin)
+	if err != nil {
+		k.Logger(ctx).Error("Unable to unmarshal balance info for zone", "zone", zone.ChainId, "err", err)
+		return err
+	}
+
+	if coin.IsNil() {
+		denom := ""
+
+		for i := 0; i < len(query.Request)-len(accAddr); i++ {
+			if bytes.Equal(query.Request[i:i+len(accAddr)], accAddr) {
+				denom = string(query.Request[i+len(accAddr):])
+				k.Logger(ctx).Error("denom found", "denom", denom)
+				break
+			}
+
+		}
+		// if balance is nil, the response sent back is nil, so we don't receive the denom. Override that now.
+		coin = sdk.NewCoin(denom, sdk.ZeroInt())
+	}
+
+	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
+	if err != nil {
+		return err
+	}
+
+	return SetAccountBalanceForDenom(k, ctx, zone, address, coin)
+}
+
+func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZone, address string, coin sdk.Coin) error {
+
 	switch true {
 	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
-		zone.DepositAddress.Balance = queryRes.Balances
+		existing := zone.DepositAddress.Balance.AmountOf(coin.Denom)
+		zone.DepositAddress.Balance = zone.DepositAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
+		zone.DepositAddress.BalanceWaitgroup = zone.DepositAddress.BalanceWaitgroup - 1
+		k.Logger(ctx).Info("Matched deposit address", "address", address, "wg", zone.DepositAddress.BalanceWaitgroup, "balance", zone.DepositAddress.Balance)
+		if zone.DepositAddress.BalanceWaitgroup == 0 {
+			k.depositInterval(ctx)(0, zone)
+		}
 	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
-		zone.WithdrawalAddress.Balance = queryRes.Balances
+		existing := zone.WithdrawalAddress.Balance.AmountOf(coin.Denom)
+		zone.WithdrawalAddress.Balance = zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
+		zone.WithdrawalAddress.BalanceWaitgroup = zone.WithdrawalAddress.BalanceWaitgroup - 1
+		k.Logger(ctx).Info("Matched withdrawal address", "address", address, "wg", zone.WithdrawalAddress.BalanceWaitgroup, "balance", zone.WithdrawalAddress.Balance)
 	default:
 		icaAccount, err := zone.GetDelegationAccountByAddress(address)
 		if err != nil {
 			return err
 		}
+		existing := icaAccount.Balance.AmountOf(coin.Denom)
+		k.Logger(ctx).Info("Matched delegate address", "address", address, "wg", icaAccount.BalanceWaitgroup, "balance", icaAccount.Balance)
+
+		icaAccount.Balance = icaAccount.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))) // zero this denom
+
 		// TODO: figure out how this impacts delegations in progress / race conditions (in most cases, the duplicate delegation will just fail)
-		if !queryRes.Balances.Empty() {
-			icaAccount.Balance = queryRes.Balances
+		if !icaAccount.Balance.Empty() {
 			claims := k.AllWithdrawalRecords(ctx, icaAccount.Address)
 			if len(claims) > 0 {
 				// should we reconcile here?
@@ -220,24 +271,100 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 					if claim.Status == WITHDRAW_STATUS_TOKENIZE {
 						// if the claim has tokenize status AND then remove any coins in the balance that match that validator.
 						// so we don't try to re-delegate any recently redeemed tokens that haven't been sent yet.
-						for _, coin := range queryRes.Balances {
-							if strings.HasPrefix(coin.Denom, claim.Validator) {
-								k.Logger(ctx).Info("Ignoring denom this iteration", "denom", coin.GetDenom())
-								queryRes.Balances = queryRes.Balances.Sub(sdk.NewCoins(coin))
-							}
+						if strings.HasPrefix(coin.Denom, claim.Validator) {
+							k.Logger(ctx).Info("Ignoring denom this iteration", "denom", coin.GetDenom())
+							coin = coin.Sub(claim.Amount)
 						}
 					}
 				}
 			}
-			if !queryRes.Balances.Empty() && !queryRes.Balances.IsZero() {
-				k.Logger(ctx).Info("Delegate account balance is non-zero; delegating!", "to_delegate", queryRes.Balances)
+		}
+
+		icaAccount.Balance = icaAccount.Balance.Add(coin)
+		k.Logger(ctx).Info("Matched delegate address", "address", address, "wg", icaAccount.BalanceWaitgroup, "balance", icaAccount.Balance)
+
+		if zone.WithdrawalAddress.BalanceWaitgroup == 0 {
+			if !icaAccount.Balance.Empty() {
+				k.Logger(ctx).Info("Delegate account balance is non-zero; delegating!", "to_delegate", icaAccount.Balance)
 				err := k.Delegate(ctx, zone, icaAccount)
 				if err != nil {
 					return err
 				}
 			}
 		}
+
+		icaAccount.BalanceWaitgroup = icaAccount.BalanceWaitgroup - 1
+
 	}
+	k.SetRegisteredZone(ctx, zone)
+	return nil
+}
+
+func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, address string, queryResult []byte) error {
+	queryRes := banktypes.QueryAllBalancesResponse{}
+	err := k.cdc.Unmarshal(queryResult, &queryRes)
+	if err != nil {
+		k.Logger(ctx).Error("Unable to unmarshal balance", "zone", zone.ChainId, "err", err)
+		return err
+	}
+	_, addr, _ := bech32.DecodeAndConvert(address)
+	data := banktypes.CreateAccountBalancesPrefix(addr)
+
+	var icaAccount *types.ICAAccount
+
+	switch true {
+	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
+		icaAccount = zone.DepositAddress
+	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
+		icaAccount = zone.WithdrawalAddress
+	default:
+		icaAccount, err = zone.GetDelegationAccountByAddress(address)
+		if err != nil {
+			return err
+		}
+	}
+
+	if icaAccount == nil {
+		return fmt.Errorf("unable to determine account for address %s", address)
+	}
+
+	for _, coin := range zone.DepositAddress.Balance {
+		if queryRes.Balances.AmountOf(coin.Denom).Equal(sdk.ZeroInt()) {
+			// coin we used to have is now zero - also validate this.
+			key := "store/bank/key"
+			k.Logger(ctx).Error("Querying for value", "key", key, "denom", coin.Denom)
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zone.ConnectionId,
+				zone.ChainId,
+				key,
+				append(data, []byte(coin.Denom)...),
+				sdk.NewInt(-1),
+				types.ModuleName,
+				setAccountCb,
+			)
+			icaAccount.BalanceWaitgroup += 1
+
+		}
+
+	}
+
+	for _, coin := range queryRes.Balances {
+		key := "store/bank/key"
+		k.Logger(ctx).Error("Querying for value", "key", key, "denom", coin.Denom)
+		k.ICQKeeper.MakeRequest(
+			ctx,
+			zone.ConnectionId,
+			zone.ChainId,
+			key,
+			append(data, []byte(coin.Denom)...),
+			sdk.NewInt(-1),
+			types.ModuleName,
+			setAccountCb,
+		)
+		icaAccount.BalanceWaitgroup += 1
+	}
+
 	k.SetRegisteredZone(ctx, zone)
 	return nil
 }

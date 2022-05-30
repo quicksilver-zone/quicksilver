@@ -75,6 +75,10 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 		Validators: s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()),
 	}
 	icqmsgSrv := icqkeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainQueryKeeper)
+
+	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
+	bz, err := s.GetQuicksilverApp(s.chainA).AppCodec().Marshal(&bondedQuery)
+
 	qmsg := icqtypes.MsgSubmitQueryResponse{
 		// target or source chain_id?
 		ChainId: s.chainB.ChainID,
@@ -82,7 +86,7 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 			s.path.EndpointA.ConnectionID,
 			s.chainB.ChainID,
 			"cosmos.staking.v1beta1.Query/Validators",
-			map[string]string{"status": stakingtypes.BondStatusBonded},
+			bz,
 		),
 		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshalJSON(&qvr),
 		Height:      s.chainB.CurrentHeader.Height,

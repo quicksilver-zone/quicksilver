@@ -454,14 +454,14 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, 
 
 func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.RegisteredZone, delegatorAddress string, args []byte) error {
 	var response stakingtypes.QueryDelegatorDelegationsResponse
-	err := k.cdc.UnmarshalJSON(args, &response)
+	err := k.cdc.Unmarshal(args, &response)
 	if err != nil {
 		return err
 	}
 
 	delegatorSum := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
 	for _, delegation := range response.DelegationResponses {
-		err = k.UpdateDelegationRecordForAddress(ctx, delegatorAddress, delegation.Delegation.ValidatorAddress, delegation.Balance)
+		err = k.UpdateDelegationRecordForAddressWithZone(ctx, delegatorAddress, delegation.Delegation.ValidatorAddress, delegation.Balance, zone)
 		delegatorSum = delegatorSum.Add(delegation.Balance)
 		if err != nil {
 			return err
@@ -480,9 +480,8 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.R
 
 	return nil
 }
-func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin) error {
 
-	var validator *types.Validator
+func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin) error {
 	var err error
 
 	zone, err := k.GetZoneFromContext(ctx)
@@ -490,8 +489,13 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 		k.Logger(ctx).Error(err.Error())
 		return err
 	}
+	return k.UpdateDelegationRecordForAddressWithZone(ctx, delegatorAddress, validatorAddress, amount, *zone)
+}
 
-	validator, err = zone.GetValidatorByValoper(validatorAddress)
+func (k *Keeper) UpdateDelegationRecordForAddressWithZone(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin, zone types.RegisteredZone) error {
+	var validator *types.Validator
+
+	validator, err := zone.GetValidatorByValoper(validatorAddress)
 	if err != nil {
 		return err
 	}
@@ -518,7 +522,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 
 	}
 
-	k.SetRegisteredZone(ctx, *zone)
+	k.SetRegisteredZone(ctx, zone)
 	return nil
 }
 
@@ -542,12 +546,19 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.
 		// interface assertion
 		var cb Callback = DistributeRewardsFromWithdrawAccount
 
+		balanceQuery := banktypes.QueryAllBalancesRequest{Address: zone.WithdrawalAddress.Address}
+		bz, err := k.cdc.Marshal(&balanceQuery)
+		if err != nil {
+			return err
+		}
+
 		// total rewards balance withdrawn
 		k.ICQKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
-			zone.ChainId, "cosmos.bank.v1beta1.Query/AllBalances",
-			map[string]string{"address": zone.WithdrawalAddress.Address},
+			zone.ChainId,
+			"cosmos.bank.v1beta1.Query/AllBalances",
+			bz,
 			sdk.NewInt(int64(-1)),
 			types.ModuleName,
 			cb,
@@ -567,7 +578,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	// query all balances as chains can accumulate fees in different denoms.
 	withdrawBalance := banktypes.QueryAllBalancesResponse{}
 
-	err := k.cdc.UnmarshalJSON(args, &withdrawBalance)
+	err := k.cdc.Unmarshal(args, &withdrawBalance)
 	if err != nil {
 		return err
 	}

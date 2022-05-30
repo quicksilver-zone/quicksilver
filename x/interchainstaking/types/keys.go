@@ -27,6 +27,10 @@ const (
 	DelegateInterval            = 25
 	DelegateDelegationsInterval = 100 // probably wants to be somewhere in the region of 1000 (c. 3h) in prod with 7s blocks.
 	ValidatorSetInterval        = 25
+
+	QueryParameters                   = "params"
+	QueryRegisteredZonesInfo          = "zones"
+	QueryRegisteredZoneDepositAddress = "zones/deposit_address"
 )
 
 // prefix bytes for the epoch persistent store

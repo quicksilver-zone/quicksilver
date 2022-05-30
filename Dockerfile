@@ -1,11 +1,12 @@
 FROM golang:1.17-alpine3.15 AS builder
+RUN apk add --no-cache make git gcc musl-dev openssl-dev linux-headers 
 
 WORKDIR /src/app/
+
 COPY go.mod go.sum* ./
 RUN go mod download
-COPY . .
 
-RUN apk add --no-cache make git gcc musl-dev openssl-dev linux-headers 
+COPY . .
 RUN make build
 
 # Add to a distroless container

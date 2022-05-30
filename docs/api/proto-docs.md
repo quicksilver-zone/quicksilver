@@ -20,7 +20,6 @@
     - [DataPoint](#quicksilver.interchainquery.v1.DataPoint)
     - [GenesisState](#quicksilver.interchainquery.v1.GenesisState)
     - [Query](#quicksilver.interchainquery.v1.Query)
-    - [Query.QueryParametersEntry](#quicksilver.interchainquery.v1.Query.QueryParametersEntry)
   
 - [quicksilver/interchainquery/v1/messages.proto](#quicksilver/interchainquery/v1/messages.proto)
     - [MsgSubmitQueryResponse](#quicksilver.interchainquery.v1.MsgSubmitQueryResponse)
@@ -276,25 +275,9 @@ GenesisState defines the epochs module's genesis state.
 | `connection_id` | [string](#string) |  |  |
 | `chain_id` | [string](#string) |  |  |
 | `query_type` | [string](#string) |  |  |
-| `query_parameters` | [Query.QueryParametersEntry](#quicksilver.interchainquery.v1.Query.QueryParametersEntry) | repeated |  |
+| `request` | [bytes](#bytes) |  |  |
 | `period` | [string](#string) |  |  |
 | `last_height` | [string](#string) |  |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainquery.v1.Query.QueryParametersEntry"></a>
-
-### Query.QueryParametersEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [string](#string) |  |  |
 
 
 
@@ -328,6 +311,7 @@ MsgSubmitQueryResponse represents a message type to fulfil a query request.
 | `chain_id` | [string](#string) |  |  |
 | `query_id` | [string](#string) |  |  |
 | `result` | [bytes](#bytes) |  |  |
+| `proof_ops` | [tendermint.crypto.ProofOps](#tendermint.crypto.ProofOps) |  |  |
 | `height` | [int64](#int64) |  |  |
 | `from_address` | [string](#string) |  |  |
 
@@ -435,7 +419,8 @@ GenesisState defines the interchainstaking module's genesis state.
 | `address` | [string](#string) |  |  |
 | `balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated | balance defines the different coins this balance holds. |
 | `delegated_balance` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
-| `port_name` | [string](#string) |  | Delegations here? or against validator? |
+| `port_name` | [string](#string) |  |  |
+| `balance_waitgroup` | [uint32](#uint32) |  | Delegations here? or against validator? |
 
 
 
@@ -508,7 +493,10 @@ GenesisState defines the interchainstaking module's genesis state.
 | `connection_id` | [string](#string) |  |  |
 | `chain_id` | [string](#string) |  |  |
 | `deposit_address` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) |  |  |
+| `withdrawal_address` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) |  |  |
+| `performance_address` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) |  |  |
 | `delegation_addresses` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) | repeated |  |
+| `account_prefix` | [string](#string) |  |  |
 | `local_denom` | [string](#string) |  |  |
 | `base_denom` | [string](#string) |  |  |
 | `redemption_rate` | [string](#string) |  |  |
@@ -517,9 +505,7 @@ GenesisState defines the interchainstaking module's genesis state.
 | `aggregate_intent` | [RegisteredZone.AggregateIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.AggregateIntentEntry) | repeated |  |
 | `multi_send` | [bool](#bool) |  |  |
 | `last_redemption_rate` | [string](#string) |  |  |
-| `withdrawal_address` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) |  |  |
 | `withdrawal_waitgroup` | [uint32](#uint32) |  |  |
-| `performance_address` | [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount) |  |  |
 
 
 
@@ -656,6 +642,7 @@ deprecate in favour of governance vote.
 | `connection_id` | [string](#string) |  |  |
 | `base_denom` | [string](#string) |  |  |
 | `local_denom` | [string](#string) |  |  |
+| `account_prefix` | [string](#string) |  |  |
 | `from_address` | [string](#string) |  |  |
 | `multi_send` | [bool](#bool) |  |  |
 

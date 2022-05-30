@@ -1,12 +1,13 @@
 package keeper
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
@@ -17,11 +18,12 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v3/modules/light-clients/07-tendermint/types"
 	"github.com/tendermint/tendermint/libs/log"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+
+	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // Keeper of this module maintains collections of registered zones.
@@ -65,6 +67,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
+func (k Keeper) GetCodec() codec.Codec {
+	return k.cdc
+}
+
 // ClaimCapability claims the channel capability passed via the OnOpenChanInit callback
 func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
@@ -96,24 +102,88 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 
 func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZone, data []byte) error {
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
-	err := k.cdc.UnmarshalJSON(data, &validatorsRes)
+	err := k.cdc.Unmarshal(data, &validatorsRes)
 	if err != nil {
 		k.Logger(ctx).Error("Unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
 		return err
 	}
 
 	for _, validator := range validatorsRes.Validators {
+		_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
 		val, err := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
 		if err != nil {
-			k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
-			zoneInfo.Validators = append(zoneInfo.GetValidatorsSorted(), &types.Validator{
-				ValoperAddress: validator.OperatorAddress,
-				CommissionRate: validator.GetCommission(),
-				VotingPower:    sdk.NewDecFromInt(validator.Tokens),
-				Delegations:    []*types.Delegation{},
-			})
+			k.Logger(ctx).Info("Unable to find validator - fetching proof...", "valoper", validator.OperatorAddress)
+
+			data := stakingTypes.GetValidatorKey(addr)
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zoneInfo.ConnectionId,
+				zoneInfo.ChainId,
+				"store/staking/key",
+				data,
+				sdk.NewInt(-1),
+				types.ModuleName,
+				cb,
+			)
 			continue
 		}
+
+		if !val.CommissionRate.Equal(validator.GetCommission()) || !val.VotingPower.Equal(sdk.NewDecFromInt(validator.Tokens)) {
+			k.Logger(ctx).Info("Validator state change; fetching proof", "valoper", validator.OperatorAddress)
+
+			if err != nil {
+				return err
+			}
+
+			data := stakingTypes.GetValidatorKey(addr)
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zoneInfo.ConnectionId,
+				zoneInfo.ChainId,
+				"store/staking/key",
+				data,
+				sdk.NewInt(-1),
+				types.ModuleName,
+				cb,
+			)
+		}
+	}
+
+	// also do this for Unbonded and Unbonding
+	k.SetRegisteredZone(ctx, zoneInfo)
+	return nil
+}
+
+var cb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	k.Logger(ctx).Info("Received provable payload", "data", args)
+	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+	SetValidatorForZone(k, ctx, zone, args)
+	return nil
+}
+
+func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZone, data []byte) error {
+	validator := stakingTypes.Validator{}
+	err := k.cdc.Unmarshal(data, &validator)
+	if err != nil {
+		k.Logger(ctx).Error("Unable to unmarshal validator info for zone", "zone", zoneInfo.ChainId, "err", err)
+		return err
+	}
+
+	val, err := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
+	if err != nil {
+		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
+
+		zoneInfo.Validators = append(zoneInfo.GetValidatorsSorted(), &types.Validator{
+			ValoperAddress: validator.OperatorAddress,
+			CommissionRate: validator.GetCommission(),
+			VotingPower:    sdk.NewDecFromInt(validator.Tokens),
+			Delegations:    []*types.Delegation{},
+		})
+
+	} else {
 
 		if !val.CommissionRate.Equal(validator.GetCommission()) {
 			val.CommissionRate = validator.GetCommission()
@@ -126,7 +196,6 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZo
 		}
 	}
 
-	// also do this for Unbonded and Unbonding
 	k.SetRegisteredZone(ctx, zoneInfo)
 	return nil
 }
@@ -138,20 +207,20 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 				k.Logger(ctx).Info("Balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
 
 				var callback Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-					txs := coretypes.ResultTxSearch{}
-					err := json.Unmarshal(args, &txs)
+					txs := tx.GetTxsEventResponse{}
+					err := k.cdc.Unmarshal(args, &txs)
 					if err != nil {
 						k.Logger(ctx).Error("Unable to unmarshal txs for deposit account", "deposit_address", zoneInfo.DepositAddress.GetAddress(), "err", err)
 						return err
 					}
 
-					for _, tx := range txs.Txs {
+					for _, tx := range txs.TxResponses {
 						k.HandleReceiptTransaction(ctx, tx, zoneInfo)
 					}
 					return nil
 				}
-
-				k.ICQKeeper.MakeRequest(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.tx.v1beta1.Query/GetTxEvents", map[string]string{"transfer.recipient": zoneInfo.DepositAddress.GetAddress()}, sdk.NewInt(-1), types.ModuleName, callback)
+				req := tx.GetTxsEventRequest{Events: []string{"transfer.recipient='" + zoneInfo.DepositAddress.GetAddress() + "'"}, Pagination: &query.PageRequest{Offset: 0, Limit: 100, Reverse: true}}
+				k.ICQKeeper.MakeRequest(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, callback)
 
 			}
 		} else {
@@ -160,37 +229,6 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 		return false
 	}
 }
-
-// // temporary: this callback should be registered when the delegate account is created, in ibc_module.go but is currently here to
-// // avoid a testnet restart (same logic, just called in a different way).
-
-// func (k Keeper) delegateInterval(ctx sdk.Context) zoneItrFn {
-// 	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
-// 		for _, ica := range zoneInfo.DelegationAddresses {
-// 			// emit a single balance query for each delegate account
-
-// 			var cb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-// 				zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-// 				if !found {
-// 					return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-// 				}
-// 				return k.SetAccountBalance(ctx, zone, query.QueryParameters["address"], args)
-// 			}
-
-// 			k.ICQKeeper.MakeRequest(
-// 				ctx,
-// 				zoneInfo.ConnectionId,
-// 				zoneInfo.ChainId,
-// 				"cosmos.bank.v1beta1.Query/AllBalances",
-// 				map[string]string{"address": ica.Address},
-// 				sdk.NewInt(-1),
-// 				types.ModuleName,
-// 				cb,
-// 			)
-// 		}
-// 		return false
-// 	}
-// }
 
 func (k *Keeper) GetParam(ctx sdk.Context, key []byte) uint64 {
 	var out uint64

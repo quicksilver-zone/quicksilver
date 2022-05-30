@@ -13,8 +13,9 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *t
 	var msgs []sdk.Msg
 
 	balance := account.Balance
+
 	// deterministically sort balance
-	sort.Slice(balance, func(i, j int) bool { return account.Balance[i].Denom > account.Balance[j].Denom })
+	sort.Slice(balance, func(i, j int) bool { return balance[i].Denom > balance[j].Denom })
 
 	for _, asset := range balance {
 		if asset.Denom == zone.GetBaseDenom() {
@@ -48,7 +49,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone type
 	var msgs []sdk.Msg
 
 	delegatorRewards := distrTypes.QueryDelegationTotalRewardsResponse{}
-	err := k.cdc.UnmarshalJSON(response, &delegatorRewards)
+	err := k.cdc.Unmarshal(response, &delegatorRewards)
 	if err != nil {
 		return err
 	}
