@@ -1,0 +1,7 @@
+FROM ubuntu:jammy
+
+COPY ./build/quicksilverd /bin/quicksilverd
+
+RUN adduser --system --home /quicksilver --disabled-password --disabled-login quicksilver --uid 1000
+USER quicksilver
+CMD ["quicksilverd", "start"]

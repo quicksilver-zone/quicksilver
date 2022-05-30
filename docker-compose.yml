@@ -1,5 +1,5 @@
 version: '3.8'
-services: 
+services:
   quicksilver:
     image: quicksilverzone/quicksilver:latest
     hostname: quicksilver

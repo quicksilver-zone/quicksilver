@@ -147,6 +147,9 @@ build-reproducible: go.sum
 build-docker:
 	$(DOCKERCOMPOSE) build quicksilver
 
+build-docker-local: build
+	$(DOCKER) build -f Dockerfile.local . -t quicksilverzone/quicksilver:latest
+
 push-docker: build-docker
 	$(DOCKERCOMPOSE) push quicksilver
 
