@@ -1,22 +1,19 @@
 package types
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (v Validator) GetDelegationForDelegator(delegator string) (*Delegation, error) {
-	for _, d := range v.Delegations {
-		if d.DelegationAddress == delegator {
-			return d, nil
-		}
-	}
-	return nil, fmt.Errorf("no delegation for for delegator %s", delegator)
+func (v Validator) SharesToTokens(shares sdk.Dec) sdk.Int {
+	return v.VotingPower.ToDec().Quo(v.DelegatorShares).TruncateInt()
 }
 
 func (di DelegatorIntent) AddOrdinal(multiplier sdk.Int, intents map[string]*ValidatorIntent) DelegatorIntent {
+	if len(intents) == 0 {
+		return di
+	}
 	di.Ordinalize(multiplier)
+
 OUTER:
 	for _, i := range intents {
 		for _, j := range di.Intents {

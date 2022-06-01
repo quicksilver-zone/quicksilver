@@ -128,7 +128,7 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZo
 			continue
 		}
 
-		if !val.CommissionRate.Equal(validator.GetCommission()) || !val.VotingPower.Equal(sdk.NewDecFromInt(validator.Tokens)) {
+		if !val.CommissionRate.Equal(validator.GetCommission()) || !val.VotingPower.Equal(validator.Tokens) || !val.DelegatorShares.Equal(validator.DelegatorShares) {
 			k.Logger(ctx).Info("Validator state change; fetching proof", "valoper", validator.OperatorAddress)
 
 			if err != nil {
@@ -177,10 +177,10 @@ func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZon
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
 		zoneInfo.Validators = append(zoneInfo.GetValidatorsSorted(), &types.Validator{
-			ValoperAddress: validator.OperatorAddress,
-			CommissionRate: validator.GetCommission(),
-			VotingPower:    sdk.NewDecFromInt(validator.Tokens),
-			Delegations:    []*types.Delegation{},
+			ValoperAddress:  validator.OperatorAddress,
+			CommissionRate:  validator.GetCommission(),
+			VotingPower:     validator.Tokens,
+			DelegatorShares: validator.DelegatorShares,
 		})
 
 	} else {
@@ -190,9 +190,14 @@ func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZon
 			k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
 		}
 
-		if !val.VotingPower.Equal(sdk.NewDecFromInt(validator.Tokens)) {
-			val.VotingPower = sdk.NewDecFromInt(validator.Tokens)
-			k.Logger(ctx).Info("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens.ToDec())
+		if !val.VotingPower.Equal(validator.Tokens) {
+			val.VotingPower = validator.Tokens
+			k.Logger(ctx).Info("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens)
+		}
+
+		if !val.DelegatorShares.Equal(validator.DelegatorShares) {
+			val.DelegatorShares = validator.DelegatorShares
+			k.Logger(ctx).Info("Validator delegator shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.DelegatorShares, "newShares", validator.DelegatorShares)
 		}
 	}
 
@@ -214,8 +219,8 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 						return err
 					}
 
-					for _, tx := range txs.TxResponses {
-						k.HandleReceiptTransaction(ctx, tx, zoneInfo)
+					for i, tx := range txs.TxResponses {
+						k.HandleReceiptTransaction(ctx, tx, txs.Txs[i], zoneInfo)
 					}
 					return nil
 				}

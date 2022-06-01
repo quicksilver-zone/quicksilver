@@ -9,6 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
@@ -18,6 +19,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -48,12 +50,13 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	var packetData icatypes.InterchainAccountPacketData
 	err = icatypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &packetData)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal acknowledgement packet data", "error", err, "data", packetData)
+		k.Logger(ctx).Error("unable to unmarshal acknowledgement packet data", "error", err, "data", packetData)
 		return err
 	}
 	msgs, err := icatypes.DeserializeCosmosTx(k.cdc, packetData.Data)
 	if err != nil {
-		k.Logger(ctx).Info("Error decoding messages", "err", err)
+		k.Logger(ctx).Error("unable to decode messages", "err", err)
+		return err
 	}
 
 	for msgIndex, msgData := range txMsgData.Data {
@@ -394,12 +397,13 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 	if err != nil {
 		return err
 	}
-	err = k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount)
+	zone := k.GetZoneForDelegateAccount(ctx, redeemMsg.DelegatorAddress)
+
+	err = k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
 	if err != nil {
 		return err
 	}
-	zone, da := k.GetICAForDelegateAccount(ctx, redeemMsg.DelegatorAddress)
-	da.DelegatedBalance = da.DelegatedBalance.Add(amount)
+
 	k.SetRegisteredZone(ctx, *zone)
 	return nil
 }
@@ -412,12 +416,13 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
 		k.Logger(ctx).Error("unable to cast source message to MsgDelegate")
 		return fmt.Errorf("unable to cast source message to MsgDelegate")
 	}
-	err := k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount)
+	zone := k.GetZoneForDelegateAccount(ctx, delegateMsg.DelegatorAddress)
+
+	err := k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
 	if err != nil {
 		return err
 	}
-	zone, da := k.GetICAForDelegateAccount(ctx, delegateMsg.DelegatorAddress)
-	da.DelegatedBalance = da.DelegatedBalance.Add(delegateMsg.Amount)
+
 	k.SetRegisteredZone(ctx, *zone)
 	return nil
 }
@@ -452,77 +457,119 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, 
 
 }
 
-func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.RegisteredZone, delegatorAddress string, args []byte) error {
+var delegationCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+
+	delegation := stakingtypes.Delegation{}
+	err := k.cdc.Unmarshal(args, &delegation)
+	if err != nil {
+		return err
+	}
+
+	val, err := zone.GetValidatorByValoper(delegation.ValidatorAddress)
+	if err != nil {
+		return err
+	}
+
+	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), &zone, true)
+}
+
+func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.RegisteredZone, delegatorAddress string, args []byte) error {
 	var response stakingtypes.QueryDelegatorDelegationsResponse
 	err := k.cdc.Unmarshal(args, &response)
 	if err != nil {
 		return err
 	}
 
-	delegatorSum := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
-	for _, delegation := range response.DelegationResponses {
-		err = k.UpdateDelegationRecordForAddressWithZone(ctx, delegatorAddress, delegation.Delegation.ValidatorAddress, delegation.Balance, zone)
-		delegatorSum = delegatorSum.Add(delegation.Balance)
-		if err != nil {
-			return err
-		}
+	_, delAddr, _ := bech32.DecodeAndConvert(delegatorAddress)
+	delegatorDelegations := k.GetDelegatorDelegations(ctx, zone, delAddr)
+	delMap := make(map[string]types.Delegation, len(delegatorDelegations))
+	for _, del := range delegatorDelegations {
+		delMap[del.ValidatorAddress] = del
 	}
 
-	zone.WithdrawalWaitgroup--
-	k.Logger(ctx).Info("Decrementing waitgroup", "value", zone.WithdrawalWaitgroup)
 	da, err := zone.GetDelegationAccountByAddress(delegatorAddress)
 	if err != nil {
 		return err
 	}
-	da.DelegatedBalance = delegatorSum
 
-	k.SetRegisteredZone(ctx, zone)
+	for _, delegationRecord := range response.DelegationResponses {
+
+		_, valAddr, _ := bech32.DecodeAndConvert(delegationRecord.Delegation.ValidatorAddress)
+		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+		delegation, ok := delMap[delegationRecord.Delegation.ValidatorAddress]
+		if !ok || !delegation.Amount.Equal(delegationRecord.GetBalance()) { // new or updated delegation
+			k.Logger(ctx).Info("Outdated delegation record - fetching proof...", "valoper", delegationRecord.Delegation.ValidatorAddress)
+
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zone.ConnectionId,
+				zone.ChainId,
+				"store/staking/key",
+				data,
+				sdk.NewInt(-1),
+				types.ModuleName,
+				delegationCb,
+			)
+		}
+
+		if ok {
+			delete(delMap, delegationRecord.Delegation.ValidatorAddress)
+		}
+	}
+
+	for _, existingDelegation := range delMap {
+		_, valAddr, _ := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
+		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+		k.RemoveDelegation(ctx, zone, existingDelegation)
+		da.DelegatedBalance = da.DelegatedBalance.Sub(existingDelegation.Amount) // remove old delegation from da.DelegatedBalance
+		// send request to prove delegation no longer exists.
+		k.ICQKeeper.MakeRequest(
+			ctx,
+			zone.ConnectionId,
+			zone.ChainId,
+			"store/staking/key",
+			data,
+			sdk.NewInt(-1),
+			types.ModuleName,
+			delegationCb,
+		)
+	}
+
+	k.SetRegisteredZone(ctx, *zone)
 
 	return nil
 }
 
-func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin) error {
-	var err error
+func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin, zone *types.RegisteredZone, absolute bool) error {
 
-	zone, err := k.GetZoneFromContext(ctx)
-	if err != nil {
-		k.Logger(ctx).Error(err.Error())
-		return err
-	}
-	return k.UpdateDelegationRecordForAddressWithZone(ctx, delegatorAddress, validatorAddress, amount, *zone)
-}
+	delegation, found := k.GetDelegation(ctx, zone, delegatorAddress, validatorAddress)
+	da, _ := zone.GetDelegationAccountByAddress(delegatorAddress)
 
-func (k *Keeper) UpdateDelegationRecordForAddressWithZone(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin, zone types.RegisteredZone) error {
-	var validator *types.Validator
-
-	validator, err := zone.GetValidatorByValoper(validatorAddress)
-	if err != nil {
-		return err
-	}
-
-	delegation, err := validator.GetDelegationForDelegator(delegatorAddress)
-	if err != nil {
-		if validator.Delegations == nil {
-			validator.Delegations = []*types.Delegation{}
-		}
-		k.Logger(ctx).Info("Adding delegation tuple", "delegator", delegatorAddress, "validator", validator.ValoperAddress, "amount", amount.Amount)
-		delegation = &types.Delegation{
-			DelegationAddress: delegatorAddress,
-			ValidatorAddress:  validator.ValoperAddress,
-			Amount:            amount.Amount.ToDec(),
-			Rewards:           sdk.Coins{},
-			RedelegationEnd:   0,
-		}
-		validator.Delegations = append(validator.Delegations, delegation)
+	if !found {
+		k.Logger(ctx).Info("Adding delegation tuple", "delegator", delegatorAddress, "validator", validatorAddress, "amount", amount.Amount)
+		delegation = types.NewDelegation(delegatorAddress, validatorAddress, amount)
+		da.DelegatedBalance = da.DelegatedBalance.Add(amount)
 	} else {
 		if !delegation.Amount.Equal(amount.Amount.ToDec()) {
-			k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validator.ValoperAddress, "old_amount", delegation.Amount, "inbound_amount", amount.Amount)
-			delegation.Amount = delegation.Amount.Add(amount.Amount.ToDec())
+			k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", delegation.Amount, "inbound_amount", amount.Amount)
+			if !absolute {
+				da.DelegatedBalance = da.DelegatedBalance.Add(amount)
+				delegation.Amount = delegation.Amount.Add(amount)
+			} else {
+				da.DelegatedBalance = da.DelegatedBalance.Sub(delegation.Amount).Add(amount)
+				delegation.Amount = amount
+			}
 		}
-
 	}
+	k.SetDelegation(ctx, zone, delegation)
+	k.SetRegisteredZone(ctx, *zone)
 
-	k.SetRegisteredZone(ctx, zone)
 	return nil
 }
 
@@ -537,8 +584,6 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.
 	}
 	// decrement withdrawal waitgroup
 	zone.WithdrawalWaitgroup--
-	k.Logger(ctx).Error("Withdrawal waitgroup DOWN", "value", zone.WithdrawalWaitgroup)
-
 	k.SetRegisteredZone(ctx, *zone)
 
 	switch zone.WithdrawalWaitgroup {
@@ -643,6 +688,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 
 func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone, epochRewards sdk.Coin) {
 	ratio := zone.GetDelegatedAmount().Add(epochRewards).Amount.ToDec().Quo(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec())
+	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
 	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec(), "lv", zone.GetDelegatedAmount().Add(epochRewards).Amount.ToDec())

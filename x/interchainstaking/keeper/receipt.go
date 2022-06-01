@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	tx "github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
@@ -17,8 +18,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 )
 
-func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *sdk.TxResponse, zone types.RegisteredZone) {
-	hash := tx.TxHash
+func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.RegisteredZone) {
+	hash := txr.TxHash
+	memo := txn.GetBody().Memo
 
 	_, found := k.GetReceipt(ctx, GetReceiptKey(zone, hash))
 	if found {
@@ -29,7 +31,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *sdk.TxResponse, zo
 	senderAddress := "unset"
 	coins := sdk.Coins{}
 
-	for _, event := range tx.Events {
+	for _, event := range txr.Events {
 		if event.Type == "transfer" {
 			attrs := attributesToMap(event.Attributes)
 			sender := attrs["sender"]
@@ -77,7 +79,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, tx *sdk.TxResponse, zo
 	// create receipt
 	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
 
-	k.UpdateIntent(ctx, accAddress, zone, coins)
+	k.UpdateIntent(ctx, accAddress, zone, coins, memo)
 	if err := k.MintQAsset(ctx, accAddress, zone, coins); err != nil {
 		k.Logger(ctx).Error("Unable to mint QAsset. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 	}

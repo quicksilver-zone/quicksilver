@@ -52,15 +52,6 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	}
 	k.SetRegisteredZone(ctx, zone)
 
-	var cb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-		zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-		if !found {
-			return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-		}
-		SetValidatorsForZone(k, ctx, zone, args)
-		return nil
-	}
-
 	// generate deposit account
 	portOwner := chainId + ".deposit"
 	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
@@ -96,53 +87,10 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		}
 	}
 
-	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
-	bz1, err := k.cdc.Marshal(&bondedQuery)
+	err = k.EmitValsetRequery(ctx, msg.ConnectionId, chainId)
 	if err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
-	unbondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusUnbonded}
-	bz2, err := k.cdc.Marshal(&unbondedQuery)
-	if err != nil {
-		return &types.MsgRegisterZoneResponse{}, err
-	}
-	unbondingQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusUnbonding}
-	bz3, err := k.cdc.Marshal(&unbondingQuery)
-	if err != nil {
-		return &types.MsgRegisterZoneResponse{}, err
-	}
-
-	valsetInterval := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
-	k.ICQKeeper.MakeRequest(
-		ctx,
-		msg.ConnectionId,
-		chainId,
-		"cosmos.staking.v1beta1.Query/Validators",
-		bz1,
-		sdk.NewInt(valsetInterval),
-		types.ModuleName,
-		cb,
-	)
-	k.ICQKeeper.MakeRequest(
-		ctx,
-		msg.ConnectionId,
-		chainId,
-		"cosmos.staking.v1beta1.Query/Validators",
-		bz2,
-		sdk.NewInt(valsetInterval),
-		types.ModuleName,
-		cb,
-	)
-	k.ICQKeeper.MakeRequest(
-		ctx,
-		msg.ConnectionId,
-		chainId,
-		"cosmos.staking.v1beta1.Query/Validators",
-		bz3,
-		sdk.NewInt(valsetInterval),
-		types.ModuleName,
-		cb,
-	)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -249,7 +197,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	intentMap := userIntent.ToMap(native_tokens)
 	k.Logger(ctx).Error("DEBUG 11", "intent", intentMap)
 
-	targets := zone.GetRedemptionTargets(intentMap, zone.BaseDenom) // map[string][string]sdk.Coin
+	targets := k.GetRedemptionTargets(ctx, zone, intentMap) // map[string][string]sdk.Coin
 	k.Logger(ctx).Error("DEBUG 12")
 
 	if len(targets) == 0 {
@@ -363,5 +311,65 @@ func (k msgServer) validateIntents(zone types.RegisteredZone, intents []*types.V
 		return types.NewMultiError(errors)
 	}
 
+	return nil
+}
+
+func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId string) error {
+	var cb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+		zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+		if !found {
+			return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		}
+		SetValidatorsForZone(k, ctx, zone, args)
+		return nil
+	}
+
+	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
+	bz1, err := k.cdc.Marshal(&bondedQuery)
+	if err != nil {
+		return err
+	}
+	unbondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusUnbonded}
+	bz2, err := k.cdc.Marshal(&unbondedQuery)
+	if err != nil {
+		return err
+	}
+	unbondingQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusUnbonding}
+	bz3, err := k.cdc.Marshal(&unbondingQuery)
+	if err != nil {
+		return err
+	}
+
+	valsetInterval := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		connectionId,
+		chainId,
+		"cosmos.staking.v1beta1.Query/Validators",
+		bz1,
+		sdk.NewInt(valsetInterval),
+		types.ModuleName,
+		cb,
+	)
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		connectionId,
+		chainId,
+		"cosmos.staking.v1beta1.Query/Validators",
+		bz2,
+		sdk.NewInt(valsetInterval),
+		types.ModuleName,
+		cb,
+	)
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		connectionId,
+		chainId,
+		"cosmos.staking.v1beta1.Query/Validators",
+		bz3,
+		sdk.NewInt(valsetInterval),
+		types.ModuleName,
+		cb,
+	)
 	return nil
 }

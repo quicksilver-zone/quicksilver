@@ -116,7 +116,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.RegisteredZone) {
 	k.SetRegisteredZone(ctx, zone)
 }
 
-func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types.RegisteredZone, inAmount sdk.Coins) {
+func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types.RegisteredZone, inAmount sdk.Coins, memo string) {
 	// this is here because we need access to the bankKeeper to ordinalize intent
 	intent, _ := k.GetIntent(ctx, zone, sender.String())
 
@@ -128,5 +128,6 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 	}
 	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(balance.Balance.Amount)).TruncateInt()
 	intent = intent.AddOrdinal(baseBalance, zone.ConvertCoinsToOrdinalIntents(ctx, inAmount))
+	intent = intent.AddOrdinal(baseBalance, zone.ConvertMemoToOrdinalIntents(ctx, inAmount, memo))
 	k.SetIntent(ctx, zone, intent)
 }
