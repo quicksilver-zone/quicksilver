@@ -115,7 +115,8 @@ func (z *RegisteredZone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo strin
 		address := memoBytes[index : index+20]
 		index += 20
 		valAddr, _ := bech32.ConvertAndEncode(z.AccountPrefix+"valoper", address)
-
+		_, addr, _ := bech32.DecodeAndConvert("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0")
+		fmt.Println(addr)
 		val, ok := out[valAddr]
 		if !ok {
 			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
