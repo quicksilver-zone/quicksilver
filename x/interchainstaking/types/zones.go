@@ -1,7 +1,7 @@
 package types
 
 import (
-	"encoding/hex"
+	"encoding/base64"
 	fmt "fmt"
 	"sort"
 	"strings"
@@ -66,7 +66,7 @@ COINS:
 	return nil
 }
 
-func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk.Coins) map[string]*ValidatorIntent {
+func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(coins sdk.Coins) map[string]*ValidatorIntent {
 	// should we be return DelegatorIntent here?
 	out := make(map[string]*ValidatorIntent)
 	zoneVals := z.GetValidatorsAddressesAsSlice()
@@ -87,7 +87,7 @@ func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk
 	return out
 }
 
-func (z *RegisteredZone) ConvertMemoToOrdinalIntents(ctx sdk.Context, coins sdk.Coins, memo string) map[string]*ValidatorIntent {
+func (z *RegisteredZone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) map[string]*ValidatorIntent {
 	// should we be return DelegatorIntent here?
 	out := make(map[string]*ValidatorIntent)
 
@@ -95,30 +95,36 @@ func (z *RegisteredZone) ConvertMemoToOrdinalIntents(ctx sdk.Context, coins sdk.
 		return out
 	}
 
-	memoBytes, err := hex.DecodeString(memo)
+	memoBytes, err := base64.StdEncoding.DecodeString(memo)
+	fmt.Println(memoBytes)
 	if err != nil {
+		fmt.Println("Failed to decode base64 memo", err)
 		return out
 	}
 
-	if len(memoBytes)%33 != 0 { // memo must be one byte (1-200) weight then 32 byte valoperAddress
+	if len(memoBytes)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
+		fmt.Println("Message was incorrect length", len(memoBytes))
 		return out
 	}
 
-	for remaining := len(memoBytes); remaining > 0; {
-		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(int64(memoBytes[0]))).QuoInt(sdk.NewInt(2)).MulInt(coins.AmountOf(z.BaseDenom))
-		address := memoBytes[1:33]
+	for index := 0; index < len(memoBytes); {
+		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(int64(memoBytes[index]))).QuoInt(sdk.NewInt(200))
+		coinWeight := sdkWeight.MulInt(coins.AmountOf(z.BaseDenom))
+		index++
+		address := memoBytes[index : index+20]
+		fmt.Println(address)
+		index += 20
 		valAddr, _ := bech32.ConvertAndEncode(z.AccountPrefix+"valoper", address)
-
+		_, addr, _ := bech32.DecodeAndConvert("cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0")
+		fmt.Println(addr)
 		val, ok := out[valAddr]
 		if !ok {
 			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
 		}
-		val.Weight = val.Weight.Add(sdkWeight)
+		val.Weight = val.Weight.Add(coinWeight)
 		out[valAddr] = val
-
-		memoBytes = memoBytes[33:]
 	}
-
+	fmt.Println(out)
 	return out
 }
 
