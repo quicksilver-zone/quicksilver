@@ -281,7 +281,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 		if queryRes.Balances.AmountOf(coin.Denom).Equal(sdk.ZeroInt()) {
 			// coin we used to have is now zero - also validate this.
 			key := "store/bank/key"
-			k.Logger(ctx).Error("Querying for value", "key", key, "denom", coin.Denom)
+			k.Logger(ctx).Info("Querying for value", "key", key, "denom", coin.Denom) // debug?
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				zone.ConnectionId,
@@ -300,7 +300,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 
 	for _, coin := range queryRes.Balances {
 		key := "store/bank/key"
-		k.Logger(ctx).Error("Querying for value", "key", key, "denom", coin.Denom)
+		k.Logger(ctx).Info("Querying for value", "key", key, "denom", coin.Denom) // debug?
 		k.ICQKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
