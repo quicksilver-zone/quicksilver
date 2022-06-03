@@ -70,14 +70,10 @@ func (im IBCModule) OnChanOpenAck(
 	counterPartyChannelId string,
 	counterpartyVersion string,
 ) error {
+	// get connection from port
 	connectionId, err := im.keeper.GetConnectionForPort(ctx, portID)
 	if err != nil {
 		ctx.Logger().Error("Unable to get connection for port " + portID)
-	}
-	address, found := im.keeper.ICAControllerKeeper.GetInterchainAccountAddress(ctx, connectionId, portID)
-	if !found {
-		ctx.Logger().Error(fmt.Sprintf("Expected to find an address for %s/%s", connectionId, portID))
-		return nil
 	}
 
 	// get chain id from connection
@@ -99,12 +95,21 @@ func (im IBCModule) OnChanOpenAck(
 		return nil
 	}
 
+	// get interchain account address
+	address, found := im.keeper.ICAControllerKeeper.GetInterchainAccountAddress(ctx, connectionId, portID)
+	if !found {
+		ctx.Logger().Error(fmt.Sprintf("Expected to find an address for %s/%s", connectionId, portID))
+		return nil
+	}
+
 	ctx.Logger().Info("Found matching address", "chain", zoneInfo.ChainId, "address", address, "port", portID)
 	portParts := strings.Split(portID, ".")
 
 	switch {
 	// deposit address
 	case len(portParts) == 2 && portParts[1] == "deposit":
+
+		// refactor: register DepositAddress
 
 		zoneInfo.DepositAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 		var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -134,13 +139,10 @@ func (im IBCModule) OnChanOpenAck(
 			cb,
 		)
 
-	// performance address
-	case len(portParts) == 2 && portParts[1] == "performance":
-
-		zoneInfo.PerformanceAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
-
 	// withdrawal address
 	case len(portParts) == 2 && portParts[1] == "withdrawal":
+
+		// refactor: register WithdrawalAddress
 
 		zoneInfo.WithdrawalAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 
@@ -151,6 +153,9 @@ func (im IBCModule) OnChanOpenAck(
 
 	// delegation addresses
 	case len(portParts) == 3 && portParts[1] == "delegate":
+
+		// refactor: register DelegationAddresses
+
 		delegationAccounts := zoneInfo.GetDelegationAccounts()
 		// check for duplicate address
 		for _, existing := range delegationAccounts {
@@ -201,11 +206,72 @@ func (im IBCModule) OnChanOpenAck(
 			cb,
 		)
 
+	// performance address
+	case len(portParts) == 2 && portParts[1] == "performance":
+
+		if err := im.registerPerformanceAddress(ctx, portID, connectionId, chainId, address, &zoneInfo); err != nil {
+			return err
+		}
+
 	default:
 		ctx.Logger().Error("unexpected channel on portID: " + portID)
 
 	}
 	im.keeper.SetRegisteredZone(ctx, zoneInfo)
+	return nil
+}
+
+func (im IBCModule) registerPerformanceAddress(
+	ctx sdk.Context,
+	portId,
+	connectionId,
+	chainId,
+	address string,
+	zone *types.RegisteredZone,
+) error {
+	zone.PerformanceAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt()), PortName: portId}
+
+	// set withdrawal address if, and only if withdrawal address is already set
+	if zone.WithdrawalAddress != nil {
+		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: address, WithdrawAddress: zone.WithdrawalAddress.String()}
+		im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress)
+	}
+
+	var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+		zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+		if !found {
+			return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		}
+
+		// initialize performance delegations
+		if err := k.InitPerformanceDelegations(ctx, zone, response); err != nil {
+			k.Logger(ctx).Info(err.Error())
+			return err
+		}
+
+		// query action completed: delete query
+		im.keeper.ICQKeeper.DeleteQuery(ctx, query.Id)
+
+		return nil
+	}
+
+	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
+	bz, err := im.keeper.GetCodec().Marshal(&balanceQuery)
+	if err != nil {
+		return err
+	}
+
+	im.keeper.ICQKeeper.MakeRequest(
+		ctx,
+		connectionId,
+		chainId,
+		"cosmos.bank.v1beta1.Query/AllBalances",
+		bz,
+		sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDepositInterval))),
+		types.ModuleName,
+		cb,
+	)
+
 	return nil
 }
 

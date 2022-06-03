@@ -426,7 +426,17 @@ func NewQuicksilver(
 	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
 	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper)
 
-	app.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(appCodec, keys[interchainstakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.ICAControllerKeeper, scopedInterchainStakingKeeper, app.InterchainQueryKeeper, *app.IBCKeeper, app.GetSubspace(interchainstakingtypes.ModuleName))
+	app.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(
+		appCodec,
+		keys[interchainstakingtypes.StoreKey],
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.ICAControllerKeeper,
+		scopedInterchainStakingKeeper,
+		app.InterchainQueryKeeper,
+		*app.IBCKeeper,
+		app.GetSubspace(interchainstakingtypes.ModuleName),
+	)
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
 
 	interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
@@ -439,10 +449,13 @@ func NewQuicksilver(
 		app.GetSubspace(participationrewardstypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.InterchainQueryKeeper,
 		app.InterchainstakingKeeper,
 		authtypes.FeeCollectorName,
 	)
 	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
+
+	app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler())
 
 	// Quicksilver Keepers
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])

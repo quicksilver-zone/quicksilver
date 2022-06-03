@@ -80,7 +80,6 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 	bz, err := s.GetQuicksilverApp(s.chainA).AppCodec().Marshal(&bondedQuery)
 
 	qmsg := icqtypes.MsgSubmitQueryResponse{
-		// target or source chain_id?
 		ChainId: s.chainB.ChainID,
 		QueryId: icqkeeper.GenerateQueryHash(
 			s.path.EndpointA.ConnectionID,
