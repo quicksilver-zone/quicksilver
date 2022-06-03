@@ -1,11 +1,13 @@
 package types
 
 import (
+	"encoding/hex"
 	fmt "fmt"
 	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/ingenuity-build/quicksilver/utils"
 )
 
@@ -41,18 +43,6 @@ func (z *RegisteredZone) GetDelegationAccountByAddress(address string) (*ICAAcco
 		}
 	}
 	return nil, fmt.Errorf("unable to find delegation account: %s", address)
-}
-
-func (z *RegisteredZone) GetDelegationsForDelegator(delegator string) []*Delegation {
-	delegations := []*Delegation{}
-	for _, v := range z.GetValidatorsSorted() {
-		delegation, err := v.GetDelegationForDelegator(delegator)
-		if err != nil {
-			continue
-		}
-		delegations = append(delegations, delegation)
-	}
-	return delegations
 }
 
 func (z *RegisteredZone) ValidateCoinsForZone(ctx sdk.Context, coins sdk.Coins) error {
@@ -97,6 +87,41 @@ func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk
 	return out
 }
 
+func (z *RegisteredZone) ConvertMemoToOrdinalIntents(ctx sdk.Context, coins sdk.Coins, memo string) map[string]*ValidatorIntent {
+	// should we be return DelegatorIntent here?
+	out := make(map[string]*ValidatorIntent)
+
+	if len(memo) == 0 {
+		return out
+	}
+
+	memoBytes, err := hex.DecodeString(memo)
+	if err != nil {
+		return out
+	}
+
+	if len(memoBytes)%33 != 0 { // memo must be one byte (1-200) weight then 32 byte valoperAddress
+		return out
+	}
+
+	for remaining := len(memoBytes); remaining > 0; {
+		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(int64(memoBytes[0]))).QuoInt(sdk.NewInt(2)).MulInt(coins.AmountOf(z.BaseDenom))
+		address := memoBytes[1:33]
+		valAddr, _ := bech32.ConvertAndEncode(z.AccountPrefix+"valoper", address)
+
+		val, ok := out[valAddr]
+		if !ok {
+			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
+		}
+		val.Weight = val.Weight.Add(sdkWeight)
+		out[valAddr] = val
+
+		memoBytes = memoBytes[33:]
+	}
+
+	return out
+}
+
 func (z *RegisteredZone) GetValidatorsSorted() []*Validator {
 	vals := z.Validators
 	sort.Slice(vals, func(i, j int) bool {
@@ -114,65 +139,6 @@ func (z RegisteredZone) GetValidatorsAddressesAsSlice() []string {
 	sort.Strings(l)
 
 	return l
-}
-
-func (z RegisteredZone) DetermineStateIntentDiff(aggregateIntent map[string]*ValidatorIntent) map[string]sdk.Int {
-	totalAggregateIntent := sdk.ZeroDec()
-	currentState := make(map[string]sdk.Int)
-	totalDelegations := sdk.ZeroInt()
-	diff := make(map[string]sdk.Int)
-
-	// sum total aggregate intent
-	for _, val := range aggregateIntent {
-		totalAggregateIntent = totalAggregateIntent.Add(val.Weight)
-
-	}
-
-	validators := z.GetValidatorsSorted()
-
-	if totalAggregateIntent.IsZero() {
-		// if totalAggregateIntent is zero (that is, we have no intent set - which can happen
-		// if we have only ever have native tokens staked and nbody has signalled intent) give
-		// every validator an equal intent artificially.
-
-		// this can be removed when we cache intent.
-		if aggregateIntent == nil {
-			aggregateIntent = make(map[string]*ValidatorIntent)
-		}
-
-		for _, val := range validators {
-			aggregateIntent[val.ValoperAddress] = &ValidatorIntent{ValoperAddress: val.ValoperAddress, Weight: sdk.OneDec()}
-			totalAggregateIntent = totalAggregateIntent.Add(sdk.OneDec())
-		}
-	}
-
-	for _, i := range validators {
-		stake := sdk.ZeroInt()
-		for _, delegation := range i.GetDelegations() {
-			stake = stake.Add(delegation.Amount.TruncateInt())
-		}
-		currentState[i.ValoperAddress] = stake
-		totalDelegations = totalDelegations.Add(stake)
-	}
-	ratio := totalDelegations.ToDec().Quo(totalAggregateIntent) // will always be >= 1.0
-
-	for _, i := range validators {
-		current, found := currentState[i.ValoperAddress]
-		if !found {
-			// this probably can happen if we have intent for a validator not in the set
-			// (although we _should_ have all validators, current and past in the set).
-			panic("this shouldn't happen...")
-		}
-		desired, found := aggregateIntent[i.ValoperAddress]
-		if !found {
-			desired = &ValidatorIntent{ValoperAddress: i.ValoperAddress, Weight: sdk.ZeroDec()} // this is okay! just means nobody wants this validator anymore!
-		}
-		thisDiff := desired.Weight.Mul(ratio).TruncateInt().Sub(current)
-		if !thisDiff.Equal(sdk.ZeroInt()) {
-			diff[i.ValoperAddress] = thisDiff
-		}
-	}
-	return diff
 }
 
 // func (z RegisteredZone) ApplyDiffsToDistribution(distribution map[string]sdk.Coin, diffs map[string]sdk.Int) (map[string]sdk.Coin, sdk.Int) {
@@ -210,84 +176,23 @@ func (z RegisteredZone) DetermineStateIntentDiff(aggregateIntent map[string]*Val
 // 	return distribution, remaining
 // }
 
-type sortableStringInt struct {
-	str string
-	i   sdk.Int
-}
+// type sortableStringInt struct {
+// 	str string
+// 	i   sdk.Int
+// }
 
-func sortMapToSlice(numbers map[string]sdk.Int) []sortableStringInt {
-	out := []sortableStringInt{}
-	for str, int := range numbers {
-		if !int.IsZero() {
-			out = append(out, sortableStringInt{str: str, i: int})
-		}
-	}
-	// sort
-	sort.SliceStable(out, func(i, j int) bool {
-		return out[i].i.GT(out[j].i)
-	})
-	return out
-}
-
-func (z *RegisteredZone) GetRedemptionTargets(requests map[string]sdk.Int, denom string) map[string]map[string]sdk.Coin {
-	out := make(map[string]map[string]sdk.Coin)
-	for valoper, tokens := range requests {
-
-		remainingTokens := tokens
-		// TODO: order delegations from highest to lowest, as a reference. We wish to even these out as much as possible.
-		// return a map of delegation bucket deviation from median.
-
-		validator, err := z.GetValidatorByValoper(valoper)
-		if err != nil {
-			continue
-		}
-
-		for _, i := range validator.Delegations {
-			if i.Amount.TruncateInt().GTE(remainingTokens) {
-				if out[i.DelegationAddress] == nil {
-					out[i.DelegationAddress] = make(map[string]sdk.Coin)
-				}
-				out[i.DelegationAddress][i.ValidatorAddress] = sdk.NewCoin(denom, remainingTokens)
-				break
-			} else {
-				val := i.Amount.TruncateInt()
-				remainingTokens = remainingTokens.Sub(val)
-				if out[i.DelegationAddress] == nil {
-					out[i.DelegationAddress] = make(map[string]sdk.Coin)
-				}
-				out[i.DelegationAddress][i.ValidatorAddress] = sdk.NewCoin(denom, val)
-			}
-		}
-
-	}
-	return out
-}
-
-// func (z *RegisteredZone) UpdateDelegatedAmount() {
-
-// 	sum := map[string]sdk.Dec{}
-// 	for _, validator := range z.Validators {
-// 		for _, delegation := range validator.Delegations {
-// 			_, ok := sum[delegation.DelegationAddress]
-// 			if !ok {
-// 				sum[delegation.DelegationAddress] = delegation.Amount
-// 			} else {
-// 				sum[delegation.DelegationAddress] = sum[delegation.DelegationAddress].Add(delegation.Amount)
-// 			}
+// func sortMapToSlice(numbers map[string]sdk.Int) []sortableStringInt {
+// 	out := []sortableStringInt{}
+// 	for str, int := range numbers {
+// 		if !int.IsZero() {
+// 			out = append(out, sortableStringInt{str: str, i: int})
 // 		}
 // 	}
-
-// 	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())
-// 	for _, da := range z.DelegationAddresses {
-// 		val, ok := sum[da.Address]
-// 		if ok {
-// 			delCoin := sdk.NewCoin(z.BaseDenom, val.TruncateInt())
-// 			if da.DelegatedBalance.IsNil() || da.DelegatedBalance.IsZero() || !da.DelegatedBalance.Equal(delCoin) {
-// 				da.DelegatedBalance = delCoin
-// 			}
-// 			out = out.Add(da.DelegatedBalance)
-// 		}
-// 	}
+// 	// sort
+// 	sort.SliceStable(out, func(i, j int) bool {
+// 		return out[i].i.GT(out[j].i)
+// 	})
+// 	return out
 // }
 
 func (z *RegisteredZone) GetDelegatedAmount() sdk.Coin {

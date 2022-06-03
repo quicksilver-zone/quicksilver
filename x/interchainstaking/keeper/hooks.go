@@ -41,8 +41,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					if err != nil {
 						return err
 					}
+					// decrement waitgroup as we have received back the query (initially incremented in L93).
 
-					return k.WithdrawDelegationRewardsForResponse(ctx, zone, rewardsQuery.DelegatorAddress, args)
+					zone.WithdrawalWaitgroup--
+					return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 				}
 
 				var delegationcb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -57,7 +59,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 						return err
 					}
 
-					return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
+					return k.UpdateDelegationRecordsForAddress(ctx, &zone, delegationQuery.DelegatorAddr, args)
 				}
 
 				delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: da.Address}

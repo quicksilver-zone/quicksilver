@@ -33,21 +33,15 @@ const (
 	QueryRegisteredZoneDepositAddress = "zones/deposit_address"
 )
 
-// prefix bytes for the epoch persistent store
-const (
-	prefixZone             = iota + 1
-	prefixIntent           = iota + 1
-	prefixPortMapping      = iota + 1
-	prefixReceipt          = iota + 1
-	prefixWithdrawalRecord = iota + 1
-)
-
 var (
-	KeyPrefixZone             = []byte{prefixZone}
-	KeyPrefixIntent           = []byte{prefixIntent}
-	KeyPrefixPortMapping      = []byte{prefixPortMapping}
-	KeyPrefixReceipt          = []byte{prefixReceipt}
-	KeyPrefixWithdrawalRecord = []byte{prefixWithdrawalRecord}
+	KeyPrefixZone             = []byte{0x01}
+	KeyPrefixIntent           = []byte{0x02}
+	KeyPrefixPortMapping      = []byte{0x03}
+	KeyPrefixReceipt          = []byte{0x04}
+	KeyPrefixWithdrawalRecord = []byte{0x05}
+	KeyPrefixDelegation       = []byte{0x06}
+
+//	KeyPrefixDelegationByValidator = []byte{0x08}
 )
 
 func KeyPrefix(p string) []byte {

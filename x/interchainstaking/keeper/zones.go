@@ -3,7 +3,6 @@ package keeper
 import (
 	"bytes"
 	"fmt"
-	"sort"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -15,7 +14,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// GetRegsiteredZoneInfo returns zone info by chain_id
+// GetRegisteredZoneInfo returns zone info by chain_id
 func (k Keeper) GetRegisteredZoneInfo(ctx sdk.Context, chain_id string) (types.RegisteredZone, bool) {
 	zone := types.RegisteredZone{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
@@ -75,6 +74,7 @@ func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
 	return zones
 }
 
+// GetZoneFromContext determines the zone from the current context
 func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.RegisteredZone, error) {
 	chainId, err := k.GetChainIdFromContext(ctx)
 	if err != nil {
@@ -89,6 +89,7 @@ func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.RegisteredZone, erro
 	return &zone, nil
 }
 
+// GetZoneForDelegateAccount determines the zone for a given address.
 func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.RegisteredZone {
 	var zone *types.RegisteredZone
 	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
@@ -103,6 +104,7 @@ func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *type
 	return zone
 }
 
+// GetZoneForDelegateAccount determines the zone, and returns the ICAAccount for a given address.
 func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*types.RegisteredZone, *types.ICAAccount) {
 	var ica *types.ICAAccount
 	var zone *types.RegisteredZone
@@ -118,63 +120,8 @@ func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*type
 	})
 	return zone, ica
 }
-func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coin) ([]string, map[string]sdk.Coin, error) {
-	out := make(map[string]sdk.Coin)
 
-	coinAmount := amount.Amount
-	aggregateIntents := zone.GetAggregateIntent()
-
-	if len(aggregateIntents) == 0 {
-		aggregateIntents = defaultAggregateIntents(ctx, zone)
-	}
-
-	keys := make([]string, 0)
-	for valoper, intent := range aggregateIntents {
-		keys = append(keys, valoper)
-		if !coinAmount.IsZero() {
-			// while there is some balance left to distribute
-			// calculate the int value of weight * amount to distribute.
-			thisAmount := intent.Weight.MulInt(amount.Amount).TruncateInt()
-			// set distrubtion amount
-			out[valoper] = sdk.Coin{Denom: amount.Denom, Amount: thisAmount}
-			// reduce outstanding pool
-			coinAmount = coinAmount.Sub(thisAmount)
-		}
-	}
-
-	sort.Strings(keys)
-	v0 := keys[0]
-	out[v0] = out[v0].AddAmount(coinAmount)
-
-	k.Logger(ctx).Info("Validator weightings without diffs", "weights", out)
-
-	// calculate diff between current state and intended state.
-	//diffs := zone.DetermineStateIntentDiff(aggregateIntents)
-
-	// apply diff to distrubtion of delegation.
-	// out, remaining := zone.ApplyDiffsToDistribution(out, diffs)
-	// if !remaining.IsZero() {
-	// 	for _, valoper := range keys {
-	// 		intent := aggregateIntents[valoper]
-	// 		thisAmount := intent.Weight.MulInt(remaining).TruncateInt()
-	// 		thisOutAmount, ok := out[valoper]
-	// 		if !ok {
-	// 			thisOutAmount = sdk.NewCoin(amount.Denom, sdk.ZeroInt())
-	// 		}
-
-	// 		out[valoper] = thisOutAmount.AddAmount(thisAmount)
-	// 		remaining = remaining.Sub(thisAmount)
-	// 	}
-
-	// 	v0 := keys[0]
-	// 	out[v0] = out[v0].AddAmount(remaining)
-	// }
-
-	//k.Logger(ctx).Info("Determined validators from aggregated intents +/- rebalance diffs", "amount", amount.Amount, "out", out)
-
-	return keys, out, nil
-}
-
+// defaultAggregateIntents determines the default aggregate intent (for epoch 0)
 func defaultAggregateIntents(ctx sdk.Context, zone types.RegisteredZone) map[string]*types.ValidatorIntent {
 	out := make(map[string]*types.ValidatorIntent)
 	for _, val := range zone.GetValidatorsSorted() {
@@ -194,6 +141,7 @@ func defaultAggregateIntents(ctx sdk.Context, zone types.RegisteredZone) map[str
 	return out
 }
 
+// setAccountCb is a callback handler for Balance queries.
 var setAccountCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 	if !found {
@@ -218,7 +166,6 @@ var setAccountCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query i
 		for i := 0; i < len(query.Request)-len(accAddr); i++ {
 			if bytes.Equal(query.Request[i:i+len(accAddr)], accAddr) {
 				denom = string(query.Request[i+len(accAddr):])
-				k.Logger(ctx).Error("denom found", "denom", denom)
 				break
 			}
 
@@ -235,6 +182,7 @@ var setAccountCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query i
 	return SetAccountBalanceForDenom(k, ctx, zone, address, coin)
 }
 
+// SetAccountBalanceForDenom sets the balance on an account for a given denominination.
 func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZone, address string, coin sdk.Coin) error {
 
 	switch true {
@@ -300,6 +248,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZ
 	return nil
 }
 
+// SetAccountBalance triggers provable KV queries to prove an AllBalances query.
 func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, address string, queryResult []byte) error {
 	queryRes := banktypes.QueryAllBalancesResponse{}
 	err := k.cdc.Unmarshal(queryResult, &queryRes)
@@ -367,4 +316,38 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 
 	k.SetRegisteredZone(ctx, zone)
 	return nil
+}
+
+func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.RegisteredZone, requests map[string]sdk.Int) map[string]map[string]sdk.Coin {
+	out := make(map[string]map[string]sdk.Coin)
+
+	for valoper, tokens := range requests {
+
+		_, valAddr, _ := bech32.DecodeAndConvert(valoper)
+		remainingTokens := tokens
+		// TODO: order delegations from highest to lowest, as a reference. We wish to even these out as much as possible.
+		// return a map of delegation bucket deviation from median.
+
+		delegations := k.GetValidatorDelegations(ctx, &zone, valAddr)
+
+		for _, i := range delegations {
+
+			if i.Amount.Amount.GTE(remainingTokens) {
+				if out[i.DelegationAddress] == nil {
+					out[i.DelegationAddress] = make(map[string]sdk.Coin)
+				}
+				out[i.DelegationAddress][i.ValidatorAddress] = sdk.NewCoin(zone.BaseDenom, remainingTokens)
+				break
+			} else {
+				val := i.Amount.Amount
+				remainingTokens = remainingTokens.Sub(val)
+				if out[i.DelegationAddress] == nil {
+					out[i.DelegationAddress] = make(map[string]sdk.Coin)
+				}
+				out[i.DelegationAddress][i.ValidatorAddress] = sdk.NewCoin(zone.BaseDenom, val)
+			}
+		}
+
+	}
+	return out
 }

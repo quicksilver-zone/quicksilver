@@ -2,6 +2,8 @@
 
 set -eox pipefail
 
+apk add git
+
 protoc_gen_gocosmos() {
   if ! grep "github.com/gogo/protobuf => github.com/regen-network/protobuf" go.mod &>/dev/null ; then
     echo -e "\tPlease run this command from somewhere inside the quicksilver folder."
@@ -12,8 +14,8 @@ protoc_gen_gocosmos() {
 }
 
 protoc_gen_doc() {
-  go get github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc 2>/dev/null
-  go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc 2>/dev/null
+  go get -d github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc #2>/dev/null
+  go install github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc #2>/dev/null
 }
 
 protoc_gen_gocosmos

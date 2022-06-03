@@ -8,6 +8,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - 26657:26657
+      - 1317:1317
   quicksilver2:
     image: quicksilverzone/quicksilver:latest
     hostname: quicksilver2
@@ -72,7 +75,7 @@ services:
       context: .
       dockerfile: Dockerfile.hermes
   icq:
-    image: quicksilverzone/interchain-queries:latest
+    image: quicksilverzone/interchain-queries:v0.2.0
     volumes:
       - ./data/icq:/icq/.icq
     command:
