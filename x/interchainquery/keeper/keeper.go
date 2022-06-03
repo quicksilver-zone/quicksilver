@@ -86,10 +86,25 @@ func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, connection_id string, ch
 }
 
 func (k *Keeper) MakeRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, request []byte, period sdk.Int, module string, callback interface{}) {
+	k.Logger(ctx).Info(
+		"MakeRequest",
+		"connection_id", connection_id,
+		"chain_id", chain_id,
+		"query_type", query_type,
+		"request", request,
+		"period", period,
+		"module", module,
+		"callback", callback,
+	)
 	key := GenerateQueryHash(connection_id, chain_id, query_type, request)
 	_, found := k.GetQuery(ctx, key)
 	if !found {
 		if module != "" {
+			if _, exists := k.callbacks[module]; !exists {
+				err := fmt.Errorf("no callback handler registered for module %v", module)
+				k.Logger(ctx).Error(err.Error())
+				panic(err)
+			}
 			k.callbacks[module].AddCallback(key, callback)
 		}
 		newQuery := k.NewQuery(ctx, connection_id, chain_id, query_type, request, period)

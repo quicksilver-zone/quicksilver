@@ -107,6 +107,14 @@ while [[ "$DEPOSIT_ACCOUNT" == "null" ]]; do
   DEPOSIT_ACCOUNT=$($QS_EXEC q interchainstaking zones --output=json | jq .zones[0].deposit_address.address -r)
 done
 
+PERFORMANCE_ACCOUNT=$($QS_EXEC q interchainstaking zones --output=json | jq .zones[0].performance_address.address -r)
+while [[ "$PERFORMANCE_ACCOUNT" == "null" ]]; do
+  sleep 5
+  PERFORMANCE_ACCOUNT=$($QS_EXEC q interchainstaking zones --output=json | jq .zones[0].performance_address.address -r)
+done
+
+$TZ_EXEC tx bank send val2 $PERFORMANCE_ACCOUNT 40000uatom --chain-id $CHAINID_2 -y --keyring-backend=test
+
 sleep 5
 $TZ_EXEC tx bank send val2 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_2}1 --chain-id $CHAINID_2 -y --keyring-backend=test
 sleep 30

@@ -74,15 +74,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	delegateAccountCount := int(k.GetParam(ctx, types.KeyDelegateAccountCount))
 	for i := 0; i < delegateAccountCount; i++ {
 		portOwner := fmt.Sprintf("%s.delegate.%d", chainId, i)
-		if err := k.ICAControllerKeeper.RegisterInterchainAccount(
-			ctx,
-			zone.ConnectionId,
-			portOwner,
-		); err != nil {
-			return nil, err
-		}
-		portId, _ := icatypes.NewControllerPortID(portOwner)
-		if err := k.SetConnectionForPort(ctx, msg.ConnectionId, portId); err != nil {
+		if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 			return nil, err
 		}
 	}
