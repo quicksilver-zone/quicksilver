@@ -10,6 +10,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
+// ? callback concurrency issues on map ?
 type zoneScore struct {
 	zoneId           string // chainId
 	totalVotingPower sdk.Int
@@ -34,7 +35,12 @@ func (k Keeper) allocateValidatorSelectionRewards(ctx sdk.Context, allocation sd
 			return err
 		}
 
-		k.Logger(ctx).Info("Callback", "Zone Score", zs)
+		k.Logger(ctx).Info(
+			"Callback Zone Score",
+			"zone", zs.zoneId,
+			"total voting power", zs.totalVotingPower,
+			"validator scores", zs.validatorScores,
+		)
 
 		// TODO: distribute zone allocation
 
@@ -179,6 +185,9 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Registered
 // by the number of active validators to obtain the expected rewards. The
 // performance score for each validator is then simply the percentage of actual
 // rewards compared to the expected rewards (capped at 100%).
+//
+// On completetion a msg is submitted to withdraw the zone performance rewards,
+// resetting zone performance scoring for the next epoch.
 func (k Keeper) calcOverallScores(
 	ctx sdk.Context,
 	zone icstypes.RegisteredZone,
@@ -198,6 +207,7 @@ func (k Keeper) calcOverallScores(
 		"expected", expected,
 	)
 
+	var msgs []sdk.Msg
 	limit := sdk.NewDec(1.0)
 	for _, reward := range rewards {
 		vs, exists := zs.validatorScores[reward.ValidatorAddress]
@@ -215,6 +225,21 @@ func (k Keeper) calcOverallScores(
 		// calculate overall score
 		vs.overallScore = vs.distributionScore.Mul(vs.performanceScore)
 		k.Logger(ctx).Info("Overall Score", "validator", vs.ValoperAddress, "overall", vs.overallScore)
+
+		// prepare validator performance withdrawal msg
+		msg := &distrtypes.MsgWithdrawDelegatorReward{
+			DelegatorAddress: zone.PerformanceAddress.GetAddress(),
+			ValidatorAddress: vs.ValoperAddress,
+		}
+		msgs = append(msgs, msg)
+	}
+
+	// submit rewards withdrawals to reset zone performance for next epoch
+	k.Logger(ctx).Info("Send performance rewards withdrawal messages to reset scores for next epoch")
+	if len(msgs) > 0 {
+		if err := k.icsKeeper.SubmitTx(ctx, msgs, zone.PerformanceAddress); err != nil {
+			return err
+		}
 	}
 
 	return nil
