@@ -12,7 +12,7 @@ import (
 
 type zoneScore struct {
 	zoneId           string // chainId
-	totalVotingPower sdk.Dec
+	totalVotingPower sdk.Int
 	validatorScores  map[string]*validator
 }
 
@@ -90,7 +90,7 @@ func (k Keeper) zoneCallback(ctx sdk.Context, response []byte, query icqtypes.Qu
 
 	zs := zoneScore{
 		zoneId:           zone.ChainId,
-		totalVotingPower: sdk.NewDec(0),
+		totalVotingPower: sdk.NewInt(0),
 		validatorScores:  make(map[string]*validator),
 	}
 
@@ -109,7 +109,7 @@ func (k Keeper) zoneCallback(ctx sdk.Context, response []byte, query icqtypes.Qu
 // given zone based on the normalized voting power of the validators; scoring
 // favours smaller validators for decentraliztion purposes.
 func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.RegisteredZone, zs *zoneScore) error {
-	k.Logger(ctx).Info("Get zone score", "zone", zone.ChainId)
+	k.Logger(ctx).Info("Calculate distribution scores", "zone", zone.ChainId)
 
 	zoneValidators := zone.GetValidatorsSorted()
 	if len(zoneValidators) == 0 {
@@ -118,8 +118,8 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Registered
 
 	// calculate total voting power
 	// and determine min/max voting power for zone
-	max := sdk.NewDec(0)
-	min := sdk.NewDec(999999999999999999)
+	max := sdk.NewInt(0)
+	min := sdk.NewInt(999999999999999999)
 	for _, val := range zoneValidators {
 		// compute zone total voting power
 		zs.totalVotingPower = zs.totalVotingPower.Add(val.VotingPower)
@@ -138,22 +138,24 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Registered
 		}
 	}
 
+	k.Logger(ctx).Info("zone voting power", "zone", zone.ChainId, "total voting power", zs.totalVotingPower)
+
 	if zs.totalVotingPower.IsZero() {
 		k.Logger(ctx).Error("Zone invalid, zero voting power", "zone", zone)
 		panic("This should never happen!")
 	}
 
 	// calculate power percentage and normalized distribution scores
-	max = max.Quo(zs.totalVotingPower)
-	min = min.Quo(zs.totalVotingPower)
+	maxp := max.ToDec().Quo(zs.totalVotingPower.ToDec())
+	minp := min.ToDec().Quo(zs.totalVotingPower.ToDec())
 	for _, vs := range zs.validatorScores {
 		// calculate power percentage
-		vs.powerPercentage = vs.VotingPower.Quo(zs.totalVotingPower)
+		vs.powerPercentage = vs.VotingPower.ToDec().Quo(zs.totalVotingPower.ToDec())
 
 		// calculate normalized distribution score
 		vs.distributionScore = sdk.NewDec(1).Sub(
-			vs.powerPercentage.Sub(min).Mul(
-				sdk.NewDec(1).Quo(max),
+			vs.powerPercentage.Sub(minp).Mul(
+				sdk.NewDec(1).Quo(maxp),
 			),
 		)
 
@@ -183,9 +185,19 @@ func (k Keeper) calcOverallScores(
 	delegatorRewards distrtypes.QueryDelegationTotalRewardsResponse,
 	zs *zoneScore,
 ) error {
+	k.Logger(ctx).Info("Calculate performance & overall scores")
+
 	rewards := delegatorRewards.GetRewards()
 	total := delegatorRewards.GetTotal().AmountOf(zone.BaseDenom)
 	expected := total.Quo(sdk.NewDec(int64(len(rewards))))
+
+	k.Logger(ctx).Info(
+		"performance account rewards",
+		"rewards", rewards,
+		"total", total,
+		"expected", expected,
+	)
+
 	limit := sdk.NewDec(1.0)
 	for _, reward := range rewards {
 		vs, exists := zs.validatorScores[reward.ValidatorAddress]
