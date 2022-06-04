@@ -146,7 +146,7 @@ func (im IBCModule) OnChanOpenAck(
 
 		for _, da := range zoneInfo.GetDelegationAccounts() {
 			msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: da.Address, WithdrawAddress: address}
-			im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, da)
+			im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, da, "")
 		}
 
 	// delegation addresses
@@ -166,7 +166,7 @@ func (im IBCModule) OnChanOpenAck(
 		// set withdrawal address if, and only if withdrawal address is already set
 		if zoneInfo.WithdrawalAddress != nil {
 			msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: address, WithdrawAddress: zoneInfo.WithdrawalAddress.String()}
-			im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, account)
+			im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, account, "")
 		}
 
 		var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {

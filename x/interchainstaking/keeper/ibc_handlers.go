@@ -134,7 +134,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			k.Logger(ctx).Debug("Funds Transferred", "response", response)
 			// check tokenTransfers - if end user unescrow and burn txs
-			if err := k.HandleCompleteSend(ctx, src); err != nil {
+			if err := k.HandleCompleteSend(ctx, src, packetData.Memo); err != nil {
 				return err
 			}
 			continue
@@ -146,7 +146,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			k.Logger(ctx).Debug("Funds Transferred (Multi)", "response", response)
-			if err := k.HandleCompleteMultiSend(ctx, src); err != nil {
+			if err := k.HandleCompleteMultiSend(ctx, src, packetData.Memo); err != nil {
 				return err
 			}
 			continue
@@ -213,7 +213,7 @@ func (k *Keeper) HandleDistributeFeesFromModuleAccount(ctx sdk.Context) error {
 	return k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, balance) // Fee collector name needs to be passed in to keeper constructor.
 }
 
-func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg) error {
+func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg, memo string) error {
 	k.Logger(ctx).Info("Received MsgMultiSend acknowledgement")
 	// first, type assertion. we should have banktypes.MsgMultiSend
 	sMsg, ok := msg.(*banktypes.MsgMultiSend)
@@ -229,20 +229,29 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg) error {
 		return err
 	}
 
+	receipt, found := k.GetReceipt(ctx, GetReceiptKey(*zone, memo))
+	if !found {
+		return fmt.Errorf("unable to find receipt for tx %s", memo)
+	}
+
 	for _, out := range sMsg.Outputs {
+		plan, found := receipt.DistributionPlan.Value[out.Address]
+		if !found {
+			return fmt.Errorf("unable to plan for tx %s", memo)
+		}
 		da, err := zone.GetDelegationAccountByAddress(out.Address)
 		if err != nil {
 			k.Logger(ctx).Error(err.Error())
 			return err
 		}
 		da.Balance = da.Balance.Add(out.Coins...)
-		k.Delegate(ctx, *zone, da)
+		k.Delegate(ctx, *zone, da, plan)
 	}
 
 	return nil
 }
 
-func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
+func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) error {
 	k.Logger(ctx).Info("Received MsgSend acknowledgement")
 	// first, type assertion. we should have banktypes.MsgSend
 	sMsg, ok := msg.(*banktypes.MsgSend)
@@ -267,7 +276,7 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg) error {
 			return err
 		}
 	default:
-		if err := k.handleWithdrawForUser(ctx, sMsg); err != nil {
+		if err := k.handleWithdrawForUser(ctx, sMsg, memo); err != nil {
 			return err
 		}
 	}
@@ -281,10 +290,15 @@ func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.RegisteredZ
 		return err
 	}
 	da.Balance = msg.Amount
-	return k.Delegate(ctx, zone, da)
+
+	plan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegationBinsMap(ctx, &zone), zone, sdk.NewCoin(zone.BaseDenom, msg.Amount.AmountOf(zone.BaseDenom)), zone.GetAggregateIntentOrDefault())
+	if err != nil {
+		return err
+	}
+	return k.Delegate(ctx, zone, da, plan)
 }
 
-func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, msg *banktypes.MsgSend) error {
+func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, msg *banktypes.MsgSend, memo string) error {
 	var err error = nil
 	var done bool = false
 
@@ -324,13 +338,22 @@ func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, msg *banktypes.MsgSend) 
 
 	// second check for sending of tokens from deposit -> delegate.
 	zone := k.GetZoneForDelegateAccount(ctx, msg.ToAddress)
+
+	receipt, found := k.GetReceipt(ctx, GetReceiptKey(*zone, memo))
+	if !found {
+		return fmt.Errorf("unable to receipt for tx %s", memo)
+	}
 	if zone != nil { // this _is_ a delegate account
+		plan, found := receipt.DistributionPlan.Value[msg.ToAddress]
+		if !found {
+			return fmt.Errorf("unable to find receipt for tx %s", memo)
+		}
 		da, err := zone.GetDelegationAccountByAddress(msg.ToAddress)
 		if err != nil {
 			return err
 		}
 		da.Balance = da.Balance.Add(msg.Amount...)
-		k.Delegate(ctx, *zone, da)
+		k.Delegate(ctx, *zone, da, plan)
 	}
 
 	return nil
@@ -362,7 +385,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.
 					}
 					sendMsg := &banktypes.MsgSend{FromAddress: withdrawal.Delegator, ToAddress: withdrawal.Recipient, Amount: sdk.Coins{amount}}
 
-					err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, delegatorIca)
+					err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, delegatorIca, "")
 					if err != nil {
 						k.Logger(ctx).Error("error", err)
 						return true
@@ -381,8 +404,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.
 }
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time) error {
-
-	return nil
+	panic("not implemented")
 }
 
 func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin) error {
@@ -682,7 +704,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	k.updateRedemptionRate(ctx, zone, rewards)
 
 	// send tx
-	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress)
+	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "")
 
 }
 

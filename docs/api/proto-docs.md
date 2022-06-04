@@ -29,7 +29,12 @@
   
 - [quicksilver/interchainstaking/v1/genesis.proto](#quicksilver/interchainstaking/v1/genesis.proto)
     - [Delegation](#quicksilver.interchainstaking.v1.Delegation)
+    - [DelegationPlan](#quicksilver.interchainstaking.v1.DelegationPlan)
+    - [DelegationPlan.DelegationPlanItem](#quicksilver.interchainstaking.v1.DelegationPlan.DelegationPlanItem)
+    - [DelegationPlan.ValueEntry](#quicksilver.interchainstaking.v1.DelegationPlan.ValueEntry)
     - [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent)
+    - [DistributionPlan](#quicksilver.interchainstaking.v1.DistributionPlan)
+    - [DistributionPlan.ValueEntry](#quicksilver.interchainstaking.v1.DistributionPlan.ValueEntry)
     - [GenesisState](#quicksilver.interchainstaking.v1.GenesisState)
     - [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount)
     - [Params](#quicksilver.interchainstaking.v1.Params)
@@ -382,6 +387,52 @@ Msg defines the interchainquery Msg service.
 
 
 
+<a name="quicksilver.interchainstaking.v1.DelegationPlan"></a>
+
+### DelegationPlan
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [DelegationPlan.ValueEntry](#quicksilver.interchainstaking.v1.DelegationPlan.ValueEntry) | repeated |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.DelegationPlan.DelegationPlanItem"></a>
+
+### DelegationPlan.DelegationPlanItem
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.DelegationPlan.ValueEntry"></a>
+
+### DelegationPlan.ValueEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [DelegationPlan.DelegationPlanItem](#quicksilver.interchainstaking.v1.DelegationPlan.DelegationPlanItem) |  |  |
+
+
+
+
+
+
 <a name="quicksilver.interchainstaking.v1.DelegatorIntent"></a>
 
 ### DelegatorIntent
@@ -392,6 +443,37 @@ Msg defines the interchainquery Msg service.
 | ----- | ---- | ----- | ----------- |
 | `delegator` | [string](#string) |  |  |
 | `intents` | [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent) | repeated |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.DistributionPlan"></a>
+
+### DistributionPlan
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `value` | [DistributionPlan.ValueEntry](#quicksilver.interchainstaking.v1.DistributionPlan.ValueEntry) | repeated |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.DistributionPlan.ValueEntry"></a>
+
+### DistributionPlan.ValueEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `key` | [string](#string) |  |  |
+| `value` | [DelegationPlan](#quicksilver.interchainstaking.v1.DelegationPlan) |  |  |
 
 
 
@@ -482,6 +564,7 @@ GenesisState defines the interchainstaking module's genesis state.
 | `sender` | [string](#string) |  |  |
 | `txhash` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
+| `distribution_plan` | [DistributionPlan](#quicksilver.interchainstaking.v1.DistributionPlan) |  |  |
 
 
 

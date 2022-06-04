@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"sort"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -135,157 +133,67 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Registe
 }
 
 // Delegate determines how the balance of a DelegateAccount should be distributed across validators.
-func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount) error {
+func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount, plan *types.DelegationPlan) error {
 	var msgs []sdk.Msg
 
-	balance := account.Balance
-
-	// deterministically sort balance
-	sort.Slice(balance, func(i, j int) bool { return balance[i].Denom > balance[j].Denom })
-
-	for _, asset := range balance {
-		if asset.Denom == zone.GetBaseDenom() {
-			keys, validators, err := k.DetermineValidatorsForDelegation(ctx, zone, asset)
-			// TODO: return multiple validators here; consider the size of the delegation too - are we going to increase balance 'too far'?
-			// given that we pass in the account balance, we should be able to return a map of valoper:balance and send the requisite MsgDelegates.
-			// this is less important for rewards, but far more important for deposits of native assets.
-			if err != nil {
-				k.Logger(ctx).Error("Unable to determine validators for delegation: %v", err)
-				continue
-			}
-			for _, valoper_address := range keys {
-				amount := validators[valoper_address]
-				if !amount.Amount.IsZero() {
-					k.Logger(ctx).Info("Sending a MsgDelegate!", "asset", amount, "valoper", valoper_address)
-					msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: account.GetAddress(), ValidatorAddress: valoper_address, Amount: amount})
+	for _, valAddr := range plan.Keys() {
+		if coins, ok := plan.Value[valAddr]; ok {
+			for _, coin := range coins.GetValue() {
+				if coin.Denom == zone.BaseDenom {
+					msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: account.GetAddress(), ValidatorAddress: valAddr, Amount: coin})
+				} else {
+					msgs = append(msgs, &stakingTypes.MsgRedeemTokensforShares{DelegatorAddress: account.GetAddress(), Amount: coin})
 				}
 			}
+		}
+	}
+
+	return k.SubmitTx(ctx, msgs, account, "")
+}
+
+func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coins, delegator string) (types.DistributionPlan, error) {
+	bins := k.GetDelegationBinsMap(ctx, &zone)
+
+	disPlan := types.DistributionPlan{}
+
+	for _, coin := range amount {
+		var delPlan *types.DelegationPlan
+		var err error
+		if coin.Denom == zone.BaseDenom {
+			var valPlan = make(types.ValidatorIntents)
+			plan, found := k.GetIntent(ctx, zone, delegator)
+			if !found || len(plan.Intents) == 0 {
+				valPlan = zone.GetAggregateIntentOrDefault()
+				delPlan, err = types.DelegationPlanFromGlobalIntent(bins, zone, coin, valPlan)
+				if err != nil {
+					return types.DistributionPlan{}, err
+				}
+			} else {
+				for _, i := range plan.ToValidatorIntents() {
+					valPlan[i.ValoperAddress] = i
+				}
+				delPlan, err = types.DelegationPlanFromUserIntent(zone, coin, valPlan)
+				if err != nil {
+					return types.DistributionPlan{}, err
+				}
+			}
+
 		} else {
-			k.Logger(ctx).Info("Sending a MsgRedeemTokensforShares!", "asset", asset)
-
-			// TODO: validate this against validators?
-			// if validator is not active, then redelegate msg too?
-			msgs = append(msgs, &stakingTypes.MsgRedeemTokensforShares{DelegatorAddress: account.GetAddress(), Amount: asset})
-		}
-	}
-	return k.SubmitTx(ctx, msgs, account)
-}
-
-func (k Keeper) DetermineStateIntentDiff(ctx sdk.Context, zone types.RegisteredZone) map[string]sdk.Int {
-	totalAggregateIntent := sdk.ZeroDec()
-	currentState := make(map[string]sdk.Int)
-	totalDelegations := sdk.ZeroInt()
-	diff := make(map[string]sdk.Int)
-
-	// sum total aggregate intent
-	for _, val := range zone.AggregateIntent {
-		totalAggregateIntent = totalAggregateIntent.Add(val.Weight)
-
-	}
-
-	validators := zone.GetValidatorsSorted()
-
-	if totalAggregateIntent.IsZero() {
-		// if totalAggregateIntent is zero (that is, we have no intent set - which can happen
-		// if we have only ever have native tokens staked and nbody has signalled intent) give
-		// every validator an equal intent artificially.
-
-		// this can be removed when we cache intent.
-		if zone.AggregateIntent == nil {
-			zone.AggregateIntent = make(map[string]*types.ValidatorIntent)
+			delPlan = types.DelegationPlanFromCoins(zone, coin)
 		}
 
-		for _, val := range validators {
-			zone.AggregateIntent[val.ValoperAddress] = &types.ValidatorIntent{ValoperAddress: val.ValoperAddress, Weight: sdk.OneDec()}
-			totalAggregateIntent = totalAggregateIntent.Add(sdk.OneDec())
+		for _, val := range delPlan.Keys() {
+			if coins, ok := delPlan.Value[val]; ok {
+				for _, coin := range coins.GetValue() {
+					var del string
+					del, bins = bins.FindAccountForDelegation(val, sdk.NewCoin(zone.BaseDenom, coin.Amount))
+					disPlan = disPlan.Add(del, types.NewSingleDelegationPlan(val, sdk.NewCoins(coin)))
+				}
+			}
 		}
 	}
 
-	for _, i := range validators {
-		stake := sdk.ZeroInt()
-		_, valAddr, _ := bech32.DecodeAndConvert(i.ValoperAddress)
-		for _, delegation := range k.GetValidatorDelegations(ctx, &zone, valAddr) {
-			stake = stake.Add(delegation.Amount.Amount)
-		}
-		currentState[i.ValoperAddress] = stake
-		totalDelegations = totalDelegations.Add(stake)
-	}
-	ratio := totalDelegations.ToDec().Quo(totalAggregateIntent) // will always be >= 1.0
-
-	for _, i := range validators {
-		current, found := currentState[i.ValoperAddress]
-		if !found {
-			// this probably can happen if we have intent for a validator not in the set
-			// (although we _should_ have all validators, current and past in the set).
-			panic("this shouldn't happen...")
-		}
-		desired, found := zone.AggregateIntent[i.ValoperAddress]
-		if !found {
-			desired = &types.ValidatorIntent{ValoperAddress: i.ValoperAddress, Weight: sdk.ZeroDec()} // this is okay! just means nobody wants this validator anymore!
-		}
-		thisDiff := desired.Weight.Mul(ratio).TruncateInt().Sub(current)
-		if !thisDiff.Equal(sdk.ZeroInt()) {
-			diff[i.ValoperAddress] = thisDiff
-		}
-	}
-	return diff
-}
-
-func (k Keeper) DetermineValidatorsForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coin) ([]string, map[string]sdk.Coin, error) {
-	out := make(map[string]sdk.Coin)
-
-	coinAmount := amount.Amount
-	aggregateIntents := zone.GetAggregateIntent()
-
-	if len(aggregateIntents) == 0 {
-		aggregateIntents = defaultAggregateIntents(ctx, zone)
-	}
-
-	keys := make([]string, 0)
-	for valoper, intent := range aggregateIntents {
-		keys = append(keys, valoper)
-		if !coinAmount.IsZero() {
-			// while there is some balance left to distribute
-			// calculate the int value of weight * amount to distribute.
-			thisAmount := intent.Weight.MulInt(amount.Amount).TruncateInt()
-			// set distrubtion amount
-			out[valoper] = sdk.Coin{Denom: amount.Denom, Amount: thisAmount}
-			// reduce outstanding pool
-			coinAmount = coinAmount.Sub(thisAmount)
-		}
-	}
-
-	sort.Strings(keys)
-	v0 := keys[0]
-	out[v0] = out[v0].AddAmount(coinAmount)
-
-	k.Logger(ctx).Info("Validator weightings without diffs", "weights", out)
-
-	// calculate diff between current state and intended state.
-	//diffs := k.DetermineStateIntentDiff(ctx, zone)
-
-	// apply diff to distrubtion of delegation.
-	// out, remaining := zone.ApplyDiffsToDistribution(out, diffs)
-	// if !remaining.IsZero() {
-	// 	for _, valoper := range keys {
-	// 		intent := aggregateIntents[valoper]
-	// 		thisAmount := intent.Weight.MulInt(remaining).TruncateInt()
-	// 		thisOutAmount, ok := out[valoper]
-	// 		if !ok {
-	// 			thisOutAmount = sdk.NewCoin(amount.Denom, sdk.ZeroInt())
-	// 		}
-
-	// 		out[valoper] = thisOutAmount.AddAmount(thisAmount)
-	// 		remaining = remaining.Sub(thisAmount)
-	// 	}
-
-	// 	v0 := keys[0]
-	// 	out[v0] = out[v0].AddAmount(remaining)
-	// }
-
-	//k.Logger(ctx).Info("Determined validators from aggregated intents +/- rebalance diffs", "amount", amount.Amount, "out", out)
-
-	return keys, out, nil
+	return disPlan, nil
 }
 
 func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *types.RegisteredZone, delegator string, response []byte) error {
@@ -321,9 +229,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	zone.WithdrawalWaitgroup += uint32(len(msgs))
 	k.SetRegisteredZone(ctx, *zone)
 
-	k.Logger(ctx).Info("Withdraw delegation messages", "msgs", msgs)
-
-	return k.SubmitTx(ctx, msgs, account)
+	return k.SubmitTx(ctx, msgs, account, "")
 }
 
 func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalRewardsResponse, delegator string, validator string) sdk.DecCoins {
@@ -333,4 +239,27 @@ func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalReward
 		}
 	}
 	return sdk.NewDecCoins()
+}
+
+func (k *Keeper) GetDelegationBinsMap(ctx sdk.Context, zone *types.RegisteredZone) types.DelegationBins {
+	out := make(types.DelegationBins)
+	for _, da := range zone.DelegationAddresses {
+		_, ok := out[da.Address]
+		if !ok {
+			out[da.Address] = make(types.DelegationBin)
+		}
+	}
+
+	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
+		account := out[delegation.DelegationAddress]
+		if valWeight, ok := account[delegation.ValidatorAddress]; !ok {
+			account[delegation.ValidatorAddress] = delegation.Amount.Amount
+		} else {
+			account[delegation.ValidatorAddress] = delegation.Amount.Amount.Add(valWeight)
+		}
+		out[delegation.DelegationAddress] = account
+		return false
+	})
+
+	return out
 }

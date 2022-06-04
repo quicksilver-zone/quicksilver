@@ -109,27 +109,34 @@ done
 
 sleep 5
 $TZ_EXEC tx bank send val2 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_2}1 --chain-id $CHAINID_2 -y --keyring-backend=test
+sleep 30
 $TZ2_EXEC tx bank send val3 $DEPOSIT_ACCOUNT 15000000${VAL_VALOPER_3}2 --chain-id $CHAINID_2 -y --keyring-backend=test
 
-sleep 5
+sleep 30
 $TZ_EXEC tx staking delegate ${VAL_VALOPER_2} 36000000uatom --from demowallet2 --chain-id $CHAINID_2 -y --keyring-backend=test
 
-sleep 5
+sleep 60
+$TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 333333uatom --chain-id $CHAINID_2 -y --keyring-backend=test
+sleep 60
+$TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 20000000uatom --chain-id $CHAINID_2 -y --keyring-backend=test --note MgTUzEjWVVYoDZBarqFL1akb38mxlgTsqdZ/sFxTJBNf+tv6rtckvn3T
+sleep 60
+$TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 33000000uatom --chain-id $CHAINID_2 -y --keyring-backend=test
+sleep 30
 
 $TZ_EXEC tx staking tokenize-share $VAL_VALOPER_2 36000000uatom $VAL_ADDRESS_2 --from demowallet2 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test   #4
 $TZ2_EXEC tx bank send val3 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_3}2 --chain-id $CHAINID_2 -y --keyring-backend=test
 
-sleep 10
+sleep 30
 
 $TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 20000000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
 $TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 25000000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test
 
-sleep 10
+sleep 30
 
 $TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
 $TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 15000000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test
 
-sleep 10
+sleep 30
 
 $TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 6000000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
 $TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 25000000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test

@@ -121,26 +121,6 @@ func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*type
 	return zone, ica
 }
 
-// defaultAggregateIntents determines the default aggregate intent (for epoch 0)
-func defaultAggregateIntents(ctx sdk.Context, zone types.RegisteredZone) map[string]*types.ValidatorIntent {
-	out := make(map[string]*types.ValidatorIntent)
-	for _, val := range zone.GetValidatorsSorted() {
-		if val.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
-			out[val.GetValoperAddress()] = &types.ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()}
-		}
-	}
-
-	valCount := sdk.NewInt(int64(len(out)))
-
-	// normalise the array (divide everything by length of intent list)
-	for key, val := range out {
-		val.Weight = val.Weight.Quo(sdk.NewDecFromInt(valCount))
-		out[key] = val
-	}
-
-	return out
-}
-
 // setAccountCb is a callback handler for Balance queries.
 var setAccountCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
@@ -234,7 +214,11 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZ
 		if zone.WithdrawalAddress.BalanceWaitgroup == 0 {
 			if !icaAccount.Balance.Empty() {
 				k.Logger(ctx).Info("Delegate account balance is non-zero; delegating!", "to_delegate", icaAccount.Balance)
-				err := k.Delegate(ctx, zone, icaAccount)
+				valPlan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegationBinsMap(ctx, &zone), zone, coin, zone.GetAggregateIntentOrDefault())
+				if err != nil {
+					return err
+				}
+				err = k.Delegate(ctx, zone, icaAccount, valPlan)
 				if err != nil {
 					return err
 				}

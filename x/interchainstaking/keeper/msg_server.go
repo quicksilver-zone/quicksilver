@@ -228,7 +228,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 			panic(err) // panic here because something is terribly wrong if we cann't find the delegation bucket here!!!
 		}
 		k.Logger(ctx).Error("DEBUG 13c", "msgs", msgs)
-		k.SubmitTx(ctx, msgs, icaAccount)
+		k.SubmitTx(ctx, msgs, icaAccount, "")
 	}
 	k.Logger(ctx).Error("DEBUG 14")
 
