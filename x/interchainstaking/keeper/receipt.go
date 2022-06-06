@@ -11,7 +11,6 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	tmtypes "github.com/tendermint/tendermint/abci/types"
 
@@ -77,15 +76,25 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 
 	k.Logger(ctx).Info("Found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "sender", senderAddress, "local", accAddress.String(), "chain id", zone.ChainId, "amount", coins, "hash", hash)
 	// create receipt
-	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
 
 	k.UpdateIntent(ctx, accAddress, zone, coins, memo)
 	if err := k.MintQAsset(ctx, accAddress, zone, coins); err != nil {
 		k.Logger(ctx).Error("Unable to mint QAsset. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+		return
 	}
-	if err := k.TransferToDelegate(ctx, zone, coins); err != nil {
+
+	plan, err := k.DeterminePlanForDelegation(ctx, zone, coins, accAddress.String())
+	if err != nil {
+		k.Logger(ctx).Error("Unable to determine delegation plan. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+		return
+	}
+
+	if err := k.TransferToDelegate(ctx, zone, plan.ToSendPlan(), hash); err != nil {
 		k.Logger(ctx).Error("Unable to transfer to delegate. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+		return
 	}
+	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins, plan)
+
 	k.SetReceipt(ctx, *receipt)
 }
 
@@ -119,91 +128,63 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.R
 	return nil
 }
 
-func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, inAmount sdk.Coins) error {
-	if zone.SupportMultiSend() {
-		return k.TransferToDelegateMulti(ctx, zone, inAmount)
-	} else {
-		eachAmount := sdk.Coins{}
-		splits := utils.MinU64(append([]uint64{}, k.GetParam(ctx, types.KeyDelegateAccountCount), uint64(len(zone.GetDelegationAccounts()))))
+func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, plan types.SendPlan, memo string) error {
 
-		for _, asset := range inAmount {
-			thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
-			// TODO: maybe set this to some param based threshold? 5000 is an arbitrary figure to avoid distributing dust continuously.
-			// 5000 * 100 accounts == 0.5 tokens
-			if thisAsset.Amount.GT(sdk.NewInt(5000)) {
-				eachAmount = eachAmount.Add(thisAsset)
+	// if zone.SupportMultiSend() {
+	// 	return k.TransferToDelegateMulti(ctx, zone, plan, memo)
+	// } else {
+	var msgs []sdk.Msg
+	for _, delAccount := range plan.Keys() {
+		if coins, ok := plan[delAccount]; ok {
+			if !coins.Empty() && !coins.IsZero() {
+				msgs = append(msgs, &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: delAccount, Amount: coins})
 			}
 		}
-
-		// if we don't have sufficient balance to delegate from multiple accounts; limit to a single account.
-		if eachAmount.Empty() || eachAmount.IsZero() {
-			splits = 1
-		}
-		accounts := zone.GetDelegationAccountsByLowestBalance(splits)
-
-		// reverse this slice; because we want the smallest account last, so the remainder ends in it.
-		for i, j := 0, len(accounts)-1; i < j; i, j = i+1, j-1 {
-			accounts[i], accounts[j] = accounts[j], accounts[i]
-		}
-
-		var msgs []sdk.Msg
-
-		for idx, account := range accounts {
-			var amount sdk.Coins
-			if idx < len(accounts)-1 {
-				// if not the last account in sequence then sub each amount from inAmount
-				amount = eachAmount
-				inAmount = inAmount.Sub(amount)
-			} else {
-				amount = inAmount
-			}
-			if !amount.Empty() && !amount.IsZero() {
-				msgs = append(msgs, &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: account.GetAddress(), Amount: amount})
-			}
-		}
-
-		return k.SubmitTx(ctx, msgs, zone.DepositAddress)
 	}
+
+	return k.SubmitTx(ctx, msgs, zone.DepositAddress, memo)
 }
 
-func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZone, inAmount sdk.Coins) error {
-	eachAmount := sdk.Coins{}
-	splits := utils.MinU64(append([]uint64{}, k.GetParam(ctx, types.KeyDelegateAccountCount), uint64(len(zone.GetDelegationAccounts()))))
+//}
 
-	for _, asset := range inAmount {
-		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
-		// TODO: maybe set this to some param based threshold? 5000 is an arbitrary figure to avoid distributing dust continuously.
-		// 5000 * 100 accounts == 0.5 tokens
-		if thisAsset.Amount.GT(sdk.NewInt(5000)) {
-			eachAmount = eachAmount.Add(thisAsset)
-		}
-	}
+// func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZone, plan types.SendPlan, memo string) error {
+// 	eachAmount := sdk.Coins{}
+// 	splits := utils.MinU64(append([]uint64{}, k.GetParam(ctx, types.KeyDelegateAccountCount), uint64(len(zone.GetDelegationAccounts()))))
 
-	if eachAmount.Empty() || eachAmount.IsZero() {
-		splits = 1
-	}
+// 	for _, asset := range inAmount {
+// 		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
+// 		// TODO: maybe set this to some param based threshold? 5000 is an arbitrary figure to avoid distributing dust continuously.
+// 		// 5000 * 100 accounts == 0.5 tokens
+// 		if thisAsset.Amount.GT(sdk.NewInt(5000)) {
+// 			eachAmount = eachAmount.Add(thisAsset)
+// 		}
+// 	}
 
-	in := []bankTypes.Input{}
-	out := []bankTypes.Output{}
+// 	if eachAmount.Empty() || eachAmount.IsZero() {
+// 		splits = 1
+// 	}
 
-	in = append(in, bankTypes.Input{Address: zone.DepositAddress.GetAddress(), Coins: inAmount})
+// 	in := []bankTypes.Input{}
+// 	out := []bankTypes.Output{}
 
-	accounts := zone.GetDelegationAccountsByLowestBalance(splits)
-	for _, account := range accounts {
-		out = append(out, bankTypes.Output{Address: account.GetAddress(), Coins: eachAmount})
-		inAmount = inAmount.Sub(eachAmount)
-	}
+// 	in = append(in, bankTypes.Input{Address: zone.DepositAddress.GetAddress(), Coins: inAmount})
 
-	// ensure any remainder gets deposited in the first account (as it will have the lowest balance)
-	out[0].Coins = out[0].Coins.Add(inAmount...)
+// 	accounts := zone.GetDelegationAccountsByLowestBalance(splits)
+// 	for _, account := range accounts {
+// 		out = append(out, bankTypes.Output{Address: account.GetAddress(), Coins: eachAmount})
+// 		inAmount = inAmount.Sub(eachAmount)
+// 	}
 
-	msg := bankTypes.NewMsgMultiSend(in, out)
-	// send from deposit to accounts
+// 	// ensure any remainder gets deposited in the first account (as it will have the lowest balance)
+// 	out[0].Coins = out[0].Coins.Add(inAmount...)
 
-	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress)
-}
+// 	msg := bankTypes.NewMsgMultiSend(in, out)
+// 	// send from deposit to accounts
 
-func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount) error {
+// 	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo)
+// }
+
+func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string) error {
 
 	portID := account.GetPortName()
 	connectionID, err := k.GetConnectionForPort(ctx, portID)
@@ -226,9 +207,11 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		return err
 	}
 
+	// validate memo < 256 bytes
 	packetData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
+		Memo: memo,
 	}
 
 	// timeoutTimestamp set to max value with the unsigned bit shifted to sastisfy hermes timestamp conversion
@@ -244,8 +227,8 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 // ---------------------------------------------------------------
 
-func (k Keeper) NewReceipt(ctx sdk.Context, zone types.RegisteredZone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
-	return &types.Receipt{Zone: &zone, Sender: sender, Txhash: txhash, Amount: amount}
+func (k Keeper) NewReceipt(ctx sdk.Context, zone types.RegisteredZone, sender string, txhash string, amount sdk.Coins, plan types.DistributionPlan) *types.Receipt {
+	return &types.Receipt{Zone: &zone, Sender: sender, Txhash: txhash, Amount: amount, DistributionPlan: &plan}
 }
 
 // GetReceipt returns receipt

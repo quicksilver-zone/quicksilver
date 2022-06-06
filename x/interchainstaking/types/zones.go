@@ -1,7 +1,7 @@
 package types
 
 import (
-	"encoding/hex"
+	"encoding/base64"
 	fmt "fmt"
 	"sort"
 	"strings"
@@ -66,10 +66,11 @@ COINS:
 	return nil
 }
 
-func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk.Coins) map[string]*ValidatorIntent {
+func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(coins sdk.Coins) ValidatorIntents {
 	// should we be return DelegatorIntent here?
-	out := make(map[string]*ValidatorIntent)
+	out := make(ValidatorIntents)
 	zoneVals := z.GetValidatorsAddressesAsSlice()
+COINS:
 	for _, coin := range coins {
 		for _, v := range zoneVals {
 			// if token share, add amount to
@@ -80,6 +81,7 @@ func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk
 				}
 				val.Weight = val.Weight.Add(sdk.NewDecFromInt(coin.Amount))
 				out[v] = val
+				continue COINS
 			}
 		}
 	}
@@ -87,47 +89,48 @@ func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(ctx sdk.Context, coins sdk
 	return out
 }
 
-func (z *RegisteredZone) ConvertMemoToOrdinalIntents(ctx sdk.Context, coins sdk.Coins, memo string) map[string]*ValidatorIntent {
+func (z *RegisteredZone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) ValidatorIntents {
 	// should we be return DelegatorIntent here?
-	out := make(map[string]*ValidatorIntent)
+	out := make(ValidatorIntents)
 
 	if len(memo) == 0 {
 		return out
 	}
 
-	memoBytes, err := hex.DecodeString(memo)
+	memoBytes, err := base64.StdEncoding.DecodeString(memo)
 	if err != nil {
+		fmt.Println("Failed to decode base64 memo", err)
 		return out
 	}
 
-	if len(memoBytes)%33 != 0 { // memo must be one byte (1-200) weight then 32 byte valoperAddress
+	if len(memoBytes)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
+		fmt.Println("Message was incorrect length", len(memoBytes))
 		return out
 	}
 
-	for remaining := len(memoBytes); remaining > 0; {
-		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(int64(memoBytes[0]))).QuoInt(sdk.NewInt(2)).MulInt(coins.AmountOf(z.BaseDenom))
-		address := memoBytes[1:33]
+	for index := 0; index < len(memoBytes); {
+		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(int64(memoBytes[index]))).QuoInt(sdk.NewInt(200))
+		coinWeight := sdkWeight.MulInt(coins.AmountOf(z.BaseDenom))
+		index++
+		address := memoBytes[index : index+20]
+		index += 20
 		valAddr, _ := bech32.ConvertAndEncode(z.AccountPrefix+"valoper", address)
 
 		val, ok := out[valAddr]
 		if !ok {
 			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
 		}
-		val.Weight = val.Weight.Add(sdkWeight)
+		val.Weight = val.Weight.Add(coinWeight)
 		out[valAddr] = val
-
-		memoBytes = memoBytes[33:]
 	}
-
 	return out
 }
 
 func (z *RegisteredZone) GetValidatorsSorted() []*Validator {
-	vals := z.Validators
-	sort.Slice(vals, func(i, j int) bool {
-		return vals[i].ValoperAddress < vals[j].ValoperAddress
+	sort.Slice(z.Validators, func(i, j int) bool {
+		return z.Validators[i].ValoperAddress < z.Validators[j].ValoperAddress
 	})
-	return vals
+	return z.Validators
 }
 
 func (z RegisteredZone) GetValidatorsAddressesAsSlice() []string {
@@ -140,60 +143,6 @@ func (z RegisteredZone) GetValidatorsAddressesAsSlice() []string {
 
 	return l
 }
-
-// func (z RegisteredZone) ApplyDiffsToDistribution(distribution map[string]sdk.Coin, diffs map[string]sdk.Int) (map[string]sdk.Coin, sdk.Int) {
-// 	remaining := sdk.ZeroInt()
-// 	// sort map to ordered slice
-// 	for _, val := range sortMapToSlice(diffs) {
-// 		thisAmount, ok := distribution[val.str]
-// 		if !ok {
-// 			// no allocation to this val from intents, so skip.
-// 			// TODO: should we _add_ a new distribution here? We could easily, we just need to know the denom.
-// 			continue
-// 		}
-
-// 		if val.i.GT(sdk.ZeroInt()) {
-// 			if thisAmount.Amount.LTE(val.i) { // if the new additional value is LTE the positive diff, remove it all and assign all values to remaining.
-// 				delete(distribution, val.str)
-// 				remaining = remaining.Add(thisAmount.Amount)
-// 			} else { // GT
-// 				distribution[val.str] = distribution[val.str].SubAmount(val.i)
-// 				remaining = remaining.Add(val.i)
-// 			}
-// 		} else {
-// 			// increase new amounts by diff from remaining
-// 			if val.i.Abs().GTE(remaining) {
-// 				distribution[val.str] = distribution[val.str].AddAmount(remaining) // negative addition :(
-// 				remaining = sdk.ZeroInt()
-// 				break
-// 			} else {
-// 				distribution[val.str] = distribution[val.str].SubAmount(val.i) // negative addition :(
-// 				remaining = remaining.Add(val.i)
-// 			}
-// 		}
-// 	}
-
-// 	return distribution, remaining
-// }
-
-// type sortableStringInt struct {
-// 	str string
-// 	i   sdk.Int
-// }
-
-// func sortMapToSlice(numbers map[string]sdk.Int) []sortableStringInt {
-// 	out := []sortableStringInt{}
-// 	for str, int := range numbers {
-// 		if !int.IsZero() {
-// 			out = append(out, sortableStringInt{str: str, i: int})
-// 		}
-// 	}
-// 	// sort
-// 	sort.SliceStable(out, func(i, j int) bool {
-// 		return out[i].i.GT(out[j].i)
-// 	})
-// 	return out
-// }
 
 func (z *RegisteredZone) GetDelegatedAmount() sdk.Coin {
 	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())
@@ -209,4 +158,34 @@ func (z *RegisteredZone) GetDelegationAccounts() []*ICAAccount {
 		return delegationAccounts[i].Address < delegationAccounts[j].Address
 	})
 	return delegationAccounts
+}
+
+func (z *RegisteredZone) GetAggregateIntentOrDefault() ValidatorIntents {
+	if len(z.AggregateIntent) == 0 {
+		return z.DefaultAggregateIntents()
+	} else {
+		return z.AggregateIntent
+	}
+}
+
+// defaultAggregateIntents determines the default aggregate intent (for epoch 0)
+func (z *RegisteredZone) DefaultAggregateIntents() ValidatorIntents {
+	out := make(ValidatorIntents)
+	for _, val := range z.GetValidatorsSorted() {
+		if val.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
+			out[val.GetValoperAddress()] = &ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()}
+		}
+	}
+
+	valCount := sdk.NewInt(int64(len(out)))
+
+	// normalise the array (divide everything by length of intent list)
+	for _, key := range out.Keys() {
+		if val, ok := out[key]; ok {
+			val.Weight = val.Weight.Quo(sdk.NewDecFromInt(valCount))
+			out[key] = val
+		}
+	}
+
+	return out
 }

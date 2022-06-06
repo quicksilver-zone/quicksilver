@@ -127,7 +127,10 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 		panic(err)
 	}
 	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(balance.Balance.Amount)).TruncateInt()
-	intent = intent.AddOrdinal(baseBalance, zone.ConvertCoinsToOrdinalIntents(ctx, inAmount))
-	intent = intent.AddOrdinal(baseBalance, zone.ConvertMemoToOrdinalIntents(ctx, inAmount, memo))
+	intent = intent.AddOrdinal(baseBalance, zone.ConvertCoinsToOrdinalIntents(inAmount))
+	intent = intent.AddOrdinal(baseBalance, zone.ConvertMemoToOrdinalIntents(inAmount, memo))
+	if len(intent.Intents) == 0 {
+		return
+	}
 	k.SetIntent(ctx, zone, intent)
 }

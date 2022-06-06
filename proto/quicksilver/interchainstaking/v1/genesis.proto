@@ -141,7 +141,24 @@ message Receipt {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
+  DistributionPlan distribution_plan = 5;
 }
+
+message DelegationPlan {
+  message DelegationPlanItem {
+    repeated cosmos.base.v1beta1.Coin value = 1 [ 
+      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+      (gogoproto.nullable) = false
+      ];
+  }
+
+  map<string, DelegationPlanItem> value = 1;
+}
+
+message DistributionPlan {
+  map<string, DelegationPlan> value = 1;
+}
+
 
 message Params {
   option (gogoproto.equal) = true;
@@ -159,3 +176,4 @@ message Params {
     (gogoproto.nullable) = false
   ];
 }
+
