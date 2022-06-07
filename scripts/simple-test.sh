@@ -93,7 +93,7 @@ docker-compose up --force-recreate -d icq
 echo "Register $CHAINID_2 on quicksilver..."
 $QS_EXEC tx interchainstaking register connection-0 uqatom uatom cosmos --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test --multi-send
 
-sleep 15
+sleep 5
 
 ## TODO: get val2 valoper from keys
 $TZ_EXEC tx staking tokenize-share $VAL_VALOPER_2 10000000uatom $VAL_ADDRESS_2 --from val2 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test  #1
@@ -109,7 +109,7 @@ done
 
 PERFORMANCE_ACCOUNT=$($QS_EXEC q interchainstaking zones --output=json | jq .zones[0].performance_address.address -r)
 while [[ "$PERFORMANCE_ACCOUNT" == "null" ]]; do
-  sleep 5
+  sleep 2
   PERFORMANCE_ACCOUNT=$($QS_EXEC q interchainstaking zones --output=json | jq .zones[0].performance_address.address -r)
 done
 

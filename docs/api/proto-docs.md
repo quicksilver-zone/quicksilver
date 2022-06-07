@@ -30,11 +30,7 @@
 - [quicksilver/interchainstaking/v1/genesis.proto](#quicksilver/interchainstaking/v1/genesis.proto)
     - [Delegation](#quicksilver.interchainstaking.v1.Delegation)
     - [DelegationPlan](#quicksilver.interchainstaking.v1.DelegationPlan)
-    - [DelegationPlan.DelegationPlanItem](#quicksilver.interchainstaking.v1.DelegationPlan.DelegationPlanItem)
-    - [DelegationPlan.ValueEntry](#quicksilver.interchainstaking.v1.DelegationPlan.ValueEntry)
     - [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent)
-    - [DistributionPlan](#quicksilver.interchainstaking.v1.DistributionPlan)
-    - [DistributionPlan.ValueEntry](#quicksilver.interchainstaking.v1.DistributionPlan.ValueEntry)
     - [GenesisState](#quicksilver.interchainstaking.v1.GenesisState)
     - [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount)
     - [Params](#quicksilver.interchainstaking.v1.Params)
@@ -59,6 +55,8 @@
     - [Msg](#quicksilver.interchainstaking.v1.Msg)
   
 - [quicksilver/interchainstaking/v1/query.proto](#quicksilver/interchainstaking/v1/query.proto)
+    - [QueryDelegationPlansRequest](#quicksilver.interchainstaking.v1.QueryDelegationPlansRequest)
+    - [QueryDelegationPlansResponse](#quicksilver.interchainstaking.v1.QueryDelegationPlansResponse)
     - [QueryDelegationsRequest](#quicksilver.interchainstaking.v1.QueryDelegationsRequest)
     - [QueryDelegationsResponse](#quicksilver.interchainstaking.v1.QueryDelegationsResponse)
     - [QueryDelegatorDelegationsRequest](#quicksilver.interchainstaking.v1.QueryDelegatorDelegationsRequest)
@@ -414,38 +412,9 @@ Msg defines the interchainquery Msg service.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `value` | [DelegationPlan.ValueEntry](#quicksilver.interchainstaking.v1.DelegationPlan.ValueEntry) | repeated |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainstaking.v1.DelegationPlan.DelegationPlanItem"></a>
-
-### DelegationPlan.DelegationPlanItem
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
+| `validatorAddress` | [string](#string) |  |  |
+| `delegatorAddress` | [string](#string) |  |  |
 | `value` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainstaking.v1.DelegationPlan.ValueEntry"></a>
-
-### DelegationPlan.ValueEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [DelegationPlan.DelegationPlanItem](#quicksilver.interchainstaking.v1.DelegationPlan.DelegationPlanItem) |  |  |
 
 
 
@@ -462,37 +431,6 @@ Msg defines the interchainquery Msg service.
 | ----- | ---- | ----- | ----------- |
 | `delegator` | [string](#string) |  |  |
 | `intents` | [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent) | repeated |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainstaking.v1.DistributionPlan"></a>
-
-### DistributionPlan
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `value` | [DistributionPlan.ValueEntry](#quicksilver.interchainstaking.v1.DistributionPlan.ValueEntry) | repeated |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainstaking.v1.DistributionPlan.ValueEntry"></a>
-
-### DistributionPlan.ValueEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [DelegationPlan](#quicksilver.interchainstaking.v1.DelegationPlan) |  |  |
 
 
 
@@ -583,7 +521,6 @@ GenesisState defines the interchainstaking module's genesis state.
 | `sender` | [string](#string) |  |  |
 | `txhash` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `distribution_plan` | [DistributionPlan](#quicksilver.interchainstaking.v1.DistributionPlan) |  |  |
 
 
 
@@ -854,6 +791,37 @@ Msg defines the interchainstaking Msg service.
 
 
 
+<a name="quicksilver.interchainstaking.v1.QueryDelegationPlansRequest"></a>
+
+### QueryDelegationPlansRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `chain_id` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.QueryDelegationPlansResponse"></a>
+
+### QueryDelegationPlansResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegations` | [DelegationPlan](#quicksilver.interchainstaking.v1.DelegationPlan) | repeated |  |
+
+
+
+
+
+
 <a name="quicksilver.interchainstaking.v1.QueryDelegationsRequest"></a>
 
 ### QueryDelegationsRequest
@@ -1062,6 +1030,7 @@ Query defines the gRPC querier service.
 | `Delegations` | [QueryDelegationsRequest](#quicksilver.interchainstaking.v1.QueryDelegationsRequest) | [QueryDelegationsResponse](#quicksilver.interchainstaking.v1.QueryDelegationsResponse) | Delegations provides data on the delegations for the given zone. | GET|/quicksilver/interchainstaking/v1/zones/{chain_id}/delegations|
 | `DelegatorDelegations` | [QueryDelegatorDelegationsRequest](#quicksilver.interchainstaking.v1.QueryDelegatorDelegationsRequest) | [QueryDelegatorDelegationsResponse](#quicksilver.interchainstaking.v1.QueryDelegatorDelegationsResponse) | DelegatorDelegations provides data on the delegations from a given delegator for the given zone. | GET|/quicksilver/interchainstaking/v1/zones/{chain_id}/delegator_delegations/{delegator_address}|
 | `ValidatorDelegations` | [QueryValidatorDelegationsRequest](#quicksilver.interchainstaking.v1.QueryValidatorDelegationsRequest) | [QueryValidatorDelegationsResponse](#quicksilver.interchainstaking.v1.QueryValidatorDelegationsResponse) | ValidatorDelegations provides data on the delegations to a given validator for the given zone. | GET|/quicksilver/interchainstaking/v1/zones/{chain_id}/validator_delegations/{validator_address}|
+| `DelegationPlans` | [QueryDelegationPlansRequest](#quicksilver.interchainstaking.v1.QueryDelegationPlansRequest) | [QueryDelegationPlansResponse](#quicksilver.interchainstaking.v1.QueryDelegationPlansResponse) | DelegationPlans provides data on the delegations to a given validator for the given zone. | GET|/quicksilver/interchainstaking/v1/zones/{chain_id}/delegation_plans|
 
  <!-- end services -->
 

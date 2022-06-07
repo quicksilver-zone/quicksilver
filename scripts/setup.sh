@@ -183,10 +183,10 @@ $QS_RUN gentx val1 7000000000uqck --chain-id $CHAINID_1 --keyring-backend test
 $QS2_RUN gentx val6 7000000000uqck --chain-id $CHAINID_1 --keyring-backend test
 $QS3_RUN gentx val7 7000000000uqck --chain-id $CHAINID_1 --keyring-backend test
 
-$TZ_RUN gentx val2 7000000000uatom --chain-id $CHAINID_2 --keyring-backend test
-$TZ2_RUN gentx val3 6000000000uatom --chain-id $CHAINID_2 --keyring-backend test
-$TZ3_RUN gentx val4 5000000000uatom --chain-id $CHAINID_2 --keyring-backend test
-$TZ4_RUN gentx val5 4000000000uatom --chain-id $CHAINID_2 --keyring-backend test
+$TZ_RUN gentx val2 7000000000uatom --commission-rate 0.33 --commission-max-rate 0.5 --commission-max-change-rate 0.1 --chain-id $CHAINID_2 --keyring-backend test
+$TZ2_RUN gentx val3 6000000000uatom --commission-rate 0.23 --commission-max-rate 0.5 --commission-max-change-rate 0.1 --chain-id $CHAINID_2 --keyring-backend test
+$TZ3_RUN gentx val4 5000000000uatom --commission-rate 0.13 --commission-max-rate 0.5 --commission-max-change-rate 0.1 --chain-id $CHAINID_2 --keyring-backend test
+$TZ4_RUN gentx val5 4000000000uatom --commission-rate 0.03 --commission-max-rate 0.5 --commission-max-change-rate 0.1 --chain-id $CHAINID_2 --keyring-backend test
 
 cp ./${CHAIN_DIR}/${CHAINID_1}a/config/gentx/*.json ./${CHAIN_DIR}/${CHAINID_1}/config/gentx/
 cp ./${CHAIN_DIR}/${CHAINID_1}b/config/gentx/*.json ./${CHAIN_DIR}/${CHAINID_1}/config/gentx/

@@ -40,6 +40,7 @@ var (
 	KeyPrefixReceipt          = []byte{0x04}
 	KeyPrefixWithdrawalRecord = []byte{0x05}
 	KeyPrefixDelegation       = []byte{0x06}
+	KeyPrefixDelegationPlan   = []byte{0x07}
 
 //	KeyPrefixDelegationByValidator = []byte{0x08}
 )

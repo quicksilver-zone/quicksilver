@@ -86,6 +86,7 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 			s.chainB.ChainID,
 			"cosmos.staking.v1beta1.Query/Validators",
 			bz,
+			icstypes.ModuleName,
 		),
 		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshalJSON(&qvr),
 		Height:      s.chainB.CurrentHeader.Height,

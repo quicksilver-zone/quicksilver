@@ -141,23 +141,28 @@ func (bins DelegationBins) SmallestBin() CandidateBin {
 }
 
 func (bins DelegationBins) FindAccountForDelegation(validatorAddress string, coin sdk.Coin) (string, DelegationBins) {
-
+	fmt.Println("Finding bin: ", coin)
 	candidates := CandidateBins{}
 	threshold := bins.DetermineThreshold()
+	fmt.Println("Threshold is: ", threshold)
+
 	for _, delAddr := range bins.Keys() {
 		bin := bins[delAddr]
 		binVal := bin.SumDelegations()
 		if bin.HasValidator(validatorAddress) {
 			// already contains
 			if binVal.GTE(threshold) {
+				fmt.Printf("Binval %s >= threshold %s adding as candidate\n", binVal, threshold)
 				// oversubscribed :(
 				candidates = append(candidates, CandidateBin{delAddr, binVal})
 			} else {
+				fmt.Printf("Binval %s < threshold %s; using\n", binVal, threshold)
 				return delAddr, bins.AddDelegation(delAddr, validatorAddress, coin.Amount)
 			}
 		} else {
 			// bin does not have this validator in...
 			if bin.IsEmpty() {
+				fmt.Println("Bin is empty; using")
 				return delAddr, bins.AddDelegation(delAddr, validatorAddress, coin.Amount)
 			}
 		}
@@ -166,7 +171,8 @@ func (bins DelegationBins) FindAccountForDelegation(validatorAddress string, coi
 	smallest := bins.SmallestBin()
 	if len(candidates) > 0 {
 		candidates = candidates.GetSorted()
-
+		fmt.Println("Candidates: ", candidates)
+		fmt.Println("Smallest: ", smallest)
 		if smallest.val.LT(candidates[0].val.Quo(sdk.NewInt(3))) {
 			return smallest.addr, bins.AddDelegation(smallest.addr, validatorAddress, coin.Amount)
 		} else {
@@ -207,128 +213,105 @@ func (v ValidatorIntents) Keys() []string {
 	return out
 }
 
-type SendPlan map[string]sdk.Coins
+// MustMarshalDelegationPlan returns the delegation plan bytes. Panics if fails
+func MustMarshalDelegationPlan(cdc codec.BinaryCodec, delegationPlan DelegationPlan) []byte {
+	return cdc.MustMarshal(&delegationPlan)
+}
 
-func (s SendPlan) Keys() []string {
-	out := []string{}
-
-	for i := range s {
-		out = append(out, i)
+// MustUnmarshalDelegationPlan return the unmarshaled delegation plan from bytes.
+// Panics if fails.
+func MustUnmarshalDelegationPlan(cdc codec.BinaryCodec, value []byte) DelegationPlan {
+	delegationPlan, err := UnmarshalDelegationPlan(cdc, value)
+	if err != nil {
+		panic(err)
 	}
 
-	sort.Strings(out)
-
-	return out
+	return delegationPlan
 }
 
-func (distrPlan DistributionPlan) ToSendPlan() SendPlan {
-	out := make(SendPlan)
-	for _, delegateAccount := range distrPlan.Keys() {
-		if plan, ok := distrPlan.Value[delegateAccount]; ok {
-			for _, planKey := range plan.Keys() {
-				if _, ok := out[delegateAccount]; !ok {
-					out[delegateAccount] = plan.Value[planKey].Value
-				} else {
-					out[delegateAccount] = out[delegateAccount].Add(plan.Value[planKey].Value...)
-				}
-			}
-		}
+// return the delegation plan
+func UnmarshalDelegationPlan(cdc codec.BinaryCodec, value []byte) (delegationPlan DelegationPlan, err error) {
+	err = cdc.Unmarshal(value, &delegationPlan)
+	return delegationPlan, err
+}
+
+func (d DelegationPlan) GetDelegatorAddr() sdk.AccAddress {
+	_, delAddr, err := bech32.DecodeAndConvert(d.DelegatorAddress)
+	if err != nil {
+		panic(err)
 	}
-	return out
+	return delAddr
 }
 
-func (distrPlan DistributionPlan) Keys() []string {
-	out := []string{}
-
-	for i := range distrPlan.GetValue() {
-		out = append(out, i)
+func (d DelegationPlan) GetValidatorAddr() sdk.ValAddress {
+	_, valAddr, err := bech32.DecodeAndConvert(d.ValidatorAddress)
+	if err != nil {
+		panic(err)
 	}
-
-	sort.Strings(out)
-
-	return out
+	return valAddr
 }
 
-func (delPlan DelegationPlan) Keys() []string {
-	out := []string{}
-
-	for i := range delPlan.GetValue() {
-		out = append(out, i)
-	}
-
-	sort.Strings(out)
-
-	return out
+func NewDelegationPlan(delAddr, valAddr string, amount sdk.Coins) DelegationPlan {
+	return DelegationPlan{DelegatorAddress: delAddr, ValidatorAddress: valAddr, Value: amount}
 }
 
-func (distrPlan DistributionPlan) Add(delegationAddress string, plan *DelegationPlan) DistributionPlan {
-	if distrPlan.Value == nil {
-		distrPlan.Value = make(map[string]*DelegationPlan)
-	}
-	if _, ok := distrPlan.Value[delegationAddress]; !ok {
-		distrPlan.Value[delegationAddress] = NewEmptyDelegationPlan()
-	}
-	distrPlan.Value[delegationAddress] = distrPlan.Value[delegationAddress].Merge(plan)
-	return distrPlan
-}
+func DelegationPlanFromUserIntent(zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) Allocations {
 
-func (distrPlan DistributionPlan) Merge(b DistributionPlan) DistributionPlan {
-	for _, delegationAddress := range b.Keys() {
-		if plan, ok := distrPlan.Value[delegationAddress]; ok {
-			distrPlan.Value[delegationAddress] = plan.Merge(b.GetValue()[delegationAddress])
-		} else {
-			distrPlan.Value[delegationAddress] = b.GetValue()[delegationAddress]
-		}
-	}
-	return distrPlan
-}
-
-func (delegationPlan DelegationPlan) Sum() sdk.Coins {
-	out := sdk.Coins{}
-	for _, planItem := range delegationPlan.Value {
-		out = out.Add(planItem.Value...)
-	}
-	return out
-
-}
-
-func NewEmptyDelegationPlan() *DelegationPlan {
-	return &DelegationPlan{Value: map[string]*DelegationPlan_DelegationPlanItem{}}
-}
-
-func NewSingleDelegationPlan(validator string, amount sdk.Coins) *DelegationPlan {
-	out := NewEmptyDelegationPlan()
-	out.Value[validator] = &DelegationPlan_DelegationPlanItem{Value: amount}
-	return out
-}
-
-func NewPlanItem(coins sdk.Coins) *DelegationPlan_DelegationPlanItem {
-	return &DelegationPlan_DelegationPlanItem{Value: coins}
-}
-
-func (delegationPlan DelegationPlan) Merge(b *DelegationPlan) *DelegationPlan {
-	for _, validatorAddress := range b.Keys() {
-		if existingCoins, ok := delegationPlan.Value[validatorAddress]; ok {
-			delegationPlan.Value[validatorAddress] = NewPlanItem(existingCoins.Value.Add(b.GetValue()[validatorAddress].GetValue()...))
-		} else {
-			delegationPlan.Value[validatorAddress] = b.GetValue()[validatorAddress]
-		}
-	}
-	return &delegationPlan
-}
-
-func DelegationPlanFromUserIntent(zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) (*DelegationPlan, error) {
-
-	out := NewEmptyDelegationPlan()
+	out := Allocations{}
 
 	for _, val := range intent.Keys() {
-		out.Value[val] = NewPlanItem(sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: sdk.Int(coin.Amount.ToDec().Mul(intent[val].Weight).TruncateInt())}})
+		out = out.Allocate(val, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: sdk.Int(coin.Amount.ToDec().Mul(intent[val].Weight).TruncateInt())}})
 	}
+	fmt.Println("DelegationPlanFromUserIntent", out)
 
-	return out, nil
+	return out
 }
 
-func DelegationPlanFromGlobalIntent(currentState DelegationBins, zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) (*DelegationPlan, error) {
+type Allocation struct {
+	Address string
+	Amount  sdk.Coins
+}
+
+func (a Allocations) Allocate(address string, amount sdk.Coins) Allocations {
+	for _, allocation := range a {
+		if allocation.Address == address {
+			allocation.Amount = allocation.Amount.Add(amount...)
+			return a
+		}
+	}
+	return append(a, Allocation{Address: address, Amount: amount})
+}
+
+func (a Allocations) Sorted() Allocations {
+	sort.SliceStable(a, func(i, j int) bool {
+		return a[i].Address < a[j].Address
+	})
+
+	return a
+}
+
+func (a Allocations) Sum() sdk.Coins {
+	out := sdk.Coins{}
+	for _, allocation := range a {
+		out = out.Add(allocation.Amount...)
+	}
+	return out
+}
+
+type DelegationPlans []DelegationPlan
+type Allocations []Allocation
+
+func (d DelegationPlans) Add(valAddress string, delAddress string, amount sdk.Coins) DelegationPlans {
+	for _, delPlan := range d {
+		if delPlan.ValidatorAddress == valAddress && delPlan.DelegatorAddress == delAddress {
+			delPlan.Value = delPlan.Value.Add(amount...)
+			return d
+		}
+	}
+	return append(d, DelegationPlan{ValidatorAddress: valAddress, DelegatorAddress: delAddress, Value: amount})
+}
+
+func DelegationPlanFromGlobalIntent(currentState DelegationBins, zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) (Allocations, error) {
 	if coin.Denom != zone.BaseDenom {
 		return nil, fmt.Errorf("expected base denom, got %s", coin.Denom)
 	}
@@ -339,8 +322,7 @@ func DelegationPlanFromGlobalIntent(currentState DelegationBins, zone Registered
 	}
 
 	deltas := []Diff{}
-
-	out := NewEmptyDelegationPlan()
+	allocations := Allocations{}
 
 	// fetch current state
 	total := zone.GetDelegatedAmount().Amount
@@ -357,17 +339,19 @@ func DelegationPlanFromGlobalIntent(currentState DelegationBins, zone Registered
 		return deltas[i].amount.LT(deltas[j].amount)
 	})
 
+	fmt.Println("deltas: ", deltas)
+
 	distributableValue := coin.Amount
 
 	for idx, delta := range deltas {
 		if delta.amount.GT(sdk.ZeroInt()) {
 			if delta.amount.GTE(distributableValue) {
-				out.Value[delta.valoper] = NewPlanItem(sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: distributableValue}})
+				allocations = allocations.Allocate(delta.valoper, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: distributableValue}})
 				distributableValue = sdk.ZeroInt()
 				break
 			} else {
+				allocations = allocations.Allocate(delta.valoper, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: deltas[idx].amount}})
 				distributableValue = distributableValue.Sub(deltas[idx].amount)
-				out.Value[delta.valoper] = NewPlanItem(sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: deltas[idx].amount}})
 			}
 		}
 	}
@@ -376,32 +360,31 @@ func DelegationPlanFromGlobalIntent(currentState DelegationBins, zone Registered
 		for _, val := range intent.Keys() {
 			valCoin := distributableValue.ToDec().Mul(intent[val].Weight).TruncateInt()
 			distributableValue = distributableValue.Sub(valCoin)
-			out.Value[val] = NewPlanItem(out.Value[val].Value.Add(sdk.NewCoin(zone.BaseDenom, valCoin)))
+			allocations = allocations.Allocate(val, sdk.Coins{sdk.NewCoin(zone.BaseDenom, valCoin)})
 		}
 	}
 
-	if !out.Sum().IsEqual(sdk.Coins{coin}) {
-		remainder := sdk.Coins{coin}.Sub(out.Sum())
-		out.Value[deltas[len(deltas)-1].valoper] = NewPlanItem(out.Value[deltas[len(deltas)-1].valoper].Value.Add(remainder...))
+	if !allocations.Sum().IsEqual(sdk.Coins{coin}) {
+		remainder := sdk.Coins{coin}.Sub(allocations.Sum())
+		allocations = allocations.Allocate(deltas[len(deltas)-1].valoper, remainder)
 	}
 
-	return out, nil
+	fmt.Println("DelegationPlanFromGlobalIntent", allocations)
+
+	return allocations, nil
 }
 
-func DelegationPlanFromCoins(zone RegisteredZone, coin sdk.Coin) *DelegationPlan {
-	out := NewEmptyDelegationPlan()
+func DelegationPlanFromCoins(zone RegisteredZone, coin sdk.Coin) Allocations {
+	out := Allocations{}
 
 	for _, val := range zone.GetValidatorsSorted() {
 		if strings.HasPrefix(coin.Denom, val.ValoperAddress) {
-			_, ok := out.Value[val.ValoperAddress]
-			if !ok {
-				out.Value[val.ValoperAddress] = NewPlanItem(sdk.NewCoins(coin))
-			} else {
-				out.Value[val.ValoperAddress] = NewPlanItem(out.Value[val.ValoperAddress].Value.Add(coin))
-			}
+			out = out.Allocate(val.ValoperAddress, sdk.NewCoins(coin))
 			break
 		}
 	}
+
+	fmt.Println("DelegationPlanFromCoins", out)
 
 	return out
 }

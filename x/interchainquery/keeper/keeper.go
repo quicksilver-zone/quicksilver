@@ -64,13 +64,13 @@ func (k *Keeper) GetDatapointForId(ctx sdk.Context, id string) (types.DataPoint,
 	return mapping, nil
 }
 
-func (k *Keeper) GetDatapoint(ctx sdk.Context, connection_id string, chain_id string, query_type string, request []byte) (types.DataPoint, error) {
-	id := GenerateQueryHash(connection_id, chain_id, query_type, request)
+func (k *Keeper) GetDatapoint(ctx sdk.Context, module string, connection_id string, chain_id string, query_type string, request []byte) (types.DataPoint, error) {
+	id := GenerateQueryHash(connection_id, chain_id, query_type, request, module)
 	return k.GetDatapointForId(ctx, id)
 }
 
-func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, request []byte, max_age int64) (types.DataPoint, error) {
-	val, err := k.GetDatapoint(ctx, connection_id, chain_id, query_type, request)
+func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module string, connection_id string, chain_id string, query_type string, request []byte, max_age int64) (types.DataPoint, error) {
+	val, err := k.GetDatapoint(ctx, module, connection_id, chain_id, query_type, request)
 	if err != nil {
 		// no datapoint
 		k.MakeRequest(ctx, connection_id, chain_id, query_type, request, sdk.NewInt(-1), "", nil)
@@ -94,10 +94,10 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, connection_id string, chain_id str
 		"request", request,
 		"period", period,
 		"module", module,
-		"callback", callback,
+		//"callback", callback,  // can't render this to JSON!
 	)
-	key := GenerateQueryHash(connection_id, chain_id, query_type, request)
-	_, found := k.GetQuery(ctx, key)
+	key := GenerateQueryHash(connection_id, chain_id, query_type, request, module)
+	existingQuery, found := k.GetQuery(ctx, key)
 	if !found {
 		if module != "" {
 			if _, exists := k.callbacks[module]; !exists {
@@ -107,7 +107,13 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, connection_id string, chain_id str
 			}
 			k.callbacks[module].AddCallback(key, callback)
 		}
-		newQuery := k.NewQuery(ctx, connection_id, chain_id, query_type, request, period)
+		newQuery := k.NewQuery(ctx, module, connection_id, chain_id, query_type, request, period)
 		k.SetQuery(ctx, *newQuery)
+
+	} else {
+		// a re-request of an existing query triggers resetting of height to trigger immediately.
+		existingQuery.LastHeight = sdk.ZeroInt()
+		k.SetQuery(ctx, existingQuery)
+		k.Logger(ctx).Error("Query already registered", "id", existingQuery.Id, "query", existingQuery)
 	}
 }

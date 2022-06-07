@@ -105,6 +105,18 @@ func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *type
 	return zone
 }
 
+func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *types.RegisteredZone {
+	var zone *types.RegisteredZone
+	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+		if zoneInfo.PerformanceAddress.Address == address {
+			zone = &zoneInfo
+			return true
+		}
+		return false
+	})
+	return zone
+}
+
 // GetZoneForDelegateAccount determines the zone, and returns the ICAAccount for a given address.
 func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*types.RegisteredZone, *types.ICAAccount) {
 	var ica *types.ICAAccount
@@ -352,7 +364,10 @@ func (k Keeper) InitPerformanceDelegations(ctx sdk.Context, zone types.Registere
 	k.Logger(ctx).Info("Performance Balance", "Account", zone.PerformanceAddress, "Balances", resp.Balances)
 
 	if resp.Balances.IsZero() {
-		return fmt.Errorf("performance account has a zero balance")
+		// if zero balance, retrigger the query.
+		k.EmitPerformanceBalanceQuery(ctx, &zone)
+		k.Logger(ctx).Info("performance account has a zero balance; requerying")
+		return icqtypes.ErrSucceededNoDelete
 	}
 
 	amount := sdk.NewCoin(zone.BaseDenom, sdk.NewInt(10000))
@@ -383,5 +398,5 @@ func (k Keeper) InitPerformanceDelegations(ctx sdk.Context, zone types.Registere
 		})
 	}
 
-	return k.SubmitTx(ctx, msgs, zone.PerformanceAddress)
+	return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "")
 }

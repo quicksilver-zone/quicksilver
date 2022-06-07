@@ -78,8 +78,9 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 			return nil, err
 		}
 	}
+	valsetInterval := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 
-	err = k.EmitValsetRequery(ctx, msg.ConnectionId, chainId)
+	err = k.EmitValsetRequery(ctx, msg.ConnectionId, chainId, valsetInterval)
 	if err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
@@ -306,7 +307,7 @@ func (k msgServer) validateIntents(zone types.RegisteredZone, intents []*types.V
 	return nil
 }
 
-func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId string) error {
+func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId string, period int64) error {
 	var cb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 		zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 		if !found {
@@ -332,14 +333,13 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 		return err
 	}
 
-	valsetInterval := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		connectionId,
 		chainId,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz1,
-		sdk.NewInt(valsetInterval),
+		sdk.NewInt(period),
 		types.ModuleName,
 		cb,
 	)
@@ -349,7 +349,7 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 		chainId,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz2,
-		sdk.NewInt(valsetInterval),
+		sdk.NewInt(period),
 		types.ModuleName,
 		cb,
 	)
@@ -359,7 +359,7 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 		chainId,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz3,
-		sdk.NewInt(valsetInterval),
+		sdk.NewInt(period),
 		types.ModuleName,
 		cb,
 	)

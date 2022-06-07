@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -281,4 +282,40 @@ func (k Keeper) GetChainIdFromContext(ctx sdk.Context) (string, error) {
 	}
 
 	return k.GetChainID(ctx, connectionId.(string))
+}
+
+func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.RegisteredZone) error {
+	var cb Callback = func(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+		zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+		if !found {
+			return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		}
+
+		// initialize performance delegations
+		if err := k.InitPerformanceDelegations(ctx, zone, response); err != nil {
+			k.Logger(ctx).Info(err.Error())
+			return err
+		}
+
+		return nil
+	}
+
+	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: zone.PerformanceAddress.Address}
+	bz, err := k.GetCodec().Marshal(&balanceQuery)
+	if err != nil {
+		return err
+	}
+
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		zone.ConnectionId,
+		zone.ChainId,
+		"cosmos.bank.v1beta1.Query/AllBalances",
+		bz,
+		sdk.NewInt(int64(-1)),
+		types.ModuleName,
+		cb,
+	)
+
+	return nil
 }

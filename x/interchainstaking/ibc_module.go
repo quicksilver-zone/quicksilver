@@ -174,37 +174,37 @@ func (im IBCModule) OnChanOpenAck(
 			im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, account, "")
 		}
 
-		var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-			zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-			if !found {
-				return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-			}
-			// unmarshal request
-			balanceQuery := bankTypes.QueryAllBalancesRequest{}
-			err := k.GetCodec().Unmarshal(query.Request, &balanceQuery)
-			if err == nil {
-				return err
-			}
+		// var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+		// 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+		// 	if !found {
+		// 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		// 	}
+		// 	// unmarshal request
+		// 	balanceQuery := bankTypes.QueryAllBalancesRequest{}
+		// 	err := k.GetCodec().Unmarshal(query.Request, &balanceQuery)
+		// 	if err == nil {
+		// 		return err
+		// 	}
 
-			return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
-		}
+		// 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
+		// }
 
-		balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
-		bz, err := im.keeper.GetCodec().Marshal(&balanceQuery)
-		if err != nil {
-			return err
-		}
+		// balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
+		// bz, err := im.keeper.GetCodec().Marshal(&balanceQuery)
+		// if err != nil {
+		// 	return err
+		// }
 
-		im.keeper.ICQKeeper.MakeRequest(
-			ctx,
-			connectionId,
-			chainId,
-			"cosmos.bank.v1beta1.Query/AllBalances",
-			bz,
-			sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegateInterval))),
-			types.ModuleName,
-			cb,
-		)
+		// im.keeper.ICQKeeper.MakeRequest(
+		// 	ctx,
+		// 	connectionId,
+		// 	chainId,
+		// 	"cosmos.bank.v1beta1.Query/AllBalances",
+		// 	bz,
+		// 	sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegateInterval))),
+		// 	types.ModuleName,
+		// 	cb,
+		// )
 
 	// performance address
 	case len(portParts) == 2 && portParts[1] == "performance":
@@ -234,45 +234,10 @@ func (im IBCModule) registerPerformanceAddress(
 	// set withdrawal address if, and only if withdrawal address is already set
 	if zone.WithdrawalAddress != nil {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: address, WithdrawAddress: zone.WithdrawalAddress.String()}
-		im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress)
+		im.keeper.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "")
 	}
 
-	var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
-		zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-		if !found {
-			return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-		}
-
-		// initialize performance delegations
-		if err := k.InitPerformanceDelegations(ctx, zone, response); err != nil {
-			k.Logger(ctx).Info(err.Error())
-			return err
-		}
-
-		// query action completed: delete query
-		im.keeper.ICQKeeper.DeleteQuery(ctx, query.Id)
-
-		return nil
-	}
-
-	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
-	bz, err := im.keeper.GetCodec().Marshal(&balanceQuery)
-	if err != nil {
-		return err
-	}
-
-	im.keeper.ICQKeeper.MakeRequest(
-		ctx,
-		connectionId,
-		chainId,
-		"cosmos.bank.v1beta1.Query/AllBalances",
-		bz,
-		sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDepositInterval))),
-		types.ModuleName,
-		cb,
-	)
-
-	return nil
+	return im.keeper.EmitPerformanceBalanceQuery(ctx, zone)
 }
 
 // OnChanOpenConfirm implements the IBCModule interface

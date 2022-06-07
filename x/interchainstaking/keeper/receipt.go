@@ -83,17 +83,17 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 		return
 	}
 
-	plan, err := k.DeterminePlanForDelegation(ctx, zone, coins, accAddress.String())
+	sendPlan, err := k.DeterminePlanForDelegation(ctx, zone, coins, accAddress.String(), hash)
 	if err != nil {
 		k.Logger(ctx).Error("Unable to determine delegation plan. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 		return
 	}
 
-	if err := k.TransferToDelegate(ctx, zone, plan.ToSendPlan(), hash); err != nil {
+	if err := k.TransferToDelegate(ctx, zone, sendPlan, hash); err != nil {
 		k.Logger(ctx).Error("Unable to transfer to delegate. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 		return
 	}
-	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins, plan)
+	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
 
 	k.SetReceipt(ctx, *receipt)
 }
@@ -128,19 +128,19 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.R
 	return nil
 }
 
-func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, plan types.SendPlan, memo string) error {
+func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, plan types.Allocations, memo string) error {
 
 	// if zone.SupportMultiSend() {
 	// 	return k.TransferToDelegateMulti(ctx, zone, plan, memo)
 	// } else {
 	var msgs []sdk.Msg
-	for _, delAccount := range plan.Keys() {
-		if coins, ok := plan[delAccount]; ok {
-			if !coins.Empty() && !coins.IsZero() {
-				msgs = append(msgs, &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: delAccount, Amount: coins})
-			}
+	for _, allocation := range plan.Sorted() {
+		if !allocation.Amount.Empty() && !allocation.Amount.IsZero() {
+			msgs = append(msgs, &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: allocation.Address, Amount: allocation.Amount})
 		}
 	}
+
+	fmt.Println("messages", msgs)
 
 	return k.SubmitTx(ctx, msgs, zone.DepositAddress, memo)
 }
@@ -227,8 +227,8 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 // ---------------------------------------------------------------
 
-func (k Keeper) NewReceipt(ctx sdk.Context, zone types.RegisteredZone, sender string, txhash string, amount sdk.Coins, plan types.DistributionPlan) *types.Receipt {
-	return &types.Receipt{Zone: &zone, Sender: sender, Txhash: txhash, Amount: amount, DistributionPlan: &plan}
+func (k Keeper) NewReceipt(ctx sdk.Context, zone types.RegisteredZone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
+	return &types.Receipt{Zone: &zone, Sender: sender, Txhash: txhash, Amount: amount}
 }
 
 // GetReceipt returns receipt
