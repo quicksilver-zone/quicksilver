@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	FlagMultiSend = "multi-send"
+	FlagMultiSend  = "multi-send"
+	FlagLsmSupport = "lsm-support"
 )
 
 // GetTxCmd returns a root CLI command handler for all x/bank transaction commands.
@@ -50,7 +51,8 @@ func GetRegisterZoneTxCmd() *cobra.Command {
 			account_prefix := args[3]
 
 			multi_send, _ := cmd.Flags().GetBool(FlagMultiSend)
-			msg := types.NewMsgRegisterZone(connection_id, local_denom, remote_denom, account_prefix, clientCtx.GetFromAddress(), multi_send)
+			lsm_support, _ := cmd.Flags().GetBool(FlagLsmSupport)
+			msg := types.NewMsgRegisterZone(connection_id, local_denom, remote_denom, account_prefix, clientCtx.GetFromAddress(), multi_send, lsm_support)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

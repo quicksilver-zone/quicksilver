@@ -49,6 +49,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		LastRedemptionRate: sdk.NewDec(1),
 		DelegatorIntent:    make(map[string]*types.DelegatorIntent),
 		MultiSend:          msg.MultiSend,
+		LiquidityModule:    msg.LiquidityModule,
 	}
 	k.SetRegisteredZone(ctx, zone)
 
@@ -146,6 +147,10 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		}
 		return false
 	})
+
+	if !zone.LiquidityModule {
+		return nil, fmt.Errorf("zone %s does not currently support redemptions", zone.ChainId)
+	}
 	k.Logger(ctx).Error("DEBUG 6")
 
 	sender, err := sdk.AccAddressFromBech32(msg.FromAddress)
