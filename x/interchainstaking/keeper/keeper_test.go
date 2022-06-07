@@ -71,6 +71,7 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 	s.Require().NoError(err)
 
 	// Simulate "cosmos.staking.v1beta1.Query/Validators" response
+	// - this is not working anymore;
 	qvr := stakingtypes.QueryValidatorsResponse{
 		Validators: s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()),
 	}
@@ -78,15 +79,16 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 
 	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
 	bz, err := s.GetQuicksilverApp(s.chainA).AppCodec().Marshal(&bondedQuery)
+	s.Require().NoError(err)
 
 	qmsg := icqtypes.MsgSubmitQueryResponse{
-		// target or source chain_id?
 		ChainId: s.chainB.ChainID,
 		QueryId: icqkeeper.GenerateQueryHash(
 			s.path.EndpointA.ConnectionID,
 			s.chainB.ChainID,
 			"cosmos.staking.v1beta1.Query/Validators",
 			bz,
+			icstypes.ModuleName,
 		),
 		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshalJSON(&qvr),
 		Height:      s.chainB.CurrentHeader.Height,

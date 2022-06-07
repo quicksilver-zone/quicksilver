@@ -156,8 +156,6 @@ func TestBase64MemoToIntent(t *testing.T) {
 
 // 	zone.Validators = append(zone.Validators, &types.Validator{ValoperAddress: "cosmos12345667890", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewDec(2000), Delegations: d1})
 
-// 	//fmt.Println(zone.DetermineStateIntentDiff(i1))
-
 // 	require.Equal(t, 0, 0)
 // }
 

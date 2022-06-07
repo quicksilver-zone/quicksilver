@@ -140,3 +140,20 @@ func (k Keeper) ValidatorDelegations(c context.Context, req *types.QueryValidato
 
 	return &types.QueryValidatorDelegationsResponse{Delegations: delegations}, nil
 }
+
+func (k Keeper) DelegationPlans(c context.Context, req *types.QueryDelegationPlansRequest) (*types.QueryDelegationPlansResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	zone, found := k.GetRegisteredZoneInfo(ctx, req.GetChainId())
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
+
+	delegationplans := k.GetAllDelegationPlans(ctx, &zone)
+
+	return &types.QueryDelegationPlansResponse{Delegations: delegationplans}, nil
+}

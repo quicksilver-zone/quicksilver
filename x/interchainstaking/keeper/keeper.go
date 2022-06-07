@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -104,7 +105,7 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZo
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
 	err := k.cdc.Unmarshal(data, &validatorsRes)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
 		return err
 	}
 
@@ -168,7 +169,7 @@ func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZon
 	validator := stakingTypes.Validator{}
 	err := k.cdc.Unmarshal(data, &validator)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal validator info for zone", "zone", zoneInfo.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zoneInfo.ChainId, "err", err)
 		return err
 	}
 
@@ -209,13 +210,13 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 		if zoneInfo.DepositAddress != nil {
 			if !zoneInfo.DepositAddress.Balance.Empty() {
-				k.Logger(ctx).Info("Balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
+				k.Logger(ctx).Info("balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
 
 				var callback Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 					txs := tx.GetTxsEventResponse{}
 					err := k.cdc.Unmarshal(args, &txs)
 					if err != nil {
-						k.Logger(ctx).Error("Unable to unmarshal txs for deposit account", "deposit_address", zoneInfo.DepositAddress.GetAddress(), "err", err)
+						k.Logger(ctx).Error("unable to unmarshal txs for deposit account", "deposit_address", zoneInfo.DepositAddress.GetAddress(), "err", err)
 						return err
 					}
 
@@ -229,7 +230,7 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 
 			}
 		} else {
-			k.Logger(ctx).Error("Deposit account is nil")
+			k.Logger(ctx).Error("deposit account is nil")
 		}
 		return false
 	}
@@ -281,4 +282,40 @@ func (k Keeper) GetChainIdFromContext(ctx sdk.Context) (string, error) {
 	}
 
 	return k.GetChainID(ctx, connectionId.(string))
+}
+
+func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.RegisteredZone) error {
+	var cb Callback = func(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+		zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+		if !found {
+			return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		}
+
+		// initialize performance delegations
+		if err := k.InitPerformanceDelegations(ctx, zone, response); err != nil {
+			k.Logger(ctx).Info(err.Error())
+			return err
+		}
+
+		return nil
+	}
+
+	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: zone.PerformanceAddress.Address}
+	bz, err := k.GetCodec().Marshal(&balanceQuery)
+	if err != nil {
+		return err
+	}
+
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		zone.ConnectionId,
+		zone.ChainId,
+		"cosmos.bank.v1beta1.Query/AllBalances",
+		bz,
+		sdk.NewInt(int64(-1)),
+		types.ModuleName,
+		cb,
+	)
+
+	return nil
 }

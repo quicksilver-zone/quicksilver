@@ -114,6 +114,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainquery"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+
+	"github.com/ingenuity-build/quicksilver/x/participationrewards"
+	participationrewardskeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
+	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func init() {
@@ -164,6 +168,7 @@ var (
 		epochs.AppModuleBasic{},
 		interchainstaking.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
+		participationrewards.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -179,6 +184,8 @@ var (
 		icatypes.ModuleName:               nil,
 		interchainstakingtypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		interchainquerytypes.ModuleName:   nil,
+		// TODO: Remove Burner from participationrewards - for dev/test only;
+		participationrewardstypes.ModuleName: {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -231,9 +238,10 @@ type Quicksilver struct {
 	TransferKeeper      ibctransferkeeper.Keeper
 
 	// Quicksilver keepers
-	EpochsKeeper            epochskeeper.Keeper
-	InterchainstakingKeeper interchainstakingkeeper.Keeper
-	InterchainQueryKeeper   interchainquerykeeper.Keeper
+	EpochsKeeper               epochskeeper.Keeper
+	InterchainstakingKeeper    interchainstakingkeeper.Keeper
+	InterchainQueryKeeper      interchainquerykeeper.Keeper
+	ParticipationRewardsKeeper participationrewardskeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper                      capabilitykeeper.ScopedKeeper
@@ -286,7 +294,7 @@ func NewQuicksilver(
 	keys := sdk.NewKVStoreKeys(
 		// SDK keys
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
-		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
+		distrtypes.StoreKey, minttypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey,
 		feegrant.StoreKey, authzkeeper.StoreKey,
@@ -298,6 +306,7 @@ func NewQuicksilver(
 		epochstypes.StoreKey,
 		interchainstakingtypes.StoreKey,
 		interchainquerytypes.StoreKey,
+		participationrewardstypes.StoreKey,
 	)
 
 	// Add the transient store key
@@ -417,12 +426,36 @@ func NewQuicksilver(
 	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
 	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper)
 
-	app.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(appCodec, keys[interchainstakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, app.ICAControllerKeeper, scopedInterchainStakingKeeper, app.InterchainQueryKeeper, *app.IBCKeeper, app.GetSubspace(interchainstakingtypes.ModuleName))
+	app.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(
+		appCodec,
+		keys[interchainstakingtypes.StoreKey],
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.ICAControllerKeeper,
+		scopedInterchainStakingKeeper,
+		app.InterchainQueryKeeper,
+		*app.IBCKeeper,
+		app.GetSubspace(interchainstakingtypes.ModuleName),
+	)
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
 
 	interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
 
 	app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler())
+
+	app.ParticipationRewardsKeeper = participationrewardskeeper.NewKeeper(
+		appCodec,
+		keys[participationrewardstypes.StoreKey],
+		app.GetSubspace(participationrewardstypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.InterchainQueryKeeper,
+		app.InterchainstakingKeeper,
+		authtypes.FeeCollectorName,
+	)
+	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
+
+	app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler())
 
 	// Quicksilver Keepers
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
@@ -430,6 +463,7 @@ func NewQuicksilver(
 		epochstypes.NewMultiEpochHooks(
 			app.MintKeeper.Hooks(),
 			app.InterchainstakingKeeper.Hooks(),
+			app.ParticipationRewardsKeeper.Hooks(),
 		),
 	)
 
@@ -489,6 +523,7 @@ func NewQuicksilver(
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		interchainstakingModule,
 		interchainQueryModule,
+		participationrewardsModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -502,8 +537,8 @@ func NewQuicksilver(
 		capabilitytypes.ModuleName,
 		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
 		epochstypes.ModuleName,
-		minttypes.ModuleName,
 		distrtypes.ModuleName,
+		minttypes.ModuleName,
 		slashingtypes.ModuleName,
 		evidencetypes.ModuleName,
 		stakingtypes.ModuleName,
@@ -513,6 +548,7 @@ func NewQuicksilver(
 		// no-op modules
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		participationrewardstypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -550,6 +586,7 @@ func NewQuicksilver(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		interchainstakingtypes.ModuleName,
+		participationrewardstypes.ModuleName,
 		// currently no-op.
 	)
 
@@ -582,6 +619,7 @@ func NewQuicksilver(
 		epochstypes.ModuleName,
 		interchainstakingtypes.ModuleName,
 		interchainquerytypes.ModuleName,
+		participationrewardstypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	)
@@ -877,8 +915,8 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(authtypes.ModuleName)
 	paramsKeeper.Subspace(banktypes.ModuleName)
 	paramsKeeper.Subspace(stakingtypes.ModuleName)
-	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(distrtypes.ModuleName)
+	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govtypes.ParamKeyTable())
 	paramsKeeper.Subspace(crisistypes.ModuleName)
@@ -890,5 +928,6 @@ func initParamsKeeper(
 	// quicksilver subspaces
 	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
+	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
 	return paramsKeeper
 }

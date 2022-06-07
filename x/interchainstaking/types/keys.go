@@ -40,8 +40,7 @@ var (
 	KeyPrefixReceipt          = []byte{0x04}
 	KeyPrefixWithdrawalRecord = []byte{0x05}
 	KeyPrefixDelegation       = []byte{0x06}
-
-//	KeyPrefixDelegationByValidator = []byte{0x08}
+	KeyPrefixDelegationPlan   = []byte{0x07}
 )
 
 func KeyPrefix(p string) []byte {

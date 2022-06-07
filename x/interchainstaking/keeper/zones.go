@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -38,7 +39,6 @@ func (k Keeper) SetRegisteredZone(ctx sdk.Context, zone types.RegisteredZone) {
 // DeleteRegisteredZone delete zone info
 func (k Keeper) DeleteRegisteredZone(ctx sdk.Context, chain_id string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-	ctx.Logger().Error(fmt.Sprintf("Removing chain: %s", chain_id))
 	store.Delete([]byte(chain_id))
 }
 
@@ -104,6 +104,18 @@ func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *type
 	return zone
 }
 
+func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *types.RegisteredZone {
+	var zone *types.RegisteredZone
+	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+		if zoneInfo.PerformanceAddress.Address == address {
+			zone = &zoneInfo
+			return true
+		}
+		return false
+	})
+	return zone
+}
+
 // GetZoneForDelegateAccount determines the zone, and returns the ICAAccount for a given address.
 func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*types.RegisteredZone, *types.ICAAccount) {
 	var ica *types.ICAAccount
@@ -136,7 +148,7 @@ var setAccountCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query i
 	coin := sdk.Coin{}
 	err = k.cdc.Unmarshal(args, &coin)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal balance info for zone", "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal balance info for zone", "zone", zone.ChainId, "err", err)
 		return err
 	}
 
@@ -164,7 +176,9 @@ var setAccountCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query i
 
 // SetAccountBalanceForDenom sets the balance on an account for a given denominination.
 func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZone, address string, coin sdk.Coin) error {
-
+	// ? is this switch statement still required ?
+	// prior to callback we had no way to distinguish the originator
+	// with the query type in setAccountCb this is probably superfluous...
 	switch true {
 	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
 		existing := zone.DepositAddress.Balance.AmountOf(coin.Denom)
@@ -179,6 +193,8 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZ
 		zone.WithdrawalAddress.Balance = zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
 		zone.WithdrawalAddress.BalanceWaitgroup = zone.WithdrawalAddress.BalanceWaitgroup - 1
 		k.Logger(ctx).Info("Matched withdrawal address", "address", address, "wg", zone.WithdrawalAddress.BalanceWaitgroup, "balance", zone.WithdrawalAddress.Balance)
+	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
+		k.Logger(ctx).Info("Matched performance address")
 	default:
 		icaAccount, err := zone.GetDelegationAccountByAddress(address)
 		if err != nil {
@@ -237,7 +253,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 	queryRes := banktypes.QueryAllBalancesResponse{}
 	err := k.cdc.Unmarshal(queryResult, &queryRes)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal balance", "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal balance", "zone", zone.ChainId, "err", err)
 		return err
 	}
 	_, addr, _ := bech32.DecodeAndConvert(address)
@@ -334,4 +350,52 @@ func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.RegisteredZone
 
 	}
 	return out
+}
+
+func (k Keeper) InitPerformanceDelegations(ctx sdk.Context, zone types.RegisteredZone, response []byte) error {
+	k.Logger(ctx).Info("Initialize performance delegations")
+
+	resp := banktypes.QueryAllBalancesResponse{}
+	err := k.cdc.Unmarshal(response, &resp)
+	if err != nil {
+		return err
+	}
+	k.Logger(ctx).Info("Performance Balance", "Account", zone.PerformanceAddress, "Balances", resp.Balances)
+
+	if resp.Balances.IsZero() {
+		// if zero balance, retrigger the query.
+		k.EmitPerformanceBalanceQuery(ctx, &zone)
+		k.Logger(ctx).Info("performance account has a zero balance; requerying")
+		return icqtypes.ErrSucceededNoDelete
+	}
+
+	amount := sdk.NewCoin(zone.BaseDenom, sdk.NewInt(10000))
+	minBalance := sdk.NewInt(int64(len(zone.Validators)) * amount.Amount.Int64())
+	balance := resp.Balances.AmountOfNoDenomValidation(zone.BaseDenom)
+	if balance.LT(minBalance) {
+		return fmt.Errorf(
+			"performance account has an insufficient balance, got %v, expected at least %v",
+			balance,
+			minBalance,
+		)
+	}
+
+	// send delegations to validators
+	k.Logger(ctx).Info("send performance delegations", "zone", zone.ChainId)
+	var msgs []sdk.Msg
+	for _, val := range zone.Validators {
+		k.Logger(ctx).Info(
+			"performance delegation",
+			"zone", zone.ChainId,
+			"validator", val.ValoperAddress,
+			"amount", amount,
+		)
+		msgs = append(msgs, &stakingtypes.MsgDelegate{
+			DelegatorAddress: zone.PerformanceAddress.GetAddress(),
+			ValidatorAddress: val.GetValoperAddress(),
+			Amount:           amount,
+		})
+	}
+
+	return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "")
 }

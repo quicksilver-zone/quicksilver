@@ -10,14 +10,14 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
-func GenerateQueryHash(connection_id string, chain_id string, query_type string, request []byte) string {
-	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(connection_id+chain_id+query_type), request...)))
+func GenerateQueryHash(connection_id string, chain_id string, query_type string, request []byte, module string) string {
+	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(module+connection_id+chain_id+query_type), request...)))
 }
 
 // ----------------------------------------------------------------
 
-func (k Keeper) NewQuery(ctx sdk.Context, connection_id string, chain_id string, query_type string, request []byte, period sdk.Int) *types.Query {
-	return &types.Query{Id: GenerateQueryHash(connection_id, chain_id, query_type, request), ConnectionId: connection_id, ChainId: chain_id, QueryType: query_type, Request: request, Period: period, LastHeight: sdk.ZeroInt()}
+func (k Keeper) NewQuery(ctx sdk.Context, module string, connection_id string, chain_id string, query_type string, request []byte, period sdk.Int) *types.Query {
+	return &types.Query{Id: GenerateQueryHash(connection_id, chain_id, query_type, request, module), ConnectionId: connection_id, ChainId: chain_id, QueryType: query_type, Request: request, Period: period, LastHeight: sdk.ZeroInt()}
 }
 
 // GetQuery returns query
@@ -45,7 +45,7 @@ func (k Keeper) DeleteQuery(ctx sdk.Context, id string) {
 	store.Delete([]byte(id))
 }
 
-// IterateQueries iterate through querys
+// IterateQueries iterate through queries
 func (k Keeper) IterateQueries(ctx sdk.Context, fn func(index int64, queryInfo types.Query) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -66,10 +66,10 @@ func (k Keeper) IterateQueries(ctx sdk.Context, fn func(index int64, queryInfo t
 
 // AllQueries returns every queryInfo in the store
 func (k Keeper) AllQueries(ctx sdk.Context) []types.Query {
-	querys := []types.Query{}
+	queries := []types.Query{}
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
-		querys = append(querys, queryInfo)
+		queries = append(queries, queryInfo)
 		return false
 	})
-	return querys
+	return queries
 }

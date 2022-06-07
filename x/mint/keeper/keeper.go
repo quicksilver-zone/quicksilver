@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	participationrewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 // Keeper of the mint store.
@@ -167,7 +169,9 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 
 	participationRewardCoin := k.GetProportions(ctx, mintedCoin, proportions.ParticipationRewards)
 	participationRewardCoins := sdk.NewCoins(participationRewardCoin)
-	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, participationRewardCoins)
+	participationRewardsAddress := k.accountKeeper.GetModuleAddress(participationrewards.ModuleName)
+	k.Logger(ctx).Info("participation rewards", "Proportion", proportions.ParticipationRewards, "Coins", participationRewardCoins, "Address", participationRewardsAddress)
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, participationrewards.ModuleName, participationRewardCoins)
 	if err != nil {
 		return err
 	}

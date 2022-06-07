@@ -1,0 +1,37 @@
+syntax = "proto3";
+package quicksilver.participationrewards.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
+
+// DistributionProportions defines the proportions of minted QCK that is to be
+// allocated as participation rewards.
+message DistributionProportions {
+  string validator_selection_allocation = 1[
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string holdings_allocation = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string lockup_allocation = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// Params holds parameters for the participationrewards module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+
+  // distribution_proportions defines the proportions of the minted
+  // participation rewards;
+  DistributionProportions distribution_proportions = 6
+      [ (gogoproto.nullable) = false ];
+}

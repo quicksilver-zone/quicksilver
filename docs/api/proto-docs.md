@@ -30,11 +30,7 @@
 - [quicksilver/interchainstaking/v1/genesis.proto](#quicksilver/interchainstaking/v1/genesis.proto)
     - [Delegation](#quicksilver.interchainstaking.v1.Delegation)
     - [DelegationPlan](#quicksilver.interchainstaking.v1.DelegationPlan)
-    - [DelegationPlan.DelegationPlanItem](#quicksilver.interchainstaking.v1.DelegationPlan.DelegationPlanItem)
-    - [DelegationPlan.ValueEntry](#quicksilver.interchainstaking.v1.DelegationPlan.ValueEntry)
     - [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent)
-    - [DistributionPlan](#quicksilver.interchainstaking.v1.DistributionPlan)
-    - [DistributionPlan.ValueEntry](#quicksilver.interchainstaking.v1.DistributionPlan.ValueEntry)
     - [GenesisState](#quicksilver.interchainstaking.v1.GenesisState)
     - [ICAAccount](#quicksilver.interchainstaking.v1.ICAAccount)
     - [Params](#quicksilver.interchainstaking.v1.Params)
@@ -59,6 +55,8 @@
     - [Msg](#quicksilver.interchainstaking.v1.Msg)
   
 - [quicksilver/interchainstaking/v1/query.proto](#quicksilver/interchainstaking/v1/query.proto)
+    - [QueryDelegationPlansRequest](#quicksilver.interchainstaking.v1.QueryDelegationPlansRequest)
+    - [QueryDelegationPlansResponse](#quicksilver.interchainstaking.v1.QueryDelegationPlansResponse)
     - [QueryDelegationsRequest](#quicksilver.interchainstaking.v1.QueryDelegationsRequest)
     - [QueryDelegationsResponse](#quicksilver.interchainstaking.v1.QueryDelegationsResponse)
     - [QueryDelegatorDelegationsRequest](#quicksilver.interchainstaking.v1.QueryDelegatorDelegationsRequest)
@@ -89,6 +87,25 @@
     - [QueryParamsResponse](#quicksilver.mint.v1beta1.QueryParamsResponse)
   
     - [Query](#quicksilver.mint.v1beta1.Query)
+  
+- [quicksilver/participationrewards/v1/participationrewards.proto](#quicksilver/participationrewards/v1/participationrewards.proto)
+    - [DistributionProportions](#quicksilver.participationrewards.v1.DistributionProportions)
+    - [Params](#quicksilver.participationrewards.v1.Params)
+  
+- [quicksilver/participationrewards/v1/genesis.proto](#quicksilver/participationrewards/v1/genesis.proto)
+    - [GenesisState](#quicksilver.participationrewards.v1.GenesisState)
+  
+- [quicksilver/participationrewards/v1/messages.proto](#quicksilver/participationrewards/v1/messages.proto)
+    - [MsgSubmitClaim](#quicksilver.participationrewards.v1.MsgSubmitClaim)
+    - [MsgSubmitClaimResponse](#quicksilver.participationrewards.v1.MsgSubmitClaimResponse)
+  
+    - [Msg](#quicksilver.participationrewards.v1.Msg)
+  
+- [quicksilver/participationrewards/v1/query.proto](#quicksilver/participationrewards/v1/query.proto)
+    - [QueryParamsRequest](#quicksilver.participationrewards.v1.QueryParamsRequest)
+    - [QueryParamsResponse](#quicksilver.participationrewards.v1.QueryParamsResponse)
+  
+    - [Query](#quicksilver.participationrewards.v1.Query)
   
 - [Scalar Value Types](#scalar-value-types)
 
@@ -395,38 +412,9 @@ Msg defines the interchainquery Msg service.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| `value` | [DelegationPlan.ValueEntry](#quicksilver.interchainstaking.v1.DelegationPlan.ValueEntry) | repeated |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainstaking.v1.DelegationPlan.DelegationPlanItem"></a>
-
-### DelegationPlan.DelegationPlanItem
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
+| `validatorAddress` | [string](#string) |  |  |
+| `delegatorAddress` | [string](#string) |  |  |
 | `value` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainstaking.v1.DelegationPlan.ValueEntry"></a>
-
-### DelegationPlan.ValueEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [DelegationPlan.DelegationPlanItem](#quicksilver.interchainstaking.v1.DelegationPlan.DelegationPlanItem) |  |  |
 
 
 
@@ -443,37 +431,6 @@ Msg defines the interchainquery Msg service.
 | ----- | ---- | ----- | ----------- |
 | `delegator` | [string](#string) |  |  |
 | `intents` | [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent) | repeated |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainstaking.v1.DistributionPlan"></a>
-
-### DistributionPlan
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `value` | [DistributionPlan.ValueEntry](#quicksilver.interchainstaking.v1.DistributionPlan.ValueEntry) | repeated |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainstaking.v1.DistributionPlan.ValueEntry"></a>
-
-### DistributionPlan.ValueEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [DelegationPlan](#quicksilver.interchainstaking.v1.DelegationPlan) |  |  |
 
 
 
@@ -564,7 +521,6 @@ GenesisState defines the interchainstaking module's genesis state.
 | `sender` | [string](#string) |  |  |
 | `txhash` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
-| `distribution_plan` | [DistributionPlan](#quicksilver.interchainstaking.v1.DistributionPlan) |  |  |
 
 
 
@@ -835,6 +791,37 @@ Msg defines the interchainstaking Msg service.
 
 
 
+<a name="quicksilver.interchainstaking.v1.QueryDelegationPlansRequest"></a>
+
+### QueryDelegationPlansRequest
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `chain_id` | [string](#string) |  |  |
+| `pagination` | [cosmos.base.query.v1beta1.PageRequest](#cosmos.base.query.v1beta1.PageRequest) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.interchainstaking.v1.QueryDelegationPlansResponse"></a>
+
+### QueryDelegationPlansResponse
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `delegations` | [DelegationPlan](#quicksilver.interchainstaking.v1.DelegationPlan) | repeated |  |
+
+
+
+
+
+
 <a name="quicksilver.interchainstaking.v1.QueryDelegationsRequest"></a>
 
 ### QueryDelegationsRequest
@@ -1043,6 +1030,7 @@ Query defines the gRPC querier service.
 | `Delegations` | [QueryDelegationsRequest](#quicksilver.interchainstaking.v1.QueryDelegationsRequest) | [QueryDelegationsResponse](#quicksilver.interchainstaking.v1.QueryDelegationsResponse) | Delegations provides data on the delegations for the given zone. | GET|/quicksilver/interchainstaking/v1/zones/{chain_id}/delegations|
 | `DelegatorDelegations` | [QueryDelegatorDelegationsRequest](#quicksilver.interchainstaking.v1.QueryDelegatorDelegationsRequest) | [QueryDelegatorDelegationsResponse](#quicksilver.interchainstaking.v1.QueryDelegatorDelegationsResponse) | DelegatorDelegations provides data on the delegations from a given delegator for the given zone. | GET|/quicksilver/interchainstaking/v1/zones/{chain_id}/delegator_delegations/{delegator_address}|
 | `ValidatorDelegations` | [QueryValidatorDelegationsRequest](#quicksilver.interchainstaking.v1.QueryValidatorDelegationsRequest) | [QueryValidatorDelegationsResponse](#quicksilver.interchainstaking.v1.QueryValidatorDelegationsResponse) | ValidatorDelegations provides data on the delegations to a given validator for the given zone. | GET|/quicksilver/interchainstaking/v1/zones/{chain_id}/validator_delegations/{validator_address}|
+| `DelegationPlans` | [QueryDelegationPlansRequest](#quicksilver.interchainstaking.v1.QueryDelegationPlansRequest) | [QueryDelegationPlansResponse](#quicksilver.interchainstaking.v1.QueryDelegationPlansResponse) | DelegationPlans provides data on the delegations to a given validator for the given zone. | GET|/quicksilver/interchainstaking/v1/zones/{chain_id}/delegation_plans|
 
  <!-- end services -->
 
@@ -1225,6 +1213,191 @@ Query provides defines the gRPC querier service.
 | ----------- | ------------ | ------------- | ------------| ------- | -------- |
 | `Params` | [QueryParamsRequest](#quicksilver.mint.v1beta1.QueryParamsRequest) | [QueryParamsResponse](#quicksilver.mint.v1beta1.QueryParamsResponse) | Params returns the total set of minting parameters. | GET|/quicksilver/mint/v1beta1/params|
 | `EpochProvisions` | [QueryEpochProvisionsRequest](#quicksilver.mint.v1beta1.QueryEpochProvisionsRequest) | [QueryEpochProvisionsResponse](#quicksilver.mint.v1beta1.QueryEpochProvisionsResponse) | EpochProvisions current minting epoch provisions value. | GET|/quicksilver/mint/v1beta1/epoch_provisions|
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/participationrewards/v1/participationrewards.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/participationrewards/v1/participationrewards.proto
+
+
+
+<a name="quicksilver.participationrewards.v1.DistributionProportions"></a>
+
+### DistributionProportions
+DistributionProportions defines the proportions of minted QCK that is to be
+allocated as participation rewards.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `validator_selection_allocation` | [string](#string) |  |  |
+| `holdings_allocation` | [string](#string) |  |  |
+| `lockup_allocation` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.participationrewards.v1.Params"></a>
+
+### Params
+Params holds parameters for the participationrewards module.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `distribution_proportions` | [DistributionProportions](#quicksilver.participationrewards.v1.DistributionProportions) |  | distribution_proportions defines the proportions of the minted participation rewards; |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/participationrewards/v1/genesis.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/participationrewards/v1/genesis.proto
+
+
+
+<a name="quicksilver.participationrewards.v1.GenesisState"></a>
+
+### GenesisState
+GenesisState defines the participationrewards module's genesis state.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#quicksilver.participationrewards.v1.Params) |  |  |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/participationrewards/v1/messages.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/participationrewards/v1/messages.proto
+
+
+
+<a name="quicksilver.participationrewards.v1.MsgSubmitClaim"></a>
+
+### MsgSubmitClaim
+MsgSubmitClaim represents a message type for submitting a participation
+claim regarding the given zone (chain).
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `user_address` | [string](#string) |  |  |
+| `zone` | [string](#string) |  |  |
+| `asset_type` | [string](#string) |  |  |
+
+
+
+
+
+
+<a name="quicksilver.participationrewards.v1.MsgSubmitClaimResponse"></a>
+
+### MsgSubmitClaimResponse
+MsgSubmitClaimResponse defines the MsgSubmitClaim response type.
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="quicksilver.participationrewards.v1.Msg"></a>
+
+### Msg
+Msg defines the participationrewards Msg service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `SubmitClaim` | [MsgSubmitClaim](#quicksilver.participationrewards.v1.MsgSubmitClaim) | [MsgSubmitClaimResponse](#quicksilver.participationrewards.v1.MsgSubmitClaimResponse) |  | POST|/quicksilver/tx/v1/participationrewards/claim|
+
+ <!-- end services -->
+
+
+
+<a name="quicksilver/participationrewards/v1/query.proto"></a>
+<p align="right"><a href="#top">Top</a></p>
+
+## quicksilver/participationrewards/v1/query.proto
+
+
+
+<a name="quicksilver.participationrewards.v1.QueryParamsRequest"></a>
+
+### QueryParamsRequest
+QueryParamsRequest is the request type for the Query/Params RPC method.
+
+
+
+
+
+
+<a name="quicksilver.participationrewards.v1.QueryParamsResponse"></a>
+
+### QueryParamsResponse
+QueryParamsResponse is the response type for the Query/Params RPC method.
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| `params` | [Params](#quicksilver.participationrewards.v1.Params) |  | params defines the parameters of the module. |
+
+
+
+
+
+ <!-- end messages -->
+
+ <!-- end enums -->
+
+ <!-- end HasExtensions -->
+
+
+<a name="quicksilver.participationrewards.v1.Query"></a>
+
+### Query
+Query provides defines the gRPC querier service.
+
+| Method Name | Request Type | Response Type | Description | HTTP Verb | Endpoint |
+| ----------- | ------------ | ------------- | ------------| ------- | -------- |
+| `Params` | [QueryParamsRequest](#quicksilver.participationrewards.v1.QueryParamsRequest) | [QueryParamsResponse](#quicksilver.participationrewards.v1.QueryParamsResponse) | Params returns the total set of participation rewards parameters. | GET|/quicksilver/participationrewards/v1beta1/params|
 
  <!-- end services -->
 

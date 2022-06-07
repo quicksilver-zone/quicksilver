@@ -133,31 +133,29 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Registe
 }
 
 // Delegate determines how the balance of a DelegateAccount should be distributed across validators.
-func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount, plan *types.DelegationPlan) error {
+func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount, allocations types.Allocations) error {
 	var msgs []sdk.Msg
 
-	for _, valAddr := range plan.Keys() {
-		if coins, ok := plan.Value[valAddr]; ok {
-			for _, coin := range coins.GetValue() {
-				if coin.Denom == zone.BaseDenom {
-					msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: account.GetAddress(), ValidatorAddress: valAddr, Amount: coin})
-				} else {
-					msgs = append(msgs, &stakingTypes.MsgRedeemTokensforShares{DelegatorAddress: account.GetAddress(), Amount: coin})
-				}
+	for _, allocation := range allocations.Sorted() {
+		for _, coin := range allocation.Amount {
+			if coin.Denom == zone.BaseDenom {
+				msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: account.GetAddress(), ValidatorAddress: allocation.Address, Amount: coin})
+			} else {
+				msgs = append(msgs, &stakingTypes.MsgRedeemTokensforShares{DelegatorAddress: account.GetAddress(), Amount: coin})
 			}
 		}
 	}
-
+	k.Logger(ctx).Info("Messages submitted in Delegate()", "msgs", msgs)
 	return k.SubmitTx(ctx, msgs, account, "")
 }
 
-func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coins, delegator string) (types.DistributionPlan, error) {
+func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coins, delegator string, txhash string) (types.Allocations, error) {
 	bins := k.GetDelegationBinsMap(ctx, &zone)
 
-	disPlan := types.DistributionPlan{}
+	sendPlan := types.Allocations{}
 
 	for _, coin := range amount {
-		var delPlan *types.DelegationPlan
+		var delPlan types.Allocations
 		var err error
 		if coin.Denom == zone.BaseDenom {
 			var valPlan = make(types.ValidatorIntents)
@@ -166,15 +164,15 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 				valPlan = zone.GetAggregateIntentOrDefault()
 				delPlan, err = types.DelegationPlanFromGlobalIntent(bins, zone, coin, valPlan)
 				if err != nil {
-					return types.DistributionPlan{}, err
+					return types.Allocations{}, err
 				}
 			} else {
 				for _, i := range plan.ToValidatorIntents() {
 					valPlan[i.ValoperAddress] = i
 				}
-				delPlan, err = types.DelegationPlanFromUserIntent(zone, coin, valPlan)
+				delPlan = types.DelegationPlanFromUserIntent(zone, coin, valPlan)
 				if err != nil {
-					return types.DistributionPlan{}, err
+					return types.Allocations{}, err
 				}
 			}
 
@@ -182,18 +180,19 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 			delPlan = types.DelegationPlanFromCoins(zone, coin)
 		}
 
-		for _, val := range delPlan.Keys() {
-			if coins, ok := delPlan.Value[val]; ok {
-				for _, coin := range coins.GetValue() {
-					var del string
-					del, bins = bins.FindAccountForDelegation(val, sdk.NewCoin(zone.BaseDenom, coin.Amount))
-					disPlan = disPlan.Add(del, types.NewSingleDelegationPlan(val, sdk.NewCoins(coin)))
-				}
+		for _, allocation := range delPlan.Sorted() {
+			var delegatorAddress string
+			for _, coin := range allocation.Amount {
+				delegatorAddress, bins = bins.FindAccountForDelegation(allocation.Address, sdk.NewCoin(zone.BaseDenom, coin.Amount))
+
+				delegationPlan := types.NewDelegationPlan(delegatorAddress, allocation.Address, sdk.NewCoins(coin))
+				sendPlan = sendPlan.Allocate(delegatorAddress, sdk.NewCoins(coin))
+				k.SetDelegationPlan(ctx, &zone, txhash, delegationPlan)
 			}
 		}
 	}
 
-	return disPlan, nil
+	return sendPlan, nil
 }
 
 func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *types.RegisteredZone, delegator string, response []byte) error {
@@ -241,23 +240,14 @@ func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalReward
 	return sdk.NewDecCoins()
 }
 
-func (k *Keeper) GetDelegationBinsMap(ctx sdk.Context, zone *types.RegisteredZone) types.DelegationBins {
-	out := make(types.DelegationBins)
+func (k *Keeper) GetDelegationBinsMap(ctx sdk.Context, zone *types.RegisteredZone) types.Allocations {
+	out := types.Allocations{}
 	for _, da := range zone.DelegationAddresses {
-		_, ok := out[da.Address]
-		if !ok {
-			out[da.Address] = make(types.DelegationBin)
-		}
+		out = out.Allocate(da.Address, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: sdk.ZeroInt()}})
 	}
 
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
-		account := out[delegation.DelegationAddress]
-		if valWeight, ok := account[delegation.ValidatorAddress]; !ok {
-			account[delegation.ValidatorAddress] = delegation.Amount.Amount
-		} else {
-			account[delegation.ValidatorAddress] = delegation.Amount.Amount.Add(valWeight)
-		}
-		out[delegation.DelegationAddress] = account
+		out = out.Allocate(delegation.DelegationAddress, sdk.Coins{sdk.Coin{Denom: delegation.ValidatorAddress, Amount: delegation.Amount.Amount}})
 		return false
 	})
 

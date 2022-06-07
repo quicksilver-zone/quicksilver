@@ -41,13 +41,13 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 				}
 
 				if sender != senderAddress {
-					k.Logger(ctx).Error("Sender mismatch", "expected", senderAddress, "received", sender)
+					k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
 				}
 
 				k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
 				thisCoins, err := sdk.ParseCoinsNormalized(amount)
 				if err != nil {
-					k.Logger(ctx).Error("Unable to parse coin", "string", amount)
+					k.Logger(ctx).Error("unable to parse coin", "string", amount)
 				}
 				coins = coins.Add(thisCoins...)
 			}
@@ -55,20 +55,20 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 	}
 
 	if senderAddress == "unset" {
-		k.Logger(ctx).Error("No sender found. Ignoring.")
+		k.Logger(ctx).Error("no sender found. Ignoring.")
 		return
 	}
 
 	// sdk.AccAddressFromBech32 doesn't work here as it expects the local HRP
 	_, addressBytes, err := bech32.DecodeAndConvert(senderAddress)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to decode sender address. Ignoring.", "sender", senderAddress)
+		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "sender", senderAddress)
 		return
 	}
 
 	if err := zone.ValidateCoinsForZone(ctx, coins); err != nil {
 		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before. That is okay, we'll catch it next round!)
-		k.Logger(ctx).Error("Unable to validate coins. Ignoring.", "sender", senderAddress)
+		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "sender", senderAddress)
 		return
 	}
 
@@ -79,21 +79,21 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 
 	k.UpdateIntent(ctx, accAddress, zone, coins, memo)
 	if err := k.MintQAsset(ctx, accAddress, zone, coins); err != nil {
-		k.Logger(ctx).Error("Unable to mint QAsset. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 		return
 	}
 
-	plan, err := k.DeterminePlanForDelegation(ctx, zone, coins, accAddress.String())
+	sendPlan, err := k.DeterminePlanForDelegation(ctx, zone, coins, accAddress.String(), hash)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to determine delegation plan. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to determine delegation plan. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 		return
 	}
 
-	if err := k.TransferToDelegate(ctx, zone, plan.ToSendPlan(), hash); err != nil {
-		k.Logger(ctx).Error("Unable to transfer to delegate. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+	if err := k.TransferToDelegate(ctx, zone, sendPlan, hash); err != nil {
+		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 		return
 	}
-	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins, plan)
+	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
 
 	k.SetReceipt(ctx, *receipt)
 }
@@ -128,17 +128,15 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.R
 	return nil
 }
 
-func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, plan types.SendPlan, memo string) error {
+func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, plan types.Allocations, memo string) error {
 
 	// if zone.SupportMultiSend() {
 	// 	return k.TransferToDelegateMulti(ctx, zone, plan, memo)
 	// } else {
 	var msgs []sdk.Msg
-	for _, delAccount := range plan.Keys() {
-		if coins, ok := plan[delAccount]; ok {
-			if !coins.Empty() && !coins.IsZero() {
-				msgs = append(msgs, &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: delAccount, Amount: coins})
-			}
+	for _, allocation := range plan.Sorted() {
+		if !allocation.Amount.Empty() && !allocation.Amount.IsZero() {
+			msgs = append(msgs, &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: allocation.Address, Amount: allocation.Amount})
 		}
 	}
 
@@ -227,8 +225,8 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 // ---------------------------------------------------------------
 
-func (k Keeper) NewReceipt(ctx sdk.Context, zone types.RegisteredZone, sender string, txhash string, amount sdk.Coins, plan types.DistributionPlan) *types.Receipt {
-	return &types.Receipt{Zone: &zone, Sender: sender, Txhash: txhash, Amount: amount, DistributionPlan: &plan}
+func (k Keeper) NewReceipt(ctx sdk.Context, zone types.RegisteredZone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
+	return &types.Receipt{Zone: &zone, Sender: sender, Txhash: txhash, Amount: amount}
 }
 
 // GetReceipt returns receipt

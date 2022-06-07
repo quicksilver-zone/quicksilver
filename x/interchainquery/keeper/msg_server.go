@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -57,7 +58,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 
 			tmclientstate, ok := clientState.(*tmclienttypes.ClientState)
 			if !ok {
-				k.Logger(ctx).Error("Not ok!", "cs", clientState)
+				k.Logger(ctx).Error("error unmarshaling client state", "cs", clientState)
 			}
 
 			if len(msg.Result) != 0 {
@@ -65,24 +66,40 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 				if err := merkleProof.VerifyMembership(tmclientstate.ProofSpecs, consensusState.GetRoot(), path, msg.Result); err != nil {
 					return nil, fmt.Errorf("unable to verify proof: %s", err)
 				}
-				k.Logger(ctx).Info("Proof validated!", "module", types.ModuleName, "queryId", q.Id)
+				k.Logger(ctx).Debug("Proof validated!", "module", types.ModuleName, "queryId", q.Id)
 
 			} else {
 				// if we got a nil response, verify non inclusion proof.
 				if err := merkleProof.VerifyNonMembership(tmclientstate.ProofSpecs, consensusState.GetRoot(), path); err != nil {
 					return nil, fmt.Errorf("unable to verify proof: %s", err)
 				}
-				k.Logger(ctx).Info("Non-inclusion Proof validated!", "module", types.ModuleName, "queryId", q.Id)
+				k.Logger(ctx).Debug("Non-inclusion Proof validated!", "module", types.ModuleName, "queryId", q.Id)
 			}
 		}
 
+		noDelete := false
 		// execute registered callbacks.
-		for _, module := range k.callbacks {
+
+		keys := []string{}
+		for k := range k.callbacks {
+			keys = append(keys, k)
+		}
+
+		sort.Strings(keys)
+
+		for _, key := range keys {
+			module := k.callbacks[key]
 			if module.Has(msg.QueryId) {
 				err := module.Call(ctx, msg.QueryId, msg.Result, q)
 				if err != nil {
-					k.Logger(ctx).Error("Error in callback", "error", err, "msg", msg.QueryId, "result", msg.Result, "type", q.QueryType, "params", q.Request)
-					return nil, err
+					// handle edge case; callback has resent the same query!
+					// set noDelete to true and short circuit error handling!
+					if err == types.ErrSucceededNoDelete {
+						noDelete = true
+					} else {
+						k.Logger(ctx).Error("error in callback", "error", err, "msg", msg.QueryId, "result", msg.Result, "type", q.QueryType, "params", q.Request)
+						return nil, err
+					}
 				}
 			}
 		}
@@ -92,7 +109,9 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 		}
 
 		if q.Period.IsNegative() {
-			k.DeleteQuery(ctx, msg.QueryId)
+			if !noDelete {
+				k.DeleteQuery(ctx, msg.QueryId)
+			}
 		} else {
 			k.SetQuery(ctx, q)
 		}

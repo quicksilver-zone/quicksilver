@@ -25,9 +25,9 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 					if len(zone.IbcNextValidatorsHash) == 0 || !bytes.Equal(zone.IbcNextValidatorsHash, tmConsState.NextValidatorsHash.Bytes()) {
 						k.Logger(ctx).Info("IBC ValSet has changed; requerying valset")
 						// trigger valset update.
-						err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+						err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId, -1)
 						if err != nil {
-							k.Logger(ctx).Error("Unable to trigger valset update query")
+							k.Logger(ctx).Error("unable to trigger valset update query")
 						}
 						zone.IbcNextValidatorsHash = tmConsState.NextValidatorsHash.Bytes()
 						k.SetRegisteredZone(ctx, zone)
