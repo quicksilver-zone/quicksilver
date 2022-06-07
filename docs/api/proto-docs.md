@@ -549,6 +549,7 @@ GenesisState defines the interchainstaking module's genesis state.
 | `delegator_intent` | [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry) | repeated |  |
 | `aggregate_intent` | [RegisteredZone.AggregateIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.AggregateIntentEntry) | repeated |  |
 | `multi_send` | [bool](#bool) |  |  |
+| `liquidity_module` | [bool](#bool) |  |  |
 | `last_redemption_rate` | [string](#string) |  |  |
 | `withdrawal_waitgroup` | [uint32](#uint32) |  |  |
 | `ibc_next_validators_hash` | [bytes](#bytes) |  |  |
@@ -691,6 +692,7 @@ deprecate in favour of governance vote.
 | `account_prefix` | [string](#string) |  |  |
 | `from_address` | [string](#string) |  |  |
 | `multi_send` | [bool](#bool) |  |  |
+| `liquidity_module` | [bool](#bool) |  |  |
 
 
 

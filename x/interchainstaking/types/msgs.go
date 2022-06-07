@@ -29,14 +29,16 @@ func NewMsgRegisterZone(
 	account_prefix string,
 	from_address sdk.Address,
 	multi_send bool,
+	lsm_support bool,
 ) *MsgRegisterZone {
 	return &MsgRegisterZone{
-		ConnectionId:  connection_id,
-		LocalDenom:    local_denom,
-		BaseDenom:     base_denom,
-		AccountPrefix: account_prefix,
-		FromAddress:   from_address.String(),
-		MultiSend:     multi_send,
+		ConnectionId:    connection_id,
+		LocalDenom:      local_denom,
+		BaseDenom:       base_denom,
+		AccountPrefix:   account_prefix,
+		FromAddress:     from_address.String(),
+		MultiSend:       multi_send,
+		LiquidityModule: lsm_support,
 	}
 }
 
