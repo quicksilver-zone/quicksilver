@@ -20,6 +20,7 @@ const (
 func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
+		Aliases:                    []string{"ics"},
 		Short:                      "Interchain staking transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
