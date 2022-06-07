@@ -26,13 +26,14 @@ message RegisteredZone {
   map<string, DelegatorIntent> delegator_intent = 12;
   map<string, ValidatorIntent> aggregate_intent = 13;
   bool multi_send = 14;
-  string last_redemption_rate = 15 [
+  bool liquidity_module = 15;
+  string last_redemption_rate = 16 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  uint32 withdrawal_waitgroup = 16;
-  bytes ibc_next_validators_hash = 17;
+  uint32 withdrawal_waitgroup = 17;
+  bytes ibc_next_validators_hash = 18;
 }
 
 message ICAAccount {
