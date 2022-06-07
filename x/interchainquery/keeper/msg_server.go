@@ -58,7 +58,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 
 			tmclientstate, ok := clientState.(*tmclienttypes.ClientState)
 			if !ok {
-				k.Logger(ctx).Error("Not ok!", "cs", clientState)
+				k.Logger(ctx).Error("error unmarshaling client state", "cs", clientState)
 			}
 
 			if len(msg.Result) != 0 {
@@ -97,7 +97,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 					if err == types.ErrSucceededNoDelete {
 						noDelete = true
 					} else {
-						k.Logger(ctx).Error("Error in callback", "error", err, "msg", msg.QueryId, "result", msg.Result, "type", q.QueryType, "params", q.Request)
+						k.Logger(ctx).Error("error in callback", "error", err, "msg", msg.QueryId, "result", msg.Result, "type", q.QueryType, "params", q.Request)
 						return nil, err
 					}
 				}

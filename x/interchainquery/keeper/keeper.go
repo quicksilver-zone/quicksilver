@@ -114,6 +114,5 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, connection_id string, chain_id str
 		// a re-request of an existing query triggers resetting of height to trigger immediately.
 		existingQuery.LastHeight = sdk.ZeroInt()
 		k.SetQuery(ctx, existingQuery)
-		k.Logger(ctx).Error("Query already registered", "id", existingQuery.Id, "query", existingQuery)
 	}
 }

@@ -39,7 +39,6 @@ func (k Keeper) SetRegisteredZone(ctx sdk.Context, zone types.RegisteredZone) {
 // DeleteRegisteredZone delete zone info
 func (k Keeper) DeleteRegisteredZone(ctx sdk.Context, chain_id string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-	ctx.Logger().Error(fmt.Sprintf("Removing chain: %s", chain_id))
 	store.Delete([]byte(chain_id))
 }
 
@@ -149,7 +148,7 @@ var setAccountCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query i
 	coin := sdk.Coin{}
 	err = k.cdc.Unmarshal(args, &coin)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal balance info for zone", "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal balance info for zone", "zone", zone.ChainId, "err", err)
 		return err
 	}
 
@@ -254,7 +253,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 	queryRes := banktypes.QueryAllBalancesResponse{}
 	err := k.cdc.Unmarshal(queryResult, &queryRes)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal balance", "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal balance", "zone", zone.ChainId, "err", err)
 		return err
 	}
 	_, addr, _ := bech32.DecodeAndConvert(address)

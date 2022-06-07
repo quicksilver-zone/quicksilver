@@ -105,7 +105,7 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZo
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
 	err := k.cdc.Unmarshal(data, &validatorsRes)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
 		return err
 	}
 
@@ -169,7 +169,7 @@ func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZon
 	validator := stakingTypes.Validator{}
 	err := k.cdc.Unmarshal(data, &validator)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal validator info for zone", "zone", zoneInfo.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zoneInfo.ChainId, "err", err)
 		return err
 	}
 
@@ -210,13 +210,13 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
 		if zoneInfo.DepositAddress != nil {
 			if !zoneInfo.DepositAddress.Balance.Empty() {
-				k.Logger(ctx).Info("Balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
+				k.Logger(ctx).Info("balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
 
 				var callback Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 					txs := tx.GetTxsEventResponse{}
 					err := k.cdc.Unmarshal(args, &txs)
 					if err != nil {
-						k.Logger(ctx).Error("Unable to unmarshal txs for deposit account", "deposit_address", zoneInfo.DepositAddress.GetAddress(), "err", err)
+						k.Logger(ctx).Error("unable to unmarshal txs for deposit account", "deposit_address", zoneInfo.DepositAddress.GetAddress(), "err", err)
 						return err
 					}
 
@@ -230,7 +230,7 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 
 			}
 		} else {
-			k.Logger(ctx).Error("Deposit account is nil")
+			k.Logger(ctx).Error("deposit account is nil")
 		}
 		return false
 	}

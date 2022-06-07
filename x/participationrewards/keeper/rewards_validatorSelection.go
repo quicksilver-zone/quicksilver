@@ -147,7 +147,7 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Registered
 	k.Logger(ctx).Info("zone voting power", "zone", zone.ChainId, "total voting power", zs.totalVotingPower)
 
 	if zs.totalVotingPower.IsZero() {
-		k.Logger(ctx).Error("Zone invalid, zero voting power", "zone", zone)
+		k.Logger(ctx).Error("zone invalid, zero voting power", "zone", zone)
 		panic("This should never happen!")
 	}
 
@@ -159,11 +159,7 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Registered
 		vs.powerPercentage = vs.VotingPower.ToDec().Quo(zs.totalVotingPower.ToDec())
 
 		// calculate normalized distribution score
-		vs.distributionScore = sdk.NewDec(1).Sub(
-			vs.powerPercentage.Sub(minp).Mul(
-				sdk.NewDec(1).Quo(maxp),
-			),
-		)
+		vs.distributionScore = sdk.NewDec(1).Sub(vs.powerPercentage.Sub(minp).Mul(sdk.NewDec(1).Quo(maxp)))
 
 		k.Logger(ctx).Info(
 			"Validator Score",

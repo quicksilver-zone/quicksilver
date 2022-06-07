@@ -20,7 +20,6 @@ func GetDelegationPlansKey(zone *types.RegisteredZone, txhash string, delAddr sd
 // GetDelegationPlan returns a specific delegation.
 func (k Keeper) GetDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, txhash string, delegatorAddress string, validatorAddress string) (delegationPlan types.DelegationPlan, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	k.Logger(ctx).Error("Fetching delegation plan")
 
 	_, delAddr, _ := bech32.DecodeAndConvert(delegatorAddress)
 	_, valAddr, _ := bech32.DecodeAndConvert(validatorAddress)
@@ -40,7 +39,6 @@ func (k Keeper) GetDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, t
 // IterateAllDelegationPlansForHash iterates through all of the delegations for a given transaction.
 func (k Keeper) IterateAllDelegationPlans(ctx sdk.Context, zone *types.RegisteredZone, cb func(delegationPlan types.DelegationPlan) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	k.Logger(ctx).Error("Fetching delegation plans in IterateAllDelegationPlans")
 
 	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegationPlan, []byte(zone.ChainId)...))
 	defer iterator.Close()
@@ -53,8 +51,8 @@ func (k Keeper) IterateAllDelegationPlans(ctx sdk.Context, zone *types.Registere
 	}
 }
 
-func (k Keeper) GetAllDelegationPlans(ctx sdk.Context, zone *types.RegisteredZone) types.DelegationPlans {
-	out := types.DelegationPlans{}
+func (k Keeper) GetAllDelegationPlans(ctx sdk.Context, zone *types.RegisteredZone) []types.DelegationPlan {
+	out := []types.DelegationPlan{}
 	k.IterateAllDelegationPlans(ctx, zone, func(delegationPlan types.DelegationPlan) bool {
 		out = append(out, delegationPlan)
 		return false
@@ -65,7 +63,6 @@ func (k Keeper) GetAllDelegationPlans(ctx sdk.Context, zone *types.RegisteredZon
 // IterateAllDelegationPlansForHash iterates through all of the delegations for a given transaction.
 func (k Keeper) IterateAllDelegationPlansForHash(ctx sdk.Context, zone *types.RegisteredZone, txhash string, cb func(delegationPlan types.DelegationPlan) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	k.Logger(ctx).Error("Fetching delegation plans in IterateAllDelegationPlansForHash")
 
 	iterator := sdk.KVStorePrefixIterator(store, append(append(types.KeyPrefixDelegationPlan, []byte(zone.ChainId)...), []byte(txhash)...))
 	defer iterator.Close()
@@ -81,7 +78,6 @@ func (k Keeper) IterateAllDelegationPlansForHash(ctx sdk.Context, zone *types.Re
 // IterateAllDelegationPlansForHashAndDelegator iterates through all of the delegations for a given transaction and delegator tuple.
 func (k Keeper) IterateAllDelegationPlansForHashAndDelegator(ctx sdk.Context, zone *types.RegisteredZone, txhash string, delegatorAddr sdk.AccAddress, cb func(delegationPlan types.DelegationPlan) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	k.Logger(ctx).Error("Fetching delegation plans in IterateAllDelegationPlansForHashAndDelegator")
 
 	iterator := sdk.KVStorePrefixIterator(store, GetDelegationPlansKey(zone, txhash, delegatorAddr))
 	defer iterator.Close()
@@ -97,7 +93,6 @@ func (k Keeper) IterateAllDelegationPlansForHashAndDelegator(ctx sdk.Context, zo
 // SetDelegationPlan sets a delegation.
 func (k Keeper) SetDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, txhash string, delegationPlan types.DelegationPlan) {
 	delegatorAddress := delegationPlan.GetDelegatorAddr()
-	k.Logger(ctx).Error("Saving delegation plan")
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegationPlan(k.cdc, delegationPlan)
 	store.Set(GetDelegationPlanKey(zone, txhash, delegatorAddress, delegationPlan.GetValidatorAddr()), b)
@@ -106,7 +101,6 @@ func (k Keeper) SetDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, t
 // RemoveDelegationPlan removes a delegation
 func (k Keeper) RemoveDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, txhash string, delegationPlan types.DelegationPlan) error {
 	delegatorAddress := delegationPlan.GetDelegatorAddr()
-	k.Logger(ctx).Error("Removing delegation plan")
 
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(GetDelegationPlanKey(zone, txhash, delegatorAddress, delegationPlan.GetValidatorAddr()))

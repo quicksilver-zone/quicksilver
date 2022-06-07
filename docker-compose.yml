@@ -75,7 +75,7 @@ services:
       context: .
       dockerfile: Dockerfile.hermes
   icq:
-    image: quicksilverzone/interchain-queries:v0.2.0
+    image: quicksilverzone/interchain-queries:v0.2.1
     volumes:
       - ./data/icq:/icq/.icq
     command:

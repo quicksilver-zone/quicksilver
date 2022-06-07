@@ -73,7 +73,7 @@ func (im IBCModule) OnChanOpenAck(
 	// get connection from port
 	connectionId, err := im.keeper.GetConnectionForPort(ctx, portID)
 	if err != nil {
-		ctx.Logger().Error("Unable to get connection for port " + portID)
+		ctx.Logger().Error("unable to get connection for port " + portID)
 	}
 
 	// get chain id from connection
@@ -91,14 +91,14 @@ func (im IBCModule) OnChanOpenAck(
 	// get zone info
 	zoneInfo, found := im.keeper.GetRegisteredZoneInfo(ctx, chainId)
 	if !found {
-		ctx.Logger().Error(fmt.Sprintf("Expected to find zone info for %v", chainId))
+		ctx.Logger().Error(fmt.Sprintf("expected to find zone info for %v", chainId))
 		return nil
 	}
 
 	// get interchain account address
 	address, found := im.keeper.ICAControllerKeeper.GetInterchainAccountAddress(ctx, connectionId, portID)
 	if !found {
-		ctx.Logger().Error(fmt.Sprintf("Expected to find an address for %s/%s", connectionId, portID))
+		ctx.Logger().Error(fmt.Sprintf("expected to find an address for %s/%s", connectionId, portID))
 		return nil
 	}
 

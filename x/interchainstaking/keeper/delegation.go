@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -185,13 +183,10 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 		for _, allocation := range delPlan.Sorted() {
 			var delegatorAddress string
 			for _, coin := range allocation.Amount {
-				fmt.Println("Bins pre:", bins)
 				delegatorAddress, bins = bins.FindAccountForDelegation(allocation.Address, sdk.NewCoin(zone.BaseDenom, coin.Amount))
-				fmt.Println("Bins post:", bins)
 
 				delegationPlan := types.NewDelegationPlan(delegatorAddress, allocation.Address, sdk.NewCoins(coin))
 				sendPlan = sendPlan.Allocate(delegatorAddress, sdk.NewCoins(coin))
-				k.Logger(ctx).Error("Adding delegation plan", "delegator", delegatorAddress, "validator", allocation.Address, "amount", sdk.NewCoins(coin))
 				k.SetDelegationPlan(ctx, &zone, txhash, delegationPlan)
 			}
 		}
@@ -245,23 +240,14 @@ func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalReward
 	return sdk.NewDecCoins()
 }
 
-func (k *Keeper) GetDelegationBinsMap(ctx sdk.Context, zone *types.RegisteredZone) types.DelegationBins {
-	out := make(types.DelegationBins)
+func (k *Keeper) GetDelegationBinsMap(ctx sdk.Context, zone *types.RegisteredZone) types.Allocations {
+	out := types.Allocations{}
 	for _, da := range zone.DelegationAddresses {
-		_, ok := out[da.Address]
-		if !ok {
-			out[da.Address] = make(types.DelegationBin)
-		}
+		out = out.Allocate(da.Address, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: sdk.ZeroInt()}})
 	}
 
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
-		account := out[delegation.DelegationAddress]
-		if valWeight, ok := account[delegation.ValidatorAddress]; !ok {
-			account[delegation.ValidatorAddress] = delegation.Amount.Amount
-		} else {
-			account[delegation.ValidatorAddress] = delegation.Amount.Amount.Add(valWeight)
-		}
-		out[delegation.DelegationAddress] = account
+		out = out.Allocate(delegation.DelegationAddress, sdk.Coins{sdk.Coin{Denom: delegation.ValidatorAddress, Amount: delegation.Amount.Amount}})
 		return false
 	})
 

@@ -63,137 +63,48 @@ func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 // -------------------------------------------------------------------------
 // DelegationCandidates
 
-type CandidateBins []CandidateBin
+func (bins Allocations) DetermineThreshold() sdk.Int {
 
-type CandidateBin struct {
-	addr string
-	val  sdk.Int
+	return bins.SortedByAmount()[int(float64(0.33)*float64(len(bins)))].SumAll()
 }
 
-func (bins CandidateBins) GetSorted() CandidateBins {
-	sort.Slice(bins, func(i, j int) bool {
-		return bins[i].val.LT(bins[j].val)
-	})
-	return bins
+func (bins Allocations) SmallestBin() Allocation {
+	return *bins.SortedByAmount()[0]
 }
 
-type DelegationBin map[string]sdk.Int
-
-func (bin DelegationBin) SumDelegations() sdk.Int {
-	sum := sdk.ZeroInt()
-	for _, delegation := range bin {
-		sum = sum.Add(delegation)
-	}
-	return sum
-}
-
-func (bin DelegationBin) IsEmpty() bool {
-	return len(bin) == 0
-}
-
-func (bin DelegationBin) HasValidator(valoperAddress string) bool {
-	_, ok := bin[valoperAddress]
-	return ok
-}
-
-type DelegationBins map[string]DelegationBin
-
-func (bins DelegationBins) AddDelegation(valoperAddress string, delegationAddress string, amount sdk.Int) DelegationBins {
-	if _, ok := bins[delegationAddress]; !ok {
-		bins[delegationAddress] = DelegationBin{}
-	}
-	if bins[delegationAddress].HasValidator(valoperAddress) {
-		bins[delegationAddress][valoperAddress] = bins[delegationAddress][valoperAddress].Add(amount)
-	} else {
-		bins[delegationAddress][valoperAddress] = amount
-	}
-	return bins
-}
-
-func (bins DelegationBins) Keys() []string {
-	keys := []string{}
-	for k := range bins {
-		keys = append(keys, k)
-	}
-
-	sort.Strings(keys)
-	return keys
-}
-
-func (bins DelegationBins) GetSorted() CandidateBins {
-	sortedBins := CandidateBins{}
-	for binAddr, bin := range bins {
-		sortedBins = append(sortedBins, CandidateBin{binAddr, bin.SumDelegations()})
-	}
-	sort.Slice(sortedBins, func(i, j int) bool {
-		return sortedBins[i].val.LT(sortedBins[j].val)
-	})
-	return sortedBins
-}
-
-func (bins DelegationBins) DetermineThreshold() sdk.Int {
-
-	return bins.GetSorted()[int(float64(0.33)*float64(len(bins)))].val
-}
-
-func (bins DelegationBins) SmallestBin() CandidateBin {
-	return bins.GetSorted()[0]
-}
-
-func (bins DelegationBins) FindAccountForDelegation(validatorAddress string, coin sdk.Coin) (string, DelegationBins) {
-	fmt.Println("Finding bin: ", coin)
-	candidates := CandidateBins{}
+func (bins Allocations) FindAccountForDelegation(validatorAddress string, coin sdk.Coin) (string, Allocations) {
+	candidates := Allocations{}
 	threshold := bins.DetermineThreshold()
-	fmt.Println("Threshold is: ", threshold)
 
-	for _, delAddr := range bins.Keys() {
-		bin := bins[delAddr]
-		binVal := bin.SumDelegations()
-		if bin.HasValidator(validatorAddress) {
+	for _, bin := range bins.SortedByAmount() {
+		binVal := bin.SumAll()
+		if bin.Amount.AmountOf(validatorAddress).GT(sdk.ZeroInt()) { // does this allocation contain any valoper coins?
 			// already contains
 			if binVal.GTE(threshold) {
-				fmt.Printf("Binval %s >= threshold %s adding as candidate\n", binVal, threshold)
 				// oversubscribed :(
-				candidates = append(candidates, CandidateBin{delAddr, binVal})
+				candidates = candidates.Allocate(bin.Address, bin.Amount)
 			} else {
-				fmt.Printf("Binval %s < threshold %s; using\n", binVal, threshold)
-				return delAddr, bins.AddDelegation(delAddr, validatorAddress, coin.Amount)
+				return bin.Address, bins.Allocate(bin.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
 			}
 		} else {
 			// bin does not have this validator in...
-			if bin.IsEmpty() {
-				fmt.Println("Bin is empty; using")
-				return delAddr, bins.AddDelegation(delAddr, validatorAddress, coin.Amount)
+			if bin.Amount.IsZero() {
+				return bin.Address, bins.Allocate(bin.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
 			}
 		}
 	}
 
 	smallest := bins.SmallestBin()
 	if len(candidates) > 0 {
-		candidates = candidates.GetSorted()
-		fmt.Println("Candidates: ", candidates)
-		fmt.Println("Smallest: ", smallest)
-		if smallest.val.LT(candidates[0].val.Quo(sdk.NewInt(3))) {
-			return smallest.addr, bins.AddDelegation(smallest.addr, validatorAddress, coin.Amount)
+		candidates = candidates.SortedByAmount()
+		if smallest.SumAll().LT(candidates[0].SumAll().Quo(sdk.NewInt(3))) {
+			return smallest.Address, bins.Allocate(smallest.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
 		} else {
-			return candidates[0].addr, bins.AddDelegation(candidates[0].addr, validatorAddress, coin.Amount)
+			return candidates[0].Address, bins.Allocate(candidates[0].Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
 		}
 	} else {
-		return smallest.addr, bins.AddDelegation(smallest.addr, validatorAddress, coin.Amount)
+		return smallest.Address, bins.Allocate(smallest.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
 	}
-}
-
-func (bins DelegationBins) SumForValidator(valoper string) sdk.Int {
-	out := sdk.ZeroInt()
-
-	for _, bin := range bins {
-		val, ok := bin[valoper]
-		if ok {
-			out = out.Add(val)
-		}
-	}
-
-	return out
 }
 
 // --------------------------------------------------------
@@ -262,8 +173,6 @@ func DelegationPlanFromUserIntent(zone RegisteredZone, coin sdk.Coin, intent Val
 	for _, val := range intent.Keys() {
 		out = out.Allocate(val, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: sdk.Int(coin.Amount.ToDec().Mul(intent[val].Weight).TruncateInt())}})
 	}
-	fmt.Println("DelegationPlanFromUserIntent", out)
-
 	return out
 }
 
@@ -279,12 +188,20 @@ func (a Allocations) Allocate(address string, amount sdk.Coins) Allocations {
 			return a
 		}
 	}
-	return append(a, Allocation{Address: address, Amount: amount})
+	return append(a, &Allocation{Address: address, Amount: amount})
 }
 
 func (a Allocations) Sorted() Allocations {
 	sort.SliceStable(a, func(i, j int) bool {
 		return a[i].Address < a[j].Address
+	})
+
+	return a
+}
+
+func (a Allocations) SortedByAmount() Allocations {
+	sort.SliceStable(a, func(i, j int) bool {
+		return a[i].SumAll().LT(a[j].SumAll())
 	})
 
 	return a
@@ -298,20 +215,37 @@ func (a Allocations) Sum() sdk.Coins {
 	return out
 }
 
-type DelegationPlans []DelegationPlan
-type Allocations []Allocation
-
-func (d DelegationPlans) Add(valAddress string, delAddress string, amount sdk.Coins) DelegationPlans {
-	for _, delPlan := range d {
-		if delPlan.ValidatorAddress == valAddress && delPlan.DelegatorAddress == delAddress {
-			delPlan.Value = delPlan.Value.Add(amount...)
-			return d
-		}
+func (a Allocations) SumForDenom(denom string) sdk.Int {
+	out := sdk.ZeroInt()
+	for _, allocation := range a {
+		out = out.Add(allocation.Amount.AmountOf(denom))
 	}
-	return append(d, DelegationPlan{ValidatorAddress: valAddress, DelegatorAddress: delAddress, Value: amount})
+	return out
 }
 
-func DelegationPlanFromGlobalIntent(currentState DelegationBins, zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) (Allocations, error) {
+func (a Allocation) SumAll() sdk.Int {
+	// warning: this treats all denoms as fungible. It might not be what you want to do!
+	out := sdk.ZeroInt()
+	for _, coin := range a.Amount {
+		out = out.Add(coin.Amount)
+	}
+	return out
+}
+
+func (a Allocations) SumAll() sdk.Int {
+	// warning: this treats all denoms as fungible. It might not be what you want to do!
+	out := sdk.ZeroInt()
+	for _, allocation := range a {
+		for _, coin := range allocation.Amount {
+			out = out.Add(coin.Amount)
+		}
+	}
+	return out
+}
+
+type Allocations []*Allocation
+
+func DelegationPlanFromGlobalIntent(currentState Allocations, zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) (Allocations, error) {
 	if coin.Denom != zone.BaseDenom {
 		return nil, fmt.Errorf("expected base denom, got %s", coin.Denom)
 	}
@@ -328,7 +262,7 @@ func DelegationPlanFromGlobalIntent(currentState DelegationBins, zone Registered
 	total := zone.GetDelegatedAmount().Amount
 
 	for _, val := range intent.Keys() {
-		current := currentState.SumForValidator(val)                                                  // fetch current delegations to validator
+		current := currentState.SumForDenom(val)                                                      // fetch current delegations to validator
 		percent := current.ToDec().Quo(total.Add(coin.Amount).ToDec())                                // what is this a percent of total + new
 		deltaToIntent := intent[val].Weight.Sub(percent).MulInt(total.Add(coin.Amount)).TruncateInt() // what to we have to delegate to make it match intent?
 		deltas = append(deltas, Diff{val, deltaToIntent})
@@ -338,8 +272,6 @@ func DelegationPlanFromGlobalIntent(currentState DelegationBins, zone Registered
 	sort.Slice(deltas, func(i, j int) bool {
 		return deltas[i].amount.LT(deltas[j].amount)
 	})
-
-	fmt.Println("deltas: ", deltas)
 
 	distributableValue := coin.Amount
 
@@ -369,8 +301,6 @@ func DelegationPlanFromGlobalIntent(currentState DelegationBins, zone Registered
 		allocations = allocations.Allocate(deltas[len(deltas)-1].valoper, remainder)
 	}
 
-	fmt.Println("DelegationPlanFromGlobalIntent", allocations)
-
 	return allocations, nil
 }
 
@@ -383,8 +313,6 @@ func DelegationPlanFromCoins(zone RegisteredZone, coin sdk.Coin) Allocations {
 			break
 		}
 	}
-
-	fmt.Println("DelegationPlanFromCoins", out)
 
 	return out
 }

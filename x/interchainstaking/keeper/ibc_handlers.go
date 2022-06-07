@@ -33,17 +33,17 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		ackErr := channeltypes.Acknowledgement_Error{}
 		err := json.Unmarshal(acknowledgement, &ackErr)
 		if err != nil {
-			k.Logger(ctx).Error("Unable to unmarshal acknowledgement error", "error", err, "data", acknowledgement)
+			k.Logger(ctx).Error("unable to unmarshal acknowledgement error", "error", err, "data", acknowledgement)
 			return err
 		}
-		k.Logger(ctx).Error("Unable to unmarshal acknowledgement result", "error", err, "remote_err", ackErr, "data", acknowledgement)
+		k.Logger(ctx).Error("unable to unmarshal acknowledgement result", "error", err, "remote_err", ackErr, "data", acknowledgement)
 		return err
 	}
 
 	txMsgData := &sdk.TxMsgData{}
 	err = proto.Unmarshal(ack.Result, txMsgData)
 	if err != nil {
-		k.Logger(ctx).Error("Unable to unmarshal acknowledgement", "error", err, "ack", ack.Result)
+		k.Logger(ctx).Error("unable to unmarshal acknowledgement", "error", err, "ack", ack.Result)
 		return err
 	}
 
@@ -66,7 +66,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			response := distrtypes.MsgWithdrawDelegatorRewardResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal MsgWithdrawDelegatorReward response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgWithdrawDelegatorReward response", "error", err)
 				return err
 			}
 			k.Logger(ctx).Info("Rewards withdrawn", "response", response)
@@ -78,7 +78,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			response := stakingtypes.MsgRedeemTokensforSharesResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal MsgRedeemTokensforShares response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
 				return err
 			}
 			k.Logger(ctx).Debug("Tokens redeemed for shares", "response", response)
@@ -91,7 +91,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			response := stakingtypes.MsgTokenizeSharesResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal MsgTokenizeShares response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgTokenizeShares response", "error", err)
 				return err
 			}
 			k.Logger(ctx).Info("Shares tokenized", "response", response)
@@ -104,7 +104,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			response := stakingtypes.MsgDelegateResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal MsgDelegate response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgDelegate response", "error", err)
 				return err
 			}
 			k.Logger(ctx).Info("Delegated", "response", response)
@@ -117,7 +117,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			response := stakingtypes.MsgBeginRedelegateResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal MsgBeginRedelegate response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgBeginRedelegate response", "error", err)
 				return err
 			}
 			k.Logger(ctx).Debug("Redelegation initiated", "response", response)
@@ -129,7 +129,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			response := banktypes.MsgSendResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal MsgSend response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgSend response", "error", err)
 				return err
 			}
 			k.Logger(ctx).Debug("Funds Transferred", "response", response)
@@ -142,7 +142,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			response := banktypes.MsgMultiSendResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal MsgMultiSend response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
 				return err
 			}
 			k.Logger(ctx).Debug("Funds Transferred (Multi)", "response", response)
@@ -154,7 +154,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			response := distrtypes.MsgSetWithdrawAddressResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal MsgMultiSend response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
 				return err
 			}
 			k.Logger(ctx).Debug("Withdraw Address Updated", "response", response)
@@ -166,7 +166,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			response := ibctransfertypes.MsgTransferResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
-				k.Logger(ctx).Error("Unable to unmarshal MsgTransfer response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgTransfer response", "error", err)
 				return err
 			}
 			k.Logger(ctx).Debug("MsgTranfer acknowledgement received")
@@ -423,13 +423,7 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, redeemMsg.DelegatorAddress)
 
-	err = k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
-	if err != nil {
-		return err
-	}
-
-	k.SetRegisteredZone(ctx, *zone)
-	return nil
+	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
 }
 
 func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
@@ -450,13 +444,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
 		}
 	}
 
-	err := k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
-	if err != nil {
-		return err
-	}
-
-	k.SetRegisteredZone(ctx, *zone)
-	return nil
+	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
 }
 
 func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) error {
@@ -603,7 +591,6 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 	k.SetDelegation(ctx, zone, delegation)
 	k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId, -1)
 	k.SetRegisteredZone(ctx, *zone)
-
 	return nil
 }
 
