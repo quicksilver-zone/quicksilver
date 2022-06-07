@@ -61,6 +61,7 @@ func GetRegisterZoneTxCmd() *cobra.Command {
 
 	flags.AddTxFlagsToCmd(cmd)
 	cmd.Flags().Bool(FlagMultiSend, false, "multi-send support")
+	cmd.Flags().Bool(FlagLsmSupport, false, "lsm support")
 
 	return cmd
 }
