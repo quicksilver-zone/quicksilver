@@ -23,6 +23,9 @@ type tokenValue struct {
 	Value      sdk.Dec
 }
 
+// getRewardsAllocations returns an instance of rewardsAllocation with values
+// set according to the module balance and set DistributionProportions
+// parameters.
 func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 	var allocation rewardsAllocation
 
@@ -132,6 +135,9 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 }*/
 
 // TODO: remove when above is properly implemented
+// allocateZoneRewards executes zone based rewards allocation. This entails
+// rewards that are proportionally distributed to zones based on the tvl for
+// each zone relative to the tvl of the QS protocol.
 func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation rewardsAllocation) error {
 	k.Logger(ctx).Info("allocateZoneRewards", "token values", tvs, "allocation", allocation)
 
@@ -151,6 +157,8 @@ func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation
 	return nil
 }
 
+// getZoneProportions returns the proportion of each zone's tvl relative to the
+// tvl of the protocol as a map indexed by the zone id (chain id).
 func (k Keeper) getZoneProportions(ctx sdk.Context, tvs tokenValues) (map[string]sdk.Dec, error) {
 	k.Logger(ctx).Info("getZoneProportions", "token values", tvs)
 
@@ -168,7 +176,7 @@ func (k Keeper) getZoneProportions(ctx sdk.Context, tvs tokenValues) (map[string
 			Quo(sdk.NewDec(tv.Multiplier)).
 			Mul(tv.Value)
 		// set the zone tvl here, we will overwrite it with the correct
-		// proportion once we have the overall tvl;
+		// proportion once we have the overall protocol tvl;
 		zoneProps[zone.ChainId] = ztvl
 		k.Logger(ctx).Info("zone tvl", "zone", zone.ChainId, "tvl", ztvl)
 
@@ -183,6 +191,8 @@ func (k Keeper) getZoneProportions(ctx sdk.Context, tvs tokenValues) (map[string
 	return zoneProps, nil
 }
 
+// getZoneAllocations returns the proportional zone rewards allocations as a
+// map indexed by the zone id.
 func (k Keeper) getZoneAllocations(ctx sdk.Context, zoneProps map[string]sdk.Dec, allocation sdk.Coins) map[string]sdk.Coins {
 	k.Logger(ctx).Info("getZoneAllocations", "proportions", zoneProps, "allocation", allocation)
 
@@ -201,6 +211,7 @@ func (k Keeper) getZoneAllocations(ctx sdk.Context, zoneProps map[string]sdk.Dec
 	return zoneAllocations
 }
 
+// distributeToUsers sends the allocated user rewards to the user address.
 func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocation) error {
 	k.Logger(ctx).Info("distributeToUsers", "allocations", userAllocations)
 	hasError := false

@@ -10,13 +10,18 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-// ? callback concurrency issues on map ?
+// zoneScore is an internal struct to track transient state for the calculation
+// of zone scores. It specifically tallies the total zone voting power used in
+// calculations to determine validator voting power percentages;
 type zoneScore struct {
 	ZoneId           string // chainId
 	TotalVotingPower sdk.Int
 	ValidatorScores  map[string]*validator
 }
 
+// validator is an internal struct to track transient state for the calculation
+// of zone scores. It contains all relevant validator scoring metrics with a
+// pointer reference to the actual validator (embedded).
 type validator struct {
 	PowerPercentage   sdk.Dec
 	PerformanceScore  sdk.Dec
@@ -26,11 +31,18 @@ type validator struct {
 	*icstypes.Validator
 }
 
+// userAllocation is an internal struct to track transient state for rewards
+// distribution. It contains the user address and the coins that are allocated
+// to it.
 type userAllocation struct {
 	Address string
 	Coins   sdk.Coins
 }
 
+// allocateValidatorSelectionRewards utilizes IBC to query the performance
+// rewards account for each zone to determine validator performance and
+// corresponding rewards allocations. Each zone's response is dealt with
+// individually in a callback.
 func (k Keeper) allocateValidatorSelectionRewards(
 	ctx sdk.Context,
 	allocation sdk.Coins,
@@ -40,6 +52,7 @@ func (k Keeper) allocateValidatorSelectionRewards(
 
 	za := k.getZoneAllocations(ctx, zoneProps, allocation)
 
+	// zone callback >>>
 	var rewardscb Callback = func(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
 		za := za
 
@@ -66,7 +79,11 @@ func (k Keeper) allocateValidatorSelectionRewards(
 			"validator scores", zs.ValidatorScores,
 		)
 
-		userAllocations, err := k.calcUserAllocations(ctx, zone, *zs, za)
+		zAllocation, exists := za[zone.ChainId]
+		if !exists {
+			return fmt.Errorf("zone allocation not found for zone %s", zone.ChainId)
+		}
+		userAllocations, err := k.calcUserAllocations(ctx, zone, *zs, zAllocation)
 		if err != nil {
 			return err
 		}
@@ -77,6 +94,7 @@ func (k Keeper) allocateValidatorSelectionRewards(
 
 		return nil
 	}
+	// <<<
 
 	for i, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
 		k.Logger(ctx).Info("zones", "i", i, "zone", zone.ChainId, "performance address", zone.PerformanceAddress.GetAddress())
@@ -107,6 +125,8 @@ func (k Keeper) allocateValidatorSelectionRewards(
 	return nil
 }
 
+// getZoneScores returns an instance of zoneScore containing the calculated
+// zone validator scores.
 func (k Keeper) getZoneScores(
 	ctx sdk.Context,
 	zone icstypes.RegisteredZone,
@@ -269,11 +289,14 @@ func (k Keeper) calcOverallScores(
 	return nil
 }
 
+// calcUserAllocations returns a slice of userAllocation. It calculates
+// individual user scores relative to overall zone score and then
+// proportionally allocates rewards based on the individual zone allocation.
 func (k Keeper) calcUserAllocations(
 	ctx sdk.Context,
 	zone icstypes.RegisteredZone,
 	zs zoneScore,
-	za map[string]sdk.Coins,
+	za sdk.Coins,
 ) ([]userAllocation, error) {
 	k.Logger(ctx).Info("calcUserAllocations", "zone", zone.ChainId, "scores", zs, "allocations", za)
 
@@ -286,6 +309,7 @@ func (k Keeper) calcUserAllocations(
 
 	sum := sdk.NewDec(0)
 	userScores := make([]userScore, 0)
+	// TODO: replace this with captured intents of the previous epoch boundary...
 	for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone) {
 		uSum := sdk.NewDec(0)
 		for _, intent := range di.GetIntents() {
@@ -304,7 +328,7 @@ func (k Keeper) calcUserAllocations(
 		sum = sum.Add(uSum)
 	}
 
-	tokensPerPoint := za[zone.ChainId].AmountOf("uqck").ToDec().Quo(sum)
+	tokensPerPoint := za.AmountOf("uqck").ToDec().Quo(sum)
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneId, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
 		ua := userAllocation{
