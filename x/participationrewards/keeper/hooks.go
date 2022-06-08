@@ -10,19 +10,36 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 }
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	k.Logger(ctx).Info("Distribute participation rewards...")
+	k.Logger(ctx).Info("distribute participation rewards...")
 
 	allocation := k.getRewardsAllocations(ctx)
 
-	// TODO: obtain zone tvl and calculate zone allocation proportions
+	// this function is completed in a callback
+	// TODO: implement and use this
+	/*if err := k.allocateZoneRewards(ctx, allocation); err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}*/
 
-	if err := k.allocateValidatorSelectionRewards(ctx, allocation.ValidatorSelection); err != nil {
+	// TODO: remove this when the above is implemented
+	// >>>
+	tvs := tokenValues{
+		Tokens: map[string]tokenValue{
+			"uatom": {
+				Symbol:     "atom",
+				Multiplier: 1000000,
+				Value:      sdk.NewDec(10.0),
+			},
+			"uosmo": {
+				Symbol:     "osmo",
+				Multiplier: 1000000,
+				Value:      sdk.NewDec(2.0),
+			},
+		},
+	}
+	if err := k.allocateZoneRewards(ctx, tvs, allocation); err != nil {
 		k.Logger(ctx).Error(err.Error())
 	}
-
-	if err := k.allocateHoldingsRewards(ctx, allocation.Holdings); err != nil {
-		k.Logger(ctx).Error(err.Error())
-	}
+	// <<<
 
 	if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
 		k.Logger(ctx).Error(err.Error())

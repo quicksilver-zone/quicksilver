@@ -7,7 +7,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (k Keeper) allocateHoldingsRewards(ctx sdk.Context, allocation sdk.Coins) error {
+func (k Keeper) allocateHoldingsRewards(ctx sdk.Context, allocation sdk.Coins, zp map[string]sdk.Dec) error {
 	k.Logger(ctx).Info("allocateHoldingsRewards", "allocation", allocation)
 	// DEVTEST:
 	if ctx.Context().Value("DEVTEST") == "DEVTEST" {

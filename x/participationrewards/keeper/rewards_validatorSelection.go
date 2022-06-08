@@ -12,43 +12,74 @@ import (
 
 // ? callback concurrency issues on map ?
 type zoneScore struct {
-	zoneId           string // chainId
-	totalVotingPower sdk.Int
-	validatorScores  map[string]*validator
+	ZoneId           string // chainId
+	TotalVotingPower sdk.Int
+	ValidatorScores  map[string]*validator
 }
 
 type validator struct {
-	powerPercentage   sdk.Dec
-	performanceScore  sdk.Dec
-	distributionScore sdk.Dec
-	overallScore      sdk.Dec
+	PowerPercentage   sdk.Dec
+	PerformanceScore  sdk.Dec
+	DistributionScore sdk.Dec
+	OverallScore      sdk.Dec
 
 	*icstypes.Validator
 }
 
-func (k Keeper) allocateValidatorSelectionRewards(ctx sdk.Context, allocation sdk.Coins) error {
-	k.Logger(ctx).Info("allocateValidatorChoiceRewards", "allocation", allocation)
+type userAllocation struct {
+	Address string
+	Coins   sdk.Coins
+}
+
+func (k Keeper) allocateValidatorSelectionRewards(
+	ctx sdk.Context,
+	allocation sdk.Coins,
+	zoneProps map[string]sdk.Dec,
+) error {
+	k.Logger(ctx).Info("allocateValidatorChoiceRewards", "allocation", allocation, "zone proportions", zoneProps)
+
+	za := k.getZoneAllocations(ctx, zoneProps, allocation)
 
 	var rewardscb Callback = func(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
-		zs, err := k.zoneCallback(ctx, response, query)
+		za := za
+
+		delegatorRewards := distrtypes.QueryDelegationTotalRewardsResponse{}
+		err := k.cdc.Unmarshal(response, &delegatorRewards)
+		if err != nil {
+			return err
+		}
+
+		zone, found := k.icsKeeper.GetRegisteredZoneInfo(ctx, query.GetChainId())
+		if !found {
+			return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+		}
+
+		zs, err := k.getZoneScores(ctx, zone, delegatorRewards)
 		if err != nil {
 			return err
 		}
 
 		k.Logger(ctx).Info(
-			"Callback Zone Score",
-			"zone", zs.zoneId,
-			"total voting power", zs.totalVotingPower,
-			"validator scores", zs.validatorScores,
+			"callback zone score",
+			"zone", zs.ZoneId,
+			"total voting power", zs.TotalVotingPower,
+			"validator scores", zs.ValidatorScores,
 		)
 
-		// TODO: distribute zone allocation
+		userAllocations, err := k.calcUserAllocations(ctx, zone, *zs, za)
+		if err != nil {
+			return err
+		}
+
+		if err := k.distributeToUsers(ctx, userAllocations); err != nil {
+			return err
+		}
 
 		return nil
 	}
 
 	for i, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
-		k.Logger(ctx).Info("Zones", "i", i, "zone", zone.ChainId, "performance address", zone.PerformanceAddress.GetAddress())
+		k.Logger(ctx).Info("zones", "i", i, "zone", zone.ChainId, "performance address", zone.PerformanceAddress.GetAddress())
 
 		// obtain zone performance account rewards
 		rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.PerformanceAddress.GetAddress()}
@@ -68,36 +99,29 @@ func (k Keeper) allocateValidatorSelectionRewards(ctx sdk.Context, allocation sd
 
 	// TODO: distribute zone allocation on callback
 	// We burn for now to ensure sound accounting for testing purposes
-	err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, allocation)
+	/*err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, allocation)
 	if err != nil {
 		return err
-	}
+	}*/
 
-	return fmt.Errorf("allocateValidatorChoiceRewards not implemented")
+	return nil
 }
 
-func (k Keeper) zoneCallback(ctx sdk.Context, response []byte, query icqtypes.Query) (*zoneScore, error) {
-	delegatorRewards := distrtypes.QueryDelegationTotalRewardsResponse{}
-	err := k.cdc.Unmarshal(response, &delegatorRewards)
-	if err != nil {
-		return nil, err
-	}
-
-	zone, found := k.icsKeeper.GetRegisteredZoneInfo(ctx, query.GetChainId())
-	if !found {
-		return nil, fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-
+func (k Keeper) getZoneScores(
+	ctx sdk.Context,
+	zone icstypes.RegisteredZone,
+	delegatorRewards distrtypes.QueryDelegationTotalRewardsResponse,
+) (*zoneScore, error) {
 	k.Logger(ctx).Info(
-		"Performance Rewards Zone Callback Response",
+		"performance rewards zone callback response",
 		"zone", zone.ChainId,
 		"rewards", delegatorRewards,
 	)
 
 	zs := zoneScore{
-		zoneId:           zone.ChainId,
-		totalVotingPower: sdk.NewInt(0),
-		validatorScores:  make(map[string]*validator),
+		ZoneId:           zone.ChainId,
+		TotalVotingPower: sdk.NewInt(0),
+		ValidatorScores:  make(map[string]*validator),
 	}
 
 	if err := k.calcDistributionScores(ctx, zone, &zs); err != nil {
@@ -115,7 +139,7 @@ func (k Keeper) zoneCallback(ctx sdk.Context, response []byte, query icqtypes.Qu
 // given zone based on the normalized voting power of the validators; scoring
 // favours smaller validators for decentraliztion purposes.
 func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.RegisteredZone, zs *zoneScore) error {
-	k.Logger(ctx).Info("Calculate distribution scores", "zone", zone.ChainId)
+	k.Logger(ctx).Info("calculate distribution scores", "zone", zone.ChainId)
 
 	zoneValidators := zone.GetValidatorsSorted()
 	if len(zoneValidators) == 0 {
@@ -128,44 +152,48 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Registered
 	min := sdk.NewInt(999999999999999999)
 	for _, val := range zoneValidators {
 		// compute zone total voting power
-		zs.totalVotingPower = zs.totalVotingPower.Add(val.VotingPower)
-		if _, exists := zs.validatorScores[val.ValoperAddress]; !exists {
-			zs.validatorScores[val.ValoperAddress] = &validator{Validator: val}
+		zs.TotalVotingPower = zs.TotalVotingPower.Add(val.VotingPower)
+		if _, exists := zs.ValidatorScores[val.ValoperAddress]; !exists {
+			zs.ValidatorScores[val.ValoperAddress] = &validator{Validator: val}
 		}
 
 		// Set max/min
 		if max.LT(val.VotingPower) {
 			max = val.VotingPower
-			k.Logger(ctx).Info("New power max", "max", max, "validator", val.ValoperAddress)
+			k.Logger(ctx).Info("new power max", "max", max, "validator", val.ValoperAddress)
 		}
 		if min.GT(val.VotingPower) {
 			min = val.VotingPower
-			k.Logger(ctx).Info("New power min", "min", min, "validator", val.ValoperAddress)
+			k.Logger(ctx).Info("new power min", "min", min, "validator", val.ValoperAddress)
 		}
 	}
 
-	k.Logger(ctx).Info("zone voting power", "zone", zone.ChainId, "total voting power", zs.totalVotingPower)
+	k.Logger(ctx).Info("zone voting power", "zone", zone.ChainId, "total voting power", zs.TotalVotingPower)
 
-	if zs.totalVotingPower.IsZero() {
+	if zs.TotalVotingPower.IsZero() {
 		k.Logger(ctx).Error("zone invalid, zero voting power", "zone", zone)
-		panic("This should never happen!")
+		panic("this should never happen!")
 	}
 
 	// calculate power percentage and normalized distribution scores
-	maxp := max.ToDec().Quo(zs.totalVotingPower.ToDec())
-	minp := min.ToDec().Quo(zs.totalVotingPower.ToDec())
-	for _, vs := range zs.validatorScores {
+	maxp := max.ToDec().Quo(zs.TotalVotingPower.ToDec())
+	minp := min.ToDec().Quo(zs.TotalVotingPower.ToDec())
+	for _, vs := range zs.ValidatorScores {
 		// calculate power percentage
-		vs.powerPercentage = vs.VotingPower.ToDec().Quo(zs.totalVotingPower.ToDec())
+		vs.PowerPercentage = vs.VotingPower.ToDec().Quo(zs.TotalVotingPower.ToDec())
 
 		// calculate normalized distribution score
-		vs.distributionScore = sdk.NewDec(1).Sub(vs.powerPercentage.Sub(minp).Mul(sdk.NewDec(1).Quo(maxp)))
+		vs.DistributionScore = sdk.NewDec(1).Sub(
+			vs.PowerPercentage.Sub(minp).Mul(
+				sdk.NewDec(1).Quo(maxp),
+			),
+		)
 
-		k.Logger(ctx).Info(
-			"Validator Score",
+		k.Logger(ctx).Debug(
+			"validator score",
 			"validator", vs.ValoperAddress,
-			"power percentage", vs.powerPercentage,
-			"distribution score", vs.distributionScore,
+			"power percentage", vs.PowerPercentage,
+			"distribution score", vs.DistributionScore,
 		)
 	}
 
@@ -190,7 +218,7 @@ func (k Keeper) calcOverallScores(
 	delegatorRewards distrtypes.QueryDelegationTotalRewardsResponse,
 	zs *zoneScore,
 ) error {
-	k.Logger(ctx).Info("Calculate performance & overall scores")
+	k.Logger(ctx).Info("calculate performance & overall scores")
 
 	rewards := delegatorRewards.GetRewards()
 	total := delegatorRewards.GetTotal().AmountOf(zone.BaseDenom)
@@ -206,21 +234,21 @@ func (k Keeper) calcOverallScores(
 	var msgs []sdk.Msg
 	limit := sdk.NewDec(1.0)
 	for _, reward := range rewards {
-		vs, exists := zs.validatorScores[reward.ValidatorAddress]
+		vs, exists := zs.ValidatorScores[reward.ValidatorAddress]
 		if !exists {
 			k.Logger(ctx).Info("validator may have been removed from active set", "validator", reward.ValidatorAddress)
 			continue
 		}
 
-		vs.performanceScore = reward.Reward.AmountOf(zone.BaseDenom).Quo(expected)
-		if vs.performanceScore.GT(limit) {
-			vs.performanceScore = limit
+		vs.PerformanceScore = reward.Reward.AmountOf(zone.BaseDenom).Quo(expected)
+		if vs.PerformanceScore.GT(limit) {
+			vs.PerformanceScore = limit
 		}
-		k.Logger(ctx).Info("Performance Score", "validator", vs.ValoperAddress, "performance", vs.performanceScore)
+		k.Logger(ctx).Info("performance score", "validator", vs.ValoperAddress, "performance", vs.PerformanceScore)
 
 		// calculate overall score
-		vs.overallScore = vs.distributionScore.Mul(vs.performanceScore)
-		k.Logger(ctx).Info("Overall Score", "validator", vs.ValoperAddress, "overall", vs.overallScore)
+		vs.OverallScore = vs.DistributionScore.Mul(vs.PerformanceScore)
+		k.Logger(ctx).Info("overall score", "validator", vs.ValoperAddress, "overall", vs.OverallScore)
 
 		// prepare validator performance withdrawal msg
 		msg := &distrtypes.MsgWithdrawDelegatorReward{
@@ -231,7 +259,7 @@ func (k Keeper) calcOverallScores(
 	}
 
 	// submit rewards withdrawals to reset zone performance for next epoch
-	k.Logger(ctx).Info("Send performance rewards withdrawal messages to reset scores for next epoch")
+	k.Logger(ctx).Info("send performance rewards withdrawal messages to reset scores for next epoch")
 	if len(msgs) > 0 {
 		if err := k.icsKeeper.SubmitTx(ctx, msgs, zone.PerformanceAddress, ""); err != nil {
 			return err
@@ -239,4 +267,57 @@ func (k Keeper) calcOverallScores(
 	}
 
 	return nil
+}
+
+func (k Keeper) calcUserAllocations(
+	ctx sdk.Context,
+	zone icstypes.RegisteredZone,
+	zs zoneScore,
+	za map[string]sdk.Coins,
+) ([]userAllocation, error) {
+	k.Logger(ctx).Info("calcUserAllocations", "zone", zone.ChainId, "scores", zs, "allocations", za)
+
+	userAllocations := make([]userAllocation, 0)
+
+	type userScore struct {
+		address string
+		score   sdk.Dec
+	}
+
+	sum := sdk.NewDec(0)
+	userScores := make([]userScore, 0)
+	for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone) {
+		uSum := sdk.NewDec(0)
+		for _, intent := range di.GetIntents() {
+			// calc overall user score
+			score := intent.Weight.Mul(zs.ValidatorScores[intent.ValoperAddress].OverallScore)
+			k.Logger(ctx).Info("user score for validator", "user", di.GetDelegator(), "validator", intent.ValoperAddress, "score", score)
+			uSum = uSum.Add(score)
+		}
+		u := userScore{
+			address: di.GetDelegator(),
+			score:   uSum,
+		}
+		k.Logger(ctx).Info("user score for zone", "user", di.GetDelegator(), "zone", zs.ZoneId, "score", uSum)
+		userScores = append(userScores, u)
+		// calc overall zone score
+		sum = sum.Add(uSum)
+	}
+
+	tokensPerPoint := za[zone.ChainId].AmountOf("uqck").ToDec().Quo(sum)
+	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneId, "zone score", sum, "tpp", tokensPerPoint)
+	for _, us := range userScores {
+		ua := userAllocation{
+			Address: us.address,
+			Coins: sdk.NewCoins(
+				sdk.NewCoin(
+					"uqck",
+					us.score.Mul(tokensPerPoint).TruncateInt(),
+				),
+			),
+		}
+		userAllocations = append(userAllocations, ua)
+	}
+
+	return userAllocations, nil
 }
