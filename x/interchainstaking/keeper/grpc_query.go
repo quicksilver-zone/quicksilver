@@ -80,7 +80,7 @@ func (k Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorInte
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
 
-	intent, found := k.GetIntent(ctx, zone, req.DelegatorAddress)
+	intent, found := k.GetIntent(ctx, zone, req.DelegatorAddress, false)
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no delegation intent specified for %s", req.GetChainId()))
 	}

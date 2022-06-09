@@ -83,6 +83,7 @@ func (k Keeper) allocateValidatorSelectionRewards(
 		if !exists {
 			return fmt.Errorf("zone allocation not found for zone %s", zone.ChainId)
 		}
+
 		userAllocations, err := k.calcUserAllocations(ctx, zone, *zs, zAllocation)
 		if err != nil {
 			return err
@@ -90,6 +91,11 @@ func (k Keeper) allocateValidatorSelectionRewards(
 
 		if err := k.distributeToUsers(ctx, userAllocations); err != nil {
 			return err
+		}
+
+		// create snapshot of current intents for next epoch boundary
+		for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
+			k.icsKeeper.SetIntent(ctx, zone, di, true)
 		}
 
 		return nil
@@ -114,13 +120,6 @@ func (k Keeper) allocateValidatorSelectionRewards(
 			rewardscb,
 		)
 	}
-
-	// TODO: distribute zone allocation on callback
-	// We burn for now to ensure sound accounting for testing purposes
-	/*err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, allocation)
-	if err != nil {
-		return err
-	}*/
 
 	return nil
 }
@@ -309,8 +308,8 @@ func (k Keeper) calcUserAllocations(
 
 	sum := sdk.NewDec(0)
 	userScores := make([]userScore, 0)
-	// TODO: replace this with captured intents of the previous epoch boundary...
-	for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone) {
+	// obtain snapshotted intents of last epoch boundary
+	for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, true) {
 		uSum := sdk.NewDec(0)
 		for _, intent := range di.GetIntents() {
 			// calc overall user score
@@ -326,6 +325,11 @@ func (k Keeper) calcUserAllocations(
 		userScores = append(userScores, u)
 		// calc overall zone score
 		sum = sum.Add(uSum)
+	}
+
+	if sum.IsZero() {
+		k.Logger(ctx).Info("zero sum score for zone", "zone", zone.ChainId)
+		return userAllocations, nil
 	}
 
 	tokensPerPoint := za.AmountOf("uqck").ToDec().Quo(sum)

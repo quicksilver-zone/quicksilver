@@ -180,7 +180,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	k.Logger(ctx).Error("DEBUG 10")
 
 	// send message
-	userIntent, found := k.GetIntent(ctx, zone, msg.FromAddress)
+	userIntent, found := k.GetIntent(ctx, zone, msg.FromAddress, false)
 	k.Logger(ctx).Error("DEBUG 11", "intent", userIntent)
 
 	if !found {
@@ -278,7 +278,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 		Intents:   msg.Intents,
 	}
 
-	k.SetIntent(ctx, zone, intent)
+	k.SetIntent(ctx, zone, intent, false)
 
 	// ctx.EventManager().EmitEvents(sdk.Events{
 	// 	sdk.NewEvent(

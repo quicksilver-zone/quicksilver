@@ -37,6 +37,14 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 	if moduleBalances.Empty() {
 		k.Logger(ctx).Info("nothing to distribute...")
 
+		// create snapshot of current intents for next epoch boundary
+		// TODO: this needs to be verified as it currently does not trigger anymore
+		for _, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
+			for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
+				k.icsKeeper.SetIntent(ctx, zone, di, true)
+			}
+		}
+
 		return allocation
 	}
 
