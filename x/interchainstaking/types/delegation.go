@@ -191,6 +191,15 @@ func (a Allocations) Allocate(address string, amount sdk.Coins) Allocations {
 	return append(a, &Allocation{Address: address, Amount: amount})
 }
 
+func (a Allocations) Get(address string) *Allocation {
+	for _, allocation := range a {
+		if allocation.Address == address {
+			return allocation
+		}
+	}
+	return nil
+}
+
 func (a Allocations) Sorted() Allocations {
 	sort.SliceStable(a, func(i, j int) bool {
 		return a[i].Address < a[j].Address
@@ -200,6 +209,7 @@ func (a Allocations) Sorted() Allocations {
 }
 
 func (a Allocations) SortedByAmount() Allocations {
+	a = a.Sorted() // sort by address first so that sorting on amount is deterministic.
 	sort.SliceStable(a, func(i, j int) bool {
 		return a[i].SumAll().LT(a[j].SumAll())
 	})
@@ -213,6 +223,25 @@ func (a Allocations) Sum() sdk.Coins {
 		out = out.Add(allocation.Amount...)
 	}
 	return out
+}
+
+// remove amount from address. Return the amount that could not be substracted.
+func (a Allocations) Sub(amount sdk.Coins, address string) (Allocations, sdk.Coins) {
+	if allocation := a.Get(address); allocation != nil {
+		subAmount := allocation.Amount
+		for _, coin := range amount {
+			var amountToSub sdk.Coins
+			if subAmount.AmountOf(coin.Denom).GTE(coin.Amount) {
+				amountToSub = sdk.Coins{coin}
+			} else {
+				amountToSub = sdk.Coins{sdk.NewCoin(coin.Denom, subAmount.AmountOf(coin.Denom))}
+			}
+			subAmount = subAmount.Sub(amountToSub)
+			amount = amount.Sub(amountToSub)
+		}
+		allocation.Amount = subAmount
+	}
+	return a, amount
 }
 
 func (a Allocations) SumForDenom(denom string) sdk.Int {
@@ -245,45 +274,51 @@ func (a Allocations) SumAll() sdk.Int {
 
 type Allocations []*Allocation
 
+func DetermineIntentDelta(currentState Allocations, total sdk.Int, intent ValidatorIntents) []Diff {
+	deltas := []Diff{}
+
+	for _, val := range intent.Keys() {
+		current := currentState.SumForDenom(val)                                     // fetch current delegations to validator
+		percent := current.ToDec().Quo(total.ToDec())                                // what is this a percent of total + new
+		deltaToIntent := intent[val].Weight.Sub(percent).MulInt(total).TruncateInt() // what to we have to delegate to make it match intent?
+		deltas = append(deltas, Diff{val, deltaToIntent})
+	}
+
+	// determinism baby!
+	sort.SliceStable(deltas, func(i, j int) bool {
+		return deltas[i].Amount.LT(deltas[j].Amount)
+	})
+	return deltas
+}
+
+type Diff struct {
+	Valoper string
+	Amount  sdk.Int
+}
+
 func DelegationPlanFromGlobalIntent(currentState Allocations, zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) (Allocations, error) {
 	if coin.Denom != zone.BaseDenom {
 		return nil, fmt.Errorf("expected base denom, got %s", coin.Denom)
 	}
 
-	type Diff struct {
-		valoper string
-		amount  sdk.Int
-	}
-
-	deltas := []Diff{}
 	allocations := Allocations{}
 
 	// fetch current state
 	total := zone.GetDelegatedAmount().Amount
 
-	for _, val := range intent.Keys() {
-		current := currentState.SumForDenom(val)                                                      // fetch current delegations to validator
-		percent := current.ToDec().Quo(total.Add(coin.Amount).ToDec())                                // what is this a percent of total + new
-		deltaToIntent := intent[val].Weight.Sub(percent).MulInt(total.Add(coin.Amount)).TruncateInt() // what to we have to delegate to make it match intent?
-		deltas = append(deltas, Diff{val, deltaToIntent})
-	}
-
-	// determinism baby!
-	sort.Slice(deltas, func(i, j int) bool {
-		return deltas[i].amount.LT(deltas[j].amount)
-	})
+	deltas := DetermineIntentDelta(currentState, total.Add(coin.Amount), intent)
 
 	distributableValue := coin.Amount
 
 	for idx, delta := range deltas {
-		if delta.amount.GT(sdk.ZeroInt()) {
-			if delta.amount.GTE(distributableValue) {
-				allocations = allocations.Allocate(delta.valoper, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: distributableValue}})
+		if delta.Amount.GT(sdk.ZeroInt()) {
+			if delta.Amount.GTE(distributableValue) {
+				allocations = allocations.Allocate(delta.Valoper, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: distributableValue}})
 				distributableValue = sdk.ZeroInt()
 				break
 			} else {
-				allocations = allocations.Allocate(delta.valoper, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: deltas[idx].amount}})
-				distributableValue = distributableValue.Sub(deltas[idx].amount)
+				allocations = allocations.Allocate(delta.Valoper, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: deltas[idx].Amount}})
+				distributableValue = distributableValue.Sub(deltas[idx].Amount)
 			}
 		}
 	}
@@ -298,7 +333,7 @@ func DelegationPlanFromGlobalIntent(currentState Allocations, zone RegisteredZon
 
 	if !allocations.Sum().IsEqual(sdk.Coins{coin}) {
 		remainder := sdk.Coins{coin}.Sub(allocations.Sum())
-		allocations = allocations.Allocate(deltas[len(deltas)-1].valoper, remainder)
+		allocations = allocations.Allocate(deltas[len(deltas)-1].Valoper, remainder)
 	}
 
 	return allocations, nil

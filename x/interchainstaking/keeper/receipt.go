@@ -18,6 +18,7 @@ import (
 )
 
 func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.RegisteredZone) {
+	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
 	hash := txr.TxHash
 	memo := txn.GetBody().Memo
 

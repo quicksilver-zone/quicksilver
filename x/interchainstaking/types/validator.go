@@ -60,6 +60,15 @@ func (di DelegatorIntent) ToMap(multiple sdk.Int) map[string]sdk.Int {
 	return out
 }
 
+func (di DelegatorIntent) ToAllocations(multiple sdk.Int) Allocations {
+	out := Allocations{}
+	di = di.Ordinalize(multiple)
+	for _, i := range di.Sorted() {
+		out = out.Allocate(i.ValoperAddress, sdk.Coins{sdk.Coin{Denom: GenericToken, Amount: i.Weight.TruncateInt()}})
+	}
+	return out
+}
+
 func (di DelegatorIntent) ToValidatorIntents() ValidatorIntents {
 	out := make(ValidatorIntents)
 	for _, i := range di.Sorted() {

@@ -1,6 +1,10 @@
 package keeper
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -25,6 +29,8 @@ func (k Keeper) GetIntent(ctx sdk.Context, zone types.RegisteredZone, delegator 
 func (k Keeper) SetIntent(ctx sdk.Context, zone types.RegisteredZone, intent types.DelegatorIntent) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), append(types.KeyPrefixIntent, []byte(zone.ChainId)...))
 	bz := k.cdc.MustMarshal(&intent)
+	sum := sha256.Sum256(bz)
+	fmt.Println("hash", hex.EncodeToString(sum[:]))
 	store.Set([]byte(intent.Delegator), bz)
 }
 

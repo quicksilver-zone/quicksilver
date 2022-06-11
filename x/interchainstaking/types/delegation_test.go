@@ -23,6 +23,61 @@ func TestAllocationsAllocate(t *testing.T) {
 	}
 }
 
+func TestAllocationsSub(t *testing.T) {
+	testCases := []struct {
+		Allocations types.Allocations
+		ToSub       types.Allocation
+		Result      types.Allocations
+		Remainder   sdk.Coins
+	}{
+		{
+			types.Allocations{}.
+				Allocate("test1", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.OneInt()}}).
+				Allocate("test2", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.OneInt()}}),
+			types.Allocation{"test1", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.OneInt()}}},
+			types.Allocations{}.
+				Allocate("test2", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.OneInt()}}),
+			sdk.NewCoins(),
+		},
+		{
+			types.Allocations{}.
+				Allocate("test1", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.NewInt(16)}}).
+				Allocate("test2", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.OneInt()}}),
+			types.Allocation{"test1", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.OneInt()}}},
+			types.Allocations{}.
+				Allocate("test2", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.OneInt()}}).Allocate("test1", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.NewInt(15)}}),
+			sdk.NewCoins(),
+		},
+		{
+			types.Allocations{}.
+				Allocate("test1", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.NewInt(16)}}),
+			types.Allocation{"test2", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.OneInt()}}},
+			types.Allocations{}.
+				Allocate("test1", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.NewInt(16)}}),
+			sdk.NewCoins(sdk.NewCoin("testCoin", sdk.OneInt())),
+		},
+		{
+			types.Allocations{}.
+				Allocate("test1", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.NewInt(16)}}),
+			types.Allocation{"test1", sdk.Coins{sdk.Coin{Denom: "testCoin", Amount: sdk.NewInt(20)}}},
+			types.Allocations{}.
+				Allocate("test1", sdk.Coins{}),
+			sdk.NewCoins(sdk.NewCoin("testCoin", sdk.NewInt(4))),
+		},
+	}
+	for _, tc := range testCases {
+		out, remainder := tc.Allocations.Sub(tc.ToSub.Amount, tc.ToSub.Address)
+		for _, a := range tc.Result {
+			if !out.Get(a.Address).Amount.IsEqual(a.Amount) {
+				t.Errorf("allocation mismatch between expected %s and actual %s", a.Amount, out.Get(a.Address).Amount)
+			}
+		}
+		if !remainder.IsEqual(tc.Remainder) {
+			t.Errorf("remainder mismatch between expected %s and actual %s", tc.Remainder, remainder)
+		}
+	}
+}
+
 // func TestFindAccountForDelegation(t *testing.T) {
 // 	testCases := []struct {
 // 		bins      types.DelegationBins

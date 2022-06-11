@@ -2,6 +2,9 @@ package keeper
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,7 +50,6 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		AccountPrefix:      msg.AccountPrefix,
 		RedemptionRate:     sdk.NewDec(1),
 		LastRedemptionRate: sdk.NewDec(1),
-		DelegatorIntent:    make(map[string]*types.DelegatorIntent),
 		MultiSend:          msg.MultiSend,
 		LiquidityModule:    msg.LiquidityModule,
 	}
@@ -79,9 +81,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 			return nil, err
 		}
 	}
-	valsetInterval := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
-
-	err = k.EmitValsetRequery(ctx, msg.ConnectionId, chainId, valsetInterval)
+	err = k.EmitValsetRequery(ctx, msg.ConnectionId, chainId)
 	if err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
@@ -136,32 +136,40 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, err
 	}
 
-	// TODO: store HRP of RegisteredZone to validate destination address (don't let users do stupid things!)
-
-	var zone types.RegisteredZone
+	var zone *types.RegisteredZone = nil
 
 	k.IterateRegisteredZones(ctx, func(_ int64, thisZone types.RegisteredZone) bool {
 		if thisZone.LocalDenom == inCoin.GetDenom() {
-			zone = thisZone
+			zone = &thisZone
 			return true
 		}
 		return false
 	})
 
+	// does zone exist?
+	if nil == zone {
+		return nil, fmt.Errorf("unable to find matching zone for denom %s", inCoin.GetDenom())
+	}
+
+	// does zone have LSM enabled?
 	if !zone.LiquidityModule {
 		return nil, fmt.Errorf("zone %s does not currently support redemptions", zone.ChainId)
 	}
-	k.Logger(ctx).Error("DEBUG 6")
+
+	// does destination address match the prefix registered against the zone?
+	if _, err := types.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
+		return nil, fmt.Errorf("destination address %s does not match expected prefix %s", msg.DestinationAddress, zone.AccountPrefix)
+	}
 
 	sender, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
 		return nil, err
 	}
 
+	// does the user have sufficient assets to burn
 	if !k.BankKeeper.HasBalance(ctx, sender, inCoin) {
 		return nil, fmt.Errorf("account has insufficient balance of qasset to burn")
 	}
-	k.Logger(ctx).Error("DEBUG 7")
 
 	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
 	var rate sdk.Dec
@@ -169,34 +177,35 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	if zone.RedemptionRate.LT(rate) {
 		rate = zone.RedemptionRate
 	}
+
 	native_tokens := inCoin.Amount.ToDec().Mul(rate).TruncateInt()
-	k.Logger(ctx).Error("DEBUG 8")
 
 	outTokens := sdk.NewCoin(zone.BaseDenom, native_tokens)
-	k.Logger(ctx).Error("DEBUG 9", "outTokens", outTokens, "nativeTokens", native_tokens)
+
+	heightBytes := make([]byte, 4)
+	binary.PutVarint(heightBytes, ctx.BlockHeight())
+	hash := sha256.Sum256(append(msg.GetSignBytes(), heightBytes...))
+	hashString := hex.EncodeToString(hash[:])
 
 	// lock qAssets - how are we tracking this?
-	k.BankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(msg.FromAddress), types.ModuleName, sdk.NewCoins(inCoin))
-	k.Logger(ctx).Error("DEBUG 10")
-
-	// send message
-	userIntent, found := k.GetIntent(ctx, zone, msg.FromAddress)
-	k.Logger(ctx).Error("DEBUG 11", "intent", userIntent)
-
-	if !found {
-		// here we should use the tokens the zone WANTS to get rid of!
-		// fetch cachedIntent vs  currentState from zone.
-		// for now:
-		userIntent = types.DelegatorIntent{Delegator: msg.FromAddress, Intents: []*types.ValidatorIntent{}}
-		k.Logger(ctx).Error("DEBUG 11a")
-
+	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(inCoin)); err != nil {
+		return nil, err
 	}
 
-	intentMap := userIntent.ToMap(native_tokens)
-	k.Logger(ctx).Error("DEBUG 11", "intent", intentMap)
+	// send message
+	userIntent, found := k.GetIntent(ctx, *zone, msg.FromAddress)
 
-	targets := k.GetRedemptionTargets(ctx, zone, intentMap) // map[string][string]sdk.Coin
-	k.Logger(ctx).Error("DEBUG 12")
+	if !found || len(userIntent.Intents) == 0 {
+		vi := []*types.ValidatorIntent{}
+		for _, v := range zone.GetAggregateIntentOrDefault() {
+			vi = append(vi, v)
+		}
+		userIntent = types.DelegatorIntent{Delegator: msg.FromAddress, Intents: vi}
+	}
+
+	intentMap := userIntent.ToAllocations(native_tokens)
+
+	targets := k.GetRedemptionTargets(ctx, *zone, intentMap) // map[string][string]sdk.Coin
 
 	if len(targets) == 0 {
 		return nil, fmt.Errorf("targets can never be zero length")
@@ -204,42 +213,40 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	sumAmount := sdk.NewCoins()
 
-	for delegator, validators := range targets {
-		k.Logger(ctx).Error("DEBUG 13", "delegator", delegator)
+	msgs := make(map[string][]sdk.Msg, 0)
 
-		msgs := make([]sdk.Msg, 0)
-		for validator, amount := range validators {
-			k.Logger(ctx).Error("DEBUG 13a", "delegator", delegator, "validator", validator)
-			msgs = append(msgs, &stakingtypes.MsgTokenizeShares{
-				DelegatorAddress:    delegator,
-				ValidatorAddress:    validator,
-				Amount:              amount,
+	for _, target := range targets.Sorted() {
+		if len(target.Value) == 1 {
+			if _, ok := msgs[target.DelegatorAddress]; !ok {
+				msgs[target.DelegatorAddress] = make([]sdk.Msg, 0)
+			}
+			msgs[target.DelegatorAddress] = append(msgs[target.DelegatorAddress], &stakingtypes.MsgTokenizeShares{
+				DelegatorAddress:    target.DelegatorAddress,
+				ValidatorAddress:    target.ValidatorAddress,
+				Amount:              target.Value[0],
 				TokenizedShareOwner: msg.DestinationAddress,
 			})
-			sumAmount = sumAmount.Add(amount)
-			// what happens here if we revert below? this is stored in the KV store, so it should be rolled back. Check me.
-			k.AddWithdrawalRecord(ctx, delegator, validator, msg.DestinationAddress, amount)
+			sumAmount = sumAmount.Add(target.Value[0])
+			k.AddWithdrawalRecord(ctx, target.DelegatorAddress, target.ValidatorAddress, msg.DestinationAddress, target.Value[0], inCoin, hashString)
 		}
+	}
+
+	for delegator, _ := range msgs {
 		icaAccount, err := zone.GetDelegationAccountByAddress(delegator)
-		k.Logger(ctx).Error("DEBUG 13b", "delegator", delegator, "ica", icaAccount)
 		if err != nil {
 			panic(err) // panic here because something is terribly wrong if we cann't find the delegation bucket here!!!
 		}
-		k.Logger(ctx).Error("DEBUG 13c", "msgs", msgs)
-		k.SubmitTx(ctx, msgs, icaAccount, "")
+		err = k.SubmitTx(ctx, msgs[delegator], icaAccount, "")
+		if err != nil {
+			k.Logger(ctx).Error("error submitting tx", "err", err)
+			return nil, err
+		}
 	}
-	k.Logger(ctx).Error("DEBUG 14")
 
 	if !sumAmount.IsAllLTE(sdk.NewCoins(outTokens)) {
 		k.Logger(ctx).Error("Output coins > than expected!", "sum", sumAmount, "expected", outTokens)
-		panic("argh")
+		return nil, err
 	}
-	k.Logger(ctx).Error("DEBUG 15")
-
-	//msgs = append(msgs, &banktypes.MsgSend{t.DelegatorsAddress(), msg.DestinationAddress, t.Amount()})
-	// on confirmation of asset dispersal, burn qAssets?
-
-	// burn qAssets
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -312,7 +319,7 @@ func (k msgServer) validateIntents(zone types.RegisteredZone, intents []*types.V
 	return nil
 }
 
-func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId string, period int64) error {
+func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId string) error {
 	var cb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 		zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 		if !found {
@@ -337,6 +344,8 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 	if err != nil {
 		return err
 	}
+
+	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 
 	k.ICQKeeper.MakeRequest(
 		ctx,

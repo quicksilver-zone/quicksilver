@@ -43,7 +43,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					}
 					// decrement waitgroup as we have received back the query (initially incremented in L93).
 
-					zone.WithdrawalWaitgroup--
+					zone.WithdrawalWaitgroup = zone.WithdrawalWaitgroup - 1
+					k.Logger(ctx).Info("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup)
+
 					return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 				}
 

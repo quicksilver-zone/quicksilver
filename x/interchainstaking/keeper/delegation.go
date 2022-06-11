@@ -136,6 +136,7 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Registe
 func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount, allocations types.Allocations) error {
 	var msgs []sdk.Msg
 
+	k.Logger(ctx).Error("LOGGING DELEGATE()")
 	for _, allocation := range allocations.Sorted() {
 		for _, coin := range allocation.Amount {
 			if coin.Denom == zone.BaseDenom {
@@ -167,9 +168,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 					return types.Allocations{}, err
 				}
 			} else {
-				for _, i := range plan.ToValidatorIntents() {
-					valPlan[i.ValoperAddress] = i
-				}
+				valPlan = plan.ToValidatorIntents()
 				delPlan = types.DelegationPlanFromUserIntent(zone, coin, valPlan)
 				if err != nil {
 					return types.Allocations{}, err
@@ -225,8 +224,9 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 		return nil
 	}
 	// add withdrawal waitgroup tally
-	zone.WithdrawalWaitgroup += uint32(len(msgs))
+	zone.WithdrawalWaitgroup = zone.WithdrawalWaitgroup + uint32(len(msgs))
 	k.SetRegisteredZone(ctx, *zone)
+	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup)
 
 	return k.SubmitTx(ctx, msgs, account, "")
 }
@@ -251,5 +251,5 @@ func (k *Keeper) GetDelegationBinsMap(ctx sdk.Context, zone *types.RegisteredZon
 		return false
 	})
 
-	return out
+	return out.Sorted()
 }
