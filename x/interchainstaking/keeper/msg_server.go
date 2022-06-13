@@ -244,7 +244,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	if !sumAmount.IsAllLTE(sdk.NewCoins(outTokens)) {
-		k.Logger(ctx).Error("Output coins > than expected!", "sum", sumAmount, "expected", outTokens)
+		k.Logger(ctx).Error("output coins > than expected!", "sum", sumAmount, "expected", outTokens)
 		return nil, err
 	}
 

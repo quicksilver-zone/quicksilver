@@ -348,7 +348,7 @@ func (r RedemptionTargets) Add(delAddr string, valAddr string, amount sdk.Coins)
 	return append(r, RedemptionTarget{ValidatorAddress: valAddr, DelegatorAddress: delAddr, Value: amount})
 }
 
-func ApplyDeltasToIntent(requests types.Allocations, deltas []types.Diff, currentState types.Allocations) types.Allocations {
+func ApplyDeltasToIntent(requests types.Allocations, deltas types.Diffs, currentState types.Allocations) types.Allocations {
 
 OUT:
 	for fromIdx := 0; fromIdx < len(deltas) && deltas[fromIdx].Amount.LT(sdk.ZeroInt()); {
@@ -377,7 +377,7 @@ OUT:
 	return SatisfyRequestsForBins(requests, currentState, deltas).Sorted()
 }
 
-func SatisfyRequestsForBins(requests types.Allocations, bins types.Allocations, deltas []types.Diff) types.Allocations {
+func SatisfyRequestsForBins(requests types.Allocations, bins types.Allocations, deltas types.Diffs) types.Allocations {
 	for dIdx, delta := range deltas {
 		maxWithdrawableForDenom := bins.SumForDenom(delta.Valoper)
 		r := requests.Get(delta.Valoper)

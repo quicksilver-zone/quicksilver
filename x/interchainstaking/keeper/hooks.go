@@ -16,13 +16,13 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	// every epoch
-	k.Logger(ctx).Info("Handling epoch end")
+	k.Logger(ctx).Info("handling epoch end")
 	if epochIdentifier == "epoch" {
 		k.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
-			k.Logger(ctx).Info("Taking a snapshot of intents")
+			k.Logger(ctx).Info("taking a snapshot of intents")
 			k.AggregateIntents(ctx, zoneInfo)
 			if zoneInfo.WithdrawalWaitgroup > 0 {
-				k.Logger(ctx).Error("Epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!")
+				k.Logger(ctx).Error("epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!")
 				zoneInfo.WithdrawalWaitgroup = 0
 			}
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
@@ -41,10 +41,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					if err != nil {
 						return err
 					}
-					// decrement waitgroup as we have received back the query (initially incremented in L93).
 
-					zone.WithdrawalWaitgroup = zone.WithdrawalWaitgroup - 1
-					k.Logger(ctx).Info("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup)
+					// decrement waitgroup as we have received back the query (initially incremented in L93).
+					zone.WithdrawalWaitgroup--
+
+					k.Logger(ctx).Info("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress)
 
 					return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 				}

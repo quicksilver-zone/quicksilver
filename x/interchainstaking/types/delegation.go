@@ -273,22 +273,36 @@ func (a Allocations) SumAll() sdk.Int {
 }
 
 type Allocations []*Allocation
+type Diffs []*Diff
 
-func DetermineIntentDelta(currentState Allocations, total sdk.Int, intent ValidatorIntents) []Diff {
-	deltas := []Diff{}
+func (a Diffs) Sorted() Diffs {
+	sort.SliceStable(a, func(i, j int) bool {
+		return a[i].Valoper < a[j].Valoper
+	})
+
+	return a
+}
+
+func (a Diffs) SortedByAmount() Diffs {
+	a = a.Sorted() // sort by address first so that sorting on amount is deterministic.
+	sort.SliceStable(a, func(i, j int) bool {
+		return a[i].Amount.LT(a[j].Amount)
+	})
+
+	return a
+}
+
+func DetermineIntentDelta(currentState Allocations, total sdk.Int, intent ValidatorIntents) Diffs {
+	deltas := Diffs{}
 
 	for _, val := range intent.Keys() {
 		current := currentState.SumForDenom(val)                                     // fetch current delegations to validator
 		percent := current.ToDec().Quo(total.ToDec())                                // what is this a percent of total + new
 		deltaToIntent := intent[val].Weight.Sub(percent).MulInt(total).TruncateInt() // what to we have to delegate to make it match intent?
-		deltas = append(deltas, Diff{val, deltaToIntent})
+		deltas = append(deltas, &Diff{val, deltaToIntent})
 	}
 
-	// determinism baby!
-	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].Amount.LT(deltas[j].Amount)
-	})
-	return deltas
+	return deltas.SortedByAmount()
 }
 
 type Diff struct {
@@ -335,7 +349,6 @@ func DelegationPlanFromGlobalIntent(currentState Allocations, zone RegisteredZon
 		remainder := sdk.Coins{coin}.Sub(allocations.Sum())
 		allocations = allocations.Allocate(deltas[len(deltas)-1].Valoper, remainder)
 	}
-
 	return allocations, nil
 }
 

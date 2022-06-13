@@ -136,7 +136,6 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Registe
 func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount, allocations types.Allocations) error {
 	var msgs []sdk.Msg
 
-	k.Logger(ctx).Error("LOGGING DELEGATE()")
 	for _, allocation := range allocations.Sorted() {
 		for _, coin := range allocation.Amount {
 			if coin.Denom == zone.BaseDenom {
@@ -146,7 +145,6 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *t
 			}
 		}
 	}
-	k.Logger(ctx).Info("Messages submitted in Delegate()", "msgs", msgs)
 	return k.SubmitTx(ctx, msgs, account, "")
 }
 
@@ -214,19 +212,20 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	k.IterateDelegatorDelegations(ctx, zone, delAddr, func(delegation types.Delegation) bool {
 		amount := rewardsForDelegation(delegatorRewards, delegation.DelegationAddress, delegation.ValidatorAddress)
 		k.Logger(ctx).Info("Withdraw rewards", "delegator", delegation.DelegationAddress, "validator", delegation.ValidatorAddress, "amount", amount)
-		if !amount.IsZero() {
+		if !amount.IsZero() || !amount.Empty() {
 			msgs = append(msgs, &distrTypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegation.GetDelegationAddress(), ValidatorAddress: delegation.GetValidatorAddress()})
 		}
 		return false
 	})
 
 	if len(msgs) == 0 {
+		k.SetRegisteredZone(ctx, *zone)
 		return nil
 	}
 	// add withdrawal waitgroup tally
-	zone.WithdrawalWaitgroup = zone.WithdrawalWaitgroup + uint32(len(msgs))
+	zone.WithdrawalWaitgroup += uint32(len(msgs))
 	k.SetRegisteredZone(ctx, *zone)
-	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup)
+	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup, "address", delegator)
 
 	return k.SubmitTx(ctx, msgs, account, "")
 }
