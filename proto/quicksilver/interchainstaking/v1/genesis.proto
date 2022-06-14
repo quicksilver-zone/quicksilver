@@ -22,18 +22,17 @@ message RegisteredZone {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  repeated Validator validators = 11;
-  map<string, DelegatorIntent> delegator_intent = 12;
-  map<string, ValidatorIntent> aggregate_intent = 13;
-  bool multi_send = 14;
-  bool liquidity_module = 15;
-  string last_redemption_rate = 16 [
+  string last_redemption_rate = 11 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  uint32 withdrawal_waitgroup = 17;
-  bytes ibc_next_validators_hash = 18;
+  repeated Validator validators = 12;
+  map<string, ValidatorIntent> aggregate_intent = 13;
+  bool multi_send = 14;
+  bool liquidity_module = 15;
+   uint32 withdrawal_waitgroup = 16;
+  bytes ibc_next_validators_hash = 17;
 }
 
 message ICAAccount {
@@ -62,7 +61,13 @@ message WithdrawalRecord {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.nullable) = false
   ];
-  int32 status = 5;
+  cosmos.base.v1beta1.Coin burn_amount = 5 [
+    (cosmos_proto.scalar) = "cosmos.Coin",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable) = false
+  ];
+  string txhash = 6;
+  int32 status = 7;
 }
 
 message TransferRecord {

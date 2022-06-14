@@ -17,6 +17,8 @@ const (
 
 	Version = "ics27-1"
 
+	GenericToken = "tokens"
+
 	// this value defines the number of delegation accounts per zone. This can only ever increase.
 	DelegationAccountCount = 10
 	// this value defines the number of delegation accounts a given deposit should be shared amongst

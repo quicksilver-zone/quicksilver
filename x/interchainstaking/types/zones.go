@@ -8,21 +8,19 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/ingenuity-build/quicksilver/utils"
 )
 
-func (z RegisteredZone) GetDelegationAccountsByLowestBalance(qty uint64) []*ICAAccount {
-	delegationAccounts := z.GetDelegationAccounts()
-	sort.SliceStable(delegationAccounts, func(i, j int) bool {
-		return delegationAccounts[i].DelegatedBalance.Amount.GT(delegationAccounts[j].DelegatedBalance.Amount)
-	})
-	if qty > 0 {
-		return delegationAccounts[:int(utils.MinU64(append([]uint64{}, uint64(len(delegationAccounts)), qty)))]
-	}
-	return delegationAccounts
-}
-
 func (z RegisteredZone) SupportMultiSend() bool { return z.MultiSend }
+func (z RegisteredZone) SupportLsm() bool       { return z.LiquidityModule }
+
+func (z RegisteredZone) IsDelegateAddress(addr string) bool {
+	for _, acc := range z.DelegationAddresses {
+		if acc.Address == addr {
+			return true
+		}
+	}
+	return false
+}
 
 func (z *RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, error) {
 	for _, v := range z.GetValidatorsSorted() {
@@ -30,14 +28,14 @@ func (z *RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, erro
 			return v, nil
 		}
 	}
-	return nil, fmt.Errorf("invalid validator %s", valoper)
+	return nil, fmt.Errorf("invalid validator -> %s", valoper)
 }
 
 func (z *RegisteredZone) GetDelegationAccountByAddress(address string) (*ICAAccount, error) {
 	if z.DelegationAddresses == nil {
 		return nil, fmt.Errorf("no delegation accounts set: %v", z)
 	}
-	for _, account := range z.GetDelegationAccounts() {
+	for _, account := range z.DelegationAddresses {
 		if account.GetAddress() == address {
 			return account, nil
 		}
@@ -46,8 +44,8 @@ func (z *RegisteredZone) GetDelegationAccountByAddress(address string) (*ICAAcco
 }
 
 func (z *RegisteredZone) ValidateCoinsForZone(ctx sdk.Context, coins sdk.Coins) error {
-
 	zoneVals := z.GetValidatorsAddressesAsSlice()
+
 COINS:
 	for _, coin := range coins {
 		if coin.Denom == z.BaseDenom {
@@ -146,7 +144,7 @@ func (z RegisteredZone) GetValidatorsAddressesAsSlice() []string {
 
 func (z *RegisteredZone) GetDelegatedAmount() sdk.Coin {
 	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())
-	for _, da := range z.GetDelegationAccounts() {
+	for _, da := range z.DelegationAddresses {
 		out = out.Add(da.DelegatedBalance)
 	}
 	return out
