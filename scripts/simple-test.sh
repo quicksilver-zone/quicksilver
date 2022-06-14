@@ -37,33 +37,7 @@ else
   cp ./scripts/config/icq.yaml ./${CHAIN_DIR}/icq/config.yaml
 fi
 
-VAL_ADDRESS_1=$($QS_RUN keys show val1 --keyring-backend test -a)
-DEMO_ADDRESS_1=$($QS_RUN keys show demowallet1 --keyring-backend test -a)
-RLY_ADDRESS_1=$($QS_RUN keys show rly1 --keyring-backend test -a)
-
-VAL_ADDRESS_6=$($QS2_RUN keys show val6 --keyring-backend test -a)
-DEMO_ADDRESS_6=$($QS2_RUN keys show demowallet6 --keyring-backend test -a)
-
-VAL_ADDRESS_7=$($QS3_RUN keys show val7 --keyring-backend test -a)
-DEMO_ADDRESS_7=$($QS3_RUN keys show demowallet7 --keyring-backend test -a)
-
-VAL_ADDRESS_2=$($TZ_RUN keys show val2 --keyring-backend test -a)
-DEMO_ADDRESS_2=$($TZ_RUN keys show demowallet2 --keyring-backend test -a)
-RLY_ADDRESS_2=$($TZ_RUN keys show rly2 --keyring-backend test -a)
-
-VAL_ADDRESS_3=$($TZ2_RUN keys show val3 --keyring-backend test -a)
-DEMO_ADDRESS_3=$($TZ2_RUN keys show demowallet3 --keyring-backend test -a)
-
-VAL_ADDRESS_4=$($TZ3_RUN keys show val4 --keyring-backend test -a)
-DEMO_ADDRESS_4=$($TZ3_RUN keys show demowallet4 --keyring-backend test -a)
-
-VAL_ADDRESS_5=$($TZ4_RUN keys show val5 --keyring-backend test -a)
-DEMO_ADDRESS_5=$($TZ4_RUN keys show demowallet5 --keyring-backend test -a)
-
-VAL_VALOPER_2=$($TZ_RUN keys show val2 --keyring-backend test --bech=val -a)
-VAL_VALOPER_3=$($TZ2_RUN keys show val3 --keyring-backend test --bech=val -a)
-VAL_VALOPER_4=$($TZ3_RUN keys show val4 --keyring-backend test --bech=val -a)
-VAL_VALOPER_5=$($TZ4_RUN keys show val5 --keyring-backend test --bech=val -a)
+source ${SCRIPT_DIR}/wallets.sh
 
 #############################################################################################################################
 
@@ -91,7 +65,7 @@ $TZ_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_2 -y --k
 docker-compose up --force-recreate -d icq
 
 echo "Register $CHAINID_2 on quicksilver..."
-$QS_EXEC tx interchainstaking register connection-0 uqatom uatom cosmos --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test --multi-send
+$QS_EXEC tx interchainstaking register connection-0 uqatom uatom cosmos --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test --multi-send --lsm-support
 
 sleep 5
 
@@ -117,34 +91,29 @@ $TZ_EXEC tx bank send val2 $PERFORMANCE_ACCOUNT 40000uatom --chain-id $CHAINID_2
 
 sleep 5
 $TZ_EXEC tx bank send val2 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_2}1 --chain-id $CHAINID_2 -y --keyring-backend=test
-sleep 30
+sleep 10
 $TZ2_EXEC tx bank send val3 $DEPOSIT_ACCOUNT 15000000${VAL_VALOPER_3}2 --chain-id $CHAINID_2 -y --keyring-backend=test
-
-sleep 30
-$TZ_EXEC tx staking delegate ${VAL_VALOPER_2} 36000000uatom --from demowallet2 --chain-id $CHAINID_2 -y --keyring-backend=test
-
-sleep 60
+sleep 10
 $TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 333333uatom --chain-id $CHAINID_2 -y --keyring-backend=test
-sleep 60
+sleep 20
 $TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 20000000uatom --chain-id $CHAINID_2 -y --keyring-backend=test --note MgTUzEjWVVYoDZBarqFL1akb38mxlgTsqdZ/sFxTJBNf+tv6rtckvn3T
-sleep 60
+sleep 10
 $TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 33000000uatom --chain-id $CHAINID_2 -y --keyring-backend=test
-sleep 30
-
+sleep 10
 $TZ_EXEC tx staking tokenize-share $VAL_VALOPER_2 36000000uatom $VAL_ADDRESS_2 --from demowallet2 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test   #4
 $TZ2_EXEC tx bank send val3 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_3}2 --chain-id $CHAINID_2 -y --keyring-backend=test
 
-sleep 30
+sleep 10
 
 $TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 20000000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
 $TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 25000000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test
 
-sleep 30
+sleep 10
 
 $TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
 $TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 15000000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test
 
-sleep 30
+sleep 10
 
 $TZ_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 6000000${VAL_VALOPER_2}4 --chain-id $CHAINID_2 -y --keyring-backend=test
 $TZ3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 25000000${VAL_VALOPER_4}3 --chain-id $CHAINID_2 -y --keyring-backend=test

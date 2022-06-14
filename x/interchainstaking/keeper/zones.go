@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -318,37 +319,122 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 	return nil
 }
 
-func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.RegisteredZone, requests map[string]sdk.Int) map[string]map[string]sdk.Coin {
-	out := make(map[string]map[string]sdk.Coin)
+type RedemptionTarget types.DelegationPlan
+type RedemptionTargets []RedemptionTarget
 
-	for valoper, tokens := range requests {
+func (r RedemptionTargets) Sorted() RedemptionTargets {
+	sort.SliceStable(r, func(i, j int) bool {
+		return fmt.Sprintf("%s%s", r[i].DelegatorAddress, r[i].ValidatorAddress) < fmt.Sprintf("%s%s", r[j].DelegatorAddress, r[j].ValidatorAddress)
+	})
+	return r
+}
 
-		_, valAddr, _ := bech32.DecodeAndConvert(valoper)
-		remainingTokens := tokens
-		// TODO: order delegations from highest to lowest, as a reference. We wish to even these out as much as possible.
-		// return a map of delegation bucket deviation from median.
+func (r RedemptionTargets) Get(delAddr string, valAddr string) *RedemptionTarget {
+	for _, rt := range r.Sorted() {
+		if rt.DelegatorAddress == delAddr && rt.ValidatorAddress == valAddr {
+			return &rt
+		}
+	}
+	return nil
+}
 
-		delegations := k.GetValidatorDelegations(ctx, &zone, valAddr)
+func (r RedemptionTargets) Add(delAddr string, valAddr string, amount sdk.Coins) RedemptionTargets {
+	for _, rt := range r.Sorted() {
+		if rt.DelegatorAddress == delAddr && rt.ValidatorAddress == valAddr {
+			rt.Value = rt.Value.Add(amount...)
+			return r
+		}
+	}
+	return append(r, RedemptionTarget{ValidatorAddress: valAddr, DelegatorAddress: delAddr, Value: amount})
+}
 
-		for _, i := range delegations {
+func ApplyDeltasToIntent(requests types.Allocations, deltas types.Diffs, currentState types.Allocations) types.Allocations {
 
-			if i.Amount.Amount.GTE(remainingTokens) {
-				if out[i.DelegationAddress] == nil {
-					out[i.DelegationAddress] = make(map[string]sdk.Coin)
-				}
-				out[i.DelegationAddress][i.ValidatorAddress] = sdk.NewCoin(zone.BaseDenom, remainingTokens)
-				break
-			} else {
-				val := i.Amount.Amount
-				remainingTokens = remainingTokens.Sub(val)
-				if out[i.DelegationAddress] == nil {
-					out[i.DelegationAddress] = make(map[string]sdk.Coin)
-				}
-				out[i.DelegationAddress][i.ValidatorAddress] = sdk.NewCoin(zone.BaseDenom, val)
+OUT:
+	for fromIdx := 0; fromIdx < len(deltas) && deltas[fromIdx].Amount.LT(sdk.ZeroInt()); {
+		for idx := len(deltas) - 1; idx > fromIdx; idx-- {
+			if idx == fromIdx {
+				continue
 			}
+			if intent := requests.Get(deltas[idx].Valoper); intent != nil {
+				var remainder sdk.Coins
+				toSub := deltas[fromIdx].Amount.Abs()
+				requests, remainder = requests.Sub(sdk.Coins{sdk.NewCoin(types.GenericToken, toSub)}, intent.Address)
+				requests = requests.Allocate(deltas[fromIdx].Valoper, sdk.Coins{sdk.NewCoin(types.GenericToken, toSub)}.Sub(remainder))
+				deltas[fromIdx].Amount = remainder.AmountOf(types.GenericToken).Neg()
+				if deltas[fromIdx].Amount.Equal(sdk.ZeroInt()) {
+					fromIdx++
+					continue OUT
+				}
+			}
+		}
+		if !deltas[fromIdx].Amount.Equal(sdk.ZeroInt()) {
+			break
 		}
 
 	}
+
+	return SatisfyRequestsForBins(requests, currentState, deltas).Sorted()
+}
+
+func SatisfyRequestsForBins(requests types.Allocations, bins types.Allocations, deltas types.Diffs) types.Allocations {
+	for dIdx, delta := range deltas {
+		maxWithdrawableForDenom := bins.SumForDenom(delta.Valoper)
+		r := requests.Get(delta.Valoper)
+		if r != nil {
+			if r.Amount.AmountOf(types.GenericToken).GT(maxWithdrawableForDenom) {
+				toReallocate := sdk.Coins{sdk.Coin{Denom: types.GenericToken, Amount: r.Amount.AmountOf(types.GenericToken).Sub(maxWithdrawableForDenom)}}
+				requests, _ = requests.Sub(toReallocate, r.Address)
+				if dIdx >= len(deltas)-1 {
+					requests = requests.Allocate(deltas[0].Valoper, toReallocate)
+					return SatisfyRequestsForBins(requests, bins, deltas)
+				}
+				requests = requests.Allocate(deltas[dIdx+1].Valoper, toReallocate)
+			}
+		}
+	}
+	return requests
+}
+
+func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.RegisteredZone, requests types.Allocations) RedemptionTargets {
+	out := RedemptionTargets{}
+
+	bins := k.GetDelegationBinsMap(ctx, &zone)
+
+	deltas := types.DetermineIntentDelta(bins, zone.GetDelegatedAmount().Amount, zone.GetAggregateIntentOrDefault())
+
+	requests = ApplyDeltasToIntent(requests, deltas, bins)
+
+	for _, allocation := range requests.Sorted() {
+
+		valoper := allocation.Address
+		remainingTokens := allocation.Amount.AmountOf(types.GenericToken)
+
+		_, valAddr, _ := bech32.DecodeAndConvert(valoper)
+
+		delegations := k.GetValidatorDelegations(ctx, &zone, valAddr)
+		sort.SliceStable(delegations, func(i, j int) bool {
+			return delegations[i].Amount.Amount.LT(delegations[j].Amount.Amount)
+		})
+
+		for _, delegation := range delegations {
+			if delegation.Amount.Amount.GTE(remainingTokens) {
+				out = out.Add(delegation.DelegationAddress, delegation.ValidatorAddress, sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, remainingTokens)))
+				remainingTokens = sdk.ZeroInt()
+				break
+			} else {
+				val := delegation.Amount.Amount
+				remainingTokens = remainingTokens.Sub(val)
+				out = out.Add(delegation.DelegationAddress, delegation.ValidatorAddress, sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, val)))
+			}
+		}
+
+		if remainingTokens.GT(sdk.ZeroInt()) {
+			panic("redemption with remaining amount:" + remainingTokens.String())
+		}
+
+	}
+
 	return out
 }
 

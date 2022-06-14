@@ -38,7 +38,6 @@
     - [Receipt](#quicksilver.interchainstaking.v1.Receipt)
     - [RegisteredZone](#quicksilver.interchainstaking.v1.RegisteredZone)
     - [RegisteredZone.AggregateIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.AggregateIntentEntry)
-    - [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry)
     - [TransferRecord](#quicksilver.interchainstaking.v1.TransferRecord)
     - [Validator](#quicksilver.interchainstaking.v1.Validator)
     - [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent)
@@ -545,12 +544,11 @@ GenesisState defines the interchainstaking module's genesis state.
 | `local_denom` | [string](#string) |  |  |
 | `base_denom` | [string](#string) |  |  |
 | `redemption_rate` | [string](#string) |  |  |
+| `last_redemption_rate` | [string](#string) |  |  |
 | `validators` | [Validator](#quicksilver.interchainstaking.v1.Validator) | repeated |  |
-| `delegator_intent` | [RegisteredZone.DelegatorIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry) | repeated |  |
 | `aggregate_intent` | [RegisteredZone.AggregateIntentEntry](#quicksilver.interchainstaking.v1.RegisteredZone.AggregateIntentEntry) | repeated |  |
 | `multi_send` | [bool](#bool) |  |  |
 | `liquidity_module` | [bool](#bool) |  |  |
-| `last_redemption_rate` | [string](#string) |  |  |
 | `withdrawal_waitgroup` | [uint32](#uint32) |  |  |
 | `ibc_next_validators_hash` | [bytes](#bytes) |  |  |
 
@@ -569,22 +567,6 @@ GenesisState defines the interchainstaking module's genesis state.
 | ----- | ---- | ----- | ----------- |
 | `key` | [string](#string) |  |  |
 | `value` | [ValidatorIntent](#quicksilver.interchainstaking.v1.ValidatorIntent) |  |  |
-
-
-
-
-
-
-<a name="quicksilver.interchainstaking.v1.RegisteredZone.DelegatorIntentEntry"></a>
-
-### RegisteredZone.DelegatorIntentEntry
-
-
-
-| Field | Type | Label | Description |
-| ----- | ---- | ----- | ----------- |
-| `key` | [string](#string) |  |  |
-| `value` | [DelegatorIntent](#quicksilver.interchainstaking.v1.DelegatorIntent) |  |  |
 
 
 
@@ -654,6 +636,8 @@ GenesisState defines the interchainstaking module's genesis state.
 | `validator` | [string](#string) |  |  |
 | `recipient` | [string](#string) |  |  |
 | `amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `burn_amount` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) |  |  |
+| `txhash` | [string](#string) |  |  |
 | `status` | [int32](#int32) |  |  |
 
 
