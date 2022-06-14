@@ -177,12 +177,13 @@ func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZon
 	if err != nil {
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
-		zoneInfo.Validators = append(zoneInfo.GetValidatorsSorted(), &types.Validator{
+		zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
 			DelegatorShares: validator.DelegatorShares,
 		})
+		zoneInfo.Validators = zoneInfo.GetValidatorsSorted()
 
 	} else {
 
