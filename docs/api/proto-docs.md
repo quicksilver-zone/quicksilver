@@ -305,6 +305,8 @@ GenesisState defines the epochs module's genesis state.
 | `request` | [bytes](#bytes) |  |  |
 | `period` | [string](#string) |  |  |
 | `last_height` | [string](#string) |  |  |
+| `callback_id` | [string](#string) |  |  |
+| `ttl` | [uint64](#uint64) |  |  |
 
 
 
@@ -551,6 +553,7 @@ GenesisState defines the interchainstaking module's genesis state.
 | `liquidity_module` | [bool](#bool) |  |  |
 | `withdrawal_waitgroup` | [uint32](#uint32) |  |  |
 | `ibc_next_validators_hash` | [bytes](#bytes) |  |  |
+| `allocation` | [cosmos.base.v1beta1.Coin](#cosmos.base.v1beta1.Coin) | repeated |  |
 
 
 

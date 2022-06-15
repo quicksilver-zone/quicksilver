@@ -1,13 +1,10 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -29,42 +26,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			for _, da := range zoneInfo.GetDelegationAccounts() {
 				k.Logger(ctx).Info("Withdrawing rewards")
 
-				var rewardscb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-					zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-					if !found {
-						return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-					}
-
-					// unmarshal request payload
-					rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
-					err := k.cdc.Unmarshal(query.Request, &rewardsQuery)
-					if err != nil {
-						return err
-					}
-
-					// decrement waitgroup as we have received back the query (initially incremented in L93).
-					zone.WithdrawalWaitgroup--
-
-					k.Logger(ctx).Info("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress)
-
-					return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
-				}
-
-				var delegationcb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-					zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-					if !found {
-						return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-					}
-
-					delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
-					err := k.cdc.Unmarshal(query.Request, &delegationQuery)
-					if err != nil {
-						return err
-					}
-
-					return k.UpdateDelegationRecordsForAddress(ctx, &zone, delegationQuery.DelegatorAddr, args)
-				}
-
 				delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: da.Address}
 				bz := k.cdc.MustMarshal(&delegationQuery)
 
@@ -76,7 +37,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					bz,
 					sdk.NewInt(-1),
 					types.ModuleName,
-					delegationcb,
+					"delegations",
+					0,
 				)
 
 				rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: da.Address}
@@ -90,7 +52,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					bz,
 					sdk.NewInt(-1),
 					types.ModuleName,
-					rewardscb,
+					"rewards",
+					0,
 				)
 
 				zoneInfo.WithdrawalWaitgroup++

@@ -22,6 +22,8 @@ message Query {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
+  string callback_id = 8;
+  uint64 ttl = 9;
 }
 
 message DataPoint {

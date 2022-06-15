@@ -35,7 +35,7 @@ func (k *Keeper) SetCallbackHandler(module string, handler types.QueryCallbacks)
 	if found {
 		return fmt.Errorf("callback handler already set for %s", module)
 	}
-	k.callbacks[module] = handler
+	k.callbacks[module] = handler.RegisterCallbacks()
 	return nil
 }
 
@@ -64,28 +64,53 @@ func (k *Keeper) GetDatapointForId(ctx sdk.Context, id string) (types.DataPoint,
 	return mapping, nil
 }
 
+// IterateDatapoints iterate through datapoints
+func (k Keeper) IterateDatapoints(ctx sdk.Context, fn func(index int64, dp types.DataPoint) (stop bool)) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
+	iterator := sdk.KVStorePrefixIterator(store, nil)
+	defer iterator.Close()
+
+	i := int64(0)
+	for ; iterator.Valid(); iterator.Next() {
+		datapoint := types.DataPoint{}
+		k.cdc.MustUnmarshal(iterator.Value(), &datapoint)
+		stop := fn(i, datapoint)
+
+		if stop {
+			break
+		}
+		i++
+	}
+}
+
+// DeleteQuery delete datapoint
+func (k Keeper) DeleteDatapoint(ctx sdk.Context, id string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
+	store.Delete([]byte(id))
+}
+
 func (k *Keeper) GetDatapoint(ctx sdk.Context, module string, connection_id string, chain_id string, query_type string, request []byte) (types.DataPoint, error) {
 	id := GenerateQueryHash(connection_id, chain_id, query_type, request, module)
 	return k.GetDatapointForId(ctx, id)
 }
 
-func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module string, connection_id string, chain_id string, query_type string, request []byte, max_age int64) (types.DataPoint, error) {
+func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module string, connection_id string, chain_id string, query_type string, request []byte, max_age uint64) (types.DataPoint, error) {
 	val, err := k.GetDatapoint(ctx, module, connection_id, chain_id, query_type, request)
 	if err != nil {
 		// no datapoint
-		k.MakeRequest(ctx, connection_id, chain_id, query_type, request, sdk.NewInt(-1), "", nil)
+		k.MakeRequest(ctx, connection_id, chain_id, query_type, request, sdk.NewInt(-1), "", "", max_age)
 		return types.DataPoint{}, fmt.Errorf("no data; query submitted")
 	}
 
-	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - max_age)) { // this is somewhat arbitrary; TODO: make this better
-		k.MakeRequest(ctx, connection_id, chain_id, query_type, request, sdk.NewInt(-1), "", nil)
+	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - int64(max_age))) { // this is somewhat arbitrary; TODO: make this better
+		k.MakeRequest(ctx, connection_id, chain_id, query_type, request, sdk.NewInt(-1), "", "", max_age)
 		return types.DataPoint{}, fmt.Errorf("stale data; query submitted")
 	}
 	// check ttl
 	return val, nil
 }
 
-func (k *Keeper) MakeRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, request []byte, period sdk.Int, module string, callback interface{}) {
+func (k *Keeper) MakeRequest(ctx sdk.Context, connection_id string, chain_id string, query_type string, request []byte, period sdk.Int, module string, callback_id string, ttl uint64) {
 	k.Logger(ctx).Info(
 		"MakeRequest",
 		"connection_id", connection_id,
@@ -94,20 +119,25 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, connection_id string, chain_id str
 		"request", request,
 		"period", period,
 		"module", module,
-		//"callback", callback,  // can't render this to JSON!
+		"callback", callback_id,
+		"ttl", ttl,
 	)
 	key := GenerateQueryHash(connection_id, chain_id, query_type, request, module)
 	existingQuery, found := k.GetQuery(ctx, key)
 	if !found {
 		if module != "" {
 			if _, exists := k.callbacks[module]; !exists {
-				err := fmt.Errorf("no callback handler registered for module %v", module)
+				err := fmt.Errorf("no callback handler registered for module %s", module)
 				k.Logger(ctx).Error(err.Error())
 				panic(err)
 			}
-			k.callbacks[module].AddCallback(key, callback)
+			if exists := k.callbacks[module].Has(callback_id); !exists {
+				err := fmt.Errorf("no callback %s registered for module %s", callback_id, module)
+				k.Logger(ctx).Error(err.Error())
+				panic(err)
+			}
 		}
-		newQuery := k.NewQuery(ctx, module, connection_id, chain_id, query_type, request, period)
+		newQuery := k.NewQuery(ctx, module, connection_id, chain_id, query_type, request, period, callback_id, ttl)
 		k.SetQuery(ctx, *newQuery)
 
 	} else {
