@@ -47,5 +47,20 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	if len(events) > 0 {
 		ctx.EventManager().EmitEvents(events)
 	}
-	// garbage collection of DataPoints
+
+	k.IterateDatapoints(ctx, func(_ int64, dp types.DataPoint) bool {
+		q, found := k.GetQuery(ctx, dp.Id)
+		if !found {
+			// query was removed; delete datapoint
+			k.DeleteDatapoint(ctx, dp.Id)
+		} else {
+			if dp.LocalHeight.Int64()+int64(q.Ttl) > ctx.BlockHeader().Height {
+				// gc old data
+				k.DeleteDatapoint(ctx, dp.Id)
+			}
+		}
+
+		return false
+
+	})
 }

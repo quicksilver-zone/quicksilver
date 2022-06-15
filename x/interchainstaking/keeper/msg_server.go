@@ -11,7 +11,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -319,15 +318,6 @@ func (k msgServer) validateIntents(zone types.RegisteredZone, intents []*types.V
 }
 
 func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId string) error {
-	var cb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-		zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-		if !found {
-			return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-		}
-		SetValidatorsForZone(k, ctx, zone, args)
-		return nil
-	}
-
 	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
 	bz1, err := k.cdc.Marshal(&bondedQuery)
 	if err != nil {
@@ -354,7 +344,8 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 		bz1,
 		sdk.NewInt(period),
 		types.ModuleName,
-		cb,
+		"valset",
+		0,
 	)
 	k.ICQKeeper.MakeRequest(
 		ctx,
@@ -364,7 +355,8 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 		bz2,
 		sdk.NewInt(period),
 		types.ModuleName,
-		cb,
+		"valset",
+		0,
 	)
 	k.ICQKeeper.MakeRequest(
 		ctx,
@@ -374,7 +366,8 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 		bz3,
 		sdk.NewInt(period),
 		types.ModuleName,
-		cb,
+		"valset",
+		0,
 	)
 	return nil
 }

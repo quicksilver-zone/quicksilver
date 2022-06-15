@@ -10,7 +10,6 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -112,15 +111,6 @@ func (im IBCModule) OnChanOpenAck(
 		// refactor: register DepositAddress
 
 		zoneInfo.DepositAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
-		var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-			localAddress := address
-			zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-			if !found {
-				return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-			}
-
-			return k.SetAccountBalance(ctx, zone, localAddress, args)
-		}
 
 		balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
 		bz, err := im.keeper.GetCodec().Marshal(&balanceQuery)
@@ -136,7 +126,8 @@ func (im IBCModule) OnChanOpenAck(
 			bz,
 			sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDepositInterval))),
 			types.ModuleName,
-			cb,
+			"allbalances",
+			0,
 		)
 
 	// withdrawal address

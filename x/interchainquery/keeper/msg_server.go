@@ -29,7 +29,7 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubmitQueryResponse) (*types.MsgSubmitQueryResponseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	q, found := k.GetQuery(ctx, msg.QueryId)
-	if found {
+	if found && q.LastHeight.Int64() != ctx.BlockHeader().Height {
 		pathParts := strings.Split(q.QueryType, "/")
 		if pathParts[len(pathParts)-1] == "key" {
 			if msg.ProofOps == nil {
@@ -89,8 +89,8 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 
 		for _, key := range keys {
 			module := k.callbacks[key]
-			if module.Has(msg.QueryId) {
-				err := module.Call(ctx, msg.QueryId, msg.Result, q)
+			if module.Has(q.CallbackId) {
+				err := module.Call(ctx, q.CallbackId, msg.Result, q)
 				if err != nil {
 					// handle edge case; callback has resent the same query!
 					// set noDelete to true and short circuit error handling!
@@ -104,8 +104,11 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 			}
 		}
 
-		if err := k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height)); err != nil {
-			return nil, err
+		if q.Ttl > 0 {
+			// don't store if ttl is 0
+			if err := k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height)); err != nil {
+				return nil, err
+			}
 		}
 
 		if q.Period.IsNegative() {
@@ -117,6 +120,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 		}
 
 	} else {
+		k.Logger(ctx).Info("Ignoring duplicate query")
 		return &types.MsgSubmitQueryResponseResponse{}, nil // technically this is an error, but will cause the entire tx to fail if we have one 'bad' message, so we can just no-op here.
 	}
 

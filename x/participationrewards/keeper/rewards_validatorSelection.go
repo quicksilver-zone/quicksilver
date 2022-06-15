@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -50,57 +49,7 @@ func (k Keeper) allocateValidatorSelectionRewards(
 ) error {
 	k.Logger(ctx).Info("allocateValidatorChoiceRewards", "allocation", allocation, "zone proportions", zoneProps)
 
-	za := k.getZoneAllocations(ctx, zoneProps, allocation)
-
-	// zone callback >>>
-	var rewardscb Callback = func(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
-		za := za
-
-		delegatorRewards := distrtypes.QueryDelegationTotalRewardsResponse{}
-		err := k.cdc.Unmarshal(response, &delegatorRewards)
-		if err != nil {
-			return err
-		}
-
-		zone, found := k.icsKeeper.GetRegisteredZoneInfo(ctx, query.GetChainId())
-		if !found {
-			return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-		}
-
-		zs, err := k.getZoneScores(ctx, zone, delegatorRewards)
-		if err != nil {
-			return err
-		}
-
-		k.Logger(ctx).Info(
-			"callback zone score",
-			"zone", zs.ZoneId,
-			"total voting power", zs.TotalVotingPower,
-			"validator scores", zs.ValidatorScores,
-		)
-
-		zAllocation, exists := za[zone.ChainId]
-		if !exists {
-			return fmt.Errorf("zone allocation not found for zone %s", zone.ChainId)
-		}
-
-		userAllocations, err := k.calcUserAllocations(ctx, zone, *zs, zAllocation)
-		if err != nil {
-			return err
-		}
-
-		if err := k.distributeToUsers(ctx, userAllocations); err != nil {
-			return err
-		}
-
-		// create snapshot of current intents for next epoch boundary
-		for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
-			k.icsKeeper.SetIntent(ctx, zone, di, true)
-		}
-
-		return nil
-	}
-	// <<<
+	za := k.getZoneAllocations(ctx, zoneProps, allocation) // return ZoneAllcation
 
 	for i, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
 		k.Logger(ctx).Info("zones", "i", i, "zone", zone.ChainId, "performance address", zone.PerformanceAddress.GetAddress())
@@ -117,8 +66,14 @@ func (k Keeper) allocateValidatorSelectionRewards(
 			bz,
 			sdk.NewInt(-1),
 			types.ModuleName,
-			rewardscb,
+			"rewards",
+			0,
 		)
+
+		if zoneAllocation, exists := za[zone.ChainId]; exists {
+			zone.Allocation = zoneAllocation
+			k.icsKeeper.SetRegisteredZone(ctx, zone)
+		}
 	}
 
 	return nil

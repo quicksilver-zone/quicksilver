@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"fmt"
 	"sort"
 	"strings"
@@ -134,47 +133,6 @@ func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*type
 	return zone, ica
 }
 
-// setAccountCb is a callback handler for Balance queries.
-var setAccountCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-	balancesStore := []byte(query.Request[1:])
-	accAddr, err := banktypes.AddressFromBalancesStore(balancesStore)
-	if err != nil {
-		return err
-	}
-
-	coin := sdk.Coin{}
-	err = k.cdc.Unmarshal(args, &coin)
-	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal balance info for zone", "zone", zone.ChainId, "err", err)
-		return err
-	}
-
-	if coin.IsNil() {
-		denom := ""
-
-		for i := 0; i < len(query.Request)-len(accAddr); i++ {
-			if bytes.Equal(query.Request[i:i+len(accAddr)], accAddr) {
-				denom = string(query.Request[i+len(accAddr):])
-				break
-			}
-
-		}
-		// if balance is nil, the response sent back is nil, so we don't receive the denom. Override that now.
-		coin = sdk.NewCoin(denom, sdk.ZeroInt())
-	}
-
-	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
-	if err != nil {
-		return err
-	}
-
-	return SetAccountBalanceForDenom(k, ctx, zone, address, coin)
-}
-
 // SetAccountBalanceForDenom sets the balance on an account for a given denominination.
 func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZone, address string, coin sdk.Coin) error {
 	// ? is this switch statement still required ?
@@ -291,7 +249,8 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 				append(data, []byte(coin.Denom)...),
 				sdk.NewInt(-1),
 				types.ModuleName,
-				setAccountCb,
+				"accountbalance",
+				0,
 			)
 			icaAccount.BalanceWaitgroup += 1
 
@@ -310,7 +269,8 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 			append(data, []byte(coin.Denom)...),
 			sdk.NewInt(-1),
 			types.ModuleName,
-			setAccountCb,
+			"accountbalance",
+			0,
 		)
 		icaAccount.BalanceWaitgroup += 1
 	}

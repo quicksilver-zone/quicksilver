@@ -21,7 +21,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -124,7 +123,8 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZo
 				data,
 				sdk.NewInt(-1),
 				types.ModuleName,
-				cb,
+				"validator",
+				0,
 			)
 			continue
 		}
@@ -145,23 +145,14 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZo
 				data,
 				sdk.NewInt(-1),
 				types.ModuleName,
-				cb,
+				"validator",
+				0,
 			)
 		}
 	}
 
 	// also do this for Unbonded and Unbonding
 	k.SetRegisteredZone(ctx, zoneInfo)
-	return nil
-}
-
-var cb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	k.Logger(ctx).Info("Received provable payload", "data", args)
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-	SetValidatorForZone(k, ctx, zone, args)
 	return nil
 }
 
@@ -213,21 +204,8 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 			if !zoneInfo.DepositAddress.Balance.Empty() {
 				k.Logger(ctx).Info("balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
 
-				var callback Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-					txs := tx.GetTxsEventResponse{}
-					err := k.cdc.Unmarshal(args, &txs)
-					if err != nil {
-						k.Logger(ctx).Error("unable to unmarshal txs for deposit account", "deposit_address", zoneInfo.DepositAddress.GetAddress(), "err", err)
-						return err
-					}
-
-					for i, tx := range txs.TxResponses {
-						k.HandleReceiptTransaction(ctx, tx, txs.Txs[i], zoneInfo)
-					}
-					return nil
-				}
 				req := tx.GetTxsEventRequest{Events: []string{"transfer.recipient='" + zoneInfo.DepositAddress.GetAddress() + "'"}, Pagination: &query.PageRequest{Offset: 0, Limit: 100, Reverse: true}}
-				k.ICQKeeper.MakeRequest(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, callback)
+				k.ICQKeeper.MakeRequest(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
 
 			}
 		} else {
@@ -286,20 +264,6 @@ func (k Keeper) GetChainIdFromContext(ctx sdk.Context) (string, error) {
 }
 
 func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.RegisteredZone) error {
-	var cb Callback = func(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
-		zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-		if !found {
-			return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-		}
-
-		// initialize performance delegations
-		if err := k.InitPerformanceDelegations(ctx, zone, response); err != nil {
-			k.Logger(ctx).Info(err.Error())
-			return err
-		}
-
-		return nil
-	}
 
 	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: zone.PerformanceAddress.Address}
 	bz, err := k.GetCodec().Marshal(&balanceQuery)
@@ -315,7 +279,8 @@ func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Registe
 		bz,
 		sdk.NewInt(int64(-1)),
 		types.ModuleName,
-		cb,
+		"perfbalance",
+		0,
 	)
 
 	return nil

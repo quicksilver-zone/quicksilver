@@ -20,7 +20,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -488,52 +487,6 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, 
 
 }
 
-var delegationCb Callback = func(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-
-	delegation := stakingtypes.Delegation{}
-	err := k.cdc.Unmarshal(args, &delegation)
-	if err != nil {
-		return err
-	}
-
-	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
-		// delegation never gets removed, even with zero shares.
-		delegator, validator, err := parseDelegationKey(query.Request)
-		if err != nil {
-			return err
-		}
-		validatorAddress, err := bech32.ConvertAndEncode(zone.GetAccountPrefix()+"valoper", validator)
-		if err != nil {
-			return err
-		}
-		delegatorAddress, err := bech32.ConvertAndEncode(zone.GetAccountPrefix(), delegator)
-		if err != nil {
-			return err
-		}
-		if delegation, ok := k.GetDelegation(ctx, &zone, delegatorAddress, validatorAddress); ok {
-			k.RemoveDelegation(ctx, &zone, delegation)
-			ica, err := zone.GetDelegationAccountByAddress(delegatorAddress)
-			if err != nil {
-				return err
-			}
-			ica.DelegatedBalance = ica.DelegatedBalance.Sub(delegation.Amount)
-			k.SetRegisteredZone(ctx, zone)
-		}
-		return nil
-	}
-	val, err := zone.GetValidatorByValoper(delegation.ValidatorAddress)
-	if err != nil {
-		k.Logger(ctx).Error("unable to get validator", "address", delegation.ValidatorAddress)
-		return err
-	}
-
-	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), &zone, true)
-}
-
 func parseDelegationKey(key []byte) ([]byte, []byte, error) {
 	if !bytes.Equal(key[0:1], []byte{0x31}) {
 		return []byte{}, []byte{}, fmt.Errorf("not a valid delegation key")
@@ -581,7 +534,8 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 				data,
 				sdk.NewInt(-1),
 				types.ModuleName,
-				delegationCb,
+				"delegation",
+				0,
 			)
 		}
 
@@ -605,7 +559,8 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 			data,
 			sdk.NewInt(-1),
 			types.ModuleName,
-			delegationCb,
+			"delegation",
+			0,
 		)
 	}
 
@@ -664,8 +619,6 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.
 	switch zone.WithdrawalWaitgroup {
 	case 0:
 		// interface assertion
-		var cb Callback = DistributeRewardsFromWithdrawAccount
-
 		balanceQuery := banktypes.QueryAllBalancesRequest{Address: zone.WithdrawalAddress.Address}
 		bz, err := k.cdc.Marshal(&balanceQuery)
 		if err != nil {
@@ -681,7 +634,8 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.
 			bz,
 			sdk.NewInt(int64(-1)),
 			types.ModuleName,
-			cb,
+			"distributerewards",
+			0,
 		)
 		return nil
 	default:
