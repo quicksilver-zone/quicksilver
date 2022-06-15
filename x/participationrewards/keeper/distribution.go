@@ -41,6 +41,9 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 		// TODO: this needs to be verified as it currently does not trigger anymore
 		for _, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
 			for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
+				// this already happens in zone. If we are certain about ordering,
+				// we should only iterate intents once per epoch boundary as it'll
+				// get unwieldy.
 				k.icsKeeper.SetIntent(ctx, zone, di, true)
 			}
 		}
@@ -205,6 +208,11 @@ func (k Keeper) getZoneAllocations(ctx sdk.Context, zoneProps map[string]sdk.Dec
 	k.Logger(ctx).Info("getZoneAllocations", "proportions", zoneProps, "allocation", allocation)
 
 	zoneAllocations := make(map[string]sdk.Coins)
+
+	if len(allocation) == 0 {
+		// if there are no coins, we can never fetch the first one! short circuit.
+		return zoneAllocations
+	}
 
 	for zid, zp := range zoneProps {
 		zoneAllocations[zid] = sdk.NewCoins(
