@@ -217,16 +217,16 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 
 		zone.ValidatorSelectionAllocation = sdk.NewCoins(
 			sdk.NewCoin(
-				"uqck",
-				allocation.ValidatorSelection.AmountOfNoDenomValidation("uqck").ToDec().
+				k.stakingKeeper.BondDenom(ctx),
+				allocation.ValidatorSelection.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx)).ToDec().
 					Mul(zp).TruncateInt(),
 			),
 		)
 
 		zone.HoldingsAllocation = sdk.NewCoins(
 			sdk.NewCoin(
-				"uqck",
-				allocation.Holdings.AmountOfNoDenomValidation("uqck").ToDec().
+				k.stakingKeeper.BondDenom(ctx),
+				allocation.Holdings.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx)).ToDec().
 					Mul(zp).TruncateInt(),
 			),
 		)

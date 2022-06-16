@@ -8,6 +8,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
@@ -22,6 +23,7 @@ type Keeper struct {
 	paramSpace       paramtypes.Subspace
 	accountKeeper    authkeeper.AccountKeeper
 	bankKeeper       bankkeeper.Keeper
+	stakingKeeper    stakingkeeper.Keeper
 	icqKeeper        icqkeeper.Keeper
 	icsKeeper        icskeeper.Keeper
 	feeCollectorName string
@@ -34,6 +36,7 @@ func NewKeeper(
 	ps paramtypes.Subspace,
 	ak authkeeper.AccountKeeper,
 	bk bankkeeper.Keeper,
+	sk stakingkeeper.Keeper,
 	icqk icqkeeper.Keeper,
 	icsk icskeeper.Keeper,
 	feeCollectorName string,
@@ -53,6 +56,7 @@ func NewKeeper(
 		paramSpace:       ps,
 		accountKeeper:    ak,
 		bankKeeper:       bk,
+		stakingKeeper:    sk,
 		icqKeeper:        icqk,
 		icsKeeper:        icsk,
 		feeCollectorName: feeCollectorName,

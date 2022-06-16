@@ -86,7 +86,12 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	}
 
 	// set zone ValidatorSelectionAllocation to zero
-	zone.ValidatorSelectionAllocation = sdk.NewCoins(sdk.NewCoin("uqck", sdk.ZeroInt()))
+	zone.ValidatorSelectionAllocation = sdk.NewCoins(
+		sdk.NewCoin(
+			k.stakingKeeper.BondDenom(ctx),
+			sdk.ZeroInt(),
+		),
+	)
 	k.icsKeeper.SetRegisteredZone(ctx, zone)
 
 	return nil
