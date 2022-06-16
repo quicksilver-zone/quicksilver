@@ -40,16 +40,14 @@ func (c Callbacks) AddCallback(id string, fn interface{}) types.QueryCallbacks {
 
 func (c Callbacks) RegisterCallbacks() types.QueryCallbacks {
 	a := c.
-		AddCallback("perfrewards", Callback(RewardsCallback))
+		AddCallback("validatorselectionrewards", Callback(ValidatorSelectionRewardsCallback))
 
 	return a.(Callbacks)
 }
 
 // Callbacks
 
-// zone callback >>>
-func RewardsCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
-
+func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
 	delegatorRewards := distrtypes.QueryDelegationTotalRewardsResponse{}
 	err := k.cdc.Unmarshal(response, &delegatorRewards)
 	if err != nil {
@@ -73,9 +71,7 @@ func RewardsCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.
 		"validator scores", zs.ValidatorScores,
 	)
 
-	zAllocation := zone.GetAllocation()
-
-	userAllocations, err := k.calcUserAllocations(ctx, zone, *zs, zAllocation)
+	userAllocations, err := k.calcUserValidatorSelectionAllocations(ctx, zone, *zs)
 	if err != nil {
 		return err
 	}
@@ -88,6 +84,10 @@ func RewardsCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.
 	for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
 		k.icsKeeper.SetIntent(ctx, zone, di, true)
 	}
+
+	// set zone ValidatorSelectionAllocation to zero
+	zone.ValidatorSelectionAllocation = sdk.NewCoins(sdk.NewCoin("uqck", sdk.ZeroInt()))
+	k.icsKeeper.SetRegisteredZone(ctx, zone)
 
 	return nil
 }

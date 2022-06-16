@@ -33,7 +33,11 @@ message RegisteredZone {
   bool liquidity_module = 15;
    uint32 withdrawal_waitgroup = 16;
   bytes ibc_next_validators_hash = 17;
-  repeated cosmos.base.v1beta1.Coin allocation = 18 [
+  repeated cosmos.base.v1beta1.Coin validator_selection_allocation = 18 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+  repeated cosmos.base.v1beta1.Coin holdings_allocation = 19 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];

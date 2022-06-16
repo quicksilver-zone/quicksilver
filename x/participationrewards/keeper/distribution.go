@@ -152,35 +152,40 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation rewardsAllocation) error {
 	k.Logger(ctx).Info("allocateZoneRewards", "token values", tvs, "allocation", allocation)
 
-	zoneProportions, err := k.getZoneProportions(ctx, tvs)
-	if err != nil {
+	if err := k.setZoneAllocations(ctx, tvs, allocation); err != nil {
 		return err
 	}
 
-	if err := k.allocateValidatorSelectionRewards(ctx, allocation.ValidatorSelection, zoneProportions); err != nil {
+	if err := k.allocateValidatorSelectionRewards(ctx); err != nil {
 		k.Logger(ctx).Error(err.Error())
 	}
 
-	if err := k.allocateHoldingsRewards(ctx, allocation.Holdings, zoneProportions); err != nil {
+	if err := k.allocateHoldingsRewards(ctx); err != nil {
 		k.Logger(ctx).Error(err.Error())
+		// TODO: remove once allocateHoldingsRewards is implemented: >>>
+		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, allocation.Holdings); err != nil {
+			k.Logger(ctx).Error(err.Error())
+		}
+		// <<<
 	}
 
 	return nil
 }
 
-// getZoneProportions returns the proportion of each zone's tvl relative to the
-// tvl of the protocol as a map indexed by the zone id (chain id).
-func (k Keeper) getZoneProportions(ctx sdk.Context, tvs tokenValues) (map[string]sdk.Dec, error) {
-	k.Logger(ctx).Info("getZoneProportions", "token values", tvs)
+// setZoneAllocations returns the proportional zone rewards allocations as a
+// map indexed by the zone id.
+func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation rewardsAllocation) error {
+	k.Logger(ctx).Info("setZoneAllocations", "allocation", allocation)
 
 	zoneProps := make(map[string]sdk.Dec)
 
 	otvl := sdk.NewDec(0)
+	// pass 1: iterate zones - set tvl & calc overall tvl
 	for _, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
 		tv, exists := tvs.Tokens[zone.BaseDenom]
 		if !exists {
 			err := fmt.Errorf("unable to obtain token value for zone %s", zone.ChainId)
-			return nil, err
+			return err
 		}
 
 		ztvl := zone.GetDelegatedAmount().Amount.ToDec().
@@ -194,37 +199,42 @@ func (k Keeper) getZoneProportions(ctx sdk.Context, tvs tokenValues) (map[string
 		otvl = otvl.Add(ztvl)
 	}
 
-	for zid, ztvl := range zoneProps {
-		zoneProps[zid] = ztvl.Quo(otvl)
-		k.Logger(ctx).Info("zone proportion", "zone", zid, "proportion", zoneProps[zid])
+	// check overall protocol tvl
+	if otvl.IsZero() {
+		err := fmt.Errorf("protocol tvl is zero")
+		return err
 	}
 
-	return zoneProps, nil
-}
+	// pass 2: iterate zones - calc zone tvl proportion & set allocations
+	for _, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
+		ztvl, exists := zoneProps[zone.ChainId]
+		if !exists {
+			panic("unable to obtain zone proportion on second zone pass")
+		}
 
-// getZoneAllocations returns the proportional zone rewards allocations as a
-// map indexed by the zone id.
-func (k Keeper) getZoneAllocations(ctx sdk.Context, zoneProps map[string]sdk.Dec, allocation sdk.Coins) map[string]sdk.Coins {
-	k.Logger(ctx).Info("getZoneAllocations", "proportions", zoneProps, "allocation", allocation)
+		zp := ztvl.Quo(otvl)
+		k.Logger(ctx).Info("zone proportion", "zone", zone.ChainId, "proportion", zp)
 
-	zoneAllocations := make(map[string]sdk.Coins)
-
-	if len(allocation) == 0 {
-		// if there are no coins, we can never fetch the first one! short circuit.
-		return zoneAllocations
-	}
-
-	for zid, zp := range zoneProps {
-		zoneAllocations[zid] = sdk.NewCoins(
+		zone.ValidatorSelectionAllocation = sdk.NewCoins(
 			sdk.NewCoin(
-				allocation.GetDenomByIndex(0),
-				allocation.AmountOf(allocation.GetDenomByIndex(0)).ToDec().
+				"uqck",
+				allocation.ValidatorSelection.AmountOfNoDenomValidation("uqck").ToDec().
 					Mul(zp).TruncateInt(),
 			),
 		)
+
+		zone.HoldingsAllocation = sdk.NewCoins(
+			sdk.NewCoin(
+				"uqck",
+				allocation.Holdings.AmountOfNoDenomValidation("uqck").ToDec().
+					Mul(zp).TruncateInt(),
+			),
+		)
+
+		k.icsKeeper.SetRegisteredZone(ctx, zone)
 	}
 
-	return zoneAllocations
+	return nil
 }
 
 // distributeToUsers sends the allocated user rewards to the user address.
