@@ -23,3 +23,6 @@ dist
 
 rocksdb
 data
+
+# python script
+autotest.py

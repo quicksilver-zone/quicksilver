@@ -449,6 +449,7 @@ func NewQuicksilver(
 		app.GetSubspace(participationrewardstypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
+		app.StakingKeeper,
 		app.InterchainQueryKeeper,
 		app.InterchainstakingKeeper,
 		authtypes.FeeCollectorName,

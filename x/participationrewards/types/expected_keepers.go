@@ -25,3 +25,8 @@ type BankKeeper interface {
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	//AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int)
 }
+
+// StakingKeeper defines the contract for staking APIs.
+type StakingKeeper interface {
+	BondDenom(ctx sdk.Context) string
+}
