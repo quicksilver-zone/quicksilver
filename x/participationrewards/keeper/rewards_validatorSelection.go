@@ -66,7 +66,7 @@ func (k Keeper) allocateValidatorSelectionRewards(
 			bz,
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"rewards",
+			"perfrewards",
 			0,
 		)
 
@@ -195,6 +195,11 @@ func (k Keeper) calcOverallScores(
 	k.Logger(ctx).Info("calculate performance & overall scores")
 
 	rewards := delegatorRewards.GetRewards()
+	if rewards == nil {
+		k.Logger(ctx).Error("No delegator rewards")
+		return nil
+	}
+
 	total := delegatorRewards.GetTotal().AmountOf(zone.BaseDenom)
 	expected := total.Quo(sdk.NewDec(int64(len(rewards))))
 

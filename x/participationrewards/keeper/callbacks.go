@@ -40,7 +40,7 @@ func (c Callbacks) AddCallback(id string, fn interface{}) types.QueryCallbacks {
 
 func (c Callbacks) RegisterCallbacks() types.QueryCallbacks {
 	a := c.
-		AddCallback("rewards", Callback(RewardsCallback))
+		AddCallback("perfrewards", Callback(RewardsCallback))
 
 	return a.(Callbacks)
 }
