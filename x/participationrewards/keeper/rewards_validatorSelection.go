@@ -66,7 +66,7 @@ func (k Keeper) allocateValidatorSelectionRewards(
 			bz,
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"rewards",
+			"perfrewards",
 			0,
 		)
 
