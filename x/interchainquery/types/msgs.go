@@ -1,6 +1,9 @@
 package types
 
 import (
+	fmt "fmt"
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,13 +14,6 @@ const (
 
 var _ sdk.Msg = &MsgSubmitQueryResponse{}
 
-// NewMsgSubmitQueryResponse - construct a msg to fulfil query request.
-//nolint:interfacer
-func NewMsgSubmitQueryResponse(chain_id string, result string, from_address sdk.Address) *MsgSubmitQueryResponse {
-	// TODO: fix me.
-	return &MsgSubmitQueryResponse{ChainId: chain_id, Result: nil, FromAddress: from_address.String()}
-}
-
 // Route Implements Msg.
 func (msg MsgSubmitQueryResponse) Route() string { return RouterKey }
 
@@ -26,13 +22,24 @@ func (msg MsgSubmitQueryResponse) Type() string { return TypeMsgSubmitQueryRespo
 
 // ValidateBasic Implements Msg.
 func (msg MsgSubmitQueryResponse) ValidateBasic() error {
-	// TODO: check from address
+	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return err
+	}
 
-	// TODO: check for valid identifier
+	if msg.Height < 0 {
+		return fmt.Errorf("height must be non-negative")
+	}
 
-	// TODO: check for valid chain_id
+	// TODO: is there a chain validation spec in ICS?
+	chainParts := strings.Split(msg.ChainId, "-")
+	if len(chainParts) < 2 {
+		return fmt.Errorf("chain_id must be of form XXXX-N")
+	}
 
-	// TODO: check for valid denominations
+	if len(msg.QueryId) != 64 {
+		return fmt.Errorf("invalid query id")
+	}
 
 	return nil
 }

@@ -50,12 +50,31 @@ func (msg MsgRegisterZone) Type() string { return TypeMsgRegisterZone }
 
 // ValidateBasic Implements Msg.
 func (msg MsgRegisterZone) ValidateBasic() error {
-	// TODO: check from address
+	// check from address
+	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return err
+	}
 
-	// TODO: check for valid chain_id
+	// check valid connection id
+	if msg.ConnectionId[0:11] != "connection-" {
+		return fmt.Errorf("invalid connection string: %s", msg.ConnectionId)
+	}
 
-	// TODO: check for valid denominations
+	// validate local denominations
+	if err := sdk.ValidateDenom(msg.LocalDenom); err != nil {
+		return err
+	}
 
+	// validate base denom
+	if err := sdk.ValidateDenom(msg.BaseDenom); err != nil {
+		return err
+	}
+
+	// validate account prefix
+	if len(msg.AccountPrefix) < 2 {
+		return fmt.Errorf("account prefix must be at least 2 characters") // ki is shortest to date.
+	}
 	return nil
 }
 
@@ -87,10 +106,20 @@ func (msg MsgRequestRedemption) Type() string { return TypeMsgRegisterZone }
 // ValidateBasic Implements Msg.
 func (msg MsgRequestRedemption) ValidateBasic() error {
 	// TODO: check from address
+	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return err
+	}
 
-	// TODO: check for valid chain_id
+	// check coin
+	coin, err := sdk.ParseCoinNormalized(msg.Coin)
+	if err != nil {
+		return err
+	}
 
-	// TODO: check for valid denominations
+	if !coin.IsPositive() {
+		return fmt.Errorf("expected positive value, got %v", msg.Coin)
+	}
 
 	return nil
 }
