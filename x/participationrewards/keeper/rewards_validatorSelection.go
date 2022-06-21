@@ -25,7 +25,6 @@ type validator struct {
 	PowerPercentage   sdk.Dec
 	PerformanceScore  sdk.Dec
 	DistributionScore sdk.Dec
-	OverallScore      sdk.Dec
 
 	*icstypes.Validator
 }
@@ -215,8 +214,8 @@ func (k Keeper) calcOverallScores(
 		k.Logger(ctx).Info("performance score", "validator", vs.ValoperAddress, "performance", vs.PerformanceScore)
 
 		// calculate overall score
-		vs.OverallScore = vs.DistributionScore.Mul(vs.PerformanceScore)
-		k.Logger(ctx).Info("overall score", "validator", vs.ValoperAddress, "overall", vs.OverallScore)
+		vs.Score = vs.DistributionScore.Mul(vs.PerformanceScore)
+		k.Logger(ctx).Info("overall score", "validator", vs.ValoperAddress, "overall", vs.Score)
 
 		// prepare validator performance withdrawal msg
 		msg := &distrtypes.MsgWithdrawDelegatorReward{
@@ -233,6 +232,9 @@ func (k Keeper) calcOverallScores(
 			return err
 		}
 	}
+
+	// update zone with validator scores
+	k.icsKeeper.SetRegisteredZone(ctx, zone)
 
 	return nil
 }
@@ -266,7 +268,7 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 		uSum := sdk.NewDec(0)
 		for _, intent := range di.GetIntents() {
 			// calc overall user score
-			score := intent.Weight.Mul(zs.ValidatorScores[intent.ValoperAddress].OverallScore)
+			score := intent.Weight.Mul(zs.ValidatorScores[intent.ValoperAddress].Score)
 			k.Logger(ctx).Info("user score for validator", "user", di.GetDelegator(), "validator", intent.ValoperAddress, "score", score)
 			uSum = uSum.Add(score)
 		}
