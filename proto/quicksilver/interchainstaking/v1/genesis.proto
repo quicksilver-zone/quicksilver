@@ -31,7 +31,7 @@ message RegisteredZone {
   map<string, ValidatorIntent> aggregate_intent = 13;
   bool multi_send = 14;
   bool liquidity_module = 15;
-   uint32 withdrawal_waitgroup = 16;
+  uint32 withdrawal_waitgroup = 16;
   bytes ibc_next_validators_hash = 17;
   repeated cosmos.base.v1beta1.Coin validator_selection_allocation = 18 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -94,12 +94,12 @@ message Validator {
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
-    ];
+  ];
   string delegator_shares = 3 [
-      (cosmos_proto.scalar) = "cosmos.Dec",
-      (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
-      (gogoproto.nullable) = false
-    ];
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
   string voting_power = 4 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -137,7 +137,7 @@ message Delegation {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.nullable) = false
   ];
-  int64 height = 4; 
+  int64 height = 4;
   int64 redelegation_end = 5;
 }
 
@@ -163,14 +163,15 @@ message Receipt {
 }
 
 message DelegationPlan {
-  string validatorAddress = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  string delegatorAddress = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  repeated cosmos.base.v1beta1.Coin value = 3 [ 
-      (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-      (gogoproto.nullable) = false
-      ];
+  string validatorAddress = 1
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string delegatorAddress = 2
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated cosmos.base.v1beta1.Coin value = 3 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
 }
-
 
 message Params {
   option (gogoproto.equal) = true;
@@ -188,4 +189,3 @@ message Params {
     (gogoproto.nullable) = false
   ];
 }
-

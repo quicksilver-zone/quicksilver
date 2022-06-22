@@ -9,7 +9,7 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewar
 // DistributionProportions defines the proportions of minted QCK that is to be
 // allocated as participation rewards.
 message DistributionProportions {
-  string validator_selection_allocation = 1[
+  string validator_selection_allocation = 1 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
