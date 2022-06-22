@@ -6,6 +6,6 @@
 "local_denom": "uqatom",
 "account_prefix": "cosmos",
 "multi_send": true,
-"liquidity_module": false,
+"liquidity_module": true,
 "deposit": "1000uqck"
 }
