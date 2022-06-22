@@ -814,15 +814,19 @@ type QueryClient interface {
 	RegisteredZoneInfos(ctx context.Context, in *QueryRegisteredZonesInfoRequest, opts ...grpc.CallOption) (*QueryRegisteredZonesInfoResponse, error)
 	// DepositAccount provides data on the deposit address for a connected zone.
 	DepositAccount(ctx context.Context, in *QueryDepositAccountForChainRequest, opts ...grpc.CallOption) (*QueryDepositAccountForChainResponse, error)
-	// DelegatorIntent provides data on the intent of the delegator for the given zone.
+	// DelegatorIntent provides data on the intent of the delegator for the given
+	// zone.
 	DelegatorIntent(ctx context.Context, in *QueryDelegatorIntentRequest, opts ...grpc.CallOption) (*QueryDelegatorIntentResponse, error)
 	// Delegations provides data on the delegations for the given zone.
 	Delegations(ctx context.Context, in *QueryDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegationsResponse, error)
-	// DelegatorDelegations provides data on the delegations from a given delegator for the given zone.
+	// DelegatorDelegations provides data on the delegations from a given
+	// delegator for the given zone.
 	DelegatorDelegations(ctx context.Context, in *QueryDelegatorDelegationsRequest, opts ...grpc.CallOption) (*QueryDelegatorDelegationsResponse, error)
-	// ValidatorDelegations provides data on the delegations to a given validator for the given zone.
+	// ValidatorDelegations provides data on the delegations to a given validator
+	// for the given zone.
 	ValidatorDelegations(ctx context.Context, in *QueryValidatorDelegationsRequest, opts ...grpc.CallOption) (*QueryValidatorDelegationsResponse, error)
-	// DelegationPlans provides data on the delegations to a given validator for the given zone.
+	// DelegationPlans provides data on the delegations to a given validator for
+	// the given zone.
 	DelegationPlans(ctx context.Context, in *QueryDelegationPlansRequest, opts ...grpc.CallOption) (*QueryDelegationPlansResponse, error)
 }
 
@@ -903,15 +907,19 @@ type QueryServer interface {
 	RegisteredZoneInfos(context.Context, *QueryRegisteredZonesInfoRequest) (*QueryRegisteredZonesInfoResponse, error)
 	// DepositAccount provides data on the deposit address for a connected zone.
 	DepositAccount(context.Context, *QueryDepositAccountForChainRequest) (*QueryDepositAccountForChainResponse, error)
-	// DelegatorIntent provides data on the intent of the delegator for the given zone.
+	// DelegatorIntent provides data on the intent of the delegator for the given
+	// zone.
 	DelegatorIntent(context.Context, *QueryDelegatorIntentRequest) (*QueryDelegatorIntentResponse, error)
 	// Delegations provides data on the delegations for the given zone.
 	Delegations(context.Context, *QueryDelegationsRequest) (*QueryDelegationsResponse, error)
-	// DelegatorDelegations provides data on the delegations from a given delegator for the given zone.
+	// DelegatorDelegations provides data on the delegations from a given
+	// delegator for the given zone.
 	DelegatorDelegations(context.Context, *QueryDelegatorDelegationsRequest) (*QueryDelegatorDelegationsResponse, error)
-	// ValidatorDelegations provides data on the delegations to a given validator for the given zone.
+	// ValidatorDelegations provides data on the delegations to a given validator
+	// for the given zone.
 	ValidatorDelegations(context.Context, *QueryValidatorDelegationsRequest) (*QueryValidatorDelegationsResponse, error)
-	// DelegationPlans provides data on the delegations to a given validator for the given zone.
+	// DelegationPlans provides data on the delegations to a given validator for
+	// the given zone.
 	DelegationPlans(context.Context, *QueryDelegationPlansRequest) (*QueryDelegationPlansResponse, error)
 }
 

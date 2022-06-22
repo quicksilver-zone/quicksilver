@@ -16,62 +16,6 @@ const (
 	TypeMsgSignalIntent      = "signalintent"
 )
 
-var _ sdk.Msg = &MsgRegisterZone{}
-var _ sdk.Msg = &MsgRequestRedemption{}
-var _ sdk.Msg = &MsgSignalIntent{}
-
-// NewMsgRegisterZone - construct a msg to register a new zone.
-//nolint:interfacer
-func NewMsgRegisterZone(
-	connection_id string,
-	local_denom string,
-	base_denom string,
-	account_prefix string,
-	from_address sdk.Address,
-	multi_send bool,
-	lsm_support bool,
-) *MsgRegisterZone {
-	return &MsgRegisterZone{
-		ConnectionId:    connection_id,
-		LocalDenom:      local_denom,
-		BaseDenom:       base_denom,
-		AccountPrefix:   account_prefix,
-		FromAddress:     from_address.String(),
-		MultiSend:       multi_send,
-		LiquidityModule: lsm_support,
-	}
-}
-
-// Route Implements Msg.
-func (msg MsgRegisterZone) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (msg MsgRegisterZone) Type() string { return TypeMsgRegisterZone }
-
-// ValidateBasic Implements Msg.
-func (msg MsgRegisterZone) ValidateBasic() error {
-	// TODO: check from address
-
-	// TODO: check for valid chain_id
-
-	// TODO: check for valid denominations
-
-	return nil
-}
-
-// GetSignBytes Implements Msg.
-func (msg MsgRegisterZone) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// GetSigners Implements Msg.
-func (msg MsgRegisterZone) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
-	return []sdk.AccAddress{fromAddress}
-}
-
-//----------------------------------------------------------------
-
 // NewMsgRequestRedemption - construct a msg to request redemption.
 //nolint:interfacer
 func NewMsgRequestRedemption(coin string, destination_address string, from_address sdk.Address) *MsgRequestRedemption {
@@ -87,10 +31,20 @@ func (msg MsgRequestRedemption) Type() string { return TypeMsgRegisterZone }
 // ValidateBasic Implements Msg.
 func (msg MsgRequestRedemption) ValidateBasic() error {
 	// TODO: check from address
+	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
+	if err != nil {
+		return err
+	}
 
-	// TODO: check for valid chain_id
+	// check coin
+	coin, err := sdk.ParseCoinNormalized(msg.Coin)
+	if err != nil {
+		return err
+	}
 
-	// TODO: check for valid denominations
+	if !coin.IsPositive() {
+		return fmt.Errorf("expected positive value, got %v", msg.Coin)
+	}
 
 	return nil
 }

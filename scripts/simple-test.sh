@@ -64,11 +64,14 @@ $TZ_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_2 -y --k
 
 docker-compose up --force-recreate -d icq
 
-echo "Register $CHAINID_2 on quicksilver..."
-$QS_EXEC tx interchainstaking register connection-0 uqatom uatom cosmos --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test --multi-send --lsm-support
-
+#echo "Register $CHAINID_2 on quicksilver..."
+#$QS_EXEC tx interchainstaking register connection-0 uqatom uatom cosmos --from demowallet1 --gas 10000000 --chain-id $CHAINID_1 -y --keyring-backend=test --multi-send --lsm-support
+cat $SCRIPT_DIR/registerzone.json | jq . -c | $QS_EXEC tx gov submit-proposal register-zone /dev/fd/0 --from demowallet1 --chain-id $CHAINID_1 --gas 2000000 -y --keyring-backend=test
 sleep 5
-
+$QS_EXEC tx gov vote 1 yes --from val1 --chain-id $CHAINID_1 -y --keyring-backend=test
+$QS2_EXEC tx gov vote 1 yes --from val6 --chain-id $CHAINID_1 -y --keyring-backend=test
+$QS3_EXEC tx gov vote 1 yes --from val7 --chain-id $CHAINID_1 -y --keyring-backend=test
+sleep 30
 ## TODO: get val2 valoper from keys
 $TZ_EXEC tx staking tokenize-share $VAL_VALOPER_2 10000000uatom $VAL_ADDRESS_2 --from val2 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test  #1
 $TZ2_EXEC tx staking tokenize-share $VAL_VALOPER_3 25000000uatom $VAL_ADDRESS_3 --from val3 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test   #2

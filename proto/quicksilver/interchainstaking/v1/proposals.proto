@@ -1,0 +1,77 @@
+syntax = "proto3";
+package quicksilver.interchainstaking.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
+
+message RegisterZoneProposal {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1;
+  string description = 2;
+
+  string connection_id = 3 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
+  string base_denom = 4 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
+  string local_denom = 5 [ (gogoproto.moretags) = "yaml:\"local_denom\"" ];
+  string account_prefix = 6
+      [ (gogoproto.moretags) = "yaml:\"account_prefix\"" ];
+  bool multi_send = 7;
+  bool liquidity_module = 8;
+}
+
+message RegisterZoneProposalWithDeposit {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string title = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
+  string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
+
+  string connection_id = 3 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
+  string base_denom = 4 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
+  string local_denom = 5 [ (gogoproto.moretags) = "yaml:\"local_denom\"" ];
+  string account_prefix = 6
+      [ (gogoproto.moretags) = "yaml:\"account_prefix\"" ];
+  bool multi_send = 7 [ (gogoproto.moretags) = "yaml:\"multi_send\"" ];
+  bool liquidity_module = 8
+      [ (gogoproto.moretags) = "yaml:\"liquidity_module\"" ];
+  string deposit = 9 [ (gogoproto.moretags) = "yaml:\"deposit\"" ];
+}
+
+message UpdateZoneProposal {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  string title = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
+  string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
+  string chain_id = 3 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+
+  repeated UpdateZoneValue changes = 4
+      [ (gogoproto.moretags) = "yaml:\"changes\"" ];
+}
+
+message UpdateZoneProposalWithDeposit {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string title = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
+  string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
+  string chain_id = 3 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+
+  repeated UpdateZoneValue changes = 4
+      [ (gogoproto.moretags) = "yaml:\"changes\"" ];
+  string deposit = 5 [ (gogoproto.moretags) = "yaml:\"deposit\"" ];
+}
+
+// ParamChange defines an individual parameter change, for use in
+// ParameterChangeProposal.
+message UpdateZoneValue {
+
+  string key = 1 [ (gogoproto.moretags) = "yaml:\"key\"" ];
+  string value = 2 [ (gogoproto.moretags) = "yaml:\"value\"" ];
+}

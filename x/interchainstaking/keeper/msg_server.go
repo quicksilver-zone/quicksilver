@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -25,92 +24,6 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 var _ types.MsgServer = msgServer{}
-
-func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZone) (*types.MsgRegisterZoneResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	// get chain id from connection
-	chainId, err := k.GetChainID(ctx, msg.ConnectionId)
-	if err != nil {
-		return nil, fmt.Errorf("unable to obtain chain id: %w", err)
-	}
-
-	// get zone
-	_, found := k.GetRegisteredZoneInfo(ctx, chainId)
-	if found {
-		return nil, fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainId)
-	}
-
-	zone := types.RegisteredZone{
-		ChainId:            chainId,
-		ConnectionId:       msg.ConnectionId,
-		LocalDenom:         msg.LocalDenom,
-		BaseDenom:          msg.BaseDenom,
-		AccountPrefix:      msg.AccountPrefix,
-		RedemptionRate:     sdk.NewDec(1),
-		LastRedemptionRate: sdk.NewDec(1),
-		MultiSend:          msg.MultiSend,
-		LiquidityModule:    msg.LiquidityModule,
-	}
-	k.SetRegisteredZone(ctx, zone)
-
-	// generate deposit account
-	portOwner := chainId + ".deposit"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
-		return nil, err
-	}
-
-	// generate withdrawal account
-	portOwner = chainId + ".withdrawal"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
-		return nil, err
-	}
-
-	// generate perf account
-	portOwner = chainId + ".performance"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
-		return nil, err
-	}
-
-	// generate delegate accounts
-	delegateAccountCount := int(k.GetParam(ctx, types.KeyDelegateAccountCount))
-	for i := 0; i < delegateAccountCount; i++ {
-		portOwner := fmt.Sprintf("%s.delegate.%d", chainId, i)
-		if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
-			return nil, err
-		}
-	}
-	err = k.EmitValsetRequery(ctx, msg.ConnectionId, chainId)
-	if err != nil {
-		return &types.MsgRegisterZoneResponse{}, err
-	}
-
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			sdk.EventTypeMessage,
-			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-		),
-		sdk.NewEvent(
-			types.EventTypeRegisterZone,
-			sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ConnectionId),
-			sdk.NewAttribute(types.AttributeKeyConnectionId, chainId),
-		),
-	})
-
-	return &types.MsgRegisterZoneResponse{}, nil
-}
-
-func (k msgServer) registerInterchainAccount(ctx sdk.Context, connectionId string, portOwner string) error {
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionId, portOwner); err != nil {
-		return err
-	}
-	portId, _ := icatypes.NewControllerPortID(portOwner)
-	if err := k.SetConnectionForPort(ctx, connectionId, portId); err != nil {
-		return err
-	}
-
-	return nil
-}
 
 func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

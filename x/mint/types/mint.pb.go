@@ -73,8 +73,8 @@ type DistributionProportions struct {
 	// pool_incentives defines the proportion of the minted minted_denom that is
 	// to be allocated as pool incentives.
 	PoolIncentives github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,2,opt,name=pool_incentives,json=poolIncentives,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"pool_incentives" yaml:"pool_incentives"`
-	// participation_rewards defines the proportion of the minted minted_denom that is
-	// to be allocated to participation rewards address.
+	// participation_rewards defines the proportion of the minted minted_denom
+	// that is to be allocated to participation rewards address.
 	ParticipationRewards github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=participation_rewards,json=participationRewards,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"participation_rewards" yaml:"participation_rewards"`
 	// community_pool defines the proportion of the minted minted_denom that is
 	// to be allocated to the community pool.

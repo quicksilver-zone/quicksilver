@@ -30,52 +30,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgRegisterZone represents a message type to register a new zone. TODO:
-// deprecate in favour of governance vote.
-type MsgRegisterZone struct {
-	ConnectionId    string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
-	BaseDenom       string `protobuf:"bytes,4,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty" yaml:"base_denom"`
-	LocalDenom      string `protobuf:"bytes,5,opt,name=local_denom,json=localDenom,proto3" json:"local_denom,omitempty" yaml:"local_denom"`
-	AccountPrefix   string `protobuf:"bytes,6,opt,name=account_prefix,json=accountPrefix,proto3" json:"account_prefix,omitempty" yaml:"account_prefix"`
-	FromAddress     string `protobuf:"bytes,7,opt,name=from_address,json=fromAddress,proto3" json:"from_address,omitempty"`
-	MultiSend       bool   `protobuf:"varint,8,opt,name=multi_send,json=multiSend,proto3" json:"multi_send,omitempty"`
-	LiquidityModule bool   `protobuf:"varint,9,opt,name=liquidity_module,json=liquidityModule,proto3" json:"liquidity_module,omitempty"`
-}
-
-func (m *MsgRegisterZone) Reset()         { *m = MsgRegisterZone{} }
-func (m *MsgRegisterZone) String() string { return proto.CompactTextString(m) }
-func (*MsgRegisterZone) ProtoMessage()    {}
-func (*MsgRegisterZone) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ee484030fa140a82, []int{0}
-}
-func (m *MsgRegisterZone) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgRegisterZone) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgRegisterZone.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgRegisterZone) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRegisterZone.Merge(m, src)
-}
-func (m *MsgRegisterZone) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgRegisterZone) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRegisterZone.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgRegisterZone proto.InternalMessageInfo
-
-// MsgRegisterZone represents a message type to request a burn of qAssets for
+// MsgRequestRedemption represents a message type to request a burn of qAssets for
 // native assets.
 type MsgRequestRedemption struct {
 	Coin               string `protobuf:"bytes,1,opt,name=coin,proto3" json:"coin,omitempty" yaml:"coin"`
@@ -87,7 +42,7 @@ func (m *MsgRequestRedemption) Reset()         { *m = MsgRequestRedemption{} }
 func (m *MsgRequestRedemption) String() string { return proto.CompactTextString(m) }
 func (*MsgRequestRedemption) ProtoMessage()    {}
 func (*MsgRequestRedemption) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ee484030fa140a82, []int{1}
+	return fileDescriptor_ee484030fa140a82, []int{0}
 }
 func (m *MsgRequestRedemption) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -128,7 +83,7 @@ func (m *MsgSignalIntent) Reset()         { *m = MsgSignalIntent{} }
 func (m *MsgSignalIntent) String() string { return proto.CompactTextString(m) }
 func (*MsgSignalIntent) ProtoMessage()    {}
 func (*MsgSignalIntent) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ee484030fa140a82, []int{2}
+	return fileDescriptor_ee484030fa140a82, []int{1}
 }
 func (m *MsgSignalIntent) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -157,43 +112,6 @@ func (m *MsgSignalIntent) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSignalIntent proto.InternalMessageInfo
 
-// MsgRegisterZoneResponse defines the MsgRegisterZone response type.
-type MsgRegisterZoneResponse struct {
-}
-
-func (m *MsgRegisterZoneResponse) Reset()         { *m = MsgRegisterZoneResponse{} }
-func (m *MsgRegisterZoneResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgRegisterZoneResponse) ProtoMessage()    {}
-func (*MsgRegisterZoneResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ee484030fa140a82, []int{3}
-}
-func (m *MsgRegisterZoneResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgRegisterZoneResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgRegisterZoneResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgRegisterZoneResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgRegisterZoneResponse.Merge(m, src)
-}
-func (m *MsgRegisterZoneResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgRegisterZoneResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgRegisterZoneResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgRegisterZoneResponse proto.InternalMessageInfo
-
 // MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
 type MsgRequestRedemptionResponse struct {
 }
@@ -202,7 +120,7 @@ func (m *MsgRequestRedemptionResponse) Reset()         { *m = MsgRequestRedempti
 func (m *MsgRequestRedemptionResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgRequestRedemptionResponse) ProtoMessage()    {}
 func (*MsgRequestRedemptionResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ee484030fa140a82, []int{4}
+	return fileDescriptor_ee484030fa140a82, []int{2}
 }
 func (m *MsgRequestRedemptionResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -239,7 +157,7 @@ func (m *MsgSignalIntentResponse) Reset()         { *m = MsgSignalIntentResponse
 func (m *MsgSignalIntentResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSignalIntentResponse) ProtoMessage()    {}
 func (*MsgSignalIntentResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_ee484030fa140a82, []int{5}
+	return fileDescriptor_ee484030fa140a82, []int{3}
 }
 func (m *MsgSignalIntentResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -269,10 +187,8 @@ func (m *MsgSignalIntentResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgSignalIntentResponse proto.InternalMessageInfo
 
 func init() {
-	proto.RegisterType((*MsgRegisterZone)(nil), "quicksilver.interchainstaking.v1.MsgRegisterZone")
 	proto.RegisterType((*MsgRequestRedemption)(nil), "quicksilver.interchainstaking.v1.MsgRequestRedemption")
 	proto.RegisterType((*MsgSignalIntent)(nil), "quicksilver.interchainstaking.v1.MsgSignalIntent")
-	proto.RegisterType((*MsgRegisterZoneResponse)(nil), "quicksilver.interchainstaking.v1.MsgRegisterZoneResponse")
 	proto.RegisterType((*MsgRequestRedemptionResponse)(nil), "quicksilver.interchainstaking.v1.MsgRequestRedemptionResponse")
 	proto.RegisterType((*MsgSignalIntentResponse)(nil), "quicksilver.interchainstaking.v1.MsgSignalIntentResponse")
 }
@@ -282,55 +198,41 @@ func init() {
 }
 
 var fileDescriptor_ee484030fa140a82 = []byte{
-	// 757 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x95, 0x41, 0x4f, 0xe3, 0x46,
-	0x14, 0xc7, 0x63, 0x42, 0x21, 0x99, 0x04, 0x52, 0x86, 0xd0, 0x9a, 0x88, 0xc6, 0xc8, 0xbd, 0x00,
-	0x15, 0x76, 0xa1, 0x88, 0xaa, 0xa9, 0x5a, 0x51, 0xd4, 0x4b, 0x0e, 0x48, 0x95, 0x91, 0x7a, 0xe0,
-	0x62, 0x39, 0xf6, 0xc3, 0x8c, 0xb0, 0x67, 0x82, 0x67, 0x8c, 0x48, 0x8f, 0x3d, 0xf5, 0x58, 0xb5,
-	0x5f, 0x80, 0xcf, 0x50, 0x21, 0xf5, 0x03, 0xec, 0x65, 0x2f, 0x2b, 0xa1, 0xdd, 0xcb, 0x9e, 0xa2,
-	0x15, 0xec, 0x61, 0xf7, 0x9a, 0x4f, 0xb0, 0xf2, 0xd8, 0x09, 0x49, 0x40, 0x22, 0xac, 0xf6, 0xe6,
-	0x99, 0xff, 0xfb, 0xcd, 0xbc, 0xff, 0x9b, 0x37, 0x63, 0x64, 0x9e, 0xc5, 0xc4, 0x3d, 0xe5, 0x24,
-	0x38, 0x87, 0xc8, 0x24, 0x54, 0x40, 0xe4, 0x9e, 0x38, 0x84, 0x72, 0xe1, 0x9c, 0x12, 0xea, 0x9b,
-	0xe7, 0x5b, 0x66, 0x08, 0x9c, 0x3b, 0x3e, 0x70, 0xa3, 0x1d, 0x31, 0xc1, 0xf0, 0xea, 0x10, 0x60,
-	0xdc, 0x03, 0x8c, 0xf3, 0xad, 0x5a, 0xd5, 0x67, 0x3e, 0x93, 0xc1, 0x66, 0xf2, 0x95, 0x72, 0xb5,
-	0x65, 0x97, 0xf1, 0x90, 0x71, 0x3b, 0x15, 0xd2, 0x41, 0x26, 0x19, 0x8f, 0xe6, 0xe0, 0x03, 0x05,
-	0x4e, 0xfa, 0xf1, 0x2b, 0x3e, 0x63, 0x7e, 0x00, 0xa6, 0xd3, 0x26, 0xa6, 0x43, 0x29, 0x13, 0x8e,
-	0x20, 0x8c, 0x66, 0xaa, 0xfe, 0x4f, 0x1e, 0x55, 0x0e, 0xb8, 0x6f, 0x81, 0x4f, 0xb8, 0x80, 0xe8,
-	0x88, 0x51, 0xc0, 0x3f, 0xa1, 0x39, 0x97, 0x51, 0x0a, 0x6e, 0x12, 0x68, 0x13, 0x4f, 0x9d, 0x5a,
-	0x55, 0xd6, 0x8a, 0xfb, 0x6a, 0xaf, 0xab, 0x55, 0x3b, 0x4e, 0x18, 0x34, 0xf4, 0x11, 0x59, 0xb7,
-	0xca, 0x77, 0xe3, 0xa6, 0x87, 0x77, 0x10, 0x6a, 0x39, 0x1c, 0x6c, 0x0f, 0x28, 0x0b, 0xd5, 0x69,
-	0xc9, 0x2e, 0xf5, 0xba, 0xda, 0x42, 0xca, 0xde, 0x69, 0xba, 0x55, 0x4c, 0x06, 0xbf, 0x26, 0xdf,
-	0xf8, 0x7b, 0x54, 0x0a, 0x98, 0xeb, 0x04, 0x19, 0xf6, 0x99, 0xc4, 0xbe, 0xe8, 0x75, 0x35, 0x9c,
-	0x62, 0x43, 0xa2, 0x6e, 0x21, 0x39, 0x4a, 0xc1, 0x3d, 0x34, 0xef, 0xb8, 0x2e, 0x8b, 0xa9, 0xb0,
-	0xdb, 0x11, 0x1c, 0x93, 0x0b, 0x75, 0x46, 0xb2, 0xcb, 0xbd, 0xae, 0xb6, 0x94, 0xb2, 0xa3, 0xba,
-	0x6e, 0xcd, 0x65, 0x13, 0xbf, 0xc9, 0x31, 0xfe, 0x11, 0x95, 0x8f, 0x23, 0x16, 0xda, 0x8e, 0xe7,
-	0x45, 0xc0, 0xb9, 0x3a, 0x9b, 0xda, 0x7d, 0x79, 0xb5, 0x59, 0xcd, 0x2a, 0xff, 0x4b, 0xaa, 0x1c,
-	0x8a, 0x88, 0x50, 0xdf, 0x2a, 0x25, 0xd1, 0xd9, 0x14, 0xfe, 0x0a, 0xa1, 0x30, 0x0e, 0x04, 0xb1,
-	0x39, 0x50, 0x4f, 0x2d, 0xac, 0x2a, 0x6b, 0x05, 0xab, 0x28, 0x67, 0x0e, 0x81, 0x7a, 0x78, 0x1d,
-	0x7d, 0x1e, 0x90, 0xb3, 0x98, 0x78, 0x44, 0x74, 0xec, 0x90, 0x79, 0x71, 0x00, 0x6a, 0x51, 0x06,
-	0x55, 0x06, 0xf3, 0x07, 0x72, 0xba, 0x51, 0xf8, 0xeb, 0x52, 0xcb, 0xbd, 0xbb, 0xd4, 0x72, 0xfa,
-	0x0b, 0x05, 0x55, 0xe5, 0xa1, 0x9c, 0xc5, 0xc0, 0x85, 0x05, 0x1e, 0x84, 0xed, 0xa4, 0xb8, 0xf8,
-	0x6b, 0x34, 0xed, 0x32, 0x42, 0x55, 0x45, 0x66, 0x58, 0xe9, 0x75, 0xb5, 0x52, 0xff, 0x40, 0x08,
-	0xd5, 0x2d, 0x29, 0xe2, 0x26, 0x5a, 0xf4, 0x80, 0x0b, 0x42, 0xe5, 0x41, 0x0f, 0x5c, 0x4d, 0x3d,
-	0xe2, 0x0a, 0x0f, 0x41, 0x7d, 0x73, 0xe3, 0x95, 0xc9, 0x3f, 0xa1, 0x32, 0x43, 0x7e, 0xde, 0x2b,
-	0xb2, 0xc9, 0x0e, 0x89, 0x4f, 0x9d, 0xa0, 0x49, 0x05, 0x50, 0x81, 0x0d, 0x54, 0x90, 0x7d, 0x9b,
-	0xf4, 0x57, 0x6a, 0x67, 0xb1, 0xd7, 0xd5, 0x2a, 0x99, 0x9d, 0x4c, 0xd1, 0xad, 0x59, 0xf9, 0xd9,
-	0xf4, 0xb0, 0x8d, 0x66, 0x89, 0x24, 0x13, 0x27, 0xf9, 0xb5, 0xd2, 0xf6, 0x96, 0xf1, 0xd8, 0xdd,
-	0x32, 0x7e, 0x77, 0x02, 0xe2, 0x39, 0x82, 0x45, 0xe9, 0x9e, 0xfb, 0xb8, 0xd7, 0xd5, 0xe6, 0xd3,
-	0x1d, 0xb2, 0xb5, 0x74, 0xab, 0xbf, 0xea, 0xa7, 0xf2, 0xba, 0x8c, 0xbe, 0x1c, 0xbb, 0x4f, 0x16,
-	0xf0, 0x36, 0xa3, 0x1c, 0xf4, 0x3a, 0x5a, 0x79, 0xe8, 0x54, 0x07, 0x7a, 0x8a, 0x0e, 0x57, 0xa9,
-	0x2f, 0x6d, 0xff, 0x3f, 0x8d, 0xf2, 0x07, 0xdc, 0xc7, 0xff, 0x29, 0xa8, 0x3c, 0x72, 0x57, 0x27,
-	0xa8, 0xc2, 0x58, 0x3a, 0xb5, 0x1f, 0x9e, 0x8c, 0x0c, 0x32, 0xdc, 0xf9, 0xf3, 0xd5, 0xdb, 0x7f,
-	0xa7, 0x0c, 0x7d, 0x7d, 0xe4, 0x21, 0x14, 0x17, 0xc9, 0xab, 0x73, 0xff, 0x29, 0xfa, 0x83, 0x51,
-	0x68, 0x28, 0x1b, 0xf8, 0x99, 0x82, 0x16, 0xee, 0xf7, 0xf2, 0xee, 0x84, 0x69, 0x8c, 0x71, 0xb5,
-	0x9f, 0x3f, 0x8e, 0x1b, 0x78, 0xd8, 0x95, 0x1e, 0xbe, 0xd5, 0xbf, 0x99, 0xc8, 0x43, 0x04, 0x1e,
-	0x40, 0x98, 0xb8, 0xb8, 0x52, 0x50, 0x79, 0xa4, 0x83, 0x27, 0x2b, 0xfd, 0x30, 0x32, 0x61, 0xe9,
-	0x1f, 0xea, 0x80, 0x27, 0xa6, 0x9d, 0x36, 0x75, 0x43, 0xd9, 0xd8, 0x3f, 0x7a, 0x7e, 0x53, 0x57,
-	0xae, 0x6f, 0xea, 0xca, 0x9b, 0x9b, 0xba, 0xf2, 0xf7, 0x6d, 0x3d, 0x77, 0x7d, 0x5b, 0xcf, 0xbd,
-	0xbe, 0xad, 0xe7, 0x8e, 0xf6, 0x7c, 0x22, 0x4e, 0xe2, 0x96, 0xe1, 0xb2, 0xd0, 0x24, 0xd4, 0x07,
-	0x1a, 0x13, 0xd1, 0xd9, 0x6c, 0xc5, 0x24, 0xf0, 0x46, 0xf6, 0xb8, 0x78, 0x60, 0x7d, 0xd1, 0x69,
-	0x03, 0x6f, 0xcd, 0xc8, 0x7f, 0xc8, 0x77, 0x1f, 0x02, 0x00, 0x00, 0xff, 0xff, 0x73, 0xf7, 0x2d,
-	0xf0, 0x17, 0x07, 0x00, 0x00,
+	// 530 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x53, 0x4f, 0x6b, 0x13, 0x4f,
+	0x18, 0xce, 0x34, 0x3f, 0x7e, 0xad, 0x93, 0x62, 0x70, 0x1a, 0x30, 0x0d, 0x65, 0x53, 0xd6, 0x4b,
+	0xa9, 0x74, 0xd7, 0x54, 0x28, 0x18, 0x41, 0x34, 0xb7, 0x1c, 0x72, 0xd9, 0x82, 0x87, 0x5e, 0xc2,
+	0x64, 0xf7, 0x75, 0x3a, 0x74, 0x77, 0x66, 0xbb, 0x33, 0x1b, 0x9a, 0x6b, 0x4f, 0x1e, 0x05, 0xbf,
+	0x40, 0x3f, 0x44, 0xbf, 0x81, 0x17, 0x2f, 0x42, 0xd1, 0x8b, 0xa7, 0x20, 0x89, 0x07, 0xbd, 0xe6,
+	0x13, 0xc8, 0xfe, 0x49, 0x49, 0x4c, 0x20, 0x5a, 0xbc, 0xed, 0xce, 0xf3, 0x3e, 0xcf, 0xfb, 0x3c,
+	0xf3, 0xbe, 0x83, 0xed, 0xf3, 0x98, 0xbb, 0x67, 0x8a, 0xfb, 0x7d, 0x88, 0x6c, 0x2e, 0x34, 0x44,
+	0xee, 0x29, 0xe5, 0x42, 0x69, 0x7a, 0xc6, 0x05, 0xb3, 0xfb, 0x0d, 0x3b, 0x00, 0xa5, 0x28, 0x03,
+	0x65, 0x85, 0x91, 0xd4, 0x92, 0xec, 0xce, 0x10, 0xac, 0x05, 0x82, 0xd5, 0x6f, 0xd4, 0x2a, 0x4c,
+	0x32, 0x99, 0x16, 0xdb, 0xc9, 0x57, 0xc6, 0xab, 0x6d, 0xbb, 0x52, 0x05, 0x52, 0x75, 0x33, 0x20,
+	0xfb, 0xc9, 0x21, 0x6b, 0xa5, 0x07, 0x06, 0x02, 0x14, 0x9f, 0xd6, 0xef, 0x30, 0x29, 0x99, 0x0f,
+	0x36, 0x0d, 0xb9, 0x4d, 0x85, 0x90, 0x9a, 0x6a, 0x2e, 0x45, 0x8e, 0x9a, 0x9f, 0x10, 0xae, 0x74,
+	0x14, 0x73, 0xe0, 0x3c, 0x06, 0xa5, 0x1d, 0xf0, 0x20, 0x08, 0x13, 0x9c, 0x3c, 0xc2, 0xff, 0xb9,
+	0x92, 0x8b, 0x2a, 0xda, 0x45, 0x7b, 0xf7, 0x5a, 0xe5, 0xc9, 0xb0, 0x5e, 0x1a, 0xd0, 0xc0, 0x6f,
+	0x9a, 0xc9, 0xa9, 0xe9, 0xa4, 0x20, 0x69, 0xe3, 0x2d, 0x0f, 0x94, 0xe6, 0x22, 0xd5, 0xec, 0x52,
+	0xcf, 0x8b, 0x40, 0xa9, 0xea, 0x5a, 0xca, 0xa9, 0x7e, 0xbe, 0x3e, 0xa8, 0xe4, 0xd6, 0x5f, 0x65,
+	0xc8, 0xb1, 0x8e, 0xb8, 0x60, 0x0e, 0x99, 0x21, 0xe5, 0x08, 0x79, 0x8e, 0x37, 0xdf, 0x44, 0x32,
+	0xb8, 0xd5, 0x28, 0xae, 0xd0, 0x28, 0x25, 0xd5, 0xf9, 0x51, 0x73, 0xe3, 0xed, 0x55, 0xbd, 0xf0,
+	0xe3, 0xaa, 0x5e, 0x30, 0x7f, 0x22, 0x5c, 0xee, 0x28, 0x76, 0xcc, 0x99, 0xa0, 0x7e, 0x5b, 0x68,
+	0x10, 0x9a, 0x58, 0x78, 0x23, 0xbd, 0xa2, 0x2e, 0xf7, 0xf2, 0x38, 0x5b, 0x93, 0x61, 0xbd, 0x9c,
+	0xc7, 0xc9, 0x11, 0xd3, 0x59, 0x4f, 0x3f, 0xdb, 0x1e, 0xe9, 0xe2, 0x75, 0x9e, 0x32, 0x93, 0x24,
+	0xc5, 0xbd, 0xd2, 0x61, 0xc3, 0x5a, 0x35, 0x46, 0xeb, 0x35, 0xf5, 0xb9, 0x47, 0xb5, 0x8c, 0xb2,
+	0x9e, 0x2d, 0x32, 0x19, 0xd6, 0xef, 0x67, 0x1d, 0x72, 0x2d, 0xd3, 0x99, 0xaa, 0xfe, 0xab, 0xac,
+	0x06, 0xde, 0x59, 0x36, 0x3a, 0x07, 0x54, 0x28, 0x85, 0x02, 0x73, 0x1b, 0x3f, 0xfc, 0xed, 0x2a,
+	0xa6, 0xd0, 0xe1, 0x65, 0x11, 0x17, 0x3b, 0x8a, 0x91, 0x0f, 0x08, 0x3f, 0x58, 0x9c, 0xfd, 0xd1,
+	0xea, 0xbc, 0xcb, 0x1a, 0xd7, 0x5e, 0xdc, 0x8d, 0x77, 0x6b, 0xf8, 0xe8, 0xf2, 0xcb, 0xf7, 0xf7,
+	0x6b, 0x4f, 0xcc, 0xc7, 0x73, 0xef, 0x4c, 0x5f, 0x24, 0x4b, 0xbd, 0xb8, 0xe9, 0x11, 0x78, 0x00,
+	0x41, 0x13, 0xed, 0x93, 0x6b, 0x84, 0x37, 0xe7, 0x26, 0xde, 0xf8, 0x23, 0x23, 0xb3, 0x94, 0xda,
+	0xb3, 0xbf, 0xa6, 0xdc, 0xd1, 0x76, 0xb6, 0x04, 0x4d, 0xb4, 0xdf, 0x3a, 0xf9, 0x38, 0x32, 0xd0,
+	0xcd, 0xc8, 0x40, 0xdf, 0x46, 0x06, 0x7a, 0x37, 0x36, 0x0a, 0x37, 0x63, 0xa3, 0xf0, 0x75, 0x6c,
+	0x14, 0x4e, 0x5e, 0x32, 0xae, 0x4f, 0xe3, 0x9e, 0xe5, 0xca, 0xc0, 0xe6, 0x82, 0x81, 0x88, 0xb9,
+	0x1e, 0x1c, 0xf4, 0x62, 0xee, 0x7b, 0x73, 0x3d, 0x2e, 0x96, 0xe8, 0xeb, 0x41, 0x08, 0xaa, 0xf7,
+	0x7f, 0xfa, 0xbc, 0x9f, 0xfe, 0x0a, 0x00, 0x00, 0xff, 0xff, 0x6a, 0x79, 0x4f, 0xab, 0xb2, 0x04,
+	0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -345,9 +247,6 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
-	// RegisterZone defines a method for registering a new zone. TODO: deprecate
-	// in favour of governance vote.
-	RegisterZone(ctx context.Context, in *MsgRegisterZone, opts ...grpc.CallOption) (*MsgRegisterZoneResponse, error)
 	// RequestRedemption defines a method for requesting burning of qAssets for
 	// native assets.
 	RequestRedemption(ctx context.Context, in *MsgRequestRedemption, opts ...grpc.CallOption) (*MsgRequestRedemptionResponse, error)
@@ -362,15 +261,6 @@ type msgClient struct {
 
 func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
-}
-
-func (c *msgClient) RegisterZone(ctx context.Context, in *MsgRegisterZone, opts ...grpc.CallOption) (*MsgRegisterZoneResponse, error) {
-	out := new(MsgRegisterZoneResponse)
-	err := c.cc.Invoke(ctx, "/quicksilver.interchainstaking.v1.Msg/RegisterZone", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *msgClient) RequestRedemption(ctx context.Context, in *MsgRequestRedemption, opts ...grpc.CallOption) (*MsgRequestRedemptionResponse, error) {
@@ -393,9 +283,6 @@ func (c *msgClient) SignalIntent(ctx context.Context, in *MsgSignalIntent, opts 
 
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
-	// RegisterZone defines a method for registering a new zone. TODO: deprecate
-	// in favour of governance vote.
-	RegisterZone(context.Context, *MsgRegisterZone) (*MsgRegisterZoneResponse, error)
 	// RequestRedemption defines a method for requesting burning of qAssets for
 	// native assets.
 	RequestRedemption(context.Context, *MsgRequestRedemption) (*MsgRequestRedemptionResponse, error)
@@ -408,9 +295,6 @@ type MsgServer interface {
 type UnimplementedMsgServer struct {
 }
 
-func (*UnimplementedMsgServer) RegisterZone(ctx context.Context, req *MsgRegisterZone) (*MsgRegisterZoneResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RegisterZone not implemented")
-}
 func (*UnimplementedMsgServer) RequestRedemption(ctx context.Context, req *MsgRequestRedemption) (*MsgRequestRedemptionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RequestRedemption not implemented")
 }
@@ -420,24 +304,6 @@ func (*UnimplementedMsgServer) SignalIntent(ctx context.Context, req *MsgSignalI
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
-}
-
-func _Msg_RegisterZone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRegisterZone)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).RegisterZone(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/quicksilver.interchainstaking.v1.Msg/RegisterZone",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).RegisterZone(ctx, req.(*MsgRegisterZone))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _Msg_RequestRedemption_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -481,10 +347,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "RegisterZone",
-			Handler:    _Msg_RegisterZone_Handler,
-		},
-		{
 			MethodName: "RequestRedemption",
 			Handler:    _Msg_RequestRedemption_Handler,
 		},
@@ -495,84 +357,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "quicksilver/interchainstaking/v1/messages.proto",
-}
-
-func (m *MsgRegisterZone) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgRegisterZone) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgRegisterZone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.LiquidityModule {
-		i--
-		if m.LiquidityModule {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x48
-	}
-	if m.MultiSend {
-		i--
-		if m.MultiSend {
-			dAtA[i] = 1
-		} else {
-			dAtA[i] = 0
-		}
-		i--
-		dAtA[i] = 0x40
-	}
-	if len(m.FromAddress) > 0 {
-		i -= len(m.FromAddress)
-		copy(dAtA[i:], m.FromAddress)
-		i = encodeVarintMessages(dAtA, i, uint64(len(m.FromAddress)))
-		i--
-		dAtA[i] = 0x3a
-	}
-	if len(m.AccountPrefix) > 0 {
-		i -= len(m.AccountPrefix)
-		copy(dAtA[i:], m.AccountPrefix)
-		i = encodeVarintMessages(dAtA, i, uint64(len(m.AccountPrefix)))
-		i--
-		dAtA[i] = 0x32
-	}
-	if len(m.LocalDenom) > 0 {
-		i -= len(m.LocalDenom)
-		copy(dAtA[i:], m.LocalDenom)
-		i = encodeVarintMessages(dAtA, i, uint64(len(m.LocalDenom)))
-		i--
-		dAtA[i] = 0x2a
-	}
-	if len(m.BaseDenom) > 0 {
-		i -= len(m.BaseDenom)
-		copy(dAtA[i:], m.BaseDenom)
-		i = encodeVarintMessages(dAtA, i, uint64(len(m.BaseDenom)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.ConnectionId) > 0 {
-		i -= len(m.ConnectionId)
-		copy(dAtA[i:], m.ConnectionId)
-		i = encodeVarintMessages(dAtA, i, uint64(len(m.ConnectionId)))
-		i--
-		dAtA[i] = 0x12
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *MsgRequestRedemption) Marshal() (dAtA []byte, err error) {
@@ -670,29 +454,6 @@ func (m *MsgSignalIntent) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgRegisterZoneResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgRegisterZoneResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgRegisterZoneResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgRequestRedemptionResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -750,41 +511,6 @@ func encodeVarintMessages(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *MsgRegisterZone) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.ConnectionId)
-	if l > 0 {
-		n += 1 + l + sovMessages(uint64(l))
-	}
-	l = len(m.BaseDenom)
-	if l > 0 {
-		n += 1 + l + sovMessages(uint64(l))
-	}
-	l = len(m.LocalDenom)
-	if l > 0 {
-		n += 1 + l + sovMessages(uint64(l))
-	}
-	l = len(m.AccountPrefix)
-	if l > 0 {
-		n += 1 + l + sovMessages(uint64(l))
-	}
-	l = len(m.FromAddress)
-	if l > 0 {
-		n += 1 + l + sovMessages(uint64(l))
-	}
-	if m.MultiSend {
-		n += 2
-	}
-	if m.LiquidityModule {
-		n += 2
-	}
-	return n
-}
-
 func (m *MsgRequestRedemption) Size() (n int) {
 	if m == nil {
 		return 0
@@ -829,15 +555,6 @@ func (m *MsgSignalIntent) Size() (n int) {
 	return n
 }
 
-func (m *MsgRegisterZoneResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
 func (m *MsgRequestRedemptionResponse) Size() (n int) {
 	if m == nil {
 		return 0
@@ -861,256 +578,6 @@ func sovMessages(x uint64) (n int) {
 }
 func sozMessages(x uint64) (n int) {
 	return sovMessages(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *MsgRegisterZone) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowMessages
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRegisterZone: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRegisterZone: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMessages
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthMessages
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.ConnectionId = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field BaseDenom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMessages
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthMessages
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.BaseDenom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LocalDenom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMessages
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthMessages
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.LocalDenom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AccountPrefix", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMessages
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthMessages
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.AccountPrefix = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field FromAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthMessages
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthMessages
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.FromAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 8:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MultiSend", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.MultiSend = bool(v != 0)
-		case 9:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field LiquidityModule", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowMessages
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.LiquidityModule = bool(v != 0)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipMessages(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthMessages
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *MsgRequestRedemption) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1385,56 +852,6 @@ func (m *MsgSignalIntent) Unmarshal(dAtA []byte) error {
 			}
 			m.FromAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipMessages(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthMessages
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgRegisterZoneResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowMessages
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgRegisterZoneResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgRegisterZoneResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipMessages(dAtA[iNdEx:])

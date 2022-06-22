@@ -56,21 +56,27 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) SetupRegisteredZones() {
-	zonemsg := icstypes.MsgRegisterZone{
-		ConnectionId: s.path.EndpointA.ConnectionID,
-		LocalDenom:   "uqatom",
-		BaseDenom:    "uatom",
-		FromAddress:  TestOwnerAddress,
+	proposal := &icstypes.RegisterZoneProposal{
+		Title:           "register zone A",
+		Description:     "register zone A",
+		ConnectionId:    s.path.EndpointA.ConnectionID,
+		LocalDenom:      "uqatom",
+		BaseDenom:       "uatom",
+		AccountPrefix:   "cosmos",
+		MultiSend:       true,
+		LiquidityModule: true,
 	}
 
-	msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
 	ctx := s.chainA.GetContext()
+
 	// Set special testing context (e.g. for test / debug output)
 	ctx = ctx.WithContext(context.WithValue(ctx.Context(), "TEST", "TEST"))
-	_, err := msgSrv.RegisterZone(sdktypes.WrapSDKContext(ctx), &zonemsg)
+
+	err := icskeeper.HandleRegisterZoneProposal(ctx, s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper, proposal)
 	s.Require().NoError(err)
 
 	// Simulate "cosmos.staking.v1beta1.Query/Validators" response
+	// - this is not working anymore;
 	qvr := stakingtypes.QueryValidatorsResponse{
 		Validators: s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()),
 	}
@@ -78,6 +84,7 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 
 	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
 	bz, err := s.GetQuicksilverApp(s.chainA).AppCodec().Marshal(&bondedQuery)
+	s.Require().NoError(err)
 
 	qmsg := icqtypes.MsgSubmitQueryResponse{
 		ChainId: s.chainB.ChainID,
