@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -98,18 +97,6 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	})
 
 	return &types.MsgRegisterZoneResponse{}, nil
-}
-
-func (k msgServer) registerInterchainAccount(ctx sdk.Context, connectionId string, portOwner string) error {
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionId, portOwner); err != nil {
-		return err
-	}
-	portId, _ := icatypes.NewControllerPortID(portOwner)
-	if err := k.SetConnectionForPort(ctx, connectionId, portId); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {

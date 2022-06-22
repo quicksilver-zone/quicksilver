@@ -1,0 +1,11 @@
+{
+"title": "register test-2 zone",
+"description": "register test-2 zone with multisend and lsm enabled",
+"connection_id": "connection-0",
+"base_denom": "uatom",
+"local_denom": "uqatom",
+"account_prefix": "cosmos",
+"multi_send": true,
+"liquidity_module": false,
+"deposit": "1000uqck"
+}
