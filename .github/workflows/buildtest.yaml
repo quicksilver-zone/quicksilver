@@ -1,0 +1,47 @@
+# This is a basic workflow that is manually triggered
+
+name: compile quicksilver
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on: [push, pull_request, workflow_dispatch]
+
+# This workflow makes x86_64 binaries for mac, windows, and linux.
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: build quicksilver 
+    steps:
+      - uses: actions/checkout@latest
+      - uses: actions/setup-go@latest
+        with: 
+          go-version: '^1.18'
+        env:
+          GOOS: ${{ matrix.targetos }}
+          GOARCH: ${{ matrix.arch }}
+
+      - name: Compile quicksilver
+        run: |
+          make install
+
+
+
+  test:
+    runs-on: ubuntu-latest
+    name: test quicksilver 
+    steps:
+      - uses: actions/checkout@latest
+      - uses: actions/setup-go@latest
+        with: 
+          go-version: '^1.18'
+        env:
+          GOOS: ${{ matrix.targetos }}
+          GOARCH: ${{ matrix.arch }}
+
+      - name: test quicksilver
+        run: |
+          make test
+
+
+
