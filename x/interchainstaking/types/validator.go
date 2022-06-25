@@ -27,7 +27,6 @@ OUTER:
 			}
 			di.Intents = append(di.Intents, i)
 		}
-
 	}
 
 	return di.Normalize()

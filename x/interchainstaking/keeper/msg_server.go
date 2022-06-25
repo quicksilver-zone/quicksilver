@@ -142,7 +142,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		}
 	}
 
-	for delegator, _ := range msgs {
+	for delegator := range msgs {
 		icaAccount, err := zone.GetDelegationAccountByAddress(delegator)
 		if err != nil {
 			panic(err) // panic here because something is terribly wrong if we cann't find the delegation bucket here!!!

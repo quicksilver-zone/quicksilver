@@ -10,7 +10,6 @@ import (
 
 // HandleRegisterZoneProposal is a handler for executing a passed community spend proposal
 func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZoneProposal) error {
-
 	// get chain id from connection
 	chainId, err := k.GetChainID(ctx, p.ConnectionId)
 	if err != nil {
@@ -96,7 +95,6 @@ func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionId string, 
 
 // HandleUpdateZoneProposal is a handler for executing a passed community spend proposal
 func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProposal) error {
-
 	zone, found := k.GetRegisteredZoneInfo(ctx, p.ChainId)
 	if !found {
 		fmt.Errorf("Unable to get registered zone for chain id: %s", p.ChainId)

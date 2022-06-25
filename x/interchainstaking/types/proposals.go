@@ -13,8 +13,10 @@ const (
 	ProposalTypeUpdateZone   = "UpdateZone"
 )
 
-var _ govtypes.Content = &RegisterZoneProposal{}
-var _ govtypes.Content = &UpdateZoneProposal{}
+var (
+	_ govtypes.Content = &RegisterZoneProposal{}
+	_ govtypes.Content = &UpdateZoneProposal{}
+)
 
 func NewRegisterZoneProposal(title string, description string, connection_id string, base_denom string, local_denom string, account_prefix string, multi_send bool, liquidity_module bool) *RegisterZoneProposal {
 	return &RegisterZoneProposal{Title: title, Description: description, ConnectionId: connection_id, BaseDenom: base_denom, LocalDenom: local_denom, AccountPrefix: account_prefix, MultiSend: multi_send, LiquidityModule: liquidity_module}
@@ -107,6 +109,5 @@ func (m UpdateZoneProposal) String() string {
 }
 
 func (v UpdateZoneValue) Validate() error {
-
 	return nil
 }

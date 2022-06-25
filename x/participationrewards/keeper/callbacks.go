@@ -23,7 +23,7 @@ func (k Keeper) CallbackHandler() Callbacks {
 	return Callbacks{k, make(map[string]Callback)}
 }
 
-//callback handler
+// callback handler
 func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query types.Query) error {
 	return c.callbacks[id](c.k, ctx, args, query)
 }

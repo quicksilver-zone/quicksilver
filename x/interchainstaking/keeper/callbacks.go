@@ -31,7 +31,7 @@ func (k Keeper) CallbackHandler() Callbacks {
 	return Callbacks{k, make(map[string]Callback)}
 }
 
-//callback handler
+// callback handler
 func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query types.Query) error {
 	return c.callbacks[id](c.k, ctx, args, query)
 }
@@ -228,7 +228,6 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 				denom = string(query.Request[i+len(accAddr):])
 				break
 			}
-
 		}
 		// if balance is nil, the response sent back is nil, so we don't receive the denom. Override that now.
 		coin = sdk.NewCoin(denom, sdk.ZeroInt())
@@ -243,7 +242,6 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 }
 
 func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-
 	balanceQuery := bankTypes.QueryAllBalancesRequest{}
 	err := k.cdc.Unmarshal(query.Request, &balanceQuery)
 	if err != nil {

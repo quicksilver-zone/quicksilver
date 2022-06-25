@@ -6,5 +6,4 @@ import (
 
 // BeginBlocker of participationrewards module
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
-
 }
