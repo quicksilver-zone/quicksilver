@@ -18,7 +18,7 @@ func TestIntegrationTestSuite(t *testing.T) {
 	cfg := network.DefaultConfig()
 	cfg.NumValidators = 1
 	cfg.AppConstructor = NewQuicksilverConstructor()
-	//types.RegisterInterfaces(cfg.InterfaceRegistry)
+	// types.RegisterInterfaces(cfg.InterfaceRegistry)
 	suite.Run(t, NewIntegrationTestSuite(cfg))
 }
 
@@ -33,7 +33,7 @@ func NewQuicksilverConstructor() network.AppConstructor {
 			app.MakeEncodingConfig(),
 			simapp.EmptyAppOptions{},
 			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			//baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}
 }

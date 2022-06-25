@@ -4,21 +4,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	_ sdk.Msg = &MsgSubmitClaim{}
-)
+var _ sdk.Msg = &MsgSubmitClaim{}
 
 // NewMsgSubmitClaim - construct a msg to submit a claim.
 //nolint:interfacer
 func NewMsgSubmitClaim(
-	user_address sdk.Address,
+	userAddress sdk.Address,
 	zone string,
-	asset_type string,
+	assetType string,
 ) *MsgSubmitClaim {
 	return &MsgSubmitClaim{
-		UserAddress: user_address.String(),
+		UserAddress: userAddress.String(),
 		Zone:        zone,
-		AssetType:   asset_type,
+		AssetType:   assetType,
 	}
 }
 

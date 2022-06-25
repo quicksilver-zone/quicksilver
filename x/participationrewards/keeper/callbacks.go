@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
 // Callbacks wrapper struct for interchainstaking keeper
@@ -23,7 +22,7 @@ func (k Keeper) CallbackHandler() Callbacks {
 	return Callbacks{k, make(map[string]Callback)}
 }
 
-//callback handler
+// callback handler
 func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query types.Query) error {
 	return c.callbacks[id](c.k, ctx, args, query)
 }
@@ -47,7 +46,7 @@ func (c Callbacks) RegisterCallbacks() types.QueryCallbacks {
 
 // Callbacks
 
-func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byte, query types.Query) error {
 	delegatorRewards := distrtypes.QueryDelegationTotalRewardsResponse{}
 	err := k.cdc.Unmarshal(response, &delegatorRewards)
 	if err != nil {
@@ -66,12 +65,12 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 
 	k.Logger(ctx).Info(
 		"callback zone score",
-		"zone", zs.ZoneId,
+		"zone", zs.ZoneID,
 		"total voting power", zs.TotalVotingPower,
 		"validator scores", zs.ValidatorScores,
 	)
 
-	userAllocations, err := k.calcUserValidatorSelectionAllocations(ctx, zone, *zs)
+	userAllocations := k.calcUserValidatorSelectionAllocations(ctx, zone, *zs)
 	if err != nil {
 		return err
 	}

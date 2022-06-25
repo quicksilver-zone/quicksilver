@@ -24,15 +24,15 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new ics Params instance
 func NewParams(
-	validator_selection_allocation sdk.Dec,
-	holdings_allocation sdk.Dec,
-	lockup_allocation sdk.Dec,
+	validatorSelectionAllocation sdk.Dec,
+	holdingsAllocation sdk.Dec,
+	lockupAllocation sdk.Dec,
 ) Params {
 	return Params{
 		DistributionProportions: DistributionProportions{
-			ValidatorSelectionAllocation: validator_selection_allocation,
-			HoldingsAllocation:           holdings_allocation,
-			LockupAllocation:             lockup_allocation,
+			ValidatorSelectionAllocation: validatorSelectionAllocation,
+			HoldingsAllocation:           holdingsAllocation,
+			LockupAllocation:             lockupAllocation,
 		},
 	}
 }

@@ -18,8 +18,8 @@ const (
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
 //nolint:interfacer
-func NewMsgRequestRedemption(coin string, destination_address string, from_address sdk.Address) *MsgRequestRedemption {
-	return &MsgRequestRedemption{Coin: coin, DestinationAddress: destination_address, FromAddress: from_address.String()}
+func NewMsgRequestRedemption(coin string, destinationAddress string, fromAddress sdk.Address) *MsgRequestRedemption {
+	return &MsgRequestRedemption{Coin: coin, DestinationAddress: destinationAddress, FromAddress: fromAddress.String()}
 }
 
 // Route Implements Msg.
@@ -99,8 +99,8 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
 //nolint:interfacer
-func NewMsgSignalIntent(chain_id string, intents []*ValidatorIntent, from_address sdk.Address) *MsgSignalIntent {
-	return &MsgSignalIntent{ChainId: chain_id, Intents: intents, FromAddress: from_address.String()}
+func NewMsgSignalIntent(chainID string, intents []*ValidatorIntent, fromAddress sdk.Address) *MsgSignalIntent {
+	return &MsgSignalIntent{ChainId: chainID, Intents: intents, FromAddress: fromAddress.String()}
 }
 
 // Route Implements Msg.
@@ -118,23 +118,23 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 
 	// TODO: check for valid chain_id
 
-	want_sum := sdk.MustNewDecFromStr("1.0")
-	weight_sum := sdk.NewDec(0)
+	wantSum := sdk.MustNewDecFromStr("1.0")
+	weightSum := sdk.NewDec(0)
 	for i, intent := range msg.Intents {
 		if _, _, err := bech32.DecodeAndConvert(intent.ValoperAddress); err != nil {
 			istr := fmt.Sprintf("Intent_%02d_ValoperAddress", i)
 			errors[istr] = err
 		}
 
-		if intent.Weight.GT(want_sum) {
+		if intent.Weight.GT(wantSum) {
 			istr := fmt.Sprintf("Intent_%02d_Weight", i)
-			errors[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, want_sum)
+			errors[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, wantSum)
 		}
-		weight_sum = weight_sum.Add(intent.Weight)
+		weightSum = weightSum.Add(intent.Weight)
 	}
 
-	if !weight_sum.Equal(want_sum) {
-		errors["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weight_sum, want_sum)
+	if !weightSum.Equal(wantSum) {
+		errors["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weightSum, wantSum)
 	}
 
 	if len(errors) > 0 {

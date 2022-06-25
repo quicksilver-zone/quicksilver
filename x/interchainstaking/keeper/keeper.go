@@ -76,8 +76,8 @@ func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capabilit
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
 
-func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionId string, port string) error {
-	mapping := types.PortConnectionTuple{ConnectionId: connectionId, PortId: port}
+func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID string, port string) error {
+	mapping := types.PortConnectionTuple{ConnectionId: connectionID, PortId: port}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
 	bz := k.cdc.MustMarshal(&mapping)
 	store.Set([]byte(port), bz)
@@ -254,17 +254,16 @@ func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error)
 	return client.ChainId, nil
 }
 
-func (k Keeper) GetChainIdFromContext(ctx sdk.Context) (string, error) {
-	connectionId := ctx.Context().Value("connectionId")
-	if connectionId == nil {
+func (k Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
+	connectionID := ctx.Context().Value("connectionId")
+	if connectionID == nil {
 		return "", fmt.Errorf("connectionId not in context")
 	}
 
-	return k.GetChainID(ctx, connectionId.(string))
+	return k.GetChainID(ctx, connectionID.(string))
 }
 
 func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.RegisteredZone) error {
-
 	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: zone.PerformanceAddress.Address}
 	bz, err := k.GetCodec().Marshal(&balanceQuery)
 	if err != nil {

@@ -32,7 +32,6 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 						zone.IbcNextValidatorsHash = tmConsState.NextValidatorsHash.Bytes()
 						k.SetRegisteredZone(ctx, zone)
 					}
-
 				}
 			}
 		}

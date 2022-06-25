@@ -156,9 +156,7 @@ func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation
 		return err
 	}
 
-	if err := k.allocateValidatorSelectionRewards(ctx); err != nil {
-		k.Logger(ctx).Error(err.Error())
-	}
+	k.allocateValidatorSelectionRewards(ctx)
 
 	if err := k.allocateHoldingsRewards(ctx); err != nil {
 		k.Logger(ctx).Error(err.Error())
@@ -251,7 +249,7 @@ func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocat
 	}
 
 	if hasError {
-		return fmt.Errorf("errors occured while distributing rewards, review logs")
+		return fmt.Errorf("errors occurred while distributing rewards, review logs")
 	}
 
 	return nil

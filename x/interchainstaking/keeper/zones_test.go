@@ -88,7 +88,6 @@ func generateIntents() types.ValidatorIntents {
 }
 
 func TestDeltasAndIntents(t *testing.T) {
-
 	requests := types.Allocations{}.Allocate("val4", sdk.Coins{sdk.Coin{Denom: types.GenericToken, Amount: sdk.NewInt(900000)}})
 
 	bins := generateTestBins()
@@ -99,5 +98,4 @@ func TestDeltasAndIntents(t *testing.T) {
 	for _, i := range requests {
 		fmt.Println(i)
 	}
-
 }

@@ -15,9 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-var (
-	TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
-)
+var TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
 
 func init() {
 	ibctesting.DefaultTestingAppInit = qapp.SetupTestingApp

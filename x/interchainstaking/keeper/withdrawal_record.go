@@ -8,12 +8,12 @@ import (
 
 const (
 	// setting WITHDRAW_STATUS_TOKENIZE as 0 causes the value to be omitted when (un)marshalling :/
-	WITHDRAW_STATUS_TOKENIZE int32 = iota + 1
-	WITHDRAW_STATUS_SEND     int32 = iota + 1
+	WithdrawStatusTokenize int32 = iota + 1
+	WithdrawStatusSend     int32 = iota + 1
 )
 
 func (k Keeper) AddWithdrawalRecord(ctx sdk.Context, delegator string, validator string, recipient string, amount sdk.Coin, burnAmount sdk.Coin, hash string) {
-	record := &types.WithdrawalRecord{Delegator: delegator, Validator: validator, Recipient: recipient, Amount: amount, Status: WITHDRAW_STATUS_TOKENIZE, BurnAmount: burnAmount, Txhash: hash}
+	record := &types.WithdrawalRecord{Delegator: delegator, Validator: validator, Recipient: recipient, Amount: amount, Status: WithdrawStatusTokenize, BurnAmount: burnAmount, Txhash: hash}
 	k.SetWithdrawalRecord(ctx, record)
 }
 

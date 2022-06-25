@@ -9,8 +9,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-const ()
-
 // GetTxCmd returns a root CLI command handler for all x/bank transaction commands.
 func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
@@ -38,9 +36,9 @@ func GetSubmitClaimTxCmd() *cobra.Command {
 			}
 
 			zone := args[0]
-			asset_type := args[1]
+			assetType := args[1]
 
-			msg := types.NewMsgSubmitClaim(clientCtx.GetFromAddress(), zone, asset_type)
+			msg := types.NewMsgSubmitClaim(clientCtx.GetFromAddress(), zone, assetType)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

@@ -29,7 +29,7 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubmitQueryResponse) (*types.MsgSubmitQueryResponseResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	q, found := k.GetQuery(ctx, msg.QueryId)
-	//if found && q.LastHeight.Int64() != ctx.BlockHeader().Height {
+	// if found && q.LastHeight.Int64() != ctx.BlockHeader().Height {
 	if found {
 		pathParts := strings.Split(q.QueryType, "/")
 		if pathParts[len(pathParts)-1] == "key" {
@@ -107,7 +107,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 
 		if q.Ttl > 0 {
 			// don't store if ttl is 0
-			if err := k.SetDatapointForId(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height)); err != nil {
+			if err := k.SetDatapointForID(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height)); err != nil {
 				return nil, err
 			}
 		}

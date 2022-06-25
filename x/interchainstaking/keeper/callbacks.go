@@ -7,12 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
 // ___________________________________________________________________________________________________
@@ -31,7 +29,7 @@ func (k Keeper) CallbackHandler() Callbacks {
 	return Callbacks{k, make(map[string]Callback)}
 }
 
-//callback handler
+// callback handler
 func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query types.Query) error {
 	return c.callbacks[id](c.k, ctx, args, query)
 }
@@ -66,7 +64,7 @@ func (c Callbacks) RegisterCallbacks() types.QueryCallbacks {
 // Callback Handlers
 // -----------------------------------
 
-func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query types.Query) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -75,7 +73,7 @@ func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query
 	return nil
 }
 
-func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query types.Query) error {
 	k.Logger(ctx).Info("Received provable payload", "data", args)
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 	if !found {
@@ -85,7 +83,7 @@ func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Qu
 	return nil
 }
 
-func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query types.Query) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -106,7 +104,7 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 	return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 }
 
-func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query types.Query) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -121,7 +119,7 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	return k.UpdateDelegationRecordsForAddress(ctx, &zone, delegationQuery.DelegatorAddr, args)
 }
 
-func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query types.Query) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -148,7 +146,10 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 			return err
 		}
 		if delegation, ok := k.GetDelegation(ctx, &zone, delegatorAddress, validatorAddress); ok {
-			k.RemoveDelegation(ctx, &zone, delegation)
+			err := k.RemoveDelegation(ctx, &zone, delegation)
+			if err != nil {
+				return err
+			}
 			ica, err := zone.GetDelegationAccountByAddress(delegatorAddress)
 			if err != nil {
 				return err
@@ -167,7 +168,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), &zone, true)
 }
 
-func PerfBalanceCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+func PerfBalanceCallback(k Keeper, ctx sdk.Context, response []byte, query types.Query) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -182,7 +183,7 @@ func PerfBalanceCallback(k Keeper, ctx sdk.Context, response []byte, query icqty
 	return nil
 }
 
-func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query types.Query) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -202,12 +203,12 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 }
 
 // setAccountCb is a callback handler for Balance queries.
-func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query types.Query) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	balancesStore := []byte(query.Request[1:])
+	balancesStore := query.Request[1:]
 	accAddr, err := banktypes.AddressFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
@@ -228,7 +229,6 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 				denom = string(query.Request[i+len(accAddr):])
 				break
 			}
-
 		}
 		// if balance is nil, the response sent back is nil, so we don't receive the denom. Override that now.
 		coin = sdk.NewCoin(denom, sdk.ZeroInt())
@@ -242,9 +242,8 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 	return SetAccountBalanceForDenom(k, ctx, zone, address, coin)
 }
 
-func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-
-	balanceQuery := bankTypes.QueryAllBalancesRequest{}
+func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query types.Query) error {
+	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	err := k.cdc.Unmarshal(query.Request, &balanceQuery)
 	if err != nil {
 		return err

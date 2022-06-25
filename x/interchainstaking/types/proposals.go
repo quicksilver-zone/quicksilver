@@ -13,11 +13,13 @@ const (
 	ProposalTypeUpdateZone   = "UpdateZone"
 )
 
-var _ govtypes.Content = &RegisterZoneProposal{}
-var _ govtypes.Content = &UpdateZoneProposal{}
+var (
+	_ govtypes.Content = &RegisterZoneProposal{}
+	_ govtypes.Content = &UpdateZoneProposal{}
+)
 
-func NewRegisterZoneProposal(title string, description string, connection_id string, base_denom string, local_denom string, account_prefix string, multi_send bool, liquidity_module bool) *RegisterZoneProposal {
-	return &RegisterZoneProposal{Title: title, Description: description, ConnectionId: connection_id, BaseDenom: base_denom, LocalDenom: local_denom, AccountPrefix: account_prefix, MultiSend: multi_send, LiquidityModule: liquidity_module}
+func NewRegisterZoneProposal(title string, description string, connectionID string, baseDenom string, localDenom string, accountPrefix string, multiSend bool, liquidityModule bool) *RegisterZoneProposal {
+	return &RegisterZoneProposal{Title: title, Description: description, ConnectionId: connectionID, BaseDenom: baseDenom, LocalDenom: localDenom, AccountPrefix: accountPrefix, MultiSend: multiSend, LiquidityModule: liquidityModule}
 }
 
 func (m RegisterZoneProposal) GetDescription() string { return m.Description }
@@ -69,8 +71,8 @@ func (m RegisterZoneProposal) String() string {
 	return b.String()
 }
 
-func NewUpdateZoneProposal(title string, description string, chain_id string, changes []*UpdateZoneValue) *UpdateZoneProposal {
-	return &UpdateZoneProposal{Title: title, Description: description, ChainId: chain_id, Changes: changes}
+func NewUpdateZoneProposal(title string, description string, chainID string, changes []*UpdateZoneValue) *UpdateZoneProposal {
+	return &UpdateZoneProposal{Title: title, Description: description, ChainId: chainID, Changes: changes}
 }
 
 func (m UpdateZoneProposal) GetDescription() string { return m.Description }
@@ -107,6 +109,5 @@ func (m UpdateZoneProposal) String() string {
 }
 
 func (v UpdateZoneValue) Validate() error {
-
 	return nil
 }

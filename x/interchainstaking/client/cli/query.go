@@ -88,13 +88,13 @@ func GetDelegatorIntentCmd() *cobra.Command {
 			}
 
 			// args
-			chain_id := args[0]
-			delegator_addr := args[1]
+			chainID := args[0]
+			delegatorAddr := args[1]
 
 			queryClient := types.NewQueryClient(clientCtx)
 			req := &types.QueryDelegatorIntentRequest{
-				ChainId:          chain_id,
-				DelegatorAddress: delegator_addr,
+				ChainId:          chainID,
+				DelegatorAddress: delegatorAddr,
 			}
 
 			res, err := queryClient.DelegatorIntent(cmd.Context(), req)
@@ -125,11 +125,11 @@ func GetDepositAccountCmd() *cobra.Command {
 			}
 
 			// args
-			chain_id := args[0]
+			chainID := args[0]
 
 			queryClient := types.NewQueryClient(clientCtx)
 			req := &types.QueryDepositAccountForChainRequest{
-				ChainId: chain_id,
+				ChainId: chainID,
 			}
 
 			res, err := queryClient.DepositAccount(cmd.Context(), req)
