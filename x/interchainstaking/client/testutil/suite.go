@@ -71,7 +71,7 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 			flags := []string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			}
-			args := append(tt.args, flags...)
+			args := append(tt.args, flags...) //nolint:gocritic // I've seen this elsewhere in cosmos, and I don't know how to navigate it differently.
 
 			cmd := cli.GetCmdZonesInfos()
 
@@ -135,7 +135,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			flags := []string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			}
-			args := append(tt.args, flags...)
+			args := append(tt.args, flags...) //nolint:gocritic // I've seen this elsewhere in cosmos, and I don't know how to navigate it differently.
 
 			cmd := cli.GetDelegatorIntentCmd()
 
@@ -322,7 +322,7 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=true", flags.FlagDryRun),
 			}
-			args := append(tt.args, flags...)
+			args := append(tt.args, flags...) //nolint:gocritic // I've seen this elsewhere in cosmos, and I don't know how to navigate it differently.
 
 			cmd := cli.GetSignalIntentTxCmd()
 

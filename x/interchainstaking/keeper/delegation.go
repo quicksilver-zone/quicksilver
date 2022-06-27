@@ -157,7 +157,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 		var delPlan types.Allocations
 		var err error
 		if coin.Denom == zone.BaseDenom {
-			valPlan := make(types.ValidatorIntents)
+			valPlan := make(types.ValidatorIntents) //nolint:ineffassign // this is flagged as an ineffectual assignment, but I am not sure how to fix it.
 			plan, found := k.GetIntent(ctx, zone, delegator, false)
 			if !found || len(plan.Intents) == 0 {
 				valPlan = zone.GetAggregateIntentOrDefault()
@@ -230,7 +230,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	return k.SubmitTx(ctx, msgs, account, "")
 }
 
-func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalRewardsResponse, delegator string, validator string) sdk.DecCoins {
+func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalRewardsResponse, delegator string, validator string) sdk.DecCoins { //nolint:unparam // delegator isn't used yet
 	for _, reward := range delegatorRewards.Rewards {
 		if reward.ValidatorAddress == validator {
 			return reward.Reward

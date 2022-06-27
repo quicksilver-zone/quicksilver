@@ -363,9 +363,11 @@ func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.RegisteredZo
 					}
 
 					// This looks like it should return false if the query results in an error, but I am not certain.  -faddat
-					k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
-
-					return true
+					// in the end I made this panic, as above in .BurnCoins
+					err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+					if err != nil {
+						panic(err)
+					}
 				}
 			}
 		}
@@ -551,7 +553,10 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 		_, valAddr, _ := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
 		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-		k.RemoveDelegation(ctx, zone, existingDelegation)
+		err := k.RemoveDelegation(ctx, zone, existingDelegation)
+		if err != nil {
+			return err
+		}
 		da.DelegatedBalance = da.DelegatedBalance.Sub(existingDelegation.Amount) // remove old delegation from da.DelegatedBalance
 		// send request to prove delegation no longer exists.
 		k.ICQKeeper.MakeRequest(
@@ -594,7 +599,10 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 	}
 
 	k.SetDelegation(ctx, zone, delegation)
-	k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+	err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+	if err != nil {
+		return err
+	}
 	k.SetRegisteredZone(ctx, *zone)
 	return nil
 }
@@ -727,7 +735,7 @@ func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone
 	k.SetRegisteredZone(ctx, zone)
 }
 
-func (k *Keeper) prepareRewardsDistributionMsgs(ctx sdk.Context, zone types.RegisteredZone, rewards sdk.Coin) (sdk.Int, []sdk.Msg) {
+func (k *Keeper) prepareRewardsDistributionMsgs(ctx sdk.Context, zone types.RegisteredZone, rewards sdk.Coin) (sdk.Int, []sdk.Msg) { //nolint:unparam // ctx isn't used yet
 	// todo: use multisend.
 	// todo: this will probably not want to be an equal distribution. we want to use this to even out the distribution between accounts.
 	var msgs []sdk.Msg

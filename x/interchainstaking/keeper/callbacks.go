@@ -69,7 +69,10 @@ func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query types.Query) e
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	SetValidatorsForZone(k, ctx, zone, args)
+	err := SetValidatorsForZone(k, ctx, zone, args)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -79,7 +82,10 @@ func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query types.Query
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	SetValidatorForZone(k, ctx, zone, args)
+	err := SetValidatorForZone(k, ctx, zone, args)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

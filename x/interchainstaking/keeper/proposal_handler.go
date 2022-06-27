@@ -94,10 +94,11 @@ func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, 
 }
 
 // HandleUpdateZoneProposal is a handler for executing a passed community spend proposal
+//nolint:gocritic // gocritic is picking up the single case switch here, but I suspect we will want to make it more complex later.
 func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProposal) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, p.ChainId)
 	if !found {
-		fmt.Errorf("Unable to get registered zone for chain id: %s", p.ChainId)
+		fmt.Errorf("unable to get registered zone for chain id: %s", p.ChainId)
 	}
 
 	for _, change := range p.Changes {

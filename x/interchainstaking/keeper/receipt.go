@@ -17,6 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 )
 
+const unset = "unset"
+
 func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.RegisteredZone) {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
 	hash := txr.TxHash
@@ -28,7 +30,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 		return
 	}
 
-	senderAddress := "unset"
+	senderAddress := unset
 	coins := sdk.Coins{}
 
 	for _, event := range txr.Events {
@@ -37,7 +39,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 			sender := attrs["sender"]
 			amount := attrs["amount"]
 			if attrs["recipient"] == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
-				if senderAddress == "unset" {
+				if senderAddress == unset {
 					senderAddress = sender
 				}
 
@@ -55,7 +57,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 		}
 	}
 
-	if senderAddress == "unset" {
+	if senderAddress == unset {
 		k.Logger(ctx).Error("no sender found. Ignoring.")
 		return
 	}

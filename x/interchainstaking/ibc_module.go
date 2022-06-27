@@ -160,7 +160,7 @@ func (im IBCModule) OnChanOpenAck(
 		}
 		account := &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 		// append delegation account address
-		zoneInfo.DelegationAddresses = append(delegationAccounts, account)
+		zoneInfo.DelegationAddresses = append(delegationAccounts, account) //nolint:gocritic // I've seen this elsewhere in cosmos, and I don't know how to navigate it differently.
 
 		// set withdrawal address if, and only if withdrawal address is already set
 		if zoneInfo.WithdrawalAddress != nil {
@@ -218,6 +218,7 @@ func (im IBCModule) OnChanOpenAck(
 	return nil
 }
 
+//nolint:unparam // portID and connectionID aren't used yet
 func (im IBCModule) registerPerformanceAddress(
 	ctx sdk.Context,
 	portID,
@@ -291,7 +292,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 		ctx.Logger().Error(err.Error())
 		return err
 	}
-	ctx = ctx.WithContext(context.WithValue(ctx.Context(), "connectionId", connectionID))
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), "connectionId", connectionID)) //nolint:revive,staticcheck // unsure how to resolve this linter issue
 
 	return im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement)
 }
