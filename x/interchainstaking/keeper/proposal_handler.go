@@ -98,7 +98,7 @@ func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, 
 func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProposal) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, p.ChainId)
 	if !found {
-		fmt.Errorf("unable to get registered zone for chain id: %s", p.ChainId)
+		return fmt.Errorf("unable to get registered zone for chain id: %s", p.ChainId)
 	}
 
 	for _, change := range p.Changes {
