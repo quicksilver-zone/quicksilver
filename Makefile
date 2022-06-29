@@ -160,6 +160,10 @@ test-docker:
 	./scripts/simple-test.sh
 test-docker-regen:
 	./scripts/simple-test.sh -r
+test-docker-multi:
+	./scripts/multi-test.sh
+test-docker-multi-regen:
+	./scripts/multi-test.sh -r
 build-docker-all:
 	$(DOCKERCOMPOSE) build
 
