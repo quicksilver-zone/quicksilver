@@ -31,8 +31,8 @@ jobs:
     runs-on: ubuntu-latest
     name: test quicksilver 
     steps:
-      - uses: actions/checkout@latest
-      - uses: actions/setup-go@latest
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with: 
           go-version: '^1.18'
         env:
