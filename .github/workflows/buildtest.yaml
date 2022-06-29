@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     name: build quicksilver 
     steps:
-      - uses: actions/checkout@latest
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@latest
         with: 
           go-version: '^1.18'
