@@ -255,5 +255,11 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
+	if zone.DepositAddress.BalanceWaitgroup != 0 {
+		zone.DepositAddress.BalanceWaitgroup = 0
+		k.Logger(ctx).Error("Zeroing deposit balance waitgroup")
+		k.SetRegisteredZone(ctx, zone)
+	}
+
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
 }
