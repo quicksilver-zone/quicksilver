@@ -44,7 +44,7 @@ jobs:
         with:
           name: quicksilverd-${{ matrix.targetos }}-${{ matrix.arch }}
           path: |
-            build/quicksilverd*
+            ~/go/bin/quicksilverd*
 
   test:
     runs-on: ubuntu-latest
