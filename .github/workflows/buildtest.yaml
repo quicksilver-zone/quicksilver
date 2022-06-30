@@ -10,6 +10,10 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
+    strategy:
+      matrix:
+        targetos: [linux, windows]
+        arch: [amd64, arm64]
     runs-on: ubuntu-latest
     name: build quicksilver 
     steps:
