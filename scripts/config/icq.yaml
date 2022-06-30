@@ -2,7 +2,7 @@ default_chain: quicksilver
 chains:
   quicksilver:
     key: test
-    chain-id: test-1
+    chain-id: qstest-1
     rpc-addr: http://quicksilver:26657
     grpc-addr: http://quicksilver:9090
     account-prefix: quick
@@ -14,15 +14,29 @@ chains:
     timeout: 20s
     output-format: json
     sign-mode: direct
-  liquidstaking:
+  liquidstaking1:
     key: test
-    chain-id: test-2
-    rpc-addr: http://testzone:26657
-    grpc-addr: http://testzone:9090
+    chain-id: lstest-1
+    rpc-addr: http://testzone1-1:26657
+    grpc-addr: http://testzone1-1:9090
     account-prefix: cosmos
     keyring-backend: test
     gas-adjustment: 1.2
-    gas-prices: 0.00stake
+    gas-prices: 0.00uatom
+    key-directory: /root/.icq/keys
+    debug: false
+    timeout: 20s
+    output-format: json
+    sign-mode: direct
+  liquidstaking2:
+    key: test
+    chain-id: lstest-2
+    rpc-addr: http://testzone2-1:26657
+    grpc-addr: http://testzone2-1:9090
+    account-prefix: osmo
+    keyring-backend: test
+    gas-adjustment: 1.2
+    gas-prices: 0.00uosmo
     key-directory: /root/.icq/keys
     debug: false
     timeout: 20s

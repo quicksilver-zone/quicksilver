@@ -4,7 +4,7 @@ services:
     image: quicksilverzone/quicksilver:latest
     hostname: quicksilver
     volumes:
-      - ./data/test-1:/quicksilver/.quicksilverd
+      - ./data/qstest-1:/quicksilver/.quicksilverd
     build:
       context: .
       dockerfile: Dockerfile
@@ -15,7 +15,7 @@ services:
     image: quicksilverzone/quicksilver:latest
     hostname: quicksilver2
     volumes:
-      - ./data/test-1a:/quicksilver/.quicksilverd
+      - ./data/qstest-1a:/quicksilver/.quicksilverd
     build:
       context: .
       dockerfile: Dockerfile
@@ -23,41 +23,73 @@ services:
     image: quicksilverzone/quicksilver:latest
     hostname: quicksilver3
     volumes:
-      - ./data/test-1b:/quicksilver/.quicksilverd
+      - ./data/qstest-1b:/quicksilver/.quicksilverd
     build:
       context: .
       dockerfile: Dockerfile
-  testzone:
+  testzone1-1:
     image: quicksilverzone/testzone:latest
-    hostname: testzone
+    hostname: testzone1-1
     volumes:
-      - ./data/test-2:/icad/.ica
+      - ./data/lstest-1:/icad/.ica
     command:
       - icad
       - start
-  testzone2:
+  testzone1-2:
     image: quicksilverzone/testzone:latest
-    hostname: testzone2
+    hostname: testzone1-2
     volumes:
-      - ./data/test-2a:/icad/.ica
+      - ./data/lstest-1a:/icad/.ica
     command:
       - icad
       - start
-  testzone3:
+  testzone1-3:
     image: quicksilverzone/testzone:latest
-    hostname: testzone3
+    hostname: testzone1-3
     volumes:
-      - ./data/test-2b:/icad/.ica
+      - ./data/lstest-1b:/icad/.ica
     command:
       - icad
       - start
-  testzone4:
+  testzone1-4:
     image: quicksilverzone/testzone:latest
-    hostname: testzone4
+    hostname: testzone1-4
     volumes:
-      - ./data/test-2c:/icad/.ica
+      - ./data/lstest-1c:/icad/.ica
     command:
       - icad
+      - start
+  testzone2-1:
+    image: quicksilverzone/qsosmosis:latest
+    hostname: testzone2-1
+    volumes:
+      - ./data/lstest-2:/osmosis/.osmosisd
+    command:
+      - osmosisd
+      - start
+  testzone2-2:
+    image: quicksilverzone/qsosmosis:latest
+    hostname: testzone2-2
+    volumes:
+      - ./data/lstest-2a:/osmosis/.osmosisd
+    command:
+      - osmosisd
+      - start
+  testzone2-3:
+    image: quicksilverzone/qsosmosis:latest
+    hostname: testzone2-3
+    volumes:
+      - ./data/lstest-2b:/osmosis/.osmosisd
+    command:
+      - osmosisd
+      - start
+  testzone2-4:
+    image: quicksilverzone/qsosmosis:latest
+    hostname: testzone2-4
+    volumes:
+      - ./data/lstest-2c:/osmosis/.osmosisd
+    command:
+      - osmosisd
       - start
   hermes:
     image: quicksilverzone/hermes

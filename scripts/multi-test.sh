@@ -6,7 +6,7 @@ source ${SCRIPT_DIR}/vars.sh
 
 docker-compose down
 
-IS_MULTI_ZONE_TEST=false
+IS_MULTI_ZONE_TEST=true
 export IS_MULTI_ZONE_TEST
 
 if [[ "$1" == "-r" ]]; then
@@ -21,6 +21,10 @@ else
   rm -rf ${CHAIN_DIR}/${CHAINID_1}a
   rm -rf ${CHAIN_DIR}/${CHAINID_1}b
   rm -rf ${CHAIN_DIR}/${CHAINID_1}c
+  rm -rf ${CHAIN_DIR}/${CHAINID_2}
+  rm -rf ${CHAIN_DIR}/${CHAINID_2}a
+  rm -rf ${CHAIN_DIR}/${CHAINID_2}b
+  rm -rf ${CHAIN_DIR}/${CHAINID_2}c
   rm -rf ${CHAIN_DIR}/hermes &> /dev/null
   rm -rf ${CHAIN_DIR}/icq &> /dev/null
 
@@ -36,6 +40,10 @@ else
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1}a ${CHAIN_DIR}/${CHAINID_1}a
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1}b ${CHAIN_DIR}/${CHAINID_1}b
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1}c ${CHAIN_DIR}/${CHAINID_1}c
+  cp -fr ${CHAIN_DIR}/backup/${CHAINID_2} ${CHAIN_DIR}/${CHAINID_2}
+  cp -fr ${CHAIN_DIR}/backup/${CHAINID_2}a ${CHAIN_DIR}/${CHAINID_2}a
+  cp -fr ${CHAIN_DIR}/backup/${CHAINID_2}b ${CHAIN_DIR}/${CHAINID_2}b
+  cp -fr ${CHAIN_DIR}/backup/${CHAINID_2}c ${CHAIN_DIR}/${CHAINID_2}c
   mkdir ${CHAIN_DIR}/hermes ${CHAIN_DIR}/icq
   cp ./scripts/config/icq.yaml ./${CHAIN_DIR}/icq/config.yaml
 fi
@@ -44,15 +52,17 @@ source ${SCRIPT_DIR}/wallets.sh
 
 #############################################################################################################################
 
-docker-compose up --force-recreate -d quicksilver quicksilver2 quicksilver3 testzone1-1 testzone1-2 testzone1-3 testzone1-4
+docker-compose up --force-recreate -d quicksilver quicksilver2 quicksilver3 testzone1-1 testzone1-2 testzone1-3 testzone1-4 testzone2-1 testzone2-2 testzone2-3 testzone2-4
 echo "Chains created"
 sleep 10
 echo "Restoring keys"
 docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_1" $CHAINID_0
 docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_2" $CHAINID_1
+docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_3" $CHAINID_2
 sleep 10
 echo "Creating transfer channel"
 docker-compose run hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_0 $CHAINID_1
+docker-compose run hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_0 $CHAINID_2
 echo "Tranfer channel created"
 docker-compose up --force-recreate -d hermes
 
@@ -61,9 +71,11 @@ echo "Launch and configure interchain query daemon"
 
 ICQ_ADDRESS_1=$($ICQ_RUN keys add test --chain quicksilver | jq .address -r)
 ICQ_ADDRESS_2=$($ICQ_RUN keys add test --chain liquidstaking1 | jq .address -r)
+ICQ_ADDRESS_3=$($ICQ_RUN keys add test --chain liquidstaking2 | jq .address -r)
 
 $QS1_EXEC tx bank send val1 $ICQ_ADDRESS_1 1000uqck --chain-id $CHAINID_0 -y --keyring-backend=test
 $TZ1_1_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
+$TZ2_1_EXEC tx bank send val8 $ICQ_ADDRESS_3 1000uosmo --chain-id $CHAINID_2 -y --keyring-backend=test
 
 docker-compose up --force-recreate -d icq
 
@@ -77,7 +89,7 @@ $QS3_EXEC tx gov vote 1 yes --from val7 --chain-id $CHAINID_0 -y --keyring-backe
 sleep 30
 ## TODO: get val2 valoper from keys
 $TZ1_1_EXEC tx staking tokenize-share $VAL_VALOPER_2 10000000uatom $VAL_ADDRESS_2 --from val2 --gas 400000 --chain-id $CHAINID_1 -y --keyring-backend=test  #1
-$TZ1_2_EXEC tx staking tokenize-share $VAL_VALOPER_3 25000000uatom $VAL_ADDRESS_3 --from val3 --gas 400000 --chain-id $CHAINID_1 -y --keyring-backend=test   #2
+$TZ1_2_EXEC tx staking tokenize-share $VAL_VALOPER_3 25000000uatom $VAL_ADDRESS_3 --from val3 --gas 400000 --chain-id $CHAINID_1 -y --keyring-backend=test  #2
 $TZ1_3_EXEC tx staking tokenize-share $VAL_VALOPER_4 65000000uatom $VAL_ADDRESS_4 --from val4 --gas 400000 --chain-id $CHAINID_1 -y --keyring-backend=test  #3
 
 sleep 5
@@ -123,4 +135,30 @@ sleep 10
 
 $TZ1_1_EXEC tx bank send demowallet2 $DEPOSIT_ACCOUNT 6000000${VAL_VALOPER_2}4 --chain-id $CHAINID_1 -y --keyring-backend=test
 $TZ1_3_EXEC tx bank send val4 $DEPOSIT_ACCOUNT 25000000${VAL_VALOPER_4}3 --chain-id $CHAINID_1 -y --keyring-backend=test
+
+#echo "Register $CHAINID_2 on quicksilver..."
+cat $SCRIPT_DIR/registerosmo.json | jq . -c | $QS1_EXEC tx gov submit-proposal register-zone /dev/fd/0 --from demowallet1 --chain-id $CHAINID_0 --gas 2000000 -y --keyring-backend=test
+sleep 5
+$QS1_EXEC tx gov vote 2 yes --from val1 --chain-id $CHAINID_0 -y --keyring-backend=test
+$QS2_EXEC tx gov vote 2 yes --from val6 --chain-id $CHAINID_0 -y --keyring-backend=test
+$QS3_EXEC tx gov vote 2 yes --from val7 --chain-id $CHAINID_0 -y --keyring-backend=test
+sleep 30
+
+#$TZ2_1_EXEC tx staking tokenize-share $VAL_VALOPER_8 10000000uosmo $VAL_ADDRESS_8 --from val8 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test  #1
+#$TZ2_2_EXEC tx staking tokenize-share $VAL_VALOPER_9 25000000uosmo $VAL_ADDRESS_9 --from val9 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test  #2
+#$TZ2_3_EXEC tx staking tokenize-share $VAL_VALOPER_10 65000000uosmo $VAL_ADDRESS_10 --from val10 --gas 400000 --chain-id $CHAINID_2 -y --keyring-backend=test  #3
+
+sleep 5
+DEPOSIT_ACCOUNT=$($QS1_EXEC q interchainstaking zones --output=json | jq .zones[1].deposit_address.address -r)
+while [[ "$DEPOSIT_ACCOUNT" == "null" ]]; do
+  sleep 5
+  DEPOSIT_ACCOUNT=$($QS1_EXEC q interchainstaking zones --output=json | jq .zones[1].deposit_address.address -r)
+done
+
+PERFORMANCE_ACCOUNT=$($QS1_EXEC q interchainstaking zones --output=json | jq .zones[1].performance_address.address -r)
+while [[ "$PERFORMANCE_ACCOUNT" == "null" ]]; do
+  sleep 2
+  PERFORMANCE_ACCOUNT=$($QS1_EXEC q interchainstaking zones --output=json | jq .zones[1].performance_address.address -r)
+done
+$TZ2_1_EXEC tx bank send val8 $PERFORMANCE_ACCOUNT 40000uosmo --chain-id $CHAINID_2 -y --keyring-backend=test
 
