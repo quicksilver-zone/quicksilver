@@ -29,7 +29,12 @@ jobs:
         run: |
           make install
 
-
+      - name: Archive quicksilver binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: quicksilverd-${{ matrix.targetos }}-${{ matrix.arch }}
+          path: |
+            build/quicksilverd*
 
   test:
     runs-on: ubuntu-latest
