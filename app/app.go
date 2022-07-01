@@ -132,7 +132,8 @@ func init() {
 
 const (
 	// Name defines the application binary name
-	Name = "quicksilverd"
+	Name        = "quicksilverd"
+	upgradeName = "rhye"
 )
 
 var (
@@ -689,6 +690,16 @@ func NewQuicksilver(
 
 	app.SetAnteHandler(NewAnteHandler(options))
 	app.SetEndBlocker(app.EndBlocker)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		upgradeName,
+		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+
+			ctx.Logger().Info("nothing to see here o.O")
+
+			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+		},
+	)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
