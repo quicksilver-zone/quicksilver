@@ -10,6 +10,10 @@ on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build:
+    strategy:
+      matrix:
+        targetos: [linux, windows]
+        arch: [amd64, arm64]
     runs-on: ubuntu-latest
     name: build quicksilver 
     steps:
@@ -21,11 +25,26 @@ jobs:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
 
+      - name: Setup Golang caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-
+
       - name: Compile quicksilver
         run: |
           make install
 
-
+      - name: Archive quicksilver binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: quicksilverd-${{ matrix.targetos }}-${{ matrix.arch }}
+          path: |
+            ~/go/bin/quicksilverd*
 
   test:
     runs-on: ubuntu-latest
@@ -38,6 +57,16 @@ jobs:
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
+
+      - name: Setup Golang caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-test-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-test-
 
       - name: test quicksilver
         run: |
