@@ -52,7 +52,7 @@ func (k Keeper) allocateValidatorSelectionRewards(ctx sdk.Context) {
 		rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.PerformanceAddress.GetAddress()}
 		bz := k.cdc.MustMarshal(&rewardsQuery)
 
-		k.icqKeeper.MakeRequest(
+		k.IcqKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
 			zone.ChainId,

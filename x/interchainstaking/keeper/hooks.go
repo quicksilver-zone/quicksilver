@@ -1,11 +1,11 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -39,6 +39,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				k.Logger(ctx).Error("epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!")
 				zoneInfo.WithdrawalWaitgroup = 0
 			}
+
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 			for _, da := range zoneInfo.GetDelegationAccounts() {
 				k.Logger(ctx).Info("Withdrawing rewards")

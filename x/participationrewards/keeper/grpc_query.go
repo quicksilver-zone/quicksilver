@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -16,4 +17,15 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 	params := k.GetParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
+}
+
+func (k Keeper) ProtocolData(c context.Context, q *types.QueryProtocolDataRequest) (*types.QueryProtocolDataResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+	out := []json.RawMessage{}
+	k.IterateProtocolDatas(ctx, q.Protocol, func(index int64, data types.ProtocolData) (stop bool) {
+		out = append(out, data.Data)
+		return false
+	})
+
+	return &types.QueryProtocolDataResponse{Data: out}, nil
 }

@@ -11,6 +11,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
+	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 
@@ -24,9 +25,11 @@ type Keeper struct {
 	accountKeeper    authkeeper.AccountKeeper
 	bankKeeper       bankkeeper.Keeper
 	stakingKeeper    stakingkeeper.Keeper
-	icqKeeper        icqkeeper.Keeper
+	IcqKeeper        icqkeeper.Keeper
 	icsKeeper        icskeeper.Keeper
+	epochsKeeper     epochskeeper.Keeper
 	feeCollectorName string
+	prSubmodules     map[int64]Submodule
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper
@@ -57,10 +60,15 @@ func NewKeeper(
 		accountKeeper:    ak,
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
-		icqKeeper:        icqk,
+		IcqKeeper:        icqk,
 		icsKeeper:        icsk,
 		feeCollectorName: feeCollectorName,
+		prSubmodules:     LoadSubmodules(),
 	}
+}
+
+func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
+	k.epochsKeeper = epochsKeeper
 }
 
 // GetParams returns the total set of participationrewards parameters.
@@ -81,4 +89,11 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) GetAllocation(ctx sdk.Context, balance sdk.Coin, portion sdk.Dec) sdk.Coin {
 	return sdk.NewCoin(balance.Denom, balance.Amount.ToDec().Mul(portion).TruncateInt())
+}
+
+func LoadSubmodules() map[int64]Submodule {
+	out := make(map[int64]Submodule, 0)
+	out[types.ClaimTypeOsmosisPool] = &OsmosisModule{}
+	out[types.ClaimTypeLiquidToken] = &LiquidTokensModule{}
+	return out
 }

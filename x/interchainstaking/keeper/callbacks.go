@@ -75,6 +75,14 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 // Callback Handlers
 // -----------------------------------
 
+func LatestBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+	return SetValidatorsForZone(k, ctx, zone, args)
+}
+
 func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
 	if !found {

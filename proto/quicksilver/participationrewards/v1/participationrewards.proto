@@ -35,3 +35,9 @@ message Params {
   DistributionProportions distribution_proportions = 6
       [ (gogoproto.nullable) = false ];
 }
+
+message ProtocolData {
+  string protocol = 1;
+  string type = 2;
+  bytes data = 3 [ (gogoproto.casttype) = "encoding/json.RawMessage" ];
+}

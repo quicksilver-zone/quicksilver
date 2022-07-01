@@ -12,7 +12,12 @@ service Query {
   // Params returns the total set of participation rewards parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get =
-        "/quicksilver/participationrewards/v1beta1/params";
+        "/quicksilver/participationrewards/v1/params";
+  }
+
+  rpc ProtocolData(QueryProtocolDataRequest) returns (QueryProtocolDataResponse) {
+    option (google.api.http).get =
+        "/quicksilver/participationrewards/v1/protocoldata/{protocol}";
   }
 }
 
@@ -23,4 +28,18 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryProtocolDataRequest is the request type for querying Protocol Data.
+message QueryProtocolDataRequest {
+  string protocol = 1;
+}
+
+// QueryProtocolDataResponse is the response type for querying Protocol Data.
+message QueryProtocolDataResponse {
+  // params defines the parameters of the module.
+  repeated bytes data = 1 [
+    (gogoproto.moretags) = "yaml:\"data\"",
+    (gogoproto.casttype) = "encoding/json.RawMessage"
+  ];
 }

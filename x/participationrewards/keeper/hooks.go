@@ -44,6 +44,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
 		k.Logger(ctx).Error(err.Error())
 	}
+
+	k.Logger(ctx).Info("Triggering submodule hooks")
+	for _, sub := range k.prSubmodules {
+		sub.Hooks(ctx, k)
+	}
 }
 
 // ___________________________________________________________________________________________________
