@@ -96,10 +96,10 @@ func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionId string, 
 
 // HandleUpdateZoneProposal is a handler for executing a passed community spend proposal
 func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProposal) error {
-
 	zone, found := k.GetRegisteredZoneInfo(ctx, p.ChainId)
 	if !found {
-		fmt.Errorf("Unable to get registered zone for chain id: %s", p.ChainId)
+		err := fmt.Errorf("Unable to get registered zone for chain id: %s", p.ChainId)
+		return err
 	}
 
 	for _, change := range p.Changes {

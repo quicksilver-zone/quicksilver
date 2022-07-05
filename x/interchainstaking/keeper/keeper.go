@@ -173,6 +173,7 @@ func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZon
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
 			DelegatorShares: validator.DelegatorShares,
+			Score:           sdk.ZeroDec(),
 		})
 		zoneInfo.Validators = zoneInfo.GetValidatorsSorted()
 

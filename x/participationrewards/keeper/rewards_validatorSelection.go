@@ -268,7 +268,12 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 		uSum := sdk.NewDec(0)
 		for _, intent := range di.GetIntents() {
 			// calc overall user score
-			score := intent.Weight.Mul(zs.ValidatorScores[intent.ValoperAddress].Score)
+			score := sdk.ZeroDec()
+			if vs, exists := zs.ValidatorScores[intent.ValoperAddress]; exists {
+				if !vs.Score.IsNil() {
+					score = intent.Weight.Mul(vs.Score)
+				}
+			}
 			k.Logger(ctx).Info("user score for validator", "user", di.GetDelegator(), "validator", intent.ValoperAddress, "score", score)
 			uSum = uSum.Add(score)
 		}
