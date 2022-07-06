@@ -12,6 +12,7 @@ message Query {
   string chain_id = 3;
   string query_type = 4;
   bytes request = 5;
+  // change these to uint64 in v0.5.0
   string period = 6 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
@@ -24,10 +25,16 @@ message Query {
   ];
   string callback_id = 8;
   uint64 ttl = 9;
+  string last_emission = 10 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
 }
 
 message DataPoint {
   string id = 1;
+  // change these to uint64 in v0.5.0
   string remote_height = 2 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
