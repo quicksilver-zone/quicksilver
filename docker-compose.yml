@@ -62,6 +62,9 @@ services:
   testzone2-1:
     image: quicksilverzone/qsosmosis:latest
     hostname: testzone2-1
+    build:
+      context: .
+      dockerfile: Dockerfile.osmosis
     volumes:
       - ./data/lstest-2:/osmosis/.osmosisd
     command:
@@ -107,9 +110,17 @@ services:
       context: .
       dockerfile: Dockerfile.hermes
   icq:
-    image: quicksilverzone/interchain-queries:v0.2.1
+    image: quicksilverzone/interchain-queries:v0.2.2
     volumes:
       - ./data/icq:/icq/.icq
+    command:
+      - interchain-queries
+      - run
+    restart: always
+  icq2:
+    image: quicksilverzone/interchain-queries:v0.2.2
+    volumes:
+      - ./data/icq2:/icq/.icq
     command:
       - interchain-queries
       - run

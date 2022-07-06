@@ -24,11 +24,7 @@ const (
 	// this value defines the number of delegation accounts a given deposit should be shared amongst
 	DelegationAccountSplit = 9
 
-	// beginblocker intervals
-	DepositInterval             = 5
-	DelegateInterval            = 25
-	DelegateDelegationsInterval = 100 // probably wants to be somewhere in the region of 1000 (c. 3h) in prod with 7s blocks.
-	ValidatorSetInterval        = 25
+	TxRetrieveCount = 100
 
 	QueryParameters                   = "params"
 	QueryRegisteredZonesInfo          = "zones"

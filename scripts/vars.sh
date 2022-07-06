@@ -46,6 +46,7 @@ TZ2_3_EXEC="docker-compose --ansi never exec -T testzone2-3 osmosisd"
 TZ2_4_EXEC="docker-compose --ansi never exec -T testzone2-4 osmosisd"
 
 ICQ_RUN="docker-compose --ansi never run -T icq interchain-queries"
+ICQ2_RUN="docker-compose --ansi never run -T icq2 interchain-queries"
 
 VAL_MNEMONIC_1="clock post desk civil pottery foster expand merit dash seminar song memory figure uniform spice circle try happy obvious trash crime hybrid hood cushion"
 VAL_MNEMONIC_2="angry twist harsh drastic left brass behave host shove marriage fall update business leg direct reward object ugly security warm tuna model broccoli choice"
