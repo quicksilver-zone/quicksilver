@@ -30,7 +30,8 @@ func (k Keeper) Queries(c context.Context, req *types.QueryRequestsRequest) (*ty
 		if err := k.cdc.Unmarshal(value, &query); err != nil {
 			return false, err
 		}
-		if query.LastEmission.IsZero() || query.LastEmission.GTE(query.LastHeight) {
+
+		if query.ConnectionId == req.ConnectionId && (query.LastEmission.IsZero() || query.LastEmission.GTE(query.LastHeight)) {
 			queries = append(queries, query)
 			return true, nil
 		}
