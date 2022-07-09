@@ -7,7 +7,7 @@ chains:
     grpc-addr: http://quicksilver:9090
     account-prefix: quick
     keyring-backend: test
-    gas-adjustment: 1.2
+    gas-adjustment: 1.3
     gas-prices: 0.00uqck
     key-directory: /root/.icq/keys
     debug: false

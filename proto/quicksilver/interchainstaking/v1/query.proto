@@ -101,6 +101,7 @@ message QueryDelegationsRequest {
 
 message QueryDelegationsResponse {
   repeated Delegation delegations = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryDelegatorDelegationsRequest {
@@ -112,6 +113,7 @@ message QueryDelegatorDelegationsRequest {
 
 message QueryDelegatorDelegationsResponse {
   repeated Delegation delegations = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryValidatorDelegationsRequest {
@@ -123,6 +125,7 @@ message QueryValidatorDelegationsRequest {
 
 message QueryValidatorDelegationsResponse {
   repeated Delegation delegations = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryDelegationPlansRequest {
@@ -132,4 +135,5 @@ message QueryDelegationPlansRequest {
 
 message QueryDelegationPlansResponse {
   repeated DelegationPlan delegations = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

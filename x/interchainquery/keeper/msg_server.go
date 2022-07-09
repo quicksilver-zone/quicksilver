@@ -117,6 +117,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 				k.DeleteQuery(ctx, msg.QueryId)
 			}
 		} else {
+			q.LastHeight = sdk.NewInt(ctx.BlockHeight())
 			k.SetQuery(ctx, q)
 		}
 

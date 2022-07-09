@@ -30,8 +30,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// MsgRequestRedemption represents a message type to request a burn of qAssets for
-// native assets.
+// MsgRequestRedemption represents a message type to request a burn of qAssets
+// for native assets.
 type MsgRequestRedemption struct {
 	Coin               string `protobuf:"bytes,1,opt,name=coin,proto3" json:"coin,omitempty" yaml:"coin"`
 	DestinationAddress string `protobuf:"bytes,2,opt,name=destination_address,json=destinationAddress,proto3" json:"destination_address,omitempty"`
