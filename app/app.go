@@ -133,7 +133,7 @@ func init() {
 const (
 	// Name defines the application binary name
 	Name        = "quicksilverd"
-	upgradeName = "rhye"
+	upgradeName = "underpressure"
 )
 
 var (
@@ -695,7 +695,7 @@ func NewQuicksilver(
 		upgradeName,
 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 
-			ctx.Logger().Info("nothing to see here o.O")
+			ctx.Logger().Info("no-op upgrade to underpressure")
 
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		},
