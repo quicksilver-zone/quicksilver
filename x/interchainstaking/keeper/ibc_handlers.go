@@ -5,16 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	//lint:ignore SA1019 ignore this!
 	"github.com/golang/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v3/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v3/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
+	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v4/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -22,8 +23,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-
-	"time"
 )
 
 func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte) error {
@@ -295,7 +294,6 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 		k.Logger(ctx).Error(err.Error())
 		return err
 	}
-
 }
 
 func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.RegisteredZone, msg *banktypes.MsgSend) error {
@@ -484,7 +482,6 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, 
 	}
 
 	return "", fmt.Errorf("unable to find validator for token %s", amount.Denom)
-
 }
 
 func parseDelegationKey(key []byte) ([]byte, []byte, error) {
@@ -493,7 +490,7 @@ func parseDelegationKey(key []byte) ([]byte, []byte, error) {
 	}
 	delAddrLen := key[1]
 	delAddr := key[2:delAddrLen]
-	//valAddrLen := key[2+delAddrLen]
+	// valAddrLen := key[2+delAddrLen]
 	valAddr := key[3+delAddrLen:]
 	return delAddr, valAddr, nil
 }
@@ -570,7 +567,6 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 }
 
 func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin, zone *types.RegisteredZone, absolute bool) error {
-
 	delegation, found := k.GetDelegation(ctx, zone, delegatorAddress, validatorAddress)
 	da, _ := zone.GetDelegationAccountByAddress(delegatorAddress)
 
@@ -712,7 +708,6 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 
 	// send tx
 	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "")
-
 }
 
 func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone, epochRewards sdk.Coin) {

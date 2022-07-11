@@ -15,9 +15,9 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/controller/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v3/modules/core/keeper"
-	ibctmtypes "github.com/cosmos/ibc-go/v3/modules/light-clients/07-tendermint/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
@@ -265,7 +265,6 @@ func (k Keeper) GetChainIdFromContext(ctx sdk.Context) (string, error) {
 }
 
 func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.RegisteredZone) error {
-
 	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: zone.PerformanceAddress.Address}
 	bz, err := k.GetCodec().Marshal(&balanceQuery)
 	if err != nil {

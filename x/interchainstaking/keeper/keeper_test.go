@@ -6,7 +6,7 @@ import (
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctesting "github.com/cosmos/ibc-go/v3/testing"
+	ibctesting "github.com/cosmos/ibc-go/v4/testing"
 	qapp "github.com/ingenuity-build/quicksilver/app"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -15,9 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-var (
-	TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
-)
+var TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
 
 func init() {
 	ibctesting.DefaultTestingAppInit = qapp.SetupTestingApp

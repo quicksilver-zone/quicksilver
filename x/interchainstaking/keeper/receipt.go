@@ -8,9 +8,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	tx "github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v4/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v4/modules/core/24-host"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	tmtypes "github.com/tendermint/tendermint/abci/types"
 
@@ -130,7 +130,6 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.R
 }
 
 func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, plan types.Allocations, memo string) error {
-
 	// if zone.SupportMultiSend() {
 	// 	return k.TransferToDelegateMulti(ctx, zone, plan, memo)
 	// } else {
@@ -184,7 +183,6 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 // }
 
 func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string) error {
-
 	portID := account.GetPortName()
 	connectionID, err := k.GetConnectionForPort(ctx, portID)
 	if err != nil {
