@@ -788,7 +788,6 @@ func NewQuicksilver(
 		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 			ctx.Logger().Info("nothing to see here o.O")
 
-
 			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 		},
 	)
