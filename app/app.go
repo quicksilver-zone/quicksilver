@@ -364,6 +364,8 @@ func NewQuicksilver(
 	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedInterchainStakingKeeper := app.CapabilityKeeper.ScopeToModule(interchainstakingtypes.ModuleName)
+	scopedIBCMockKeeper := app.CapabilityKeeper.ScopeToModule(ibcmock.ModuleName)
+	ScopedICAMockKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
@@ -452,7 +454,7 @@ func NewQuicksilver(
 
 	// initialize ICA module with mock module as the authentication module on the controller side
 	var icaControllerStack porttypes.IBCModule
-	icaControllerStack = ibcmock.NewIBCModule(&mockModule, ibcmock.NewMockIBCApp("", scopedICAMockKeeper))
+	icaControllerStack = ibcmock.NewIBCModule(&mockModule, ibcmock.NewMockIBCApp("", ScopedICAMockKeeper))
 	app.ICAAuthModule = icaControllerStack.(ibcmock.IBCModule)
 	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.ICAControllerKeeper)
 	icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.IBCFeeKeeper)
@@ -512,7 +514,7 @@ func NewQuicksilver(
 
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
 
-	interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
+	// interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
 
 	app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler())
 
@@ -613,7 +615,7 @@ func NewQuicksilver(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		// ibc modules
 		ibc.NewAppModule(app.IBCKeeper),
-		transferModule,
+		// transferModule,
 		icaModule,
 		// Quicksilver app modules
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
