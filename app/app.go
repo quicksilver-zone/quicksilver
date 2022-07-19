@@ -119,6 +119,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards"
 	participationrewardskeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+
+	"github.com/ingenuity-build/quicksilver/x/airdrop"
+	airdropkeeper "github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
+	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
 func init() {
@@ -172,6 +176,7 @@ var (
 		interchainstaking.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
 		participationrewards.AppModuleBasic{},
+		airdrop.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -189,6 +194,7 @@ var (
 		interchainquerytypes.ModuleName:   nil,
 		// TODO: Remove Burner from participationrewards - for dev/test only;
 		participationrewardstypes.ModuleName: {authtypes.Burner},
+		airdroptypes.ModuleName:              nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -245,6 +251,7 @@ type Quicksilver struct {
 	InterchainstakingKeeper    interchainstakingkeeper.Keeper
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
 	ParticipationRewardsKeeper participationrewardskeeper.Keeper
+	AirdropKeeper              airdropkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper                      capabilitykeeper.ScopedKeeper
@@ -310,6 +317,7 @@ func NewQuicksilver(
 		interchainstakingtypes.StoreKey,
 		interchainquerytypes.StoreKey,
 		participationrewardstypes.StoreKey,
+		airdroptypes.StoreKey,
 	)
 
 	// Add the transient store key
@@ -443,6 +451,18 @@ func NewQuicksilver(
 
 	app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler())
 
+	app.AirdropKeeper = *airdropkeeper.NewKeeper(
+		appCodec,
+		keys[airdroptypes.StoreKey],
+		nil,
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		app.GetSubspace(airdroptypes.ModuleName),
+	)
+	airdropModule := airdrop.NewAppModule(appCodec, app.AirdropKeeper)
+
 	// Quicksilver Keepers
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	app.EpochsKeeper = *epochsKeeper.SetHooks(
@@ -528,6 +548,7 @@ func NewQuicksilver(
 		interchainstakingModule,
 		interchainQueryModule,
 		participationrewardsModule,
+		airdropModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -553,6 +574,7 @@ func NewQuicksilver(
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		participationrewardstypes.ModuleName,
+		airdroptypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -591,6 +613,7 @@ func NewQuicksilver(
 		vestingtypes.ModuleName,
 		interchainstakingtypes.ModuleName,
 		participationrewardstypes.ModuleName,
+		airdroptypes.ModuleName,
 		// currently no-op.
 	)
 
@@ -624,6 +647,7 @@ func NewQuicksilver(
 		interchainstakingtypes.ModuleName,
 		interchainquerytypes.ModuleName,
 		participationrewardstypes.ModuleName,
+		airdroptypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	)
@@ -943,5 +967,6 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
+	paramsKeeper.Subspace(airdroptypes.ModuleName)
 	return paramsKeeper
 }
