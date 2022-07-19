@@ -82,7 +82,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 }
 
 func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionId string, portOwner string) error {
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionId, portOwner); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionId, portOwner, ""); err != nil {
 		return err
 	}
 	portId, _ := icatypes.NewControllerPortID(portOwner)
