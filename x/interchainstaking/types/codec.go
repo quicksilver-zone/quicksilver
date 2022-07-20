@@ -39,8 +39,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 func init() {
 	cryptocodec.RegisterCrypto(amino)
 	govtypes.RegisterProposalType(ProposalTypeRegisterZone)
-	amino.RegisterConcrete(&RegisterZoneProposal{}, "cosmos-sdk/RegisterZoneProposal", nil)
+	govtypes.ModuleCdc.Amino.RegisterConcrete(&RegisterZoneProposal{}, "cosmos-sdk/RegisterZoneProposal", nil)
 
 	govtypes.RegisterProposalType(ProposalTypeUpdateZone)
-	amino.RegisterConcrete(&UpdateZoneProposal{}, "cosmos-sdk/UpdateZoneProposal", nil)
+	govtypes.ModuleCdc.Amino.RegisterConcrete(&UpdateZoneProposal{}, "cosmos-sdk/UpdateZoneProposal", nil)
 }
