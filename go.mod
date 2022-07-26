@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
 	github.com/cosmos/cosmos-sdk v0.46.0-rc2
-	github.com/cosmos/ibc-go/v4 v4.0.0-rc0
+	github.com/cosmos/ibc-go/v4 v4.0.0-00010101000000-000000000000
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
@@ -150,6 +150,8 @@ require (
 
 // https://github.com/cosmos/cosmos-sdk/issues/8469
 replace (
+	github.com/cosmos/cosmos-sdk => github.com/levanhieuhust/cosmos-sdk v0.46.0-quicksilverd
+
 	// use ibc4: https://github.com/cosmos/ibc-go/pull/1653
 	github.com/cosmos/ibc-go/v4 => github.com/notional-labs/ibc-go/v4 v4.0.0-20220707091415-8e4f87eaef2d
 
