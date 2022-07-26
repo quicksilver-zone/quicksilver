@@ -150,6 +150,8 @@ require (
 
 // https://github.com/cosmos/cosmos-sdk/issues/8469
 replace (
+	github.com/cosmos/cosmos-sdk => github.com/levanhieuhust/cosmos-sdk v0.46.0-quicksilverb
+
 	// use ibc4: https://github.com/cosmos/ibc-go/pull/1653
 	github.com/cosmos/ibc-go/v4 => github.com/notional-labs/ibc-go/v4 v4.0.0-20220707091415-8e4f87eaef2d
 

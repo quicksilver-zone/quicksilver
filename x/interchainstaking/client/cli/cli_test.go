@@ -31,10 +31,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	// Tendermint RPC calls. (from testutil/network godocs)
 
 	s.cfg = app.DefaultConfig()
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
 
-	s.network = network.New(s.T(), s.cfg)
-
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
 

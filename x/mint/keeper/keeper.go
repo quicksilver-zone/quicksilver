@@ -8,13 +8,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	participationrewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 // Keeper of the mint store.
 type Keeper struct {
 	cdc              codec.BinaryCodec
-	storeKey         sdk.StoreKey
+	storeKey         storetypes.StoreKey
 	paramSpace       paramtypes.Subspace
 	accountKeeper    types.AccountKeeper
 	bankKeeper       types.BankKeeper
@@ -27,7 +28,7 @@ type Keeper struct {
 // NewKeeper creates a new mint Keeper instance.
 func NewKeeper(
 	cdc codec.BinaryCodec,
-	key sdk.StoreKey,
+	key storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -139,7 +140,7 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 
 // GetProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the `AllocationRatio`.
 func (k Keeper) GetProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
-	return sdk.NewCoin(mintedCoin.Denom, mintedCoin.Amount.ToDec().Mul(ratio).TruncateInt())
+	return sdk.NewCoin(mintedCoin.Denom, sdk.NewDecFromInt(mintedCoin.Amount).Mul(ratio).TruncateInt())
 }
 
 // DistributeMintedCoins implements distribution of minted coins from mint to external modules.
@@ -186,7 +187,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	// k.bankKeeper.AddSupplyOffset(ctx, mintedCoin.Denom, developerAccountBalance.Amount.Neg())
 
 	// subtract from original provision to ensure no coins left over after the allocations
-	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins).Sub(poolIncentivesCoins).Sub(participationRewardCoins)
+	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins...).Sub(poolIncentivesCoins...).Sub(participationRewardCoins...)
 	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
 	if err != nil {
 		return err

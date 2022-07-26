@@ -14,12 +14,13 @@ import (
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 type Keeper struct {
 	cdc              codec.BinaryCodec
-	storeKey         sdk.StoreKey
+	storeKey         storetypes.StoreKey
 	paramSpace       paramtypes.Subspace
 	accountKeeper    authkeeper.AccountKeeper
 	bankKeeper       bankkeeper.Keeper
@@ -32,7 +33,7 @@ type Keeper struct {
 // NewKeeper returns a new instance of participationrewards Keeper
 func NewKeeper(
 	cdc codec.Codec,
-	key sdk.StoreKey,
+	key storetypes.StoreKey,
 	ps paramtypes.Subspace,
 	ak authkeeper.AccountKeeper,
 	bk bankkeeper.Keeper,
@@ -80,5 +81,5 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) GetAllocation(ctx sdk.Context, balance sdk.Coin, portion sdk.Dec) sdk.Coin {
-	return sdk.NewCoin(balance.Denom, balance.Amount.ToDec().Mul(portion).TruncateInt())
+	return sdk.NewCoin(balance.Denom, sdk.NewDecFromInt(balance.Amount).Mul(portion).TruncateInt())
 }

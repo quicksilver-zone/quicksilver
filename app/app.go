@@ -364,6 +364,8 @@ func NewQuicksilver(
 	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedInterchainStakingKeeper := app.CapabilityKeeper.ScopeToModule(interchainstakingtypes.ModuleName)
+	scopedIBCMockKeeper := app.CapabilityKeeper.ScopeToModule(ibcmock.ModuleName)
+	scopedICAMockKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
@@ -512,7 +514,7 @@ func NewQuicksilver(
 
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
 
-	interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
+	// interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
 
 	app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler())
 
@@ -541,8 +543,8 @@ func NewQuicksilver(
 		),
 	)
 
-	//	icaControllerIBCModule := icacontroller.NewIBCMiddleware(app.ICAControllerKeeper, interchainstakingIBCModule)
-	//	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
+	// icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, app.ICAControllerKeeper)
+	// icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -613,7 +615,7 @@ func NewQuicksilver(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		// ibc modules
 		ibc.NewAppModule(app.IBCKeeper),
-		transferModule,
+		// transferModule,
 		icaModule,
 		// Quicksilver app modules
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),

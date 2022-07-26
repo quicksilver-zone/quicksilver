@@ -221,7 +221,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 	balancesStore := []byte(query.Request[1:])
-	accAddr, err := banktypes.AddressFromBalancesStore(balancesStore)
+	accAddr, _, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}

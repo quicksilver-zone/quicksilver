@@ -9,19 +9,20 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
 // Keeper of this module maintains collections of registered zones.
 type Keeper struct {
 	cdc       codec.Codec
-	storeKey  sdk.StoreKey
+	storeKey  storetypes.StoreKey
 	callbacks map[string]types.QueryCallbacks
 	IBCKeeper *ibckeeper.Keeper
 }
 
 // NewKeeper returns a new instance of zones Keeper
-func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, ibckeeper *ibckeeper.Keeper) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, ibckeeper *ibckeeper.Keeper) Keeper {
 	return Keeper{
 		cdc:       cdc,
 		storeKey:  storeKey,

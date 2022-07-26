@@ -6,7 +6,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 var (
@@ -39,8 +39,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 func init() {
 	cryptocodec.RegisterCrypto(amino)
 	govtypes.RegisterProposalType(ProposalTypeRegisterZone)
-	govtypes.RegisterProposalTypeCodec(&RegisterZoneProposal{}, "cosmos-sdk/RegisterZoneProposal")
+	govtypes.ModuleCdc.Amino.RegisterConcrete(&RegisterZoneProposal{}, "cosmos-sdk/RegisterZoneProposal", nil)
 
 	govtypes.RegisterProposalType(ProposalTypeUpdateZone)
-	govtypes.RegisterProposalTypeCodec(&UpdateZoneProposal{}, "cosmos-sdk/UpdateZoneProposal")
+	govtypes.ModuleCdc.Amino.RegisterConcrete(&UpdateZoneProposal{}, "cosmos-sdk/UpdateZoneProposal", nil)
 }

@@ -575,7 +575,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 		delegation = types.NewDelegation(delegatorAddress, validatorAddress, amount)
 		da.DelegatedBalance = da.DelegatedBalance.Add(amount)
 	} else {
-		if !delegation.Amount.Equal(amount.Amount.ToDec()) {
+		if !delegation.Amount.Equal(sdk.NewDecFromInt(amount.Amount)) {
 			oldAmount := delegation.Amount
 			if !absolute {
 				da.DelegatedBalance = da.DelegatedBalance.Add(amount)
@@ -655,7 +655,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	baseDenomAmount := withdrawBalance.Balances.AmountOf(zone.BaseDenom)
 	// calculate fee (fee = amount * rate)
 
-	baseDenomFee := baseDenomAmount.ToDec().
+	baseDenomFee := sdk.NewDecFromInt(baseDenomAmount).
 		Mul(k.GetCommissionRate(ctx)).
 		TruncateInt()
 
@@ -668,7 +668,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	rewards = rewards.SubAmount(dust)
 
 	// multiDenomFee is the balance of withdrawal account minus the redelegated rewards.
-	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards})
+	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards}...)
 
 	channelReq := channeltypes.QueryConnectionChannelsRequest{Connection: zone.ConnectionId}
 	localChannelResp, err := k.IBCKeeper.ChannelKeeper.ConnectionChannels(sdk.WrapSDKContext(ctx), &channelReq)
@@ -711,11 +711,11 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 }
 
 func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone, epochRewards sdk.Coin) {
-	ratio := zone.GetDelegatedAmount().Add(epochRewards).Amount.ToDec().Quo(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec())
+	ratio := sdk.NewDecFromInt(zone.GetDelegatedAmount().Add(epochRewards).Amount).Quo(sdk.NewDecFromInt(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount))
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec(), "lv", zone.GetDelegatedAmount().Add(epochRewards).Amount.ToDec())
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", sdk.NewDecFromInt(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount), "lv", sdk.NewDecFromInt(zone.GetDelegatedAmount().Add(epochRewards).Amount))
 
 	zone.LastRedemptionRate = zone.RedemptionRate
 	zone.RedemptionRate = ratio
@@ -728,7 +728,7 @@ func (k *Keeper) prepareRewardsDistributionMsgs(ctx sdk.Context, zone types.Regi
 	var msgs []sdk.Msg
 
 	dust := rewards.Amount
-	portion := rewards.Amount.ToDec().Quo(sdk.NewDec(int64(len(zone.DelegationAddresses)))).TruncateInt()
+	portion := sdk.NewDecFromInt(rewards.Amount).Quo(sdk.NewDec(int64(len(zone.DelegationAddresses)))).TruncateInt()
 	for _, da := range zone.GetDelegationAccounts() {
 		msgs = append(
 			msgs,

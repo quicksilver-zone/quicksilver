@@ -90,7 +90,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		rate = zone.RedemptionRate
 	}
 
-	native_tokens := inCoin.Amount.ToDec().Mul(rate).TruncateInt()
+	native_tokens := sdk.NewDecFromInt(inCoin.Amount).Mul(rate).TruncateInt()
 
 	outTokens := sdk.NewCoin(zone.BaseDenom, native_tokens)
 
