@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -142,7 +143,13 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		}
 	}
 
-	for delegator, _ := range msgs {
+	delegators := make([]string, 0, len(msgs))
+	for delegator := range msgs {
+		delegators = append(delegators, delegator)
+	}
+	sort.Strings(delegators)
+
+	for _, delegator := range delegators {
 		icaAccount, err := zone.GetDelegationAccountByAddress(delegator)
 		if err != nil {
 			panic(err) // panic here because something is terribly wrong if we cann't find the delegation bucket here!!!
