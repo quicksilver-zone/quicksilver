@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"fmt"
+	"sort"
 )
 
 var (
@@ -27,8 +28,14 @@ func (e Errors) Error() string {
 func (e Errors) details(d int) string {
 	str := "{"
 	d++
-	for k, v := range e.Errors {
-		str += indent(k, v, d)
+
+	keys := make([]string, 0, len(e.Errors))
+	for k := range e.Errors {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		str += indent(key, e.Errors[key], d)
 	}
 	d--
 	str += fmt.Sprintf("\n%v}", indentString("  ", d))

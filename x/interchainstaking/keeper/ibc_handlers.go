@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	//lint:ignore SA1019 ignore this!
@@ -544,7 +545,14 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 		}
 	}
 
-	for _, existingDelegation := range delMap {
+	sortedLeftAddrs := make([]string, 0, len(delMap))
+	for valAddr := range delMap {
+		sortedLeftAddrs = append(sortedLeftAddrs, valAddr)
+	}
+	sort.Strings(sortedLeftAddrs)
+
+	for _, existingValAddr := range sortedLeftAddrs {
+		existingDelegation := delMap[existingValAddr]
 		_, valAddr, _ := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
 		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
