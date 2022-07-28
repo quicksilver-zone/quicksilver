@@ -1,0 +1,14 @@
+FROM golang:1.18-alpine3.15 AS builder
+RUN apk add --no-cache make git gcc musl-dev openssl-dev linux-headers 
+
+RUN git clone https://github.com/ingenuity-build/relayer --branch master /src/app
+WORKDIR /src/app/
+
+RUN go mod download
+RUN make build
+
+# Add to a distroless container
+FROM alpine:3.15
+COPY --from=builder /src/app/build/rly /usr/local/bin/rly
+RUN adduser -S -h /rly -D rly -u 1000
+USER rly

@@ -179,17 +179,17 @@ func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZon
 
 	} else {
 
-		if !val.CommissionRate.Equal(validator.GetCommission()) {
+		if validator.GetCommission().IsNil() || !val.CommissionRate.Equal(validator.GetCommission()) {
 			val.CommissionRate = validator.GetCommission()
 			k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
 		}
 
-		if !val.VotingPower.Equal(validator.Tokens) {
+		if validator.Tokens.IsNil() || !val.VotingPower.Equal(validator.Tokens) {
 			val.VotingPower = validator.Tokens
 			k.Logger(ctx).Info("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens)
 		}
 
-		if !val.DelegatorShares.Equal(validator.DelegatorShares) {
+		if validator.DelegatorShares.IsNil() || !val.DelegatorShares.Equal(validator.DelegatorShares) {
 			val.DelegatorShares = validator.DelegatorShares
 			k.Logger(ctx).Info("Validator delegator shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.DelegatorShares, "newShares", validator.DelegatorShares)
 		}

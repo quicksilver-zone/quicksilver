@@ -3,30 +3,23 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	tx "github.com/cosmos/cosmos-sdk/types/tx"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	tmtypes "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	abcitypes "github.com/tendermint/tendermint/abci/types"
 )
 
 func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.RegisteredZone) {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
 	hash := txr.TxHash
-	memo := txn.GetBody().Memo
-
-	_, found := k.GetReceipt(ctx, GetReceiptKey(zone, hash))
-	if found {
-		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", hash)
-		return
-	}
+	memo := txn.Body.Memo
 
 	senderAddress := "unset"
 	coins := sdk.Coins{}
@@ -99,7 +92,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 	k.SetReceipt(ctx, *receipt)
 }
 
-func attributesToMap(attrs []tmtypes.EventAttribute) map[string]string {
+func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
 	out := make(map[string]string)
 	for _, attr := range attrs {
 		out[string(attr.Key)] = string(attr.Value)
