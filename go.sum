@@ -626,8 +626,8 @@ github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANyt
 github.com/influxdata/influxdb v1.2.3-0.20180221223340-01288bdb0883/go.mod h1:qZna6X/4elxqT3yI9iZYdZrWWdeFOOprn86kgg4+IzY=
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
-github.com/ingenuity-build/cosmos-sdk v0.45.4-ls h1:0Jzed1lRU0708bErI9zyQK1Hl7XoBxBjgyTkQ59nJM0=
-github.com/ingenuity-build/cosmos-sdk v0.45.4-ls/go.mod h1:PBz2dPjo7DG4o9qdQoIQDnziZn05MrIvc0+y4Ovo4tU=
+github.com/ingenuity-build/cosmos-sdk v0.45.6-ls.1 h1:ahVB631J6TNo+Nmd6fy6amNSfeXuQUgOmcRMIM9IXbE=
+github.com/ingenuity-build/cosmos-sdk v0.45.6-ls.1/go.mod h1:bPeeVMEtVvH3y3xAGHVbK+/CZlpaazzh77hG8ZrcJpI=
 github.com/iris-contrib/blackfriday v2.0.0+incompatible/go.mod h1:UzZ2bDEoaSGPbkg6SAB4att1aAwTmVIx/5gCVqeyUdI=
 github.com/iris-contrib/go.uuid v2.0.0+incompatible/go.mod h1:iz2lgM/1UnEf1kP0L/+fafWORmlnuysV2EMP8MW+qe0=
 github.com/iris-contrib/i18n v0.0.0-20171121225848-987a633949d0/go.mod h1:pMCz62A0xJL6I+umB2YTlFRwWXaDFA0jy+5HzGiJjqI=

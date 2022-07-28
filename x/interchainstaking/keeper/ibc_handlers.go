@@ -63,14 +63,8 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		src := msgs[msgIndex]
 		switch msgData.MsgType {
 		case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
-			response := distrtypes.MsgWithdrawDelegatorRewardResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgWithdrawDelegatorReward response", "error", err)
-				return err
-			}
-			k.Logger(ctx).Info("Rewards withdrawn", "response", response)
-			if err := k.HandleWithdrawRewards(ctx, src, response.Amount); err != nil {
+			k.Logger(ctx).Info("Rewards withdrawn")
+			if err := k.HandleWithdrawRewards(ctx, src); err != nil {
 				return err
 			}
 			continue
@@ -598,7 +592,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 	return nil
 }
 
-func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg, amount sdk.Coins) error {
+func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	withdrawalMsg, ok := msg.(*distrtypes.MsgWithdrawDelegatorReward)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgWithdrawDelegatorReward")

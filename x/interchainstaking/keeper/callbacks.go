@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,6 +56,7 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("delegation", Callback(DelegationCallback)).
 		AddCallback("distributerewards", Callback(DistributeRewardsFromWithdrawAccount)).
 		AddCallback("depositinterval", Callback(DepositIntervalCallback)).
+		AddCallback("deposittx", Callback(DepositTx)).
 		AddCallback("perfbalance", Callback(PerfBalanceCallback)).
 		AddCallback("accountbalance", Callback(AccountBalanceCallback)).
 		AddCallback("allbalances", Callback(AllBalancesCallback))
@@ -208,9 +210,33 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
 	}
 
-	for i, tx := range txs.TxResponses {
-		k.HandleReceiptTransaction(ctx, tx, txs.Txs[i], zone)
+	for _, tx := range txs.TxResponses {
+
+		hashBytes, err := hex.DecodeString(tx.TxHash)
+		if err != nil {
+			return err
+		}
+		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
+
 	}
+	return nil
+}
+
+func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+
+	res := sdk.TxResponse{}
+	err := k.cdc.Unmarshal(args, &res)
+	if err != nil {
+		return err
+	}
+
+	txn := res.GetTx()
+
+	k.HandleReceiptTransaction(ctx, &res, &txn, zone)
 	return nil
 }
 
