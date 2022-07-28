@@ -8,6 +8,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";
 import "tendermint/types/types.proto";
+import "ibc/lightclients/tendermint/v1/tendermint.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainquery/types";
 
@@ -54,4 +55,6 @@ message GetTxWithProofResponse {
   cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
   // proof is the tmproto.TxProof for the queried tx
   tendermint.types.TxProof proof = 3;
+  // ibc-go header to validate txs
+  ibc.lightclients.tendermint.v1.Header header = 4;
 }

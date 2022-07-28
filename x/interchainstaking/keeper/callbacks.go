@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -210,12 +209,10 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
 	}
 
-	for _, tx := range txs.TxResponses {
+	for _, txn := range txs.TxResponses {
 
-		hashBytes, err := hex.DecodeString(tx.TxHash)
-		if err != nil {
-			return err
-		}
+		req := tx.GetTxRequest{Hash: txn.TxHash}
+		hashBytes := k.cdc.MustMarshal(&req)
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 
 	}
@@ -228,15 +225,28 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	res := sdk.TxResponse{}
+	res := icqtypes.GetTxWithProofResponse{}
 	err := k.cdc.Unmarshal(args, &res)
 	if err != nil {
 		return err
 	}
 
-	txn := res.GetTx()
+	// validate proof
+	connection, _ := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
 
-	k.HandleReceiptTransaction(ctx, &res, &txn, zone)
+	height := clienttypes.NewHeight(clienttypes.ParseChainID(zone.ChainId), uint64(txr.Height+1))
+	consensusState, found := k.IBCKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, height)
+
+	if !found {
+		fmt.Errorf("unable to fetch consensus state")
+	}
+
+	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
+	if !found {
+		return fmt.Error("unable to fetch client state")
+	}
+
+	k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone)
 	return nil
 }
 
