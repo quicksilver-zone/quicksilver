@@ -1,8 +1,6 @@
 package keeper
 
-import (
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
-)
+import "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 
 type msgServer struct {
 	Keeper

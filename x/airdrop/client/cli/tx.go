@@ -1,30 +1,26 @@
 package cli
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	// "github.com/cosmos/cosmos-sdk/client/flags"
+
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
-var DefaultRelativePacketTimeoutTimestamp = uint64((time.Duration(10) * time.Minute).Nanoseconds())
+const ()
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns a root CLI command handler for all x/bank transaction commands.
 func GetTxCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      fmt.Sprintf("%s transactions subcommands", types.ModuleName),
+		Short:                      "Interchain staking transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdInitialClaim())
-	// this line is used by starport scaffolding # 1
+	txCmd.AddCommand()
 
-	return cmd
+	return txCmd
 }

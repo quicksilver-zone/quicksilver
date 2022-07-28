@@ -451,15 +451,13 @@ func NewQuicksilver(
 
 	app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler())
 
-	app.AirdropKeeper = *airdropkeeper.NewKeeper(
+	app.AirdropKeeper = airdropkeeper.NewKeeper(
 		appCodec,
 		keys[airdroptypes.StoreKey],
-		nil,
+		app.GetSubspace(airdroptypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
-		app.DistrKeeper,
-		app.GetSubspace(airdroptypes.ModuleName),
 	)
 	airdropModule := airdrop.NewAppModule(appCodec, app.AirdropKeeper)
 
