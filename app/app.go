@@ -443,6 +443,8 @@ func NewQuicksilver(
 
 	// create IBC module from bottom to top of stack
 	var transferStack porttypes.IBCModule
+
+	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferStack = transfer.NewIBCModule(app.TransferKeeper)
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.IBCFeeKeeper)
 
@@ -615,7 +617,7 @@ func NewQuicksilver(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		// ibc modules
 		ibc.NewAppModule(app.IBCKeeper),
-		// transferModule,
+		transferModule,
 		icaModule,
 		// Quicksilver app modules
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
