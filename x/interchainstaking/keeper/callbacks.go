@@ -383,12 +383,12 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 
 	tmproof, err := tmtypes.TxProofFromProto(*res.GetProof())
 	if err != nil {
-		return fmt.Errorf("unable to marshal proof", err)
+		return fmt.Errorf("unable to marshal proof: %s", err)
 	}
 	//k.Logger(ctx).Error("hashes", "proof", tmproof.RootHash, "header", hex.EncodeToString(res.Header.Header.DataHash))
 	err = tmproof.Validate(res.Header.Header.DataHash)
 	if err != nil {
-		return fmt.Errorf("unable to validate proof", err)
+		return fmt.Errorf("unable to validate proof: %s", err)
 	}
 
 	k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone)
