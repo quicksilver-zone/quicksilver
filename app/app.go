@@ -435,7 +435,9 @@ func NewQuicksilver(
 
 	interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
 
-	app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler())
+	if err := app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler()); err != nil {
+		panic(err)
+	}
 
 	app.ParticipationRewardsKeeper = participationrewardskeeper.NewKeeper(
 		appCodec,
@@ -450,7 +452,9 @@ func NewQuicksilver(
 	)
 	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
 
-	app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler())
+	if err := app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler()); err != nil {
+		panic(err)
+	}
 
 	app.AirdropKeeper = airdropkeeper.NewKeeper(
 		appCodec,
