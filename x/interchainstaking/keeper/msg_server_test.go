@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )

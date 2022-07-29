@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	tmtypes "github.com/cosmos/ibc-go/v3/modules/light-clients/07-tendermint/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -32,7 +33,6 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 						zone.IbcNextValidatorsHash = tmConsState.NextValidatorsHash.Bytes()
 						k.SetRegisteredZone(ctx, zone)
 					}
-
 				}
 			}
 		}

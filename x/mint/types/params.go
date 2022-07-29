@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	yaml "gopkg.in/yaml.v2"
+
+	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"

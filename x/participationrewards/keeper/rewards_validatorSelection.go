@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -172,7 +173,7 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Registered
 // performance score for each validator is then simply the percentage of actual
 // rewards compared to the expected rewards (capped at 100%).
 //
-// On completetion a msg is submitted to withdraw the zone performance rewards,
+// On completion a msg is submitted to withdraw the zone performance rewards,
 // resetting zone performance scoring for the next epoch.
 func (k Keeper) calcOverallScores(
 	ctx sdk.Context,

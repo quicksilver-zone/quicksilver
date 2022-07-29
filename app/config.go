@@ -54,7 +54,7 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			MakeEncodingConfig(),
 			simapp.EmptyAppOptions{},
 			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
-			//baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
+			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}
 }

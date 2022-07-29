@@ -64,7 +64,6 @@ func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 // DelegationCandidates
 
 func (bins Allocations) DetermineThreshold() sdk.Int {
-
 	return bins.SortedByAmount()[int(float64(0.33)*float64(len(bins)))].SumAll()
 }
 
@@ -167,7 +166,6 @@ func NewDelegationPlan(delAddr, valAddr string, amount sdk.Coins) DelegationPlan
 }
 
 func DelegationPlanFromUserIntent(zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) Allocations {
-
 	out := Allocations{}
 
 	for _, val := range intent.Keys() {
@@ -225,7 +223,7 @@ func (a Allocations) Sum() sdk.Coins {
 	return out
 }
 
-// remove amount from address. Return the amount that could not be substracted.
+// remove amount from address. Return the amount that could not be subtracted.
 func (a Allocations) Sub(amount sdk.Coins, address string) (Allocations, sdk.Coins) {
 	if allocation := a.Get(address); allocation != nil {
 		subAmount := allocation.Amount
@@ -272,8 +270,10 @@ func (a Allocations) SumAll() sdk.Int {
 	return out
 }
 
-type Allocations []*Allocation
-type Diffs []*Diff
+type (
+	Allocations []*Allocation
+	Diffs       []*Diff
+)
 
 func (a Diffs) Sorted() Diffs {
 	sort.SliceStable(a, func(i, j int) bool {

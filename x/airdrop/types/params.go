@@ -5,8 +5,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var ()
-
 // ParamTable for participationrewards module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
@@ -25,7 +23,7 @@ func DefaultParams() Params {
 // ParamSetPairs implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		//paramtypes.NewParamSetPair(Key, &p.Attribute, validateAttrib),
+		// paramtypes.NewParamSetPair(Key, &p.Attribute, validateAttrib),
 	}
 }
 

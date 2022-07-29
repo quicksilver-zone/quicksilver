@@ -38,7 +38,6 @@ func (k Keeper) Queries(c context.Context, req *types.QueryRequestsRequest) (*ty
 
 		return false, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

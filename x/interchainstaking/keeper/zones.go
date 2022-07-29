@@ -30,7 +30,6 @@ func (k Keeper) GetRegisteredZoneInfo(ctx sdk.Context, chain_id string) (types.R
 
 // SetRegisteredZone set zone info
 func (k Keeper) SetRegisteredZone(ctx sdk.Context, zone types.RegisteredZone) {
-
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := k.cdc.MustMarshal(&zone)
 	store.Set([]byte(zone.ChainId), bz)
@@ -255,7 +254,6 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 			icaAccount.BalanceWaitgroup += 1
 
 		}
-
 	}
 
 	for _, coin := range queryRes.Balances {
@@ -279,8 +277,10 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 	return nil
 }
 
-type RedemptionTarget types.DelegationPlan
-type RedemptionTargets []RedemptionTarget
+type (
+	RedemptionTarget  types.DelegationPlan
+	RedemptionTargets []RedemptionTarget
+)
 
 func (r RedemptionTargets) Sorted() RedemptionTargets {
 	sort.SliceStable(r, func(i, j int) bool {
@@ -309,7 +309,6 @@ func (r RedemptionTargets) Add(delAddr string, valAddr string, amount sdk.Coins)
 }
 
 func ApplyDeltasToIntent(requests types.Allocations, deltas types.Diffs, currentState types.Allocations) types.Allocations {
-
 OUT:
 	for fromIdx := 0; fromIdx < len(deltas) && deltas[fromIdx].Amount.LT(sdk.ZeroInt()); {
 		for idx := len(deltas) - 1; idx > fromIdx; idx-- {

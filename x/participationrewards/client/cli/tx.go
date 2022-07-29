@@ -6,10 +6,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
-
-const ()
 
 // GetTxCmd returns a root CLI command handler for all x/bank transaction commands.
 func GetTxCmd() *cobra.Command {
