@@ -79,8 +79,7 @@ func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	SetValidatorsForZone(k, ctx, zone, args)
-	return nil
+	return SetValidatorsForZone(k, ctx, zone, args)
 }
 
 func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -89,8 +88,7 @@ func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Qu
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	SetValidatorForZone(k, ctx, zone, args)
-	return nil
+	return SetValidatorForZone(k, ctx, zone, args)
 }
 
 func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -156,7 +154,11 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 			return err
 		}
 		if delegation, ok := k.GetDelegation(ctx, &zone, delegatorAddress, validatorAddress); ok {
-			k.RemoveDelegation(ctx, &zone, delegation)
+			err := k.RemoveDelegation(ctx, &zone, delegation)
+			if err != nil {
+				return err
+			}
+
 			ica, err := zone.GetDelegationAccountByAddress(delegatorAddress)
 			if err != nil {
 				return err
