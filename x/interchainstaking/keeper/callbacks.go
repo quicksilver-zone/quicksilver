@@ -355,7 +355,9 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return fmt.Errorf("unable to fetch client state")
 	}
 
-	/** we can call ClientKeeper.CheckHeaderAndUpdateState() here, but this causes state changes inside the IBCKeeper which feels bad.*/
+	/** we can call ClientKeeper.CheckHeaderAndUpdateState() here, but this causes state changes inside the IBCKeeper which feels bad.
+	  so instead we copy the above two functions wholesale from ibc-go (this sucks too, but with predicatable behaviour) and validate
+	  the inbound header manually. */
 	consensusState, found := k.IBCKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, res.Header.TrustedHeight)
 	if !found {
 		return fmt.Errorf("unable to fetch consensus state")
