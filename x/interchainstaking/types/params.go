@@ -161,7 +161,7 @@ func validatePositiveInt(i interface{}) error {
 	}
 
 	if intval <= 0 {
-		return fmt.Errorf("invalid (non-positve) parameter value: %d", intval)
+		return fmt.Errorf("invalid (non-positive) parameter value: %d", intval)
 	}
 	return nil
 }

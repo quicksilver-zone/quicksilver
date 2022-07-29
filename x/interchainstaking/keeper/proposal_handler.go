@@ -5,12 +5,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 // HandleRegisterZoneProposal is a handler for executing a passed community spend proposal
 func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZoneProposal) error {
-
 	// get chain id from connection
 	chainId, err := k.GetChainID(ctx, p.ConnectionId)
 	if err != nil {

@@ -77,7 +77,6 @@ func (k Keeper) AllIntents(ctx sdk.Context, zone types.RegisteredZone, snapshot 
 func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.RegisteredZone, snapshot bool) []types.DelegatorIntent {
 	intents := []types.DelegatorIntent{}
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
-
 		query := bankTypes.QueryBalanceRequest{Address: intent.Delegator, Denom: zone.LocalDenom}
 		balance, err := k.BankKeeper.Balance(sdk.WrapSDKContext(ctx), &query)
 		if err != nil {

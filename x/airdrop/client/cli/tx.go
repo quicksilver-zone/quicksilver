@@ -8,8 +8,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
-const ()
-
 // GetTxCmd returns a root CLI command handler for all module transaction commands.
 func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{

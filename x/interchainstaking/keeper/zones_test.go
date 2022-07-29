@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -88,7 +89,6 @@ func generateIntents() types.ValidatorIntents {
 }
 
 func TestDeltasAndIntents(t *testing.T) {
-
 	requests := types.Allocations{}.Allocate("val4", sdk.Coins{sdk.Coin{Denom: types.GenericToken, Amount: sdk.NewInt(900000)}})
 
 	bins := generateTestBins()
@@ -99,5 +99,4 @@ func TestDeltasAndIntents(t *testing.T) {
 	for _, i := range requests {
 		fmt.Println(i)
 	}
-
 }

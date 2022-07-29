@@ -265,7 +265,6 @@ func (k Keeper) GetChainIdFromContext(ctx sdk.Context) (string, error) {
 }
 
 func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.RegisteredZone) error {
-
 	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: zone.PerformanceAddress.Address}
 	bz, err := k.GetCodec().Marshal(&balanceQuery)
 	if err != nil {

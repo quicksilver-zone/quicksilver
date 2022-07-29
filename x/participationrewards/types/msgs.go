@@ -4,9 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-var (
-	_ sdk.Msg = &MsgSubmitClaim{}
-)
+var _ sdk.Msg = &MsgSubmitClaim{}
 
 // NewMsgSubmitClaim - construct a msg to submit a claim.
 //nolint:interfacer

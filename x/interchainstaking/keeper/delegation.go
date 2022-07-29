@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -157,7 +158,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 		var delPlan types.Allocations
 		var err error
 		if coin.Denom == zone.BaseDenom {
-			var valPlan = make(types.ValidatorIntents)
+			valPlan := make(types.ValidatorIntents)
 			plan, found := k.GetIntent(ctx, zone, delegator, false)
 			if !found || len(plan.Intents) == 0 {
 				valPlan = zone.GetAggregateIntentOrDefault()

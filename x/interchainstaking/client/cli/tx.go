@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -39,7 +40,7 @@ func GetSignalIntentTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "signal-intent [chain_id] [delegation_intent]",
 		Short: `Signal validator delegation intent.`,
-		Long: `signal validator delegation intent by providing a comma seperated string
+		Long: `signal validator delegation intent by providing a comma separated string
 containing a decimal weight and the bech32 validator address,
 e.g. "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzzzzzzzz"`,
 		Example: `signal-intent [chain_id] 0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzzzzzzzz`,
@@ -74,7 +75,6 @@ func GetRequestRedemptionTxCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
-
 			if err != nil {
 				return err
 			}

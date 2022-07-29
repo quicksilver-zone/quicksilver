@@ -61,6 +61,5 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		}
 
 		return false
-
 	})
 }
