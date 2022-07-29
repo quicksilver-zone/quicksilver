@@ -9,7 +9,7 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 
 // GenesisState defines the airdrop module's genesis state.
 message GenesisState {
-    Params params = 1 [ (gogoproto.nullable) = false ];
-    repeated ZoneDrop zone_drops = 2;
-    repeated ClaimRecord claim_records = 3;
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated ZoneDrop zone_drops = 2;
+  repeated ClaimRecord claim_records = 3;
 }
