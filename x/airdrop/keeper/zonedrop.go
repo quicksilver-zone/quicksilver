@@ -105,11 +105,7 @@ func (k Keeper) IsActiveZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	}
 
 	// Zone airdrop has expired
-	if bt.After(zd.StartTime.Add(zd.Duration).Add(zd.Decay)) {
-		return false
-	}
-
-	return true
+	return !bt.After(zd.StartTime.Add(zd.Duration).Add(zd.Decay))
 }
 
 // AllFutureZoneDrops returns all future zone airdrops.
@@ -129,11 +125,7 @@ func (k Keeper) IsFutureZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
 	// Zone airdrop has already started
-	if bt.After(zd.StartTime) {
-		return false
-	}
-
-	return true
+	return !bt.After(zd.StartTime)
 }
 
 // AllExpiredZoneDrops returns all expired zone airdrops.
@@ -153,11 +145,7 @@ func (k Keeper) IsExpiredZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
 	// Zone airdrop has not yet expired
-	if bt.Before(zd.StartTime.Add(zd.Duration).Add(zd.Decay)) {
-		return false
-	}
-
-	return true
+	return !bt.Before(zd.StartTime.Add(zd.Duration).Add(zd.Decay))
 }
 
 // UnconcludedAirdrops returns all expired zone airdrops that have not yet been
