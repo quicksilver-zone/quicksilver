@@ -409,7 +409,9 @@ func (k Keeper) InitPerformanceDelegations(ctx sdk.Context, zone types.Registere
 
 	if resp.Balances.IsZero() {
 		// if zero balance, retrigger the query.
-		k.EmitPerformanceBalanceQuery(ctx, &zone)
+		if err := k.EmitPerformanceBalanceQuery(ctx, &zone); err != nil {
+			return err
+		}
 		k.Logger(ctx).Info("performance account has a zero balance; requerying")
 		return icqtypes.ErrSucceededNoDelete
 	}
