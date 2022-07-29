@@ -242,7 +242,9 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg, memo stri
 		})
 
 		for _, delegationPlan := range toDelete {
-			k.RemoveDelegationPlan(ctx, zone, memo, delegationPlan)
+			if err := k.RemoveDelegationPlan(ctx, zone, memo, delegationPlan); err != nil {
+				return err
+			}
 		}
 
 		da, err := zone.GetDelegationAccountByAddress(out.Address)
@@ -250,8 +252,7 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg, memo stri
 			return err
 		}
 		da.Balance = da.Balance.Add(out.Coins...)
-		err = k.Delegate(ctx, *zone, da, plan)
-		if err != nil {
+		if err = k.Delegate(ctx, *zone, da, plan); err != nil {
 			return err
 		}
 	}
@@ -323,7 +324,9 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.RegisteredZon
 	})
 
 	for _, delegationPlan := range toDelete {
-		k.RemoveDelegationPlan(ctx, zone, memo, delegationPlan)
+		if err := k.RemoveDelegationPlan(ctx, zone, memo, delegationPlan); err != nil {
+			return err
+		}
 	}
 
 	da, err := zone.GetDelegationAccountByAddress(msg.ToAddress)
@@ -346,15 +349,17 @@ func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.RegisteredZo
 					k.Logger(ctx).Info("Found matching withdrawal; withdrawal marked as completed")
 					k.DeleteWithdrawalRecord(ctx, memo, withdrawal.Delegator, withdrawal.Validator, withdrawal.Recipient)
 					if len(k.AllWithdrawalRecordsWithHash(ctx, memo, withdrawal.Delegator)) == 0 {
-						err := k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{withdrawal.BurnAmount})
+						err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{withdrawal.BurnAmount})
 						if err != nil {
-							panic(err)
+							return false
 						}
 						k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawal.BurnAmount)
 					}
 
-					k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
-
+					err = k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+					if err != nil {
+						return false
+					}
 					return true
 				}
 			}
@@ -548,7 +553,9 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 		_, valAddr, _ := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
 		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-		k.RemoveDelegation(ctx, zone, existingDelegation)
+		if err := k.RemoveDelegation(ctx, zone, existingDelegation); err != nil {
+			return err
+		}
 		da.DelegatedBalance = da.DelegatedBalance.Sub(existingDelegation.Amount) // remove old delegation from da.DelegatedBalance
 		// send request to prove delegation no longer exists.
 		k.ICQKeeper.MakeRequest(
@@ -588,11 +595,12 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 				delegation.Amount = amount
 			}
 			k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
-
 		}
 	}
 	k.SetDelegation(ctx, zone, delegation)
-	k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+	if err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId); err != nil {
+		return err
+	}
 	k.SetRegisteredZone(ctx, *zone)
 	return nil
 }
