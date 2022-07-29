@@ -489,24 +489,29 @@ proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 
-TM_URL              = https://raw.githubusercontent.com/tendermint/tendermint/v0.34.19/proto/tendermint
-GOGO_PROTO_URL      = https://raw.githubusercontent.com/regen-network/protobuf/cosmos
-CONFIO_URL          = https://raw.githubusercontent.com/confio/ics23/v0.7.0
-SDK_PROTO_URL 		= https://raw.githubusercontent.com/ingenuity-build/cosmos-sdk/v0.45.4-ls.1/proto/cosmos
+TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.19/proto/tendermint
+GOGO_PROTO_URL      	= https://raw.githubusercontent.com/regen-network/protobuf/cosmos
+CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.7.1
+SDK_PROTO_URL 			= https://raw.githubusercontent.com/ingenuity-build/cosmos-sdk/v0.45.6-ls.1/proto/cosmos
+IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v3.1.0/proto
 
-TM_CRYPTO_TYPES     = third_party/proto/tendermint/crypto
-TM_ABCI_TYPES       = third_party/proto/tendermint/abci
-TM_TYPES            = third_party/proto/tendermint/types
-TM_VERSION          = third_party/proto/tendermint/version
-TM_LIBS             = third_party/proto/tendermint/libs/bits
-TM_P2P              = third_party/proto/tendermint/p2p
+TM_CRYPTO_TYPES     	= third_party/proto/tendermint/crypto
+TM_ABCI_TYPES       	= third_party/proto/tendermint/abci
+TM_TYPES            	= third_party/proto/tendermint/types
+TM_VERSION          	= third_party/proto/tendermint/version
+TM_LIBS             	= third_party/proto/tendermint/libs/bits
+TM_P2P              	= third_party/proto/tendermint/p2p
 
-SDK_QUERY 			= third_party/proto/cosmos/base/query/v1beta1
-SDK_BASE 			= third_party/proto/cosmos/base/v1beta1
-SDK_UPGRADE			= third_party/proto/cosmos/upgrade/v1beta1
+SDK_QUERY 				= third_party/proto/cosmos/base/query/v1beta1
+SDK_BASE 				= third_party/proto/cosmos/base/v1beta1
+SDK_UPGRADE				= third_party/proto/cosmos/upgrade/v1beta1
 
-GOGO_PROTO_TYPES    = third_party/proto/gogoproto
-CONFIO_TYPES        = third_party/proto/confio
+GOGO_PROTO_TYPES    	= third_party/proto/gogoproto
+CONFIO_TYPES        	= third_party/proto
+
+IBC_TM_TYPES 			= third_party/proto/ibc/lightclients/tendermint/v1
+IBC_CLIENT_TYPES 		= third_party/proto/ibc/core/client/v1
+IBC_COMMITMENT_TYPES	= third_party/proto/ibc/core/commitment/v1
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)
@@ -520,6 +525,15 @@ proto-update-deps:
 
 	@mkdir -p $(SDK_UPGRADE)
 	@curl -sSL $(SDK_PROTO_URL)/upgrade/v1beta1/upgrade.proto > $(SDK_UPGRADE)/upgrade.proto
+
+	@mkdir -p $(IBC_TM_TYPES)
+	@curl -sSL $(IBC_PROTO_URL)/ibc/lightclients/tendermint/v1/tendermint.proto > $(IBC_TM_TYPES)/tendermint.proto
+
+	@mkdir -p $(IBC_CLIENT_TYPES)
+	@curl -sSL $(IBC_PROTO_URL)/ibc/core/client/v1/client.proto > $(IBC_CLIENT_TYPES)/client.proto
+
+	@mkdir -p $(IBC_COMMITMENT_TYPES)
+	@curl -sSL $(IBC_PROTO_URL)/ibc/core/commitment/v1/commitment.proto > $(IBC_COMMITMENT_TYPES)/commitment.proto
 
 ## Importing of tendermint protobuf definitions currently requires the
 ## use of `sed` in order to build properly with cosmos-sdk's proto file layout

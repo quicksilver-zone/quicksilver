@@ -167,7 +167,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 				}
 			} else {
 				valPlan = plan.ToValidatorIntents()
-				delPlan = types.DelegationPlanFromUserIntent(zone, coin, valPlan)
+				delPlan = types.DelegationPlanFromUserIntent(zone, coin, valPlan) // TODO: does it make sense to do this? why don't we just use the global intent?
 				if err != nil {
 					return types.Allocations{}, err
 				}
