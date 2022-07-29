@@ -10,14 +10,14 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
-func GenerateQueryHash(connection_id string, chain_id string, query_type string, request []byte, module string) string {
-	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(module+connection_id+chain_id+query_type), request...)))
+func GenerateQueryHash(connectionID string, chainID string, queryType string, request []byte, module string) string {
+	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(module+connectionID+chainID+queryType), request...)))
 }
 
 // ----------------------------------------------------------------
 
-func (k Keeper) NewQuery(ctx sdk.Context, module string, connection_id string, chain_id string, query_type string, request []byte, period sdk.Int, callback_id string, ttl uint64) *types.Query {
-	return &types.Query{Id: GenerateQueryHash(connection_id, chain_id, query_type, request, module), ConnectionId: connection_id, ChainId: chain_id, QueryType: query_type, Request: request, Period: period, LastHeight: sdk.ZeroInt(), CallbackId: callback_id, Ttl: ttl}
+func (k Keeper) NewQuery(ctx sdk.Context, module string, connectionID string, chainID string, queryType string, request []byte, period sdk.Int, callbackID string, ttl uint64) *types.Query {
+	return &types.Query{Id: GenerateQueryHash(connectionID, chainID, queryType, request, module), ConnectionId: connectionID, ChainId: chainID, QueryType: queryType, Request: request, Period: period, LastHeight: sdk.ZeroInt(), CallbackId: callbackID, Ttl: ttl}
 }
 
 // GetQuery returns query

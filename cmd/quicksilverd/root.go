@@ -103,7 +103,7 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	)
 
 	ac := appCreator{
-		encCfg: app.EncodingConfig(app.MakeEncodingConfig()),
+		encCfg: app.MakeEncodingConfig(),
 	}
 	server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.appExport, addModuleInitFlags)
 

@@ -27,9 +27,9 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 				sdk.EventTypeMessage,
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 				sdk.NewAttribute(sdk.AttributeKeyAction, types.AttributeValueQuery),
-				sdk.NewAttribute(types.AttributeKeyQueryId, queryInfo.Id),
-				sdk.NewAttribute(types.AttributeKeyChainId, queryInfo.ChainId),
-				sdk.NewAttribute(types.AttributeKeyConnectionId, queryInfo.ConnectionId),
+				sdk.NewAttribute(types.AttributeKeyQueryID, queryInfo.Id),
+				sdk.NewAttribute(types.AttributeKeyChainID, queryInfo.ChainId),
+				sdk.NewAttribute(types.AttributeKeyConnectionID, queryInfo.ConnectionId),
 				sdk.NewAttribute(types.AttributeKeyType, queryInfo.QueryType),
 				// TODO: add height to request type
 				sdk.NewAttribute(types.AttributeKeyHeight, "0"),
@@ -53,11 +53,9 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		if !found {
 			// query was removed; delete datapoint
 			k.DeleteDatapoint(ctx, dp.Id)
-		} else {
-			if dp.LocalHeight.Int64()+int64(q.Ttl) > ctx.BlockHeader().Height {
-				// gc old data
-				k.DeleteDatapoint(ctx, dp.Id)
-			}
+		} else if dp.LocalHeight.Int64()+int64(q.Ttl) > ctx.BlockHeader().Height {
+			// gc old data
+			k.DeleteDatapoint(ctx, dp.Id)
 		}
 
 		return false

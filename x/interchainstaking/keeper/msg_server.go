@@ -45,12 +45,11 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("recipient address not provided")
 	}
 
-	_, _, err = bech32.DecodeAndConvert(msg.DestinationAddress)
-	if err != nil {
+	if _, _, err = bech32.DecodeAndConvert(msg.DestinationAddress); err != nil {
 		return nil, err
 	}
 
-	var zone *types.RegisteredZone = nil
+	var zone *types.RegisteredZone
 
 	k.IterateRegisteredZones(ctx, func(_ int64, thisZone types.RegisteredZone) bool {
 		if thisZone.LocalDenom == inCoin.GetDenom() {
@@ -92,9 +91,9 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		rate = zone.RedemptionRate
 	}
 
-	native_tokens := inCoin.Amount.ToDec().Mul(rate).TruncateInt()
+	nativeTokens := inCoin.Amount.ToDec().Mul(rate).TruncateInt()
 
-	outTokens := sdk.NewCoin(zone.BaseDenom, native_tokens)
+	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
 
 	heightBytes := make([]byte, 4)
 	binary.PutVarint(heightBytes, ctx.BlockHeight())
@@ -116,7 +115,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		userIntent = types.DelegatorIntent{Delegator: msg.FromAddress, Intents: vi}
 	}
 
-	intentMap := userIntent.ToAllocations(native_tokens)
+	intentMap := userIntent.ToAllocations(nativeTokens)
 
 	targets := k.GetRedemptionTargets(ctx, *zone, intentMap) // map[string][string]sdk.Coin
 
@@ -178,7 +177,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 			sdk.NewAttribute(types.AttributeKeyRedeemAmount, sumAmount.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
 			sdk.NewAttribute(types.AttributeKeyRecipientChain, zone.ChainId),
-			sdk.NewAttribute(types.AttributeKeyConnectionId, zone.ConnectionId),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, zone.ConnectionId),
 		),
 	})
 
@@ -238,7 +237,7 @@ func (k msgServer) validateIntents(zone types.RegisteredZone, intents []*types.V
 	return nil
 }
 
-func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId string) error {
+func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionID string, chainID string) error {
 	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
 	bz1, err := k.cdc.Marshal(&bondedQuery)
 	if err != nil {
@@ -259,8 +258,8 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 
 	k.ICQKeeper.MakeRequest(
 		ctx,
-		connectionId,
-		chainId,
+		connectionID,
+		chainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz1,
 		sdk.NewInt(period),
@@ -270,8 +269,8 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 	)
 	k.ICQKeeper.MakeRequest(
 		ctx,
-		connectionId,
-		chainId,
+		connectionID,
+		chainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz2,
 		sdk.NewInt(period),
@@ -281,8 +280,8 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 	)
 	k.ICQKeeper.MakeRequest(
 		ctx,
-		connectionId,
-		chainId,
+		connectionID,
+		chainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz3,
 		sdk.NewInt(period),

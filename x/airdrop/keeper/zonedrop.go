@@ -8,29 +8,29 @@ import (
 )
 
 // CreateZoneDropAccount creates a zone specific module account.
-func (k Keeper) CreateZoneDropAccount(ctx sdk.Context, chainId string) {
-	name := types.ModuleName + "." + chainId
+func (k Keeper) CreateZoneDropAccount(ctx sdk.Context, chainID string) {
+	name := types.ModuleName + "." + chainID
 	moduleAcc := authtypes.NewEmptyModuleAccount(name, "")
 	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
 }
 
 // GetZoneDropAccountAddress returns the zone airdrop account address.
-func (k Keeper) GetZoneDropAccountAddress(ctx sdk.Context, chainId string) sdk.AccAddress {
-	name := types.ModuleName + "." + chainId
+func (k Keeper) GetZoneDropAccountAddress(ctx sdk.Context, chainID string) sdk.AccAddress {
+	name := types.ModuleName + "." + chainID
 	return k.accountKeeper.GetModuleAddress(name)
 }
 
 // GetZoneDropAccountBalance gets the zone airdrop account coin balance.
-func (k Keeper) GetZoneDropAccountBalance(ctx sdk.Context, chainId string) sdk.Coin {
-	zonedropAccAddr := k.GetZoneDropAccountAddress(ctx, chainId)
+func (k Keeper) GetZoneDropAccountBalance(ctx sdk.Context, chainID string) sdk.Coin {
+	zonedropAccAddr := k.GetZoneDropAccountAddress(ctx, chainID)
 	return k.bankKeeper.GetBalance(ctx, zonedropAccAddr, k.stakingKeeper.BondDenom(ctx))
 }
 
-// GetZoneDrop returns airdrop details for the zone identified by chainId.
-func (k Keeper) GetZoneDrop(ctx sdk.Context, chainId string) (types.ZoneDrop, bool) {
+// GetZoneDrop returns airdrop details for the zone identified by chainID.
+func (k Keeper) GetZoneDrop(ctx sdk.Context, chainID string) (types.ZoneDrop, bool) {
 	zd := types.ZoneDrop{}
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(types.GetKeyZoneDrop(chainId))
+	b := store.Get(types.GetKeyZoneDrop(chainID))
 	if len(b) == 0 {
 		return zd, false
 	}
@@ -46,10 +46,10 @@ func (k Keeper) SetZoneDrop(ctx sdk.Context, zd types.ZoneDrop) {
 	store.Set(types.GetKeyZoneDrop(zd.ChainId), b)
 }
 
-// DeleteZoneDrop deletes the airdrop of the zone identified by chainId.
-func (k Keeper) DeleteZoneDrop(ctx sdk.Context, chainId string) {
+// DeleteZoneDrop deletes the airdrop of the zone identified by chainID.
+func (k Keeper) DeleteZoneDrop(ctx sdk.Context, chainID string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetKeyZoneDrop(chainId))
+	store.Delete(types.GetKeyZoneDrop(chainID))
 }
 
 // IterateZoneDrops iterate through zone airdrops.
@@ -165,13 +165,13 @@ func (k Keeper) UnconcludedAirdrops(ctx sdk.Context) []types.ZoneDrop {
 
 // EndZoneDrop concludes a zone airdrop. It deletes all ClaimRecords for the
 // given zone.
-func (k Keeper) EndZoneDrop(ctx sdk.Context, chainId string) error {
-	if err := k.returnUnclaimedZoneDropTokens(ctx, chainId); err != nil {
+func (k Keeper) EndZoneDrop(ctx sdk.Context, chainID string) error {
+	if err := k.returnUnclaimedZoneDropTokens(ctx, chainID); err != nil {
 		return err
 	}
-	k.ClearClaimRecords(ctx, chainId)
+	k.ClearClaimRecords(ctx, chainID)
 
-	zd, ok := k.GetZoneDrop(ctx, chainId)
+	zd, ok := k.GetZoneDrop(ctx, chainID)
 	if !ok {
 		return types.ErrZoneDropNotFound
 	}
@@ -184,9 +184,9 @@ func (k Keeper) EndZoneDrop(ctx sdk.Context, chainId string) error {
 
 // returnUnclaimedZoneDropTokens returns all unclaimed zone airdrop tokens to
 // the airdrop module account.
-func (k Keeper) returnUnclaimedZoneDropTokens(ctx sdk.Context, chainId string) error {
-	zonedropAccountAddress := k.GetZoneDropAccountAddress(ctx, chainId)
-	zonedropAccountBalance := k.GetZoneDropAccountBalance(ctx, chainId)
+func (k Keeper) returnUnclaimedZoneDropTokens(ctx sdk.Context, chainID string) error {
+	zonedropAccountAddress := k.GetZoneDropAccountAddress(ctx, chainID)
+	zonedropAccountBalance := k.GetZoneDropAccountBalance(ctx, chainID)
 	airdropAccountAddress := k.GetModuleAccountAddress(ctx)
 	return k.bankKeeper.SendCoinsFromModuleToModule(
 		ctx,

@@ -6,26 +6,25 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
 // Callbacks wrapper struct for interchainstaking keeper
-type Callback func(Keeper, sdk.Context, []byte, types.Query) error
+type Callback func(Keeper, sdk.Context, []byte, icqtypes.Query) error
 
 type Callbacks struct {
 	k         Keeper
 	callbacks map[string]Callback
 }
 
-var _ types.QueryCallbacks = Callbacks{}
+var _ icqtypes.QueryCallbacks = Callbacks{}
 
 func (k Keeper) CallbackHandler() Callbacks {
 	return Callbacks{k, make(map[string]Callback)}
 }
 
 // callback handler
-func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query types.Query) error {
+func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query icqtypes.Query) error {
 	return c.callbacks[id](c.k, ctx, args, query)
 }
 
@@ -34,12 +33,12 @@ func (c Callbacks) Has(id string) bool {
 	return found
 }
 
-func (c Callbacks) AddCallback(id string, fn interface{}) types.QueryCallbacks {
+func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallbacks {
 	c.callbacks[id] = fn.(Callback)
 	return c
 }
 
-func (c Callbacks) RegisterCallbacks() types.QueryCallbacks {
+func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 	a := c.
 		AddCallback("validatorselectionrewards", Callback(ValidatorSelectionRewardsCallback))
 
@@ -67,7 +66,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 
 	k.Logger(ctx).Info(
 		"callback zone score",
-		"zone", zs.ZoneId,
+		"zone", zs.ZoneID,
 		"total voting power", zs.TotalVotingPower,
 		"validator scores", zs.ValidatorScores,
 	)

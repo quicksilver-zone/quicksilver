@@ -15,11 +15,11 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// GetRegisteredZoneInfo returns zone info by chain_id
-func (k Keeper) GetRegisteredZoneInfo(ctx sdk.Context, chain_id string) (types.RegisteredZone, bool) {
+// GetRegisteredZoneInfo returns zone info by chainID
+func (k Keeper) GetRegisteredZoneInfo(ctx sdk.Context, chainID string) (types.RegisteredZone, bool) {
 	zone := types.RegisteredZone{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-	bz := store.Get([]byte(chain_id))
+	bz := store.Get([]byte(chainID))
 	if len(bz) == 0 {
 		return zone, false
 	}
@@ -36,9 +36,9 @@ func (k Keeper) SetRegisteredZone(ctx sdk.Context, zone types.RegisteredZone) {
 }
 
 // DeleteRegisteredZone delete zone info
-func (k Keeper) DeleteRegisteredZone(ctx sdk.Context, chain_id string) {
+func (k Keeper) DeleteRegisteredZone(ctx sdk.Context, chainID string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-	store.Delete([]byte(chain_id))
+	store.Delete([]byte(chainID))
 }
 
 // IterateRegisteredZones iterate through zones
@@ -75,13 +75,13 @@ func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
 
 // GetZoneFromContext determines the zone from the current context
 func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.RegisteredZone, error) {
-	chainId, err := k.GetChainIdFromContext(ctx)
+	chainID, err := k.GetChainIDFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch zone from context: %w", err)
 	}
-	zone, found := k.GetRegisteredZoneInfo(ctx, chainId)
+	zone, found := k.GetRegisteredZoneInfo(ctx, chainID)
 	if !found {
-		err := fmt.Errorf("unable to fetch zone from context: not found for chainId %s", chainId)
+		err := fmt.Errorf("unable to fetch zone from context: not found for chainID %s", chainID)
 		k.Logger(ctx).Error(err.Error())
 		return nil, err
 	}
@@ -137,11 +137,11 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZ
 	// ? is this switch statement still required ?
 	// prior to callback we had no way to distinguish the originator
 	// with the query type in setAccountCb this is probably superfluous...
-	switch true {
+	switch {
 	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
 		existing := zone.DepositAddress.Balance.AmountOf(coin.Denom)
 		zone.DepositAddress.Balance = zone.DepositAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
-		zone.DepositAddress.BalanceWaitgroup = zone.DepositAddress.BalanceWaitgroup - 1
+		zone.DepositAddress.BalanceWaitgroup--
 		k.Logger(ctx).Info("Matched deposit address", "address", address, "wg", zone.DepositAddress.BalanceWaitgroup, "balance", zone.DepositAddress.Balance)
 		if zone.DepositAddress.BalanceWaitgroup == 0 {
 			k.depositInterval(ctx)(0, zone)
@@ -149,7 +149,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZ
 	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
 		existing := zone.WithdrawalAddress.Balance.AmountOf(coin.Denom)
 		zone.WithdrawalAddress.Balance = zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
-		zone.WithdrawalAddress.BalanceWaitgroup = zone.WithdrawalAddress.BalanceWaitgroup - 1
+		zone.WithdrawalAddress.BalanceWaitgroup--
 		k.Logger(ctx).Info("Matched withdrawal address", "address", address, "wg", zone.WithdrawalAddress.BalanceWaitgroup, "balance", zone.WithdrawalAddress.Balance)
 	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
 		k.Logger(ctx).Info("Matched performance address")
@@ -170,7 +170,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZ
 				// should we reconcile here?
 				k.Logger(ctx).Info("Outstanding Withdrawal Claims", "count", len(claims))
 				for _, claim := range claims {
-					if claim.Status == WITHDRAW_STATUS_TOKENIZE {
+					if claim.Status == WithdrawStatusTokenize {
 						// if the claim has tokenize status AND then remove any coins in the balance that match that validator.
 						// so we don't try to re-delegate any recently redeemed tokens that haven't been sent yet.
 						if strings.HasPrefix(coin.Denom, claim.Validator) {
@@ -199,7 +199,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZ
 			}
 		}
 
-		icaAccount.BalanceWaitgroup = icaAccount.BalanceWaitgroup - 1
+		icaAccount.BalanceWaitgroup--
 
 	}
 	k.SetRegisteredZone(ctx, zone)
@@ -219,7 +219,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 
 	var icaAccount *types.ICAAccount
 
-	switch true {
+	switch {
 	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
 		icaAccount = zone.DepositAddress
 	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
@@ -251,7 +251,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 				"accountbalance",
 				0,
 			)
-			icaAccount.BalanceWaitgroup += 1
+			icaAccount.BalanceWaitgroup++
 
 		}
 	}
@@ -270,7 +270,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 			"accountbalance",
 			0,
 		)
-		icaAccount.BalanceWaitgroup += 1
+		icaAccount.BalanceWaitgroup++
 	}
 
 	k.SetRegisteredZone(ctx, zone)

@@ -14,7 +14,7 @@ import (
 // of zone scores. It specifically tallies the total zone voting power used in
 // calculations to determine validator voting power percentages;
 type zoneScore struct {
-	ZoneId           string // chainId
+	ZoneID           string // chainID
 	TotalVotingPower sdk.Int
 	ValidatorScores  map[string]*validator
 }
@@ -82,7 +82,7 @@ func (k Keeper) getZoneScores(
 	)
 
 	zs := zoneScore{
-		ZoneId:           zone.ChainId,
+		ZoneID:           zone.ChainId,
 		TotalVotingPower: sdk.NewInt(0),
 		ValidatorScores:  make(map[string]*validator),
 	}
@@ -282,7 +282,7 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 			address: di.GetDelegator(),
 			score:   uSum,
 		}
-		k.Logger(ctx).Info("user score for zone", "user", di.GetDelegator(), "zone", zs.ZoneId, "score", uSum)
+		k.Logger(ctx).Info("user score for zone", "user", di.GetDelegator(), "zone", zs.ZoneID, "score", uSum)
 		userScores = append(userScores, u)
 		// calc overall zone score
 		sum = sum.Add(uSum)
@@ -294,7 +294,7 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 	}
 
 	tokensPerPoint := zone.ValidatorSelectionAllocation.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx)).ToDec().Quo(sum)
-	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneId, "zone score", sum, "tpp", tokensPerPoint)
+	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
 		ua := userAllocation{
 			Address: us.address,

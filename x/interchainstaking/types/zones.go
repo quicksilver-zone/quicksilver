@@ -161,9 +161,8 @@ func (z *RegisteredZone) GetDelegationAccounts() []*ICAAccount {
 func (z *RegisteredZone) GetAggregateIntentOrDefault() ValidatorIntents {
 	if len(z.AggregateIntent) == 0 {
 		return z.DefaultAggregateIntents()
-	} else {
-		return z.AggregateIntent
 	}
+	return z.AggregateIntent
 }
 
 // defaultAggregateIntents determines the default aggregate intent (for epoch 0)

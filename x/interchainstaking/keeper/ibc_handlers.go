@@ -338,14 +338,14 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.RegisteredZon
 }
 
 func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.RegisteredZone, msg *banktypes.MsgSend, memo string) error {
-	var err error = nil
+	var err error
 	// first check for withdrawals (if FromAddress is a DelegateAccount)
 	k.IterateWithdrawalRecordsWithTxhash(ctx, memo, msg.FromAddress, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		if withdrawal.Recipient == msg.ToAddress {
 			k.Logger(ctx).Info("matched the recipient", "val", withdrawal.Delegator, "recipient", withdrawal.Recipient)
 			if msg.Amount[0].Amount.Equal(withdrawal.Amount.Amount) {
 				k.Logger(ctx).Info("matched the amount", "amount", msg.Amount, "record.amount", withdrawal.Amount.Amount)
-				if withdrawal.Status == WITHDRAW_STATUS_SEND {
+				if withdrawal.Status == WithdrawStatusSend {
 					k.Logger(ctx).Info("Found matching withdrawal; withdrawal marked as completed")
 					k.DeleteWithdrawalRecord(ctx, memo, withdrawal.Delegator, withdrawal.Validator, withdrawal.Recipient)
 					if len(k.AllWithdrawalRecordsWithHash(ctx, memo, withdrawal.Delegator)) == 0 {
@@ -369,7 +369,7 @@ func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.RegisteredZo
 func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin, memo string) error {
 	k.Logger(ctx).Info("Received MsgTokenizeShares acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgTokenizeShares
-	var err error = nil
+	var err error
 	tsMsg, ok := msg.(*stakingtypes.MsgTokenizeShares)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgTokenizeShares")
@@ -382,7 +382,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.
 			k.Logger(ctx).Debug("matched the prefix", "token", amount.Denom, "denom", "val", withdrawal.Validator)
 			if amount.Amount.Equal(withdrawal.Amount.Amount) {
 				k.Logger(ctx).Debug("matched the amount", "amount", amount.Amount, "record.amount", withdrawal.Amount.Amount)
-				if withdrawal.Status == WITHDRAW_STATUS_TOKENIZE {
+				if withdrawal.Status == WithdrawStatusTokenize {
 					k.Logger(ctx).Info("Found matching withdrawal", "request_amount", withdrawal.Amount, "actual_amount", amount)
 					// bingo!
 					_, delegatorIca := k.GetICAForDelegateAccount(ctx, withdrawal.Delegator)
@@ -398,7 +398,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.
 						return true
 					}
 					k.Logger(ctx).Info("sending funds", "from", withdrawal.Delegator, "to", withdrawal.Recipient, "amount", amount)
-					withdrawal.Status = WITHDRAW_STATUS_SEND
+					withdrawal.Status = WithdrawStatusSend
 					k.SetWithdrawalRecord(ctx, &withdrawal)
 					return true
 				}
@@ -444,9 +444,9 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
 		// most likely a performance account...
 		if zone := k.GetZoneForPerformanceAccount(ctx, delegateMsg.DelegatorAddress); zone != nil {
 			return nil
-		} else {
-			return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
 		}
+		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
+
 	}
 
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
@@ -581,18 +581,16 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 		k.Logger(ctx).Info("Adding delegation tuple", "delegator", delegatorAddress, "validator", validatorAddress, "amount", amount.Amount)
 		delegation = types.NewDelegation(delegatorAddress, validatorAddress, amount)
 		da.DelegatedBalance = da.DelegatedBalance.Add(amount)
-	} else {
-		if !delegation.Amount.Equal(amount.Amount.ToDec()) {
-			oldAmount := delegation.Amount
-			if !absolute {
-				da.DelegatedBalance = da.DelegatedBalance.Add(amount)
-				delegation.Amount = delegation.Amount.Add(amount)
-			} else {
-				da.DelegatedBalance = da.DelegatedBalance.Sub(delegation.Amount).Add(amount)
-				delegation.Amount = amount
-			}
-			k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
+	} else if !delegation.Amount.Equal(amount.Amount.ToDec()) {
+		oldAmount := delegation.Amount
+		if !absolute {
+			da.DelegatedBalance = da.DelegatedBalance.Add(amount)
+			delegation.Amount = delegation.Amount.Add(amount)
+		} else {
+			da.DelegatedBalance = da.DelegatedBalance.Sub(delegation.Amount).Add(amount)
+			delegation.Amount = amount
 		}
+		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
 	}
 	k.SetDelegation(ctx, zone, delegation)
 	if err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId); err != nil {

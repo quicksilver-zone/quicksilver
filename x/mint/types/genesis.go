@@ -1,11 +1,11 @@
 package types
 
 // NewGenesisState creates a new GenesisState object.
-func NewGenesisState(minter Minter, params Params, ReductionStartedEpoch int64) *GenesisState {
+func NewGenesisState(minter Minter, params Params, reductionStartedEpoch int64) *GenesisState {
 	return &GenesisState{
 		Minter:                minter,
 		Params:                params,
-		ReductionStartedEpoch: ReductionStartedEpoch,
+		ReductionStartedEpoch: reductionStartedEpoch,
 	}
 }
 

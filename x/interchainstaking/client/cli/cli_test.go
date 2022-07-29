@@ -114,7 +114,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			&types.QueryDelegatorIntentResponse{},
 		},
 		{
-			"invalid chainid",
+			"invalid chainID",
 			[]string{"boguschainid", ""},
 			true,
 			&types.QueryDelegatorIntentResponse{},
@@ -178,7 +178,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			&types.QueryDepositAccountForChainResponse{},
 		},
 		{
-			"invalid chainid",
+			"invalid chainID",
 			[]string{"boguschainid"},
 			true,
 			&types.QueryDepositAccountForChainResponse{},
@@ -291,7 +291,7 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 			&sdk.TxResponse{},
 		},
 		{
-			"invalid chain_id",
+			"invalid chainID",
 			[]string{
 				"boguschainid",
 				"0.3A12UEL5L,0.3a12uel5l,0.4abcdef1qpzry9x8gf2tvdw0s3jn54khce6mua7lmqqqxw",
