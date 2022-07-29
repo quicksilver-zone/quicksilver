@@ -19,8 +19,8 @@ type Keeper struct {
 	storeKey         sdk.StoreKey
 	paramSpace       paramtypes.Subspace
 	accountKeeper    authkeeper.AccountKeeper
-	BankKeeper       bankkeeper.Keeper
-	StakingKeeper    stakingkeeper.Keeper
+	bankKeeper       bankkeeper.Keeper
+	stakingKeeper    stakingkeeper.Keeper
 	feeCollectorName string
 }
 
@@ -47,8 +47,8 @@ func NewKeeper(
 		storeKey:      key,
 		paramSpace:    ps,
 		accountKeeper: ak,
-		BankKeeper:    bk,
-		StakingKeeper: sk,
+		bankKeeper:    bk,
+		stakingKeeper: sk,
 	}
 }
 
@@ -76,5 +76,13 @@ func (k Keeper) GetModuleAccountAddress(ctx sdk.Context) sdk.AccAddress {
 // GetModuleAccountBalance gets the airdrop module account coin balance.
 func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
 	moduleAccAddr := k.GetModuleAccountAddress(ctx)
-	return k.BankKeeper.GetBalance(ctx, moduleAccAddr, k.StakingKeeper.BondDenom(ctx))
+	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, k.stakingKeeper.BondDenom(ctx))
+}
+
+func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amount sdk.Coins) error {
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amount)
+}
+
+func (k Keeper) BondDenom(ctx sdk.Context) string {
+	return k.stakingKeeper.BondDenom(ctx)
 }

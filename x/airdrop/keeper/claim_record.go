@@ -223,10 +223,10 @@ func (k Keeper) Claim(ctx sdk.Context, chainId string, address string, action ty
 	}
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin(k.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(claimAmount)),
+		sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(claimAmount)),
 	)
 
-	if err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, zoneDropAccount, addr, coins); err != nil {
+	if err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, zoneDropAccount, addr, coins); err != nil {
 		return 0, err
 	}
 

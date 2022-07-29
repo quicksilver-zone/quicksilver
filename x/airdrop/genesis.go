@@ -44,13 +44,13 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 
 		zonedropAddress := k.GetZoneDropAccountAddress(ctx, zd.ChainId)
-		err := k.BankKeeper.SendCoinsFromModuleToModule(
+		err := k.SendCoinsFromModuleToModule(
 			ctx,
 			moduleAddress.String(),
 			zonedropAddress.String(),
 			sdk.NewCoins(
 				sdk.NewCoin(
-					k.StakingKeeper.BondDenom(ctx),
+					k.BondDenom(ctx),
 					sdk.NewIntFromUint64(zd.Allocation),
 				),
 			),
