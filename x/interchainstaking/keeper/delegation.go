@@ -211,7 +211,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 
 	// send withdrawal msg for each delegation (delegator:validator pairs)
 	k.IterateDelegatorDelegations(ctx, zone, delAddr, func(delegation types.Delegation) bool {
-		amount := rewardsForDelegation(delegatorRewards, delegation.DelegationAddress, delegation.ValidatorAddress)
+		amount := rewardsForDelegation(delegatorRewards, delegation.ValidatorAddress)
 		k.Logger(ctx).Info("Withdraw rewards", "delegator", delegation.DelegationAddress, "validator", delegation.ValidatorAddress, "amount", amount)
 		if !amount.IsZero() || !amount.Empty() {
 			msgs = append(msgs, &distrTypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegation.GetDelegationAddress(), ValidatorAddress: delegation.GetValidatorAddress()})
@@ -231,7 +231,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	return k.SubmitTx(ctx, msgs, account, "")
 }
 
-func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalRewardsResponse, delegator string, validator string) sdk.DecCoins {
+func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalRewardsResponse, validator string) sdk.DecCoins {
 	for _, reward := range delegatorRewards.Rewards {
 		if reward.ValidatorAddress == validator {
 			return reward.Reward

@@ -209,7 +209,7 @@ func (im IBCModule) OnChanOpenAck(
 	// performance address
 	case len(portParts) == 2 && portParts[1] == "performance":
 
-		if err := im.registerPerformanceAddress(ctx, portID, connectionID, chainID, address, &zoneInfo); err != nil {
+		if err := im.registerPerformanceAddress(ctx, portID, address, &zoneInfo); err != nil {
 			return err
 		}
 
@@ -223,9 +223,7 @@ func (im IBCModule) OnChanOpenAck(
 
 func (im IBCModule) registerPerformanceAddress(
 	ctx sdk.Context,
-	portID,
-	connectionID,
-	chainID,
+	portID string,
 	address string,
 	zone *types.RegisteredZone,
 ) error {

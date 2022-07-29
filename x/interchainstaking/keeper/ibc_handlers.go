@@ -668,7 +668,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	// prepare rewards distribution
 	rewards := sdk.NewCoin(zone.BaseDenom, baseDenomAmount.Sub(baseDenomFee))
 
-	dust, msgs := k.prepareRewardsDistributionMsgs(ctx, zone, rewards)
+	dust, msgs := k.prepareRewardsDistributionMsgs(zone, rewards)
 
 	// subtract dust from rewards
 	rewards = rewards.SubAmount(dust)
@@ -728,7 +728,7 @@ func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone
 	k.SetRegisteredZone(ctx, zone)
 }
 
-func (k *Keeper) prepareRewardsDistributionMsgs(ctx sdk.Context, zone types.RegisteredZone, rewards sdk.Coin) (sdk.Int, []sdk.Msg) {
+func (k *Keeper) prepareRewardsDistributionMsgs(zone types.RegisteredZone, rewards sdk.Coin) (sdk.Int, []sdk.Msg) {
 	// todo: use multisend.
 	// todo: this will probably not want to be an equal distribution. we want to use this to even out the distribution between accounts.
 	var msgs []sdk.Msg
