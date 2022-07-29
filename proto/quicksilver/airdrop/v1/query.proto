@@ -21,22 +21,22 @@ service Query {
   // ZoneDrop returns the details of the specified zone airdrop.
   rpc ZoneDrop(QueryZoneDropRequest) returns (QueryZoneDropResponse) {
     option (google.api.http).get =
-        "/quicksilver/airdrop/v1/zonedrop";
+        "/quicksilver/airdrop/v1/zonedrop/{chain_id}";
   }
   // ZoneDrops returns all zone airdrops of the specified status.
   rpc ZoneDrops(QueryZoneDropsRequest) returns (QueryZoneDropsResponse) {
     option (google.api.http).get =
-        "/quicksilver/airdrop/v1/zonedrops";
+        "/quicksilver/airdrop/v1/zonedrops/{status}";
   }
   // ClaimRecord returns the claim record that corresponds to the given zone and address.
   rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
     option (google.api.http).get =
-        "/quicksilver/airdrop/v1/claimrecord";
+        "/quicksilver/airdrop/v1/claimrecord/{chain_id}/{address}";
   }
   // ClaimRecords returns all the claim records of the given zone.
   rpc ClaimRecords(QueryClaimRecordsRequest) returns (QueryClaimRecordsResponse) {
     option (google.api.http).get =
-        "/quicksilver/airdrop/v1/claimrecords";
+        "/quicksilver/airdrop/v1/claimrecords/{chain_id}";
   }
 }
 
