@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	//lint:ignore SA1019 ignore this!
+	//nolint:staticcheck
 	"github.com/golang/protobuf/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -357,10 +357,7 @@ func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.RegisteredZo
 					}
 
 					err = k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
-					if err != nil {
-						return false
-					}
-					return true
+					return err != nil
 				}
 			}
 		}
