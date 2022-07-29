@@ -135,7 +135,7 @@ func (im IBCModule) OnChanOpenAck(
 	// withdrawal address
 	case len(portParts) == 2 && portParts[1] == "withdrawal":
 
-		// refactor: register WithdrawalAddress
+		// TODO: refactor: register WithdrawalAddress
 
 		zoneInfo.WithdrawalAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zoneInfo.BaseDenom, sdk.ZeroInt()), PortName: portID}
 
@@ -150,7 +150,7 @@ func (im IBCModule) OnChanOpenAck(
 	// delegation addresses
 	case len(portParts) == 3 && portParts[1] == "delegate":
 
-		// refactor: register DelegationAddresses
+		// TODO: refactor: register DelegationAddresses
 
 		delegationAccounts := zoneInfo.GetDelegationAccounts()
 		// check for duplicate address
@@ -173,38 +173,6 @@ func (im IBCModule) OnChanOpenAck(
 				return err
 			}
 		}
-
-		// var cb keeper.Callback = func(k keeper.Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-		// 	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
-		// 	if !found {
-		// 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-		// 	}
-		// 	// unmarshal request
-		// 	balanceQuery := bankTypes.QueryAllBalancesRequest{}
-		// 	err := k.GetCodec().Unmarshal(query.Request, &balanceQuery)
-		// 	if err == nil {
-		// 		return err
-		// 	}
-
-		// 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
-		// }
-
-		// balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
-		// bz, err := im.keeper.GetCodec().Marshal(&balanceQuery)
-		// if err != nil {
-		// 	return err
-		// }
-
-		// im.keeper.ICQKeeper.MakeRequest(
-		// 	ctx,
-		// 	connectionID,
-		// 	chainId,
-		// 	"cosmos.bank.v1beta1.Query/AllBalances",
-		// 	bz,
-		// 	sdk.NewInt(int64(im.keeper.GetParam(ctx, types.KeyDelegateInterval))),
-		// 	types.ModuleName,
-		// 	cb,
-		// )
 
 	// performance address
 	case len(portParts) == 2 && portParts[1] == "performance":
