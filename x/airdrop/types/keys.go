@@ -25,3 +25,7 @@ func GetKeyZoneDrop(chainId string) []byte {
 func GetKeyClaimRecord(chainId string, addr sdk.AccAddress) []byte {
 	return append(append(KeyPrefixClaimRecord, []byte(chainId)...), addr...)
 }
+
+func GetPrefixClaimRecord(chainId string) []byte {
+	return append(KeyPrefixClaimRecord, []byte(chainId)...)
+}

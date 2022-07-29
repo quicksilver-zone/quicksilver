@@ -56,7 +56,7 @@ func (k Keeper) DeleteClaimRecord(ctx sdk.Context, chainId string, address strin
 func (k Keeper) IterateClaimRecords(ctx sdk.Context, chainId string, fn func(index int64, cr types.ClaimRecord) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, []byte(chainId))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainId))
 	defer iterator.Close()
 
 	i := int64(0)
@@ -73,11 +73,30 @@ func (k Keeper) IterateClaimRecords(ctx sdk.Context, chainId string, fn func(ind
 	}
 }
 
-// AllClaimRecords returns all the claim records of the given zone.
-func (k Keeper) AllClaimRecords(ctx sdk.Context, chainId string) []types.ClaimRecord {
-	crs := []types.ClaimRecord{}
+// AllClaimRecords returns all the claim records.
+func (k Keeper) AllClaimRecords(ctx sdk.Context) []*types.ClaimRecord {
+	crs := []*types.ClaimRecord{}
+
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixClaimRecord)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		cr := types.ClaimRecord{}
+		k.cdc.MustUnmarshal(iterator.Value(), &cr)
+
+		crs = append(crs, &cr)
+	}
+
+	return crs
+}
+
+// AllZoneClaimRecords returns all the claim records of the given zone.
+func (k Keeper) AllZoneClaimRecords(ctx sdk.Context, chainId string) []*types.ClaimRecord {
+	crs := []*types.ClaimRecord{}
 	k.IterateClaimRecords(ctx, chainId, func(_ int64, cr types.ClaimRecord) (stop bool) {
-		crs = append(crs, cr)
+		crs = append(crs, &cr)
 		return false
 	})
 	return crs
@@ -87,7 +106,7 @@ func (k Keeper) AllClaimRecords(ctx sdk.Context, chainId string) []types.ClaimRe
 func (k Keeper) ClearClaimRecords(ctx sdk.Context, chainId string) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, []byte(chainId))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainId))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -204,10 +223,10 @@ func (k Keeper) Claim(ctx sdk.Context, chainId string, address string, action ty
 	}
 
 	coins := sdk.NewCoins(
-		sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(claimAmount)),
+		sdk.NewCoin(k.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(claimAmount)),
 	)
 
-	if err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, zoneDropAccount, addr, coins); err != nil {
+	if err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, zoneDropAccount, addr, coins); err != nil {
 		return 0, err
 	}
 

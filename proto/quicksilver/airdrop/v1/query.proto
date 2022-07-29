@@ -3,7 +3,11 @@ package quicksilver.airdrop.v1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+
 import "quicksilver/airdrop/v1/params.proto";
+import "quicksilver/airdrop/v1/airdrop.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 
@@ -14,6 +18,26 @@ service Query {
     option (google.api.http).get =
         "/quicksilver/airdrop/v1/params";
   }
+  // ZoneDrop returns the details of the specified zone airdrop.
+  rpc ZoneDrop(QueryZoneDropRequest) returns (QueryZoneDropResponse) {
+    option (google.api.http).get =
+        "/quicksilver/airdrop/v1/zonedrop";
+  }
+  // ZoneDrops returns all zone airdrops of the specified status.
+  rpc ZoneDrops(QueryZoneDropsRequest) returns (QueryZoneDropsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/airdrop/v1/zonedrops";
+  }
+  // ClaimRecord returns the claim record that corresponds to the given zone and address.
+  rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
+    option (google.api.http).get =
+        "/quicksilver/airdrop/v1/claimrecord";
+  }
+  // ClaimRecords returns all the claim records of the given zone.
+  rpc ClaimRecords(QueryClaimRecordsRequest) returns (QueryClaimRecordsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/airdrop/v1/claimrecords";
+  }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
@@ -23,4 +47,54 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryZoneDropRequest is the request type for Query/ZoneDrop RPC method.
+message QueryZoneDropRequest {
+  // chain_id identifies the zone.
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+}
+
+// QueryZoneDropResponse is the response type for Query/ZoneDrop RPC method.
+message QueryZoneDropResponse {
+  ZoneDrop zone_drop = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryZoneDropsRequest is the request type for Query/ZoneDrops RPC method.
+message QueryZoneDropsRequest {
+  // status enables to query zone airdrops matching a given status:
+  //  - active
+  //  - future
+  //  - expired
+  string status = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryZoneDropResponse is the response type for Query/ZoneDrops RPC method.
+message QueryZoneDropsResponse {
+  repeated ZoneDrop zone_drops = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryClaimRecordRequest is the request type for Query/ClaimRecord RPC method.
+message QueryClaimRecordRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  string address = 2 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+}
+
+// QueryClaimRecordResponse is the response type for Query/ClaimRecord RPC method.
+message QueryClaimRecordResponse {
+  ClaimRecord claim_record = 1 [ (gogoproto.moretags) = "yaml:\"claim_record\"" ];
+}
+
+// QueryClaimRecordsRequest is the request type for Query/ClaimRecords RPC method.
+message QueryClaimRecordsRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryClaimRecordsResponse is the response type for Query/ClaimRecords RPC method.
+message QueryClaimRecordsResponse {
+  repeated ClaimRecord claim_records = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

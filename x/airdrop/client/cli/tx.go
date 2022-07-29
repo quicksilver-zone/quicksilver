@@ -10,11 +10,11 @@ import (
 
 const ()
 
-// GetTxCmd returns a root CLI command handler for all x/bank transaction commands.
+// GetTxCmd returns a root CLI command handler for all module transaction commands.
 func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Interchain staking transaction subcommands",
+		Short:                      "Airdrop transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,

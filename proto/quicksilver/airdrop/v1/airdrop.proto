@@ -5,7 +5,6 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 import "cosmos_proto/cosmos.proto";
-import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 
@@ -38,10 +37,7 @@ message ZoneDrop {
         (gogoproto.jsontag) = "decay,omitempty",
         (gogoproto.moretags) = "yaml:\"decay\""
     ];
-    repeated cosmos.base.v1beta1.Coin allocation = 5 [
-        (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-        (gogoproto.nullable) = false
-    ];
+    uint64 allocation = 5;
     repeated string actions = 6 [
         (cosmos_proto.scalar) = "cosmos.Dec",
         (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",

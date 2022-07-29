@@ -23,7 +23,7 @@ func (k Keeper) GetZoneDropAccountAddress(ctx sdk.Context, chainId string) sdk.A
 // GetZoneDropAccountBalance gets the zone airdrop account coin balance.
 func (k Keeper) GetZoneDropAccountBalance(ctx sdk.Context, chainId string) sdk.Coin {
 	zonedropAccAddr := k.GetZoneDropAccountAddress(ctx, chainId)
-	return k.bankKeeper.GetBalance(ctx, zonedropAccAddr, k.stakingKeeper.BondDenom(ctx))
+	return k.BankKeeper.GetBalance(ctx, zonedropAccAddr, k.StakingKeeper.BondDenom(ctx))
 }
 
 // GetZoneDrop returns airdrop details for the zone identified by chainId.
@@ -71,6 +71,16 @@ func (k Keeper) IterateZoneDrops(ctx sdk.Context, fn func(index int64, zoneInfo 
 		}
 		i++
 	}
+}
+
+// AllZoneDrops returns all zone airdrops (active, future, expired).
+func (k Keeper) AllZoneDrops(ctx sdk.Context) []*types.ZoneDrop {
+	zds := []*types.ZoneDrop{}
+	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
+		zds = append(zds, &zd)
+		return false
+	})
+	return zds
 }
 
 // AllActiveZoneDrops returns all active zone airdrops.
@@ -190,7 +200,7 @@ func (k Keeper) returnUnclaimedZoneDropTokens(ctx sdk.Context, chainId string) e
 	zonedropAccountAddress := k.GetZoneDropAccountAddress(ctx, chainId)
 	zonedropAccountBalance := k.GetZoneDropAccountBalance(ctx, chainId)
 	airdropAccountAddress := k.GetModuleAccountAddress(ctx)
-	return k.bankKeeper.SendCoinsFromModuleToModule(
+	return k.BankKeeper.SendCoinsFromModuleToModule(
 		ctx,
 		zonedropAccountAddress.String(),
 		airdropAccountAddress.String(),
