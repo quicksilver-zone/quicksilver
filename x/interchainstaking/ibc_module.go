@@ -17,6 +17,8 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v3/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v3/modules/core/exported"
+
+	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 var _ porttypes.IBCModule = IBCModule{}
@@ -291,7 +293,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 		ctx.Logger().Error(err.Error())
 		return err
 	}
-	ctx = ctx.WithContext(context.WithValue(ctx.Context(), "connectionId", connectionId))
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionId"), connectionId))
 
 	return im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement)
 }
