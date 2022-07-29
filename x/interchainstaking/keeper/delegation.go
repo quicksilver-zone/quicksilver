@@ -158,7 +158,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 		var delPlan types.Allocations
 		var err error
 		if coin.Denom == zone.BaseDenom {
-			valPlan := make(types.ValidatorIntents)
+			var valPlan types.ValidatorIntents
 			plan, found := k.GetIntent(ctx, zone, delegator, false)
 			if !found || len(plan.Intents) == 0 {
 				valPlan = zone.GetAggregateIntentOrDefault()
