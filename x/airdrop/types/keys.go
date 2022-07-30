@@ -18,14 +18,14 @@ var (
 	KeyPrefixClaimRecord = []byte{0x02}
 )
 
-func GetKeyZoneDrop(chainId string) []byte {
-	return append(KeyPrefixZoneDrop, []byte(chainId)...)
+func GetKeyZoneDrop(chainID string) []byte {
+	return append(KeyPrefixZoneDrop, []byte(chainID)...)
 }
 
-func GetKeyClaimRecord(chainId string, addr sdk.AccAddress) []byte {
-	return append(append(KeyPrefixClaimRecord, []byte(chainId)...), addr...)
+func GetKeyClaimRecord(chainID string, addr sdk.AccAddress) []byte {
+	return append(append(KeyPrefixClaimRecord, []byte(chainID)...), addr...)
 }
 
-func GetPrefixClaimRecord(chainId string) []byte {
-	return append(KeyPrefixClaimRecord, []byte(chainId)...)
+func GetPrefixClaimRecord(chainID string) []byte {
+	return append(KeyPrefixClaimRecord, []byte(chainID)...)
 }

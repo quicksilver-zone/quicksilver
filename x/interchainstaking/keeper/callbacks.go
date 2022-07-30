@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -79,8 +78,7 @@ func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	SetValidatorsForZone(k, ctx, zone, args)
-	return nil
+	return SetValidatorsForZone(k, ctx, zone, args)
 }
 
 func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -89,8 +87,7 @@ func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Qu
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	SetValidatorForZone(k, ctx, zone, args)
-	return nil
+	return SetValidatorForZone(k, ctx, zone, args)
 }
 
 func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -156,7 +153,11 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 			return err
 		}
 		if delegation, ok := k.GetDelegation(ctx, &zone, delegatorAddress, validatorAddress); ok {
-			k.RemoveDelegation(ctx, &zone, delegation)
+			err := k.RemoveDelegation(ctx, &zone, delegation)
+			if err != nil {
+				return err
+			}
+
 			ica, err := zone.GetDelegationAccountByAddress(delegatorAddress)
 			if err != nil {
 				return err
@@ -211,7 +212,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		if err != nil {
 			return err
 		}
-		req.Pagination.Offset = req.Pagination.Offset + req.Pagination.Limit
+		req.Pagination.Offset += req.Pagination.Limit
 
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
 	}
@@ -404,7 +405,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	balancesStore := []byte(query.Request[1:])
+	balancesStore := query.Request[1:]
 	accAddr, err := banktypes.AddressFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
@@ -439,7 +440,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 }
 
 func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	balanceQuery := bankTypes.QueryAllBalancesRequest{}
+	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	err := k.cdc.Unmarshal(query.Request, &balanceQuery)
 	if err != nil {
 		return err

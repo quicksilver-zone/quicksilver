@@ -24,15 +24,15 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 // NewParams creates a new ics Params instance
 func NewParams(
-	validator_selection_allocation sdk.Dec,
-	holdings_allocation sdk.Dec,
-	lockup_allocation sdk.Dec,
+	validatorSelectionAllocation sdk.Dec,
+	holdingsAllocation sdk.Dec,
+	lockupAllocation sdk.Dec,
 ) Params {
 	return Params{
 		DistributionProportions: DistributionProportions{
-			ValidatorSelectionAllocation: validator_selection_allocation,
-			HoldingsAllocation:           holdings_allocation,
-			LockupAllocation:             lockup_allocation,
+			ValidatorSelectionAllocation: validatorSelectionAllocation,
+			HoldingsAllocation:           holdingsAllocation,
+			LockupAllocation:             lockupAllocation,
 		},
 	}
 }
@@ -60,15 +60,15 @@ func validateDistributionProportions(i interface{}) error {
 	}
 
 	if v.ValidatorSelectionAllocation.IsNegative() {
-		return errors.New("ValidatorSelectionAllocation distribution ratio should not be negative")
+		return errors.New("validatorSelectionAllocation distribution ratio should not be negative")
 	}
 
 	if v.HoldingsAllocation.IsNegative() {
-		return errors.New("PariticpationAllocation distribution ratio should not be negative")
+		return errors.New("participationAllocation distribution ratio should not be negative")
 	}
 
 	if v.LockupAllocation.IsNegative() {
-		return errors.New("LockupAllocation distribution ratio should not be negative")
+		return errors.New("lockupAllocation distribution ratio should not be negative")
 	}
 
 	totalProportions := v.ValidatorSelectionAllocation.Add(v.HoldingsAllocation).Add(v.LockupAllocation)

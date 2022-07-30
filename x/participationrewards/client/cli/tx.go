@@ -14,7 +14,7 @@ import (
 func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Interchain staking transaction subcommands",
+		Short:                      "Participation rewards transaction subcommands",
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -37,9 +37,9 @@ func GetSubmitClaimTxCmd() *cobra.Command {
 			}
 
 			zone := args[0]
-			asset_type := args[1]
+			assetType := args[1]
 
-			msg := types.NewMsgSubmitClaim(clientCtx.GetFromAddress(), zone, asset_type)
+			msg := types.NewMsgSubmitClaim(clientCtx.GetFromAddress(), zone, assetType)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

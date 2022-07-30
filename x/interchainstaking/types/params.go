@@ -99,22 +99,22 @@ func validateParams(i interface{}) error {
 
 // NewParams creates a new ics Params instance
 func NewParams(
-	delegate_account_count uint64,
-	delegate_account_split uint64,
-	deposit_interval uint64,
-	delegate_interval uint64,
-	delegations_interval uint64,
-	valset_interval uint64,
-	commission_rate sdk.Dec,
+	delegateAccountCount uint64,
+	delegateAccountSplit uint64,
+	depositInterval uint64,
+	delegateInterval uint64,
+	delegationsInterval uint64,
+	valsetInterval uint64,
+	commissionRate sdk.Dec,
 ) Params {
 	return Params{
-		DelegationAccountCount: delegate_account_count,
-		DelegationAccountSplit: delegate_account_split,
-		DepositInterval:        deposit_interval,
-		DelegateInterval:       delegate_interval,
-		DelegationsInterval:    delegations_interval,
-		ValidatorsetInterval:   valset_interval,
-		CommissionRate:         commission_rate,
+		DelegationAccountCount: delegateAccountCount,
+		DelegationAccountSplit: delegateAccountSplit,
+		DepositInterval:        depositInterval,
+		DelegateInterval:       delegateInterval,
+		DelegationsInterval:    delegationsInterval,
+		ValidatorsetInterval:   valsetInterval,
+		CommissionRate:         commissionRate,
 	}
 }
 

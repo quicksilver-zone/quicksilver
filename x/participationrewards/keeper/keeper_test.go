@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	qapp "github.com/ingenuity-build/quicksilver/app"
+	"github.com/ingenuity-build/quicksilver/utils"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -69,7 +70,7 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 	ctx := s.chainA.GetContext()
 
 	// Set special testing context (e.g. for test / debug output)
-	ctx = ctx.WithContext(context.WithValue(ctx.Context(), "TEST", "TEST"))
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("TEST"), "TEST"))
 
 	err := icskeeper.HandleRegisterZoneProposal(ctx, s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper, proposal)
 	s.Require().NoError(err)
@@ -94,7 +95,7 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 			bz,
 			icstypes.ModuleName,
 		),
-		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshalJSON(&qvr),
+		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshal(&qvr),
 		Height:      s.chainB.CurrentHeader.Height,
 		FromAddress: TestOwnerAddress,
 	}

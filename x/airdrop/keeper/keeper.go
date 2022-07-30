@@ -15,13 +15,12 @@ import (
 )
 
 type Keeper struct {
-	cdc              codec.BinaryCodec
-	storeKey         sdk.StoreKey
-	paramSpace       paramtypes.Subspace
-	accountKeeper    authkeeper.AccountKeeper
-	bankKeeper       bankkeeper.Keeper
-	stakingKeeper    stakingkeeper.Keeper
-	feeCollectorName string
+	cdc           codec.BinaryCodec
+	storeKey      sdk.StoreKey
+	paramSpace    paramtypes.Subspace
+	accountKeeper authkeeper.AccountKeeper
+	bankKeeper    bankkeeper.Keeper
+	stakingKeeper stakingkeeper.Keeper
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper

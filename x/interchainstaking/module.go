@@ -23,7 +23,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/client/cli"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 
-	//"github.com/ingenuity-build/quicksilver/x/interchainstaking/simulation"
+	// "github.com/ingenuity-build/quicksilver/x/interchainstaking/simulation"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
