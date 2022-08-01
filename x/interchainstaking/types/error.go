@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 )
 
 var (
@@ -54,11 +55,6 @@ func indent(k string, v error, d int) string {
 	}
 }
 
-func indentString(indent string, d int) string {
-	istr := ""
-	for i := 0; i < d; i++ {
-		istr += indent
-	}
-
-	return istr
+func indentString(indent string, n int) string {
+	return strings.Repeat(indent, n)
 }

@@ -428,6 +428,9 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 			}
 		}
 		// if balance is nil, the response sent back is nil, so we don't receive the denom. Override that now.
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return err
+		}
 		coin = sdk.NewCoin(denom, sdk.ZeroInt())
 	}
 
