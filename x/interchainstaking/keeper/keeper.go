@@ -76,12 +76,11 @@ func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capabilit
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
 
-func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID string, port string) error {
+func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID string, port string) {
 	mapping := types.PortConnectionTuple{ConnectionId: connectionID, PortId: port}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
 	bz := k.cdc.MustMarshal(&mapping)
 	store.Set([]byte(port), bz)
-	return nil
 }
 
 func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, error) {
@@ -94,6 +93,32 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 
 	k.cdc.MustUnmarshal(bz, &mapping)
 	return mapping.ConnectionId, nil
+}
+
+// IteratePortConnections iterates through all of the delegations.
+func (k Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortConnectionTuple) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixPortMapping)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		pc := types.PortConnectionTuple{}
+		k.cdc.MustUnmarshal(iterator.Value(), &pc)
+		if cb(pc) {
+			break
+		}
+	}
+}
+
+// AllPortConnections returns all delegations used during genesis dump.
+func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionTuple) {
+	k.IteratePortConnections(ctx, func(pc types.PortConnectionTuple) bool {
+		pcs = append(pcs, pc)
+		return false
+	})
+
+	return pcs
 }
 
 // ### Interval functions >>>

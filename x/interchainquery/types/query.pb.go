@@ -37,7 +37,7 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 type QueryRequestsRequest struct {
 	Pagination   *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
-	ConnectionId string             `protobuf:"bytes,2,opt,name=connection_id,json=connectionID,proto3" json:"connection_id,omitempty"`
+	ConnectionId string             `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
 }
 
 func (m *QueryRequestsRequest) Reset()         { *m = QueryRequestsRequest{} }

@@ -56,7 +56,6 @@ message ICAAccount {
     (gogoproto.nullable) = false
   ];
   string port_name = 4;
-  // Delegations here? or against validator?
   uint32 balance_waitgroup = 5;
 }
 
@@ -146,12 +145,6 @@ message PortConnectionTuple {
   string port_id = 2;
 }
 
-// GenesisState defines the interchainstaking module's genesis state.
-message GenesisState {
-  Params params = 1 [ (gogoproto.nullable) = false ];
-  repeated RegisteredZone zones = 2 [ (gogoproto.nullable) = false ];
-}
-
 message Receipt {
   RegisteredZone zone = 1;
   string sender = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
@@ -188,4 +181,31 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+}
+
+message DelegationsForZone {
+  string chain_id = 1;
+  repeated Delegation delegations = 2;
+}
+
+message DelegationPlansForZone {
+  string chain_id = 1;
+  map<string, DelegationPlan> delegation_plans = 2;
+}
+
+message DelegatorIntentsForZone {
+  string chain_id = 1;
+  repeated DelegatorIntent delegation_intent = 2;
+  bool snapshot = 3;
+}
+
+// GenesisState defines the interchainstaking module's genesis state.
+message GenesisState {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated RegisteredZone zones = 2 [ (gogoproto.nullable) = false ];
+  repeated Receipt receipts = 3 [ (gogoproto.nullable) = false ];
+  repeated DelegationsForZone delegations = 4 [ (gogoproto.nullable) = false ];
+  repeated DelegationPlansForZone delegation_plans = 5 [ (gogoproto.nullable) = false ];
+  repeated DelegatorIntentsForZone delegator_intents = 6 [ (gogoproto.nullable) = false ];
+  repeated PortConnectionTuple port_connections = 7 [ (gogoproto.nullable) = false ];
 }

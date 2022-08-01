@@ -367,7 +367,8 @@ func (m *QueryClaimRecordRequest) GetAddress() string {
 	return ""
 }
 
-// QueryClaimRecordResponse is the response type for Query/ClaimRecord RPC method.
+// QueryClaimRecordResponse is the response type for Query/ClaimRecord RPC
+// method.
 type QueryClaimRecordResponse struct {
 	ClaimRecord *ClaimRecord `protobuf:"bytes,1,opt,name=claim_record,json=claimRecord,proto3" json:"claim_record,omitempty" yaml:"claim_record"`
 }
@@ -412,7 +413,8 @@ func (m *QueryClaimRecordResponse) GetClaimRecord() *ClaimRecord {
 	return nil
 }
 
-// QueryClaimRecordsRequest is the request type for Query/ClaimRecords RPC method.
+// QueryClaimRecordsRequest is the request type for Query/ClaimRecords RPC
+// method.
 type QueryClaimRecordsRequest struct {
 	ChainId    string             `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
 	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -465,7 +467,8 @@ func (m *QueryClaimRecordsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
-// QueryClaimRecordsResponse is the response type for Query/ClaimRecords RPC method.
+// QueryClaimRecordsResponse is the response type for Query/ClaimRecords RPC
+// method.
 type QueryClaimRecordsResponse struct {
 	ClaimRecords []ClaimRecord       `protobuf:"bytes,1,rep,name=claim_records,json=claimRecords,proto3" json:"claim_records"`
 	Pagination   *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -605,7 +608,8 @@ type QueryClient interface {
 	ZoneDrop(ctx context.Context, in *QueryZoneDropRequest, opts ...grpc.CallOption) (*QueryZoneDropResponse, error)
 	// ZoneDrops returns all zone airdrops of the specified status.
 	ZoneDrops(ctx context.Context, in *QueryZoneDropsRequest, opts ...grpc.CallOption) (*QueryZoneDropsResponse, error)
-	// ClaimRecord returns the claim record that corresponds to the given zone and address.
+	// ClaimRecord returns the claim record that corresponds to the given zone and
+	// address.
 	ClaimRecord(ctx context.Context, in *QueryClaimRecordRequest, opts ...grpc.CallOption) (*QueryClaimRecordResponse, error)
 	// ClaimRecords returns all the claim records of the given zone.
 	ClaimRecords(ctx context.Context, in *QueryClaimRecordsRequest, opts ...grpc.CallOption) (*QueryClaimRecordsResponse, error)
@@ -672,7 +676,8 @@ type QueryServer interface {
 	ZoneDrop(context.Context, *QueryZoneDropRequest) (*QueryZoneDropResponse, error)
 	// ZoneDrops returns all zone airdrops of the specified status.
 	ZoneDrops(context.Context, *QueryZoneDropsRequest) (*QueryZoneDropsResponse, error)
-	// ClaimRecord returns the claim record that corresponds to the given zone and address.
+	// ClaimRecord returns the claim record that corresponds to the given zone and
+	// address.
 	ClaimRecord(context.Context, *QueryClaimRecordRequest) (*QueryClaimRecordResponse, error)
 	// ClaimRecords returns all the claim records of the given zone.
 	ClaimRecords(context.Context, *QueryClaimRecordsRequest) (*QueryClaimRecordsResponse, error)
