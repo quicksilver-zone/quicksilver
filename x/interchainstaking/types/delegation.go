@@ -110,15 +110,15 @@ func (a Allocations) FindAccountForDelegation(validatorAddress string, coin sdk.
 type ValidatorIntents map[string]*ValidatorIntent
 
 func (v ValidatorIntents) Keys() []string {
-	out := []string{}
-
-	for i := range v {
-		out = append(out, i)
+	keys := make([]string, len(v))
+	i := 0
+	for key := range v {
+		keys[i] = key
+		i++
 	}
+	sort.Strings(keys)
 
-	sort.Strings(out)
-
-	return out
+	return keys
 }
 
 // MustMarshalDelegationPlan returns the delegation plan bytes. Panics if fails
