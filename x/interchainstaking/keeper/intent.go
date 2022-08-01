@@ -73,6 +73,16 @@ func (k Keeper) AllIntents(ctx sdk.Context, zone types.RegisteredZone, snapshot 
 	return intents
 }
 
+// AllIntents returns every intent in the store for the specified zone
+func (k Keeper) AllIntentsAsPointer(ctx sdk.Context, zone types.RegisteredZone, snapshot bool) []*types.DelegatorIntent {
+	intents := []*types.DelegatorIntent{}
+	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
+		intents = append(intents, &intent)
+		return false
+	})
+	return intents
+}
+
 // AllOrdinalizedIntents returns every intent in the store for the specified zone
 func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.RegisteredZone, snapshot bool) []types.DelegatorIntent {
 	intents := []types.DelegatorIntent{}

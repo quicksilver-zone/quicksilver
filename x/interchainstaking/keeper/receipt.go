@@ -268,6 +268,15 @@ func (k Keeper) IterateReceipts(ctx sdk.Context, fn func(index int64, receiptInf
 	}
 }
 
+func (k Keeper) AllReceipts(ctx sdk.Context) []types.Receipt {
+	receipts := make([]types.Receipt, 0)
+	k.IterateReceipts(ctx, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+		receipts = append(receipts, receiptInfo)
+		return false
+	})
+	return receipts
+}
+
 func GetReceiptKey(zone types.RegisteredZone, txhash string) string {
 	return fmt.Sprintf("%s/%s", zone.ChainId, txhash)
 }

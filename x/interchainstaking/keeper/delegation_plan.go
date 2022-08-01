@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
@@ -38,7 +40,7 @@ func (k Keeper) GetDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, t
 }
 
 // IterateAllDelegationPlansForHash iterates through all of the delegations for a given transaction.
-func (k Keeper) IterateAllDelegationPlans(ctx sdk.Context, zone *types.RegisteredZone, cb func(delegationPlan types.DelegationPlan) (stop bool)) {
+func (k Keeper) IterateAllDelegationPlans(ctx sdk.Context, zone *types.RegisteredZone, cb func(delegationPlan types.DelegationPlan, key []byte) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegationPlan, []byte(zone.ChainId)...))
@@ -46,7 +48,7 @@ func (k Keeper) IterateAllDelegationPlans(ctx sdk.Context, zone *types.Registere
 
 	for ; iterator.Valid(); iterator.Next() {
 		delegationPlan := types.MustUnmarshalDelegationPlan(k.cdc, iterator.Value())
-		if cb(delegationPlan) {
+		if cb(delegationPlan, iterator.Key()) {
 			break
 		}
 	}
@@ -54,8 +56,19 @@ func (k Keeper) IterateAllDelegationPlans(ctx sdk.Context, zone *types.Registere
 
 func (k Keeper) GetAllDelegationPlans(ctx sdk.Context, zone *types.RegisteredZone) []types.DelegationPlan {
 	out := []types.DelegationPlan{}
-	k.IterateAllDelegationPlans(ctx, zone, func(delegationPlan types.DelegationPlan) bool {
+	k.IterateAllDelegationPlans(ctx, zone, func(delegationPlan types.DelegationPlan, _ []byte) bool {
 		out = append(out, delegationPlan)
+		return false
+	})
+	return out
+}
+
+func (k Keeper) GetAllDelegationPlansWithKey(ctx sdk.Context, zone *types.RegisteredZone) map[string]*types.DelegationPlan {
+	out := map[string]*types.DelegationPlan{}
+	k.IterateAllDelegationPlans(ctx, zone, func(delegationPlan types.DelegationPlan, key []byte) bool {
+		keyString := string(key)
+		parts := strings.Split(keyString, "/")
+		out[parts[1]] = &delegationPlan
 		return false
 	})
 	return out
