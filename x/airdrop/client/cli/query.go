@@ -25,7 +25,13 @@ func GetQueryCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand()
+	cmd.AddCommand(
+		GetParamsQueryCmd(),
+		GetZoneDropQueryCmd(),
+		GetAccountBalanceQueryCmd(),
+		GetZoneDropsQueryCmd(),
+		GetClaimRecordQueryCmd(),
+	)
 
 	return cmd
 }

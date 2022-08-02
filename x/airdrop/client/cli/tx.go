@@ -53,6 +53,9 @@ func GetClaimTxCmd() *cobra.Command {
 
 			chainID := args[0]
 			action, err := strconv.ParseInt(args[1], 10, 32)
+			if err != nil {
+				return err
+			}
 
 			msg := &types.MsgClaim{
 				ChainId: chainID,
