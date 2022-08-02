@@ -30,12 +30,13 @@ type tokenValue struct {
 func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 	var allocation rewardsAllocation
 
+	denom := k.stakingKeeper.BondDenom(ctx)
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	moduleBalances := k.bankKeeper.GetAllBalances(ctx, moduleAddress)
+	moduleBalance := k.bankKeeper.GetBalance(ctx, moduleAddress, denom)
 
-	k.Logger(ctx).Info("module account", "address", moduleAddress, "balances", moduleBalances)
+	k.Logger(ctx).Info("module account", "address", moduleAddress, "balance", moduleBalance)
 
-	if moduleBalances.Empty() {
+	if moduleBalance.IsZero() {
 		k.Logger(ctx).Info("nothing to distribute...")
 
 		// create snapshot of current intents for next epoch boundary
@@ -60,29 +61,29 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 	allocation.ValidatorSelection = sdk.NewCoins(
 		k.GetAllocation(
 			ctx,
-			moduleBalances[0],
+			moduleBalance,
 			params.DistributionProportions.ValidatorSelectionAllocation,
 		),
 	)
 	allocation.Holdings = sdk.NewCoins(
 		k.GetAllocation(
 			ctx,
-			moduleBalances[0],
+			moduleBalance,
 			params.DistributionProportions.HoldingsAllocation,
 		),
 	)
 	allocation.Lockup = sdk.NewCoins(
 		k.GetAllocation(
 			ctx,
-			moduleBalances[0],
+			moduleBalance,
 			params.DistributionProportions.LockupAllocation,
 		),
 	)
 
 	// use sum to check total distribution to collect and allocate dust
-	total := moduleBalances[0]
+	total := moduleBalance
 	sum := allocation.Lockup.Add(allocation.ValidatorSelection...).Add(allocation.Holdings...)
-	dust := total.Sub(sum[0])
+	dust := total.SubAmount(sum.AmountOf(denom))
 	k.Logger(ctx).Info(
 		"rewards distribution",
 		"total", total,
