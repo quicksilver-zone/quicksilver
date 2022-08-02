@@ -17,8 +17,19 @@ enum Action {
   ActionDelegateStake = 2;
 }
 
+// Status is used as an enum to denote zone status.
+enum Status {
+  option (gogoproto.goproto_enum_prefix) = false;
+  
+  StatusActive = 0;
+  StatusFuture = 1;
+  StatusExpired = 2;
+}
+
 // ZoneDrop represents an airdrop for a specific zone.
 message ZoneDrop {
+  option (gogoproto.goproto_getters) = false;
+
   string chain_id = 1;
   google.protobuf.Timestamp start_time = 2 [
     (gogoproto.stdtime) = true,
@@ -49,6 +60,8 @@ message ZoneDrop {
 // ClaimRecord represents a users' claim (including completed claims) for a
 // given zone.
 message ClaimRecord {
+  option (gogoproto.goproto_getters) = false;
+
   string chain_id = 1;
   string address = 2;
   // Protobuf3 does not allow enum as map key
@@ -58,6 +71,8 @@ message ClaimRecord {
 
 // CompletedAction represents a claim action completed by the user.
 message CompletedAction {
+  option (gogoproto.goproto_getters) = false;
+  
   google.protobuf.Timestamp complete_time = 1 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,

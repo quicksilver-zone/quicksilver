@@ -34,6 +34,17 @@ func (k Keeper) ZoneDrop(c context.Context, req *types.QueryZoneDropRequest) (*t
 	return &types.QueryZoneDropResponse{ZoneDrop: zd}, nil
 }
 
+// AccountBalance returns the airdrop module account balance of the specified zone.
+func (k Keeper) AccountBalance(c context.Context, req *types.QueryAccountBalanceRequest) (*types.QueryAccountBalanceResponse, error) {
+	ctx := sdk.UnwrapSDKContext(c)
+
+	ab := k.GetZoneDropAccountBalance(ctx, req.ChainId)
+
+	return &types.QueryAccountBalanceResponse{
+		AccountBalance: &ab,
+	}, nil
+}
+
 // ZoneDrops returns all zone airdrops of the specified status.
 func (k Keeper) ZoneDrops(c context.Context, req *types.QueryZoneDropsRequest) (*types.QueryZoneDropsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
@@ -48,19 +59,20 @@ func (k Keeper) ZoneDrops(c context.Context, req *types.QueryZoneDropsRequest) (
 		}
 
 		switch req.Status {
-		case "active":
+		case types.StatusActive:
 			if k.IsActiveZoneDrop(ctx, zd) {
 				zds = append(zds, zd)
 			}
-		case "future":
+		case types.StatusFuture:
 			if k.IsFutureZoneDrop(ctx, zd) {
 				zds = append(zds, zd)
 			}
-		case "expired":
+		case types.StatusExpired:
 			if k.IsExpiredZoneDrop(ctx, zd) {
 				zds = append(zds, zd)
 			}
 		default:
+			// unknown status no-op
 		}
 
 		return nil

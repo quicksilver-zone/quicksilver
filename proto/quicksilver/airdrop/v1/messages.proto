@@ -8,4 +8,26 @@ import "google/api/annotations.proto";
 option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 
 // Msg defines the airdrop Msg service.
-service Msg {}
+service Msg {
+    rpc Claim(MsgClaim) returns(MsgClaimResponse) {
+        option (google.api.http) = {
+            post : "/quicksilver/tx/v1/airdrop/claim"
+            body : "*"
+        };
+    }
+}
+
+message MsgClaim {
+    option (gogoproto.equal) = false;
+    option (gogoproto.goproto_getters) = false;
+
+    string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+    int32 action = 2 [ (gogoproto.moretags) = "yaml:\"action\"" ];
+    string address = 3 [ (gogoproto.moretags) = "yaml:\"address\"" ];
+}
+
+message MsgClaimResponse {
+    option (gogoproto.goproto_getters) = false;
+    
+    uint64 amount = 1 [ (gogoproto.moretags) = "yaml:\"amount\"" ];
+}

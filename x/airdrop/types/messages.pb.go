@@ -12,7 +12,11 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -26,25 +30,119 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type MsgClaim struct {
+	ChainId string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
+	Action  int32  `protobuf:"varint,2,opt,name=action,proto3" json:"action,omitempty" yaml:"action"`
+	Address string `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
+}
+
+func (m *MsgClaim) Reset()         { *m = MsgClaim{} }
+func (m *MsgClaim) String() string { return proto.CompactTextString(m) }
+func (*MsgClaim) ProtoMessage()    {}
+func (*MsgClaim) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2b0828c7de1949a1, []int{0}
+}
+func (m *MsgClaim) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClaim) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClaim.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClaim) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClaim.Merge(m, src)
+}
+func (m *MsgClaim) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClaim) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClaim.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClaim proto.InternalMessageInfo
+
+type MsgClaimResponse struct {
+	Amount uint64 `protobuf:"varint,1,opt,name=amount,proto3" json:"amount,omitempty" yaml:"amount"`
+}
+
+func (m *MsgClaimResponse) Reset()         { *m = MsgClaimResponse{} }
+func (m *MsgClaimResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgClaimResponse) ProtoMessage()    {}
+func (*MsgClaimResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2b0828c7de1949a1, []int{1}
+}
+func (m *MsgClaimResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgClaimResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgClaimResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgClaimResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgClaimResponse.Merge(m, src)
+}
+func (m *MsgClaimResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgClaimResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgClaimResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgClaimResponse proto.InternalMessageInfo
+
+func init() {
+	proto.RegisterType((*MsgClaim)(nil), "quicksilver.airdrop.v1.MsgClaim")
+	proto.RegisterType((*MsgClaimResponse)(nil), "quicksilver.airdrop.v1.MsgClaimResponse")
+}
+
 func init() {
 	proto.RegisterFile("quicksilver/airdrop/v1/messages.proto", fileDescriptor_2b0828c7de1949a1)
 }
 
 var fileDescriptor_2b0828c7de1949a1 = []byte{
-	// 202 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0x8f, 0x31, 0x4a, 0xc6, 0x40,
-	0x10, 0x46, 0x13, 0x44, 0x8b, 0xbf, 0x14, 0x11, 0x0c, 0xb2, 0x9d, 0xa5, 0x3b, 0x44, 0xc1, 0x03,
-	0xd8, 0x0b, 0xd6, 0x36, 0xb2, 0x49, 0x96, 0x71, 0x30, 0xd9, 0x59, 0x77, 0x76, 0x83, 0xb9, 0x85,
-	0xc7, 0xb2, 0x4c, 0x69, 0x29, 0xc9, 0x45, 0xc4, 0x24, 0xfc, 0xa4, 0x9b, 0xe1, 0x3d, 0x3e, 0x78,
-	0x87, 0x9b, 0x8f, 0x44, 0xf5, 0xbb, 0x50, 0xdb, 0xdb, 0x00, 0x86, 0x42, 0x13, 0xd8, 0x43, 0x5f,
-	0x42, 0x67, 0x45, 0x0c, 0x5a, 0xd1, 0x3e, 0x70, 0xe4, 0xf3, 0xcb, 0x9d, 0xa6, 0x37, 0x4d, 0xf7,
-	0x65, 0x71, 0x81, 0x8c, 0xbc, 0x28, 0xf0, 0x7f, 0xad, 0x76, 0x71, 0x55, 0xb3, 0x74, 0x2c, 0xaf,
-	0x2b, 0x58, 0x9f, 0x0d, 0x5d, 0x23, 0x33, 0xb6, 0x16, 0x8c, 0x27, 0x30, 0xce, 0x71, 0x34, 0x91,
-	0xd8, 0x6d, 0xf4, 0xee, 0xf4, 0x70, 0xf2, 0x24, 0xf8, 0xf8, 0xfc, 0x3d, 0xa9, 0x7c, 0x9c, 0x54,
-	0xfe, 0x3b, 0xa9, 0xfc, 0x6b, 0x56, 0xd9, 0x38, 0xab, 0xec, 0x67, 0x56, 0xd9, 0xcb, 0x03, 0x52,
-	0x7c, 0x4b, 0x95, 0xae, 0xb9, 0x03, 0x72, 0x68, 0x5d, 0xa2, 0x38, 0xdc, 0x56, 0x89, 0xda, 0x06,
-	0xf6, 0x25, 0x9f, 0xc7, 0x96, 0x38, 0x78, 0x2b, 0xd5, 0xd9, 0xb2, 0x7f, 0xff, 0x17, 0x00, 0x00,
-	0xff, 0xff, 0x47, 0x92, 0xe2, 0x25, 0xef, 0x00, 0x00, 0x00,
+	// 401 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x91, 0xbd, 0xeb, 0xd3, 0x40,
+	0x1c, 0xc6, 0x73, 0xbf, 0x97, 0xb6, 0x1e, 0xf8, 0x16, 0x45, 0x6a, 0x91, 0x24, 0x1c, 0x14, 0xea,
+	0x5b, 0x8e, 0x2a, 0x38, 0x64, 0x6c, 0x27, 0x87, 0x82, 0x64, 0x74, 0x29, 0xd7, 0xe4, 0xb8, 0x1e,
+	0x26, 0x77, 0x31, 0x77, 0x29, 0xed, 0x26, 0x4e, 0x1d, 0x05, 0x67, 0xa1, 0x7f, 0x8e, 0x63, 0xc1,
+	0xc5, 0xa9, 0x48, 0xeb, 0xe0, 0xdc, 0xbf, 0x40, 0x72, 0x49, 0xa4, 0x05, 0xe1, 0xb7, 0x7d, 0xf3,
+	0x7d, 0x3e, 0x79, 0x9e, 0x6f, 0xf2, 0xc0, 0xfe, 0xc7, 0x82, 0x47, 0x1f, 0x14, 0x4f, 0x16, 0x34,
+	0xc7, 0x84, 0xe7, 0x71, 0x2e, 0x33, 0xbc, 0x18, 0xe2, 0x94, 0x2a, 0x45, 0x18, 0x55, 0x7e, 0x96,
+	0x4b, 0x2d, 0xed, 0x47, 0x27, 0x98, 0x5f, 0x63, 0xfe, 0x62, 0xd8, 0x7b, 0xc8, 0x24, 0x93, 0x06,
+	0xc1, 0xe5, 0x54, 0xd1, 0xbd, 0xc7, 0x91, 0x54, 0xa9, 0x54, 0xd3, 0x4a, 0xa8, 0x1e, 0x6a, 0xe9,
+	0x09, 0x93, 0x92, 0x25, 0x14, 0x93, 0x8c, 0x63, 0x22, 0x84, 0xd4, 0x44, 0x73, 0x29, 0x6a, 0x15,
+	0x7d, 0x03, 0xb0, 0x33, 0x51, 0x6c, 0x9c, 0x10, 0x9e, 0xda, 0x3e, 0xec, 0x44, 0x73, 0xc2, 0xc5,
+	0x94, 0xc7, 0x5d, 0xe0, 0x81, 0xc1, 0xad, 0xd1, 0x83, 0xe3, 0xce, 0xbd, 0xbb, 0x22, 0x69, 0x12,
+	0xa0, 0x46, 0x41, 0x61, 0xdb, 0x8c, 0x6f, 0x63, 0xfb, 0x29, 0x6c, 0x91, 0xa8, 0x74, 0xeb, 0x5e,
+	0x78, 0x60, 0x70, 0x3d, 0xba, 0x7f, 0xdc, 0xb9, 0xb7, 0x2b, 0xba, 0xda, 0xa3, 0xb0, 0x06, 0xec,
+	0x17, 0xb0, 0x4d, 0xe2, 0x38, 0xa7, 0x4a, 0x75, 0x2f, 0x8d, 0xb3, 0x7d, 0xdc, 0xb9, 0x77, 0x6a,
+	0xb6, 0x12, 0x50, 0xd8, 0x20, 0x41, 0x67, 0xbd, 0x71, 0xad, 0x3f, 0x1b, 0xd7, 0x42, 0x63, 0x78,
+	0xaf, 0x39, 0x2f, 0xa4, 0x2a, 0x93, 0x42, 0x51, 0x13, 0x9b, 0xca, 0x42, 0x68, 0x73, 0xe4, 0xd5,
+	0x59, 0xac, 0xd9, 0x97, 0xb1, 0x66, 0x08, 0xae, 0x4a, 0xa3, 0x57, 0x6b, 0x00, 0x2f, 0x27, 0x8a,
+	0xd9, 0x9f, 0x00, 0xbc, 0xae, 0xbe, 0xd4, 0xf3, 0xff, 0xff, 0x7b, 0xfd, 0x26, 0xac, 0x37, 0xb8,
+	0x89, 0x68, 0xce, 0x41, 0xcf, 0x3f, 0xff, 0xf8, 0xfd, 0xf5, 0xa2, 0x8f, 0x3c, 0x7c, 0xda, 0xac,
+	0x5e, 0x96, 0xa5, 0x36, 0xfd, 0x46, 0xe5, 0x1b, 0x01, 0x78, 0x36, 0x7a, 0xf7, 0x7d, 0xef, 0x80,
+	0xed, 0xde, 0x01, 0xbf, 0xf6, 0x0e, 0xf8, 0x72, 0x70, 0xac, 0xed, 0xc1, 0xb1, 0x7e, 0x1e, 0x1c,
+	0xeb, 0xfd, 0x1b, 0xc6, 0xf5, 0xbc, 0x98, 0xf9, 0x91, 0x4c, 0x31, 0x17, 0x8c, 0x8a, 0x82, 0xeb,
+	0xd5, 0xcb, 0x59, 0xc1, 0x93, 0xf8, 0xcc, 0x78, 0xf9, 0xcf, 0x54, 0xaf, 0x32, 0xaa, 0x66, 0x2d,
+	0x53, 0xe4, 0xeb, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xc7, 0x99, 0xdb, 0x77, 0x58, 0x02, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -59,6 +157,7 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type MsgClient interface {
+	Claim(ctx context.Context, in *MsgClaim, opts ...grpc.CallOption) (*MsgClaimResponse, error)
 }
 
 type msgClient struct {
@@ -69,22 +168,465 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 	return &msgClient{cc}
 }
 
+func (c *msgClient) Claim(ctx context.Context, in *MsgClaim, opts ...grpc.CallOption) (*MsgClaimResponse, error) {
+	out := new(MsgClaimResponse)
+	err := c.cc.Invoke(ctx, "/quicksilver.airdrop.v1.Msg/Claim", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
+	Claim(context.Context, *MsgClaim) (*MsgClaimResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
 type UnimplementedMsgServer struct {
 }
 
+func (*UnimplementedMsgServer) Claim(ctx context.Context, req *MsgClaim) (*MsgClaimResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Claim not implemented")
+}
+
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
+}
+
+func _Msg_Claim_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgClaim)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).Claim(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/quicksilver.airdrop.v1.Msg/Claim",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).Claim(ctx, req.(*MsgClaim))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "quicksilver.airdrop.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "quicksilver/airdrop/v1/messages.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Claim",
+			Handler:    _Msg_Claim_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "quicksilver/airdrop/v1/messages.proto",
 }
+
+func (m *MsgClaim) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClaim) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClaim) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.Action != 0 {
+		i = encodeVarintMessages(dAtA, i, uint64(m.Action))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.ChainId) > 0 {
+		i -= len(m.ChainId)
+		copy(dAtA[i:], m.ChainId)
+		i = encodeVarintMessages(dAtA, i, uint64(len(m.ChainId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgClaimResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgClaimResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgClaimResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Amount != 0 {
+		i = encodeVarintMessages(dAtA, i, uint64(m.Amount))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintMessages(dAtA []byte, offset int, v uint64) int {
+	offset -= sovMessages(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+func (m *MsgClaim) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ChainId)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	if m.Action != 0 {
+		n += 1 + sovMessages(uint64(m.Action))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovMessages(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgClaimResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Amount != 0 {
+		n += 1 + sovMessages(uint64(m.Amount))
+	}
+	return n
+}
+
+func sovMessages(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func sozMessages(x uint64) (n int) {
+	return sovMessages(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgClaim) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClaim: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClaim: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChainId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Action", wireType)
+			}
+			m.Action = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Action |= int32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthMessages
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgClaimResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgClaimResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgClaimResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			m.Amount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Amount |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipMessages(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthMessages
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipMessages(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
+	iNdEx := 0
+	depth := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowMessages
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if dAtA[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+		case 1:
+			iNdEx += 8
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowMessages
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if length < 0 {
+				return 0, ErrInvalidLengthMessages
+			}
+			iNdEx += length
+		case 3:
+			depth++
+		case 4:
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupMessages
+			}
+			depth--
+		case 5:
+			iNdEx += 4
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthMessages
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
+	}
+	return 0, io.ErrUnexpectedEOF
+}
+
+var (
+	ErrInvalidLengthMessages        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowMessages          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupMessages = fmt.Errorf("proto: unexpected end of group")
+)
