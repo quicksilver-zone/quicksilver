@@ -11,9 +11,7 @@ const (
 	ProposalTypeRegisterZoneDrop = "RegisterZoneDrop"
 )
 
-var (
-	_ govtypes.Content = &RegisterZoneDropProposal{}
-)
+var _ govtypes.Content = &RegisterZoneDropProposal{}
 
 func (m RegisterZoneDropProposal) GetDescription() string { return m.Description }
 func (m RegisterZoneDropProposal) GetTitle() string       { return m.Title }
