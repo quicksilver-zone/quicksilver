@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -17,6 +18,22 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	k.Logger(ctx).Info("handling epoch end")
 	if epochIdentifier == "epoch" {
 		k.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
+
+			blockQuery := tmservice.GetLatestBlockRequest{}
+			bz := k.cdc.MustMarshal(&blockQuery)
+
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zoneInfo.ConnectionId,
+				zoneInfo.ChainId,
+				"cosmos.base.tendermint.v1beta1.Service/GetLatestBlock",
+				bz,
+				sdk.NewInt(-1),
+				types.ModuleName,
+				"epochblock",
+				0,
+			)
+
 			k.Logger(ctx).Info("taking a snapshot of intents")
 			k.AggregateIntents(ctx, zoneInfo)
 			if zoneInfo.WithdrawalWaitgroup > 0 {

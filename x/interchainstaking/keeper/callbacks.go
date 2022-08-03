@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -64,7 +65,8 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("deposittx", Callback(DepositTx)).
 		AddCallback("perfbalance", Callback(PerfBalanceCallback)).
 		AddCallback("accountbalance", Callback(AccountBalanceCallback)).
-		AddCallback("allbalances", Callback(AllBalancesCallback))
+		AddCallback("allbalances", Callback(AllBalancesCallback)).
+		AddCallback("epochblock", Callback(SetEpochBlockCallback))
 
 	return a.(Callbacks)
 }
@@ -79,6 +81,22 @@ func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 	return SetValidatorsForZone(k, ctx, zone, args)
+}
+
+// SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
+func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+	blockResponse := tmservice.GetLatestBlockResponse{}
+	err := k.cdc.Unmarshal(args, &blockResponse)
+	if err != nil {
+		return err
+	}
+	zone.LastEpochHeight = blockResponse.Block.Header.Height
+	k.SetRegisteredZone(ctx, zone)
+	return nil
 }
 
 func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
