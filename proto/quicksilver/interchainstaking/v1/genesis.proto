@@ -41,6 +41,7 @@ message RegisteredZone {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
+  int64 last_epoch_height = 20;
 }
 
 message ICAAccount {
@@ -146,7 +147,7 @@ message PortConnectionTuple {
 }
 
 message Receipt {
-  RegisteredZone zone = 1;
+  string chain_id = 1;
   string sender = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string txhash = 3;
   repeated cosmos.base.v1beta1.Coin amount = 4 [
