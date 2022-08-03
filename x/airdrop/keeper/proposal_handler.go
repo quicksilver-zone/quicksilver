@@ -12,6 +12,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
+var chunkSize = int64(4096)
+
 type ClaimRecords []types.ClaimRecord
 
 // HandleRegisterZoneDropProposal is a handler for executing a passed airdrop proposal.
@@ -84,8 +86,14 @@ func (k Keeper) decompress(data []byte) ([]byte, error) {
 	// copy reader data to output buffer (writer)
 	// - prevents data going out of scope;
 	var obuf bytes.Buffer
-	if _, err := io.Copy(&obuf, zr); err != nil {
-		return nil, err
+	for {
+		_, err := io.CopyN(&obuf, zr, chunkSize)
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return nil, err
+		}
 	}
 
 	return obuf.Bytes(), nil
