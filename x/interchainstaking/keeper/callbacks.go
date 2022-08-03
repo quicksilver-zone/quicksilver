@@ -343,7 +343,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return err
 	}
 
-	_, found = k.GetReceipt(ctx, GetReceiptKey(zone, res.GetTxResponse().TxHash))
+	_, found = k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, res.GetTxResponse().TxHash))
 	if found {
 		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", res.GetTxResponse().TxHash)
 		return nil

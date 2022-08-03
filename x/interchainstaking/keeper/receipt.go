@@ -221,7 +221,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 // ---------------------------------------------------------------
 
 func (k Keeper) NewReceipt(ctx sdk.Context, zone types.RegisteredZone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
-	return &types.Receipt{Zone: &zone, Sender: sender, Txhash: txhash, Amount: amount}
+	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount}
 }
 
 // GetReceipt returns receipt
@@ -241,7 +241,7 @@ func (k Keeper) GetReceipt(ctx sdk.Context, key string) (types.Receipt, bool) {
 func (k Keeper) SetReceipt(ctx sdk.Context, receipt types.Receipt) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
 	bz := k.cdc.MustMarshal(&receipt)
-	store.Set([]byte(GetReceiptKey(*receipt.Zone, receipt.Txhash)), bz)
+	store.Set([]byte(GetReceiptKey(receipt.ChainId, receipt.Txhash)), bz)
 }
 
 // DeleteReceipt delete receipt info
@@ -277,6 +277,6 @@ func (k Keeper) AllReceipts(ctx sdk.Context) []types.Receipt {
 	return receipts
 }
 
-func GetReceiptKey(zone types.RegisteredZone, txhash string) string {
-	return fmt.Sprintf("%s/%s", zone.ChainId, txhash)
+func GetReceiptKey(chainID string, txhash string) string {
+	return fmt.Sprintf("%s/%s", chainID, txhash)
 }
