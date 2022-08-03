@@ -126,8 +126,8 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID string, add
 		return 0, nil
 	}
 
-	// action completed, nothing to claim
-	if _, exists := cr.ActionCompleted[int32(action)]; exists {
+	// action already completed, nothing to claim
+	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
 		return 0, nil
 	}
 
@@ -241,7 +241,7 @@ func (k Keeper) Claim(ctx sdk.Context, chainID string, action types.Action, addr
 		return 0, nil
 	}
 
-	cr.ActionCompleted[int32(action)] = &types.CompletedAction{
+	cr.ActionsCompleted[int32(action)] = &types.CompletedAction{
 		CompleteTime: ctx.BlockTime(),
 		ClaimAmount:  claimAmount,
 	}

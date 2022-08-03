@@ -27,7 +27,7 @@ func ClaimRecordInvariant(k Keeper) sdk.Invariant {
 		crs := k.AllClaimRecords(ctx)
 		for _, cr := range crs {
 			sum := uint64(0)
-			for _, ca := range cr.ActionCompleted {
+			for _, ca := range cr.ActionsCompleted {
 				sum += ca.ClaimAmount
 			}
 			if cr.MaxAllocation < sum {

@@ -39,13 +39,10 @@ func (m RegisterZoneDropProposal) String() string {
 	b.WriteString("Airdrop - ZoneDrop Registration Proposal:\n")
 	b.WriteString(fmt.Sprintf("\tTitle:       %s\n", m.Title))
 	b.WriteString(fmt.Sprintf("\tDescription: %s\n", m.Description))
-	b.WriteString(fmt.Sprintf("\tZoneDrop:\n\n%v\n----------", m.ZoneDrop))
-	b.WriteString("\tClaimRecords:\n\n")
-
-	for _, cr := range m.ClaimRecords {
-		b.WriteString(fmt.Sprintf("%v\n\n", cr))
-	}
-	b.WriteString("----------\n")
-
+	b.WriteString("\tZoneDrop:\n")
+	b.WriteString(fmt.Sprintf("\n%v\n\n", m.ZoneDrop))
+	b.WriteString("\tClaimRecords:\n")
+	b.WriteString(fmt.Sprintf("\n%v\n", m.ClaimRecords))
+	b.WriteString("\n----------\n")
 	return b.String()
 }

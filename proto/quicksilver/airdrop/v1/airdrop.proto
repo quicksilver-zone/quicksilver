@@ -65,7 +65,7 @@ message ClaimRecord {
   string chain_id = 1;
   string address = 2;
   // Protobuf3 does not allow enum as map key
-  map<int32, CompletedAction> action_completed = 3;
+  map<int32, CompletedAction> actions_completed = 3;
   uint64 max_allocation = 4;
 }
 
