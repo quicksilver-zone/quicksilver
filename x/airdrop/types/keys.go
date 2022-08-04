@@ -9,8 +9,10 @@ const (
 	ModuleName = "airdrop"
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
-	// QuerierRoute is the querier route for the minting store.
+	// QuerierRoute is the querier route for the module
 	QuerierRoute = StoreKey
+	// RouterKey is the message route for the module
+	RouterKey = ModuleName
 )
 
 var (

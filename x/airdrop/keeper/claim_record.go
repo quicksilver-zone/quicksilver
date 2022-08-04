@@ -6,7 +6,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
-// GetClaimRecord returns the ClaimRecord for the given address on the given zone.
+// GetClaimRecord returns the ClaimRecord of the given address for the given zone.
 func (k Keeper) GetClaimRecord(ctx sdk.Context, chainID string, address string) (types.ClaimRecord, error) {
 	cr := types.ClaimRecord{}
 
@@ -126,8 +126,8 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID string, add
 		return 0, nil
 	}
 
-	// action completed, nothing to claim
-	if _, exists := cr.ActionCompleted[int32(action)]; exists {
+	// action already completed, nothing to claim
+	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
 		return 0, nil
 	}
 
@@ -195,8 +195,13 @@ func (k Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID string, addre
 	return total, nil
 }
 
-// Claim
-func (k Keeper) Claim(ctx sdk.Context, chainID string, address string, action types.Action) (uint64, error) {
+// Claim executes an airdrop claim for the given address on the given action
+// against the given zone (chainID). It returns the claim amount or an error
+// on failure.
+//
+// TODO: we also want to verify that the action was executed on the remote
+// chain before we execute the claim...
+func (k Keeper) Claim(ctx sdk.Context, chainID string, action types.Action, address string) (uint64, error) {
 	// get zone airdrop details
 	zd, ok := k.GetZoneDrop(ctx, chainID)
 	if !ok {
@@ -236,7 +241,7 @@ func (k Keeper) Claim(ctx sdk.Context, chainID string, address string, action ty
 		return 0, nil
 	}
 
-	cr.ActionCompleted[int32(action)] = &types.CompletedAction{
+	cr.ActionsCompleted[int32(action)] = &types.CompletedAction{
 		CompleteTime: ctx.BlockTime(),
 		ClaimAmount:  claimAmount,
 	}

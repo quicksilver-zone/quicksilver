@@ -4,6 +4,7 @@ package quicksilver.airdrop.v1;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 
 import "quicksilver/airdrop/v1/params.proto";
@@ -21,6 +22,11 @@ service Query {
   rpc ZoneDrop(QueryZoneDropRequest) returns (QueryZoneDropResponse) {
     option (google.api.http).get =
         "/quicksilver/airdrop/v1/zonedrop/{chain_id}";
+  }
+  // AccountBalance returns the module account balance of the specified zone.
+  rpc AccountBalance(QueryAccountBalanceRequest) returns (QueryAccountBalanceResponse) {
+    option (google.api.http).get =
+        "/quicksilver/airdrop/v1/accountbalance/{chain_id}";
   }
   // ZoneDrops returns all zone airdrops of the specified status.
   rpc ZoneDrops(QueryZoneDropsRequest) returns (QueryZoneDropsResponse) {
@@ -45,39 +51,61 @@ message QueryParamsRequest {}
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
+  option (gogoproto.goproto_getters) = false;
   // params defines the parameters of the module.
   Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryZoneDropRequest is the request type for Query/ZoneDrop RPC method.
 message QueryZoneDropRequest {
+  option (gogoproto.goproto_getters) = false;
   // chain_id identifies the zone.
   string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
 }
 
 // QueryZoneDropResponse is the response type for Query/ZoneDrop RPC method.
 message QueryZoneDropResponse {
+  option (gogoproto.goproto_getters) = false;
   ZoneDrop zone_drop = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryAccountBalanceRequest is the request type for Query/AccountBalance RPC method.
+message QueryAccountBalanceRequest {
+  option (gogoproto.goproto_getters) = false;
+  // chain_id identifies the zone.
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+}
+
+// QueryAccountBalanceResponse is the response type for Query/AccountBalance RPC method.
+message QueryAccountBalanceResponse {
+  option (gogoproto.goproto_getters) = false;
+
+  cosmos.base.v1beta1.Coin account_balance = 1 [ (gogoproto.moretags) = "yaml:\"account_balance\"" ];
 }
 
 // QueryZoneDropsRequest is the request type for Query/ZoneDrops RPC method.
 message QueryZoneDropsRequest {
+  option (gogoproto.goproto_getters) = false;
   // status enables to query zone airdrops matching a given status:
-  //  - active
-  //  - future
-  //  - expired
-  string status = 1;
+  //  - Active
+  //  - Future
+  //  - Expired
+  Status status = 1;
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 // QueryZoneDropResponse is the response type for Query/ZoneDrops RPC method.
 message QueryZoneDropsResponse {
+  option (gogoproto.goproto_getters) = false;
+
   repeated ZoneDrop zone_drops = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryClaimRecordRequest is the request type for Query/ClaimRecord RPC method.
 message QueryClaimRecordRequest {
+  option (gogoproto.goproto_getters) = false;
+
   string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
   string address = 2 [ (gogoproto.moretags) = "yaml:\"address\"" ];
 }
@@ -85,6 +113,8 @@ message QueryClaimRecordRequest {
 // QueryClaimRecordResponse is the response type for Query/ClaimRecord RPC
 // method.
 message QueryClaimRecordResponse {
+  option (gogoproto.goproto_getters) = false;
+
   ClaimRecord claim_record = 1
       [ (gogoproto.moretags) = "yaml:\"claim_record\"" ];
 }
@@ -92,6 +122,8 @@ message QueryClaimRecordResponse {
 // QueryClaimRecordsRequest is the request type for Query/ClaimRecords RPC
 // method.
 message QueryClaimRecordsRequest {
+  option (gogoproto.goproto_getters) = false;
+
   string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
@@ -99,6 +131,8 @@ message QueryClaimRecordsRequest {
 // QueryClaimRecordsResponse is the response type for Query/ClaimRecords RPC
 // method.
 message QueryClaimRecordsResponse {
+  option (gogoproto.goproto_getters) = false;
+  
   repeated ClaimRecord claim_records = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
