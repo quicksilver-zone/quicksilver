@@ -277,6 +277,43 @@ func (k Keeper) AllReceipts(ctx sdk.Context) []types.Receipt {
 	return receipts
 }
 
+// IterateZoneReceipts iterate through receipts of the given zone
+func (k Keeper) IterateZoneReceipts(ctx sdk.Context, zone *types.RegisteredZone, fn func(index int64, receiptInfo types.Receipt) (stop bool)) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
+	iterator := sdk.KVStorePrefixIterator(store, []byte(zone.ChainId))
+	defer iterator.Close()
+
+	i := int64(0)
+	for ; iterator.Valid(); iterator.Next() {
+		receipt := types.Receipt{}
+		k.cdc.MustUnmarshal(iterator.Value(), &receipt)
+		stop := fn(i, receipt)
+		if stop {
+			break
+		}
+		i++
+	}
+}
+
+// UserZoneReceipts returns all receipts of the given user for the given zone
+func (k Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.RegisteredZone, addr sdk.AccAddress) ([]types.Receipt, error) {
+	receipts := make([]types.Receipt, 0)
+
+	bech32Address, err := bech32.ConvertAndEncode(zone.AccountPrefix, addr)
+	if err != nil {
+		return receipts, err
+	}
+
+	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
+		if receipt.Sender == bech32Address {
+			receipts = append(receipts, receipt)
+		}
+		return false
+	})
+
+	return receipts, nil
+}
+
 func GetReceiptKey(chainID string, txhash string) string {
 	return fmt.Sprintf("%s/%s", chainID, txhash)
 }

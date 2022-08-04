@@ -25,9 +25,9 @@ func (m RegisterZoneDropProposal) ValidateBasic() error {
 		return err
 	}
 
-	// validate ZoneDrop
+	// validate ZoneDrop -> HandleRegisterZoneDropProposal
 
-	// validate ClaimRecords
+	// validate ClaimRecords -> HandleRegisterZoneDropProposal (after decompression)
 
 	return nil
 }
@@ -40,9 +40,7 @@ func (m RegisterZoneDropProposal) String() string {
 	b.WriteString(fmt.Sprintf("\tTitle:       %s\n", m.Title))
 	b.WriteString(fmt.Sprintf("\tDescription: %s\n", m.Description))
 	b.WriteString("\tZoneDrop:\n")
-	b.WriteString(fmt.Sprintf("\n%v\n\n", m.ZoneDrop))
-	b.WriteString("\tClaimRecords:\n")
-	b.WriteString(fmt.Sprintf("\n%v\n", m.ClaimRecords))
+	b.WriteString(fmt.Sprintf("\n%v\n", m.ZoneDrop))
 	b.WriteString("\n----------\n")
 	return b.String()
 }
