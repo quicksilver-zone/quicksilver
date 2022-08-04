@@ -176,8 +176,9 @@ func (im IBCModule) OnChanOpenAck(
 
 	// performance address
 	case len(portParts) == 2 && portParts[1] == "performance":
-
 		if err := im.registerPerformanceAddress(ctx, portID, address, &zoneInfo); err != nil {
+			im.keeper.Logger(ctx).Error("error registering performance address", "error", err, "channels", im.keeper.ICAControllerKeeper.GetAllActiveChannels(ctx), "icas", im.keeper.ICAControllerKeeper.GetAllInterchainAccounts(ctx))
+
 			return err
 		}
 
@@ -196,6 +197,7 @@ func (im IBCModule) registerPerformanceAddress(
 	zone *types.RegisteredZone,
 ) error {
 	zone.PerformanceAddress = &types.ICAAccount{Address: address, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt()), PortName: portID}
+	im.keeper.Logger(ctx).Error("perf addr", "p", zone.PerformanceAddress)
 
 	// set withdrawal address if, and only if withdrawal address is already set
 	if zone.WithdrawalAddress != nil {

@@ -7,8 +7,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-type OsmosisModule struct {
-}
+type OsmosisModule struct{}
 
 var _ Submodule = &OsmosisModule{}
 
@@ -47,7 +46,6 @@ func (m *OsmosisModule) IsReady() bool {
 }
 
 func (m *OsmosisModule) VerifyClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) error {
-	// osmosis claim is likely
 	return nil
 }
 

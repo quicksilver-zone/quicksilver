@@ -12,7 +12,6 @@ import (
 // SubmitClaim is used to verify, by proof, that the given user address has a
 // claim against the given asset type for the given zone.
 func (k *Keeper) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim) (*types.MsgSubmitClaimResponse, error) {
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// fetch zone

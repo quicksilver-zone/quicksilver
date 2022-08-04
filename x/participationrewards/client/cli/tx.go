@@ -24,7 +24,7 @@ func GetTxCmd() *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	//txCmd.AddCommand(GetSubmitClaimTxCmd())
+	// txCmd.AddCommand(GetSubmitClaimTxCmd())
 
 	return txCmd
 }

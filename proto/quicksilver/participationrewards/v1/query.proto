@@ -15,7 +15,8 @@ service Query {
         "/quicksilver/participationrewards/v1/params";
   }
 
-  rpc ProtocolData(QueryProtocolDataRequest) returns (QueryProtocolDataResponse) {
+  rpc ProtocolData(QueryProtocolDataRequest)
+      returns (QueryProtocolDataResponse) {
     option (google.api.http).get =
         "/quicksilver/participationrewards/v1/protocoldata/{protocol}";
   }
@@ -31,9 +32,7 @@ message QueryParamsResponse {
 }
 
 // QueryProtocolDataRequest is the request type for querying Protocol Data.
-message QueryProtocolDataRequest {
-  string protocol = 1;
-}
+message QueryProtocolDataRequest { string protocol = 1; }
 
 // QueryProtocolDataResponse is the response type for querying Protocol Data.
 message QueryProtocolDataResponse {

@@ -206,7 +206,10 @@ message GenesisState {
   repeated RegisteredZone zones = 2 [ (gogoproto.nullable) = false ];
   repeated Receipt receipts = 3 [ (gogoproto.nullable) = false ];
   repeated DelegationsForZone delegations = 4 [ (gogoproto.nullable) = false ];
-  repeated DelegationPlansForZone delegation_plans = 5 [ (gogoproto.nullable) = false ];
-  repeated DelegatorIntentsForZone delegator_intents = 6 [ (gogoproto.nullable) = false ];
-  repeated PortConnectionTuple port_connections = 7 [ (gogoproto.nullable) = false ];
+  repeated DelegationPlansForZone delegation_plans = 5
+      [ (gogoproto.nullable) = false ];
+  repeated DelegatorIntentsForZone delegator_intents = 6
+      [ (gogoproto.nullable) = false ];
+  repeated PortConnectionTuple port_connections = 7
+      [ (gogoproto.nullable) = false ];
 }

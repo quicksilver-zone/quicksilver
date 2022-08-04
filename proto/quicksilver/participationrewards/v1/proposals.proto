@@ -16,7 +16,7 @@ message AddProtocolDataProposal {
   string description = 2;
 
   string protocol = 3 [ (gogoproto.moretags) = "yaml:\"protocol\"" ];
-  string type = 4 [ (gogoproto.moretags) = "yaml:\"type\""];
+  string type = 4 [ (gogoproto.moretags) = "yaml:\"type\"" ];
   string key = 5 [ (gogoproto.moretags) = "yaml:\"key\"" ];
   string data = 6 [
     (gogoproto.moretags) = "yaml:\"data\"",
@@ -32,7 +32,7 @@ message AddProtocolDataProposalWithDeposit {
   string description = 2;
 
   string protocol = 3 [ (gogoproto.moretags) = "yaml:\"protocol\"" ];
-  string type = 4 [ (gogoproto.moretags) = "yaml:\"type\""];
+  string type = 4 [ (gogoproto.moretags) = "yaml:\"type\"" ];
   string key = 5 [ (gogoproto.moretags) = "yaml:\"key\"" ];
   bytes data = 6 [
     (gogoproto.moretags) = "yaml:\"data\"",
