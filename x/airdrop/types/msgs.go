@@ -29,11 +29,12 @@ func (msg MsgClaim) ValidateBasic() error {
 	errors := make(map[string]error)
 
 	if msg.ChainId == "" {
-		errors["ChainId"] = fmt.Errorf("invalid ChainID, empty string")
+		errors["ChainId"] = ErrUndefinedAttribute
 	}
 
-	if int(msg.Action) >= len(Action_value) {
-		errors["Action"] = fmt.Errorf("invalid action, expects range [0-%d), got %d", len(Action_value), msg.Action)
+	action := int(msg.Action)
+	if action < 0 || action >= len(Action_value) {
+		errors["Action"] = fmt.Errorf("%w, got %d", ErrActionOutOfBounds, msg.Action)
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Address); err != nil {
