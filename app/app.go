@@ -458,7 +458,6 @@ func NewQuicksilver(
 	var icaControllerStack porttypes.IBCModule
 	icaControllerStack = ibcmock.NewIBCModule(&mockModule, ibcmock.NewMockIBCApp("", scopedICAMockKeeper))
 	app.ICAAuthModule = icaControllerStack.(ibcmock.IBCModule)
-	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.ICAControllerKeeper)
 	icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.IBCFeeKeeper)
 
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
@@ -468,13 +467,20 @@ func NewQuicksilver(
 	icaHostStack = icahost.NewIBCModule(app.ICAHostKeeper)
 	icaHostStack = ibcfee.NewIBCMiddleware(icaHostStack, app.IBCFeeKeeper)
 
+	interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
+	var icaControllerIBCModule porttypes.IBCModule
+	icaControllerIBCModule = ibcmock.NewIBCModule(&mockModule, ibcmock.NewMockIBCApp("", scopedInterchainStakingKeeper))
+	app.ICAAuthModule = icaControllerIBCModule.(ibcmock.IBCModule)
+	icaControllerIBCModule = icacontroller.NewIBCMiddleware(interchainstakingIBCModule, app.ICAControllerKeeper)
+	icaControllerIBCModule = ibcfee.NewIBCMiddleware(icaControllerIBCModule, app.IBCFeeKeeper)
+
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, transferStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostStack).
-		AddRoute(interchainstakingtypes.ModuleName, icaControllerStack).
+		AddRoute(interchainstakingtypes.ModuleName, icaControllerIBCModule).
 		AddRoute(ibcmock.ModuleName, mockIBCModule).
 		AddRoute(ibcmock.ModuleName+icacontrollertypes.SubModuleName, icaControllerStack) // ica with mock auth module stack route to ica (top level of middleware stack)
 	app.IBCKeeper.SetRouter(ibcRouter)
@@ -516,8 +522,6 @@ func NewQuicksilver(
 
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
 
-	// interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
-
 	app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler())
 
 	app.ParticipationRewardsKeeper = participationrewardskeeper.NewKeeper(
@@ -545,7 +549,6 @@ func NewQuicksilver(
 		),
 	)
 
-	// icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, app.ICAControllerKeeper)
 	// icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 
 	// create evidence keeper with router
