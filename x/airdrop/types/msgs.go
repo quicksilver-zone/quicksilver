@@ -13,7 +13,6 @@ const (
 )
 
 // NewMsgClaim constructs a msg to claim from a zone airdrop.
-//nolint:interfacer
 func NewMsgClaim(chainID string, action int32, fromAddress sdk.Address) *MsgClaim {
 	return &MsgClaim{ChainId: chainID, Action: action, Address: fromAddress.String()}
 }

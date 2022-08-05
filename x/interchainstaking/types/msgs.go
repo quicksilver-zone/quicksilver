@@ -17,7 +17,6 @@ const (
 )
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
-//nolint:interfacer
 func NewMsgRequestRedemption(coin string, destinationAddress string, fromAddress sdk.Address) *MsgRequestRedemption {
 	return &MsgRequestRedemption{Coin: coin, DestinationAddress: destinationAddress, FromAddress: fromAddress.String()}
 }
@@ -98,7 +97,6 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 }
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
-//nolint:interfacer
 func NewMsgSignalIntent(chainID string, intents []*ValidatorIntent, fromAddress sdk.Address) *MsgSignalIntent {
 	return &MsgSignalIntent{ChainId: chainID, Intents: intents, FromAddress: fromAddress.String()}
 }
