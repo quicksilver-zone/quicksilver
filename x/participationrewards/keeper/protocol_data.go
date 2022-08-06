@@ -39,10 +39,10 @@ func (k Keeper) DeleteProtocolData(ctx sdk.Context, key string, protocol string)
 	store.Delete([]byte(GetProtocolDataKey(protocol, key)))
 }
 
-// IterateQueries iterate through protocol datas
-func (k Keeper) IterateProtocolDatas(ctx sdk.Context, protocol string, fn func(index int64, data types.ProtocolData) (stop bool)) {
+// IteratePrefixedProtocolDatas iterate through protocol datas with the given prefix and perform the provided function
+func (k Keeper) IteratePrefixedProtocolDatas(ctx sdk.Context, keyPrefix string, fn func(index int64, data types.ProtocolData) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(protocol))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(keyPrefix))
 	defer iterator.Close()
 
 	i := int64(0)
@@ -55,6 +55,34 @@ func (k Keeper) IterateProtocolDatas(ctx sdk.Context, protocol string, fn func(i
 		}
 		i++
 	}
+}
+
+// IterateAllProtocolDatas iterate through protocol data and perform the provided function
+func (k Keeper) IterateAllProtocolDatas(ctx sdk.Context, fn func(index int64, key string, data types.ProtocolData) (stop bool)) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
+	iterator := sdk.KVStorePrefixIterator(store, nil)
+	defer iterator.Close()
+
+	i := int64(0)
+	for ; iterator.Valid(); iterator.Next() {
+		data := types.ProtocolData{}
+		k.cdc.MustUnmarshal(iterator.Value(), &data)
+		stop := fn(i, string(iterator.Key()), data)
+		if stop {
+			break
+		}
+		i++
+	}
+}
+
+// AllKeyedProtocolDatas returns a slice containing all protocol datas and their keys from the store.
+func (k Keeper) AllKeyedProtocolDatas(ctx sdk.Context) []*types.KeyedProtocolData {
+	out := make([]*types.KeyedProtocolData, 0)
+	k.IterateAllProtocolDatas(ctx, func(_ int64, key string, data types.ProtocolData) (stop bool) {
+		out = append(out, &types.KeyedProtocolData{Key: key, ProtocolData: &data})
+		return false
+	})
+	return out
 }
 
 func GetProtocolDataKey(protocol string, key string) string {

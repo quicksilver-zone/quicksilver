@@ -18,5 +18,8 @@ func ValidateGenesis(data GenesisState) error {
 		return err
 	}
 
+	// TODO: validate protocol data is valid
+	// TODO: validate claims pertain to existing chains
+
 	return nil
 }

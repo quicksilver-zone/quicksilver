@@ -32,10 +32,22 @@ message Params {
 
   // distribution_proportions defines the proportions of the minted
   // participation rewards;
-  DistributionProportions distribution_proportions = 6
+  DistributionProportions distribution_proportions = 1
       [ (gogoproto.nullable) = false ];
 }
 
+// Claim define the users claim for holdings rewards for the last epoch.
+message Claim {
+  string user_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string zone = 2;
+  int64 held_amount = 3;
+}
+
+message KeyedProtocolData {
+  string key = 1;
+  ProtocolData protocol_data = 2;
+}
+// Protocol Data is an arbitrary data type held against a given zone for the determination of rewards. 
 message ProtocolData {
   string protocol = 1;
   string type = 2;

@@ -22,7 +22,7 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 func (k Keeper) ProtocolData(c context.Context, q *types.QueryProtocolDataRequest) (*types.QueryProtocolDataResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	out := []json.RawMessage{}
-	k.IterateProtocolDatas(ctx, q.Protocol, func(index int64, data types.ProtocolData) (stop bool) {
+	k.IteratePrefixedProtocolDatas(ctx, q.Protocol, func(index int64, data types.ProtocolData) (stop bool) {
 		out = append(out, data.Data)
 		return false
 	})

@@ -16,4 +16,7 @@ const (
 	ClaimTypeSifchainPool = 3
 )
 
-var KeyPrefixProtocolData = []byte{0x01}
+var (
+	KeyPrefixProtocolData = []byte{0x00}
+	KeyPrefixClaim        = []byte{0x01}
+)

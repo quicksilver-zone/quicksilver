@@ -7,4 +7,9 @@ import "quicksilver/participationrewards/v1/participationrewards.proto";
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
 
 // GenesisState defines the participationrewards module's genesis state.
-message GenesisState { Params params = 1 [ (gogoproto.nullable) = false ]; }
+message GenesisState { 
+    Params params = 1 [ (gogoproto.nullable) = false ]; 
+    repeated Claim claims = 2;   
+    repeated KeyedProtocolData protocol_data = 3; 
+}
+
