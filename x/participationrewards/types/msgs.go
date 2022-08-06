@@ -7,7 +7,6 @@ import (
 var _ sdk.Msg = &MsgSubmitClaim{}
 
 // NewMsgSubmitClaim - construct a msg to submit a claim.
-//nolint:interfacer
 func NewMsgSubmitClaim(
 	userAddress sdk.Address,
 	zone string,

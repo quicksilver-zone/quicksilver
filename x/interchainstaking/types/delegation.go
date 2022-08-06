@@ -11,7 +11,6 @@ import (
 )
 
 // NewDelegation creates a new delegation object
-//nolint:interfacer
 func NewDelegation(delegatorAddr string, validatorAddr string, amount sdk.Coin) Delegation {
 	return Delegation{
 		DelegationAddress: delegatorAddr,
