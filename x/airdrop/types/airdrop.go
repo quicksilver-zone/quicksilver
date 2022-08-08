@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
@@ -37,6 +38,14 @@ func (zd ZoneDrop) ValidateBasic() error {
 	// must have at least one defined
 	if zd.Actions == nil || len(zd.Actions) == 0 {
 		errors["Actions"] = ErrUndefinedAttribute
+	} else {
+		wsum := sdk.ZeroDec()
+		for _, aw := range zd.Actions {
+			wsum = wsum.Add(aw)
+		}
+		if !wsum.Equal(sdk.OneDec()) {
+			errors["Actions"] = fmt.Errorf("%w, got %s", ErrActionWeights, wsum)
+		}
 	}
 
 	if len(errors) > 0 {
@@ -70,11 +79,21 @@ func (cr ClaimRecord) ValidateBasic() error {
 		i := 0
 		sum := uint64(0)
 		for ae, ca := range cr.ActionsCompleted {
+			// check enum bounds
+			kstr := fmt.Sprintf("ActionsCompleted[%d]", i)
 			if int(ae) >= len(Action_name) {
-				kstr := fmt.Sprintf("ActionsCompleted[%d]", i)
-				errors[kstr] = fmt.Errorf("enum out of bounds, expects [0-%d), got %d", len(Action_name), ae)
+				errors[kstr+" Enum"] = fmt.Errorf("%w, got %d", ErrActionOutOfBounds, ae)
 			}
+			// calc sum
 			sum += ca.ClaimAmount
+			// check completed time
+			if ca.CompleteTime.After(time.Now()) {
+				errors[kstr+" CompleteTime"] = fmt.Errorf("invalid spacetime continuum, time is in the future")
+			}
+			// check claim amount
+			if ca.ClaimAmount > cr.MaxAllocation {
+				errors[kstr+" ClaimAmount"] = fmt.Errorf("exceeds max allocation")
+			}
 			i++
 		}
 

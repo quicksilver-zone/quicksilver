@@ -44,26 +44,31 @@ func ValidateGenesis(data GenesisState) error {
 
 	claimMap := make(map[string]int)
 	for i, cr := range data.ClaimRecords {
-		// validate claim record
-		if err := cr.ValidateBasic(); err != nil {
-			return err
-		}
 		// check for duplicate
 		key := cr.ChainId + "." + cr.Address
 		if cmi, exists := claimMap[key]; exists {
 			return fmt.Errorf("%w, [%d] %s already used for zone drop [%d]", ErrDuplicateClaimRecord, i, key, cmi)
 		}
-		claimMap[key] = i
-		// sum MaxAllocations per zone
+		// validate claim record
+		if err := cr.ValidateBasic(); err != nil {
+			return err
+		}
+		// check corresponding zone drop exists
 		if _, exists := zoneMap[cr.ChainId]; !exists {
 			return fmt.Errorf("%w, %s for claim record [%d]", ErrZoneDropNotFound, cr.ChainId, i)
 		}
+		// sum MaxAllocations per zone
 		sumMap[cr.ChainId] += cr.MaxAllocation
+		// add to lookup map
+		claimMap[key] = i
 	}
 
-	for _, zd := range data.ZoneDrops {
+	for i, zd := range data.ZoneDrops {
 		if zd.Allocation < sumMap[zd.ChainId] {
-			return ErrAllocationExceeded
+			return fmt.Errorf("%w, zone drop [%d], max %v, got %v", ErrAllocationExceeded, i, zd.Allocation, sumMap[zd.ChainId])
+		}
+		if sumMap[zd.ChainId] == 0 {
+			return fmt.Errorf("%w, %s [%d]", ErrNoClaimRecords, zd.ChainId, i)
 		}
 	}
 
