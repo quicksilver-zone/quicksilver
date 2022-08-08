@@ -890,8 +890,6 @@ github.com/leodido/go-urn v1.2.0 h1:hpXL4XnriNwQ/ABnpepYM/1vCLWNDfUNts8dX3xTG6Y=
 github.com/leodido/go-urn v1.2.0/go.mod h1:+8+nEpDfqqsY+g338gtMEUOtuK+4dEMhiQEgxpxOKII=
 github.com/leonklingele/grouper v1.1.0/go.mod h1:uk3I3uDfi9B6PeUjsCKi6ndcf63Uy7snXgR4yDYQVDY=
 github.com/letsencrypt/pkcs11key/v4 v4.0.0/go.mod h1:EFUvBDay26dErnNb70Nd0/VW3tJiIbETBPTl9ATXQag=
-github.com/levanhieuhust/cosmos-sdk v0.46.0-quicksilverb h1:eYRljf8MPx2zaMBwcu+uTHSvuqoDNB2iaZ+IZvD/NOc=
-github.com/levanhieuhust/cosmos-sdk v0.46.0-quicksilverb/go.mod h1:nK39fRb7XB+4X9aJyr3j0Mwp14epBWtrGZ6YXjeY44w=
 github.com/lib/pq v0.0.0-20180327071824-d34b9ff171c2/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.0.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.2.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
@@ -1035,6 +1033,8 @@ github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLA
 github.com/nishanths/exhaustive v0.7.11/go.mod h1:gX+MP7DWMKJmNa1HfMozK+u04hQd3na9i0hyqf3/dOI=
 github.com/nishanths/predeclared v0.0.0-20190419143655-18a43bb90ffc/go.mod h1:62PewwiQTlm/7Rj+cxVYqZvDIUc+JjZq6GHAC1fsObQ=
 github.com/nishanths/predeclared v0.2.2/go.mod h1:RROzoN6TnGQupbC+lqggsOlcgysk3LMK/HI84Mp280c=
+github.com/notional-labs/cosmos-sdk v0.46.0-quicksilver h1:TeWEbSCq7XzpCYmBWPd23p0lBcKoxVuGzMTrbCpBV6w=
+github.com/notional-labs/cosmos-sdk v0.46.0-quicksilver/go.mod h1:nK39fRb7XB+4X9aJyr3j0Mwp14epBWtrGZ6YXjeY44w=
 github.com/notional-labs/ibc-go/v4 v4.0.0-20220707091415-8e4f87eaef2d h1:5SjoaTik8W+EKWXOKUiPHfPXWAp6Xffh857yjDEFXJE=
 github.com/notional-labs/ibc-go/v4 v4.0.0-20220707091415-8e4f87eaef2d/go.mod h1:XYDJZB5bOpOPJpuL+fb6h1MOHtQdygZJNUx/D8aTCHs=
 github.com/notional-labs/tm-db v0.6.7-0.20220704213938-a15237b6faf1 h1:6TFqOfcpewbfYVtap0jYUcGEh/PCgu4O259SJ/3JGoM=
