@@ -127,7 +127,7 @@ import (
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
-func init() {
+func Init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
@@ -138,8 +138,7 @@ func init() {
 
 const (
 	// Name defines the application binary name
-	Name        = "quicksilverd"
-	upgradeName = "underpressure"
+	Name = "quicksilverd"
 )
 
 var (
@@ -723,14 +722,14 @@ func NewQuicksilver(
 	app.SetAnteHandler(NewAnteHandler(options))
 	app.SetEndBlocker(app.EndBlocker)
 
-	app.UpgradeKeeper.SetUpgradeHandler(
-		upgradeName,
-		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			ctx.Logger().Info("no-op upgrade to underpressure")
+	// app.UpgradeKeeper.SetUpgradeHandler(
+	// 	upgradeName,
+	// 	func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	// 		ctx.Logger().Info("no-op upgrade to underpressure")
 
-			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-		},
-	)
+	// 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	// 	},
+	// )
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {

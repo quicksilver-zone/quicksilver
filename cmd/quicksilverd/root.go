@@ -47,6 +47,7 @@ const (
 // NewRootCmd creates a new root command for quicksilverd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
+	app.Init()
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
