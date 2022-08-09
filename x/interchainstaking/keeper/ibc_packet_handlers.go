@@ -221,7 +221,8 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg, memo stri
 	// check for sending of tokens from deposit -> delegate.
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
-		k.Logger(ctx).Error("1" + err.Error())
+		err = fmt.Errorf("1: %w", err)
+		k.Logger(ctx).Error(err.Error())
 		return err
 	}
 
@@ -274,7 +275,7 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 	// get zone
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
-		return fmt.Errorf("2: %s", err.Error())
+		return fmt.Errorf("2: %w", err)
 	}
 
 	// checks here are specific to ensure future extensibility;
@@ -481,7 +482,7 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, 
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
 		k.Logger(ctx).Error(err.Error())
-		return "", fmt.Errorf("3: %s", err.Error())
+		return "", fmt.Errorf("3: %w", err)
 	}
 
 	for _, val := range zone.GetValidatorsAddressesAsSlice() {
