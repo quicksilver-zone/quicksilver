@@ -275,7 +275,9 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 	// get zone
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
-		return fmt.Errorf("2: %w", err)
+		err = fmt.Errorf("2: %w", err)
+		k.Logger(ctx).Error(err.Error())
+		return err
 	}
 
 	// checks here are specific to ensure future extensibility;
@@ -481,8 +483,9 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, amount sdk.Coin) (string, error) {
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
+		err = fmt.Errorf("3: %w", err)
 		k.Logger(ctx).Error(err.Error())
-		return "", fmt.Errorf("3: %w", err)
+		return "", err
 	}
 
 	for _, val := range zone.GetValidatorsAddressesAsSlice() {
@@ -622,8 +625,9 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
+		err = fmt.Errorf("4: %w", err)
 		k.Logger(ctx).Error(err.Error())
-		return fmt.Errorf("4: %s", err.Error())
+		return err
 	}
 	// decrement withdrawal waitgroup
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
