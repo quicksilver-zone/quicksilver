@@ -17,7 +17,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	// every epoch
 	k.Logger(ctx).Info("handling epoch end")
 	if epochIdentifier == "epoch" {
-		k.IterateRegisteredZones(ctx, func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
+		k.IterateZones(ctx, func(index int64, zoneInfo types.Zone) (stop bool) {
 			blockQuery := tmservice.GetLatestBlockRequest{}
 			bz := k.cdc.MustMarshal(&blockQuery)
 
@@ -77,7 +77,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				zoneInfo.WithdrawalWaitgroup++
 				k.Logger(ctx).Info("Incrementing waitgroup for delegation", "value", zoneInfo.WithdrawalWaitgroup)
 			}
-			k.SetRegisteredZone(ctx, zoneInfo)
+			k.SetZone(ctx, &zoneInfo)
 
 			return false
 		})

@@ -26,9 +26,14 @@ const (
 
 	TxRetrieveCount = 100
 
-	QueryParameters                   = "params"
-	QueryRegisteredZonesInfo          = "zones"
-	QueryRegisteredZoneDepositAddress = "zones/deposit_address"
+	QueryParameters         = "params"
+	QueryZones              = "zones"
+	QueryZoneDepositAddress = "zones/deposit_address"
+
+	ICASuffixDeposit     = "deposit"
+	ICASuffixDelegate    = "delegate"
+	ICASuffixWithdrawal  = "withdrawal"
+	ICASuffixPerformance = "performance"
 )
 
 var (

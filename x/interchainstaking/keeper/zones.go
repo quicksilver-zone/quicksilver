@@ -9,15 +9,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// GetRegisteredZoneInfo returns zone info by chainID
-func (k Keeper) GetRegisteredZoneInfo(ctx sdk.Context, chainID string) (types.RegisteredZone, bool) {
-	zone := types.RegisteredZone{}
+// GetZone returns zone info by chainID
+func (k Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
+	zone := types.Zone{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := store.Get([]byte(chainID))
 	if len(bz) == 0 {
@@ -28,21 +29,21 @@ func (k Keeper) GetRegisteredZoneInfo(ctx sdk.Context, chainID string) (types.Re
 	return zone, true
 }
 
-// SetRegisteredZone set zone info
-func (k Keeper) SetRegisteredZone(ctx sdk.Context, zone types.RegisteredZone) {
+// SetZone set zone info
+func (k Keeper) SetZone(ctx sdk.Context, zone *types.Zone) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-	bz := k.cdc.MustMarshal(&zone)
+	bz := k.cdc.MustMarshal(zone)
 	store.Set([]byte(zone.ChainId), bz)
 }
 
-// DeleteRegisteredZone delete zone info
-func (k Keeper) DeleteRegisteredZone(ctx sdk.Context, chainID string) {
+// DeleteZone delete zone info
+func (k Keeper) DeleteZone(ctx sdk.Context, chainID string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	store.Delete([]byte(chainID))
 }
 
-// IterateRegisteredZones iterate through zones
-func (k Keeper) IterateRegisteredZones(ctx sdk.Context, fn func(index int64, zoneInfo types.RegisteredZone) (stop bool)) {
+// IterateZones iterate through zones
+func (k Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo types.Zone) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -51,7 +52,7 @@ func (k Keeper) IterateRegisteredZones(ctx sdk.Context, fn func(index int64, zon
 	i := int64(0)
 
 	for ; iterator.Valid(); iterator.Next() {
-		zone := types.RegisteredZone{}
+		zone := types.Zone{}
 		k.cdc.MustUnmarshal(iterator.Value(), &zone)
 
 		stop := fn(i, zone)
@@ -63,10 +64,10 @@ func (k Keeper) IterateRegisteredZones(ctx sdk.Context, fn func(index int64, zon
 	}
 }
 
-// AllRegisteredZonesInfos returns every zoneInfo in the store
-func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
-	zones := []types.RegisteredZone{}
-	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+// AllZonesInfos returns every zoneInfo in the store
+func (k Keeper) AllZones(ctx sdk.Context) []types.Zone {
+	zones := []types.Zone{}
+	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
 		zones = append(zones, zoneInfo)
 		return false
 	})
@@ -74,12 +75,12 @@ func (k Keeper) AllRegisteredZones(ctx sdk.Context) []types.RegisteredZone {
 }
 
 // GetZoneFromContext determines the zone from the current context
-func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.RegisteredZone, error) {
+func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 	chainID, err := k.GetChainIDFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch zone from context: %w", err)
 	}
-	zone, found := k.GetRegisteredZoneInfo(ctx, chainID)
+	zone, found := k.GetZone(ctx, chainID)
 	if !found {
 		err := fmt.Errorf("unable to fetch zone from context: not found for chainID %s", chainID)
 		k.Logger(ctx).Error(err.Error())
@@ -89,9 +90,9 @@ func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.RegisteredZone, erro
 }
 
 // GetZoneForDelegateAccount determines the zone for a given address.
-func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.RegisteredZone {
-	var zone *types.RegisteredZone
-	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.Zone {
+	var zone *types.Zone
+	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
 		for _, ica := range zoneInfo.GetDelegationAccounts() {
 			if ica.Address == address {
 				zone = &zoneInfo
@@ -103,9 +104,9 @@ func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *type
 	return zone
 }
 
-func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *types.RegisteredZone {
-	var zone *types.RegisteredZone
-	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *types.Zone {
+	var zone *types.Zone
+	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
 		if zoneInfo.PerformanceAddress.Address == address {
 			zone = &zoneInfo
 			return true
@@ -116,10 +117,10 @@ func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *t
 }
 
 // GetZoneForDelegateAccount determines the zone, and returns the ICAAccount for a given address.
-func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*types.RegisteredZone, *types.ICAAccount) {
+func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*types.Zone, *types.ICAAccount) {
 	var ica *types.ICAAccount
-	var zone *types.RegisteredZone
-	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+	var zone *types.Zone
+	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
 		for _, delegateAccount := range zoneInfo.GetDelegationAccounts() {
 			if delegateAccount.Address == address {
 				ica = delegateAccount
@@ -161,7 +162,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 }
 
 // SetAccountBalanceForDenom sets the balance on an account for a given denominination.
-func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZone, address string, coin sdk.Coin) error {
+func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, address string, coin sdk.Coin) error {
 	// ? is this switch statement still required ?
 	// prior to callback we had no way to distinguish the originator
 	// with the query type in setAccountCb this is probably superfluous...
@@ -230,12 +231,12 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZ
 		icaAccount.BalanceWaitgroup--
 
 	}
-	k.SetRegisteredZone(ctx, zone)
+	k.SetZone(ctx, &zone)
 	return nil
 }
 
 // SetAccountBalance triggers provable KV queries to prove an AllBalances query.
-func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, address string, queryResult []byte) error {
+func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address string, queryResult []byte) error {
 	queryRes := banktypes.QueryAllBalancesResponse{}
 	err := k.cdc.Unmarshal(queryResult, &queryRes)
 	if err != nil {
@@ -301,7 +302,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.RegisteredZone, ad
 		icaAccount.BalanceWaitgroup++
 	}
 
-	k.SetRegisteredZone(ctx, zone)
+	k.SetZone(ctx, &zone)
 	return nil
 }
 
@@ -383,7 +384,7 @@ func SatisfyRequestsForBins(requests types.Allocations, bins types.Allocations, 
 	return requests
 }
 
-func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.RegisteredZone, requests types.Allocations) RedemptionTargets {
+func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.Zone, requests types.Allocations) RedemptionTargets {
 	out := RedemptionTargets{}
 
 	bins := k.GetDelegationBinsMap(ctx, &zone)
@@ -425,7 +426,7 @@ func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.RegisteredZone
 	return out
 }
 
-func (k Keeper) InitPerformanceDelegations(ctx sdk.Context, zone types.RegisteredZone, response []byte) error {
+func (k Keeper) InitPerformanceDelegations(ctx sdk.Context, zone types.Zone, response []byte) error {
 	k.Logger(ctx).Info("Initialize performance delegations")
 
 	resp := banktypes.QueryAllBalancesResponse{}

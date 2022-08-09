@@ -58,8 +58,8 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 			"valid",
 			[]string{},
 			false,
-			&types.QueryRegisteredZonesInfoResponse{},
-			&types.QueryRegisteredZonesInfoResponse{
+			&types.QueryZonesInfoResponse{},
+			&types.QueryZonesInfoResponse{
 				Pagination: &query.PageResponse{},
 			},
 		},

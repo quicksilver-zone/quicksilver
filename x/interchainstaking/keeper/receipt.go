@@ -19,7 +19,7 @@ import (
 
 const UNSET = "unset"
 
-func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.RegisteredZone) {
+func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.Zone) {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
 	hash := txr.TxHash
 	memo := txn.Body.Memo
@@ -103,7 +103,7 @@ func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
 	return out
 }
 
-func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.RegisteredZone, inCoins sdk.Coins) error {
+func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Zone, inCoins sdk.Coins) error {
 	outCoins := sdk.Coins{}
 	for _, inCoin := range inCoins {
 		outAmount := inCoin.Amount.ToDec().Quo(zone.RedemptionRate).TruncateInt()
@@ -125,7 +125,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.R
 	return nil
 }
 
-func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, plan types.Allocations, memo string) error {
+func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.Zone, plan types.Allocations, memo string) error {
 	// if zone.SupportMultiSend() {
 	// 	return k.TransferToDelegateMulti(ctx, zone, plan, memo)
 	// } else {
@@ -141,7 +141,7 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, 
 
 //}
 
-// func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.RegisteredZone, plan types.SendPlan, memo string) error {
+// func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.Zone, plan types.SendPlan, memo string) error {
 // 	eachAmount := sdk.Coins{}
 // 	splits := utils.MinU64(append([]uint64{}, k.GetParam(ctx, types.KeyDelegateAccountCount), uint64(len(zone.GetDelegationAccounts()))))
 
@@ -184,10 +184,11 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 	if err != nil {
 		return err
 	}
+	k.Logger(ctx).Error("connection", "conn", connectionID)
 
 	channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, connectionID, portID)
 	if !found {
-		return sdkerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s", portID)
+		return sdkerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s in submittx", portID)
 	}
 
 	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
@@ -207,7 +208,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		Memo: memo,
 	}
 
-	// timeoutTimestamp set to max value with the unsigned bit shifted to sastisfy hermes timestamp conversion
+	// timeoutTimestamp set to max value with the unsigned bit shifted to satisfy hermes timestamp conversion
 	// it is the responsibility of the auth module developer to ensure an appropriate timeout timestamp
 	timeoutTimestamp := ^uint64(0) >> 1
 	_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
@@ -220,7 +221,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 // ---------------------------------------------------------------
 
-func (k Keeper) NewReceipt(ctx sdk.Context, zone types.RegisteredZone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
+func (k Keeper) NewReceipt(ctx sdk.Context, zone types.Zone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
 	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount}
 }
 
@@ -278,7 +279,7 @@ func (k Keeper) AllReceipts(ctx sdk.Context) []types.Receipt {
 }
 
 // IterateZoneReceipts iterate through receipts of the given zone
-func (k Keeper) IterateZoneReceipts(ctx sdk.Context, zone *types.RegisteredZone, fn func(index int64, receiptInfo types.Receipt) (stop bool)) {
+func (k Keeper) IterateZoneReceipts(ctx sdk.Context, zone *types.Zone, fn func(index int64, receiptInfo types.Receipt) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
 	iterator := sdk.KVStorePrefixIterator(store, []byte(zone.ChainId))
 	defer iterator.Close()
@@ -296,7 +297,7 @@ func (k Keeper) IterateZoneReceipts(ctx sdk.Context, zone *types.RegisteredZone,
 }
 
 // UserZoneReceipts returns all receipts of the given user for the given zone
-func (k Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.RegisteredZone, addr sdk.AccAddress) ([]types.Receipt, error) {
+func (k Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.Zone, addr sdk.AccAddress) ([]types.Receipt, error) {
 	receipts := make([]types.Receipt, 0)
 
 	bech32Address, err := bech32.ConvertAndEncode(zone.AccountPrefix, addr)

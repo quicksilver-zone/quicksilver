@@ -8,7 +8,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (k Keeper) getStoreKey(zone types.RegisteredZone, snapshot bool) []byte {
+func (k Keeper) getStoreKey(zone types.Zone, snapshot bool) []byte {
 	if snapshot {
 		return append(types.KeyPrefixSnapshotIntent, []byte(zone.ChainId)...)
 	}
@@ -16,7 +16,7 @@ func (k Keeper) getStoreKey(zone types.RegisteredZone, snapshot bool) []byte {
 }
 
 // GetIntent returns intent info by zone and delegator
-func (k Keeper) GetIntent(ctx sdk.Context, zone types.RegisteredZone, delegator string, snapshot bool) (types.DelegatorIntent, bool) {
+func (k Keeper) GetIntent(ctx sdk.Context, zone types.Zone, delegator string, snapshot bool) (types.DelegatorIntent, bool) {
 	intent := types.DelegatorIntent{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 	bz := store.Get([]byte(delegator))
@@ -29,20 +29,20 @@ func (k Keeper) GetIntent(ctx sdk.Context, zone types.RegisteredZone, delegator 
 }
 
 // SetIntent store the delegator intent
-func (k Keeper) SetIntent(ctx sdk.Context, zone types.RegisteredZone, intent types.DelegatorIntent, snapshot bool) {
+func (k Keeper) SetIntent(ctx sdk.Context, zone types.Zone, intent types.DelegatorIntent, snapshot bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 	bz := k.cdc.MustMarshal(&intent)
 	store.Set([]byte(intent.Delegator), bz)
 }
 
 // DeleteIntent deletes delegator intent
-func (k Keeper) DeleteIntent(ctx sdk.Context, zone types.RegisteredZone, delegator string, snapshot bool) {
+func (k Keeper) DeleteIntent(ctx sdk.Context, zone types.Zone, delegator string, snapshot bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 	store.Delete([]byte(delegator))
 }
 
 // IterateIntents iterate through intents for a given zone
-func (k Keeper) IterateIntents(ctx sdk.Context, zone types.RegisteredZone, snapshot bool, fn func(index int64, intent types.DelegatorIntent) (stop bool)) {
+func (k Keeper) IterateIntents(ctx sdk.Context, zone types.Zone, snapshot bool, fn func(index int64, intent types.DelegatorIntent) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -64,7 +64,7 @@ func (k Keeper) IterateIntents(ctx sdk.Context, zone types.RegisteredZone, snaps
 }
 
 // AllIntents returns every intent in the store for the specified zone
-func (k Keeper) AllIntents(ctx sdk.Context, zone types.RegisteredZone, snapshot bool) []types.DelegatorIntent {
+func (k Keeper) AllIntents(ctx sdk.Context, zone types.Zone, snapshot bool) []types.DelegatorIntent {
 	intents := []types.DelegatorIntent{}
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		intents = append(intents, intent)
@@ -74,7 +74,7 @@ func (k Keeper) AllIntents(ctx sdk.Context, zone types.RegisteredZone, snapshot 
 }
 
 // AllIntents returns every intent in the store for the specified zone
-func (k Keeper) AllIntentsAsPointer(ctx sdk.Context, zone types.RegisteredZone, snapshot bool) []*types.DelegatorIntent {
+func (k Keeper) AllIntentsAsPointer(ctx sdk.Context, zone types.Zone, snapshot bool) []*types.DelegatorIntent {
 	intents := []*types.DelegatorIntent{}
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		intents = append(intents, &intent)
@@ -84,7 +84,7 @@ func (k Keeper) AllIntentsAsPointer(ctx sdk.Context, zone types.RegisteredZone, 
 }
 
 // AllOrdinalizedIntents returns every intent in the store for the specified zone
-func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.RegisteredZone, snapshot bool) []types.DelegatorIntent {
+func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot bool) []types.DelegatorIntent {
 	intents := []types.DelegatorIntent{}
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		query := bankTypes.QueryBalanceRequest{Address: intent.Delegator, Denom: zone.LocalDenom}
@@ -99,7 +99,7 @@ func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.RegisteredZone
 	return intents
 }
 
-func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.RegisteredZone) {
+func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) {
 	snapshot := false
 	intents := map[string]*types.ValidatorIntent{}
 	ordinalizedIntentSum := sdk.ZeroDec()
@@ -130,10 +130,10 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.RegisteredZone) {
 	}
 
 	zone.AggregateIntent = intents
-	k.SetRegisteredZone(ctx, zone)
+	k.SetZone(ctx, &zone)
 }
 
-func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types.RegisteredZone, inAmount sdk.Coins, memo string) {
+func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types.Zone, inAmount sdk.Coins, memo string) {
 	snapshot := false
 	// this is here because we need access to the bankKeeper to ordinalize intent
 	intent, _ := k.GetIntent(ctx, zone, sender.String(), snapshot)

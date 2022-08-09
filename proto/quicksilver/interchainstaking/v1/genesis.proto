@@ -7,7 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
-message RegisteredZone {
+message Zone {
   string connection_id = 1;
   string chain_id = 2;
   ICAAccount deposit_address = 3;
@@ -57,7 +57,8 @@ message ICAAccount {
     (gogoproto.nullable) = false
   ];
   string port_name = 4;
-  uint32 balance_waitgroup = 5;
+  string withdrawal_address = 5;
+  uint32 balance_waitgroup = 6;
 }
 
 message WithdrawalRecord {
@@ -200,7 +201,7 @@ message DelegatorIntentsForZone {
 // GenesisState defines the interchainstaking module's genesis state.
 message GenesisState {
   Params params = 1 [ (gogoproto.nullable) = false ];
-  repeated RegisteredZone zones = 2 [ (gogoproto.nullable) = false ];
+  repeated Zone zones = 2 [ (gogoproto.nullable) = false ];
   repeated Receipt receipts = 3 [ (gogoproto.nullable) = false ];
   repeated DelegationsForZone delegations = 4 [ (gogoproto.nullable) = false ];
   repeated DelegationPlansForZone delegation_plans = 5

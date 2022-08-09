@@ -15,7 +15,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// set registered zones info from genesis
 	for _, zone := range genState.Zones {
 		// TODO: instantiate connections to ICAs based upon genesis values
-		k.SetRegisteredZone(ctx, zone)
+		k.SetZone(ctx, &zone)
 	}
 
 	for _, pc := range genState.PortConnections {
@@ -23,7 +23,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	for _, delegationForZone := range genState.Delegations {
-		zone, found := k.GetRegisteredZoneInfo(ctx, delegationForZone.ChainId)
+		zone, found := k.GetZone(ctx, delegationForZone.ChainId)
 		if !found {
 			panic("unable to find zone for delegation")
 		}
@@ -33,7 +33,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	for _, delegationPlanForZone := range genState.DelegationPlans {
-		zone, found := k.GetRegisteredZoneInfo(ctx, delegationPlanForZone.ChainId)
+		zone, found := k.GetZone(ctx, delegationPlanForZone.ChainId)
 		if !found {
 			panic("unable to find zone for delegation")
 		}
@@ -43,7 +43,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	for _, delegatorIntentsForZone := range genState.DelegatorIntents {
-		zone, found := k.GetRegisteredZoneInfo(ctx, delegatorIntentsForZone.ChainId)
+		zone, found := k.GetZone(ctx, delegatorIntentsForZone.ChainId)
 		if !found {
 			panic("unable to find zone for delegation")
 		}
@@ -61,7 +61,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
 		Params:           k.GetParams(ctx),
-		Zones:            k.AllRegisteredZones(ctx),
+		Zones:            k.AllZones(ctx),
 		Receipts:         k.AllReceipts(ctx),
 		Delegations:      ExportDelegationsPerZone(ctx, k),
 		DelegationPlans:  ExportDelegationPlansPerZone(ctx, k),
@@ -72,7 +72,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 func ExportDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegationsForZone {
 	delegationsForZones := make([]types.DelegationsForZone, 0)
-	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
 		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zoneInfo.ChainId, Delegations: k.GetAllDelegationsAsPointer(ctx, &zoneInfo)})
 		return false
 	})
@@ -81,7 +81,7 @@ func ExportDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.Delegati
 
 func ExportDelegationPlansPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegationPlansForZone {
 	delegationPlansForZones := make([]types.DelegationPlansForZone, 0)
-	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
 		delegationPlansForZones = append(delegationPlansForZones, types.DelegationPlansForZone{ChainId: zoneInfo.ChainId, DelegationPlans: k.GetAllDelegationPlansWithKey(ctx, &zoneInfo)})
 		return false
 	})
@@ -90,7 +90,7 @@ func ExportDelegationPlansPerZone(ctx sdk.Context, k keeper.Keeper) []types.Dele
 
 func ExportDelegatorIntentsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegatorIntentsForZone {
 	delegatorIntentsForZones := make([]types.DelegatorIntentsForZone, 0)
-	k.IterateRegisteredZones(ctx, func(_ int64, zoneInfo types.RegisteredZone) (stop bool) {
+	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
 		// export current epoch intents
 		delegatorIntentsForZones = append(delegatorIntentsForZones, types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllIntentsAsPointer(ctx, zoneInfo, false), Snapshot: false})
 		// export last epoch intents

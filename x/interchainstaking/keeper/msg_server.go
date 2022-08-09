@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -49,9 +50,9 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, err
 	}
 
-	var zone *types.RegisteredZone
+	var zone *types.Zone
 
-	k.IterateRegisteredZones(ctx, func(_ int64, thisZone types.RegisteredZone) bool {
+	k.IterateZones(ctx, func(_ int64, thisZone types.Zone) bool {
 		if thisZone.LocalDenom == inCoin.GetDenom() {
 			zone = &thisZone
 			return true
@@ -70,7 +71,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	// does destination address match the prefix registered against the zone?
-	if _, err := types.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
+	if _, err := utils.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
 		return nil, fmt.Errorf("destination address %s does not match expected prefix %s", msg.DestinationAddress, zone.AccountPrefix)
 	}
 
@@ -188,7 +189,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// get zone
-	zone, ok := k.GetRegisteredZoneInfo(ctx, msg.ChainId)
+	zone, ok := k.GetZone(ctx, msg.ChainId)
 	if !ok {
 		return nil, fmt.Errorf("invalid chain id \"%s\"", msg.ChainId)
 	}
@@ -220,7 +221,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	return &types.MsgSignalIntentResponse{}, nil
 }
 
-func (k msgServer) validateIntents(zone types.RegisteredZone, intents []*types.ValidatorIntent) error {
+func (k msgServer) validateIntents(zone types.Zone, intents []*types.ValidatorIntent) error {
 	errors := make(map[string]error)
 
 	for i, intent := range intents {

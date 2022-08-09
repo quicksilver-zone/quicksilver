@@ -11,17 +11,17 @@ import (
 
 // gets the key for delegator bond with validator
 // VALUE: staking/DelegationPlan
-func GetDelegationPlanKey(zone *types.RegisteredZone, txhash string, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+func GetDelegationPlanKey(zone *types.Zone, txhash string, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationPlansKey(zone, txhash, delAddr), valAddr.Bytes()...)
 }
 
 // gets the prefix for a delegator for all validators
-func GetDelegationPlansKey(zone *types.RegisteredZone, txhash string, delAddr sdk.AccAddress) []byte {
+func GetDelegationPlansKey(zone *types.Zone, txhash string, delAddr sdk.AccAddress) []byte {
 	return append(append(append(types.KeyPrefixDelegationPlan, []byte(zone.ChainId)...), []byte(txhash)...), delAddr.Bytes()...)
 }
 
 // GetDelegationPlan returns a specific delegation.
-func (k Keeper) GetDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, txhash string, delegatorAddress string, validatorAddress string) (delegationPlan types.DelegationPlan, found bool) {
+func (k Keeper) GetDelegationPlan(ctx sdk.Context, zone *types.Zone, txhash string, delegatorAddress string, validatorAddress string) (delegationPlan types.DelegationPlan, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	_, delAddr, _ := bech32.DecodeAndConvert(delegatorAddress)
@@ -40,7 +40,7 @@ func (k Keeper) GetDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, t
 }
 
 // IterateAllDelegationPlansForHash iterates through all of the delegations for a given transaction.
-func (k Keeper) IterateAllDelegationPlans(ctx sdk.Context, zone *types.RegisteredZone, cb func(delegationPlan types.DelegationPlan, key []byte) (stop bool)) {
+func (k Keeper) IterateAllDelegationPlans(ctx sdk.Context, zone *types.Zone, cb func(delegationPlan types.DelegationPlan, key []byte) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegationPlan, []byte(zone.ChainId)...))
@@ -54,7 +54,7 @@ func (k Keeper) IterateAllDelegationPlans(ctx sdk.Context, zone *types.Registere
 	}
 }
 
-func (k Keeper) GetAllDelegationPlans(ctx sdk.Context, zone *types.RegisteredZone) []types.DelegationPlan {
+func (k Keeper) GetAllDelegationPlans(ctx sdk.Context, zone *types.Zone) []types.DelegationPlan {
 	out := []types.DelegationPlan{}
 	k.IterateAllDelegationPlans(ctx, zone, func(delegationPlan types.DelegationPlan, _ []byte) bool {
 		out = append(out, delegationPlan)
@@ -63,7 +63,7 @@ func (k Keeper) GetAllDelegationPlans(ctx sdk.Context, zone *types.RegisteredZon
 	return out
 }
 
-func (k Keeper) GetAllDelegationPlansWithKey(ctx sdk.Context, zone *types.RegisteredZone) map[string]*types.DelegationPlan {
+func (k Keeper) GetAllDelegationPlansWithKey(ctx sdk.Context, zone *types.Zone) map[string]*types.DelegationPlan {
 	out := map[string]*types.DelegationPlan{}
 	k.IterateAllDelegationPlans(ctx, zone, func(delegationPlan types.DelegationPlan, key []byte) bool {
 		keyString := string(key)
@@ -75,7 +75,7 @@ func (k Keeper) GetAllDelegationPlansWithKey(ctx sdk.Context, zone *types.Regist
 }
 
 // IterateAllDelegationPlansForHash iterates through all of the delegations for a given transaction.
-func (k Keeper) IterateAllDelegationPlansForHash(ctx sdk.Context, zone *types.RegisteredZone, txhash string, cb func(delegationPlan types.DelegationPlan) (stop bool)) {
+func (k Keeper) IterateAllDelegationPlansForHash(ctx sdk.Context, zone *types.Zone, txhash string, cb func(delegationPlan types.DelegationPlan) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, append(append(types.KeyPrefixDelegationPlan, []byte(zone.ChainId)...), []byte(txhash)...))
@@ -90,7 +90,7 @@ func (k Keeper) IterateAllDelegationPlansForHash(ctx sdk.Context, zone *types.Re
 }
 
 // IterateAllDelegationPlansForHashAndDelegator iterates through all of the delegations for a given transaction and delegator tuple.
-func (k Keeper) IterateAllDelegationPlansForHashAndDelegator(ctx sdk.Context, zone *types.RegisteredZone, txhash string, delegatorAddr sdk.AccAddress, cb func(delegationPlan types.DelegationPlan) (stop bool)) {
+func (k Keeper) IterateAllDelegationPlansForHashAndDelegator(ctx sdk.Context, zone *types.Zone, txhash string, delegatorAddr sdk.AccAddress, cb func(delegationPlan types.DelegationPlan) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, GetDelegationPlansKey(zone, txhash, delegatorAddr))
@@ -105,7 +105,7 @@ func (k Keeper) IterateAllDelegationPlansForHashAndDelegator(ctx sdk.Context, zo
 }
 
 // SetDelegationPlan sets a delegation.
-func (k Keeper) SetDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, txhash string, delegationPlan types.DelegationPlan) {
+func (k Keeper) SetDelegationPlan(ctx sdk.Context, zone *types.Zone, txhash string, delegationPlan types.DelegationPlan) {
 	delegatorAddress := delegationPlan.GetDelegatorAddr()
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegationPlan(k.cdc, delegationPlan)
@@ -113,7 +113,7 @@ func (k Keeper) SetDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, t
 }
 
 // RemoveDelegationPlan removes a delegation
-func (k Keeper) RemoveDelegationPlan(ctx sdk.Context, zone *types.RegisteredZone, txhash string, delegationPlan types.DelegationPlan) error {
+func (k Keeper) RemoveDelegationPlan(ctx sdk.Context, zone *types.Zone, txhash string, delegationPlan types.DelegationPlan) error {
 	delegatorAddress := delegationPlan.GetDelegatorAddr()
 
 	store := ctx.KVStore(k.storeKey)
