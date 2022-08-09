@@ -10,7 +10,6 @@ import (
 )
 
 func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, channelID string, connectionID string) error {
-
 	chainID, err := k.GetChainID(ctx, connectionID)
 	if err != nil {
 		ctx.Logger().Error(
