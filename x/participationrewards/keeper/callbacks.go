@@ -8,6 +8,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	osmosisgammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
 )
 
@@ -57,7 +58,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 		return err
 	}
 
-	zone, found := k.icsKeeper.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.icsKeeper.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -92,7 +93,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 			sdk.ZeroInt(),
 		),
 	)
-	k.icsKeeper.SetRegisteredZone(ctx, zone)
+	k.icsKeeper.SetZone(ctx, &zone)
 
 	return nil
 }
@@ -104,7 +105,7 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 		return err
 	}
 	poolId := sdk.BigEndianToUint64(query.Request[1:])
-	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("osmosis/pools/%d", poolId))
+	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("pools/%d", poolId))
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for osmosis/pools/%d", poolId)
 	}
@@ -112,12 +113,11 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	if err != nil {
 		return err
 	}
-	pool, ok := ipool.(OsmosisPoolProtocolData)
+	pool, ok := ipool.(types.OsmosisPoolProtocolData)
 	if !ok {
 		return fmt.Errorf("unable to unmarshal protocol data for osmosis/pools/%d", poolId)
 	}
-	pool.IbcTokenBalance = acc.GetTotalPoolLiquidity(ctx).AmountOf("ibc/" + pool.IbcToken).Int64()
-	pool.LocalTokenBalance = acc.GetTotalShares().Int64()
+	pool.PoolData = acc
 	data.Data, err = json.Marshal(pool)
 	if err != nil {
 		return err

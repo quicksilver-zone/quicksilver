@@ -9,7 +9,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (k Keeper) NewProtocolData(ctx sdk.Context, datatype string, protocol string, data json.RawMessage) *types.ProtocolData {
+func NewProtocolData(datatype string, protocol string, data json.RawMessage) *types.ProtocolData {
 	return &types.ProtocolData{Type: datatype, Protocol: protocol, Data: data}
 }
 
@@ -30,13 +30,13 @@ func (k Keeper) GetProtocolData(ctx sdk.Context, key string) (types.ProtocolData
 func (k Keeper) SetProtocolData(ctx sdk.Context, key string, data *types.ProtocolData) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
 	bz := k.cdc.MustMarshal(data)
-	store.Set([]byte(GetProtocolDataKey(data.Protocol, key)), bz)
+	store.Set([]byte(key), bz)
 }
 
 // DeleteProtocolData delete protocol data info
 func (k Keeper) DeleteProtocolData(ctx sdk.Context, key string, protocol string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
-	store.Delete([]byte(GetProtocolDataKey(protocol, key)))
+	store.Delete([]byte(key))
 }
 
 // IteratePrefixedProtocolDatas iterate through protocol datas with the given prefix and perform the provided function

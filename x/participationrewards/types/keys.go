@@ -19,4 +19,11 @@ const (
 var (
 	KeyPrefixProtocolData = []byte{0x00}
 	KeyPrefixClaim        = []byte{0x01}
+
+	ClaimTypes = map[int32]string{
+		ClaimTypeLiquidToken:  "liquidtoken",
+		ClaimTypeOsmosisPool:  "osmosispool",
+		ClaimTypeCrescentPool: "crescentpool",
+		ClaimTypeSifchainPool: "sifchainpool",
+	}
 )

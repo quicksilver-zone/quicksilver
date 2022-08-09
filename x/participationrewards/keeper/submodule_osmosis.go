@@ -29,7 +29,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 		if err != nil {
 			return false
 		}
-		pool, _ := ipool.(OsmosisPoolProtocolData)
+		pool, _ := ipool.(types.OsmosisPoolProtocolData)
 
 		// update pool datas
 		k.IcqKeeper.MakeRequest(ctx, connectionData.ConnectionId, connectionData.ChainId, "store/gamm/key", m.GetKeyPrefixPools(pool.PoolId), sdk.NewInt(-1), types.ModuleName, "osmosispoolupdate", 0) // query pool data

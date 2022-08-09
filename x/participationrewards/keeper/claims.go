@@ -13,10 +13,10 @@ func (k Keeper) NewClaim(ctx sdk.Context, address string, zone string, amount in
 }
 
 // GetClaim returns claim
-func (k Keeper) GetClaim(ctx sdk.Context, key string) (types.Claim, bool) {
+func (k Keeper) GetClaim(ctx sdk.Context, key []byte) (types.Claim, bool) {
 	data := types.Claim{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClaim)
-	bz := store.Get([]byte(key))
+	bz := store.Get(key)
 	if len(bz) == 0 {
 		return data, false
 	}
@@ -29,13 +29,13 @@ func (k Keeper) GetClaim(ctx sdk.Context, key string) (types.Claim, bool) {
 func (k Keeper) SetClaim(ctx sdk.Context, claim *types.Claim) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClaim)
 	bz := k.cdc.MustMarshal(claim)
-	store.Set([]byte(GetClaimKey(claim)), bz)
+	store.Set(GetClaimKeyForClaim(claim), bz)
 }
 
 // DeleteClaim deletes claim
 func (k Keeper) DeleteClaim(ctx sdk.Context, claim *types.Claim) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClaim)
-	store.Delete([]byte(GetClaimKey(claim)))
+	store.Delete(GetClaimKeyForClaim(claim))
 }
 
 // IterateQueries iterates through claims
@@ -67,6 +67,11 @@ func (k Keeper) AllClaims(ctx sdk.Context) []*types.Claim {
 }
 
 // ClaimKey returns the key for storing a given claim.
-func GetClaimKey(claim *types.Claim) []byte {
-	return []byte(fmt.Sprintf("%s/%s", claim.Zone, claim.UserAddress))
+func GetClaimKeyForClaim(claim *types.Claim) []byte {
+	return GetClaimKey(claim.Zone, claim.UserAddress)
+}
+
+// ClaimKey returns the key for a given zone and user.
+func GetClaimKey(zone string, userAddress string) []byte {
+	return []byte(fmt.Sprintf("%s/%s", zone, userAddress))
 }

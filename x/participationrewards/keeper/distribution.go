@@ -41,7 +41,7 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 
 		// create snapshot of current intents for next epoch boundary
 		// TODO: this needs to be verified as it currently does not trigger anymore
-		for _, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
+		for _, zone := range k.icsKeeper.AllZones(ctx) {
 			for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
 				// this already happens in zone. If we are certain about ordering,
 				// we should only iterate intents once per epoch boundary as it'll
@@ -181,7 +181,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 
 	otvl := sdk.NewDec(0)
 	// pass 1: iterate zones - set tvl & calc overall tvl
-	for _, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
+	for _, zone := range k.icsKeeper.AllZones(ctx) {
 		tv, exists := tvs.Tokens[zone.BaseDenom]
 		if !exists {
 			err := fmt.Errorf("unable to obtain token value for zone %s", zone.ChainId)
@@ -206,7 +206,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 	}
 
 	// pass 2: iterate zones - calc zone tvl proportion & set allocations
-	for _, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
+	for _, zone := range k.icsKeeper.AllZones(ctx) {
 		ztvl, exists := zoneProps[zone.ChainId]
 		if !exists {
 			panic("unable to obtain zone proportion on second zone pass")
@@ -231,7 +231,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 			),
 		)
 
-		k.icsKeeper.SetRegisteredZone(ctx, zone)
+		k.icsKeeper.SetZone(ctx, &zone)
 	}
 
 	return nil

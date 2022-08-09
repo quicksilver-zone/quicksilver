@@ -10,7 +10,7 @@ import (
 
 // HandleAddProtocolDataProposal is a handler for executing a passed add protocol data proposal
 func HandleAddProtocolDataProposal(ctx sdk.Context, k Keeper, p *types.AddProtocolDataProposal) error {
-	protocolData := k.NewProtocolData(ctx, p.Type, p.Protocol, p.Data)
+	protocolData := NewProtocolData(p.Type, p.Protocol, p.Data)
 
 	_, err := UnmarshalProtocolData(p.Type, p.Data)
 	if err != nil {
@@ -24,8 +24,8 @@ func HandleAddProtocolDataProposal(ctx sdk.Context, k Keeper, p *types.AddProtoc
 
 func UnmarshalProtocolData(datatype string, data json.RawMessage) (IProtocolData, error) {
 	switch datatype {
-	case "osmosispool":
-		pd := OsmosisPoolProtocolData{}
+	case types.ClaimTypes[types.ClaimTypeOsmosisPool]:
+		pd := types.OsmosisPoolProtocolData{}
 		err := json.Unmarshal(data, &pd)
 		if err != nil {
 			return nil, err
@@ -38,8 +38,8 @@ func UnmarshalProtocolData(datatype string, data json.RawMessage) (IProtocolData
 			return nil, err
 		}
 		return pd, nil
-	case "liquidalloweddenoms":
-		pd := LiquidAllowedDenomProtocolData{}
+	case types.ClaimTypes[types.ClaimTypeLiquidToken]:
+		pd := types.LiquidAllowedDenomProtocolData{}
 		err := json.Unmarshal(data, &pd)
 		if err != nil {
 			return nil, err
@@ -57,23 +57,8 @@ type ConnectionProtocolData struct {
 	ChainId      string
 }
 
-type OsmosisPoolProtocolData struct {
-	PoolId            uint64
-	PoolName          string
-	IbcToken          string
-	LocalToken        string
-	IbcTokenBalance   int64
-	LocalTokenBalance int64
-}
-
-type LiquidAllowedDenomProtocolData struct {
-	ChainId    string
-	Denom      string
-	LocalDenom string
-}
-
 var (
 	_ IProtocolData = &ConnectionProtocolData{}
-	_ IProtocolData = &OsmosisPoolProtocolData{}
-	_ IProtocolData = &LiquidAllowedDenomProtocolData{}
+	_ IProtocolData = &types.OsmosisPoolProtocolData{}
+	_ IProtocolData = &types.LiquidAllowedDenomProtocolData{}
 )

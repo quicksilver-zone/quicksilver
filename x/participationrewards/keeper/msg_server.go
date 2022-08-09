@@ -15,7 +15,7 @@ func (k *Keeper) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim) (
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// fetch zone
-	zone, ok := k.icsKeeper.GetRegisteredZoneInfo(ctx, msg.Zone)
+	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
@@ -34,7 +34,7 @@ func (k *Keeper) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim) (
 	// if we get here all data was validated; verifyClaim will write the claim to the correct store.
 	if mod, ok := k.prSubmodules[msg.ProofType]; ok {
 		if err := mod.VerifyClaim(ctx, k, msg); err != nil {
-			return nil, fmt.Errorf("claim verification failed", err)
+			return nil, fmt.Errorf("claim verification failed: %v", err)
 		}
 	}
 

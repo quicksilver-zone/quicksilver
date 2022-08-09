@@ -26,7 +26,7 @@ func (m *LiquidTokensModule) VerifyClaim(ctx sdk.Context, k *Keeper, msg *types.
 	// message
 	// check denom is valid vs allowed
 
-	zone, ok := k.icsKeeper.GetRegisteredZoneInfo(ctx, msg.Zone)
+	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
 		return fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)
 	}
