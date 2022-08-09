@@ -33,7 +33,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdRegisteredZonesInfos provide running epochInfos
+// GetCmdZonesInfos provide running epochInfos
 func GetCmdZonesInfos() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zones",
@@ -56,11 +56,11 @@ func GetCmdZonesInfos() *cobra.Command {
 				return err
 			}
 
-			req := &types.QueryRegisteredZonesInfoRequest{
+			req := &types.QueryZonesInfoRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.RegisteredZoneInfos(cmd.Context(), req)
+			res, err := queryClient.ZoneInfos(cmd.Context(), req)
 			if err != nil {
 				return err
 			}

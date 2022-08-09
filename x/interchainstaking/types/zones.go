@@ -10,10 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
-func (z RegisteredZone) SupportMultiSend() bool { return z.MultiSend }
-func (z RegisteredZone) SupportLsm() bool       { return z.LiquidityModule }
+func (z Zone) SupportMultiSend() bool { return z.MultiSend }
+func (z Zone) SupportLsm() bool       { return z.LiquidityModule }
 
-func (z RegisteredZone) IsDelegateAddress(addr string) bool {
+func (z Zone) IsDelegateAddress(addr string) bool {
 	for _, acc := range z.DelegationAddresses {
 		if acc.Address == addr {
 			return true
@@ -22,7 +22,7 @@ func (z RegisteredZone) IsDelegateAddress(addr string) bool {
 	return false
 }
 
-func (z *RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, error) {
+func (z *Zone) GetValidatorByValoper(valoper string) (*Validator, error) {
 	for _, v := range z.GetValidatorsSorted() {
 		if v.ValoperAddress == valoper {
 			return v, nil
@@ -31,7 +31,7 @@ func (z *RegisteredZone) GetValidatorByValoper(valoper string) (*Validator, erro
 	return nil, fmt.Errorf("invalid validator -> %s", valoper)
 }
 
-func (z *RegisteredZone) GetDelegationAccountByAddress(address string) (*ICAAccount, error) {
+func (z *Zone) GetDelegationAccountByAddress(address string) (*ICAAccount, error) {
 	if z.DelegationAddresses == nil {
 		return nil, fmt.Errorf("no delegation accounts set: %v", z)
 	}
@@ -43,7 +43,7 @@ func (z *RegisteredZone) GetDelegationAccountByAddress(address string) (*ICAAcco
 	return nil, fmt.Errorf("unable to find delegation account: %s", address)
 }
 
-func (z *RegisteredZone) ValidateCoinsForZone(ctx sdk.Context, coins sdk.Coins) error {
+func (z *Zone) ValidateCoinsForZone(ctx sdk.Context, coins sdk.Coins) error {
 	zoneVals := z.GetValidatorsAddressesAsSlice()
 
 COINS:
@@ -64,7 +64,7 @@ COINS:
 	return nil
 }
 
-func (z *RegisteredZone) ConvertCoinsToOrdinalIntents(coins sdk.Coins) ValidatorIntents {
+func (z *Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins) ValidatorIntents {
 	// should we be return DelegatorIntent here?
 	out := make(ValidatorIntents)
 	zoneVals := z.GetValidatorsAddressesAsSlice()
@@ -87,7 +87,7 @@ COINS:
 	return out
 }
 
-func (z *RegisteredZone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) ValidatorIntents {
+func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) ValidatorIntents {
 	// should we be return DelegatorIntent here?
 	out := make(ValidatorIntents)
 
@@ -124,14 +124,14 @@ func (z *RegisteredZone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo strin
 	return out
 }
 
-func (z *RegisteredZone) GetValidatorsSorted() []*Validator {
+func (z *Zone) GetValidatorsSorted() []*Validator {
 	sort.Slice(z.Validators, func(i, j int) bool {
 		return z.Validators[i].ValoperAddress < z.Validators[j].ValoperAddress
 	})
 	return z.Validators
 }
 
-func (z RegisteredZone) GetValidatorsAddressesAsSlice() []string {
+func (z Zone) GetValidatorsAddressesAsSlice() []string {
 	l := make([]string, 0)
 	for _, v := range z.Validators {
 		l = append(l, v.ValoperAddress)
@@ -142,7 +142,7 @@ func (z RegisteredZone) GetValidatorsAddressesAsSlice() []string {
 	return l
 }
 
-func (z *RegisteredZone) GetDelegatedAmount() sdk.Coin {
+func (z *Zone) GetDelegatedAmount() sdk.Coin {
 	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())
 	for _, da := range z.DelegationAddresses {
 		out = out.Add(da.DelegatedBalance)
@@ -150,7 +150,7 @@ func (z *RegisteredZone) GetDelegatedAmount() sdk.Coin {
 	return out
 }
 
-func (z *RegisteredZone) GetDelegationAccounts() []*ICAAccount {
+func (z *Zone) GetDelegationAccounts() []*ICAAccount {
 	delegationAccounts := z.DelegationAddresses
 	sort.Slice(delegationAccounts, func(i, j int) bool {
 		return delegationAccounts[i].Address < delegationAccounts[j].Address
@@ -158,7 +158,7 @@ func (z *RegisteredZone) GetDelegationAccounts() []*ICAAccount {
 	return delegationAccounts
 }
 
-func (z *RegisteredZone) GetAggregateIntentOrDefault() ValidatorIntents {
+func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
 	if len(z.AggregateIntent) == 0 {
 		return z.DefaultAggregateIntents()
 	}
@@ -166,7 +166,7 @@ func (z *RegisteredZone) GetAggregateIntentOrDefault() ValidatorIntents {
 }
 
 // defaultAggregateIntents determines the default aggregate intent (for epoch 0)
-func (z *RegisteredZone) DefaultAggregateIntents() ValidatorIntents {
+func (z *Zone) DefaultAggregateIntents() ValidatorIntents {
 	out := make(ValidatorIntents)
 	for _, val := range z.GetValidatorsSorted() {
 		if val.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.

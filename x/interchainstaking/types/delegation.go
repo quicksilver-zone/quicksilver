@@ -162,7 +162,7 @@ func NewDelegationPlan(delAddr, valAddr string, amount sdk.Coins) DelegationPlan
 	return DelegationPlan{DelegatorAddress: delAddr, ValidatorAddress: valAddr, Value: amount}
 }
 
-func DelegationPlanFromUserIntent(zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) Allocations {
+func DelegationPlanFromUserIntent(zone Zone, coin sdk.Coin, intent ValidatorIntents) Allocations {
 	out := Allocations{}
 
 	for _, val := range intent.Keys() {
@@ -307,7 +307,7 @@ type Diff struct {
 	Amount  sdk.Int
 }
 
-func DelegationPlanFromGlobalIntent(currentState Allocations, zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) (Allocations, error) {
+func DelegationPlanFromGlobalIntent(currentState Allocations, zone Zone, coin sdk.Coin, intent ValidatorIntents) (Allocations, error) {
 	if coin.Denom != zone.BaseDenom {
 		return nil, fmt.Errorf("expected base denom, got %s", coin.Denom)
 	}
@@ -349,7 +349,7 @@ func DelegationPlanFromGlobalIntent(currentState Allocations, zone RegisteredZon
 	return allocations, nil
 }
 
-func DelegationPlanFromCoins(zone RegisteredZone, coin sdk.Coin) Allocations {
+func DelegationPlanFromCoins(zone Zone, coin sdk.Coin) Allocations {
 	out := Allocations{}
 
 	for _, val := range zone.GetValidatorsSorted() {

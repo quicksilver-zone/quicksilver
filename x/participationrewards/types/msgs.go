@@ -10,12 +10,10 @@ var _ sdk.Msg = &MsgSubmitClaim{}
 func NewMsgSubmitClaim(
 	userAddress sdk.Address,
 	zone string,
-	assetType string,
 ) *MsgSubmitClaim {
 	return &MsgSubmitClaim{
 		UserAddress: userAddress.String(),
 		Zone:        zone,
-		AssetType:   assetType,
 	}
 }
 

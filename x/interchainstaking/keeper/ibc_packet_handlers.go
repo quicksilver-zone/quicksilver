@@ -23,6 +23,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -220,12 +221,13 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg, memo stri
 	// check for sending of tokens from deposit -> delegate.
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
+		err = fmt.Errorf("1: %w", err)
 		k.Logger(ctx).Error(err.Error())
 		return err
 	}
 
 	for _, out := range sMsg.Outputs {
-		accAddr, err := types.AccAddressFromBech32(out.Address, "")
+		accAddr, err := utils.AccAddressFromBech32(out.Address, zone.AccountPrefix)
 		if err != nil {
 			return err
 		}
@@ -273,6 +275,8 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 	// get zone
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
+		err = fmt.Errorf("2: %w", err)
+		k.Logger(ctx).Error(err.Error())
 		return err
 	}
 
@@ -293,7 +297,7 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 	}
 }
 
-func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.RegisteredZone, msg *banktypes.MsgSend) error {
+func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.Zone, msg *banktypes.MsgSend) error {
 	da, err := zone.GetDelegationAccountByAddress(msg.ToAddress)
 	if err != nil {
 		return err
@@ -307,8 +311,8 @@ func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.RegisteredZ
 	return k.Delegate(ctx, zone, da, plan)
 }
 
-func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.RegisteredZone, msg *banktypes.MsgSend, memo string) error {
-	accAddr, err := types.AccAddressFromBech32(msg.ToAddress, "")
+func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
+	accAddr, err := utils.AccAddressFromBech32(msg.ToAddress, zone.AccountPrefix)
 	if err != nil {
 		return err
 	}
@@ -337,7 +341,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.RegisteredZon
 	return k.Delegate(ctx, *zone, da, plan)
 }
 
-func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.RegisteredZone, msg *banktypes.MsgSend, memo string) error {
+func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
 	var err error
 	// first check for withdrawals (if FromAddress is a DelegateAccount)
 	k.IterateWithdrawalRecordsWithTxhash(ctx, memo, msg.FromAddress, func(idx int64, withdrawal types.WithdrawalRecord) bool {
@@ -455,11 +459,26 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
 func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) error {
 	k.Logger(ctx).Info("Received MsgSetWithdrawAddress acknowledgement")
 	// first, type assertion. we should have distrtypes.MsgSetWithdrawAddress
-	_, ok := msg.(*distrtypes.MsgSetWithdrawAddress)
+	original, ok := msg.(*distrtypes.MsgSetWithdrawAddress)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgSetWithdrawAddress")
 		return fmt.Errorf("unable to cast source message to MsgSetWithdrawAddress")
 	}
+	zone, ica := k.GetICAForDelegateAccount(ctx, original.DelegatorAddress)
+	if zone == nil {
+		zone = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
+		if zone == nil {
+			return fmt.Errorf("unable to find zone")
+		}
+		if err := zone.PerformanceAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
+			return err
+		}
+	} else {
+		if err := ica.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
+			return err
+		}
+	}
+	k.SetZone(ctx, zone)
 
 	return nil
 }
@@ -468,6 +487,7 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, amount sdk.Coin) (string, error) {
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
+		err = fmt.Errorf("3: %w", err)
 		k.Logger(ctx).Error(err.Error())
 		return "", err
 	}
@@ -493,7 +513,7 @@ func parseDelegationKey(key []byte) ([]byte, []byte, error) {
 	return delAddr, valAddr, nil
 }
 
-func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.RegisteredZone, delegatorAddress string, args []byte) error {
+func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.Zone, delegatorAddress string, args []byte) error {
 	var response stakingtypes.QueryDelegatorDelegationsResponse
 	err := k.cdc.Unmarshal(args, &response)
 	if err != nil {
@@ -568,12 +588,12 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 		)
 	}
 
-	k.SetRegisteredZone(ctx, *zone)
+	k.SetZone(ctx, zone)
 
 	return nil
 }
 
-func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin, zone *types.RegisteredZone, absolute bool) error {
+func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin, zone *types.Zone, absolute bool) error {
 	delegation, found := k.GetDelegation(ctx, zone, delegatorAddress, validatorAddress)
 	da, _ := zone.GetDelegationAccountByAddress(delegatorAddress)
 
@@ -596,7 +616,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 	if err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId); err != nil {
 		return err
 	}
-	k.SetRegisteredZone(ctx, *zone)
+	k.SetZone(ctx, zone)
 	return nil
 }
 
@@ -609,13 +629,14 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
+		err = fmt.Errorf("4: %w", err)
 		k.Logger(ctx).Error(err.Error())
 		return err
 	}
 	// decrement withdrawal waitgroup
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
 		zone.WithdrawalWaitgroup--
-		k.SetRegisteredZone(ctx, *zone)
+		k.SetZone(ctx, zone)
 	}
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.WithdrawalWaitgroup, "delegator", withdrawalMsg.DelegatorAddress)
 	switch zone.WithdrawalWaitgroup {
@@ -646,7 +667,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 }
 
 func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.ChainId)
+	zone, found := k.GetZone(ctx, query.ChainId)
 	if !found {
 		return fmt.Errorf("unable to find zone for %s", query.ChainId)
 	}
@@ -716,7 +737,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "")
 }
 
-func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone, epochRewards sdk.Coin) {
+func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards sdk.Coin) {
 	ratio := zone.GetDelegatedAmount().Add(epochRewards).Amount.ToDec().Quo(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec())
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
@@ -725,10 +746,10 @@ func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone
 
 	zone.LastRedemptionRate = zone.RedemptionRate
 	zone.RedemptionRate = ratio
-	k.SetRegisteredZone(ctx, zone)
+	k.SetZone(ctx, &zone)
 }
 
-func (k *Keeper) prepareRewardsDistributionMsgs(zone types.RegisteredZone, rewards sdk.Coin) (sdk.Int, []sdk.Msg) {
+func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdk.Coin) (sdk.Int, []sdk.Msg) {
 	// todo: use multisend.
 	// todo: this will probably not want to be an equal distribution. we want to use this to even out the distribution between accounts.
 	var msgs []sdk.Msg

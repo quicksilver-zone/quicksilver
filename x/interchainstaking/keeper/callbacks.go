@@ -75,8 +75,16 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 // Callback Handlers
 // -----------------------------------
 
+func LatestBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetZone(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+	return SetValidatorsForZone(k, ctx, zone, args)
+}
+
 func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -85,7 +93,7 @@ func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query
 
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
 func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -95,13 +103,13 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 		return err
 	}
 	zone.LastEpochHeight = blockResponse.Block.Header.Height
-	k.SetRegisteredZone(ctx, zone)
+	k.SetZone(ctx, &zone)
 	return nil
 }
 
 func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	k.Logger(ctx).Info("Received provable payload", "data", args)
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -109,7 +117,7 @@ func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Qu
 }
 
 func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -130,7 +138,7 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 }
 
 func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -145,7 +153,7 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 }
 
 func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -181,7 +189,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 				return err
 			}
 			ica.DelegatedBalance = ica.DelegatedBalance.Sub(delegation.Amount)
-			k.SetRegisteredZone(ctx, zone)
+			k.SetZone(ctx, &zone)
 		}
 		return nil
 	}
@@ -195,7 +203,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 }
 
 func PerfBalanceCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -210,7 +218,7 @@ func PerfBalanceCallback(k Keeper, ctx sdk.Context, response []byte, query icqty
 }
 
 func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -235,12 +243,11 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
 	}
 
-	for _, txn := range txs.TxResponses {
-
-		req := tx.GetTxRequest{Hash: txn.TxHash}
-		hashBytes := k.cdc.MustMarshal(&req)
-		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
-
+	for idx, txn := range txs.TxResponses {
+		// req := tx.GetTxRequest{Hash: txn.TxHash}
+		// hashBytes := k.cdc.MustMarshal(&req)
+		k.HandleReceiptTransaction(ctx, txn, txs.Txs[idx], zone)
+		// k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}
 	return nil
 }
@@ -350,7 +357,7 @@ func checkValidity(
 }
 
 func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -380,7 +387,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 	  the inbound header manually. */
 	consensusState, found := k.IBCKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, res.Header.TrustedHeight)
 	if !found {
-		return fmt.Errorf("unable to fetch consensus state")
+		return fmt.Errorf("unable to fetch consensus state for trusted height: %s", res.Header.TrustedHeight.String())
 	}
 
 	tmclientState, ok := clientState.(*tmclienttypes.ClientState)
@@ -419,7 +426,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 
 // setAccountCb is a callback handler for Balance queries.
 func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -467,7 +474,7 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	zone, found := k.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -476,7 +483,7 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	if zone.DepositAddress.BalanceWaitgroup != 0 {
 		zone.DepositAddress.BalanceWaitgroup = 0
 		k.Logger(ctx).Error("Zeroing deposit balance waitgroup")
-		k.SetRegisteredZone(ctx, zone)
+		k.SetZone(ctx, &zone)
 	}
 
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)

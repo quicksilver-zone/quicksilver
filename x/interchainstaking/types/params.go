@@ -12,23 +12,14 @@ import (
 // Default ics params
 var (
 	DefaultDelegateAccountCount uint64  = 100
-	DefaultDelegateAccountSplit uint64  = 10
-	DefaultDepositInterval      uint64  = 50
-	DefaultDelegateInterval     uint64  = 100
-	DefaultDelegationsInterval  uint64  = 200
+	DefaultDepositInterval      uint64  = 20
 	DefaultValidatorSetInterval uint64  = 200
-	DefaultCommissionRate       sdk.Dec = func() sdk.Dec { v, _ := sdk.NewDecFromStr("0.02"); return v }()
+	DefaultCommissionRate       sdk.Dec = func() sdk.Dec { v, _ := sdk.NewDecFromStr("0.025"); return v }()
 
 	// KeyDelegateAccountCount is store's key for DelegateAccountCount option
 	KeyDelegateAccountCount = []byte("DelegateAccountCount")
-	// KeyDelegateAccountSplit is store's key for the DelegateAccountSplit option
-	KeyDelegateAccountSplit = []byte("DelegateAccountSplit")
 	// KeyDepositInterval is store's key for the DepositInterval option
 	KeyDepositInterval = []byte("DepositInterval")
-	// KeyDelegateInterval is store's key for the DelegateInterval option
-	KeyDelegateInterval = []byte("DelegateInterval")
-	// KeyDelegationsInterval is store's key for the DelegationsInterval option
-	KeyDelegationsInterval = []byte("DelegationsInterval")
 	// KeyValidatorSetInterval is store's key for the ValidatorSetInterval option
 	KeyValidatorSetInterval = []byte("ValidatorSetInterval")
 	// KeyCommissionRate is store's key for the CommissionRate option
@@ -67,24 +58,8 @@ func validateParams(i interface{}) error {
 		return fmt.Errorf("delegate account count must be positive: %d", v.DelegationAccountCount)
 	}
 
-	if v.DelegationAccountSplit <= 0 {
-		return fmt.Errorf("delegate account split must be positive: %d", v.DelegationAccountSplit)
-	}
-
-	if v.DelegationAccountSplit > v.DelegationAccountCount {
-		return fmt.Errorf("delegate account split must be less than or equal to delegate account count: %d", v.DelegationAccountCount)
-	}
-
 	if v.DepositInterval <= 0 {
 		return fmt.Errorf("deposit interval must be positive: %d", v.DepositInterval)
-	}
-
-	if v.DelegateInterval <= 0 {
-		return fmt.Errorf("delegate interval must be positive: %d", v.DelegateInterval)
-	}
-
-	if v.DelegationsInterval <= 0 {
-		return fmt.Errorf("delegations interval must be positive: %d", v.DelegationsInterval)
 	}
 
 	if v.ValidatorsetInterval <= 0 {
@@ -100,19 +75,13 @@ func validateParams(i interface{}) error {
 // NewParams creates a new ics Params instance
 func NewParams(
 	delegateAccountCount uint64,
-	delegateAccountSplit uint64,
 	depositInterval uint64,
-	delegateInterval uint64,
-	delegationsInterval uint64,
 	valsetInterval uint64,
 	commissionRate sdk.Dec,
 ) Params {
 	return Params{
 		DelegationAccountCount: delegateAccountCount,
-		DelegationAccountSplit: delegateAccountSplit,
 		DepositInterval:        depositInterval,
-		DelegateInterval:       delegateInterval,
-		DelegationsInterval:    delegationsInterval,
 		ValidatorsetInterval:   valsetInterval,
 		CommissionRate:         commissionRate,
 	}
@@ -122,10 +91,7 @@ func NewParams(
 func DefaultParams() Params {
 	return NewParams(
 		DefaultDelegateAccountCount,
-		DefaultDelegateAccountSplit,
-		DefaultDelegateInterval,
-		DefaultDelegateInterval,
-		DefaultDelegationsInterval,
+		DefaultDepositInterval,
 		DefaultValidatorSetInterval,
 		DefaultCommissionRate,
 	)
@@ -140,10 +106,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDelegateAccountCount, &p.DelegationAccountCount, validatePositiveInt),
-		paramtypes.NewParamSetPair(KeyDelegateAccountSplit, &p.DelegationAccountSplit, validatePositiveInt),
 		paramtypes.NewParamSetPair(KeyDepositInterval, &p.DepositInterval, validatePositiveInt),
-		paramtypes.NewParamSetPair(KeyDelegateInterval, &p.DelegateInterval, validatePositiveInt),
-		paramtypes.NewParamSetPair(KeyDelegationsInterval, &p.DelegationsInterval, validatePositiveInt),
 		paramtypes.NewParamSetPair(KeyValidatorSetInterval, &p.ValidatorsetInterval, validatePositiveInt),
 		paramtypes.NewParamSetPair(KeyCommissionRate, &p.CommissionRate, validateNonNegativeDec),
 	}

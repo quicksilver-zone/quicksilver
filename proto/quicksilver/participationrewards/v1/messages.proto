@@ -4,6 +4,7 @@ package quicksilver.participationrewards.v1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
+import "tendermint/crypto/proof.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
 
@@ -25,7 +26,12 @@ message MsgSubmitClaim {
 
   string user_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string zone = 2;
-  string asset_type = 3;
+  int64 proof_type = 3;
+  repeated bytes key = 4 [ (gogoproto.moretags) = "yaml:\"key\"" ];
+  repeated bytes data = 5 [ (gogoproto.moretags) = "yaml:\"result\"" ];
+  repeated tendermint.crypto.ProofOps proof_ops = 6
+      [ (gogoproto.moretags) = "yaml:\"proof_ops\"" ];
+  int64 height = 7 [ (gogoproto.moretags) = "yaml:\"height\"" ];
 }
 
 // MsgSubmitClaimResponse defines the MsgSubmitClaim response type.

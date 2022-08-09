@@ -24,7 +24,8 @@ service Query {
         "/quicksilver/airdrop/v1/zonedrop/{chain_id}";
   }
   // AccountBalance returns the module account balance of the specified zone.
-  rpc AccountBalance(QueryAccountBalanceRequest) returns (QueryAccountBalanceResponse) {
+  rpc AccountBalance(QueryAccountBalanceRequest)
+      returns (QueryAccountBalanceResponse) {
     option (google.api.http).get =
         "/quicksilver/airdrop/v1/accountbalance/{chain_id}";
   }
@@ -69,18 +70,21 @@ message QueryZoneDropResponse {
   ZoneDrop zone_drop = 1 [ (gogoproto.nullable) = false ];
 }
 
-// QueryAccountBalanceRequest is the request type for Query/AccountBalance RPC method.
+// QueryAccountBalanceRequest is the request type for Query/AccountBalance RPC
+// method.
 message QueryAccountBalanceRequest {
   option (gogoproto.goproto_getters) = false;
   // chain_id identifies the zone.
   string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
 }
 
-// QueryAccountBalanceResponse is the response type for Query/AccountBalance RPC method.
+// QueryAccountBalanceResponse is the response type for Query/AccountBalance RPC
+// method.
 message QueryAccountBalanceResponse {
   option (gogoproto.goproto_getters) = false;
 
-  cosmos.base.v1beta1.Coin account_balance = 1 [ (gogoproto.moretags) = "yaml:\"account_balance\"" ];
+  cosmos.base.v1beta1.Coin account_balance = 1
+      [ (gogoproto.moretags) = "yaml:\"account_balance\"" ];
 }
 
 // QueryZoneDropsRequest is the request type for Query/ZoneDrops RPC method.
@@ -132,7 +136,7 @@ message QueryClaimRecordsRequest {
 // method.
 message QueryClaimRecordsResponse {
   option (gogoproto.goproto_getters) = false;
-  
+
   repeated ClaimRecord claim_records = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

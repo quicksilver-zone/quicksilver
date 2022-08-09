@@ -40,6 +40,7 @@ message MsgRequestRedemption {
       [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string from_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
+
 // MsgSignalIntent represents a message type for signalling voting intent for
 // one or more validators.
 message MsgSignalIntent {

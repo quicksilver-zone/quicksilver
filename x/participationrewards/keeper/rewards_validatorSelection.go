@@ -45,14 +45,14 @@ type userAllocation struct {
 func (k Keeper) allocateValidatorSelectionRewards(ctx sdk.Context) {
 	k.Logger(ctx).Info("allocateValidatorChoiceRewards")
 
-	for i, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
+	for i, zone := range k.icsKeeper.AllZones(ctx) {
 		k.Logger(ctx).Info("zones", "i", i, "zone", zone.ChainId, "performance address", zone.PerformanceAddress.GetAddress())
 
 		// obtain zone performance account rewards
 		rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.PerformanceAddress.GetAddress()}
 		bz := k.cdc.MustMarshal(&rewardsQuery)
 
-		k.icqKeeper.MakeRequest(
+		k.IcqKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
 			zone.ChainId,
@@ -70,7 +70,7 @@ func (k Keeper) allocateValidatorSelectionRewards(ctx sdk.Context) {
 // zone validator scores.
 func (k Keeper) getZoneScores(
 	ctx sdk.Context,
-	zone icstypes.RegisteredZone,
+	zone icstypes.Zone,
 	delegatorRewards distrtypes.QueryDelegationTotalRewardsResponse,
 ) (*zoneScore, error) {
 	k.Logger(ctx).Info(
@@ -99,7 +99,7 @@ func (k Keeper) getZoneScores(
 // calcDistributionScores calculates the validator distribution scores for the
 // given zone based on the normalized voting power of the validators; scoring
 // favours smaller validators for decentraliztion purposes.
-func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.RegisteredZone, zs *zoneScore) error {
+func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *zoneScore) error {
 	k.Logger(ctx).Info("calculate distribution scores", "zone", zone.ChainId)
 
 	zoneValidators := zone.GetValidatorsSorted()
@@ -175,7 +175,7 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Registered
 // resetting zone performance scoring for the next epoch.
 func (k Keeper) calcOverallScores(
 	ctx sdk.Context,
-	zone icstypes.RegisteredZone,
+	zone icstypes.Zone,
 	delegatorRewards distrtypes.QueryDelegationTotalRewardsResponse,
 	zs *zoneScore,
 ) error {
@@ -233,7 +233,7 @@ func (k Keeper) calcOverallScores(
 	}
 
 	// update zone with validator scores
-	k.icsKeeper.SetRegisteredZone(ctx, zone)
+	k.icsKeeper.SetZone(ctx, &zone)
 
 	return nil
 }
@@ -243,7 +243,7 @@ func (k Keeper) calcOverallScores(
 // proportionally allocates rewards based on the individual zone allocation.
 func (k Keeper) calcUserValidatorSelectionAllocations(
 	ctx sdk.Context,
-	zone icstypes.RegisteredZone,
+	zone icstypes.Zone,
 	zs zoneScore,
 ) []userAllocation {
 	k.Logger(ctx).Info("calcUserAllocations", "zone", zone.ChainId, "scores", zs, "allocations", zone.ValidatorSelectionAllocation)

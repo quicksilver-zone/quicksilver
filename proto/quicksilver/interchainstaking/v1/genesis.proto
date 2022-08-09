@@ -7,7 +7,7 @@ import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
-message RegisteredZone {
+message Zone {
   string connection_id = 1;
   string chain_id = 2;
   ICAAccount deposit_address = 3;
@@ -57,7 +57,8 @@ message ICAAccount {
     (gogoproto.nullable) = false
   ];
   string port_name = 4;
-  uint32 balance_waitgroup = 5;
+  string withdrawal_address = 5;
+  uint32 balance_waitgroup = 6;
 }
 
 message WithdrawalRecord {
@@ -172,12 +173,9 @@ message Params {
   option (gogoproto.goproto_stringer) = false;
 
   uint64 delegation_account_count = 1;
-  uint64 delegation_account_split = 2;
-  uint64 deposit_interval = 3;
-  uint64 delegate_interval = 4;
-  uint64 delegations_interval = 5;
-  uint64 validatorset_interval = 6;
-  string commission_rate = 7 [
+  uint64 deposit_interval = 2;
+  uint64 validatorset_interval = 3;
+  string commission_rate = 4 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
@@ -203,10 +201,13 @@ message DelegatorIntentsForZone {
 // GenesisState defines the interchainstaking module's genesis state.
 message GenesisState {
   Params params = 1 [ (gogoproto.nullable) = false ];
-  repeated RegisteredZone zones = 2 [ (gogoproto.nullable) = false ];
+  repeated Zone zones = 2 [ (gogoproto.nullable) = false ];
   repeated Receipt receipts = 3 [ (gogoproto.nullable) = false ];
   repeated DelegationsForZone delegations = 4 [ (gogoproto.nullable) = false ];
-  repeated DelegationPlansForZone delegation_plans = 5 [ (gogoproto.nullable) = false ];
-  repeated DelegatorIntentsForZone delegator_intents = 6 [ (gogoproto.nullable) = false ];
-  repeated PortConnectionTuple port_connections = 7 [ (gogoproto.nullable) = false ];
+  repeated DelegationPlansForZone delegation_plans = 5
+      [ (gogoproto.nullable) = false ];
+  repeated DelegatorIntentsForZone delegator_intents = 6
+      [ (gogoproto.nullable) = false ];
+  repeated PortConnectionTuple port_connections = 7
+      [ (gogoproto.nullable) = false ];
 }

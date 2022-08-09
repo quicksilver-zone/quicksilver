@@ -20,6 +20,7 @@ import (
 	ibctmtypes "github.com/cosmos/ibc-go/v3/modules/light-clients/07-tendermint/types"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -125,7 +126,7 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZone, data []byte) error {
+func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
 	err := k.cdc.Unmarshal(data, &validatorsRes)
 	if err != nil {
@@ -177,11 +178,11 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZo
 	}
 
 	// also do this for Unbonded and Unbonding
-	k.SetRegisteredZone(ctx, zoneInfo)
+	k.SetZone(ctx, &zoneInfo)
 	return nil
 }
 
-func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZone, data []byte) error {
+func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validator := stakingTypes.Validator{}
 	err := k.cdc.Unmarshal(data, &validator)
 	if err != nil {
@@ -220,12 +221,12 @@ func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZon
 		}
 	}
 
-	k.SetRegisteredZone(ctx, zoneInfo)
+	k.SetZone(ctx, &zoneInfo)
 	return nil
 }
 
 func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
-	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
+	return func(index int64, zoneInfo types.Zone) (stop bool) {
 		if zoneInfo.DepositAddress != nil {
 			if !zoneInfo.DepositAddress.Balance.Empty() {
 				k.Logger(ctx).Info("balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
@@ -281,7 +282,7 @@ func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error)
 }
 
 func (k Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
-	connectionID := ctx.Context().Value("connectionID")
+	connectionID := ctx.Context().Value(utils.ContextKey("connectionID"))
 	if connectionID == nil {
 		return "", fmt.Errorf("connectionID not in context")
 	}
@@ -289,7 +290,7 @@ func (k Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
 	return k.GetChainID(ctx, connectionID.(string))
 }
 
-func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.RegisteredZone) error {
+func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
 	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: zone.PerformanceAddress.Address}
 	bz, err := k.GetCodec().Marshal(&balanceQuery)
 	if err != nil {

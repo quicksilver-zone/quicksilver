@@ -1,12 +1,15 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	osmosisgammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
 )
 
 // Callbacks wrapper struct for interchainstaking keeper
@@ -40,7 +43,8 @@ func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallback
 
 func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 	a := c.
-		AddCallback("validatorselectionrewards", Callback(ValidatorSelectionRewardsCallback))
+		AddCallback("validatorselectionrewards", Callback(ValidatorSelectionRewardsCallback)).
+		AddCallback("osmosispoolupdate", Callback(OsmosisPoolUpdateCallback))
 
 	return a.(Callbacks)
 }
@@ -54,7 +58,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 		return err
 	}
 
-	zone, found := k.icsKeeper.GetRegisteredZoneInfo(ctx, query.GetChainId())
+	zone, found := k.icsKeeper.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -89,7 +93,36 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 			sdk.ZeroInt(),
 		),
 	)
-	k.icsKeeper.SetRegisteredZone(ctx, zone)
+	k.icsKeeper.SetZone(ctx, &zone)
+
+	return nil
+}
+
+func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+	var acc osmosisgammtypes.PoolI
+	err := k.cdc.UnmarshalInterface(response, &acc)
+	if err != nil {
+		return err
+	}
+	poolID := sdk.BigEndianToUint64(query.Request[1:])
+	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("pools/%d", poolID))
+	if !ok {
+		return fmt.Errorf("unable to find protocol data for osmosis/pools/%d", poolID)
+	}
+	ipool, err := UnmarshalProtocolData("osmosispool", data.Data)
+	if err != nil {
+		return err
+	}
+	pool, ok := ipool.(types.OsmosisPoolProtocolData)
+	if !ok {
+		return fmt.Errorf("unable to unmarshal protocol data for osmosis/pools/%d", poolID)
+	}
+	pool.PoolData = acc
+	data.Data, err = json.Marshal(pool)
+	if err != nil {
+		return err
+	}
+	k.SetProtocolData(ctx, fmt.Sprintf("osmosis/pools/%d", poolID), &data)
 
 	return nil
 }

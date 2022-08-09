@@ -1,12 +1,12 @@
 package types
 
-func NewGenesisState(params Params, zones []RegisteredZone) *GenesisState {
+func NewGenesisState(params Params, zones []Zone) *GenesisState {
 	return &GenesisState{Params: params, Zones: zones}
 }
 
 // DefaultGenesis returns the default ics genesis state
 func DefaultGenesis() *GenesisState {
-	zones := []RegisteredZone{}
+	zones := []Zone{}
 	return NewGenesisState(DefaultParams(), zones)
 }
 

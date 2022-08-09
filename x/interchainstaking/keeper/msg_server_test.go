@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 
 		s.Run(tt.name, func() {
 			s.SetupTest()
-			s.SetupRegisteredZones()
+			s.SetupZones()
 
 			tt.malleate()
 
@@ -85,7 +85,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 
 		s.Run(tt.name, func() {
 			s.SetupTest()
-			s.SetupRegisteredZones()
+			s.SetupZones()
 
 			tt.malleate()
 

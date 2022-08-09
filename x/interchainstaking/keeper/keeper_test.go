@@ -55,7 +55,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.coordinator.SetupConnections(s.path)
 }
 
-func (s *KeeperTestSuite) SetupRegisteredZones() {
+func (s *KeeperTestSuite) SetupZones() {
 	proposal := &icstypes.RegisterZoneProposal{
 		Title:           "register zone A",
 		Description:     "register zone A",

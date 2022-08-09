@@ -11,11 +11,19 @@ import (
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
+	for _, claim := range genState.Claims {
+		k.SetClaim(ctx, claim)
+	}
+	for _, kpd := range genState.ProtocolData {
+		k.SetProtocolData(ctx, kpd.Key, kpd.ProtocolData)
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
-		Params: k.GetParams(ctx),
+		Params:       k.GetParams(ctx),
+		Claims:       k.AllClaims(ctx),
+		ProtocolData: k.AllKeyedProtocolDatas(ctx),
 	}
 }

@@ -16,19 +16,19 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// RegisteredZoneInfos returns information about registered zones.
-func (k Keeper) RegisteredZoneInfos(c context.Context, req *types.QueryRegisteredZonesInfoRequest) (*types.QueryRegisteredZonesInfoResponse, error) {
+// ZoneInfos returns information about registered zones.
+func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (*types.QueryZonesInfoResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var zones []types.RegisteredZone
+	var zones []types.Zone
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
-		var zone types.RegisteredZone
+		var zone types.Zone
 		if err := k.cdc.Unmarshal(value, &zone); err != nil {
 			return err
 		}
@@ -39,7 +39,7 @@ func (k Keeper) RegisteredZoneInfos(c context.Context, req *types.QueryRegistere
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryRegisteredZonesInfoResponse{
+	return &types.QueryZonesInfoResponse{
 		Zones:      zones,
 		Pagination: pageRes,
 	}, nil
@@ -53,7 +53,7 @@ func (k Keeper) DepositAccount(c context.Context, req *types.QueryDepositAccount
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	zone, found := k.GetRegisteredZoneInfo(ctx, req.GetChainId())
+	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
@@ -75,7 +75,7 @@ func (k Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorInte
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	zone, found := k.GetRegisteredZoneInfo(ctx, req.GetChainId())
+	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
@@ -95,7 +95,7 @@ func (k Keeper) Delegations(c context.Context, req *types.QueryDelegationsReques
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	zone, found := k.GetRegisteredZoneInfo(ctx, req.GetChainId())
+	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
@@ -112,7 +112,7 @@ func (k Keeper) DelegatorDelegations(c context.Context, req *types.QueryDelegato
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	zone, found := k.GetRegisteredZoneInfo(ctx, req.GetChainId())
+	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
@@ -130,7 +130,7 @@ func (k Keeper) ValidatorDelegations(c context.Context, req *types.QueryValidato
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	zone, found := k.GetRegisteredZoneInfo(ctx, req.GetChainId())
+	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
@@ -148,7 +148,7 @@ func (k Keeper) DelegationPlans(c context.Context, req *types.QueryDelegationPla
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	zone, found := k.GetRegisteredZoneInfo(ctx, req.GetChainId())
+	zone, found := k.GetZone(ctx, req.GetChainId())
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}

@@ -118,6 +118,7 @@ import (
 	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 
 	"github.com/ingenuity-build/quicksilver/x/participationrewards"
+	participationrewardsclient "github.com/ingenuity-build/quicksilver/x/participationrewards/client"
 	participationrewardskeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 
@@ -126,7 +127,7 @@ import (
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
-func init() {
+func Init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
@@ -137,8 +138,7 @@ func init() {
 
 const (
 	// Name defines the application binary name
-	Name        = "quicksilverd"
-	upgradeName = "underpressure"
+	Name = "quicksilverd"
 )
 
 var (
@@ -158,9 +158,10 @@ var (
 		mint.AppModuleBasic{},
 		gov.NewAppModuleBasic(
 			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.ProposalHandler, upgradeclient.CancelProposalHandler,
-			ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler, interchainstakingclient.RegisterProposalHandler,
-			interchainstakingclient.UpdateProposalHandler,
+			ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler,
 			// Custom proposal types
+			interchainstakingclient.RegisterProposalHandler, interchainstakingclient.UpdateProposalHandler,
+			participationrewardsclient.AddProtocolDataProposalHandler,
 		),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -476,6 +477,8 @@ func NewQuicksilver(
 		),
 	)
 
+	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
+
 	icaControllerIBCModule := icacontroller.NewIBCModule(app.ICAControllerKeeper, interchainstakingIBCModule)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 
@@ -502,7 +505,8 @@ func NewQuicksilver(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(interchainstakingtypes.RouterKey, interchainstaking.NewProposalHandler(app.InterchainstakingKeeper))
+		AddRoute(interchainstakingtypes.RouterKey, interchainstaking.NewProposalHandler(app.InterchainstakingKeeper)).
+		AddRoute(participationrewardstypes.RouterKey, participationrewards.NewProposalHandler(app.ParticipationRewardsKeeper))
 	// add custom proposal routes here.
 
 	govKeeper := govkeeper.NewKeeper(
@@ -718,14 +722,14 @@ func NewQuicksilver(
 	app.SetAnteHandler(NewAnteHandler(options))
 	app.SetEndBlocker(app.EndBlocker)
 
-	app.UpgradeKeeper.SetUpgradeHandler(
-		upgradeName,
-		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			ctx.Logger().Info("no-op upgrade to underpressure")
+	// app.UpgradeKeeper.SetUpgradeHandler(
+	// 	upgradeName,
+	// 	func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	// 		ctx.Logger().Info("no-op upgrade to underpressure")
 
-			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-		},
-	)
+	// 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	// 	},
+	// )
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {

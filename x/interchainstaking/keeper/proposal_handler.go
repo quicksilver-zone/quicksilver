@@ -18,12 +18,12 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 	}
 
 	// get zone
-	_, found := k.GetRegisteredZoneInfo(ctx, chainID)
+	_, found := k.GetZone(ctx, chainID)
 	if found {
 		return fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainID)
 	}
 
-	zone := types.RegisteredZone{
+	zone := types.Zone{
 		ChainId:            chainID,
 		ConnectionId:       p.ConnectionId,
 		LocalDenom:         p.LocalDenom,
@@ -34,7 +34,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		MultiSend:          p.MultiSend,
 		LiquidityModule:    p.LiquidityModule,
 	}
-	k.SetRegisteredZone(ctx, zone)
+	k.SetZone(ctx, &zone)
 
 	// generate deposit account
 	portOwner := chainID + ".deposit"
@@ -94,7 +94,7 @@ func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, 
 
 // HandleUpdateZoneProposal is a handler for executing a passed community spend proposal
 func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProposal) error {
-	zone, found := k.GetRegisteredZoneInfo(ctx, p.ChainId)
+	zone, found := k.GetZone(ctx, p.ChainId)
 	if !found {
 		err := fmt.Errorf("unable to get registered zone for chain id: %s", p.ChainId)
 		return err
@@ -106,7 +106,7 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 				return err
 			}
 			zone.BaseDenom = change.Value
-			k.SetRegisteredZone(ctx, zone)
+			k.SetZone(ctx, &zone)
 		}
 	}
 
