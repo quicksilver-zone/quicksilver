@@ -23,7 +23,7 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 	chainStartTime := ctx.BlockTime()
 
 	pool := types.OsmosisPoolProtocolData{
-		PoolId:      1,
+		PoolID:      1,
 		PoolName:    "atom/osmo",
 		LastUpdated: chainStartTime,
 	}
@@ -34,7 +34,7 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 	}
 	protocolData := keeper.NewProtocolData("osmosispool", "osmosis", bz)
 
-	app.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("osmosis/pools/%d", pool.PoolId), protocolData)
+	app.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("osmosis/pools/%d", pool.PoolID), protocolData)
 
 	genesis := participationrewards.ExportGenesis(ctx, app.ParticipationRewardsKeeper)
 

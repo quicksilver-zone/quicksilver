@@ -7,7 +7,7 @@ import (
 )
 
 type OsmosisPoolProtocolData struct {
-	PoolId      uint64
+	PoolID      uint64
 	PoolName    string
 	LastUpdated time.Time
 	PoolData    osmosisgammtypes.PoolI

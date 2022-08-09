@@ -32,7 +32,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 		pool, _ := ipool.(types.OsmosisPoolProtocolData)
 
 		// update pool datas
-		k.IcqKeeper.MakeRequest(ctx, connectionData.ConnectionId, connectionData.ChainId, "store/gamm/key", m.GetKeyPrefixPools(pool.PoolId), sdk.NewInt(-1), types.ModuleName, "osmosispoolupdate", 0) // query pool data
+		k.IcqKeeper.MakeRequest(ctx, connectionData.ConnectionID, connectionData.ChainID, "store/gamm/key", m.GetKeyPrefixPools(pool.PoolID), sdk.NewInt(-1), types.ModuleName, "osmosispoolupdate", 0) // query pool data
 		return false
 	})
 }
@@ -49,6 +49,6 @@ func (m *OsmosisModule) VerifyClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSu
 	return nil
 }
 
-func (m *OsmosisModule) GetKeyPrefixPools(poolId uint64) []byte {
-	return append([]byte{0x02}, sdk.Uint64ToBigEndian(poolId)...)
+func (m *OsmosisModule) GetKeyPrefixPools(poolID uint64) []byte {
+	return append([]byte{0x02}, sdk.Uint64ToBigEndian(poolID)...)
 }

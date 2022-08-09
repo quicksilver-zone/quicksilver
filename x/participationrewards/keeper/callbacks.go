@@ -104,10 +104,10 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	if err != nil {
 		return err
 	}
-	poolId := sdk.BigEndianToUint64(query.Request[1:])
-	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("pools/%d", poolId))
+	poolID := sdk.BigEndianToUint64(query.Request[1:])
+	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("pools/%d", poolID))
 	if !ok {
-		return fmt.Errorf("unable to find protocol data for osmosis/pools/%d", poolId)
+		return fmt.Errorf("unable to find protocol data for osmosis/pools/%d", poolID)
 	}
 	ipool, err := UnmarshalProtocolData("osmosispool", data.Data)
 	if err != nil {
@@ -115,14 +115,14 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	}
 	pool, ok := ipool.(types.OsmosisPoolProtocolData)
 	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for osmosis/pools/%d", poolId)
+		return fmt.Errorf("unable to unmarshal protocol data for osmosis/pools/%d", poolID)
 	}
 	pool.PoolData = acc
 	data.Data, err = json.Marshal(pool)
 	if err != nil {
 		return err
 	}
-	k.SetProtocolData(ctx, fmt.Sprintf("osmosis/pools/%d", poolId), &data)
+	k.SetProtocolData(ctx, fmt.Sprintf("osmosis/pools/%d", poolID), &data)
 
 	return nil
 }

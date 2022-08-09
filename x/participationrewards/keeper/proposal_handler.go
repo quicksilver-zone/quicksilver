@@ -53,8 +53,8 @@ func UnmarshalProtocolData(datatype string, data json.RawMessage) (IProtocolData
 type IProtocolData interface{}
 
 type ConnectionProtocolData struct {
-	ConnectionId string
-	ChainId      string
+	ConnectionID string
+	ChainID      string
 }
 
 var (
