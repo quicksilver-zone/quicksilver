@@ -12,8 +12,7 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/
 // Query defines the gRPC querier service.
 service Query {
   // ZoneInfos provides meta data on connected zones.
-  rpc ZoneInfos(QueryZonesInfoRequest)
-      returns (QueryZonesInfoResponse) {
+  rpc ZoneInfos(QueryZonesInfoRequest) returns (QueryZonesInfoResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones";
   }
   // DepositAccount provides data on the deposit address for a connected zone.

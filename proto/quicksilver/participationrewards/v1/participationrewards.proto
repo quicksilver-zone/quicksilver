@@ -47,7 +47,8 @@ message KeyedProtocolData {
   string key = 1;
   ProtocolData protocol_data = 2;
 }
-// Protocol Data is an arbitrary data type held against a given zone for the determination of rewards. 
+// Protocol Data is an arbitrary data type held against a given zone for the
+// determination of rewards.
 message ProtocolData {
   string protocol = 1;
   string type = 2;

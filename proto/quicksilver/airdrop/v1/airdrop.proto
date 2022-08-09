@@ -20,7 +20,7 @@ enum Action {
 // Status is used as an enum to denote zone status.
 enum Status {
   option (gogoproto.goproto_enum_prefix) = false;
-  
+
   StatusActive = 0;
   StatusFuture = 1;
   StatusExpired = 2;
@@ -72,7 +72,7 @@ message ClaimRecord {
 // CompletedAction represents a claim action completed by the user.
 message CompletedAction {
   option (gogoproto.goproto_getters) = false;
-  
+
   google.protobuf.Timestamp complete_time = 1 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false,

@@ -8,7 +8,6 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 
 // Params holds parameters for the airdrop module.
 message Params {
-    option (gogoproto.goproto_stringer) = false;
-    option (gogoproto.goproto_getters) = false;
-    
+  option (gogoproto.goproto_stringer) = false;
+  option (gogoproto.goproto_getters) = false;
 }
