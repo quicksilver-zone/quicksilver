@@ -132,6 +132,34 @@ func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*type
 	return zone, ica
 }
 
+func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {
+	if zone.WithdrawalAddress == nil {
+		k.Logger(ctx).Info("Withdrawal address not set")
+		return nil
+	}
+	withdrawalAddress := zone.WithdrawalAddress.Address
+
+	for _, da := range zone.GetDelegationAccounts() {
+		if da.WithdrawalAddress != zone.WithdrawalAddress.Address {
+			msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: da.Address, WithdrawAddress: withdrawalAddress}
+			err := k.SubmitTx(ctx, []sdk.Msg{&msg}, da, "")
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// set withdrawal address for performance address, if it exists
+	if zone.PerformanceAddress != nil && zone.PerformanceAddress.WithdrawalAddress != withdrawalAddress {
+		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.PerformanceAddress.Address, WithdrawAddress: withdrawalAddress}
+		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "")
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // SetAccountBalanceForDenom sets the balance on an account for a given denominination.
 func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.RegisteredZone, address string, coin sdk.Coin) error {
 	// ? is this switch statement still required ?

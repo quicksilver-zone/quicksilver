@@ -16,7 +16,9 @@ type zoneItrFn func(index int64, zoneInfo types.RegisteredZone) (stop bool)
 // BeginBlocker of interchainstaking module
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	k.IterateRegisteredZones(ctx, func(index int64, zone types.RegisteredZone) (stop bool) {
+		if ctx.BlockHeight()%10 == 0 {
+			k.EnsureWithdrawalAddresses(ctx, &zone)
+		}
 		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
 		if found {
 			consState, found := k.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(ctx, connection.GetClientID())
