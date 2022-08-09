@@ -1,7 +1,7 @@
 package types
 
 type LiquidAllowedDenomProtocolData struct {
-	ChainId    string
+	ChainID    string
 	Denom      string
 	LocalDenom string
 }
