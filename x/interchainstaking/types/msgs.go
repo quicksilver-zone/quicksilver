@@ -18,8 +18,8 @@ const (
 )
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
-func NewMsgRequestRedemption(coin string, destinationAddress string, fromAddress sdk.Address) *MsgRequestRedemption {
-	return &MsgRequestRedemption{Coin: coin, DestinationAddress: destinationAddress, FromAddress: fromAddress.String()}
+func NewMsgRequestRedemption(value sdk.Coin, destinationAddress string, fromAddress sdk.Address) *MsgRequestRedemption {
+	return &MsgRequestRedemption{Value: value, DestinationAddress: destinationAddress, FromAddress: fromAddress.String()}
 }
 
 // Route Implements Msg.
@@ -37,13 +37,8 @@ func (msg MsgRequestRedemption) ValidateBasic() error {
 	}
 
 	// check coin
-	coin, err := sdk.ParseCoinNormalized(msg.Coin)
-	if err != nil {
+	if err = msg.Value.Validate(); err != nil {
 		return err
-	}
-
-	if !coin.IsPositive() {
-		return fmt.Errorf("expected positive value, got %v", msg.Coin)
 	}
 
 	return nil

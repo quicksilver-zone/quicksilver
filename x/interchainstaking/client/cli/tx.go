@@ -70,7 +70,7 @@ e.g. "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzz
 // GetRegisterZoneTxCmd returns a CLI command handler for creating a MsgSend transaction.
 func GetRequestRedemptionTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "redeem [coins] [destination_address]",
+		Use:   "redeem [coin] [destination_address]",
 		Short: `Redeem tokens.`,
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -78,10 +78,13 @@ func GetRequestRedemptionTxCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			coins := args[0]
 			destinationAddress := args[1]
+			coin, err := sdk.ParseCoinNormalized(args[0])
+			if err != nil {
+				return fmt.Errorf("unable to parse coin %s", args[0])
+			}
 
-			msg := types.NewMsgRequestRedemption(coins, destinationAddress, clientCtx.GetFromAddress())
+			msg := types.NewMsgRequestRedemption(coin, destinationAddress, clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

@@ -33,13 +33,9 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// validate coins are positive
-	inCoin, err := sdk.ParseCoinNormalized(msg.Coin)
+	err := msg.Value.Validate()
 	if err != nil {
 		return nil, err
-	}
-
-	if !inCoin.IsPositive() {
-		return nil, fmt.Errorf("invalid input coin value")
 	}
 
 	// validate recipient address
@@ -54,7 +50,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	var zone *types.Zone
 
 	k.IterateZones(ctx, func(_ int64, thisZone types.Zone) bool {
-		if thisZone.LocalDenom == inCoin.GetDenom() {
+		if thisZone.LocalDenom == msg.Value.GetDenom() {
 			zone = &thisZone
 			return true
 		}
@@ -82,7 +78,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	// does the user have sufficient assets to burn
-	if !k.BankKeeper.HasBalance(ctx, sender, inCoin) {
+	if !k.BankKeeper.HasBalance(ctx, sender, msg.Value) {
 		return nil, fmt.Errorf("account has insufficient balance of qasset to burn")
 	}
 
@@ -93,7 +89,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		rate = zone.RedemptionRate
 	}
 
-	nativeTokens := inCoin.Amount.ToDec().Mul(rate).TruncateInt()
+	nativeTokens := msg.Value.Amount.ToDec().Mul(rate).TruncateInt()
 
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
 
@@ -103,7 +99,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	hashString := hex.EncodeToString(hash[:])
 
 	// lock qAssets - how are we tracking this?
-	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(inCoin)); err != nil {
+	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(msg.Value)); err != nil {
 		return nil, err
 	}
 
@@ -141,7 +137,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 				TokenizedShareOwner: msg.DestinationAddress,
 			})
 			sumAmount = sumAmount.Add(target.Value[0])
-			k.AddWithdrawalRecord(ctx, target.DelegatorAddress, target.ValidatorAddress, msg.DestinationAddress, target.Value[0], inCoin, hashString)
+			k.AddWithdrawalRecord(ctx, target.DelegatorAddress, target.ValidatorAddress, msg.DestinationAddress, target.Value[0], msg.Value, hashString)
 		}
 	}
 
@@ -175,7 +171,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		),
 		sdk.NewEvent(
 			types.EventTypeRedemptionRequest,
-			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Coin),
+			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Value.String()),
 			sdk.NewAttribute(types.AttributeKeyRedeemAmount, sumAmount.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
 			sdk.NewAttribute(types.AttributeKeyRecipientChain, zone.ChainId),
