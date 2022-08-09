@@ -12,6 +12,11 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	k.Logger(ctx).Info("distribute participation rewards...")
 
+	if epochNumber < 3 {
+		k.Logger(ctx).Info("defer...")
+		return
+	}
+
 	allocation := k.getRewardsAllocations(ctx)
 
 	// this function is completed in a callback
