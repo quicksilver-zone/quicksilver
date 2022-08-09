@@ -49,11 +49,10 @@ func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID
 		}
 		return nil
 
-	} else {
-		// if we got a nil response, verify non inclusion proof.
-		if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path); err != nil {
-			return fmt.Errorf("unable to verify non-inclusion proof: %s", err)
-		}
-		return nil
 	}
+	// if we got a nil response, verify non inclusion proof.
+	if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path); err != nil {
+		return fmt.Errorf("unable to verify non-inclusion proof: %s", err)
+	}
+	return nil
 }
