@@ -470,9 +470,13 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 		if zone == nil {
 			return fmt.Errorf("unable to find zone")
 		}
-		zone.PerformanceAddress.SetWithdrawalAddress(original.WithdrawAddress)
+		if err := zone.PerformanceAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
+			return err
+		}
 	} else {
-		ica.SetWithdrawalAddress(original.WithdrawAddress)
+		if err := ica.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
+			return err
+		}
 	}
 	k.SetZone(ctx, zone)
 

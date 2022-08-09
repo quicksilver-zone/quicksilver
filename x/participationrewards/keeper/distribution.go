@@ -207,6 +207,9 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 
 	// pass 2: iterate zones - calc zone tvl proportion & set allocations
 	for _, zone := range k.icsKeeper.AllZones(ctx) {
+		// explicit memory referencing
+		zone := zone
+
 		ztvl, exists := zoneProps[zone.ChainId]
 		if !exists {
 			panic("unable to obtain zone proportion on second zone pass")

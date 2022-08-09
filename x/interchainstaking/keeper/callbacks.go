@@ -248,7 +248,6 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		// hashBytes := k.cdc.MustMarshal(&req)
 		k.HandleReceiptTransaction(ctx, txn, txs.Txs[idx], zone)
 		// k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
-
 	}
 	return nil
 }

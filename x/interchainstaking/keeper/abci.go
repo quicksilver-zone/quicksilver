@@ -18,7 +18,10 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	k.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
 		if ctx.BlockHeight()%10 == 0 {
-			k.EnsureWithdrawalAddresses(ctx, &zone)
+			if err := k.EnsureWithdrawalAddresses(ctx, &zone); err != nil {
+				k.Logger(ctx).Error(err.Error())
+				panic(err)
+			}
 		}
 		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
 		if found {
