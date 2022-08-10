@@ -130,7 +130,7 @@ func TestValidateGenesis(t *testing.T) {
 							ChainId: "",
 							Address: "",
 							ActionsCompleted: map[int32]*CompletedAction{
-								7: {
+								999: {
 									CompleteTime: time.Now().Add(time.Hour),
 									ClaimAmount:  1000000,
 								},

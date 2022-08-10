@@ -112,3 +112,15 @@ func (cr ClaimRecord) ValidateBasic() error {
 
 	return nil
 }
+
+func (a Action) InBounds() bool {
+	// get action enum
+	ae := int(a)
+
+	// check action enum
+	if ae < 0 || ae >= len(Action_name) {
+		return false
+	}
+
+	return true
+}

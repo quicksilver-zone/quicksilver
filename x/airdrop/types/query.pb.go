@@ -184,7 +184,8 @@ func (m *QueryZoneDropResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryZoneDropResponse proto.InternalMessageInfo
 
-// QueryAccountBalanceRequest is the request type for Query/AccountBalance RPC method.
+// QueryAccountBalanceRequest is the request type for Query/AccountBalance RPC
+// method.
 type QueryAccountBalanceRequest struct {
 	// chain_id identifies the zone.
 	ChainId string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
@@ -223,7 +224,8 @@ func (m *QueryAccountBalanceRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryAccountBalanceRequest proto.InternalMessageInfo
 
-// QueryAccountBalanceResponse is the response type for Query/AccountBalance RPC method.
+// QueryAccountBalanceResponse is the response type for Query/AccountBalance RPC
+// method.
 type QueryAccountBalanceResponse struct {
 	AccountBalance *types.Coin `protobuf:"bytes,1,opt,name=account_balance,json=accountBalance,proto3" json:"account_balance,omitempty" yaml:"account_balance"`
 }
