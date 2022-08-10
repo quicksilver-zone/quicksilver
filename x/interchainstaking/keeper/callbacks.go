@@ -246,6 +246,11 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	for idx, txn := range txs.TxResponses {
 		// req := tx.GetTxRequest{Hash: txn.TxHash}
 		// hashBytes := k.cdc.MustMarshal(&req)
+		_, found = k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, txn.TxHash))
+		if found {
+			k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
+			continue
+		}
 		k.HandleReceiptTransaction(ctx, txn, txs.Txs[idx], zone)
 		// k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}

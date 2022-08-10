@@ -169,20 +169,21 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 	switch {
 	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
 		existing := zone.DepositAddress.Balance.AmountOf(coin.Denom)
-		zone.DepositAddress.Balance = zone.DepositAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
-		zone.DepositAddress.BalanceWaitgroup--
+		zone.DepositAddress.SetBalance(zone.DepositAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin)) // reset this denom
+		zone.DepositAddress.DecrementBalanceWaitgroup()
 		k.Logger(ctx).Info("Matched deposit address", "address", address, "wg", zone.DepositAddress.BalanceWaitgroup, "balance", zone.DepositAddress.Balance)
 		if zone.DepositAddress.BalanceWaitgroup == 0 {
 			k.depositInterval(ctx)(0, zone)
 		}
 	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
 		existing := zone.WithdrawalAddress.Balance.AmountOf(coin.Denom)
-		zone.WithdrawalAddress.Balance = zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
-		zone.WithdrawalAddress.BalanceWaitgroup--
+		zone.WithdrawalAddress.SetBalance(zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin)) // reset this denom
+		zone.WithdrawalAddress.DecrementBalanceWaitgroup()
 		k.Logger(ctx).Info("Matched withdrawal address", "address", address, "wg", zone.WithdrawalAddress.BalanceWaitgroup, "balance", zone.WithdrawalAddress.Balance)
 	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
 		k.Logger(ctx).Info("Matched performance address")
 	default:
+		panic("do i get called?")
 		icaAccount, err := zone.GetDelegationAccountByAddress(address)
 		if err != nil {
 			return err
@@ -194,12 +195,12 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 
 		// TODO: figure out how this impacts delegations in progress / race conditions (in most cases, the duplicate delegation will just fail)
 		if !icaAccount.Balance.Empty() {
-			claims := k.AllWithdrawalRecords(ctx, icaAccount.Address)
+			claims := k.AllZoneDelegatorWithdrawalRecords(ctx, &zone, icaAccount.Address)
 			if len(claims) > 0 {
 				// should we reconcile here?
 				k.Logger(ctx).Info("Outstanding Withdrawal Claims", "count", len(claims))
 				for _, claim := range claims {
-					if claim.Status == WithdrawStatusTokenize {
+					if claim.Status == WithdrawStatusTokenize || claim.Status == WithdrawStatusUnbond {
 						// if the claim has tokenize status AND then remove any coins in the balance that match that validator.
 						// so we don't try to re-delegate any recently redeemed tokens that haven't been sent yet.
 						if strings.HasPrefix(coin.Denom, claim.Validator) {

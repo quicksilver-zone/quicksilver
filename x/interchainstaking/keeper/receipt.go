@@ -184,8 +184,6 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 	if err != nil {
 		return err
 	}
-	k.Logger(ctx).Error("connection", "conn", connectionID)
-
 	channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, connectionID, portID)
 	if !found {
 		return sdkerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s in submittx", portID)
