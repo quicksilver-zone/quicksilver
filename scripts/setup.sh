@@ -168,20 +168,20 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
 fi
 
 ## Set denoms
-sed -i 's/stake/uqck/g' $(pwd)/${CHAIN_DIR}/${CHAINID_0}/config/genesis.json
-sed -i 's/stake/uqck/g' $(pwd)/${CHAIN_DIR}/${CHAINID_0}a/config/genesis.json
-sed -i 's/stake/uqck/g' $(pwd)/${CHAIN_DIR}/${CHAINID_0}b/config/genesis.json
+sed -i '' 's/stake/uqck/g' $(pwd)/${CHAIN_DIR}/${CHAINID_0}/config/genesis.json
+sed -i '' 's/stake/uqck/g' $(pwd)/${CHAIN_DIR}/${CHAINID_0}a/config/genesis.json
+sed -i '' 's/stake/uqck/g' $(pwd)/${CHAIN_DIR}/${CHAINID_0}b/config/genesis.json
 
-sed -i 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}/config/genesis.json
-sed -i 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}a/config/genesis.json
-sed -i 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}b/config/genesis.json
-sed -i 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}c/config/genesis.json
+sed -i '' 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}/config/genesis.json
+sed -i '' 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}a/config/genesis.json
+sed -i '' 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}b/config/genesis.json
+sed -i '' 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}c/config/genesis.json
 
 if [ "$IS_MULTI_ZONE_TEST" = true ]; then
-    sed -i 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}/config/genesis.json
-    sed -i 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}a/config/genesis.json
-    sed -i 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}b/config/genesis.json
-    sed -i 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}c/config/genesis.json
+    sed -i '' 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}/config/genesis.json
+    sed -i '' 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}a/config/genesis.json
+    sed -i '' 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}b/config/genesis.json
+    sed -i '' 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}c/config/genesis.json
 fi
 
 VAL_ADDRESS_1=$($QS1_RUN keys show val1 --keyring-backend test -a)
@@ -332,94 +332,94 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
 fi
 
 echo "Changing defaults and ports in app.toml and config.toml files..."
-sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_0}/config/config.toml
-sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}/config/config.toml
-sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}/config/config.toml
-sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_0}/config/config.toml
-sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node6,$node7\"/g" ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
-sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_0}/config/app.toml
-sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_0}/config/app.toml
+sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_0}/config/config.toml
+sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}/config/config.toml
+sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}/config/config.toml
+sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_0}/config/config.toml
+sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node6,$node7\"/g" ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
+sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_0}/config/app.toml
+sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_0}/config/app.toml
 
-sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
-sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
-sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
-sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
-sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node5,$node7\"/g" ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
-sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_0}a/config/app.toml
-sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_0}a/config/app.toml
+sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
+sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
+sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
+sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
+sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node5,$node7\"/g" ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
+sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_0}a/config/app.toml
+sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_0}a/config/app.toml
 
-sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
-sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
-sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
-sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
-sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node5,$node6\"/g" ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
-sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_0}b/config/app.toml
-sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_0}b/config/app.toml
+sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
+sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
+sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
+sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
+sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node5,$node6\"/g" ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
+sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_0}b/config/app.toml
+sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_0}b/config/app.toml
 
-sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
-sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
-sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
-sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
-sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node2,$node3,$node4\"/g" ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
-sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_1}/config/app.toml
-sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_1}/config/app.toml
+sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
+sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
+sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
+sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
+sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node2,$node3,$node4\"/g" ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
+sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_1}/config/app.toml
+sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_1}/config/app.toml
 
-sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_1}a/config/config.toml
-sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}a/config/config.toml
-sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}a/config/config.toml
-sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_1}a/config/config.toml
-sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node1,$node3,$node4\"/g" ${CHAIN_DIR}/${CHAINID_1}a/config/config.toml
-sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_1}a/config/app.toml
-sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_1}a/config/app.toml
+sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_1}a/config/config.toml
+sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}a/config/config.toml
+sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}a/config/config.toml
+sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_1}a/config/config.toml
+sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node1,$node3,$node4\"/g" ${CHAIN_DIR}/${CHAINID_1}a/config/config.toml
+sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_1}a/config/app.toml
+sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_1}a/config/app.toml
 
-sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_1}b/config/config.toml
-sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}b/config/config.toml
-sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}b/config/config.toml
-sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_1}b/config/config.toml
-sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node1,$node2,$node4\"/g" ${CHAIN_DIR}/${CHAINID_1}b/config/config.toml
-sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_1}b/config/app.toml
-sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_1}b/config/app.toml
+sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_1}b/config/config.toml
+sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}b/config/config.toml
+sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}b/config/config.toml
+sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_1}b/config/config.toml
+sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node1,$node2,$node4\"/g" ${CHAIN_DIR}/${CHAINID_1}b/config/config.toml
+sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_1}b/config/app.toml
+sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_1}b/config/app.toml
 
-sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_1}c/config/config.toml
-sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}c/config/config.toml
-sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}c/config/config.toml
-sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_1}c/config/config.toml
-sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node1,$node2,$node3\"/g" ${CHAIN_DIR}/${CHAINID_1}c/config/config.toml
-sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_1}c/config/app.toml
-sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_1}c/config/app.toml
+sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_1}c/config/config.toml
+sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}c/config/config.toml
+sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}c/config/config.toml
+sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_1}c/config/config.toml
+sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node1,$node2,$node3\"/g" ${CHAIN_DIR}/${CHAINID_1}c/config/config.toml
+sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_1}c/config/app.toml
+sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_1}c/config/app.toml
 
 if [ "$IS_MULTI_ZONE_TEST" = true ]; then
-    sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
-    sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
-    sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
-    sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
-    sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node9,$node10,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
-    sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/app.toml
-    sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/app.toml
+    sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
+    sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
+    sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
+    sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
+    sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node9,$node10,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
+    sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/app.toml
+    sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/app.toml
 
-    sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
-    sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
-    sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
-    sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
-    sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node10,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
-    sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/app.toml
-    sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/app.toml
+    sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
+    sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
+    sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
+    sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
+    sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node10,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
+    sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/app.toml
+    sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/app.toml
 
-    sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
-    sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
-    sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
-    sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
-    sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node9,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
-    sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/app.toml
-    sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/app.toml
+    sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
+    sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
+    sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
+    sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
+    sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node9,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
+    sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/app.toml
+    sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/app.toml
 
-    sed -i -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
-    sed -i -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
-    sed -i -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
-    sed -i -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
-    sed -i -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node9,$node10\"/g" ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
-    sed -i -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/app.toml
-    sed -i -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/app.toml
+    sed -i '' -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
+    sed -i '' -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
+    sed -i '' -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
+    sed -i '' -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
+    sed -i '' -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node9,$node10\"/g" ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
+    sed -i '' -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/app.toml
+    sed -i '' -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/app.toml
 fi
 
 ## add the message types ICA should allow
