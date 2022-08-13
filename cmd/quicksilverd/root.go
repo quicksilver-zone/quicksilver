@@ -24,10 +24,12 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	servercfg "github.com/ingenuity-build/quicksilver/server/config"
 	tmcfg "github.com/tendermint/tendermint/config"
 
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+
 	"github.com/ingenuity-build/quicksilver/app"
 	quicksilverconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 
@@ -44,6 +46,7 @@ const (
 // NewRootCmd creates a new root command for quicksilverd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
+	app.Init()
 	encodingConfig := app.MakeEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).
@@ -101,7 +104,7 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	)
 
 	ac := appCreator{
-		encCfg: app.EncodingConfig(app.MakeEncodingConfig()),
+		encCfg: app.MakeEncodingConfig(),
 	}
 	server.AddCommands(rootCmd, app.DefaultNodeHome, ac.newApp, ac.appExport, addModuleInitFlags)
 

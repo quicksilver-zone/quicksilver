@@ -110,18 +110,19 @@ services:
       context: .
       dockerfile: Dockerfile.hermes
   icq:
-    image: quicksilverzone/interchain-queries:v0.2.2
+    image: quicksilverzone/interchain-queries:latest
     volumes:
       - ./data/icq:/icq/.icq
     command:
       - interchain-queries
       - run
     restart: always
-  icq2:
-    image: quicksilverzone/interchain-queries:v0.2.2
+  relayer:
+    image: quicksilverzone/relayer
     volumes:
-      - ./data/icq2:/icq/.icq
+      - ./data/rly:/rly/.relayer
     command:
-      - interchain-queries
-      - run
+      - rly
+      - start
+      - demo
     restart: always

@@ -23,7 +23,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/client/cli"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 
-	//"github.com/ingenuity-build/quicksilver/x/interchainstaking/simulation"
+	// "github.com/ingenuity-build/quicksilver/x/interchainstaking/simulation"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -186,7 +186,7 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // GenerateGenesisState creates a randomized GenState of the pool-incentives module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	//simulation.RandomizedGenState(simState)
+	// simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.

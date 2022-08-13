@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -33,7 +34,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 
 		s.Run(tt.name, func() {
 			s.SetupTest()
-			s.SetupRegisteredZones()
+			s.SetupZones()
 
 			tt.malleate()
 
@@ -84,7 +85,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 
 		s.Run(tt.name, func() {
 			s.SetupTest()
-			s.SetupRegisteredZones()
+			s.SetupZones()
 
 			tt.malleate()
 

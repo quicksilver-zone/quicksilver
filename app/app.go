@@ -63,7 +63,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
-	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -84,34 +83,35 @@ import (
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	"github.com/ingenuity-build/quicksilver/x/mint"
 	mintkeeper "github.com/ingenuity-build/quicksilver/x/mint/keeper"
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 
-	ica "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts"
-	icacontroller "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/types"
-	icahost "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host"
-	icahostkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/keeper"
-	icahosttypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/types"
-	ibcfee "github.com/cosmos/ibc-go/v4/modules/apps/29-fee"
-	ibcfeekeeper "github.com/cosmos/ibc-go/v4/modules/apps/29-fee/keeper"
-	ibcfeetypes "github.com/cosmos/ibc-go/v4/modules/apps/29-fee/types"
+	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
+	icacontroller "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
+	icahost "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	ibcfee "github.com/cosmos/ibc-go/v5/modules/apps/29-fee"
+	ibcfeekeeper "github.com/cosmos/ibc-go/v5/modules/apps/29-fee/keeper"
+	ibcfeetypes "github.com/cosmos/ibc-go/v5/modules/apps/29-fee/types"
 
-	"github.com/cosmos/ibc-go/v4/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v4/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v4/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v4/modules/core"
-	ibcclient "github.com/cosmos/ibc-go/v4/modules/core/02-client"
-	ibcclientclient "github.com/cosmos/ibc-go/v4/modules/core/02-client/client"
-	porttypes "github.com/cosmos/ibc-go/v4/modules/core/05-port/types"
-	ibchost "github.com/cosmos/ibc-go/v4/modules/core/24-host"
-	ibcmock "github.com/cosmos/ibc-go/v4/testing/mock"
+	"github.com/cosmos/ibc-go/v5/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v5/modules/core"
+	ibcclient "github.com/cosmos/ibc-go/v5/modules/core/02-client"
+	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
+	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
+	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	ibcmock "github.com/cosmos/ibc-go/v5/testing/mock"
 
-	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/ingenuity-build/quicksilver/x/epochs"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
@@ -129,9 +129,13 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards"
 	participationrewardskeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+
+	"github.com/ingenuity-build/quicksilver/x/airdrop"
+	airdropkeeper "github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
+	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
-func init() {
+func Init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
@@ -142,8 +146,7 @@ func init() {
 
 const (
 	// Name defines the application binary name
-	Name        = "quicksilverd"
-	upgradeName = "underpressure"
+	Name = "quicksilverd"
 )
 
 var (
@@ -162,11 +165,11 @@ var (
 		distr.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		gov.NewAppModuleBasic(
-			[]govclient.ProposalHandler{
-				paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler,
-				ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler, interchainstakingclient.RegisterProposalHandler,
-				interchainstakingclient.UpdateProposalHandler,
-			},
+			paramsclient.ProposalHandler, distrclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler,
+			ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler,
+			// Custom proposal types
+			interchainstakingclient.RegisterProposalHandler, interchainstakingclient.UpdateProposalHandler,
+			participationrewardsclient.AddProtocolDataProposalHandler,
 		),
 
 		params.AppModuleBasic{},
@@ -185,6 +188,7 @@ var (
 		interchainquery.AppModuleBasic{},
 		participationrewards.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
+		airdrop.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -203,6 +207,7 @@ var (
 		ibcfeetypes.ModuleName:            nil,
 		// TODO: Remove Burner from participationrewards - for dev/test only;
 		participationrewardstypes.ModuleName: {authtypes.Burner},
+		airdroptypes.ModuleName:              nil,
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -260,6 +265,7 @@ type Quicksilver struct {
 	InterchainstakingKeeper    interchainstakingkeeper.Keeper
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
 	ParticipationRewardsKeeper participationrewardskeeper.Keeper
+	AirdropKeeper              airdropkeeper.Keeper
 
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
@@ -334,6 +340,7 @@ func NewQuicksilver(
 		interchainstakingtypes.StoreKey,
 		interchainquerytypes.StoreKey,
 		participationrewardstypes.StoreKey,
+		airdroptypes.StoreKey,
 	)
 
 	// Add the transient store key
@@ -514,7 +521,9 @@ func NewQuicksilver(
 
 	interchainstakingIBCModule := interchainstaking.NewIBCModule(app.InterchainstakingKeeper)
 
-	app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler())
+	if err := app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler()); err != nil {
+		panic(err)
+	}
 
 	app.ParticipationRewardsKeeper = participationrewardskeeper.NewKeeper(
 		appCodec,
@@ -529,7 +538,19 @@ func NewQuicksilver(
 	)
 	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
 
-	app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler())
+	if err := app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler()); err != nil {
+		panic(err)
+	}
+
+	app.AirdropKeeper = airdropkeeper.NewKeeper(
+		appCodec,
+		keys[airdroptypes.StoreKey],
+		app.GetSubspace(airdroptypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+	)
+	airdropModule := airdrop.NewAppModule(appCodec, app.AirdropKeeper)
 
 	// Quicksilver Keepers
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
@@ -541,8 +562,19 @@ func NewQuicksilver(
 		),
 	)
 
-	//	icaControllerIBCModule := icacontroller.NewIBCMiddleware(app.ICAControllerKeeper, interchainstakingIBCModule)
-	//	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
+	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
+
+	icaControllerIBCModule := icacontroller.NewIBCModule(app.ICAControllerKeeper, interchainstakingIBCModule)
+	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
+
+	// Create static IBC router, add transfer route, then set and seal it
+	ibcRouter := porttypes.NewRouter()
+	ibcRouter.
+		AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
+		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
+		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
+		AddRoute(interchainstakingtypes.ModuleName, icaControllerIBCModule)
+	app.IBCKeeper.SetRouter(ibcRouter)
 
 	// create evidence keeper with router
 	evidenceKeeper := evidencekeeper.NewKeeper(
@@ -558,7 +590,8 @@ func NewQuicksilver(
 		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
 		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(interchainstakingtypes.RouterKey, interchainstaking.NewProposalHandler(app.InterchainstakingKeeper))
+		AddRoute(interchainstakingtypes.RouterKey, interchainstaking.NewProposalHandler(app.InterchainstakingKeeper)).
+		AddRoute(participationrewardstypes.RouterKey, participationrewards.NewProposalHandler(app.ParticipationRewardsKeeper))
 	// add custom proposal routes here.
 
 	// Register the proposal types
@@ -620,6 +653,7 @@ func NewQuicksilver(
 		interchainstakingModule,
 		interchainQueryModule,
 		participationrewardsModule,
+		airdropModule,
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -645,6 +679,7 @@ func NewQuicksilver(
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		participationrewardstypes.ModuleName,
+		airdroptypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -683,6 +718,7 @@ func NewQuicksilver(
 		vestingtypes.ModuleName,
 		interchainstakingtypes.ModuleName,
 		participationrewardstypes.ModuleName,
+		airdroptypes.ModuleName,
 		// currently no-op.
 	)
 
@@ -716,6 +752,7 @@ func NewQuicksilver(
 		interchainstakingtypes.ModuleName,
 		interchainquerytypes.ModuleName,
 		participationrewardstypes.ModuleName,
+		airdroptypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	)
@@ -783,14 +820,14 @@ func NewQuicksilver(
 	app.SetAnteHandler(NewAnteHandler(options))
 	app.SetEndBlocker(app.EndBlocker)
 
-	app.UpgradeKeeper.SetUpgradeHandler(
-		upgradeName,
-		func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			ctx.Logger().Info("nothing to see here o.O")
+	// app.UpgradeKeeper.SetUpgradeHandler(
+	// 	upgradeName,
+	// 	func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	// 		ctx.Logger().Info("no-op upgrade to underpressure")
 
-			return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-		},
-	)
+	// 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	// 	},
+	// )
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -1017,7 +1054,7 @@ func GetMaccPerms() map[string][]string {
 
 // initParamsKeeper init params keeper and its subspaces
 func initParamsKeeper(
-	appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey,
+	appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey sdk.StoreKey,
 ) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
@@ -1039,5 +1076,6 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
+	paramsKeeper.Subspace(airdroptypes.ModuleName)
 	return paramsKeeper
 }

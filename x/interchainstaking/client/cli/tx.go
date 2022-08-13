@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -37,9 +38,9 @@ func GetTxCmd() *cobra.Command {
 // delegation intent.
 func GetSignalIntentTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "signal-intent [chain_id] [delegation_intent]",
+		Use:   "signal-intent [chainID] [delegation_intent]",
 		Short: `Signal validator delegation intent.`,
-		Long: `signal validator delegation intent by providing a comma seperated string
+		Long: `signal validator delegation intent by providing a comma separated string
 containing a decimal weight and the bech32 validator address,
 e.g. "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzzzzzzzz"`,
 		Example: `signal-intent [chain_id] 0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzzzzzzzz`,
@@ -50,13 +51,13 @@ e.g. "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzz
 				return err
 			}
 
-			chain_id := args[0]
+			chainID := args[0]
 			intents, err := types.IntentsFromString(args[1])
 			if err != nil {
 				return fmt.Errorf("%v, see example: %v", err, cmd.Example)
 			}
 
-			msg := types.NewMsgSignalIntent(chain_id, intents, clientCtx.GetFromAddress())
+			msg := types.NewMsgSignalIntent(chainID, intents, clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -74,14 +75,13 @@ func GetRequestRedemptionTxCmd() *cobra.Command {
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
-
 			if err != nil {
 				return err
 			}
 			coins := args[0]
-			destination_address := args[1]
+			destinationAddress := args[1]
 
-			msg := types.NewMsgRequestRedemption(coins, destination_address, clientCtx.GetFromAddress())
+			msg := types.NewMsgRequestRedemption(coins, destinationAddress, clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

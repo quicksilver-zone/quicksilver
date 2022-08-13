@@ -6,10 +6,13 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -43,14 +46,13 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("recipient address not provided")
 	}
 
-	_, _, err = bech32.DecodeAndConvert(msg.DestinationAddress)
-	if err != nil {
+	if _, _, err = bech32.DecodeAndConvert(msg.DestinationAddress); err != nil {
 		return nil, err
 	}
 
-	var zone *types.RegisteredZone = nil
+	var zone *types.Zone
 
-	k.IterateRegisteredZones(ctx, func(_ int64, thisZone types.RegisteredZone) bool {
+	k.IterateZones(ctx, func(_ int64, thisZone types.Zone) bool {
 		if thisZone.LocalDenom == inCoin.GetDenom() {
 			zone = &thisZone
 			return true
@@ -69,7 +71,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	// does destination address match the prefix registered against the zone?
-	if _, err := types.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
+	if _, err := utils.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
 		return nil, fmt.Errorf("destination address %s does not match expected prefix %s", msg.DestinationAddress, zone.AccountPrefix)
 	}
 
@@ -90,9 +92,9 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		rate = zone.RedemptionRate
 	}
 
-	native_tokens := inCoin.Amount.ToDec().Mul(rate).TruncateInt()
+	nativeTokens := inCoin.Amount.ToDec().Mul(rate).TruncateInt()
 
-	outTokens := sdk.NewCoin(zone.BaseDenom, native_tokens)
+	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
 
 	heightBytes := make([]byte, 4)
 	binary.PutVarint(heightBytes, ctx.BlockHeight())
@@ -114,7 +116,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		userIntent = types.DelegatorIntent{Delegator: msg.FromAddress, Intents: vi}
 	}
 
-	intentMap := userIntent.ToAllocations(native_tokens)
+	intentMap := userIntent.ToAllocations(nativeTokens)
 
 	targets := k.GetRedemptionTargets(ctx, *zone, intentMap) // map[string][string]sdk.Coin
 
@@ -142,7 +144,13 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		}
 	}
 
-	for delegator, _ := range msgs {
+	delegators := make([]string, 0, len(msgs))
+	for delegator := range msgs {
+		delegators = append(delegators, delegator)
+	}
+	sort.Strings(delegators)
+
+	for _, delegator := range delegators {
 		icaAccount, err := zone.GetDelegationAccountByAddress(delegator)
 		if err != nil {
 			panic(err) // panic here because something is terribly wrong if we cann't find the delegation bucket here!!!
@@ -170,7 +178,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 			sdk.NewAttribute(types.AttributeKeyRedeemAmount, sumAmount.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
 			sdk.NewAttribute(types.AttributeKeyRecipientChain, zone.ChainId),
-			sdk.NewAttribute(types.AttributeKeyConnectionId, zone.ConnectionId),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, zone.ConnectionId),
 		),
 	})
 
@@ -181,7 +189,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// get zone
-	zone, ok := k.GetRegisteredZoneInfo(ctx, msg.ChainId)
+	zone, ok := k.GetZone(ctx, msg.ChainId)
 	if !ok {
 		return nil, fmt.Errorf("invalid chain id \"%s\"", msg.ChainId)
 	}
@@ -213,7 +221,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	return &types.MsgSignalIntentResponse{}, nil
 }
 
-func (k msgServer) validateIntents(zone types.RegisteredZone, intents []*types.ValidatorIntent) error {
+func (k msgServer) validateIntents(zone types.Zone, intents []*types.ValidatorIntent) error {
 	errors := make(map[string]error)
 
 	for i, intent := range intents {
@@ -230,7 +238,7 @@ func (k msgServer) validateIntents(zone types.RegisteredZone, intents []*types.V
 	return nil
 }
 
-func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId string) error {
+func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionID string, chainID string) error {
 	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
 	bz1, err := k.cdc.Marshal(&bondedQuery)
 	if err != nil {
@@ -251,8 +259,8 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 
 	k.ICQKeeper.MakeRequest(
 		ctx,
-		connectionId,
-		chainId,
+		connectionID,
+		chainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz1,
 		sdk.NewInt(period),
@@ -262,8 +270,8 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 	)
 	k.ICQKeeper.MakeRequest(
 		ctx,
-		connectionId,
-		chainId,
+		connectionID,
+		chainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz2,
 		sdk.NewInt(period),
@@ -273,8 +281,8 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionId string, chainId 
 	)
 	k.ICQKeeper.MakeRequest(
 		ctx,
-		connectionId,
-		chainId,
+		connectionID,
+		chainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz3,
 		sdk.NewInt(period),

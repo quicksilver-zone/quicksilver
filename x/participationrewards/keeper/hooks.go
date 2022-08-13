@@ -12,6 +12,11 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	k.Logger(ctx).Info("distribute participation rewards...")
 
+	if epochNumber < 3 {
+		k.Logger(ctx).Info("defer...")
+		return
+	}
+
 	allocation := k.getRewardsAllocations(ctx)
 
 	// this function is completed in a callback
@@ -39,10 +44,17 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	if err := k.allocateZoneRewards(ctx, tvs, allocation); err != nil {
 		k.Logger(ctx).Error(err.Error())
 	}
-	// <<<
 
-	if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
-		k.Logger(ctx).Error(err.Error())
+	if !allocation.Lockup.IsZero() {
+		// at genesis lockup will be disable, and enabled when ICS is used.
+		if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
+			k.Logger(ctx).Error(err.Error())
+		}
+	}
+
+	k.Logger(ctx).Info("Triggering submodule hooks")
+	for _, sub := range k.prSubmodules {
+		sub.Hooks(ctx, k)
 	}
 }
 

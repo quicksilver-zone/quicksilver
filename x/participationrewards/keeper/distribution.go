@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -29,17 +30,18 @@ type tokenValue struct {
 func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 	var allocation rewardsAllocation
 
+	denom := k.stakingKeeper.BondDenom(ctx)
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	moduleBalances := k.bankKeeper.GetAllBalances(ctx, moduleAddress)
+	moduleBalance := k.bankKeeper.GetBalance(ctx, moduleAddress, denom)
 
-	k.Logger(ctx).Info("module account", "address", moduleAddress, "balances", moduleBalances)
+	k.Logger(ctx).Info("module account", "address", moduleAddress, "balance", moduleBalance)
 
-	if moduleBalances.Empty() {
+	if moduleBalance.IsZero() {
 		k.Logger(ctx).Info("nothing to distribute...")
 
 		// create snapshot of current intents for next epoch boundary
 		// TODO: this needs to be verified as it currently does not trigger anymore
-		for _, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
+		for _, zone := range k.icsKeeper.AllZones(ctx) {
 			for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
 				// this already happens in zone. If we are certain about ordering,
 				// we should only iterate intents once per epoch boundary as it'll
@@ -59,29 +61,29 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 	allocation.ValidatorSelection = sdk.NewCoins(
 		k.GetAllocation(
 			ctx,
-			moduleBalances[0],
+			moduleBalance,
 			params.DistributionProportions.ValidatorSelectionAllocation,
 		),
 	)
 	allocation.Holdings = sdk.NewCoins(
 		k.GetAllocation(
 			ctx,
-			moduleBalances[0],
+			moduleBalance,
 			params.DistributionProportions.HoldingsAllocation,
 		),
 	)
 	allocation.Lockup = sdk.NewCoins(
 		k.GetAllocation(
 			ctx,
-			moduleBalances[0],
+			moduleBalance,
 			params.DistributionProportions.LockupAllocation,
 		),
 	)
 
 	// use sum to check total distribution to collect and allocate dust
-	total := moduleBalances[0]
+	total := moduleBalance
 	sum := allocation.Lockup.Add(allocation.ValidatorSelection...).Add(allocation.Holdings...)
-	dust := total.Sub(sum[0])
+	dust := total.SubAmount(sum.AmountOf(denom))
 	k.Logger(ctx).Info(
 		"rewards distribution",
 		"total", total,
@@ -156,9 +158,7 @@ func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation
 		return err
 	}
 
-	if err := k.allocateValidatorSelectionRewards(ctx); err != nil {
-		k.Logger(ctx).Error(err.Error())
-	}
+	k.allocateValidatorSelectionRewards(ctx)
 
 	if err := k.allocateHoldingsRewards(ctx); err != nil {
 		k.Logger(ctx).Error(err.Error())
@@ -181,7 +181,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 
 	otvl := sdk.NewDec(0)
 	// pass 1: iterate zones - set tvl & calc overall tvl
-	for _, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
+	for _, zone := range k.icsKeeper.AllZones(ctx) {
 		tv, exists := tvs.Tokens[zone.BaseDenom]
 		if !exists {
 			err := fmt.Errorf("unable to obtain token value for zone %s", zone.ChainId)
@@ -206,7 +206,10 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 	}
 
 	// pass 2: iterate zones - calc zone tvl proportion & set allocations
-	for _, zone := range k.icsKeeper.AllRegisteredZones(ctx) {
+	for _, zone := range k.icsKeeper.AllZones(ctx) {
+		// explicit memory referencing
+		zone := zone
+
 		ztvl, exists := zoneProps[zone.ChainId]
 		if !exists {
 			panic("unable to obtain zone proportion on second zone pass")
@@ -231,7 +234,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 			),
 		)
 
-		k.icsKeeper.SetRegisteredZone(ctx, zone)
+		k.icsKeeper.SetZone(ctx, &zone)
 	}
 
 	return nil
@@ -251,7 +254,7 @@ func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocat
 	}
 
 	if hasError {
-		return fmt.Errorf("errors occured while distributing rewards, review logs")
+		return fmt.Errorf("errors occurred while distributing rewards, review logs")
 	}
 
 	return nil

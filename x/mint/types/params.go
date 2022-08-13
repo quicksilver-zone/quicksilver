@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	yaml "gopkg.in/yaml.v2"
+
+	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -31,7 +32,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
-	ReductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
+	reductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
 	mintingRewardsDistributionStartEpoch int64,
 ) Params {
 	return Params{
@@ -39,7 +40,7 @@ func NewParams(
 		GenesisEpochProvisions:               genesisEpochProvisions,
 		EpochIdentifier:                      epochIdentifier,
 		ReductionPeriodInEpochs:              reductionPeriodInEpochs,
-		ReductionFactor:                      ReductionFactor,
+		ReductionFactor:                      reductionFactor,
 		DistributionProportions:              distrProportions,
 		MintingRewardsDistributionStartEpoch: mintingRewardsDistributionStartEpoch,
 	}
@@ -182,8 +183,6 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("pool incentives distribution ratio should not be negative")
 	}
 
-	// TODO: Maybe we should allow this :joy:, lets you burn osmo from community pool
-	// for new chains
 	if v.CommunityPool.IsNegative() {
 		return errors.New("community pool distribution ratio should not be negative")
 	}

@@ -19,14 +19,14 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/mint/client/cli"
 	"github.com/ingenuity-build/quicksilver/x/mint/keeper"
 
-	//"github.com/ingenuity-build/quicksilver/x/mint/simulation"
+	// "github.com/ingenuity-build/quicksilver/x/mint/simulation"
 	"github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
 var (
 	_ module.AppModule      = AppModule{}
 	_ module.AppModuleBasic = AppModuleBasic{}
-	//_ module.AppModuleSimulation = AppModule{}
+	// _ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the mint module.

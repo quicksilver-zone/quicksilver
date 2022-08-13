@@ -1,4 +1,4 @@
-package types
+package utils
 
 import (
 	"errors"
@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
-func AccAddressFromBech32(address string, check_hrp string) (addr sdk.AccAddress, err error) {
+func AccAddressFromBech32(address string, checkHRP string) (addr sdk.AccAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
 		return sdk.AccAddress{}, errors.New("empty address string is not allowed")
 	}
@@ -19,9 +19,9 @@ func AccAddressFromBech32(address string, check_hrp string) (addr sdk.AccAddress
 		return nil, err
 	}
 
-	if check_hrp != "" {
-		if check_hrp != hrp {
-			return sdk.AccAddress{}, fmt.Errorf("unexpected hrp - got %s expected %s", hrp, check_hrp)
+	if checkHRP != "" {
+		if checkHRP != hrp {
+			return sdk.AccAddress{}, fmt.Errorf("unexpected hrp - got %s expected %s", hrp, checkHRP)
 		}
 	}
 
@@ -33,7 +33,7 @@ func AccAddressFromBech32(address string, check_hrp string) (addr sdk.AccAddress
 	return sdk.AccAddress(bz), nil
 }
 
-func ValAddressFromBech32(address string, check_hrp string) (addr sdk.ValAddress, err error) {
+func ValAddressFromBech32(address string, checkHRP string) (addr sdk.ValAddress, err error) {
 	if len(strings.TrimSpace(address)) == 0 {
 		return sdk.ValAddress{}, errors.New("empty address string is not allowed")
 	}
@@ -43,9 +43,9 @@ func ValAddressFromBech32(address string, check_hrp string) (addr sdk.ValAddress
 		return nil, err
 	}
 
-	if check_hrp != "" {
-		if check_hrp != hrp {
-			return sdk.ValAddress{}, fmt.Errorf("unexpected hrp - got %s expected %s", hrp, check_hrp)
+	if checkHRP != "" {
+		if checkHRP != hrp {
+			return sdk.ValAddress{}, fmt.Errorf("unexpected hrp - got %s expected %s", hrp, checkHRP)
 		}
 	}
 

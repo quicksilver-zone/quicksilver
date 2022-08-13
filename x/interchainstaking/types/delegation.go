@@ -11,7 +11,6 @@ import (
 )
 
 // NewDelegation creates a new delegation object
-//nolint:interfacer
 func NewDelegation(delegatorAddr string, validatorAddr string, amount sdk.Coin) Delegation {
 	return Delegation{
 		DelegationAddress: delegatorAddr,
@@ -63,20 +62,19 @@ func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 // -------------------------------------------------------------------------
 // DelegationCandidates
 
-func (bins Allocations) DetermineThreshold() sdk.Int {
-
-	return bins.SortedByAmount()[int(float64(0.33)*float64(len(bins)))].SumAll()
+func (a Allocations) DetermineThreshold() sdk.Int {
+	return a.SortedByAmount()[int(float64(0.33)*float64(len(a)))].SumAll()
 }
 
-func (bins Allocations) SmallestBin() Allocation {
-	return *bins.SortedByAmount()[0]
+func (a Allocations) SmallestBin() Allocation {
+	return *a.SortedByAmount()[0]
 }
 
-func (bins Allocations) FindAccountForDelegation(validatorAddress string, coin sdk.Coin) (string, Allocations) {
+func (a Allocations) FindAccountForDelegation(validatorAddress string, coin sdk.Coin) (string, Allocations) {
 	candidates := Allocations{}
-	threshold := bins.DetermineThreshold()
+	threshold := a.DetermineThreshold()
 
-	for _, bin := range bins.SortedByAmount() {
+	for _, bin := range a.SortedByAmount() {
 		binVal := bin.SumAll()
 		if bin.Amount.AmountOf(validatorAddress).GT(sdk.ZeroInt()) { // does this allocation contain any valoper coins?
 			// already contains
@@ -84,27 +82,25 @@ func (bins Allocations) FindAccountForDelegation(validatorAddress string, coin s
 				// oversubscribed :(
 				candidates = candidates.Allocate(bin.Address, bin.Amount)
 			} else {
-				return bin.Address, bins.Allocate(bin.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
+				return bin.Address, a.Allocate(bin.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
 			}
 		} else {
 			// bin does not have this validator in...
 			if bin.Amount.IsZero() {
-				return bin.Address, bins.Allocate(bin.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
+				return bin.Address, a.Allocate(bin.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
 			}
 		}
 	}
 
-	smallest := bins.SmallestBin()
+	smallest := a.SmallestBin()
 	if len(candidates) > 0 {
 		candidates = candidates.SortedByAmount()
 		if smallest.SumAll().LT(candidates[0].SumAll().Quo(sdk.NewInt(3))) {
-			return smallest.Address, bins.Allocate(smallest.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
-		} else {
-			return candidates[0].Address, bins.Allocate(candidates[0].Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
+			return smallest.Address, a.Allocate(smallest.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
 		}
-	} else {
-		return smallest.Address, bins.Allocate(smallest.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
+		return candidates[0].Address, a.Allocate(candidates[0].Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
 	}
+	return smallest.Address, a.Allocate(smallest.Address, sdk.Coins{sdk.Coin{Denom: validatorAddress, Amount: coin.Amount}})
 }
 
 // --------------------------------------------------------
@@ -113,15 +109,15 @@ func (bins Allocations) FindAccountForDelegation(validatorAddress string, coin s
 type ValidatorIntents map[string]*ValidatorIntent
 
 func (v ValidatorIntents) Keys() []string {
-	out := []string{}
-
-	for i := range v {
-		out = append(out, i)
+	keys := make([]string, len(v))
+	i := 0
+	for key := range v {
+		keys[i] = key
+		i++
 	}
+	sort.Strings(keys)
 
-	sort.Strings(out)
-
-	return out
+	return keys
 }
 
 // MustMarshalDelegationPlan returns the delegation plan bytes. Panics if fails
@@ -166,12 +162,11 @@ func NewDelegationPlan(delAddr, valAddr string, amount sdk.Coins) DelegationPlan
 	return DelegationPlan{DelegatorAddress: delAddr, ValidatorAddress: valAddr, Value: amount}
 }
 
-func DelegationPlanFromUserIntent(zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) Allocations {
-
+func DelegationPlanFromUserIntent(zone Zone, coin sdk.Coin, intent ValidatorIntents) Allocations {
 	out := Allocations{}
 
 	for _, val := range intent.Keys() {
-		out = out.Allocate(val, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: sdk.Int(coin.Amount.ToDec().Mul(intent[val].Weight).TruncateInt())}})
+		out = out.Allocate(val, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: coin.Amount.ToDec().Mul(intent[val].Weight).TruncateInt()}})
 	}
 	return out
 }
@@ -225,7 +220,7 @@ func (a Allocations) Sum() sdk.Coins {
 	return out
 }
 
-// remove amount from address. Return the amount that could not be substracted.
+// remove amount from address. Return the amount that could not be subtracted.
 func (a Allocations) Sub(amount sdk.Coins, address string) (Allocations, sdk.Coins) {
 	if allocation := a.Get(address); allocation != nil {
 		subAmount := allocation.Amount
@@ -272,8 +267,10 @@ func (a Allocations) SumAll() sdk.Int {
 	return out
 }
 
-type Allocations []*Allocation
-type Diffs []*Diff
+type (
+	Allocations []*Allocation
+	Diffs       []*Diff
+)
 
 func (a Diffs) Sorted() Diffs {
 	sort.SliceStable(a, func(i, j int) bool {
@@ -310,7 +307,7 @@ type Diff struct {
 	Amount  sdk.Int
 }
 
-func DelegationPlanFromGlobalIntent(currentState Allocations, zone RegisteredZone, coin sdk.Coin, intent ValidatorIntents) (Allocations, error) {
+func DelegationPlanFromGlobalIntent(currentState Allocations, zone Zone, coin sdk.Coin, intent ValidatorIntents) (Allocations, error) {
 	if coin.Denom != zone.BaseDenom {
 		return nil, fmt.Errorf("expected base denom, got %s", coin.Denom)
 	}
@@ -352,7 +349,7 @@ func DelegationPlanFromGlobalIntent(currentState Allocations, zone RegisteredZon
 	return allocations, nil
 }
 
-func DelegationPlanFromCoins(zone RegisteredZone, coin sdk.Coin) Allocations {
+func DelegationPlanFromCoins(zone Zone, coin sdk.Coin) Allocations {
 	out := Allocations{}
 
 	for _, val := range zone.GetValidatorsSorted() {

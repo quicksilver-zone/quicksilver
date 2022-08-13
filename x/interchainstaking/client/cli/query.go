@@ -33,7 +33,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdRegisteredZonesInfos provide running epochInfos
+// GetCmdZonesInfos provide running epochInfos
 func GetCmdZonesInfos() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zones",
@@ -56,11 +56,11 @@ func GetCmdZonesInfos() *cobra.Command {
 				return err
 			}
 
-			req := &types.QueryRegisteredZonesInfoRequest{
+			req := &types.QueryZonesInfoRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.RegisteredZoneInfos(cmd.Context(), req)
+			res, err := queryClient.ZoneInfos(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -74,7 +74,7 @@ func GetCmdZonesInfos() *cobra.Command {
 	return cmd
 }
 
-// GetDelegatorIntentCmd returns the intents of the user for the given chain_id
+// GetDelegatorIntentCmd returns the intents of the user for the given chainID
 // (zone).
 func GetDelegatorIntentCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -88,13 +88,13 @@ func GetDelegatorIntentCmd() *cobra.Command {
 			}
 
 			// args
-			chain_id := args[0]
-			delegator_addr := args[1]
+			chainID := args[0]
+			delegatorAddr := args[1]
 
 			queryClient := types.NewQueryClient(clientCtx)
 			req := &types.QueryDelegatorIntentRequest{
-				ChainId:          chain_id,
-				DelegatorAddress: delegator_addr,
+				ChainId:          chainID,
+				DelegatorAddress: delegatorAddr,
 			}
 
 			res, err := queryClient.DelegatorIntent(cmd.Context(), req)
@@ -111,7 +111,7 @@ func GetDelegatorIntentCmd() *cobra.Command {
 	return cmd
 }
 
-// GetDepositAccountCmd returns the deposit account for the given chain_id
+// GetDepositAccountCmd returns the deposit account for the given chainID
 // (zone).
 func GetDepositAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -125,11 +125,11 @@ func GetDepositAccountCmd() *cobra.Command {
 			}
 
 			// args
-			chain_id := args[0]
+			chainID := args[0]
 
 			queryClient := types.NewQueryClient(clientCtx)
 			req := &types.QueryDepositAccountForChainRequest{
-				ChainId: chain_id,
+				ChainId: chainID,
 			}
 
 			res, err := queryClient.DepositAccount(cmd.Context(), req)

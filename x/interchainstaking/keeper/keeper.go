@@ -15,11 +15,12 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v4/modules/apps/27-interchain-accounts/controller/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v4/modules/core/keeper"
-	ibctmtypes "github.com/cosmos/ibc-go/v4/modules/light-clients/07-tendermint/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -76,12 +77,11 @@ func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capabilit
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
 
-func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionId string, port string) error {
-	mapping := types.PortConnectionTuple{ConnectionId: connectionId, PortId: port}
+func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID string, port string) {
+	mapping := types.PortConnectionTuple{ConnectionId: connectionID, PortId: port}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
 	bz := k.cdc.MustMarshal(&mapping)
 	store.Set([]byte(port), bz)
-	return nil
 }
 
 func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, error) {
@@ -96,11 +96,37 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 	return mapping.ConnectionId, nil
 }
 
+// IteratePortConnections iterates through all of the delegations.
+func (k Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortConnectionTuple) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixPortMapping)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		pc := types.PortConnectionTuple{}
+		k.cdc.MustUnmarshal(iterator.Value(), &pc)
+		if cb(pc) {
+			break
+		}
+	}
+}
+
+// AllPortConnections returns all delegations used during genesis dump.
+func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionTuple) {
+	k.IteratePortConnections(ctx, func(pc types.PortConnectionTuple) bool {
+		pcs = append(pcs, pc)
+		return false
+	})
+
+	return pcs
+}
+
 // ### Interval functions >>>
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZone, data []byte) error {
+func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
 	err := k.cdc.Unmarshal(data, &validatorsRes)
 	if err != nil {
@@ -152,11 +178,11 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZo
 	}
 
 	// also do this for Unbonded and Unbonding
-	k.SetRegisteredZone(ctx, zoneInfo)
+	k.SetZone(ctx, &zoneInfo)
 	return nil
 }
 
-func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZone, data []byte) error {
+func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validator := stakingTypes.Validator{}
 	err := k.cdc.Unmarshal(data, &validator)
 	if err != nil {
@@ -179,28 +205,28 @@ func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.RegisteredZon
 
 	} else {
 
-		if !val.CommissionRate.Equal(validator.GetCommission()) {
+		if validator.GetCommission().IsNil() || !val.CommissionRate.Equal(validator.GetCommission()) {
 			val.CommissionRate = validator.GetCommission()
 			k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
 		}
 
-		if !val.VotingPower.Equal(validator.Tokens) {
+		if validator.Tokens.IsNil() || !val.VotingPower.Equal(validator.Tokens) {
 			val.VotingPower = validator.Tokens
 			k.Logger(ctx).Info("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens)
 		}
 
-		if !val.DelegatorShares.Equal(validator.DelegatorShares) {
+		if validator.DelegatorShares.IsNil() || !val.DelegatorShares.Equal(validator.DelegatorShares) {
 			val.DelegatorShares = validator.DelegatorShares
 			k.Logger(ctx).Info("Validator delegator shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.DelegatorShares, "newShares", validator.DelegatorShares)
 		}
 	}
 
-	k.SetRegisteredZone(ctx, zoneInfo)
+	k.SetZone(ctx, &zoneInfo)
 	return nil
 }
 
 func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
-	return func(index int64, zoneInfo types.RegisteredZone) (stop bool) {
+	return func(index int64, zoneInfo types.Zone) (stop bool) {
 		if zoneInfo.DepositAddress != nil {
 			if !zoneInfo.DepositAddress.Balance.Empty() {
 				k.Logger(ctx).Info("balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
@@ -255,16 +281,16 @@ func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error)
 	return client.ChainId, nil
 }
 
-func (k Keeper) GetChainIdFromContext(ctx sdk.Context) (string, error) {
-	connectionId := ctx.Context().Value("connectionId")
-	if connectionId == nil {
-		return "", fmt.Errorf("connectionId not in context")
+func (k Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
+	connectionID := ctx.Context().Value(utils.ContextKey("connectionID"))
+	if connectionID == nil {
+		return "", fmt.Errorf("connectionID not in context")
 	}
 
-	return k.GetChainID(ctx, connectionId.(string))
+	return k.GetChainID(ctx, connectionID.(string))
 }
 
-func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.RegisteredZone) error {
+func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
 	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: zone.PerformanceAddress.Address}
 	bz, err := k.GetCodec().Marshal(&balanceQuery)
 	if err != nil {

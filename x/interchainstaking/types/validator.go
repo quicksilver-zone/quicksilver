@@ -27,7 +27,6 @@ OUTER:
 			}
 			di.Intents = append(di.Intents, i)
 		}
-
 	}
 
 	return di.Normalize()
@@ -77,9 +76,9 @@ func (di DelegatorIntent) ToValidatorIntents() ValidatorIntents {
 	return out
 }
 
-func (d DelegatorIntent) Sorted() []*ValidatorIntent {
-	sort.SliceStable(d.Intents, func(i, j int) bool {
-		return d.Intents[i].ValoperAddress < d.Intents[j].ValoperAddress
+func (di DelegatorIntent) Sorted() []*ValidatorIntent {
+	sort.SliceStable(di.Intents, func(i, j int) bool {
+		return di.Intents[i].ValoperAddress < di.Intents[j].ValoperAddress
 	})
-	return d.Intents
+	return di.Intents
 }

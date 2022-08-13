@@ -5,22 +5,23 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 // gets the key for delegator bond with validator
 // VALUE: staking/Delegation
-func GetDelegationKey(zone *types.RegisteredZone, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+func GetDelegationKey(zone *types.Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationsKey(zone, delAddr), valAddr.Bytes()...)
 }
 
 // gets the prefix for a delegator for all validators
-func GetDelegationsKey(zone *types.RegisteredZone, delAddr sdk.AccAddress) []byte {
+func GetDelegationsKey(zone *types.Zone, delAddr sdk.AccAddress) []byte {
 	return append(append(types.KeyPrefixDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
 }
 
 // GetDelegation returns a specific delegation.
-func (k Keeper) GetDelegation(ctx sdk.Context, zone *types.RegisteredZone, delegatorAddress string, validatorAddress string) (delegation types.Delegation, found bool) {
+func (k Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddress string, validatorAddress string) (delegation types.Delegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	_, delAddr, _ := bech32.DecodeAndConvert(delegatorAddress)
@@ -39,7 +40,7 @@ func (k Keeper) GetDelegation(ctx sdk.Context, zone *types.RegisteredZone, deleg
 }
 
 // IterateAllDelegations iterates through all of the delegations.
-func (k Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.RegisteredZone, cb func(delegation types.Delegation) (stop bool)) {
+func (k Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(zone.ChainId)...))
@@ -54,7 +55,7 @@ func (k Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.RegisteredZon
 }
 
 // GetAllDelegations returns all delegations used during genesis dump.
-func (k Keeper) GetAllDelegations(ctx sdk.Context, zone *types.RegisteredZone) (delegations []types.Delegation) {
+func (k Keeper) GetAllDelegations(ctx sdk.Context, zone *types.Zone) (delegations []types.Delegation) {
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
 		delegations = append(delegations, delegation)
 		return false
@@ -63,9 +64,19 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context, zone *types.RegisteredZone) (
 	return delegations
 }
 
+// GetAllDelegations returns all delegations used during genesis dump.
+func (k Keeper) GetAllDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (delegations []*types.Delegation) {
+	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
+		delegations = append(delegations, &delegation)
+		return false
+	})
+
+	return delegations
+}
+
 // GetValidatorDelegations returns all delegations to a specific validator.
 // Useful for querier.
-func (k Keeper) GetValidatorDelegations(ctx sdk.Context, zone *types.RegisteredZone, valAddr sdk.ValAddress) (delegations []types.Delegation) { //nolint:interfacer
+func (k Keeper) GetValidatorDelegations(ctx sdk.Context, zone *types.Zone, valAddr sdk.ValAddress) (delegations []types.Delegation) { //nolint:interfacer
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(zone.ChainId)...))
@@ -83,7 +94,7 @@ func (k Keeper) GetValidatorDelegations(ctx sdk.Context, zone *types.RegisteredZ
 
 // GetDelegatorDelegations returns a given amount of all the delegations from a
 // delegator.
-func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, zone *types.RegisteredZone, delegator sdk.AccAddress) (delegations []types.Delegation) {
+func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, zone *types.Zone, delegator sdk.AccAddress) (delegations []types.Delegation) {
 	delegations = []types.Delegation{}
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(zone, delegator)
@@ -100,7 +111,7 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, zone *types.RegisteredZ
 }
 
 // SetDelegation sets a delegation.
-func (k Keeper) SetDelegation(ctx sdk.Context, zone *types.RegisteredZone, delegation types.Delegation) {
+func (k Keeper) SetDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) {
 	delegatorAddress := delegation.GetDelegatorAddr()
 
 	store := ctx.KVStore(k.storeKey)
@@ -109,7 +120,7 @@ func (k Keeper) SetDelegation(ctx sdk.Context, zone *types.RegisteredZone, deleg
 }
 
 // RemoveDelegation removes a delegation
-func (k Keeper) RemoveDelegation(ctx sdk.Context, zone *types.RegisteredZone, delegation types.Delegation) error {
+func (k Keeper) RemoveDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) error {
 	delegatorAddress := delegation.GetDelegatorAddr()
 
 	store := ctx.KVStore(k.storeKey)
@@ -118,7 +129,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, zone *types.RegisteredZone, de
 }
 
 // IterateDelegatorDelegations iterates through one delegator's delegations.
-func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.RegisteredZone, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
+func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Zone, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := GetDelegationsKey(zone, delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
@@ -133,7 +144,7 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Registe
 }
 
 // Delegate determines how the balance of a DelegateAccount should be distributed across validators.
-func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *types.ICAAccount, allocations types.Allocations) error {
+func (k *Keeper) Delegate(ctx sdk.Context, zone types.Zone, account *types.ICAAccount, allocations types.Allocations) error {
 	var msgs []sdk.Msg
 
 	for _, allocation := range allocations.Sorted() {
@@ -148,7 +159,7 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.RegisteredZone, account *t
 	return k.SubmitTx(ctx, msgs, account, "")
 }
 
-func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.RegisteredZone, amount sdk.Coins, delegator string, txhash string) (types.Allocations, error) {
+func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Zone, amount sdk.Coins, delegator string, txhash string) (types.Allocations, error) {
 	bins := k.GetDelegationBinsMap(ctx, &zone)
 
 	sendPlan := types.Allocations{}
@@ -157,7 +168,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 		var delPlan types.Allocations
 		var err error
 		if coin.Denom == zone.BaseDenom {
-			var valPlan = make(types.ValidatorIntents)
+			var valPlan types.ValidatorIntents
 			plan, found := k.GetIntent(ctx, zone, delegator, false)
 			if !found || len(plan.Intents) == 0 {
 				valPlan = zone.GetAggregateIntentOrDefault()
@@ -167,7 +178,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 				}
 			} else {
 				valPlan = plan.ToValidatorIntents()
-				delPlan = types.DelegationPlanFromUserIntent(zone, coin, valPlan)
+				delPlan = types.DelegationPlanFromUserIntent(zone, coin, valPlan) // TODO: does it make sense to do this? why don't we just use the global intent?
 				if err != nil {
 					return types.Allocations{}, err
 				}
@@ -192,7 +203,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Registere
 	return sendPlan, nil
 }
 
-func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *types.RegisteredZone, delegator string, response []byte) error {
+func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *types.Zone, delegator string, response []byte) error {
 	var msgs []sdk.Msg
 
 	delegatorRewards := distrTypes.QueryDelegationTotalRewardsResponse{}
@@ -210,7 +221,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 
 	// send withdrawal msg for each delegation (delegator:validator pairs)
 	k.IterateDelegatorDelegations(ctx, zone, delAddr, func(delegation types.Delegation) bool {
-		amount := rewardsForDelegation(delegatorRewards, delegation.DelegationAddress, delegation.ValidatorAddress)
+		amount := rewardsForDelegation(delegatorRewards, delegation.ValidatorAddress)
 		k.Logger(ctx).Info("Withdraw rewards", "delegator", delegation.DelegationAddress, "validator", delegation.ValidatorAddress, "amount", amount)
 		if !amount.IsZero() || !amount.Empty() {
 			msgs = append(msgs, &distrTypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegation.GetDelegationAddress(), ValidatorAddress: delegation.GetValidatorAddress()})
@@ -219,18 +230,18 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	})
 
 	if len(msgs) == 0 {
-		k.SetRegisteredZone(ctx, *zone)
+		k.SetZone(ctx, zone)
 		return nil
 	}
 	// add withdrawal waitgroup tally
 	zone.WithdrawalWaitgroup += uint32(len(msgs))
-	k.SetRegisteredZone(ctx, *zone)
+	k.SetZone(ctx, zone)
 	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup, "address", delegator)
 
 	return k.SubmitTx(ctx, msgs, account, "")
 }
 
-func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalRewardsResponse, delegator string, validator string) sdk.DecCoins {
+func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalRewardsResponse, validator string) sdk.DecCoins {
 	for _, reward := range delegatorRewards.Rewards {
 		if reward.ValidatorAddress == validator {
 			return reward.Reward
@@ -239,7 +250,7 @@ func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalReward
 	return sdk.NewDecCoins()
 }
 
-func (k *Keeper) GetDelegationBinsMap(ctx sdk.Context, zone *types.RegisteredZone) types.Allocations {
+func (k *Keeper) GetDelegationBinsMap(ctx sdk.Context, zone *types.Zone) types.Allocations {
 	out := types.Allocations{}
 	for _, da := range zone.DelegationAddresses {
 		out = out.Allocate(da.Address, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: sdk.ZeroInt()}})

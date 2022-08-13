@@ -1,9 +1,9 @@
 package types
 
 const (
-	AttributeKeyQueryId      = "query_id"
-	AttributeKeyChainId      = "chain_id"
-	AttributeKeyConnectionId = "connection_id"
+	AttributeKeyQueryID      = "query_id"
+	AttributeKeyChainID      = "chain_id"
+	AttributeKeyConnectionID = "connection_id"
 	AttributeKeyType         = "type"
 	AttributeKeyParams       = "parameters"
 	AttributeKeyRequest      = "request"

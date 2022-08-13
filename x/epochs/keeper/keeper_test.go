@@ -31,7 +31,6 @@ func (suite *KeeperTestSuite) DoSetupTest(t require.TestingT) {
 	queryHelper := baseapp.NewQueryServerTestHelper(suite.ctx, suite.app.InterfaceRegistry())
 	types.RegisterQueryServer(queryHelper, suite.app.EpochsKeeper)
 	suite.queryClient = types.NewQueryClient(queryHelper)
-
 }
 
 func (suite *KeeperTestSuite) SetupTest() {

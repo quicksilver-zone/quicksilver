@@ -6,13 +6,15 @@ import (
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctesting "github.com/cosmos/ibc-go/v4/testing"
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	"github.com/stretchr/testify/suite"
+
 	qapp "github.com/ingenuity-build/quicksilver/app"
+	"github.com/ingenuity-build/quicksilver/utils"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	"github.com/stretchr/testify/suite"
 )
 
 var TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
@@ -53,7 +55,7 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.coordinator.SetupConnections(s.path)
 }
 
-func (s *KeeperTestSuite) SetupRegisteredZones() {
+func (s *KeeperTestSuite) SetupZones() {
 	proposal := &icstypes.RegisterZoneProposal{
 		Title:           "register zone A",
 		Description:     "register zone A",
@@ -68,7 +70,7 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 	ctx := s.chainA.GetContext()
 
 	// Set special testing context (e.g. for test / debug output)
-	ctx = ctx.WithContext(context.WithValue(ctx.Context(), "TEST", "TEST"))
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("TEST"), "TEST"))
 
 	err := icskeeper.HandleRegisterZoneProposal(ctx, s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper, proposal)
 	s.Require().NoError(err)
