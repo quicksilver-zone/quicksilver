@@ -12,6 +12,8 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	abcitypes "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -123,7 +125,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Z
 	return nil
 }
 
-func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.RegisteredZone, plan types.Allocations, memo string) error {
+func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.Zone, plan types.Allocations, memo string) error {
 	// if zone.SupportMultiSend() {
 	// 	return k.TransferToDelegateMulti(ctx, zone, plan, memo)
 	// } else {

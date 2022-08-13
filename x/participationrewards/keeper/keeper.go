@@ -16,7 +16,6 @@ import (
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 

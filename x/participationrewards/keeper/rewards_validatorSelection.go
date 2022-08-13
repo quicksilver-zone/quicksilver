@@ -292,7 +292,7 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 	}
 
 	tokensPerPoint := sdk.NewDecFromInt(zone.ValidatorSelectionAllocation.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx))).Quo(sum)
-	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneId, "zone score", sum, "tpp", tokensPerPoint)
+	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
 		ua := userAllocation{
 			Address: us.address,

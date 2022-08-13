@@ -93,9 +93,7 @@ func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionId string, 
 		return err
 	}
 	portId, _ := icatypes.NewControllerPortID(portOwner)
-	if err := k.SetConnectionForPort(ctx, connectionId, portId); err != nil {
-		return err
-	}
+	k.SetConnectionForPort(ctx, connectionId, portId)
 
 	return nil
 }

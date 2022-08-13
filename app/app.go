@@ -673,7 +673,7 @@ func NewQuicksilver(
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
 		// ibc modules
 		ibc.NewAppModule(app.IBCKeeper),
-		transfer.NewAppModule(app.TransferKeeper),
+		transferModule,
 		icaModule,
 		// Quicksilver app modules
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),

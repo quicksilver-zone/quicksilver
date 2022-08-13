@@ -10,7 +10,6 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 

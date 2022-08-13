@@ -737,7 +737,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "")
 }
 
-func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.RegisteredZone, epochRewards sdk.Coin) {
+func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards sdk.Coin) {
 	ratio := sdk.NewDecFromInt(zone.GetDelegatedAmount().Add(epochRewards).Amount).Quo(sdk.NewDecFromInt(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount))
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
