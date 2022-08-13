@@ -166,7 +166,7 @@ func DelegationPlanFromUserIntent(zone Zone, coin sdk.Coin, intent ValidatorInte
 	out := Allocations{}
 
 	for _, val := range intent.Keys() {
-		out = out.Allocate(val, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: coin.Amount.ToDec().Mul(intent[val].Weight).TruncateInt()}})
+		out = out.Allocate(val, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: sdk.Int(sdk.NewDecFromInt(coin.Amount).Mul(intent[val].Weight).TruncateInt())}})
 	}
 	return out
 }
@@ -231,8 +231,8 @@ func (a Allocations) Sub(amount sdk.Coins, address string) (Allocations, sdk.Coi
 			} else {
 				amountToSub = sdk.Coins{sdk.NewCoin(coin.Denom, subAmount.AmountOf(coin.Denom))}
 			}
-			subAmount = subAmount.Sub(amountToSub)
-			amount = amount.Sub(amountToSub)
+			subAmount = subAmount.Sub(amountToSub...)
+			amount = amount.Sub(amountToSub...)
 		}
 		allocation.Amount = subAmount
 	}
@@ -294,7 +294,7 @@ func DetermineIntentDelta(currentState Allocations, total sdk.Int, intent Valida
 
 	for _, val := range intent.Keys() {
 		current := currentState.SumForDenom(val)                                     // fetch current delegations to validator
-		percent := current.ToDec().Quo(total.ToDec())                                // what is this a percent of total + new
+		percent := sdk.NewDecFromInt(current).Quo(sdk.NewDecFromInt(total))          // what is this a percent of total + new
 		deltaToIntent := intent[val].Weight.Sub(percent).MulInt(total).TruncateInt() // what to we have to delegate to make it match intent?
 		deltas = append(deltas, &Diff{val, deltaToIntent})
 	}
@@ -336,14 +336,14 @@ func DelegationPlanFromGlobalIntent(currentState Allocations, zone Zone, coin sd
 
 	if distributableValue.GT(sdk.ZeroInt()) {
 		for _, val := range intent.Keys() {
-			valCoin := distributableValue.ToDec().Mul(intent[val].Weight).TruncateInt()
+			valCoin := sdk.NewDecFromInt(distributableValue).Mul(intent[val].Weight).TruncateInt()
 			distributableValue = distributableValue.Sub(valCoin)
 			allocations = allocations.Allocate(val, sdk.Coins{sdk.NewCoin(zone.BaseDenom, valCoin)})
 		}
 	}
 
 	if !allocations.Sum().IsEqual(sdk.Coins{coin}) {
-		remainder := sdk.Coins{coin}.Sub(allocations.Sum())
+		remainder := sdk.Coins{coin}.Sub(allocations.Sum()...)
 		allocations = allocations.Allocate(deltas[len(deltas)-1].Valoper, remainder)
 	}
 	return allocations, nil

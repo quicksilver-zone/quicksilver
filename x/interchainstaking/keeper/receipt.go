@@ -104,7 +104,7 @@ func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
 func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Zone, inCoins sdk.Coins) error {
 	outCoins := sdk.Coins{}
 	for _, inCoin := range inCoins {
-		outAmount := inCoin.Amount.ToDec().Quo(zone.RedemptionRate).TruncateInt()
+		outAmount := sdk.NewDecFromInt(inCoin.Amount).Quo(zone.RedemptionRate).TruncateInt()
 		outCoin := sdk.NewCoin(zone.LocalDenom, outAmount)
 		outCoins = outCoins.Add(outCoin)
 	}

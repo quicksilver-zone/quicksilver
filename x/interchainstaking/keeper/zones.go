@@ -169,16 +169,16 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 	switch {
 	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
 		existing := zone.DepositAddress.Balance.AmountOf(coin.Denom)
-		zone.DepositAddress.Balance = zone.DepositAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
-		zone.DepositAddress.BalanceWaitgroup--
+		zone.DepositAddress.Balance = zone.DepositAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))...).Add(coin) // reset this denom
+		zone.DepositAddress.BalanceWaitgroup = zone.DepositAddress.BalanceWaitgroup - 1
 		k.Logger(ctx).Info("Matched deposit address", "address", address, "wg", zone.DepositAddress.BalanceWaitgroup, "balance", zone.DepositAddress.Balance)
 		if zone.DepositAddress.BalanceWaitgroup == 0 {
 			k.depositInterval(ctx)(0, zone)
 		}
 	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
 		existing := zone.WithdrawalAddress.Balance.AmountOf(coin.Denom)
-		zone.WithdrawalAddress.Balance = zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
-		zone.WithdrawalAddress.BalanceWaitgroup--
+		zone.WithdrawalAddress.Balance = zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))...).Add(coin) // reset this denom
+		zone.WithdrawalAddress.BalanceWaitgroup = zone.WithdrawalAddress.BalanceWaitgroup - 1
 		k.Logger(ctx).Info("Matched withdrawal address", "address", address, "wg", zone.WithdrawalAddress.BalanceWaitgroup, "balance", zone.WithdrawalAddress.Balance)
 	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
 		k.Logger(ctx).Info("Matched performance address")
@@ -190,7 +190,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 		existing := icaAccount.Balance.AmountOf(coin.Denom)
 		k.Logger(ctx).Info("Matched delegate address", "address", address, "wg", icaAccount.BalanceWaitgroup, "balance", icaAccount.Balance)
 
-		icaAccount.Balance = icaAccount.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))) // zero this denom
+		icaAccount.Balance = icaAccount.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))...) // zero this denom
 
 		// TODO: figure out how this impacts delegations in progress / race conditions (in most cases, the duplicate delegation will just fail)
 		if !icaAccount.Balance.Empty() {
@@ -348,7 +348,7 @@ OUT:
 				var remainder sdk.Coins
 				toSub := deltas[fromIdx].Amount.Abs()
 				requests, remainder = requests.Sub(sdk.Coins{sdk.NewCoin(types.GenericToken, toSub)}, intent.Address)
-				requests = requests.Allocate(deltas[fromIdx].Valoper, sdk.Coins{sdk.NewCoin(types.GenericToken, toSub)}.Sub(remainder))
+				requests = requests.Allocate(deltas[fromIdx].Valoper, sdk.Coins{sdk.NewCoin(types.GenericToken, toSub)}.Sub(remainder...))
 				deltas[fromIdx].Amount = remainder.AmountOf(types.GenericToken).Neg()
 				if deltas[fromIdx].Amount.Equal(sdk.ZeroInt()) {
 					fromIdx++

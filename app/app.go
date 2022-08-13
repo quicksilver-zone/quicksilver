@@ -459,6 +459,8 @@ func NewQuicksilver(
 
 	// create IBC module from bottom to top of stack
 	var transferStack porttypes.IBCModule
+
+	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferStack = transfer.NewIBCModule(app.TransferKeeper)
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.IBCFeeKeeper)
 
@@ -470,7 +472,6 @@ func NewQuicksilver(
 	var icaControllerStack porttypes.IBCModule
 	icaControllerStack = ibcmock.NewIBCModule(&mockModule, ibcmock.NewIBCApp("", scopedICAMockKeeper))
 	app.ICAAuthModule = icaControllerStack.(ibcmock.IBCModule)
-	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.ICAControllerKeeper)
 	icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.IBCFeeKeeper)
 
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
@@ -512,7 +513,7 @@ func NewQuicksilver(
 		AddRoute(ibctransfertypes.ModuleName, transferStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostStack).
-		AddRoute(interchainstakingtypes.ModuleName, icaControllerStack).
+		AddRoute(interchainstakingtypes.ModuleName, icaControllerIBCModule).
 		AddRoute(ibcmock.ModuleName, mockIBCModule).
 		AddRoute(ibcmock.ModuleName+icacontrollertypes.SubModuleName, icaControllerStack). // ica with mock auth module stack route to ica (top level of middleware stack)
 		AddRoute(MockFeePort, feeWithMockModule)

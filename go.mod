@@ -151,8 +151,9 @@ require (
 
 // https://github.com/cosmos/cosmos-sdk/issues/8469
 replace (
-	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
-	// github.com/cosmos/cosmos-sdk => github.com/ingenuity-build/cosmos-sdk v0.45.6-ls.1
+	github.com/cosmos/cosmos-sdk => github.com/notional-labs/cosmos-sdk v0.46.0-quicksilver
+
+	// use cosmos flavored gogo/protobuf: https://github.com/cosmos/cosmos-sdk/issues/8469
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 
 	// use fast tm-db: https://github.com/tendermint/tm-db/pull/237
