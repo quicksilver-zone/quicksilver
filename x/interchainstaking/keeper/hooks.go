@@ -58,6 +58,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					"delegations",
 					0,
 				)
+				da.IncrementBalanceWaitgroup()
 
 				rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: da.Address}
 				bz = k.cdc.MustMarshal(&rewardsQuery)

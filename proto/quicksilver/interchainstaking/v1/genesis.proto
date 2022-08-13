@@ -52,14 +52,9 @@ message ICAAccount {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
-  cosmos.base.v1beta1.Coin delegated_balance = 3 [
-    (cosmos_proto.scalar) = "cosmos.Coin",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
-    (gogoproto.nullable) = false
-  ];
-  string port_name = 4;
-  string withdrawal_address = 5;
-  uint32 balance_waitgroup = 6;
+  string port_name = 3;
+  string withdrawal_address = 4;
+  uint32 balance_waitgroup = 5;
 }
 
 message WithdrawalRecord {

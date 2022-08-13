@@ -64,6 +64,15 @@ func (k Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo type
 	}
 }
 
+func (k Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+	out := sdk.Coin{}
+	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
+		out = out.Add(delegation.Amount)
+		return false
+	})
+	return out
+}
+
 // AllZonesInfos returns every zoneInfo in the store
 func (k Keeper) AllZones(ctx sdk.Context) []types.Zone {
 	zones := []types.Zone{}
@@ -218,7 +227,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 		if zone.WithdrawalAddress.BalanceWaitgroup == 0 {
 			if !icaAccount.Balance.Empty() {
 				k.Logger(ctx).Info("Delegate account balance is non-zero; delegating!", "to_delegate", icaAccount.Balance)
-				valPlan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegationBinsMap(ctx, &zone), zone, coin, zone.GetAggregateIntentOrDefault())
+				valPlan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegatedAmount(ctx, &zone), k.GetDelegationBinsMap(ctx, &zone), coin, zone.GetAggregateIntentOrDefault())
 				if err != nil {
 					return err
 				}
@@ -390,7 +399,7 @@ func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.Zone, requests
 
 	bins := k.GetDelegationBinsMap(ctx, &zone)
 
-	deltas := types.DetermineIntentDelta(bins, zone.GetDelegatedAmount().Amount, zone.GetAggregateIntentOrDefault())
+	deltas := types.DetermineIntentDelta(bins, k.GetDelegatedAmount(ctx, &zone).Amount, zone.GetAggregateIntentOrDefault())
 
 	requests = ApplyDeltasToIntent(requests, deltas, bins)
 

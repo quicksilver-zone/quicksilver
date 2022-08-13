@@ -142,14 +142,6 @@ func (z Zone) GetValidatorsAddressesAsSlice() []string {
 	return l
 }
 
-func (z *Zone) GetDelegatedAmount() sdk.Coin {
-	out := sdk.NewCoin(z.BaseDenom, sdk.ZeroInt())
-	for _, da := range z.DelegationAddresses {
-		out = out.Add(da.DelegatedBalance)
-	}
-	return out
-}
-
 func (z *Zone) GetDelegationAccounts() []*ICAAccount {
 	delegationAccounts := z.DelegationAddresses
 	sort.Slice(delegationAccounts, func(i, j int) bool {

@@ -172,7 +172,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Zone, amo
 			plan, found := k.GetIntent(ctx, zone, delegator, false)
 			if !found || len(plan.Intents) == 0 {
 				valPlan = zone.GetAggregateIntentOrDefault()
-				delPlan, err = types.DelegationPlanFromGlobalIntent(bins, zone, coin, valPlan)
+				delPlan, err = types.DelegationPlanFromGlobalIntent(k.GetDelegatedAmount(ctx, &zone), bins, coin, valPlan)
 				if err != nil {
 					return types.Allocations{}, err
 				}

@@ -178,18 +178,12 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		if err != nil {
 			return err
 		}
+
 		if delegation, ok := k.GetDelegation(ctx, &zone, delegatorAddress, validatorAddress); ok {
 			err := k.RemoveDelegation(ctx, &zone, delegation)
 			if err != nil {
 				return err
 			}
-
-			ica, err := zone.GetDelegationAccountByAddress(delegatorAddress)
-			if err != nil {
-				return err
-			}
-			ica.DelegatedBalance = ica.DelegatedBalance.Sub(delegation.Amount)
-			k.SetZone(ctx, &zone)
 		}
 		return nil
 	}

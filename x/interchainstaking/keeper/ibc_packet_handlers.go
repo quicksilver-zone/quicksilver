@@ -317,7 +317,7 @@ func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.Zone, msg *
 	}
 	da.Balance = msg.Amount
 
-	plan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegationBinsMap(ctx, &zone), zone, sdk.NewCoin(zone.BaseDenom, msg.Amount.AmountOf(zone.BaseDenom)), zone.GetAggregateIntentOrDefault())
+	plan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegatedAmount(ctx, &zone), k.GetDelegationBinsMap(ctx, &zone), sdk.NewCoin(zone.BaseDenom, msg.Amount.AmountOf(zone.BaseDenom)), zone.GetAggregateIntentOrDefault())
 	if err != nil {
 		return err
 	}
@@ -631,6 +631,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 				"delegation",
 				0,
 			)
+			da.IncrementBalanceWaitgroup()
 		}
 
 		if ok {
@@ -652,7 +653,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 		if err := k.RemoveDelegation(ctx, zone, existingDelegation); err != nil {
 			return err
 		}
-		da.DelegatedBalance = da.DelegatedBalance.Sub(existingDelegation.Amount) // remove old delegation from da.DelegatedBalance
+
 		// send request to prove delegation no longer exists.
 		k.ICQKeeper.MakeRequest(
 			ctx,
@@ -674,19 +675,15 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 
 func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin, zone *types.Zone, absolute bool) error {
 	delegation, found := k.GetDelegation(ctx, zone, delegatorAddress, validatorAddress)
-	da, _ := zone.GetDelegationAccountByAddress(delegatorAddress)
 
 	if !found {
 		k.Logger(ctx).Info("Adding delegation tuple", "delegator", delegatorAddress, "validator", validatorAddress, "amount", amount.Amount)
 		delegation = types.NewDelegation(delegatorAddress, validatorAddress, amount)
-		da.DelegatedBalance = da.DelegatedBalance.Add(amount)
 	} else if !delegation.Amount.Equal(amount.Amount.ToDec()) {
 		oldAmount := delegation.Amount
 		if !absolute {
-			da.DelegatedBalance = da.DelegatedBalance.Add(amount)
 			delegation.Amount = delegation.Amount.Add(amount)
 		} else {
-			da.DelegatedBalance = da.DelegatedBalance.Sub(delegation.Amount).Add(amount)
 			delegation.Amount = amount
 		}
 		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
@@ -695,7 +692,6 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 	if err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId); err != nil {
 		return err
 	}
-	k.SetZone(ctx, zone)
 	return nil
 }
 
@@ -817,11 +813,11 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 }
 
 func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards sdk.Coin) {
-	ratio := zone.GetDelegatedAmount().Add(epochRewards).Amount.ToDec().Quo(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec())
+	ratio := k.GetDelegatedAmount(ctx, &zone).Add(epochRewards).Amount.ToDec().Quo(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec())
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec(), "lv", zone.GetDelegatedAmount().Add(epochRewards).Amount.ToDec())
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec(), "lv", k.GetDelegatedAmount(ctx, &zone).Add(epochRewards).Amount.ToDec())
 
 	zone.LastRedemptionRate = zone.RedemptionRate
 	zone.RedemptionRate = ratio

@@ -45,6 +45,4 @@ paths:
         #    query: true
         #    buffer: 10
         #    src-channel: channel-0
-        src-channel-filter:
-            rule: ""
-            channel-list: []
+        src-channel-filter: {}

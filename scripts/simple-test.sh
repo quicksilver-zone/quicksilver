@@ -51,15 +51,15 @@ docker-compose up --force-recreate -d quicksilver quicksilver2 quicksilver3 test
 echo "Chains created"
 sleep 10
 echo "Restoring keys"
-docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_1" $CHAINID_0
-docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_2" $CHAINID_1
+docker-compose run --rm hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_1" $CHAINID_0
+docker-compose run --rm hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_2" $CHAINID_1
 sleep 10
 echo "Creating IBC connection"
-docker-compose run hermes hermes -c /tmp/hermes.toml create connection $CHAINID_0 $CHAINID_1
+docker-compose run --rm hermes hermes -c /tmp/hermes.toml create connection $CHAINID_0 $CHAINID_1
 echo "Creating transfer channel"
-docker-compose run hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_0 connection-0
+docker-compose run --rm hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_0 connection-0
 echo "Tranfer channel created"
-#docker-compose up --force-recreate -d hermes
+docker-compose up --force-recreate -d hermes
 
 rm -rf ./icq/keys
 echo "Launch and configure interchain query daemon"
