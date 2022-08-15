@@ -223,7 +223,7 @@ func (k Keeper) Claim(ctx sdk.Context, chainID string, action types.Action, addr
 	}
 
 	// verify claim
-	if err := k.VerifyClaimAction(ctx, chainID, cr, action); err != nil {
+	if err := k.VerifyClaimAction(ctx, cr, action); err != nil {
 		return 0, err
 	}
 

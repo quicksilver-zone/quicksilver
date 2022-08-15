@@ -15,7 +15,7 @@ import (
 //
 // TODO: we also want to verify that the action was executed on the remote
 // chain before we execute the claim...
-func (k Keeper) VerifyClaimAction(ctx sdk.Context, chainID string, cr types.ClaimRecord, action types.Action) error {
+func (k Keeper) VerifyClaimAction(ctx sdk.Context, cr types.ClaimRecord, action types.Action) error {
 	// action already completed, nothing to claim
 	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
 		return fmt.Errorf("%s already completed", types.Action_name[int32(action)])
@@ -25,19 +25,19 @@ func (k Keeper) VerifyClaimAction(ctx sdk.Context, chainID string, cr types.Clai
 	case types.ActionInitialClaim:
 		return nil
 	case types.ActionDepositT1:
-		return k.checkDeposit(ctx, chainID, cr, sdk.MustNewDecFromStr("0.05"))
+		return k.checkDeposit(ctx, cr, sdk.MustNewDecFromStr("0.05"))
 	case types.ActionDepositT2:
-		return k.checkDeposit(ctx, chainID, cr, sdk.MustNewDecFromStr("0.10"))
+		return k.checkDeposit(ctx, cr, sdk.MustNewDecFromStr("0.10"))
 	case types.ActionDepositT3:
-		return k.checkDeposit(ctx, chainID, cr, sdk.MustNewDecFromStr("0.15"))
+		return k.checkDeposit(ctx, cr, sdk.MustNewDecFromStr("0.15"))
 	case types.ActionDepositT4:
-		return k.checkDeposit(ctx, chainID, cr, sdk.MustNewDecFromStr("0.22"))
+		return k.checkDeposit(ctx, cr, sdk.MustNewDecFromStr("0.22"))
 	case types.ActionDepositT5:
-		return k.checkDeposit(ctx, chainID, cr, sdk.MustNewDecFromStr("0.30"))
+		return k.checkDeposit(ctx, cr, sdk.MustNewDecFromStr("0.30"))
 	case types.ActionStakeQCK:
 		return k.checkBondedDelegation(ctx, cr.Address)
 	case types.ActionSignalIntent:
-		return k.checkIntentIsSet(ctx, chainID, cr.Address)
+		return k.checkIntentIsSet(ctx, cr.ChainId, cr.Address)
 	case types.ActionQSGov:
 		return k.checkQSGov(ctx, cr.Address)
 	case types.ActionGbP:
@@ -52,21 +52,21 @@ func (k Keeper) VerifyClaimAction(ctx sdk.Context, chainID string, cr types.Clai
 	return fmt.Errorf("verification not implemented for [%d] %s", action, types.Action_name[int32(action)])
 }
 
-// checkDeposit
-func (k Keeper) checkDeposit(ctx sdk.Context, chainID string, cr types.ClaimRecord, th sdk.Dec) error {
+// checkDeposit checks
+func (k Keeper) checkDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold sdk.Dec) error {
 	addr, err := sdk.AccAddressFromBech32(cr.Address)
 	if err != nil {
 		return err
 	}
 
-	zone, ok := k.icsKeeper.GetZone(ctx, chainID)
+	zone, ok := k.icsKeeper.GetZone(ctx, cr.ChainId)
 	if !ok {
-		return fmt.Errorf("zone not found for %s", chainID)
+		return fmt.Errorf("zone not found for %s", cr.ChainId)
 	}
 
 	dAmount := sdk.NewCoin(
 		zone.BaseDenom,
-		th.MulInt64(int64(cr.BaseValue)).TruncateInt(),
+		threshold.MulInt64(int64(cr.BaseValue)).TruncateInt(),
 	)
 
 	if !k.bankKeeper.HasBalance(ctx, addr, dAmount) {
