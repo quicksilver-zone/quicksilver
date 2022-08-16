@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -232,7 +233,7 @@ func (k msgServer) validateIntents(zone types.Zone, intents []*types.ValidatorIn
 	}
 
 	if len(errors) > 0 {
-		return types.NewMultiError(errors)
+		return multierror.New(errors)
 	}
 
 	return nil

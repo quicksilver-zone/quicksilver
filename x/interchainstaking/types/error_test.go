@@ -3,10 +3,12 @@ package types
 import (
 	"errors"
 	"testing"
+
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
 func TestErrorsDeterminism(t *testing.T) {
-	e := Errors{
+	e := multierror.Errors{
 		Errors: map[string]error{
 			"a":    errors.New("a"),
 			"Z":    errors.New("Z"),
