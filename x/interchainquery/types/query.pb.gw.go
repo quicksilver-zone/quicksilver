@@ -34,7 +34,7 @@ var _ = descriptor.ForMessage
 var _ = metadata.Join
 
 var (
-	filter_QuerySrvr_Queries_0 = &utilities.DoubleArray{Encoding: map[string]int{"connection_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+	filter_QuerySrvr_Queries_0 = &utilities.DoubleArray{Encoding: map[string]int{"chain_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
 )
 
 func request_QuerySrvr_Queries_0(ctx context.Context, marshaler runtime.Marshaler, client QuerySrvrClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -48,15 +48,15 @@ func request_QuerySrvr_Queries_0(ctx context.Context, marshaler runtime.Marshale
 		_   = err
 	)
 
-	val, ok = pathParams["connection_id"]
+	val, ok = pathParams["chain_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "connection_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chain_id")
 	}
 
-	protoReq.ConnectionId, err = runtime.String(val)
+	protoReq.ChainId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "connection_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chain_id", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -82,15 +82,15 @@ func local_request_QuerySrvr_Queries_0(ctx context.Context, marshaler runtime.Ma
 		_   = err
 	)
 
-	val, ok = pathParams["connection_id"]
+	val, ok = pathParams["chain_id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "connection_id")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "chain_id")
 	}
 
-	protoReq.ConnectionId, err = runtime.String(val)
+	protoReq.ChainId, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "connection_id", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "chain_id", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -199,7 +199,7 @@ func RegisterQuerySrvrHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 }
 
 var (
-	pattern_QuerySrvr_Queries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainquery", "v1", "queries", "connection_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_QuerySrvr_Queries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainquery", "v1", "queries", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
