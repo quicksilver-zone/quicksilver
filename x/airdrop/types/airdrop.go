@@ -2,7 +2,7 @@ package types
 
 import (
 	"fmt"
-	time "time"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
@@ -86,7 +86,12 @@ func (cr ClaimRecord) ValidateBasic() error {
 			}
 			// calc sum
 			sum += ca.ClaimAmount
-			// check completed time
+			// check completed
+			// CompleteTime should be some significant time (not mere
+			// miliseconds) into the past, thus it should not cause determinism
+			// issues related to clock drift.
+			// If however, this turns out to be problematic the check can be
+			// moved from stateless to stateful to ensure a valid CompleteTime.
 			if ca.CompleteTime.After(time.Now()) {
 				errors[kstr+" CompleteTime"] = fmt.Errorf("invalid spacetime continuum, time is in the future")
 			}

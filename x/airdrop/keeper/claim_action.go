@@ -64,12 +64,22 @@ func (k Keeper) checkDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold sd
 		return fmt.Errorf("zone not found for %s", cr.ChainId)
 	}
 
-	dAmount := sdk.NewCoin(
-		zone.BaseDenom,
-		threshold.MulInt64(int64(cr.BaseValue)).TruncateInt(),
-	)
+	// obtain all deposit receipts for this user on this zone
+	rcpts, err := k.icsKeeper.UserZoneReceipts(ctx, &zone, addr)
+	if err != nil {
+		return fmt.Errorf("unable to obtain zone receipts for %s on zone %s: %w", cr.Address, cr.ChainId, err)
+	}
 
-	if !k.bankKeeper.HasBalance(ctx, addr, dAmount) {
+	// sum gross deposits amount
+	gdAmount := sdk.NewInt(0)
+	for _, rcpt := range rcpts {
+		gdAmount = gdAmount.Add(rcpt.Amount.AmountOf(zone.BaseDenom))
+	}
+
+	// calculate target amount
+	tAmount := threshold.MulInt64(int64(cr.BaseValue)).TruncateInt()
+
+	if gdAmount.LT(tAmount) {
 		return fmt.Errorf("insufficient deposit amount")
 	}
 
