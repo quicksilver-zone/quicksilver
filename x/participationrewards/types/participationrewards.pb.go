@@ -226,7 +226,8 @@ func (m *KeyedProtocolData) GetProtocolData() *ProtocolData {
 	return nil
 }
 
-// Protocol Data is an arbitrary data type held against a given zone for the determination of rewards.
+// Protocol Data is an arbitrary data type held against a given zone for the
+// determination of rewards.
 type ProtocolData struct {
 	Protocol string                   `protobuf:"bytes,1,opt,name=protocol,proto3" json:"protocol,omitempty"`
 	Type     string                   `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`

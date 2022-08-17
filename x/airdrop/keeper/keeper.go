@@ -7,11 +7,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 )
 
 type Keeper struct {
@@ -21,6 +23,8 @@ type Keeper struct {
 	accountKeeper authkeeper.AccountKeeper
 	bankKeeper    bankkeeper.Keeper
 	stakingKeeper stakingkeeper.Keeper
+	govKeeper     govkeeper.Keeper
+	icsKeeper     icskeeper.Keeper
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper

@@ -12,9 +12,28 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 enum Action {
   option (gogoproto.goproto_enum_prefix) = false;
 
+  // Initial claim action
   ActionInitialClaim = 0;
-  ActionVote = 1;
-  ActionDelegateStake = 2;
+  // Deposit tier 1 (e.g. > 5% of base_value)
+  ActionDepositT1 = 1;
+  // Deposit tier 2 (e.g. > 10% of base_value)
+  ActionDepositT2 = 2;
+  // Deposit tier 3 (e.g. > 15% of base_value)
+  ActionDepositT3 = 3;
+  // Deposit tier 4 (e.g. > 22% of base_value)
+  ActionDepositT4 = 4;
+  // Deposit tier 5 (e.g. > 30% of base_value)
+  ActionDepositT5 = 5;
+  // Active QCK delegation
+  ActionStakeQCK = 6;
+  // Intent is set
+  ActionSignalIntent = 7;
+  // Cast governance vote on QS
+  ActionQSGov = 8;
+  // Governance By Proxy (GbP): cast vote on remote zone
+  ActionGbP = 9;
+  // Provide liquidity on Osmosis
+  ActionOsmosis = 10;
 }
 
 // Status is used as an enum to denote zone status.
@@ -67,6 +86,7 @@ message ClaimRecord {
   // Protobuf3 does not allow enum as map key
   map<int32, CompletedAction> actions_completed = 3;
   uint64 max_allocation = 4;
+  uint64 base_value = 5;
 }
 
 // CompletedAction represents a claim action completed by the user.
