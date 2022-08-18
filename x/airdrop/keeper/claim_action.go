@@ -15,7 +15,7 @@ import (
 //
 // TODO: we also want to verify that the action was executed on the remote
 // chain before we execute the claim...
-func (k Keeper) VerifyClaimAction(ctx sdk.Context, cr types.ClaimRecord, action types.Action) error {
+func (k Keeper) VerifyClaimAction(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proof []byte) error {
 	// action already completed, nothing to claim
 	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
 		return fmt.Errorf("%s already completed", types.Action_name[int32(action)])
@@ -43,8 +43,8 @@ func (k Keeper) VerifyClaimAction(ctx sdk.Context, cr types.ClaimRecord, action 
 	case types.ActionGbP:
 		// TODO: implement check once GbP is implemented
 	case types.ActionOsmosis:
-		// IBC proof based verification on Osmosis remote zone
-		// TODO: implement
+		// IBC proof based verification (Osmosis remote zone)
+		return k.checkOsmosisLP(ctx, cr, proof)
 	default:
 		return fmt.Errorf("undefined action [%d]", action)
 	}
@@ -145,4 +145,10 @@ func (k Keeper) checkQSGov(ctx sdk.Context, address string) error {
 	}
 
 	return nil
+}
+
+// checkOsmosisLP utilizes cross-chain-verification to indicate if the given
+// address provides any liquidity of the zones qAssets on the Osmosis chain.
+func (k Keeper) checkOsmosisLP(ctx sdk.Context, cr types.ClaimRecord, proof []byte) error {
+	return fmt.Errorf("not implemented")
 }
