@@ -74,7 +74,8 @@ message WithdrawalRecord {
   ];
   string txhash = 7;
   int32 status = 8;
-  google.protobuf.Timestamp completion_time = 9 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  google.protobuf.Timestamp completion_time = 9
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
 }
 
 message TransferRecord {
