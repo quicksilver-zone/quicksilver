@@ -120,7 +120,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	sumAmount := sdk.NewCoins()
 
-	//redeemType := "tokenize"
+	// redeemType := "tokenize"
 	redeemType := "unbond" // TODO: revert to "tokenize"
 	// does zone have LSM enabled?
 	// if !zone.LiquidityModule {

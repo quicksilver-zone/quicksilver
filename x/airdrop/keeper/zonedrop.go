@@ -14,7 +14,6 @@ func (k Keeper) GetZoneDropAccountAddress(chainID string) sdk.AccAddress {
 
 // GetZoneDropAccountAddress returns the zone airdrop account address.
 func (k *Keeper) GetZoneDropAccount(ctx sdk.Context, chainID string) authtypes.AccountI {
-
 	account := k.accountKeeper.GetAccount(ctx, k.GetZoneDropAccountAddress(chainID))
 	if account == nil {
 		newAccount := authtypes.NewBaseAccountWithAddress(k.GetZoneDropAccountAddress(chainID))

@@ -51,5 +51,4 @@ func TestIncrementDecrementWg(t *testing.T) {
 	secondWg := ica.BalanceWaitgroup
 	require.Equal(t, firstWg-1, secondWg)
 	require.Error(t, ica.DecrementBalanceWaitgroup())
-
 }

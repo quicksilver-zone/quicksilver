@@ -20,7 +20,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 		if ctx.BlockHeight()%10 == 0 {
 			if err := k.EnsureWithdrawalAddresses(ctx, &zone); err != nil {
 				k.Logger(ctx).Error(err.Error())
-				//panic(err)  // cannot panic in begin blocker; codeQL will fail this.
+				// panic(err)  // cannot panic in begin blocker; codeQL will fail this.
 			}
 			if err := k.HandleCompletedUnbondings(ctx, &zone); err != nil {
 				k.Logger(ctx).Error(err.Error())
