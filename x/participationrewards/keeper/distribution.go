@@ -187,8 +187,9 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 			err := fmt.Errorf("unable to obtain token value for zone %s", zone.ChainId)
 			return err
 		}
-
-		ztvl := k.icsKeeper.GetDelegatedAmount(ctx, &zone).Amount.ToDec().
+		// silence gosec :)
+		zp := zone
+		ztvl := k.icsKeeper.GetDelegatedAmount(ctx, &zp).Amount.ToDec().
 			Quo(sdk.NewDec(tv.Multiplier)).
 			Mul(tv.Value)
 		// set the zone tvl here, we will overwrite it with the correct

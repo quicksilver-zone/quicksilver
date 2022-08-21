@@ -40,13 +40,13 @@ func (gs GenesisState) Validate() error {
 	epochIdentifiers := map[string]bool{}
 	for i, epoch := range gs.Epochs {
 		if epoch.Identifier == "" {
-			return fmt.Errorf("Value #%d: epoch identifier should NOT be empty", i+1)
+			return fmt.Errorf("value #%d: epoch identifier should NOT be empty", i+1)
 		}
 		if epochIdentifiers[epoch.Identifier] {
-			return fmt.Errorf("Value #%d: epoch identifier should be unique, got duplicate %q", i+1, epoch.Identifier)
+			return fmt.Errorf("value #%d: epoch identifier should be unique, got duplicate %q", i+1, epoch.Identifier)
 		}
 		if epoch.Duration <= 0 {
-			return fmt.Errorf("Value #%d, Identifier: %q: epoch duration should be >0", i+1, epoch.Identifier)
+			return fmt.Errorf("value #%d, Identifier: %q: epoch duration should be >0", i+1, epoch.Identifier)
 		}
 		epochIdentifiers[epoch.Identifier] = true
 	}
