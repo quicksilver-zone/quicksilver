@@ -65,7 +65,7 @@ func (k Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo type
 }
 
 func (k Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
-	out := sdk.Coin{}
+	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
 		out = out.Add(delegation.Amount)
 		return false

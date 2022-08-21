@@ -4,15 +4,13 @@ import (
 	"context"
 	"testing"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 	"github.com/stretchr/testify/suite"
 
 	qapp "github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
-	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -75,32 +73,32 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 	err := icskeeper.HandleRegisterZoneProposal(ctx, s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper, proposal)
 	s.Require().NoError(err)
 
-	// Simulate "cosmos.staking.v1beta1.Query/Validators" response
-	// - this is not working anymore;
-	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()),
-	}
-	icqmsgSrv := icqkeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainQueryKeeper)
+	chainBVals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext())
 
-	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
-	bz, err := s.GetQuicksilverApp(s.chainA).AppCodec().Marshal(&bondedQuery)
-	s.Require().NoError(err)
+	for _, val := range chainBVals {
+		qvr := stakingtypes.QueryValidatorResponse{
+			Validator: val,
+		}
 
-	qmsg := icqtypes.MsgSubmitQueryResponse{
-		ChainId: s.chainB.ChainID,
-		QueryId: icqkeeper.GenerateQueryHash(
+		addr, err := utils.ValAddressFromBech32(val.OperatorAddress, "")
+		s.Require().NoError(err)
+
+		data := stakingtypes.GetValidatorKey(addr)
+
+		query := s.GetQuicksilverApp(s.chainA).InterchainQueryKeeper.NewQuery(
+			ctx,
+			icstypes.ModuleName,
 			s.path.EndpointA.ConnectionID,
 			s.chainB.ChainID,
-			"cosmos.staking.v1beta1.Query/Validators",
-			bz,
-			icstypes.ModuleName,
-		),
-		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshal(&qvr),
-		Height:      s.chainB.CurrentHeader.Height,
-		FromAddress: TestOwnerAddress,
+			"store/staking/key",
+			data,
+			sdk.ZeroInt(),
+			"validator",
+			0,
+		)
+		err = icskeeper.ValidatorCallback(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper, ctx, s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshal(&qvr), *query)
+		s.Require().NoError(err)
 	}
-	_, err = icqmsgSrv.SubmitQueryResponse(sdktypes.WrapSDKContext(ctx), &qmsg)
-	s.Require().NoError(err)
 
 	valsetInterval := uint64(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetParam(ctx, icstypes.KeyValidatorSetInterval))
 	s.coordinator.CommitNBlocks(s.chainA, valsetInterval)
