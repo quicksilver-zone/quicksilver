@@ -19,7 +19,7 @@ func TestValidateWithBetterContext(t *testing.T) {
 		},
 		{
 			name:    "duplicate identifiers",
-			wantErr: `Value #2: epoch identifier should be unique, got duplicate "day"`,
+			wantErr: `value #2: epoch identifier should be unique, got duplicate "day"`,
 			epochs: []EpochInfo{
 				{
 					Identifier: "day",
@@ -30,7 +30,7 @@ func TestValidateWithBetterContext(t *testing.T) {
 		},
 		{
 			name:    "invalid duration: 0",
-			wantErr: `Value #1, Identifier: "day": epoch duration should be >0`,
+			wantErr: `value #1, Identifier: "day": epoch duration should be >0`,
 			epochs: []EpochInfo{
 				{
 					Identifier: "day",
@@ -41,7 +41,7 @@ func TestValidateWithBetterContext(t *testing.T) {
 		},
 		{
 			name:    "invalid duration: -2",
-			wantErr: `Value #1, Identifier: "day": epoch duration should be >0`,
+			wantErr: `value #1, Identifier: "day": epoch duration should be >0`,
 			epochs: []EpochInfo{
 				{
 					Identifier: "day",

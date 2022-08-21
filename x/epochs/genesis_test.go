@@ -77,7 +77,7 @@ func TestEpochsInitGenesis(t *testing.T) {
 			},
 		},
 	}
-	require.EqualError(t, genesisState.Validate(), "epoch identifier should be unique")
+	require.EqualError(t, genesisState.Validate(), "value #2: epoch identifier should be unique, got duplicate \"monthly\"")
 
 	genesisState = types.GenesisState{
 		Epochs: []types.EpochInfo{
