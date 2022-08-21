@@ -7,22 +7,26 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
-// CreateZoneDropAccount creates a zone specific module account.
-func (k Keeper) CreateZoneDropAccount(ctx sdk.Context, chainID string) {
+func (k Keeper) GetZoneDropAccountAddress(chainID string) sdk.AccAddress {
 	name := types.ModuleName + "." + chainID
-	moduleAcc := authtypes.NewEmptyModuleAccount(name, "")
-	k.accountKeeper.SetModuleAccount(ctx, moduleAcc)
+	return authtypes.NewModuleAddress(name)
 }
 
 // GetZoneDropAccountAddress returns the zone airdrop account address.
-func (k Keeper) GetZoneDropAccountAddress(ctx sdk.Context, chainID string) sdk.AccAddress {
-	name := types.ModuleName + "." + chainID
-	return k.accountKeeper.GetModuleAddress(name)
+func (k *Keeper) GetZoneDropAccount(ctx sdk.Context, chainID string) authtypes.AccountI {
+
+	account := k.accountKeeper.GetAccount(ctx, k.GetZoneDropAccountAddress(chainID))
+	if account == nil {
+		newAccount := authtypes.NewBaseAccountWithAddress(k.GetZoneDropAccountAddress(chainID))
+		account = (k.accountKeeper.NewAccount(ctx, newAccount)).(*authtypes.BaseAccount) // set the account number
+		k.accountKeeper.SetAccount(ctx, account)
+	}
+	return account
 }
 
 // GetZoneDropAccountBalance gets the zone airdrop account coin balance.
 func (k Keeper) GetZoneDropAccountBalance(ctx sdk.Context, chainID string) sdk.Coin {
-	zonedropAccAddr := k.GetZoneDropAccountAddress(ctx, chainID)
+	zonedropAccAddr := k.GetZoneDropAccountAddress(chainID)
 	return k.bankKeeper.GetBalance(ctx, zonedropAccAddr, k.stakingKeeper.BondDenom(ctx))
 }
 
@@ -185,12 +189,12 @@ func (k Keeper) EndZoneDrop(ctx sdk.Context, chainID string) error {
 // returnUnclaimedZoneDropTokens returns all unclaimed zone airdrop tokens to
 // the airdrop module account.
 func (k Keeper) returnUnclaimedZoneDropTokens(ctx sdk.Context, chainID string) error {
-	zonedropAccountAddress := k.GetZoneDropAccountAddress(ctx, chainID)
+	zonedropAccountAddress := k.GetZoneDropAccountAddress(chainID)
 	zonedropAccountBalance := k.GetZoneDropAccountBalance(ctx, chainID)
 	airdropAccountAddress := k.GetModuleAccountAddress(ctx)
-	return k.bankKeeper.SendCoinsFromModuleToModule(
+	return k.bankKeeper.SendCoinsFromAccountToModule(
 		ctx,
-		zonedropAccountAddress.String(),
+		zonedropAccountAddress,
 		airdropAccountAddress.String(),
 		sdk.NewCoins(zonedropAccountBalance),
 	)
