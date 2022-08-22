@@ -61,6 +61,20 @@ service Query {
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/delegation_plans";
   }
+
+  // WithdrawalRecords provides data on the active withdrawals.
+  rpc ZoneWithdrawalRecords(QueryWithdrawalRecordsRequest)
+      returns (QueryWithdrawalRecordsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records";
+  }
+
+  // WithdrawalRecords provides data on the active withdrawals.
+  rpc WithdrawalRecords(QueryWithdrawalRecordsRequest)
+      returns (QueryWithdrawalRecordsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/interchainstaking/v1/withdrawal_records";
+  }
 }
 
 message QueryZonesInfoRequest {
@@ -134,5 +148,15 @@ message QueryDelegationPlansRequest {
 
 message QueryDelegationPlansResponse {
   repeated DelegationPlan delegations = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryWithdrawalRecordsRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryWithdrawalRecordsResponse {
+  repeated WithdrawalRecord withdrawals = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

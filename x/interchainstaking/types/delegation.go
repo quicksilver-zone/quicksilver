@@ -307,28 +307,25 @@ type Diff struct {
 	Amount  sdk.Int
 }
 
-func DelegationPlanFromGlobalIntent(currentState Allocations, zone Zone, coin sdk.Coin, intent ValidatorIntents) (Allocations, error) {
-	if coin.Denom != zone.BaseDenom {
+func DelegationPlanFromGlobalIntent(currentTotal sdk.Coin, currentState Allocations, coin sdk.Coin, intent ValidatorIntents) (Allocations, error) {
+	if coin.Denom != currentTotal.Denom {
 		return nil, fmt.Errorf("expected base denom, got %s", coin.Denom)
 	}
 
 	allocations := Allocations{}
 
-	// fetch current state
-	total := zone.GetDelegatedAmount().Amount
-
-	deltas := DetermineIntentDelta(currentState, total.Add(coin.Amount), intent)
+	deltas := DetermineIntentDelta(currentState, currentTotal.Amount.Add(coin.Amount), intent)
 
 	distributableValue := coin.Amount
 
 	for idx, delta := range deltas {
 		if delta.Amount.GT(sdk.ZeroInt()) {
 			if delta.Amount.GTE(distributableValue) {
-				allocations = allocations.Allocate(delta.Valoper, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: distributableValue}})
+				allocations = allocations.Allocate(delta.Valoper, sdk.Coins{sdk.Coin{Denom: currentTotal.Denom, Amount: distributableValue}})
 				distributableValue = sdk.ZeroInt()
 				break
 			} else {
-				allocations = allocations.Allocate(delta.Valoper, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: deltas[idx].Amount}})
+				allocations = allocations.Allocate(delta.Valoper, sdk.Coins{sdk.Coin{Denom: currentTotal.Denom, Amount: deltas[idx].Amount}})
 				distributableValue = distributableValue.Sub(deltas[idx].Amount)
 			}
 		}
@@ -338,7 +335,7 @@ func DelegationPlanFromGlobalIntent(currentState Allocations, zone Zone, coin sd
 		for _, val := range intent.Keys() {
 			valCoin := distributableValue.ToDec().Mul(intent[val].Weight).TruncateInt()
 			distributableValue = distributableValue.Sub(valCoin)
-			allocations = allocations.Allocate(val, sdk.Coins{sdk.NewCoin(zone.BaseDenom, valCoin)})
+			allocations = allocations.Allocate(val, sdk.Coins{sdk.NewCoin(currentTotal.Denom, valCoin)})
 		}
 	}
 

@@ -60,7 +60,7 @@ services:
       - icad
       - start
   testzone2-1:
-    image: quicksilverzone/qsosmosis:latest
+    image: quicksilverzone/qsosmosis:v10.1.1
     hostname: testzone2-1
     build:
       context: .
@@ -71,7 +71,7 @@ services:
       - osmosisd
       - start
   testzone2-2:
-    image: quicksilverzone/qsosmosis:latest
+    image: quicksilverzone/qsosmosis:v10.1.1
     hostname: testzone2-2
     volumes:
       - ./data/lstest-2a:/osmosis/.osmosisd
@@ -79,7 +79,7 @@ services:
       - osmosisd
       - start
   testzone2-3:
-    image: quicksilverzone/qsosmosis:latest
+    image: quicksilverzone/qsosmosis:v10.1.1
     hostname: testzone2-3
     volumes:
       - ./data/lstest-2b:/osmosis/.osmosisd
@@ -87,7 +87,7 @@ services:
       - osmosisd
       - start
   testzone2-4:
-    image: quicksilverzone/qsosmosis:latest
+    image: quicksilverzone/qsosmosis:v10.1.1
     hostname: testzone2-4
     volumes:
       - ./data/lstest-2c:/osmosis/.osmosisd
@@ -110,7 +110,7 @@ services:
       context: .
       dockerfile: Dockerfile.hermes
   icq:
-    image: quicksilverzone/interchain-queries:latest
+    image: quicksilverzone/interchain-queries:v0.3.0
     volumes:
       - ./data/icq:/icq/.icq
     command:
@@ -118,11 +118,14 @@ services:
       - run
     restart: always
   relayer:
-    image: quicksilverzone/relayer
+    image: quicksilverzone/relayer:v2.0.0
     volumes:
-      - ./data/rly:/rly/.relayer
+      - ./data/rly:/relayer/.relayer
     command:
-      - rly
       - start
       - demo
+      - -p
+      - events
+      - -b
+      - "100"
     restart: always

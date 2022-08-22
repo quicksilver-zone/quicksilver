@@ -157,3 +157,32 @@ func (k Keeper) DelegationPlans(c context.Context, req *types.QueryDelegationPla
 
 	return &types.QueryDelegationPlansResponse{Delegations: delegationplans}, nil
 }
+
+func (k Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	zone, found := k.GetZone(ctx, req.GetChainId())
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
+
+	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, &zone)
+
+	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+}
+
+func (k Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	withdrawalrecords := k.AllWithdrawalRecords(ctx)
+
+	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+}

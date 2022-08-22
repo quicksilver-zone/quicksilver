@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"sort"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -33,13 +34,9 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// validate coins are positive
-	inCoin, err := sdk.ParseCoinNormalized(msg.Coin)
+	err := msg.Value.Validate()
 	if err != nil {
 		return nil, err
-	}
-
-	if !inCoin.IsPositive() {
-		return nil, fmt.Errorf("invalid input coin value")
 	}
 
 	// validate recipient address
@@ -54,7 +51,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	var zone *types.Zone
 
 	k.IterateZones(ctx, func(_ int64, thisZone types.Zone) bool {
-		if thisZone.LocalDenom == inCoin.GetDenom() {
+		if thisZone.LocalDenom == msg.Value.GetDenom() {
 			zone = &thisZone
 			return true
 		}
@@ -63,12 +60,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	// does zone exist?
 	if nil == zone {
-		return nil, fmt.Errorf("unable to find matching zone for denom %s", inCoin.GetDenom())
-	}
-
-	// does zone have LSM enabled?
-	if !zone.LiquidityModule {
-		return nil, fmt.Errorf("zone %s does not currently support redemptions", zone.ChainId)
+		return nil, fmt.Errorf("unable to find matching zone for denom %s", msg.Value.GetDenom())
 	}
 
 	// does destination address match the prefix registered against the zone?
@@ -82,7 +74,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	// does the user have sufficient assets to burn
-	if !k.BankKeeper.HasBalance(ctx, sender, inCoin) {
+	if !k.BankKeeper.HasBalance(ctx, sender, msg.Value) {
 		return nil, fmt.Errorf("account has insufficient balance of qasset to burn")
 	}
 
@@ -93,9 +85,10 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		rate = zone.RedemptionRate
 	}
 
-	nativeTokens := inCoin.Amount.ToDec().Mul(rate).TruncateInt()
+	nativeTokens := msg.Value.Amount.ToDec().Mul(rate).TruncateInt()
 
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
+	k.Logger(ctx).Error("outtokens", "o", outTokens)
 
 	heightBytes := make([]byte, 4)
 	binary.PutVarint(heightBytes, ctx.BlockHeight())
@@ -103,7 +96,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	hashString := hex.EncodeToString(hash[:])
 
 	// lock qAssets - how are we tracking this?
-	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(inCoin)); err != nil {
+	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(msg.Value)); err != nil {
 		return nil, err
 	}
 
@@ -127,6 +120,14 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	sumAmount := sdk.NewCoins()
 
+	// redeemType := "tokenize"
+	redeemType := "unbond" // TODO: revert to "tokenize"
+	// does zone have LSM enabled?
+	// if !zone.LiquidityModule {
+	// 	// unbond workflow.
+	// 	redeemType = "unbond"
+	// }
+
 	msgs := make(map[string][]sdk.Msg, 0)
 
 	for _, target := range targets.Sorted() {
@@ -134,16 +135,30 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 			if _, ok := msgs[target.DelegatorAddress]; !ok {
 				msgs[target.DelegatorAddress] = make([]sdk.Msg, 0)
 			}
-			msgs[target.DelegatorAddress] = append(msgs[target.DelegatorAddress], &stakingtypes.MsgTokenizeShares{
-				DelegatorAddress:    target.DelegatorAddress,
-				ValidatorAddress:    target.ValidatorAddress,
-				Amount:              target.Value[0],
-				TokenizedShareOwner: msg.DestinationAddress,
-			})
+			if redeemType == "tokenize" {
+				msgs[target.DelegatorAddress] = append(msgs[target.DelegatorAddress], &stakingtypes.MsgTokenizeShares{
+					DelegatorAddress:    target.DelegatorAddress,
+					ValidatorAddress:    target.ValidatorAddress,
+					Amount:              target.Value[0],
+					TokenizedShareOwner: msg.DestinationAddress,
+				})
+			} else {
+				msgs[target.DelegatorAddress] = append(msgs[target.DelegatorAddress], &stakingtypes.MsgUndelegate{
+					DelegatorAddress: target.DelegatorAddress,
+					ValidatorAddress: target.ValidatorAddress,
+					Amount:           target.Value[0],
+				})
+			}
 			sumAmount = sumAmount.Add(target.Value[0])
-			k.AddWithdrawalRecord(ctx, target.DelegatorAddress, target.ValidatorAddress, msg.DestinationAddress, target.Value[0], inCoin, hashString)
+			if _, found := k.GetWithdrawalRecord(ctx, zone, hashString, target.DelegatorAddress, target.ValidatorAddress); found {
+				fmt.Printf("cannot withdraw twice for the same delegator/validator tuple in a single transaction")
+			}
+			k.Logger(ctx).Info("Store", "del", target.DelegatorAddress, "val", target.ValidatorAddress, "hash", hashString, "chain", zone.ChainId)
+			k.AddWithdrawalRecord(ctx, zone, target.DelegatorAddress, target.ValidatorAddress, msg.DestinationAddress, target.Value[0], msg.Value, hashString, time.Unix(0, 0))
 		}
 	}
+
+	k.Logger(ctx).Error("messages", "m", msgs)
 
 	delegators := make([]string, 0, len(msgs))
 	for delegator := range msgs {
@@ -154,9 +169,9 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	for _, delegator := range delegators {
 		icaAccount, err := zone.GetDelegationAccountByAddress(delegator)
 		if err != nil {
-			panic(err) // panic here because something is terribly wrong if we cann't find the delegation bucket here!!!
+			panic(err) // panic here because something is terribly wrong if we can't find the delegation bucket here!!!
 		}
-		err = k.SubmitTx(ctx, msgs[delegator], icaAccount, "")
+		err = k.SubmitTx(ctx, msgs[delegator], icaAccount, hashString)
 		if err != nil {
 			k.Logger(ctx).Error("error submitting tx", "err", err)
 			return nil, err
@@ -175,7 +190,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		),
 		sdk.NewEvent(
 			types.EventTypeRedemptionRequest,
-			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Coin),
+			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Value.String()),
 			sdk.NewAttribute(types.AttributeKeyRedeemAmount, sumAmount.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
 			sdk.NewAttribute(types.AttributeKeyRecipientChain, zone.ChainId),

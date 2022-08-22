@@ -178,18 +178,12 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		if err != nil {
 			return err
 		}
+
 		if delegation, ok := k.GetDelegation(ctx, &zone, delegatorAddress, validatorAddress); ok {
 			err := k.RemoveDelegation(ctx, &zone, delegation)
 			if err != nil {
 				return err
 			}
-
-			ica, err := zone.GetDelegationAccountByAddress(delegatorAddress)
-			if err != nil {
-				return err
-			}
-			ica.DelegatedBalance = ica.DelegatedBalance.Sub(delegation.Amount)
-			k.SetZone(ctx, &zone)
 		}
 		return nil
 	}
@@ -246,6 +240,11 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	for idx, txn := range txs.TxResponses {
 		// req := tx.GetTxRequest{Hash: txn.TxHash}
 		// hashBytes := k.cdc.MustMarshal(&req)
+		_, found = k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, txn.TxHash))
+		if found {
+			k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
+			continue
+		}
 		k.HandleReceiptTransaction(ctx, txn, txs.Txs[idx], zone)
 		// k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}

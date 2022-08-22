@@ -3,7 +3,8 @@ global:
     timeout: 10s
     light-cache-size: 20
 chains:
-    - type: cosmos
+  qstest-1:
+      type: cosmos
       value:
         key: testkey
         chain-id: qstest-1
@@ -16,11 +17,12 @@ chains:
         timeout: 180s
         output-format: json
         sign-mode: direct
-    - type: cosmos
+  lstest-1:
+      type: cosmos
       value:
         key: testkey
         chain-id: lstest-1
-        rpc-addr: http://testzone:26657
+        rpc-addr: http://testzone1-1:26657
         account-prefix: cosmos
         keyring-backend: test
         gas-adjustment: 1.5
@@ -39,10 +41,8 @@ paths:
             chain-id: lstest-1
             client-id: 07-tendermint-0
             connection-id: connection-0
-        interchainquery:
-            query: true
-            buffer: 10
-            src-channel: channel-0
-        src-channel-filter:
-            rule: ""
-            channel-list: []
+        #interchainquery:
+        #    query: true
+        #    buffer: 10
+        #    src-channel: channel-0
+        src-channel-filter: {}

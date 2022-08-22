@@ -24,8 +24,9 @@ else
   rm -rf ${CHAIN_DIR}/hermes &> /dev/null
   rm -rf ${CHAIN_DIR}/icq &> /dev/null
   rm -rf ${CHAIN_DIR}/rly &> /dev/null
-
-  TIME=$(date --date '-2 minutes' +%Y-%m-%dT%H:%M:00Z -u)
+  
+  TIME=$(TZ=GMT0 date -v-2M +%Y-%m-%dT%H:%M:00Z)
+  #TIME=$(date --date '-2 minutes' +%Y-%m-%dT%H:%M:00Z -u)
   jq ".genesis_time = \"$TIME\"" ./${CHAIN_DIR}/backup/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/backup/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/backup/${CHAINID_0}/config/genesis.json{.new,}
   jq ".genesis_time = \"$TIME\"" ./${CHAIN_DIR}/backup/${CHAINID_0}a/config/genesis.json > ./${CHAIN_DIR}/backup/${CHAINID_0}a/config/genesis.json.new && mv ./${CHAIN_DIR}/backup/${CHAINID_0}a/config/genesis.json{.new,}
   jq ".genesis_time = \"$TIME\"" ./${CHAIN_DIR}/backup/${CHAINID_0}b/config/genesis.json > ./${CHAIN_DIR}/backup/${CHAINID_0}b/config/genesis.json.new && mv ./${CHAIN_DIR}/backup/${CHAINID_0}b/config/genesis.json{.new,}
@@ -50,13 +51,13 @@ docker-compose up --force-recreate -d quicksilver quicksilver2 quicksilver3 test
 echo "Chains created"
 sleep 10
 echo "Restoring keys"
-docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_1" $CHAINID_0
-docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_2" $CHAINID_1
+docker-compose run --rm hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_1" $CHAINID_0
+docker-compose run --rm hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_2" $CHAINID_1
 sleep 10
 echo "Creating IBC connection"
-docker-compose run hermes hermes -c /tmp/hermes.toml create connection $CHAINID_0 $CHAINID_1
+docker-compose run --rm hermes hermes -c /tmp/hermes.toml create connection $CHAINID_0 $CHAINID_1
 echo "Creating transfer channel"
-docker-compose run hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_0 connection-0
+docker-compose run --rm hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_0 connection-0
 echo "Tranfer channel created"
 docker-compose up --force-recreate -d hermes
 
@@ -65,19 +66,18 @@ echo "Launch and configure interchain query daemon"
 
 ICQ_ADDRESS_1=$($ICQ_RUN keys add test --chain quicksilver | jq .address -r)
 ICQ_ADDRESS_2=$($ICQ_RUN keys add test --chain liquidstaking1 | jq .address -r)
-#RLY_ADDRESS_3=$($RLY_RUN keys show qstest-1 testkey)
-#RLY_ADDRESS_4=$($RLY_RUN keys show lstest-1 testkey)
+RLY_ADDRESS_3=$($RLY_RUN keys show qstest-1 testkey)
+RLY_ADDRESS_4=$($RLY_RUN keys show lstest-1 testkey)
 
 $QS1_EXEC tx bank send val1 $ICQ_ADDRESS_1 1000uqck --chain-id $CHAINID_0 -y --keyring-backend=test
-#$QS1_EXEC tx bank send val1 $RLY_ADDRESS_3 1000uqck --chain-id $CHAINID_0 -y --keyring-backend=test
+$QS1_EXEC tx bank send val1 $RLY_ADDRESS_3 1000uqck --chain-id $CHAINID_0 -y --keyring-backend=test
 $TZ1_1_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
-#$TZ1_1_EXEC tx bank send val2 $RLY_ADDRESS_4 1000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
+$TZ1_1_EXEC tx bank send val2 $RLY_ADDRESS_4 1000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
 
 docker-compose up --force-recreate -d icq
-#docker-compose up --force-recreate -d relayer
+docker-compose up --force-recreate -d relayer
 
 #echo "Register $CHAINID_1 on quicksilver..."
-#$QS1_EXEC tx interchainstaking register connection-0 uqatom uatom cosmos --from demowallet1 --gas 10000000 --chain-id $CHAINID_0 -y --keyring-backend=test --multi-send --lsm-support
 cat $SCRIPT_DIR/registerzone.json | jq . -c | $QS1_EXEC tx gov submit-proposal register-zone /dev/fd/0 --from demowallet1 --chain-id $CHAINID_0 --gas 2000000 -y --keyring-backend=test
 sleep 5
 $QS1_EXEC tx gov vote 1 yes --from val1 --chain-id $CHAINID_0 -y --keyring-backend=test

@@ -17,14 +17,14 @@ service QuerySrvr {
   // Params returns the total set of minting parameters.
   rpc Queries(QueryRequestsRequest) returns (QueryRequestsResponse) {
     option (google.api.http).get =
-        "/quicksilver/interchainquery/v1/queries/{connection_id}";
+        "/quicksilver/interchainquery/v1/queries/{chain_id}";
   }
 }
 
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 message QueryRequestsRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
-  string connection_id = 2;
+  string chain_id = 2;
 }
 
 // QueryParamsResponse is the response type for the Query/Params RPC method.

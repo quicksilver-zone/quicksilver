@@ -11,7 +11,7 @@ func NewICAAccount(addr string, portID string, baseDenom string) (*ICAAccount, e
 	if _, err := utils.AccAddressFromBech32(addr, ""); err != nil {
 		return nil, err
 	}
-	return &ICAAccount{Address: addr, WithdrawalAddress: addr, Balance: sdk.Coins{}, DelegatedBalance: sdk.NewCoin(baseDenom, sdk.ZeroInt()), PortName: portID}, nil
+	return &ICAAccount{Address: addr, WithdrawalAddress: addr, Balance: sdk.Coins{}, PortName: portID}, nil
 }
 
 func (a *ICAAccount) SetWithdrawalAddress(addr string) error {
@@ -27,14 +27,6 @@ func (a *ICAAccount) SetBalance(coins sdk.Coins) error {
 		return err
 	}
 	a.Balance = coins
-	return nil
-}
-
-func (a *ICAAccount) SetDelegatedBalance(coin sdk.Coin) error {
-	if err := coin.Validate(); err != nil {
-		return err
-	}
-	a.DelegatedBalance = coin
 	return nil
 }
 

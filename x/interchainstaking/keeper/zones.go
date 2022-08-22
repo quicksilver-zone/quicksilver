@@ -64,6 +64,15 @@ func (k Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo type
 	}
 }
 
+func (k Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
+		out = out.Add(delegation.Amount)
+		return false
+	})
+	return out
+}
+
 // AllZonesInfos returns every zoneInfo in the store
 func (k Keeper) AllZones(ctx sdk.Context) []types.Zone {
 	zones := []types.Zone{}
@@ -166,19 +175,32 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 	// ? is this switch statement still required ?
 	// prior to callback we had no way to distinguish the originator
 	// with the query type in setAccountCb this is probably superfluous...
+	var err error
 	switch {
 	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
 		existing := zone.DepositAddress.Balance.AmountOf(coin.Denom)
-		zone.DepositAddress.Balance = zone.DepositAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
-		zone.DepositAddress.BalanceWaitgroup--
+		err = zone.DepositAddress.SetBalance(zone.DepositAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin)) // reset this denom
+		if err != nil {
+			return err
+		}
+		err = zone.DepositAddress.DecrementBalanceWaitgroup()
+		if err != nil {
+			return err
+		}
 		k.Logger(ctx).Info("Matched deposit address", "address", address, "wg", zone.DepositAddress.BalanceWaitgroup, "balance", zone.DepositAddress.Balance)
 		if zone.DepositAddress.BalanceWaitgroup == 0 {
 			k.depositInterval(ctx)(0, zone)
 		}
 	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
 		existing := zone.WithdrawalAddress.Balance.AmountOf(coin.Denom)
-		zone.WithdrawalAddress.Balance = zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin) // reset this denom
-		zone.WithdrawalAddress.BalanceWaitgroup--
+		err = zone.WithdrawalAddress.SetBalance(zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin)) // reset this denom
+		if err != nil {
+			return err
+		}
+		err = zone.WithdrawalAddress.DecrementBalanceWaitgroup()
+		if err != nil {
+			return err
+		}
 		k.Logger(ctx).Info("Matched withdrawal address", "address", address, "wg", zone.WithdrawalAddress.BalanceWaitgroup, "balance", zone.WithdrawalAddress.Balance)
 	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
 		k.Logger(ctx).Info("Matched performance address")
@@ -194,12 +216,12 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 
 		// TODO: figure out how this impacts delegations in progress / race conditions (in most cases, the duplicate delegation will just fail)
 		if !icaAccount.Balance.Empty() {
-			claims := k.AllWithdrawalRecords(ctx, icaAccount.Address)
+			claims := k.AllZoneDelegatorWithdrawalRecords(ctx, &zone, icaAccount.Address)
 			if len(claims) > 0 {
 				// should we reconcile here?
 				k.Logger(ctx).Info("Outstanding Withdrawal Claims", "count", len(claims))
 				for _, claim := range claims {
-					if claim.Status == WithdrawStatusTokenize {
+					if claim.Status == WithdrawStatusTokenize || claim.Status == WithdrawStatusUnbond {
 						// if the claim has tokenize status AND then remove any coins in the balance that match that validator.
 						// so we don't try to re-delegate any recently redeemed tokens that haven't been sent yet.
 						if strings.HasPrefix(coin.Denom, claim.Validator) {
@@ -217,7 +239,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 		if zone.WithdrawalAddress.BalanceWaitgroup == 0 {
 			if !icaAccount.Balance.Empty() {
 				k.Logger(ctx).Info("Delegate account balance is non-zero; delegating!", "to_delegate", icaAccount.Balance)
-				valPlan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegationBinsMap(ctx, &zone), zone, coin, zone.GetAggregateIntentOrDefault())
+				valPlan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegatedAmount(ctx, &zone), k.GetDelegationBinsMap(ctx, &zone), coin, zone.GetAggregateIntentOrDefault())
 				if err != nil {
 					return err
 				}
@@ -389,7 +411,7 @@ func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.Zone, requests
 
 	bins := k.GetDelegationBinsMap(ctx, &zone)
 
-	deltas := types.DetermineIntentDelta(bins, zone.GetDelegatedAmount().Amount, zone.GetAggregateIntentOrDefault())
+	deltas := types.DetermineIntentDelta(bins, k.GetDelegatedAmount(ctx, &zone).Amount, zone.GetAggregateIntentOrDefault())
 
 	requests = ApplyDeltasToIntent(requests, deltas, bins)
 

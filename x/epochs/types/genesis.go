@@ -1,7 +1,7 @@
 package types
 
 import (
-	"errors"
+	"fmt"
 	"time"
 )
 
@@ -38,15 +38,15 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	epochIdentifiers := map[string]bool{}
-	for _, epoch := range gs.Epochs {
+	for i, epoch := range gs.Epochs {
 		if epoch.Identifier == "" {
-			return errors.New("epoch identifier should NOT be empty")
+			return fmt.Errorf("value #%d: epoch identifier should NOT be empty", i+1)
 		}
 		if epochIdentifiers[epoch.Identifier] {
-			return errors.New("epoch identifier should be unique")
+			return fmt.Errorf("value #%d: epoch identifier should be unique, got duplicate %q", i+1, epoch.Identifier)
 		}
-		if epoch.Duration == 0 {
-			return errors.New("epoch duration should NOT be 0")
+		if epoch.Duration <= 0 {
+			return fmt.Errorf("value #%d, Identifier: %q: epoch duration should be >0", i+1, epoch.Identifier)
 		}
 		epochIdentifiers[epoch.Identifier] = true
 	}

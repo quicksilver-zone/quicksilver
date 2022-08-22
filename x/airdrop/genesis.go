@@ -1,6 +1,8 @@
 package airdrop
 
 import (
+	"fmt"
+
 	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 
@@ -28,10 +30,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	moduleBalance := k.GetModuleAccountBalance(ctx)
 	if sum > moduleBalance.Amount.Uint64() {
-		panic("insufficient airdrop module account balance")
+		panic(fmt.Sprintf("insufficient airdrop module account balance for airdrop module account %s, expected %d", k.GetModuleAccountAddress(ctx), sum))
 	}
-
-	moduleAddress := k.GetModuleAccountAddress(ctx)
 
 	for _, zd := range genState.ZoneDrops {
 		zs, ok := zsum[zd.ChainId]
@@ -43,11 +43,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic("zone sum does not match zone allocation")
 		}
 
-		zonedropAddress := k.GetZoneDropAccountAddress(ctx, zd.ChainId)
-		err := k.SendCoinsFromModuleToModule(
+		zonedropAddress := k.GetZoneDropAccountAddress(zd.ChainId)
+
+		err := k.SendCoinsFromModuleToAccount(
 			ctx,
-			moduleAddress.String(),
-			zonedropAddress.String(),
+			types.ModuleName,
+			zonedropAddress,
 			sdk.NewCoins(
 				sdk.NewCoin(
 					k.BondDenom(ctx),

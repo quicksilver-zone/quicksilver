@@ -3,6 +3,7 @@ package quicksilver.interchainstaking.v1;
 
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "quicksilver/interchainstaking/v1/genesis.proto";
 import "google/api/annotations.proto";
 
@@ -35,7 +36,8 @@ message MsgRequestRedemption {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string coin = 1 [ (gogoproto.moretags) = "yaml:\"coin\"" ];
+  cosmos.base.v1beta1.Coin value = 1
+      [ (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"coin\"" ];
   string destination_address = 2
       [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string from_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
