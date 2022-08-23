@@ -25,7 +25,7 @@ func (k msgServer) Claim(goCtx context.Context, msg *types.MsgClaim) (*types.Msg
 
 	action := types.Action(msg.Action)
 
-	amount, err := k.Keeper.Claim(ctx, msg.ChainId, action, msg.Address, msg.Proof)
+	amount, err := k.Keeper.Claim(ctx, msg.ChainId, action, msg.Address, *msg.Proof)
 	if err != nil {
 		return nil, err
 	}

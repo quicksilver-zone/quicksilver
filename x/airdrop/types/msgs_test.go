@@ -11,7 +11,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		ChainId string
 		Action  int32
 		Address string
-		Proof   []byte
+		Proof   Proof
 	}
 	tests := []struct {
 		name    string
@@ -29,7 +29,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "",
 				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-				Proof:   []byte{},
+				Proof:   Proof{},
 			},
 			true,
 		},
@@ -39,7 +39,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  -1,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-				Proof:   []byte{},
+				Proof:   Proof{},
 			},
 			true,
 		},
@@ -49,7 +49,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  999,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-				Proof:   []byte{},
+				Proof:   Proof{},
 			},
 			true,
 		},
@@ -59,7 +59,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  0,
 				Address: "",
-				Proof:   []byte{},
+				Proof:   Proof{},
 			},
 			true,
 		},
@@ -69,7 +69,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lkq437x2w",
-				Proof:   []byte{},
+				Proof:   Proof{},
 			},
 			true,
 		},
@@ -81,7 +81,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-				Proof:   []byte{},
+				Proof:   Proof{},
 			},
 			false,
 		},
@@ -92,7 +92,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: tt.fields.ChainId,
 				Action:  tt.fields.Action,
 				Address: tt.fields.Address,
-				Proof:   tt.fields.Proof,
+				Proof:   &tt.fields.Proof,
 			}
 			err := msg.ValidateBasic()
 			if tt.wantErr {

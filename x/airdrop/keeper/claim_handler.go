@@ -6,10 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	osmosislockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
 )
 
-func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proof []byte) (uint64, error) {
+func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proof types.Proof) (uint64, error) {
 	// action already completed, nothing to claim
 	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
 		return 0, fmt.Errorf("%s already completed", types.Action_name[int32(action)])
@@ -35,7 +38,7 @@ func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.
 	case types.ActionQSGov:
 		return k.handleGovernanceParticipation(ctx, &cr, action)
 	case types.ActionGbP:
-		// TODO: implement check once GbP is implemented
+		// TODO: implement handler once GbP is implemented
 	case types.ActionOsmosis:
 		return k.handleOsmosisLP(ctx, &cr, action, proof)
 	default:
@@ -86,12 +89,12 @@ func (k Keeper) handleGovernanceParticipation(ctx sdk.Context, cr *types.ClaimRe
 }
 
 // handleOsmosisLP
-func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proof []byte) (uint64, error) {
-	if err := k.verifyOsmosisLP(ctx, *cr, proof); err != nil {
+func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proof types.Proof) (uint64, error) {
+	if err := k.verifyOsmosisLP(ctx, proof, *cr); err != nil {
 		return 0, err
 	}
 
-	return 0, nil
+	return k.completeClaim(ctx, cr, action)
 }
 
 // -------------
@@ -196,8 +199,48 @@ func (k Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) e
 // verifyOsmosisLP utilizes cross-chain-verification (XCV) to indicate if the
 // given address provides any liquidity of the zones qAssets on the Osmosis
 // chain.
-func (k Keeper) verifyOsmosisLP(ctx sdk.Context, cr types.ClaimRecord, proof []byte) error {
-	return fmt.Errorf("not implemented")
+//
+// It utilizes Osmosis query:
+//
+//	rpc LockedByID(LockedRequest) returns (LockedResponse);
+func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proof types.Proof, cr types.ClaimRecord) error {
+	// get Osmosis zone
+	var osmoZone *icstypes.Zone
+	k.icsKeeper.IterateZones(ctx, func(_ int64, zone icstypes.Zone) (stop bool) {
+		if zone.AccountPrefix == "osmo" {
+			osmoZone = &zone
+			return true
+		}
+		return false
+	})
+	if osmoZone == nil {
+		return fmt.Errorf("unable to find Osmosis zone")
+	}
+
+	// validate proof tx
+	if err := utils.ValidateProofOps(
+		ctx,
+		&k.icsKeeper.IBCKeeper,
+		osmoZone.ConnectionId,
+		osmoZone.ChainId,
+		proof.Height,
+		"lockup",
+		proof.Key,
+		proof.Data,
+		proof.ProofOps,
+	); err != nil {
+		return err
+	}
+
+	// verify proof lock owner address is claim record address
+	var lockedResp osmosislockuptypes.LockedResponse
+	k.cdc.MustUnmarshal(proof.Data, &lockedResp)
+
+	if lockedResp.Lock.Owner != cr.Address {
+		return fmt.Errorf("invalid lock owner, expected %s got %s", cr.Address, lockedResp.Lock.Owner)
+	}
+
+	return nil
 }
 
 // -----------

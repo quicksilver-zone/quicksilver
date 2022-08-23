@@ -204,7 +204,7 @@ func (k Keeper) Claim(
 	chainID string,
 	action types.Action,
 	address string,
-	proof []byte,
+	proof types.Proof,
 ) (uint64, error) {
 	// check action in bounds
 	if !action.InBounds() {
