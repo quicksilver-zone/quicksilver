@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -10,6 +11,9 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	osmosislockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
+
+	participationrewardskeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
+	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proof types.Proof) (uint64, error) {
@@ -232,12 +236,46 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proof types.Proof, cr types.Cla
 		return err
 	}
 
-	// verify proof lock owner address is claim record address
 	var lockedResp osmosislockuptypes.LockedResponse
 	k.cdc.MustUnmarshal(proof.Data, &lockedResp)
 
+	// verify proof lock owner address is claim record address
 	if lockedResp.Lock.Owner != cr.Address {
 		return fmt.Errorf("invalid lock owner, expected %s got %s", cr.Address, lockedResp.Lock.Owner)
+	}
+
+	// verify pool is for the relevant zone
+	if err := k.verifyPool(ctx, lockedResp, cr.ChainId); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k Keeper) verifyPool(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, chainID string) error {
+	gammdenom := lockedResp.Lock.Coins.GetDenomByIndex(0)
+	poolID := "osmosis/pool" + gammdenom[strings.LastIndex(gammdenom, "/"):]
+	pd, ok := k.prKeeper.GetProtocolData(ctx, poolID)
+	if !ok {
+		return fmt.Errorf("unable to obtain protocol data for %s", poolID)
+	}
+
+	ipool, err := participationrewardskeeper.UnmarshalProtocolData("osmosispool", pd.Data)
+	if err != nil {
+		return err
+	}
+	pool, _ := ipool.(participationrewardstypes.OsmosisPoolProtocolData)
+
+	poolMatch := false
+	for _, z := range pool.Zones {
+		if z == chainID {
+			poolMatch = true
+			break
+		}
+	}
+
+	if !poolMatch {
+		return fmt.Errorf("invalid zone, pool zone must match %s", chainID)
 	}
 
 	return nil

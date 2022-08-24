@@ -11,4 +11,5 @@ type OsmosisPoolProtocolData struct {
 	PoolName    string
 	LastUpdated time.Time
 	PoolData    osmosisgammtypes.PoolI
+	Zones       []string
 }
