@@ -16,6 +16,14 @@ import (
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
+var (
+	tier1 = "0.05"
+	tier2 = "0.10"
+	tier3 = "0.15"
+	tier4 = "0.22"
+	tier5 = "0.30"
+)
+
 func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proof types.Proof) (uint64, error) {
 	// action already completed, nothing to claim
 	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
@@ -26,15 +34,15 @@ func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.
 	case types.ActionInitialClaim:
 		return 0, nil
 	case types.ActionDepositT1:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr("0.05"))
+		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier1))
 	case types.ActionDepositT2:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr("0.10"))
+		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier2))
 	case types.ActionDepositT3:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr("0.15"))
+		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier3))
 	case types.ActionDepositT4:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr("0.22"))
+		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier4))
 	case types.ActionDepositT5:
-		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr("0.30"))
+		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier5))
 	case types.ActionStakeQCK:
 		return k.handleBondedDelegation(ctx, &cr, action)
 	case types.ActionSignalIntent:
@@ -245,14 +253,15 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proof types.Proof, cr types.Cla
 	}
 
 	// verify pool is for the relevant zone
-	if err := k.verifyPool(ctx, lockedResp, cr.ChainId); err != nil {
+	// and that minimum liquidity threshold is met
+	if err := k.verifyPool(ctx, lockedResp, cr); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (k Keeper) verifyPool(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, chainID string) error {
+func (k Keeper) verifyPool(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, cr types.ClaimRecord) error {
 	gammdenom := lockedResp.Lock.Coins.GetDenomByIndex(0)
 	poolID := "osmosis/pool" + gammdenom[strings.LastIndex(gammdenom, "/"):]
 	pd, ok := k.prKeeper.GetProtocolData(ctx, poolID)
@@ -266,16 +275,39 @@ func (k Keeper) verifyPool(ctx sdk.Context, lockedResp osmosislockuptypes.Locked
 	}
 	pool, _ := ipool.(participationrewardstypes.OsmosisPoolProtocolData)
 
-	poolMatch := false
-	for _, z := range pool.Zones {
-		if z == chainID {
-			poolMatch = true
+	poolDenom := ""
+	for zk, zd := range pool.Zones {
+		if zk == cr.ChainId {
+			poolDenom = zd
 			break
 		}
 	}
 
-	if !poolMatch {
-		return fmt.Errorf("invalid zone, pool zone must match %s", chainID)
+	if poolDenom == "" {
+		return fmt.Errorf("invalid zone, pool zone must match %s", cr.ChainId)
+	}
+
+	// calculate user gamm ratio and LP asset amount
+	ugamm := lockedResp.Lock.Coins.AmountOf(gammdenom) // user's gamm amount
+	pgamm := pool.PoolData.GetTotalShares()            // total pool gamm amount
+	if pgamm.IsZero() {
+		return fmt.Errorf("empty pool, %s", poolID)
+	}
+	uratio := sdk.NewDecFromInt(ugamm).QuoInt(pgamm)
+
+	zasset := pool.PoolData.GetTotalPoolLiquidity(ctx).AmountOf(poolDenom) // pool zone asset amount
+	uAmount := uratio.MulInt(zasset).TruncateInt()
+
+	// calculate target amount
+	dThreshold := sdk.MustNewDecFromStr(tier4)
+	if err := k.verifyDeposit(ctx, cr, dThreshold); err != nil {
+		return fmt.Errorf("%w, must reach at least %s of %d", err, tier4, cr.BaseValue)
+	}
+	tAmount := dThreshold.MulInt64(int64(cr.BaseValue / 2)).TruncateInt()
+
+	// check liquidity threshold
+	if uAmount.LT(tAmount) {
+		return fmt.Errorf("insufficient liquidity, expects at least %d, got %d", tAmount, uAmount)
 	}
 
 	return nil

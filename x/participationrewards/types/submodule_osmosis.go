@@ -11,5 +11,5 @@ type OsmosisPoolProtocolData struct {
 	PoolName    string
 	LastUpdated time.Time
 	PoolData    osmosisgammtypes.PoolI
-	Zones       []string
+	Zones       map[string]string // chainID: IBC/denom
 }
