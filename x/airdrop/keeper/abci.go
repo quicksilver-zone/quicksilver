@@ -12,6 +12,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 func (k Keeper) EndBlocker(ctx sdk.Context) {
 	for _, zd := range k.UnconcludedAirdrops(ctx) {
 		if err := k.EndZoneDrop(ctx, zd.ChainId); err != nil {
+			// failure in EndBlocker should panic
 			panic(err)
 		}
 	}

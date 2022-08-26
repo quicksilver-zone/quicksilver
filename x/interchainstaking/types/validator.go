@@ -7,6 +7,10 @@ import (
 )
 
 func (v Validator) SharesToTokens(shares sdk.Dec) sdk.Int {
+	if v.DelegatorShares.IsZero() {
+		return sdk.ZeroInt()
+	}
+
 	return v.VotingPower.ToDec().Quo(v.DelegatorShares).TruncateInt()
 }
 
@@ -37,6 +41,12 @@ func (di DelegatorIntent) Normalize() DelegatorIntent {
 	for _, i := range di.Sorted() {
 		summedWeight = summedWeight.Add(i.Weight)
 	}
+
+	// zero summed weight, we should panic here, something is very wrong...
+	if summedWeight.IsZero() {
+		panic("zero summed weight")
+	}
+
 	for _, i := range di.Sorted() {
 		i.Weight = i.Weight.QuoTruncate(summedWeight)
 	}

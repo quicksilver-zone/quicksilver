@@ -459,7 +459,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.
 }
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time) error {
-	panic("not implemented")
+	return fmt.Errorf("not implemented")
 }
 
 func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, hash string) error {
@@ -830,7 +830,12 @@ func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdk.Coi
 	var msgs []sdk.Msg
 
 	dust := rewards.Amount
-	portion := rewards.Amount.ToDec().Quo(sdk.NewDec(int64(len(zone.DelegationAddresses)))).TruncateInt()
+	numDelegators := len(zone.DelegationAddresses)
+	if numDelegators == 0 {
+		// zone has no delegators, we must panic here, something is very wrong...
+		panic("internal zone error, zone has no delegators")
+	}
+	portion := rewards.Amount.ToDec().Quo(sdk.NewDec(int64(numDelegators))).TruncateInt()
 	for _, da := range zone.GetDelegationAccounts() {
 		msgs = append(
 			msgs,

@@ -132,8 +132,9 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	k.Logger(ctx).Info("zone voting power", "zone", zone.ChainId, "total voting power", zs.TotalVotingPower)
 
 	if zs.TotalVotingPower.IsZero() {
-		k.Logger(ctx).Error("zone invalid, zero voting power", "zone", zone)
-		panic("this should never happen!")
+		err := fmt.Errorf("invalid zone, zero voting power")
+		k.Logger(ctx).Error(err.Error(), "zone", zone)
+		return err
 	}
 
 	// calculate power percentage and normalized distribution scores

@@ -83,7 +83,8 @@ func (k Keeper) AllIntentsAsPointer(ctx sdk.Context, zone types.Zone, snapshot b
 	return intents
 }
 
-// AllOrdinalizedIntents returns every intent in the store for the specified zone
+// AllOrdinalizedIntents returns every intent in the store for the specified zone.
+// This function will panic on failure.
 func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot bool) []types.DelegatorIntent {
 	intents := []types.DelegatorIntent{}
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
@@ -99,6 +100,7 @@ func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot
 	return intents
 }
 
+// This function will panic on failure.
 func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) {
 	snapshot := false
 	intents := map[string]*types.ValidatorIntent{}
@@ -123,6 +125,10 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) {
 
 		return false
 	})
+	// sum is zero, we must panic here, something is very wrong...
+	if ordinalizedIntentSum.IsZero() {
+		panic("ordinalized intent sum is zero, this should never happen")
+	}
 
 	for key, val := range intents {
 		val.Weight = val.Weight.Quo(ordinalizedIntentSum)
@@ -133,6 +139,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) {
 	k.SetZone(ctx, &zone)
 }
 
+// This function will panic on failure.
 func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types.Zone, inAmount sdk.Coins, memo string) {
 	snapshot := false
 	// this is here because we need access to the bankKeeper to ordinalize intent
