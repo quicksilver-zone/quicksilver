@@ -265,7 +265,10 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 		k.Logger(ctx).Error("unable to unmarshal balance", "zone", zone.ChainId, "err", err)
 		return err
 	}
-	_, addr, _ := bech32.DecodeAndConvert(address)
+	_, addr, err := bech32.DecodeAndConvert(address)
+	if err != nil {
+		return err
+	}
 	data := banktypes.CreateAccountBalancesPrefix(addr)
 
 	var icaAccount *types.ICAAccount
@@ -406,7 +409,7 @@ func SatisfyRequestsForBins(requests types.Allocations, bins types.Allocations, 
 	return requests
 }
 
-func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.Zone, requests types.Allocations) RedemptionTargets {
+func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.Zone, requests types.Allocations) (RedemptionTargets, error) {
 	out := RedemptionTargets{}
 
 	bins := k.GetDelegationBinsMap(ctx, &zone)
@@ -420,7 +423,10 @@ func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.Zone, requests
 		valoper := allocation.Address
 		remainingTokens := allocation.Amount.AmountOf(types.GenericToken)
 
-		_, valAddr, _ := bech32.DecodeAndConvert(valoper)
+		_, valAddr, err := bech32.DecodeAndConvert(valoper)
+		if err != nil {
+			return RedemptionTargets{}, err
+		}
 
 		delegations := k.GetValidatorDelegations(ctx, &zone, valAddr)
 		sort.SliceStable(delegations, func(i, j int) bool {
@@ -440,12 +446,12 @@ func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.Zone, requests
 		}
 
 		if remainingTokens.GT(sdk.ZeroInt()) {
-			panic("redemption with remaining amount:" + remainingTokens.String())
+			return RedemptionTargets{}, fmt.Errorf("redemption with remaining amount: %s", remainingTokens.String())
 		}
 
 	}
 
-	return out
+	return out, nil
 }
 
 func (k Keeper) InitPerformanceDelegations(ctx sdk.Context, zone types.Zone, response []byte) error {
