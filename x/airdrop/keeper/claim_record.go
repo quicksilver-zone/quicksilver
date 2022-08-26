@@ -204,7 +204,7 @@ func (k Keeper) Claim(
 	chainID string,
 	action types.Action,
 	address string,
-	proof types.Proof,
+	proofs []*types.Proof,
 ) (uint64, error) {
 	// check action in bounds
 	if !action.InBounds() {
@@ -228,5 +228,5 @@ func (k Keeper) Claim(
 		return 0, nil
 	}
 
-	return k.HandleClaim(ctx, cr, action, proof)
+	return k.HandleClaim(ctx, cr, action, proofs)
 }
