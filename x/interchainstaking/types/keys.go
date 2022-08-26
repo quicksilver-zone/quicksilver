@@ -1,5 +1,12 @@
 package types
 
+import (
+	"bytes"
+	"fmt"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "interchainstaking"
@@ -49,4 +56,33 @@ var (
 
 func KeyPrefix(p string) []byte {
 	return []byte(p)
+}
+
+// ParseStakingDelegationKey parses the KV store key for a delegation from Cosmos x/staking module,
+// as defined here: https://github.com/cosmos/cosmos-sdk/blob/v0.45.6/x/staking/types/keys.go#L180
+func ParseStakingDelegationKey(key []byte) (sdk.AccAddress, sdk.ValAddress, error) {
+	if len(key) < 1 {
+		return nil, nil, fmt.Errorf("out of bounds reading byte 0")
+	}
+	if !bytes.Equal(key[0:1], []byte{0x31}) {
+		return []byte{}, []byte{}, fmt.Errorf("not a valid delegation key")
+	}
+	if len(key) < 2 {
+		return nil, nil, fmt.Errorf("out of bounds reading delegator address length")
+	}
+	delAddrLen := int(key[1])
+	if len(key) < 2+delAddrLen {
+		return nil, nil, fmt.Errorf("out of bounds reading delegator address")
+	}
+	delAddr := key[2 : 2+delAddrLen]
+	// use valAddrLen to validate the val address has not been truncated.
+	if len(key) < 2+delAddrLen {
+		return nil, nil, fmt.Errorf("out of bounds reading delegator address length")
+	}
+	valAddrLen := int(key[2+delAddrLen])
+	if len(key) < 3+delAddrLen+valAddrLen {
+		return nil, nil, fmt.Errorf("out of bounds reading validator address")
+	}
+	valAddr := key[3+delAddrLen : 3+delAddrLen+valAddrLen]
+	return delAddr, valAddr, nil
 }

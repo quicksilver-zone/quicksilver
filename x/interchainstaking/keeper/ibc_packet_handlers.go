@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -579,17 +578,6 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, 
 	}
 
 	return "", fmt.Errorf("unable to find validator for token %s", amount.Denom)
-}
-
-func parseDelegationKey(key []byte) ([]byte, []byte, error) {
-	if !bytes.Equal(key[0:1], []byte{0x31}) {
-		return []byte{}, []byte{}, fmt.Errorf("not a valid delegation key")
-	}
-	delAddrLen := key[1]
-	delAddr := key[2:delAddrLen]
-	// valAddrLen := key[2+delAddrLen]
-	valAddr := key[3+delAddrLen:]
-	return delAddr, valAddr, nil
 }
 
 func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.Zone, delegatorAddress string, args []byte) error {

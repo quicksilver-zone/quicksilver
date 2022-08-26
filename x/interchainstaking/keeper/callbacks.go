@@ -166,7 +166,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 
 	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
 		// delegation never gets removed, even with zero shares.
-		delegator, validator, err := parseDelegationKey(query.Request)
+		delegator, validator, err := types.ParseStakingDelegationKey(query.Request)
 		if err != nil {
 			return err
 		}
