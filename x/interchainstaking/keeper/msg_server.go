@@ -172,7 +172,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	for _, delegator := range delegators {
 		icaAccount, err := zone.GetDelegationAccountByAddress(delegator)
 		if err != nil {
-			return nil, err // panic here because something is terribly wrong if we can't find the delegation bucket here!!!
+			panic(err) // panic here because something is terribly wrong if we can't find the delegation bucket here!!!
 		}
 		err = k.SubmitTx(ctx, msgs[delegator], icaAccount, hashString)
 		if err != nil {
