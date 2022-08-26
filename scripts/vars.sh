@@ -11,6 +11,14 @@ done
 
 set -xe
 
+SED="sed -i"
+TIME="$(date --date '-2 minutes' +%Y-%m-%dT%H:%M:00Z -u)"
+
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    SED="sed -i ''"
+    TIME="$(TZ=GMT0 date -v-2M +%Y-%m-%dT%H:%M:00Z)"
+fi
+
 QS_IMAGE=quicksilverzone/quicksilver
 QS_VERSION=latest
 TZ_IMAGE=quicksilverzone/testzone
