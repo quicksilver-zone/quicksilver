@@ -44,7 +44,7 @@ func (di DelegatorIntent) Normalize() DelegatorIntent {
 
 	// zero summed weight, we should panic here, something is very wrong...
 	if summedWeight.IsZero() {
-		panic("zero summed weight")
+		return di
 	}
 
 	for _, i := range di.Sorted() {
