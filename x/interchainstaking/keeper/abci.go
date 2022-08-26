@@ -20,10 +20,17 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 		if ctx.BlockHeight()%10 == 0 {
 			if err := k.EnsureWithdrawalAddresses(ctx, &zone); err != nil {
 				k.Logger(ctx).Error(err.Error())
-				// panic(err)  // cannot panic in begin blocker; codeQL will fail this.
+				// cannot panic in begin blocker; as this will crash the chain.
+				// failing here is not terminal, but we should log as an error.
+				// we don't return on failure here as we still want to attempt
+				// the unrelated tasks below.
 			}
 			if err := k.HandleCompletedUnbondings(ctx, &zone); err != nil {
 				k.Logger(ctx).Error(err.Error())
+				// similar to above, we can and need not panic here; logging the error is sufficient.
+				// an error here is not expected, but also not terminal.
+				// we don't return on failure here as we still want to attempt
+				// the unrelated tasks below.
 			}
 		}
 		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
@@ -38,6 +45,9 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 						err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
 						if err != nil {
 							k.Logger(ctx).Error("unable to trigger valset update query")
+							// failing to emit the valset update is not terminal but constitutes
+							// an error, as if this starts happening frequent it is something
+							// we should investigate.
 						}
 						zone.IbcNextValidatorsHash = tmConsState.NextValidatorsHash.Bytes()
 						k.SetZone(ctx, &zone)

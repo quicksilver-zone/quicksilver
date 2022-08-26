@@ -166,7 +166,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 
 	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
 		// delegation never gets removed, even with zero shares.
-		delegator, validator, err := parseDelegationKey(query.Request)
+		delegator, validator, err := types.ParseStakingDelegationKey(query.Request)
 		if err != nil {
 			return err
 		}
@@ -428,6 +428,13 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+	// strip the BalancesPrefix from the request key, as AddressFromBalancesStore expects this to be removed
+	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
+	// but lets us be safe here :)
+	if len(query.Request) < 2 {
+		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainId, "error", "request length is too short")
+		return fmt.Errorf("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
 	accAddr, err := banktypes.AddressFromBalancesStore(balancesStore)

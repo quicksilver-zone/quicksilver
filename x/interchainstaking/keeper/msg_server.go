@@ -112,7 +112,10 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	intentMap := userIntent.ToAllocations(nativeTokens)
 
-	targets := k.GetRedemptionTargets(ctx, *zone, intentMap) // map[string][string]sdk.Coin
+	targets, err := k.GetRedemptionTargets(ctx, *zone, intentMap) // map[string][string]sdk.Coin
+	if err != nil {
+		return nil, err
+	}
 
 	if len(targets) == 0 {
 		return nil, fmt.Errorf("targets can never be zero length")
@@ -151,7 +154,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 			}
 			sumAmount = sumAmount.Add(target.Value[0])
 			if _, found := k.GetWithdrawalRecord(ctx, zone, hashString, target.DelegatorAddress, target.ValidatorAddress); found {
-				fmt.Printf("cannot withdraw twice for the same delegator/validator tuple in a single transaction")
+				return nil, fmt.Errorf("cannot withdraw twice for the same delegator/validator tuple in a single transaction")
 			}
 			k.Logger(ctx).Info("Store", "del", target.DelegatorAddress, "val", target.ValidatorAddress, "hash", hashString, "chain", zone.ChainId)
 			k.AddWithdrawalRecord(ctx, zone, target.DelegatorAddress, target.ValidatorAddress, msg.DestinationAddress, target.Value[0], msg.Value, hashString, time.Unix(0, 0))

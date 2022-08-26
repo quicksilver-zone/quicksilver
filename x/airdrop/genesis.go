@@ -18,9 +18,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	sum := uint64(0)
 	zsum := make(map[string]uint64)
 	for _, cr := range genState.ClaimRecords {
-		if _, ok := zsum[cr.ChainId]; !ok {
-			zsum[cr.ChainId] = 0
-		}
 		zsum[cr.ChainId] += cr.MaxAllocation
 		sum += cr.MaxAllocation
 

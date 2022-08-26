@@ -74,7 +74,10 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 	k.Logger(ctx).Info("Found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "sender", senderAddress, "local", accAddress.String(), "chain id", zone.ChainId, "amount", coins, "hash", hash)
 	// create receipt
 
-	k.UpdateIntent(ctx, accAddress, zone, coins, memo)
+	if err := k.UpdateIntent(ctx, accAddress, zone, coins, memo); err != nil {
+		k.Logger(ctx).Error("unable to update intent. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
+		return
+	}
 	if err := k.MintQAsset(ctx, accAddress, zone, coins); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 		return

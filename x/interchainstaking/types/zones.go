@@ -87,33 +87,38 @@ COINS:
 	return out
 }
 
-func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) ValidatorIntents {
+func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (ValidatorIntents, error) {
 	// should we be return DelegatorIntent here?
 	out := make(ValidatorIntents)
 
 	if len(memo) == 0 {
-		return out
+		return out, fmt.Errorf("memo length unexpectedly zero")
 	}
 
 	memoBytes, err := base64.StdEncoding.DecodeString(memo)
 	if err != nil {
-		fmt.Println("unable to determine intent from memo: Failed to decode base64 message", err)
-		return out
+		return out, fmt.Errorf("unable to determine intent from memo: Failed to decode base64 message: %s", err.Error())
 	}
 
 	if len(memoBytes)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
-		fmt.Println("unable to determine intent from memo: Message was incorrect length", len(memoBytes))
-		return out
+		return out, fmt.Errorf("unable to determine intent from memo: Message was incorrect length: %d", len(memoBytes))
 	}
 
 	for index := 0; index < len(memoBytes); {
-		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(int64(memoBytes[index]))).QuoInt(sdk.NewInt(200))
+		// truncate weight to 200
+		rawWeight := int64(memoBytes[index])
+		if rawWeight > 200 {
+			return ValidatorIntents{}, fmt.Errorf("out of bounds value received in memo intent message; expected 0-200, got %d", rawWeight)
+		}
+		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(rawWeight)).QuoInt(sdk.NewInt(200))
 		coinWeight := sdkWeight.MulInt(coins.AmountOf(z.BaseDenom))
 		index++
 		address := memoBytes[index : index+20]
 		index += 20
-		valAddr, _ := bech32.ConvertAndEncode(z.AccountPrefix+"valoper", address)
-
+		valAddr, err := bech32.ConvertAndEncode(z.AccountPrefix+"valoper", address)
+		if err != nil {
+			return ValidatorIntents{}, err
+		}
 		val, ok := out[valAddr]
 		if !ok {
 			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
@@ -121,7 +126,7 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) Validat
 		val.Weight = val.Weight.Add(coinWeight)
 		out[valAddr] = val
 	}
-	return out
+	return out, nil
 }
 
 func (z *Zone) GetValidatorsSorted() []*Validator {

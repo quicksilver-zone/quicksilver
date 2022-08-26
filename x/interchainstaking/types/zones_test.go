@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -129,7 +130,8 @@ func TestBase64MemoToIntent(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		out := zone.ConvertMemoToOrdinalIntents(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
+		out, err := zone.ConvertMemoToOrdinalIntents(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
+		require.NoError(t, err)
 		for k, v := range out {
 			if !tc.expectedIntent[k].Equal(v.Weight) {
 				t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[k])
