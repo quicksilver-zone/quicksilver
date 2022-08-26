@@ -104,6 +104,10 @@ func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
 }
 
 func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Zone, inCoins sdk.Coins) error {
+	if zone.RedemptionRate.IsZero() {
+		return fmt.Errorf("zero redemption rate")
+	}
+
 	outCoins := sdk.Coins{}
 	for _, inCoin := range inCoins {
 		outAmount := inCoin.Amount.ToDec().Quo(zone.RedemptionRate).TruncateInt()
@@ -113,12 +117,12 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Z
 	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", outCoins)
 	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, outCoins)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, outCoins)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	k.Logger(ctx).Info("Transferred qAssets to sender", "assets", outCoins, "sender", sender)
 

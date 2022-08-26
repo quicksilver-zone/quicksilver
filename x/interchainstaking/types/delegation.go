@@ -21,13 +21,14 @@ func NewDelegation(delegatorAddr string, validatorAddr string, amount sdk.Coin) 
 	}
 }
 
-// MustMarshalDelegation returns the delegation bytes. Panics if fails
+// MustMarshalDelegation returns the delegation bytes.
+// This function will panic on failure.
 func MustMarshalDelegation(cdc codec.BinaryCodec, delegation Delegation) []byte {
 	return cdc.MustMarshal(&delegation)
 }
 
 // MustUnmarshalDelegation return the unmarshaled delegation from bytes.
-// Panics if fails.
+// This function will panic on failure.
 func MustUnmarshalDelegation(cdc codec.BinaryCodec, value []byte) Delegation {
 	delegation, err := UnmarshalDelegation(cdc, value)
 	if err != nil {
@@ -43,6 +44,7 @@ func UnmarshalDelegation(cdc codec.BinaryCodec, value []byte) (delegation Delega
 	return delegation, err
 }
 
+// This function will panic on failure.
 func (d Delegation) GetDelegatorAddr() sdk.AccAddress {
 	_, delAddr, err := bech32.DecodeAndConvert(d.DelegationAddress)
 	if err != nil {
@@ -51,6 +53,7 @@ func (d Delegation) GetDelegatorAddr() sdk.AccAddress {
 	return delAddr
 }
 
+// This function will panic on failure.
 func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 	_, valAddr, err := bech32.DecodeAndConvert(d.ValidatorAddress)
 	if err != nil {
@@ -120,13 +123,14 @@ func (v ValidatorIntents) Keys() []string {
 	return keys
 }
 
-// MustMarshalDelegationPlan returns the delegation plan bytes. Panics if fails
+// MustMarshalDelegationPlan returns the delegation plan bytes.
+// This function will panic on failure.
 func MustMarshalDelegationPlan(cdc codec.BinaryCodec, delegationPlan DelegationPlan) []byte {
 	return cdc.MustMarshal(&delegationPlan)
 }
 
 // MustUnmarshalDelegationPlan return the unmarshaled delegation plan from bytes.
-// Panics if fails.
+// This function will panic on failure.
 func MustUnmarshalDelegationPlan(cdc codec.BinaryCodec, value []byte) DelegationPlan {
 	delegationPlan, err := UnmarshalDelegationPlan(cdc, value)
 	if err != nil {
@@ -142,6 +146,7 @@ func UnmarshalDelegationPlan(cdc codec.BinaryCodec, value []byte) (delegationPla
 	return delegationPlan, err
 }
 
+// This function will panic on failure.
 func (d DelegationPlan) GetDelegatorAddr() sdk.AccAddress {
 	_, delAddr, err := bech32.DecodeAndConvert(d.DelegatorAddress)
 	if err != nil {
@@ -150,6 +155,7 @@ func (d DelegationPlan) GetDelegatorAddr() sdk.AccAddress {
 	return delAddr
 }
 
+// This function will panic on failure.
 func (d DelegationPlan) GetValidatorAddr() sdk.ValAddress {
 	_, valAddr, err := bech32.DecodeAndConvert(d.ValidatorAddress)
 	if err != nil {
@@ -291,6 +297,10 @@ func (a Diffs) SortedByAmount() Diffs {
 
 func DetermineIntentDelta(currentState Allocations, total sdk.Int, intent ValidatorIntents) Diffs {
 	deltas := Diffs{}
+
+	if total.IsZero() {
+		return deltas
+	}
 
 	for _, val := range intent.Keys() {
 		current := currentState.SumForDenom(val)                                     // fetch current delegations to validator

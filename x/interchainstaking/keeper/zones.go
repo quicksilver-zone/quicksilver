@@ -439,6 +439,7 @@ func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.Zone, requests
 			}
 		}
 
+		// panic if any tokens still remain
 		if remainingTokens.GT(sdk.ZeroInt()) {
 			panic("redemption with remaining amount:" + remainingTokens.String())
 		}

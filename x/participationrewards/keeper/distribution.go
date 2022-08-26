@@ -213,6 +213,8 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 
 		ztvl, exists := zoneProps[zone.ChainId]
 		if !exists {
+			// this panic should never occur as the first iteration inserts a
+			// a value into the map (see above).
 			panic("unable to obtain zone proportion on second zone pass")
 		}
 

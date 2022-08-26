@@ -32,7 +32,8 @@ type Keeper struct {
 	prSubmodules     map[int64]Submodule
 }
 
-// NewKeeper returns a new instance of participationrewards Keeper
+// NewKeeper returns a new instance of participationrewards Keeper.
+// This function will panic on failure.
 func NewKeeper(
 	cdc codec.Codec,
 	key sdk.StoreKey,
