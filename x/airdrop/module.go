@@ -45,10 +45,15 @@ func (AppModuleBasic) Name() string {
 func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {}
 
 // RegisterLegacyAminoCodec registers a legacy amino codec
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {}
+func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+	types.RegisterLegacyAminoCodec(cdc)
+}
 
-// RegisterInterfaces registers the module's interface types.
-func (a AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
+// RegisterInterfaces registers the module's interface types
+func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
+	// RegisterInterfaces registers interfaces and implementations of the bank module.
+	types.RegisterInterfaces(reg)
+}
 
 // DefaultGenesis returns the airdrop module's default genesis state.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
