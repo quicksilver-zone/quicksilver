@@ -40,7 +40,8 @@ type Keeper struct {
 	paramStore          paramtypes.Subspace
 }
 
-// NewKeeper returns a new instance of zones Keeper
+// NewKeeper returns a new instance of zones Keeper.
+// This function will panic on failure.
 func NewKeeper(cdc codec.Codec, storeKey sdk.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, ps paramtypes.Subspace) Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
