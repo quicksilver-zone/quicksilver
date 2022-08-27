@@ -22,13 +22,13 @@ func (z Zone) IsDelegateAddress(addr string) bool {
 	return false
 }
 
-func (z *Zone) GetValidatorByValoper(valoper string) (*Validator, error) {
+func (z *Zone) GetValidatorByValoper(valoper string) (*Validator, bool) {
 	for _, v := range z.GetValidatorsSorted() {
 		if v.ValoperAddress == valoper {
-			return v, nil
+			return v, true
 		}
 	}
-	return nil, fmt.Errorf("invalid validator -> %s", valoper)
+	return nil, false
 }
 
 func (z *Zone) GetDelegationAccountByAddress(address string) (*ICAAccount, error) {

@@ -187,9 +187,10 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		}
 		return nil
 	}
-	val, err := zone.GetValidatorByValoper(delegation.ValidatorAddress)
-	if err != nil {
-		k.Logger(ctx).Error("unable to get validator", "address", delegation.ValidatorAddress)
+	val, found := zone.GetValidatorByValoper(delegation.ValidatorAddress)
+	if !found {
+		err := fmt.Errorf("unable to get validator: %s", delegation.ValidatorAddress)
+		k.Logger(ctx).Error(err.Error())
 		return err
 	}
 

@@ -245,9 +245,9 @@ func (k msgServer) validateIntents(zone types.Zone, intents []*types.ValidatorIn
 	errors := make(map[string]error)
 
 	for i, intent := range intents {
-		_, err := zone.GetValidatorByValoper(intent.ValoperAddress)
-		if err != nil {
-			errors[fmt.Sprintf("intent[%v]", i)] = err
+		_, found := zone.GetValidatorByValoper(intent.ValoperAddress)
+		if !found {
+			errors[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
 		}
 	}
 
