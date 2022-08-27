@@ -199,7 +199,13 @@ func (k Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID string, addre
 // Claim executes an airdrop claim for the given address on the given action
 // against the given zone (chainID). It returns the claim amount or an error
 // on failure.
-func (k Keeper) Claim(ctx sdk.Context, chainID string, action types.Action, address string) (uint64, error) {
+func (k Keeper) Claim(
+	ctx sdk.Context,
+	chainID string,
+	action types.Action,
+	address string,
+	proofs []*types.Proof,
+) (uint64, error) {
 	// check action in bounds
 	if !action.InBounds() {
 		return 0, fmt.Errorf("%w, got %d", types.ErrActionOutOfBounds, action)
@@ -222,84 +228,5 @@ func (k Keeper) Claim(ctx sdk.Context, chainID string, action types.Action, addr
 		return 0, nil
 	}
 
-	// verify claim
-	if err := k.VerifyClaimAction(ctx, cr, action); err != nil {
-		return 0, err
-	}
-
-	var claimAmount uint64
-
-	// NOTE: The concept here is to intuitively claim all outstanding deposit
-	// tiers below the current deposit claim for an improved user experience.
-	// If all checks passes, i.e. the current claim is valid, this section
-	// will iterate through the lower tiers, add the claimable amount and
-	// update the claim record accordingly.
-	if action > types.ActionDepositT1 && action <= types.ActionDepositT5 {
-		for a := types.ActionDepositT1; a <= action; a++ {
-			if _, exists := cr.ActionsCompleted[int32(a)]; !exists {
-				// obtain claimable amount per deposit action
-				claimable, err := k.GetClaimableAmountForAction(ctx, chainID, address, a)
-				if err != nil {
-					return 0, err
-				}
-
-				// update claim record
-				cr.ActionsCompleted[int32(a)] = &types.CompletedAction{
-					CompleteTime: ctx.BlockTime(),
-					ClaimAmount:  claimable,
-				}
-
-				// sum total claimable
-				claimAmount += claimable
-			}
-		}
-	} else {
-		// obtain claimable amount
-		claimable, err := k.GetClaimableAmountForAction(ctx, chainID, address, action)
-		if err != nil {
-			return 0, err
-		}
-
-		// set claim amount
-		claimAmount = claimable
-
-		// update claim record
-		cr.ActionsCompleted[int32(action)] = &types.CompletedAction{
-			CompleteTime: ctx.BlockTime(),
-			ClaimAmount:  claimAmount,
-		}
-	}
-
-	// send coins to address
-	coins := sdk.NewCoins(
-		sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(claimAmount)),
-	)
-
-	addr, err := sdk.AccAddressFromBech32(address)
-	if err != nil {
-		return 0, err
-	}
-
-	zoneDropAccount := types.ModuleName + "." + chainID
-	if err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, zoneDropAccount, addr, coins); err != nil {
-		return 0, err
-	}
-
-	// set claim record
-	if err = k.SetClaimRecord(ctx, cr); err != nil {
-		return 0, err
-	}
-
-	// emit events
-	ctx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			types.EventTypeClaim,
-			sdk.NewAttribute(sdk.AttributeKeySender, address),
-			sdk.NewAttribute("zone", chainID),
-			sdk.NewAttribute(sdk.AttributeKeyAction, action.String()),
-			sdk.NewAttribute(sdk.AttributeKeyAmount, coins.String()),
-		),
-	})
-
-	return claimAmount, nil
+	return k.HandleClaim(ctx, cr, action, proofs)
 }

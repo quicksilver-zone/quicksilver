@@ -13,7 +13,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	prkeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 )
 
 type Keeper struct {
@@ -25,6 +27,8 @@ type Keeper struct {
 	stakingKeeper stakingkeeper.Keeper
 	govKeeper     govkeeper.Keeper
 	icsKeeper     icskeeper.Keeper
+	icqKeeper     icqkeeper.Keeper
+	prKeeper      prkeeper.Keeper
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -36,6 +40,10 @@ func NewKeeper(
 	ak authkeeper.AccountKeeper,
 	bk bankkeeper.Keeper,
 	sk stakingkeeper.Keeper,
+	gk govkeeper.Keeper,
+	icsk icskeeper.Keeper,
+	icqk icqkeeper.Keeper,
+	prk prkeeper.Keeper,
 ) Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -53,6 +61,10 @@ func NewKeeper(
 		accountKeeper: ak,
 		bankKeeper:    bk,
 		stakingKeeper: sk,
+		govKeeper:     gk,
+		icsKeeper:     icsk,
+		icqKeeper:     icqk,
+		prKeeper:      prk,
 	}
 }
 

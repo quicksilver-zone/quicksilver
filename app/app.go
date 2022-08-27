@@ -465,6 +465,10 @@ func NewQuicksilver(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
+		app.GovKeeper,
+		app.InterchainstakingKeeper,
+		app.InterchainQueryKeeper,
+		app.ParticipationRewardsKeeper,
 	)
 	airdropModule := airdrop.NewAppModule(appCodec, app.AirdropKeeper)
 
