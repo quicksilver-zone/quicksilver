@@ -587,7 +587,11 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 		return err
 	}
 
-	_, delAddr, _ := bech32.DecodeAndConvert(delegatorAddress)
+	_, delAddr, err := bech32.DecodeAndConvert(delegatorAddress)
+	if err != nil {
+		return err
+	}
+
 	delegatorDelegations := k.GetDelegatorDelegations(ctx, zone, delAddr)
 	delMap := make(map[string]types.Delegation, len(delegatorDelegations))
 	for _, del := range delegatorDelegations {
@@ -601,7 +605,10 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 
 	for _, delegationRecord := range response.DelegationResponses {
 
-		_, valAddr, _ := bech32.DecodeAndConvert(delegationRecord.Delegation.ValidatorAddress)
+		_, valAddr, err := bech32.DecodeAndConvert(delegationRecord.Delegation.ValidatorAddress)
+		if err != nil {
+			return err
+		}
 		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
 		delegation, ok := delMap[delegationRecord.Delegation.ValidatorAddress]
@@ -635,7 +642,10 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 
 	for _, existingValAddr := range sortedLeftAddrs {
 		existingDelegation := delMap[existingValAddr]
-		_, valAddr, _ := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
+		_, valAddr, err := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
+		if err != nil {
+			return err
+		}
 		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
 		if err := k.RemoveDelegation(ctx, zone, existingDelegation); err != nil {
