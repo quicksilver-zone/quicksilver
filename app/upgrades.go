@@ -13,7 +13,7 @@ import (
 func GetInnuendo1Upgrade(app *Quicksilver) types.UpgradeHandler {
 
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		ReplaceZoneDropChain(ctx, app, "osmotest-4", "osmo-test-4", ctx.BlockHeader().Time)
+		ReplaceZoneDropChain(ctx, app, "osmotestnet-4", "osmo-test-4", ctx.BlockHeader().Time)
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }
@@ -24,7 +24,7 @@ func ReplaceZoneDropChain(ctx sdk.Context, app *Quicksilver, chainIdFrom string,
 	if !found {
 		panic(chainIdFrom + " zonedrop not found")
 	}
-	// update chainid for osmo-test-4 airdrop and reset start time.
+	// update chainid for chainIdFrom airdrop and reset start time.
 	ad.ChainId = chainIdTo
 	ad.StartTime = start
 
