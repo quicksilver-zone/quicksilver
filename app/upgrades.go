@@ -11,7 +11,6 @@ import (
 )
 
 func GetInnuendo1Upgrade(app *Quicksilver) types.UpgradeHandler {
-
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		ReplaceZoneDropChain(ctx, app, "osmotestnet-4", "osmo-test-4", ctx.BlockHeader().Time)
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)

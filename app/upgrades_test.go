@@ -72,5 +72,4 @@ func TestReplaceZone(t *testing.T) {
 	require.Equal(t, zoneDropsAfter[0].StartTime, ctx.BlockHeader().Time)
 	require.False(t, app.AirdropKeeper.GetZoneDropAccountBalance(ctx, "osmotest-4").Amount.Equal(sdk.NewInt(1000000)))
 	require.True(t, app.AirdropKeeper.GetZoneDropAccountBalance(ctx, "osmo-test-4").Amount.Equal(sdk.NewInt(1000000)))
-
 }
