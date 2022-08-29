@@ -30,15 +30,21 @@ func (msg MsgRequestRedemption) Type() string { return TypeMsgRegisterZone }
 
 // ValidateBasic Implements Msg.
 func (msg MsgRequestRedemption) ValidateBasic() error {
-	// TODO: check from address
+	errors := make(map[string]error)
+
+	// check from address
 	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
-		return err
+		errors["FromAddress"] = err
 	}
 
 	// check coin
 	if err = msg.Value.Validate(); err != nil {
-		return err
+		errors["Value"] = err
+	}
+
+	if len(errors) > 0 {
+		return multierror.New(errors)
 	}
 
 	return nil
@@ -57,16 +63,20 @@ func (msg MsgRequestRedemption) GetSigners() []sdk.AccAddress {
 
 //----------------------------------------------------------------
 
-// IntentsFromString validates and parses the given string into a slice
+// IntentsFromString parses and validates the given string into a slice
 // containing pointers to ValidatorIntent.
 //
 // The combined weights must be 1.0 and the valoper addresses must be valid
-// bech32 strings. (what about zero weights?)
+// bech32 strings.
 //
 // Tokens are comma separated, e.g.
 // "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzzzzzzzz".
 func IntentsFromString(input string) ([]*ValidatorIntent, error) {
+	// regexp defining what an intent looks like:
+	// {value}{address}
 	iexpr := regexp.MustCompile(`(\d.\d+)(.+1\w+)`)
+	// regexp defining what the intent string looks like:
+	// {intent}(,{intent})...
 	pexpr := regexp.MustCompile(fmt.Sprintf("^%s(,%s)*$", iexpr.String(), iexpr.String()))
 	if !pexpr.MatchString(input) {
 		return nil, fmt.Errorf("invalid intents string")
@@ -74,6 +84,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 
 	out := []*ValidatorIntent{}
 
+	wsum := sdk.ZeroDec()
 	istrs := strings.Split(input, ",")
 	for i, istr := range istrs {
 		wstr := iexpr.ReplaceAllString(istr, "$1")
@@ -82,11 +93,21 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 			return nil, fmt.Errorf("intent token [%v]: %w", i, err)
 		}
 
+		if !weight.IsPositive() {
+			return nil, fmt.Errorf("intent token [%v]: must not be negative nor zero", i)
+		}
+
+		wsum = wsum.Add(weight)
+
 		v := &ValidatorIntent{
 			iexpr.ReplaceAllString(istr, "$2"),
 			weight,
 		}
 		out = append(out, v)
+	}
+
+	if !wsum.Equal(sdk.OneDec()) {
+		return nil, fmt.Errorf("combined weight must be 1.0")
 	}
 
 	return out, nil
@@ -110,9 +131,11 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 		errors["FromAddress"] = err
 	}
 
-	// TODO: check for valid chainID
+	if msg.ChainId == "" {
+		errors["ChainId"] = fmt.Errorf("undefined")
+	}
 
-	wantSum := sdk.MustNewDecFromStr("1.0")
+	wantSum := sdk.OneDec()
 	weightSum := sdk.NewDec(0)
 	for i, intent := range msg.Intents {
 		if _, _, err := bech32.DecodeAndConvert(intent.ValoperAddress); err != nil {

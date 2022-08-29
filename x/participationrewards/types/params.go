@@ -1,11 +1,11 @@
 package types
 
 import (
-	"errors"
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"gopkg.in/yaml.v2"
 )
 
@@ -59,22 +59,38 @@ func validateDistributionProportions(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.ValidatorSelectionAllocation.IsNegative() {
-		return errors.New("validatorSelectionAllocation distribution ratio should not be negative")
+	errors := make(map[string]error)
+
+	if v.ValidatorSelectionAllocation.IsNil() {
+		errors["ValidatorSelectionAllocation"] = ErrUndefinedAttribute
+	} else if v.ValidatorSelectionAllocation.IsNegative() {
+		errors["ValidatorSelectionAllocation"] = ErrNegativeDistributionRatio
 	}
 
-	if v.HoldingsAllocation.IsNegative() {
-		return errors.New("participationAllocation distribution ratio should not be negative")
+	if v.HoldingsAllocation.IsNil() {
+		errors["HoldingsAllocation"] = ErrUndefinedAttribute
+	} else if v.HoldingsAllocation.IsNegative() {
+		errors["HoldingsAllocation"] = ErrNegativeDistributionRatio
 	}
 
-	if v.LockupAllocation.IsNegative() {
-		return errors.New("lockupAllocation distribution ratio should not be negative")
+	if v.LockupAllocation.IsNil() {
+		errors["LockupAllocation"] = ErrUndefinedAttribute
+	} else if v.LockupAllocation.IsNegative() {
+		errors["LockupAllocation"] = ErrNegativeDistributionRatio
 	}
 
-	totalProportions := v.ValidatorSelectionAllocation.Add(v.HoldingsAllocation).Add(v.LockupAllocation)
+	// no errors yet: check total proportions
+	if len(errors) == 0 {
+		totalProportions := v.ValidatorSelectionAllocation.Add(v.HoldingsAllocation).Add(v.LockupAllocation)
 
-	if !totalProportions.Equal(sdk.NewDec(1)) {
-		return errors.New("total distributions ratio should be 1")
+		if !totalProportions.Equal(sdk.NewDec(1)) {
+			errors["TotalProportions"] = ErrInvalidTotalProportions
+		}
+	}
+
+	// all checks done, count errors
+	if len(errors) > 0 {
+		return multierror.New(errors)
 	}
 
 	return nil
@@ -82,11 +98,7 @@ func validateDistributionProportions(i interface{}) error {
 
 // validate params.
 func (p Params) Validate() error {
-	if err := validateDistributionProportions(p.DistributionProportions); err != nil {
-		return err
-	}
-
-	return nil
+	return validateDistributionProportions(p.DistributionProportions)
 }
 
 // String implements the Stringer interface.
