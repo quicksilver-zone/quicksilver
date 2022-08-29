@@ -118,7 +118,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // Route returns the message routing key for the airdrop module.
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+}
 
 // QuerierRoute returns the airdrop module's querier route name.
 func (AppModule) QuerierRoute() string {
