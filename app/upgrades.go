@@ -46,6 +46,8 @@ func ReplaceZoneDropChain(ctx sdk.Context, app *Quicksilver, chainIdFrom string,
 		),
 	)
 
+	ctx.Logger().Info("migrating zonedrop bounty", "from", zonedropOldAddress, "to", zonedropNewAddress, "coins", coinsToMove)
+
 	// migrate coins from old chain account to the new one - via the airdrop module.
 	if err := app.BankKeeper.SendCoinsFromAccountToModule(
 		ctx, zonedropOldAddress, airdroptypes.ModuleName, coinsToMove,
