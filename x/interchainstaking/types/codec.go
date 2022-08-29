@@ -15,9 +15,10 @@ var (
 )
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSignalIntent{}, "cosmos-sdk/MsgSignalIntent", nil)
-	cdc.RegisterConcrete(&RegisterZoneProposal{}, "cosmos-sdk/RegisterZoneProposal", nil)
-	cdc.RegisterConcrete(&UpdateZoneProposal{}, "cosmos-sdk/UpdateZoneProposal", nil)
+	cdc.RegisterConcrete(&MsgSignalIntent{}, "quicksilver/MsgSignalIntent", nil)
+	cdc.RegisterConcrete(&MsgRequestRedemption{}, "quicksilver/MsgRequestRedemption", nil)
+	cdc.RegisterConcrete(&RegisterZoneProposal{}, "quicksilver/RegisterZoneProposal", nil)
+	cdc.RegisterConcrete(&UpdateZoneProposal{}, "quicksilver/UpdateZoneProposal", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -25,6 +26,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
 		&MsgSignalIntent{},
+		&MsgRequestRedemption{},
 	)
 
 	registry.RegisterImplementations(
@@ -39,8 +41,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 func init() {
 	cryptocodec.RegisterCrypto(amino)
 	govtypes.RegisterProposalType(ProposalTypeRegisterZone)
-	govtypes.RegisterProposalTypeCodec(&RegisterZoneProposal{}, "cosmos-sdk/RegisterZoneProposal")
+	govtypes.RegisterProposalTypeCodec(&RegisterZoneProposal{}, "quicksilver/RegisterZoneProposal")
 
 	govtypes.RegisterProposalType(ProposalTypeUpdateZone)
-	govtypes.RegisterProposalTypeCodec(&UpdateZoneProposal{}, "cosmos-sdk/UpdateZoneProposal")
+	govtypes.RegisterProposalTypeCodec(&UpdateZoneProposal{}, "quicksilver/UpdateZoneProposal")
 }

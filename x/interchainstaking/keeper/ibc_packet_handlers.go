@@ -353,32 +353,47 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 	return k.Delegate(ctx, *zone, da, plan)
 }
 
+// withdraw for user will check that the msgSend we have successfully executed matches an existing withdrawal record.
+// on a match (recipient = msg.ToAddress + amount + status == SEND), we mark the record as complete.
+// if no other withdrawal records exist for this triple (i.e. no further withdrawal from this delegator account for this user (i.e. different validator))
+// then burn the withdrawal_record's burn_amount.
 func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
 	var err error
-	// first check for withdrawals (if FromAddress is a DelegateAccount)
+	end := false
+	// iterate all withdrawals pertaining to this zone / user / txhash triple.
 	k.IterateZoneDelegatorHashWithdrawalRecords(ctx, zone, memo, msg.FromAddress, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		if withdrawal.Recipient == msg.ToAddress {
-			k.Logger(ctx).Info("matched the recipient", "val", withdrawal.Delegator, "recipient", withdrawal.Recipient)
+			k.Logger(ctx).Info("withdrawal: matched the recipient", "val", withdrawal.Validator, "delegator", withdrawal.Delegator, "recipient", withdrawal.Recipient)
 			if msg.Amount[0].Amount.Equal(withdrawal.Amount.Amount) {
-				k.Logger(ctx).Info("matched the amount", "amount", msg.Amount, "record.amount", withdrawal.Amount.Amount)
+				k.Logger(ctx).Info("withdrawal:  matched the amount", "amount", msg.Amount, "record.amount", withdrawal.Amount.Amount)
 				if withdrawal.Status == WithdrawStatusSend {
-					k.Logger(ctx).Info("Found matching withdrawal; withdrawal marked as completed")
+					k.Logger(ctx).Info("Found matching withdrawal; marking as completed")
 					k.DeleteWithdrawalRecord(ctx, zone, memo, withdrawal.Delegator, withdrawal.Validator)
 					if len(k.AllZoneDelegatorHashWithdrawalRecords(ctx, zone, memo, withdrawal.Delegator)) == 0 {
 						err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{withdrawal.BurnAmount})
 						if err != nil {
-							return false
+							// if we can't burn the coins, stop iterating so we can return err outside of the iterator.
+							return true
 						}
 						k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawal.BurnAmount)
+						// stop iterating here, we reached the end of the possible withdrawal. set end to true to escape below.
+						end = true
 					}
 
 					err = k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
-					return err != nil
+					// if we can't emit the query, stop iterating so we can return err outside of the iterator.
+					// additionally, if we have reach the end of this withdrawal, stop iterating.
+					return (err != nil || end)
 				}
 			}
 		}
+		// no errors, but we haven't matched yet either. continue iterating.
 		return false
 	})
+	if err == nil && !end {
+		// if we got to here, with no error causing an early exit, but without setting the end flag, we didn't find a withdrawal record.
+		err = fmt.Errorf("unable to find matching withdrawal record for MsgSend")
+	}
 	return err
 }
 
@@ -587,7 +602,11 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 		return err
 	}
 
-	_, delAddr, _ := bech32.DecodeAndConvert(delegatorAddress)
+	_, delAddr, err := bech32.DecodeAndConvert(delegatorAddress)
+	if err != nil {
+		return err
+	}
+
 	delegatorDelegations := k.GetDelegatorDelegations(ctx, zone, delAddr)
 	delMap := make(map[string]types.Delegation, len(delegatorDelegations))
 	for _, del := range delegatorDelegations {
@@ -601,7 +620,10 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 
 	for _, delegationRecord := range response.DelegationResponses {
 
-		_, valAddr, _ := bech32.DecodeAndConvert(delegationRecord.Delegation.ValidatorAddress)
+		_, valAddr, err := bech32.DecodeAndConvert(delegationRecord.Delegation.ValidatorAddress)
+		if err != nil {
+			return err
+		}
 		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
 		delegation, ok := delMap[delegationRecord.Delegation.ValidatorAddress]
@@ -635,7 +657,10 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 
 	for _, existingValAddr := range sortedLeftAddrs {
 		existingDelegation := delMap[existingValAddr]
-		_, valAddr, _ := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
+		_, valAddr, err := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
+		if err != nil {
+			return err
+		}
 		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
 		if err := k.RemoveDelegation(ctx, zone, existingDelegation); err != nil {

@@ -90,8 +90,8 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
 	k.Logger(ctx).Error("outtokens", "o", outTokens)
 
-	heightBytes := make([]byte, 4)
-	binary.PutVarint(heightBytes, ctx.BlockHeight())
+	heightBytes := make([]byte, 8)
+	binary.BigEndian.PutUint64(heightBytes, uint64(ctx.BlockHeight()))
 	hash := sha256.Sum256(append(msg.GetSignBytes(), heightBytes...))
 	hashString := hex.EncodeToString(hash[:])
 
@@ -245,9 +245,9 @@ func (k msgServer) validateIntents(zone types.Zone, intents []*types.ValidatorIn
 	errors := make(map[string]error)
 
 	for i, intent := range intents {
-		_, err := zone.GetValidatorByValoper(intent.ValoperAddress)
-		if err != nil {
-			errors[fmt.Sprintf("intent[%v]", i)] = err
+		_, found := zone.GetValidatorByValoper(intent.ValoperAddress)
+		if !found {
+			errors[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
 		}
 	}
 

@@ -137,8 +137,8 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 
 	for _, validator := range validatorsRes.Validators {
 		_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
-		val, err := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
-		if err != nil {
+		val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
+		if !found {
 			k.Logger(ctx).Info("Unable to find validator - fetching proof...", "valoper", validator.OperatorAddress)
 
 			data := stakingTypes.GetValidatorKey(addr)
@@ -191,8 +191,8 @@ func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []
 		return err
 	}
 
-	val, err := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
-	if err != nil {
+	val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
+	if !found {
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
 		zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
