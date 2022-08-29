@@ -14,7 +14,7 @@ var (
 )
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgClaim{}, "/quicksilver.airdrop.v1.MsgClaim", nil)
+	cdc.RegisterConcrete(&MsgClaim{}, "quicksilver/MsgClaim", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
