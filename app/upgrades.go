@@ -37,6 +37,30 @@ func ReplaceZoneDropChain(ctx sdk.Context, app *Quicksilver, chainIdFrom string,
 		return false
 	})
 
+	zonedropOldAddress := app.AirdropKeeper.GetZoneDropAccountAddress(chainIdFrom)
+	zonedropNewAddress := app.AirdropKeeper.GetZoneDropAccountAddress(chainIdTo)
+
+	coinsToMove := sdk.NewCoins(
+		sdk.NewCoin(
+			app.AirdropKeeper.BondDenom(ctx),
+			sdk.NewIntFromUint64(ad.Allocation),
+		),
+	)
+
+	// migrate coins from old chain account to the new one - via the airdrop module.
+	if err := app.BankKeeper.SendCoinsFromAccountToModule(
+		ctx, zonedropOldAddress, airdroptypes.ModuleName, coinsToMove,
+	); err != nil {
+		panic(err)
+	}
+
+	if err := app.AirdropKeeper.SendCoinsFromModuleToAccount(
+		ctx,
+		airdroptypes.ModuleName, zonedropNewAddress, coinsToMove,
+	); err != nil {
+		panic(err)
+	}
+
 	app.AirdropKeeper.DeleteZoneDrop(ctx, chainIdFrom)
 
 	// update unbonding time to 48h.

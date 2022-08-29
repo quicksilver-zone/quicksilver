@@ -99,8 +99,12 @@ func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amount)
 }
 
-func (k Keeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientModule sdk.AccAddress, amount sdk.Coins) error {
-	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, senderModule, recipientModule, amount)
+func (k Keeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAccount sdk.AccAddress, amount sdk.Coins) error {
+	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, senderModule, recipientAccount, amount)
+}
+
+func (k Keeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAccount sdk.AccAddress, recipientModule string, amount sdk.Coins) error {
+	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAccount, recipientModule, amount)
 }
 
 func (k Keeper) BondDenom(ctx sdk.Context) string {
