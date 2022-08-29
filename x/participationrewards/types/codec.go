@@ -15,8 +15,8 @@ var (
 )
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgSubmitClaim{}, "cosmos-sdk/MsgSubmitClaim", nil)
-	cdc.RegisterConcrete(&AddProtocolDataProposal{}, "cosmos-sdk/AddProtocolDataProposal", nil)
+	cdc.RegisterConcrete(&MsgSubmitClaim{}, "quicksilver/MsgSubmitClaim", nil)
+	cdc.RegisterConcrete(&AddProtocolDataProposal{}, "quicksilver/AddProtocolDataProposal", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -37,5 +37,5 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 func init() {
 	cryptocodec.RegisterCrypto(amino)
 	govtypes.RegisterProposalType(ProposalTypeAddProtocolData)
-	govtypes.RegisterProposalTypeCodec(&AddProtocolDataProposal{}, "cosmos-sdk/AddProtocolDataProposal")
+	govtypes.RegisterProposalTypeCodec(&AddProtocolDataProposal{}, "quicksilver/AddProtocolDataProposal")
 }
