@@ -362,7 +362,6 @@ func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 	end := false
 	// iterate all withdrawals pertaining to this zone / user / txhash triple.
 	k.IterateZoneDelegatorHashWithdrawalRecords(ctx, zone, memo, msg.FromAddress, func(idx int64, withdrawal types.WithdrawalRecord) bool {
-
 		if withdrawal.Recipient == msg.ToAddress {
 			k.Logger(ctx).Info("withdrawal: matched the recipient", "val", withdrawal.Validator, "delegator", withdrawal.Delegator, "recipient", withdrawal.Recipient)
 			if msg.Amount[0].Amount.Equal(withdrawal.Amount.Amount) {
