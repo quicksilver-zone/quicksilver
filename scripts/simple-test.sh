@@ -65,16 +65,16 @@ echo "Launch and configure interchain query daemon"
 
 ICQ_ADDRESS_1=$($ICQ_RUN keys add test --chain quicksilver | jq .address -r)
 ICQ_ADDRESS_2=$($ICQ_RUN keys add test --chain liquidstaking1 | jq .address -r)
-RLY_ADDRESS_3=$($RLY_RUN keys show qstest-1 testkey)
-RLY_ADDRESS_4=$($RLY_RUN keys show lstest-1 testkey)
+#RLY_ADDRESS_3=$($RLY_RUN keys show qstest-1 testkey)
+#RLY_ADDRESS_4=$($RLY_RUN keys show lstest-1 testkey)
 
 $QS1_EXEC tx bank send val1 $ICQ_ADDRESS_1 1000uqck --chain-id $CHAINID_0 -y --keyring-backend=test
-$QS1_EXEC tx bank send val1 $RLY_ADDRESS_3 1000uqck --chain-id $CHAINID_0 -y --keyring-backend=test
+#$QS1_EXEC tx bank send val1 $RLY_ADDRESS_3 1000uqck --chain-id $CHAINID_0 -y --keyring-backend=test
 $TZ1_1_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
-$TZ1_1_EXEC tx bank send val2 $RLY_ADDRESS_4 1000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
+#$TZ1_1_EXEC tx bank send val2 $RLY_ADDRESS_4 1000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
 
 docker-compose up --force-recreate -d icq
-docker-compose up --force-recreate -d relayer
+#docker-compose up --force-recreate -d relayer
 
 #echo "Register $CHAINID_1 on quicksilver..."
 cat $SCRIPT_DIR/registerzone.json | jq . -c | $QS1_EXEC tx gov submit-proposal register-zone /dev/fd/0 --from demowallet1 --chain-id $CHAINID_0 --gas 2000000 -y --keyring-backend=test
@@ -85,7 +85,7 @@ $QS3_EXEC tx gov vote 1 yes --from val7 --chain-id $CHAINID_0 -y --keyring-backe
 sleep 30
 ## TODO: get val2 valoper from keys
 $TZ1_1_EXEC tx staking tokenize-share $VAL_VALOPER_2 10000000uatom $VAL_ADDRESS_2 --from val2 --gas 400000 --chain-id $CHAINID_1 -y --keyring-backend=test  #1
-$TZ1_2_EXEC tx staking tokenize-share $VAL_VALOPER_3 25000000uatom $VAL_ADDRESS_3 --from val3 --gas 400000 --chain-id $CHAINID_1 -y --keyring-backend=test   #2
+$TZ1_2_EXEC tx staking tokenize-share $VAL_VALOPER_3 25000000uatom $VAL_ADDRESS_3 --from val3 --gas 400000 --chain-id $CHAINID_1 -y --keyring-backend=test  #2
 $TZ1_3_EXEC tx staking tokenize-share $VAL_VALOPER_4 65000000uatom $VAL_ADDRESS_4 --from val4 --gas 400000 --chain-id $CHAINID_1 -y --keyring-backend=test  #3
 
 sleep 5

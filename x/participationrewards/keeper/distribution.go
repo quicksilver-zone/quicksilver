@@ -40,9 +40,12 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 		k.Logger(ctx).Info("nothing to distribute...")
 
 		// create snapshot of current intents for next epoch boundary
+		// requires intents to be set, no intents no snapshot...
+		// we need to ensure the snapshot is only taken once;
 		// TODO: this needs to be verified as it currently does not trigger anymore
 		for _, zone := range k.icsKeeper.AllZones(ctx) {
 			for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
+				k.Logger(ctx).Info("TRIGGERED")
 				// this already happens in zone. If we are certain about ordering,
 				// we should only iterate intents once per epoch boundary as it'll
 				// get unwieldy.
@@ -101,53 +104,6 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 	return allocation
 }
 
-// allocateZoneRewards allocates both validator selection rewards and holdings
-// rewards across zones, based on the TVL for each zone in proportion to the
-// overall protocol TVL (sum of zone TVLs).
-/*func (k Keeper) allocateZoneRewards(ctx sdk.Context, allocation rewardsAllocation) error {
-	var valuescb Callback = func(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
-		tvResponse := QueryTokenValuesResponse{}
-		err := k.cdc.Unmarshal(response, &tvResponse)
-		if err != nil {
-			return err
-		}
-
-		zoneProportions, err := k.getZoneProportions(ctx, tvs)
-		if err != nil {
-			return err
-		}
-
-		if err := k.allocateValidatorSelectionRewards(ctx, allocation.ValidatorSelection, zoneProportions); err != nil {
-			k.Logger(ctx).Error(err.Error())
-		}
-
-		if err := k.allocateHoldingsRewards(ctx, allocation.Holdings, zoneProportions); err != nil {
-			k.Logger(ctx).Error(err.Error())
-		}
-
-		return nil
-	}
-
-	// obtain zones token values
-	valuesQuery := QueryTokenValuesRequest{}
-	bz := k.cdc.MustMarshal(&valuesQuery)
-
-	// Request to obtain a comparable value for tokens across all zones
-	k.icqKeeper.MakeRequest(
-		ctx,
-		ibc.ConnectionId,
-		ibc.ChainId,
-		"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
-		bz,
-		sdk.NewInt(-1),
-		types.ModuleName,
-		valuescb,
-	)
-
-	return fmt.Errorf("not implemented (stub)")
-}*/
-
-// TODO: remove when above is properly implemented
 // allocateZoneRewards executes zone based rewards allocation. This entails
 // rewards that are proportionally distributed to zones based on the tvl for
 // each zone relative to the tvl of the QS protocol.
