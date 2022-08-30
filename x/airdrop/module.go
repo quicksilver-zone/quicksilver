@@ -118,7 +118,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 }
 
 // Route returns the message routing key for the airdrop module.
-func (AppModule) Route() sdk.Route { return sdk.Route{} }
+func (am AppModule) Route() sdk.Route {
+	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+}
 
 // QuerierRoute returns the airdrop module's querier route name.
 func (AppModule) QuerierRoute() string {
@@ -135,6 +137,7 @@ func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sd
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 

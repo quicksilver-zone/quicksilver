@@ -7,6 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -35,6 +37,10 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 
 // Setup initializes a new Quicksilver. A Nop logger is set in Quicksilver.
 func Setup(isCheckTx bool) *Quicksilver {
+	config := sdk.GetConfig()
+	cmdcfg.SetBech32Prefixes(config)
+	cmdcfg.SetBip44CoinType(config)
+
 	db := dbm.NewMemDB()
 	app := NewQuicksilver(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{})
 	if !isCheckTx {

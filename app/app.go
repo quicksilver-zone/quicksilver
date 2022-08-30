@@ -728,14 +728,10 @@ func NewQuicksilver(
 	app.SetAnteHandler(NewAnteHandler(options))
 	app.SetEndBlocker(app.EndBlocker)
 
-	// app.UpgradeKeeper.SetUpgradeHandler(
-	// 	upgradeName,
-	// 	func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-	// 		ctx.Logger().Info("no-op upgrade to underpressure")
-
-	// 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-	// 	},
-	// )
+	app.UpgradeKeeper.SetUpgradeHandler(
+		"innuendo1",
+		GetInnuendo1Upgrade(app),
+	)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
