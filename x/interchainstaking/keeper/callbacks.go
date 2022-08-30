@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"time"
 
@@ -425,7 +426,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 	return nil
 }
 
-// setAccountCb is a callback handler for Balance queries.
+// AccountBalanceCallback is a callback handler for Balance queries.
 func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
@@ -452,18 +453,14 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 	}
 
 	if coin.IsNil() {
-		denom := ""
+		// if the balance returned is zero for a given denom, we just get a nil response.
+		// lookup the denom from the request so we can set a zero value coin for the correct denom.
+		idx := bytes.Index(query.Request, accAddr)
+		if idx == -1 {
+			return errors.New("AccountBalanceCallback: invalid request query")
+		}
+		denom := string(query.Request[idx:])
 
-		for i := 0; i < len(query.Request)-len(accAddr); i++ {
-			if bytes.Equal(query.Request[i:i+len(accAddr)], accAddr) {
-				denom = string(query.Request[i+len(accAddr):])
-				break
-			}
-		}
-		// if balance is nil, the response sent back is nil, so we don't receive the denom. Override that now.
-		if err := sdk.ValidateDenom(denom); err != nil {
-			return err
-		}
 		coin = sdk.NewCoin(denom, sdk.ZeroInt())
 	}
 
