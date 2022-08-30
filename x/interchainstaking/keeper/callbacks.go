@@ -460,6 +460,9 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 			return errors.New("AccountBalanceCallback: invalid request query")
 		}
 		denom := string(query.Request[idx:])
+		if err = sdk.ValidateDenom(denom); err != nil {
+			return err
+		}
 
 		coin = sdk.NewCoin(denom, sdk.ZeroInt())
 	}
