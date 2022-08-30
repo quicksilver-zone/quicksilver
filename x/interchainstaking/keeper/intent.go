@@ -125,9 +125,10 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) {
 
 		return false
 	})
-	// sum is zero, we must panic here, something is very wrong...
-	if ordinalizedIntentSum.IsZero() {
-		panic("ordinalized intent sum is zero, this should never happen")
+	// if we have intents and the sum is still zero, something is not right here. panic here to avoid a div by zero.
+	// TODO: investigate, is panic neccessary or can we just return?
+	if ordinalizedIntentSum.IsZero() && len(intents) > 0 {
+		panic("ordinalized intent sum is zero and intents is non-zero length; this should never happen")
 	}
 
 	for key, val := range intents {
