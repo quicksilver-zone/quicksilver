@@ -6,12 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
 func GetInnuendo1Upgrade(app *Quicksilver) types.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(ctx sdk.Context, _ types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		ReplaceZoneDropChain(ctx, app, "osmotestnet-4", "osmo-test-4", ctx.BlockHeader().Time)
 
 		// update unbonding time to 48h for innuendo-1 testnet to avoid ibc client expiry.
@@ -25,26 +24,33 @@ func GetInnuendo1Upgrade(app *Quicksilver) types.UpgradeHandler {
 }
 
 // replaces zonedrop and claimrecords for a given chain, with another chain and update start time.
-func ReplaceZoneDropChain(ctx sdk.Context, app *Quicksilver, chainIdFrom string, chainIdTo string, start time.Time) {
-	ad, found := app.AirdropKeeper.GetZoneDrop(ctx, chainIdFrom)
+// this function will panic if zonedrop for the given chainId is not found, or claim records fail to be set or deleted as expected.
+func ReplaceZoneDropChain(ctx sdk.Context, app *Quicksilver, chainIDFrom string, chainIDTo string, start time.Time) {
+	ad, found := app.AirdropKeeper.GetZoneDrop(ctx, chainIDFrom)
 	if !found {
-		panic(chainIdFrom + " zonedrop not found")
+		panic(chainIDFrom + " zonedrop not found")
 	}
 	// update chainid for chainIdFrom airdrop and reset start time.
-	ad.ChainId = chainIdTo
+	ad.ChainId = chainIDTo
 	ad.StartTime = start
 
 	app.AirdropKeeper.SetZoneDrop(ctx, ad)
-	app.AirdropKeeper.IterateClaimRecords(ctx, chainIdFrom, func(index int64, cr airdroptypes.ClaimRecord) (stop bool) {
+	app.AirdropKeeper.IterateClaimRecords(ctx, chainIDFrom, func(index int64, cr airdroptypes.ClaimRecord) (stop bool) {
 		ctx.Logger().Info("migrating claimdrop record", "address", cr.Address)
-		cr.ChainId = chainIdTo
-		app.AirdropKeeper.SetClaimRecord(ctx, cr)
-		app.AirdropKeeper.DeleteClaimRecord(ctx, chainIdFrom, cr.Address)
+		cr.ChainId = chainIDTo
+		err := app.AirdropKeeper.SetClaimRecord(ctx, cr)
+		if err != nil {
+			panic(err)
+		}
+		err = app.AirdropKeeper.DeleteClaimRecord(ctx, chainIDFrom, cr.Address)
+		if err != nil {
+			panic(err)
+		}
 		return false
 	})
 
-	zonedropOldAddress := app.AirdropKeeper.GetZoneDropAccountAddress(chainIdFrom)
-	zonedropNewAddress := app.AirdropKeeper.GetZoneDropAccountAddress(chainIdTo)
+	zonedropOldAddress := app.AirdropKeeper.GetZoneDropAccountAddress(chainIDFrom)
+	zonedropNewAddress := app.AirdropKeeper.GetZoneDropAccountAddress(chainIDTo)
 
 	coinsToMove := sdk.NewCoins(
 		sdk.NewCoin(
@@ -69,5 +75,5 @@ func ReplaceZoneDropChain(ctx sdk.Context, app *Quicksilver, chainIdFrom string,
 		panic(err)
 	}
 
-	app.AirdropKeeper.DeleteZoneDrop(ctx, chainIdFrom)
+	app.AirdropKeeper.DeleteZoneDrop(ctx, chainIDFrom)
 }
