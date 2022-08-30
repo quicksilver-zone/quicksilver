@@ -239,7 +239,17 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg, memo stri
 	}
 
 	for _, out := range sMsg.Outputs {
-		accAddr, err := utils.AccAddressFromBech32(out.Address, zone.AccountPrefix)
+		// coerce banktype.Output to banktype.MsgSend
+		// to use in handleSendToDelegate
+		msg := banktypes.MsgSend{
+			FromAddress: "",
+			ToAddress:   out.Address,
+			Amount:      out.Coins,
+		}
+		if err := k.handleSendToDelegate(ctx, zone, &msg, memo); err != nil {
+			return err
+		}
+		/*accAddr, err := utils.AccAddressFromBech32(out.Address, zone.AccountPrefix)
 		if err != nil {
 			return err
 		}
@@ -268,7 +278,7 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg, memo stri
 		da.Balance = da.Balance.Add(out.Coins...)
 		if err = k.Delegate(ctx, *zone, da, plan); err != nil {
 			return err
-		}
+		}*/
 	}
 
 	return nil
@@ -722,6 +732,11 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 		return err
 	}
 	// decrement withdrawal waitgroup
+	// We are specifically looking for protocol delegator:validator pairs
+	// and must not decrement the waitgroup for the performance address as it
+	// is not part of the waitgroup set. It is a special delegator address that
+	// operates outside the delegator set, its purpose is to track validator
+	// performance only.
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
 		zone.WithdrawalWaitgroup--
 		k.SetZone(ctx, zone)
@@ -777,7 +792,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	// prepare rewards distribution
 	rewards := sdk.NewCoin(zone.BaseDenom, baseDenomAmount.Sub(baseDenomFee))
 
-	dust, msgs := k.prepareRewardsDistributionMsgs(zone, rewards)
+	dust, msgs := k.prepareRewardsDistributionMsgs(zone, rewards.Amount)
 
 	// subtract dust from rewards
 	rewards = rewards.SubAmount(dust)
@@ -819,36 +834,52 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	}
 
 	// update redemption rate
-	k.updateRedemptionRate(ctx, zone, rewards)
+	k.updateRedemptionRate(ctx, zone, rewards.Amount)
 
 	// send tx
 	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "")
 }
 
-func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards sdk.Coin) {
-	ratio := k.GetDelegatedAmount(ctx, &zone).Add(epochRewards).Amount.ToDec().Quo(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec())
+func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards sdk.Int) {
+	ratio := k.getRatio(ctx, zone, epochRewards)
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec(), "lv", k.GetDelegatedAmount(ctx, &zone).Add(epochRewards).Amount.ToDec())
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec(), "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards).ToDec())
 
 	zone.LastRedemptionRate = zone.RedemptionRate
 	zone.RedemptionRate = ratio
 	k.SetZone(ctx, &zone)
 }
 
-func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdk.Coin) (sdk.Int, []sdk.Msg) {
+func (k *Keeper) getRatio(ctx sdk.Context, zone types.Zone, epochRewards sdk.Int) sdk.Dec {
+	// native asset amount
+	naAmount := k.GetDelegatedAmount(ctx, &zone).Amount
+	// qAsset amount
+	qaAmount := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
+
+	// check if zone is fully withdrawn (no qAssets remain)
+	if qaAmount.IsZero() {
+		// ratio 1.0 (default 1:1 ratio between nativeAssets and qAssets)
+		// native assets should not reach zero before qAssets (discount rate asymptote)
+		return sdk.OneDec()
+	}
+
+	return naAmount.Add(epochRewards).ToDec().Quo(qaAmount.ToDec())
+}
+
+func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdk.Int) (sdk.Int, []sdk.Msg) {
 	// todo: use multisend.
 	// todo: this will probably not want to be an equal distribution. we want to use this to even out the distribution between accounts.
 	var msgs []sdk.Msg
 
-	dust := rewards.Amount
+	dust := rewards
 	numDelegators := len(zone.DelegationAddresses)
 	if numDelegators == 0 {
 		// zone has no delegators, we must panic here, something is very wrong...
 		panic("internal zone error, zone has no delegators")
 	}
-	portion := rewards.Amount.ToDec().Quo(sdk.NewDec(int64(numDelegators))).TruncateInt()
+	portion := rewards.ToDec().Quo(sdk.NewDec(int64(numDelegators))).TruncateInt()
 	for _, da := range zone.GetDelegationAccounts() {
 		msgs = append(
 			msgs,
