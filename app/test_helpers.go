@@ -40,7 +40,6 @@ func Setup(isCheckTx bool) *Quicksilver {
 	config := sdk.GetConfig()
 	cmdcfg.SetBech32Prefixes(config)
 	cmdcfg.SetBip44CoinType(config)
-	config.Seal()
 
 	db := dbm.NewMemDB()
 	app := NewQuicksilver(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{})

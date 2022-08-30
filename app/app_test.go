@@ -25,7 +25,7 @@ func TestQuicksilverExport(t *testing.T) {
 	// Initialize the chain
 	app.InitChain(
 		abci.RequestInitChain{
-			ChainId:       "quicksilver_9000-1",
+			ChainId:       "quicksilver-1",
 			Validators:    []abci.ValidatorUpdate{},
 			AppStateBytes: stateBytes,
 		},

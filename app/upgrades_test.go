@@ -11,16 +11,21 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
+// TODO: this test runs in isolation, but fails as part of `make test`.
+// In the `make test` context, MintCoins() seems to have no effect. Why is this?
 func TestReplaceZone(t *testing.T) {
 	// set up zone drop record and claims.
 	app := Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
-
+	var err error
 	denom := app.StakingKeeper.BondDenom(ctx)
 	someCoins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(1000000)))
 	// work around airdrop keeper can't mint :)
-	app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, someCoins)
-	app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, app.AirdropKeeper.GetZoneDropAccountAddress("osmotest-4"), someCoins)
+
+	err = app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, someCoins)
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, app.AirdropKeeper.GetZoneDropAccountAddress("osmotest-4"), someCoins)
+	require.NoError(t, err)
 
 	zd := airdroptypes.ZoneDrop{
 		ChainId:    "osmotest-4",
@@ -52,7 +57,7 @@ func TestReplaceZone(t *testing.T) {
 		BaseValue:        500000,
 	}
 
-	err := app.AirdropKeeper.SetClaimRecord(ctx, claim1)
+	err = app.AirdropKeeper.SetClaimRecord(ctx, claim1)
 	require.NoError(t, err)
 	err = app.AirdropKeeper.SetClaimRecord(ctx, claim2)
 	require.NoError(t, err)
