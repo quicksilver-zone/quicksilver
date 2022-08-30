@@ -14,7 +14,7 @@ var (
 	DefaultDelegateAccountCount uint64  = 100
 	DefaultDepositInterval      uint64  = 20
 	DefaultValidatorSetInterval uint64  = 200
-	DefaultCommissionRate       sdk.Dec = func() sdk.Dec { v, _ := sdk.NewDecFromStr("0.025"); return v }()
+	DefaultCommissionRate       sdk.Dec = sdk.MustNewDecFromStr("0.025")
 
 	// KeyDelegateAccountCount is store's key for DelegateAccountCount option
 	KeyDelegateAccountCount = []byte("DelegateAccountCount")

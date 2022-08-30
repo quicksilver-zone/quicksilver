@@ -129,7 +129,8 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 		return err
 	}
 
-	// decrement waitgroup as we have received back the query (initially incremented in L93).
+	// decrement waitgroup as we have received back the query
+	// (initially incremented in AfterEpochEnd)
 	zone.WithdrawalWaitgroup--
 
 	k.Logger(ctx).Info("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress)

@@ -128,9 +128,6 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID string, add
 	if err != nil {
 		return 0, err
 	}
-	if cr.Address == "" {
-		return 0, nil
-	}
 
 	// action already completed, nothing to claim
 	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
@@ -138,7 +135,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID string, add
 	}
 
 	// get zone airdrop details
-	zd, ok := k.GetZoneDrop(ctx, chainID)
+	zd, ok := k.GetZoneDrop(ctx, cr.ChainId)
 	if !ok {
 		return 0, types.ErrZoneDropNotFound
 	}
@@ -173,12 +170,9 @@ func (k Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID string, addre
 	if err != nil {
 		return 0, err
 	}
-	if cr.Address == "" {
-		return 0, nil
-	}
 
 	// get zone airdrop details
-	zd, ok := k.GetZoneDrop(ctx, chainID)
+	zd, ok := k.GetZoneDrop(ctx, cr.ChainId)
 	if !ok {
 		return 0, types.ErrZoneDropNotFound
 	}
@@ -186,7 +180,7 @@ func (k Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID string, addre
 	total := uint64(0)
 	// we will only need the index as we will be calling GetClaimableAmountForAction
 	for action := range zd.Actions {
-		claimableForAction, err := k.GetClaimableAmountForAction(ctx, chainID, address, types.Action(action))
+		claimableForAction, err := k.GetClaimableAmountForAction(ctx, cr.ChainId, cr.Address, types.Action(action))
 		if err != nil {
 			return 0, err
 		}

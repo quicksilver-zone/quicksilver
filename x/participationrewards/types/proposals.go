@@ -25,12 +25,7 @@ func (m AddProtocolDataProposal) ProposalType() string   { return ProposalTypeAd
 
 // ValidateBasic runs basic stateless validity checks
 func (m AddProtocolDataProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(m)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return govtypes.ValidateAbstract(m)
 }
 
 // String implements the Stringer interface.

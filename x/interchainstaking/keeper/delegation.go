@@ -77,17 +77,12 @@ func (k Keeper) GetAllDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (d
 // GetValidatorDelegations returns all delegations to a specific validator.
 // Useful for querier.
 func (k Keeper) GetValidatorDelegations(ctx sdk.Context, zone *types.Zone, valAddr sdk.ValAddress) (delegations []types.Delegation) { //nolint:interfacer
-	store := ctx.KVStore(k.storeKey)
-
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(zone.ChainId)...))
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
 		if delegation.GetValidatorAddr().Equals(valAddr) {
 			delegations = append(delegations, delegation)
 		}
-	}
+		return false
+	})
 
 	return delegations
 }
@@ -95,17 +90,10 @@ func (k Keeper) GetValidatorDelegations(ctx sdk.Context, zone *types.Zone, valAd
 // GetDelegatorDelegations returns a given amount of all the delegations from a
 // delegator.
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, zone *types.Zone, delegator sdk.AccAddress) (delegations []types.Delegation) {
-	delegations = []types.Delegation{}
-	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := GetDelegationsKey(zone, delegator)
-
-	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+	k.IterateDelegatorDelegations(ctx, zone, delegator, func(delegation types.Delegation) bool {
 		delegations = append(delegations, delegation)
-	}
+		return false
+	})
 
 	return delegations
 }
@@ -233,7 +221,10 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 		k.SetZone(ctx, zone)
 		return nil
 	}
-	// add withdrawal waitgroup tally
+	// increment withdrawal waitgroup for every withdrawal msg sent
+	// this allows us to track individual msg responses and ensure all
+	// responses have been received and handled...
+	// HandleWithdrawRewards contains the opposing decrement.
 	zone.WithdrawalWaitgroup += uint32(len(msgs))
 	k.SetZone(ctx, zone)
 	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup, "address", delegator)

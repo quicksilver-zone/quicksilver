@@ -75,6 +75,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 					0,
 				)
 
+				// increment the WithdrawalWaitgroup
+				// this allows us to track the response for every protocol delegator
+				// WithdrawalWaitgroup is decremented in RewardsCallback
 				zoneInfo.WithdrawalWaitgroup++
 				k.Logger(ctx).Info("Incrementing waitgroup for delegation", "value", zoneInfo.WithdrawalWaitgroup)
 			}
