@@ -74,7 +74,7 @@ func (msg MsgRequestRedemption) GetSigners() []sdk.AccAddress {
 func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 	// regexp defining what an intent looks like:
 	// {value}{address}
-	iexpr := regexp.MustCompile(`(\d.\d+)(.+1\w+)`)
+	iexpr := regexp.MustCompile(`(\d\.\d+)(.+1\w+)`)
 	// regexp defining what the intent string looks like:
 	// {intent}(,{intent})...
 	pexpr := regexp.MustCompile(fmt.Sprintf("^%s(,%s)*$", iexpr.String(), iexpr.String()))

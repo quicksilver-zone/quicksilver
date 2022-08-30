@@ -31,7 +31,7 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 		errors["UserAddress"] = err
 	}
 
-	if msg.Zone == "" {
+	if len(msg.Zone) == 0 {
 		errors["Zone"] = ErrUndefinedAttribute
 	}
 
