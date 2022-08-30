@@ -13,6 +13,13 @@ import (
 func GetInnuendo1Upgrade(app *Quicksilver) types.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		ReplaceZoneDropChain(ctx, app, "osmotestnet-4", "osmo-test-4", ctx.BlockHeader().Time)
+
+		// update unbonding time to 48h for innuendo-1 testnet to avoid ibc client expiry.
+		// this only applies to innuendo-1; production value will be 21 days.
+		stakeParams := app.StakingKeeper.GetParams(ctx)
+		stakeParams.UnbondingTime = 48 * time.Hour
+		app.StakingKeeper.SetParams(ctx, stakeParams)
+
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }
@@ -63,9 +70,4 @@ func ReplaceZoneDropChain(ctx sdk.Context, app *Quicksilver, chainIdFrom string,
 	}
 
 	app.AirdropKeeper.DeleteZoneDrop(ctx, chainIdFrom)
-
-	// update unbonding time to 48h.
-	stakeParams := app.StakingKeeper.GetParams(ctx)
-	stakeParams.UnbondingTime = 48 * time.Hour
-	app.StakingKeeper.SetParams(ctx, stakeParams)
 }
