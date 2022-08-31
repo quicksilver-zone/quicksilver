@@ -22,7 +22,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// further snapshots will be taken during
 		// ValidatorSelectionRewardsCallback;
 		for _, zone := range k.icsKeeper.AllZones(ctx) {
-			for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
+			for _, di := range k.icsKeeper.AllIntents(ctx, zone, false) {
 				k.icsKeeper.SetIntent(ctx, zone, di, true)
 			}
 		}

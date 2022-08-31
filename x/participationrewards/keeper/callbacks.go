@@ -83,7 +83,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	}
 
 	// create snapshot of current intents for next epoch boundary
-	for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
+	for _, di := range k.icsKeeper.AllIntents(ctx, zone, false) {
 		k.icsKeeper.SetIntent(ctx, zone, di, true)
 	}
 
