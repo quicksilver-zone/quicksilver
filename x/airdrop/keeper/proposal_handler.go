@@ -49,12 +49,8 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.Register
 			return fmt.Errorf("claim record %d, %w", i, err)
 		}
 
-		if cr.ActionsCompleted != nil {
-			for j, ca := range cr.ActionsCompleted {
-				if ctx.BlockTime().Before(ca.CompleteTime) {
-					return fmt.Errorf("invalid zonedrop proposal claim record [%d]: completed action [%d] is in future", i, j)
-				}
-			}
+		if len(cr.ActionsCompleted) != 0 {
+			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: contains completed actions", i)
 		}
 
 		if err := k.SetClaimRecord(ctx, cr); err != nil {
