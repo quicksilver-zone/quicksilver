@@ -32,7 +32,7 @@ func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.
 
 	switch action {
 	case types.ActionInitialClaim:
-		return 0, nil
+		return k.handleInitial(ctx, &cr, action)
 	case types.ActionDepositT1:
 		return k.handleDeposit(ctx, &cr, action, sdk.MustNewDecFromStr(tier1))
 	case types.ActionDepositT2:
@@ -63,6 +63,11 @@ func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.
 // ------------
 // # Handlers #
 // ------------
+
+// handleInitial
+func (k Keeper) handleInitial(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
+	return k.completeClaim(ctx, cr, action)
+}
 
 // handleDeposit
 func (k Keeper) handleDeposit(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, threshold sdk.Dec) (uint64, error) {
