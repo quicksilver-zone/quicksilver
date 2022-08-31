@@ -39,18 +39,6 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 	if moduleBalance.IsZero() {
 		k.Logger(ctx).Info("nothing to distribute...")
 
-		// create snapshot of current intents for the next epoch boundary
-		// requires intents to be set, no intents no snapshot...
-		// this is a bootstrapping operation and this should occur only once;
-		// on every epoch boundary inflation emissions will be allocated to the
-		// module and snapshot will be taken during
-		// ValidatorSelectionRewardsCallback;
-		for _, zone := range k.icsKeeper.AllZones(ctx) {
-			for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
-				k.icsKeeper.SetIntent(ctx, zone, di, true)
-			}
-		}
-
 		return allocation
 	}
 

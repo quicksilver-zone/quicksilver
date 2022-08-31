@@ -6,14 +6,27 @@ import (
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
+var epochsDeferred = int64(3)
+
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 }
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	k.Logger(ctx).Info("distribute participation rewards...")
 
-	if epochNumber < 3 {
-		k.Logger(ctx).Info("defer...")
+	if epochNumber < epochsDeferred {
+		k.Logger(ctx).Info("defer...", "epoch", epochNumber)
+
+		// create snapshot of current intents for the next epoch boundary
+		// requires intents to be set, no intents no snapshot...
+		// further snapshots will be taken during
+		// ValidatorSelectionRewardsCallback;
+		for _, zone := range k.icsKeeper.AllZones(ctx) {
+			for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
+				k.icsKeeper.SetIntent(ctx, zone, di, true)
+			}
+		}
+
 		return
 	}
 
