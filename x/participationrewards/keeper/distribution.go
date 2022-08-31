@@ -39,16 +39,14 @@ func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
 	if moduleBalance.IsZero() {
 		k.Logger(ctx).Info("nothing to distribute...")
 
-		// create snapshot of current intents for next epoch boundary
+		// create snapshot of current intents for the next epoch boundary
 		// requires intents to be set, no intents no snapshot...
-		// we need to ensure the snapshot is only taken once;
-		// TODO: this needs to be verified as it currently does not trigger anymore
+		// this is a bootstrapping operation and this should occur only once;
+		// on every epoch boundary inflation emissions will be allocated to the
+		// module and snapshot will be taken during
+		// ValidatorSelectionRewardsCallback;
 		for _, zone := range k.icsKeeper.AllZones(ctx) {
 			for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
-				k.Logger(ctx).Info("TRIGGERED")
-				// this already happens in zone. If we are certain about ordering,
-				// we should only iterate intents once per epoch boundary as it'll
-				// get unwieldy.
 				k.icsKeeper.SetIntent(ctx, zone, di, true)
 			}
 		}
@@ -138,14 +136,13 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 	otvl := sdk.NewDec(0)
 	// pass 1: iterate zones - set tvl & calc overall tvl
 	for _, zone := range k.icsKeeper.AllZones(ctx) {
+		zone := zone
 		tv, exists := tvs.Tokens[zone.BaseDenom]
 		if !exists {
 			err := fmt.Errorf("unable to obtain token value for zone %s", zone.ChainId)
 			return err
 		}
-		// silence gosec :)
-		zp := zone
-		ztvl := k.icsKeeper.GetDelegatedAmount(ctx, &zp).Amount.ToDec().
+		ztvl := k.icsKeeper.GetDelegatedAmount(ctx, &zone).Amount.ToDec().
 			Quo(sdk.NewDec(tv.Multiplier)).
 			Mul(tv.Value)
 		// set the zone tvl here, we will overwrite it with the correct
