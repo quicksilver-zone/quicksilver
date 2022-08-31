@@ -371,6 +371,11 @@ func (k Keeper) completeClaim(ctx sdk.Context, cr *types.ClaimRecord, action typ
 func (k Keeper) getClaimAmountAndUpdateRecord(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
 	var claimAmount uint64
 
+	// check and initialize ActionsCompleted map
+	if cr.ActionsCompleted == nil {
+		cr.ActionsCompleted = make(map[int32]*types.CompletedAction)
+	}
+
 	// The concept here is to intuitively claim all outstanding deposit tiers
 	// that are below the current deposit claim (improved user experience).
 	//
