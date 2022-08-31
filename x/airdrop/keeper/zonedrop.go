@@ -99,16 +99,21 @@ func (k Keeper) AllActiveZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 }
 
 // IsActiveZoneDrop returns true if the zone airdrop is currently active.
+//
+// `timeline: |----------s----------D----------d----------|`
+// `                     ^---------------------^           `
+//
+// s: StartTime (time.Time)
+// D: Duration  (time.Duration) ... s+D
+// d: decay     (time.Duration) ... s+D+d
+//
+// isActive:  s <= timenow <= s+D+d
+// notActive: timenow < s || timenow > s+D+d
 func (k Keeper) IsActiveZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
-	// Zone airdrop has not yet started
-	if bt.Before(zd.StartTime) {
-		return false
-	}
-
-	// Zone airdrop has expired
-	return !bt.After(zd.StartTime.Add(zd.Duration).Add(zd.Decay))
+	// negated checks here ensure inclusive range
+	return !bt.Before(zd.StartTime) && !bt.After(zd.StartTime.Add(zd.Duration).Add(zd.Decay))
 }
 
 // AllFutureZoneDrops returns all future zone airdrops.
@@ -124,11 +129,20 @@ func (k Keeper) AllFutureZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 }
 
 // IsFutureZoneDrop returns true if the zone airdrop is in the future.
+//
+// `timeline: |----------s----------D----------d----------|`
+// `          ^---------^                                  `
+//
+// s: StartTime (time.Time)
+// D: Duration  (time.Duration) ... s+D
+// d: decay     (time.Duration) ... s+D+d
+//
+// isFuture:  timenow < s
+// notFuture: s <= timenow
 func (k Keeper) IsFutureZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
-	// Zone airdrop has already started
-	return !bt.After(zd.StartTime)
+	return bt.Before(zd.StartTime)
 }
 
 // AllExpiredZoneDrops returns all expired zone airdrops.
@@ -144,11 +158,20 @@ func (k Keeper) AllExpiredZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 }
 
 // IsExpiredZoneDrop returns true if the zone airdrop has already expired.
+//
+// `timeline: |----------s----------D----------d----------|`
+// `                                            ^---------^`
+//
+// s: StartTime (time.Time)
+// D: Duration  (time.Duration) ... s+D
+// d: decay     (time.Duration) ... s+D+d
+//
+// isExpired:  timenow > s+D+d
+// notExpired: timenow < s+D+d
 func (k Keeper) IsExpiredZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
-	// Zone airdrop has not yet expired
-	return !bt.Before(zd.StartTime.Add(zd.Duration).Add(zd.Decay))
+	return bt.After(zd.StartTime.Add(zd.Duration).Add(zd.Decay))
 }
 
 // UnconcludedAirdrops returns all expired zone airdrops that have not yet been

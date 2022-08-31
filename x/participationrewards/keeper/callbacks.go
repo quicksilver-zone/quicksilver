@@ -75,6 +75,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 		"validator scores", zs.ValidatorScores,
 	)
 
+	// snapshot obtained and used here
 	userAllocations := k.calcUserValidatorSelectionAllocations(ctx, zone, *zs)
 
 	if err := k.distributeToUsers(ctx, userAllocations); err != nil {
@@ -82,7 +83,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	}
 
 	// create snapshot of current intents for next epoch boundary
-	for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, false) {
+	for _, di := range k.icsKeeper.AllIntents(ctx, zone, false) {
 		k.icsKeeper.SetIntent(ctx, zone, di, true)
 	}
 

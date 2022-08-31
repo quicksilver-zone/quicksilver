@@ -126,7 +126,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) {
 		return false
 	})
 	// sum is zero, we must panic here, something is very wrong...
-	if ordinalizedIntentSum.IsZero() {
+	if len(intents) > 0 && ordinalizedIntentSum.IsZero() {
 		panic("ordinalized intent sum is zero, this should never happen")
 	}
 

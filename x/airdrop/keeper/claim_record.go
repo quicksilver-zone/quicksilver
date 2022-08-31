@@ -131,7 +131,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID string, add
 
 	// action already completed, nothing to claim
 	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
-		return 0, nil
+		return 0, fmt.Errorf("%w: %s", types.ErrActionCompleted, types.Action_name[int32(action)])
 	}
 
 	// get zone airdrop details
@@ -140,9 +140,9 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID string, add
 		return 0, types.ErrZoneDropNotFound
 	}
 
-	// zone drop is not active, nothing to claim
-	if !k.IsActiveZoneDrop(ctx, zd) {
-		return 0, nil
+	// zone drop is expired, nothing to claim
+	if k.IsExpiredZoneDrop(ctx, zd) {
+		return 0, types.ErrZoneDropExpired
 	}
 
 	// calculate action allocation:

@@ -18,18 +18,16 @@ func (m RegisterZoneDropProposal) GetTitle() string       { return m.Title }
 func (m RegisterZoneDropProposal) ProposalRoute() string  { return RouterKey }
 func (m RegisterZoneDropProposal) ProposalType() string   { return ProposalTypeRegisterZoneDrop }
 
-// ValidateBasic runs basic stateless validity checks
+// ValidateBasic runs basic stateless validity checks.
+//
+// ZoneDrop is validated in HandleRegisterZoneDropProposal.
+// ClaimRecords are validated in HandleRegisterZoneDropProposal.
+//
+// HandleRegisterZoneDropProposal does validation checks as ZoneDrop is related
+// to ClaimRecords. ClaimRecords are in compressed []byte slice format and
+// must be decompressed in order to be validated.
 func (m RegisterZoneDropProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(m)
-	if err != nil {
-		return err
-	}
-
-	// validate ZoneDrop -> HandleRegisterZoneDropProposal
-
-	// validate ClaimRecords -> HandleRegisterZoneDropProposal (after decompression)
-
-	return nil
+	return govtypes.ValidateAbstract(m)
 }
 
 // String implements the Stringer interface.

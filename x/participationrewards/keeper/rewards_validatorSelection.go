@@ -264,7 +264,7 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 	sum := sdk.NewDec(0)
 	userScores := make([]userScore, 0)
 	// obtain snapshotted intents of last epoch boundary
-	for _, di := range k.icsKeeper.AllOrdinalizedIntents(ctx, zone, true) {
+	for _, di := range k.icsKeeper.AllIntents(ctx, zone, true) {
 		uSum := sdk.NewDec(0)
 		for _, intent := range di.GetIntents() {
 			// calc overall user score
