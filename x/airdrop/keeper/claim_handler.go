@@ -368,7 +368,22 @@ func (k Keeper) getClaimAmountAndUpdateRecord(ctx sdk.Context, cr *types.ClaimRe
 
 	// The concept here is to intuitively claim all outstanding deposit tiers
 	// that are below the current deposit claim (improved user experience).
+	//
+	// ActionDepositT5: t5amount
+	// ActionDepositT4: t4amount
+	// ActionDepositT3: t3amount  <-- eg. for T3
+	// ActionDepositT2: t2amount  <-- add to claimAmount if not CompletedAction
+	// ActionDepositT1: t1amount  <-- add to claimAmount if not CompletedAction
+	//
+	// For any given deposit action above ActionDepositT1, sum the claimable
+	// amounts of non completed deposit actions and mark them as complete.
+	// Then, if no errors occurred, update the ClaimRecord state.
+
+	// check for summable ActionDespoit (T2-T5, T1 has nothing below it to sum)
 	if action > types.ActionDepositT1 && action <= types.ActionDepositT5 {
+		// check ActionDeposits from T1 to the target tier
+		// this also ensures that for any complted ActionDeposit tier, all
+		// tiers below are guaranteed to be completed as well.
 		for a := types.ActionDepositT1; a <= action; a++ {
 			if _, exists := cr.ActionsCompleted[int32(a)]; !exists {
 				// obtain claimable amount per deposit action
@@ -377,7 +392,7 @@ func (k Keeper) getClaimAmountAndUpdateRecord(ctx sdk.Context, cr *types.ClaimRe
 					return 0, err
 				}
 
-				// update claim record
+				// update claim record (transient, not yet written to state)
 				cr.ActionsCompleted[int32(a)] = &types.CompletedAction{
 					CompleteTime: ctx.BlockTime(),
 					ClaimAmount:  claimable,
@@ -404,7 +419,7 @@ func (k Keeper) getClaimAmountAndUpdateRecord(ctx sdk.Context, cr *types.ClaimRe
 		}
 	}
 
-	// set claim record
+	// set claim record (persistent)
 	if err := k.SetClaimRecord(ctx, *cr); err != nil {
 		return 0, err
 	}

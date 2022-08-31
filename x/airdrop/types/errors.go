@@ -19,4 +19,6 @@ var (
 	ErrDuplicateClaimRecord = sdkerrors.Register(ModuleName, 9, "duplicate claim record")
 	ErrAllocationExceeded   = sdkerrors.Register(ModuleName, 10, "claim records allocations exceed zone drop allocation")
 	ErrNoClaimRecords       = sdkerrors.Register(ModuleName, 11, "no claim records for zone drop")
+	ErrZoneDropExpired      = sdkerrors.Register(ModuleName, 12, "nothing to claim, this zone drop has expired")
+	ErrActionCompleted      = sdkerrors.Register(ModuleName, 13, "nothing to claim, action already completed")
 )
