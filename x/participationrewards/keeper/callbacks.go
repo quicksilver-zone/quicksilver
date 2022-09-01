@@ -105,6 +105,15 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	if err != nil {
 		return err
 	}
+	// check query.Request is at least 9 bytes in length. (0x02 + 8 bytes for uint64)
+	if len(query.Request) < 9 {
+		return fmt.Errorf("query request not sufficient length")
+	}
+	// assert first character is 0x02 as expected.
+	if query.Request[0] != 0x02 {
+		return fmt.Errorf("query request has unexpected prefix")
+	}
+
 	poolID := sdk.BigEndianToUint64(query.Request[1:])
 	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("pools/%d", poolID))
 	if !ok {
