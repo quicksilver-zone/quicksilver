@@ -264,7 +264,10 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 		}
 
 		var lockedResp osmosislockuptypes.LockedResponse
-		k.cdc.MustUnmarshal(proof.Data, &lockedResp)
+		err := k.cdc.Unmarshal(proof.Data, &lockedResp)
+		if err != nil {
+			return fmt.Errorf("unable to unmarshal locked response: %s", err.Error())
+		}
 
 		// verify proof lock owner address is claim record address
 		if lockedResp.Lock.Owner != cr.Address {
