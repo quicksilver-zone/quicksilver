@@ -31,7 +31,6 @@ func GetWithdrawalKey(chainID string, delegator string, txhash string) []byte {
 func (k Keeper) GetWithdrawalRecord(ctx sdk.Context, zone *types.Zone, txhash string, delegator string, validator string) (types.WithdrawalRecord, bool) {
 	record := types.WithdrawalRecord{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), GetWithdrawalKey(zone.ChainId, delegator, txhash))
-	k.Logger(ctx).Error("Fetch key: ", "key", GetWithdrawalKey(zone.ChainId, delegator, txhash), "val", []byte(validator))
 	bz := store.Get([]byte(validator))
 	if bz == nil {
 		return record, false
@@ -43,7 +42,6 @@ func (k Keeper) GetWithdrawalRecord(ctx sdk.Context, zone *types.Zone, txhash st
 // SetWithdrawalRecord store the withdrawal record
 func (k Keeper) SetWithdrawalRecord(ctx sdk.Context, record *types.WithdrawalRecord) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), GetWithdrawalKey(record.ChainId, record.Delegator, record.Txhash))
-	k.Logger(ctx).Error("Store key: ", "key", GetWithdrawalKey(record.ChainId, record.Delegator, record.Txhash), "val", []byte(record.Validator))
 	bz := k.cdc.MustMarshal(record)
 	store.Set([]byte(record.Validator), bz)
 }
@@ -51,7 +49,6 @@ func (k Keeper) SetWithdrawalRecord(ctx sdk.Context, record *types.WithdrawalRec
 // DeleteWithdrawalRecord deletes withdrawal record
 func (k Keeper) DeleteWithdrawalRecord(ctx sdk.Context, zone *types.Zone, txhash string, delegator string, validator string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), GetWithdrawalKey(zone.ChainId, delegator, txhash))
-	k.Logger(ctx).Error("Delete key: ", "key", GetWithdrawalKey(zone.ChainId, delegator, txhash), "val", []byte(validator))
 	store.Delete([]byte(validator))
 }
 

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 	"sort"
 	"strings"
@@ -40,6 +41,9 @@ func MustUnmarshalDelegation(cdc codec.BinaryCodec, value []byte) Delegation {
 
 // return the delegation
 func UnmarshalDelegation(cdc codec.BinaryCodec, value []byte) (delegation Delegation, err error) {
+	if bytes.Equal(value, []byte("")) {
+		return Delegation{}, fmt.Errorf("unable to unmarshal zero-length byte slice")
+	}
 	err = cdc.Unmarshal(value, &delegation)
 	return delegation, err
 }
@@ -142,6 +146,9 @@ func MustUnmarshalDelegationPlan(cdc codec.BinaryCodec, value []byte) Delegation
 
 // return the delegation plan
 func UnmarshalDelegationPlan(cdc codec.BinaryCodec, value []byte) (delegationPlan DelegationPlan, err error) {
+	if bytes.Equal(value, []byte("")) {
+		return delegationPlan, fmt.Errorf("unable to unmarshal zero length byte slice")
+	}
 	err = cdc.Unmarshal(value, &delegationPlan)
 	return delegationPlan, err
 }

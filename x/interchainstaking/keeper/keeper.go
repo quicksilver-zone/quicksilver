@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -129,6 +130,9 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 
 func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
+	if bytes.Equal(data, []byte("")) {
+		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+	}
 	err := k.cdc.Unmarshal(data, &validatorsRes)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
@@ -185,6 +189,9 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 
 func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validator := stakingTypes.Validator{}
+	if bytes.Equal(data, []byte("")) {
+		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+	}
 	err := k.cdc.Unmarshal(data, &validator)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zoneInfo.ChainId, "err", err)
