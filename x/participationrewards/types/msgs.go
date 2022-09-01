@@ -51,6 +51,14 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 		errors["ProofOps"] = ErrUndefinedAttribute
 	}
 
+	if len(msg.Data) != len(msg.Key) {
+		errors["DataLength"] = ErrSliceLengthMismatch
+	}
+
+	if len(msg.ProofOps) != len(msg.Key) {
+		errors["DataLength"] = ErrSliceLengthMismatch
+	}
+
 	// check for errors and return
 	if len(errors) > 0 {
 		return multierror.New(errors)
