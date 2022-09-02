@@ -34,7 +34,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			)
 
 			k.Logger(ctx).Info("taking a snapshot of intents")
-			k.AggregateIntents(ctx, zoneInfo)
+			err := k.AggregateIntents(ctx, zoneInfo)
+			if err != nil {
+				k.Logger(ctx).Error("encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch", "error", err.Error())
+			}
+
 			if zoneInfo.WithdrawalWaitgroup > 0 {
 				k.Logger(ctx).Error("epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!")
 				zoneInfo.WithdrawalWaitgroup = 0
