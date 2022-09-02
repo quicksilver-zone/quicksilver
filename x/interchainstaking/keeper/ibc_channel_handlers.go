@@ -10,33 +10,35 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, channelID string, connectionID string) error {
+func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connectionID string) error {
 	chainID, err := k.GetChainID(ctx, connectionID)
 	if err != nil {
 		ctx.Logger().Error(
-			"Unable to obtain chain for given connection and port",
-			"ConnectionID", connectionID,
-			"PortID", portID,
-			"Error", err,
+			"unable to obtain chain for given connection and port",
+			"connectionID", connectionID,
+			"portID", portID,
+			"error", err,
 		)
-		return nil
+		return fmt.Errorf("unable to obtain chain for %s/%s: %w", connectionID, portID, err)
 	}
 
 	// get zone
 	zone, found := k.GetZone(ctx, chainID)
 	if !found {
-		ctx.Logger().Error(fmt.Sprintf("expected to find zone info for %v", chainID))
-		return fmt.Errorf("unable to find zone for chainID: %s", chainID)
+		err := fmt.Errorf("unable to obtain zone for chainID %s", chainID)
+		ctx.Logger().Error(err.Error())
+		return err
 	}
 
 	// get interchain account address
 	address, found := k.ICAControllerKeeper.GetInterchainAccountAddress(ctx, connectionID, portID)
 	if !found {
-		ctx.Logger().Error(fmt.Sprintf("expected to find an address for %s/%s", connectionID, portID))
-		return nil
+		err := fmt.Errorf("expected to find an address for %s/%s", connectionID, portID)
+		ctx.Logger().Error(err.Error())
+		return err
 	}
 
-	ctx.Logger().Info("Found matching address", "chain", zone.ChainId, "address", address, "port", portID)
+	ctx.Logger().Info("found matching address", "chain", zone.ChainId, "address", address, "port", portID)
 	portParts := strings.Split(portID, ".")
 
 	switch {
@@ -79,8 +81,9 @@ func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, channelID s
 		// check for duplicate address
 		for _, existing := range delegationAccounts {
 			if existing.Address == address {
-				ctx.Logger().Error("unexpectedly found existing address: " + address)
-				return nil
+				err := fmt.Errorf("unexpectedly found existing address: %s", address)
+				ctx.Logger().Error(err.Error())
+				return err
 			}
 		}
 		account, err := types.NewICAAccount(address, portID, zone.BaseDenom)
@@ -105,8 +108,9 @@ func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, channelID s
 		}
 
 	default:
-		ctx.Logger().Error("unexpected channel on portID: " + portID)
-		return fmt.Errorf("unexpected channel on portID %s", portID)
+		err := fmt.Errorf("unexpected channel on portID: %s", portID)
+		ctx.Logger().Error(err.Error())
+		return err
 	}
 	k.SetZone(ctx, &zone)
 	return nil
