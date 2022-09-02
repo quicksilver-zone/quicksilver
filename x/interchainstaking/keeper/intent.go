@@ -107,7 +107,6 @@ func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot
 	return intents, nil
 }
 
-//
 func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 	var err error
 	snapshot := false
