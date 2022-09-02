@@ -21,17 +21,33 @@ func (k *Keeper) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim) (
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
 
-	if msg.Height != zone.LastEpochHeight {
-		return nil, fmt.Errorf("invalid claim for last epoch, expected height %d, got %d", zone.LastEpochHeight, msg.Height)
-	}
+	for i, proof := range msg.Proofs {
+		pl := fmt.Sprintf("Proof [%d]", i)
 
-	height := msg.Height
-	claimCount := len(msg.Data) // validate basic should check that the length of these fields is equal.
-	for claimIdx := 0; claimIdx < claimCount; claimIdx++ {
-		if err := utils.ValidateProofOps(ctx, &k.icsKeeper.IBCKeeper, zone.ConnectionId, zone.ChainId, height, "lockup", msg.Key[claimIdx], msg.Data[claimIdx], msg.ProofOps[claimIdx]); err != nil {
-			return nil, err
+		if proof.Height != zone.LastEpochHeight {
+			return nil, fmt.Errorf(
+				"invalid claim for last epoch, %s expected height %d, got %d",
+				pl,
+				zone.LastEpochHeight,
+				proof.Height,
+			)
+		}
+
+		if err := utils.ValidateProofOps(
+			ctx,
+			&k.icsKeeper.IBCKeeper,
+			zone.ConnectionId,
+			zone.ChainId,
+			proof.Height,
+			"lockup",
+			proof.Key,
+			proof.Data,
+			proof.ProofOps,
+		); err != nil {
+			return nil, fmt.Errorf("%s: %w", pl, err)
 		}
 	}
+
 	// if we get here all data was validated; verifyClaim will write the claim to the correct store.
 	if mod, ok := k.prSubmodules[msg.ProofType]; ok {
 		if err := mod.VerifyClaim(ctx, k, msg); err != nil {

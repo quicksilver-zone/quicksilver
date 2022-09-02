@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 func TestMsgClaim_ValidateBasic(t *testing.T) {
@@ -82,7 +83,12 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 				Proofs: []*Proof{
-					{},
+					{
+						Key:      []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						Data:     []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						ProofOps: &crypto.ProofOps{},
+						Height:   10,
+					},
 				},
 			},
 			false,

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
@@ -36,28 +38,29 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 		errors["Zone"] = ErrUndefinedAttribute
 	}
 
-	if len(msg.Key) == 0 {
-		errors["Key"] = ErrUndefinedAttribute
+	if len(msg.Proofs) == 0 {
+		errors["Proofs"] = ErrUndefinedAttribute
 	}
 
-	if len(msg.Data) == 0 {
-		errors["Data"] = ErrUndefinedAttribute
-	}
+	if len(msg.Proofs) > 0 {
+		for i, p := range msg.Proofs {
+			pLabel := fmt.Sprintf("Proof [%d]:", i)
+			if len(p.Key) == 0 {
+				errors[pLabel+" Key"] = ErrUndefinedAttribute
+			}
 
-	if len(msg.ProofOps) == 0 {
-		errors["ProofOps"] = ErrUndefinedAttribute
-	}
+			if len(p.Data) == 0 {
+				errors[pLabel+" Data"] = ErrUndefinedAttribute
+			}
 
-	if msg.Height == 0 {
-		errors["ProofOps"] = ErrUndefinedAttribute
-	}
+			if p.ProofOps == nil {
+				errors[pLabel+" ProofOps"] = ErrUndefinedAttribute
+			}
 
-	if len(msg.Data) != len(msg.Key) {
-		errors["DataLength"] = ErrSliceLengthMismatch
-	}
-
-	if len(msg.ProofOps) != len(msg.Key) {
-		errors["DataLength"] = ErrSliceLengthMismatch
+			if p.Height < 0 {
+				errors[pLabel+" Height"] = ErrNegativeAttribute
+			}
+		}
 	}
 
 	// check for errors and return
