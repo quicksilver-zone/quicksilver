@@ -21,4 +21,5 @@ var (
 	ErrNoClaimRecords       = sdkerrors.Register(ModuleName, 11, "no claim records for zone drop")
 	ErrZoneDropExpired      = sdkerrors.Register(ModuleName, 12, "nothing to claim, this zone drop has expired")
 	ErrActionCompleted      = sdkerrors.Register(ModuleName, 13, "nothing to claim, action already completed")
+	ErrNegativeAttribute    = sdkerrors.Register(ModuleName, 14, "expected attribute must not be negative")
 )

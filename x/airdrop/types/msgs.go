@@ -28,7 +28,7 @@ func (msg MsgClaim) Type() string { return TypeMsgClaim }
 func (msg MsgClaim) ValidateBasic() error {
 	errors := make(map[string]error)
 
-	if msg.ChainId == "" {
+	if len(msg.ChainId) == 0 {
 		errors["ChainId"] = ErrUndefinedAttribute
 	}
 
@@ -39,6 +39,31 @@ func (msg MsgClaim) ValidateBasic() error {
 
 	if _, err := sdk.AccAddressFromBech32(msg.Address); err != nil {
 		errors["Address"] = err
+	}
+
+	if len(msg.Proofs) == 0 {
+		errors["Proofs"] = ErrUndefinedAttribute
+	}
+
+	if len(msg.Proofs) > 0 {
+		for i, p := range msg.Proofs {
+			pLabel := fmt.Sprintf("Proof [%d]:", i)
+			if len(p.Key) == 0 {
+				errors[pLabel+" Key"] = ErrUndefinedAttribute
+			}
+
+			if len(p.Data) == 0 {
+				errors[pLabel+" Data"] = ErrUndefinedAttribute
+			}
+
+			if p.ProofOps == nil {
+				errors[pLabel+" ProofOps"] = ErrUndefinedAttribute
+			}
+
+			if p.Height < 0 {
+				errors[pLabel+" Height"] = ErrNegativeAttribute
+			}
+		}
 	}
 
 	if len(errors) > 0 {

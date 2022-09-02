@@ -27,12 +27,21 @@ message MsgSubmitClaim {
   string user_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string zone = 2;
   int64 proof_type = 3;
-  repeated bytes key = 4 [ (gogoproto.moretags) = "yaml:\"key\"" ];
-  repeated bytes data = 5 [ (gogoproto.moretags) = "yaml:\"result\"" ];
-  repeated tendermint.crypto.ProofOps proof_ops = 6
-      [ (gogoproto.moretags) = "yaml:\"proof_ops\"" ];
-  int64 height = 7 [ (gogoproto.moretags) = "yaml:\"height\"" ];
+  repeated Proof proofs = 4
+    [ (gogoproto.moretags) = "yaml:\"proofs\"" ];
 }
 
 // MsgSubmitClaimResponse defines the MsgSubmitClaim response type.
 message MsgSubmitClaimResponse {}
+
+// Proof defines a type used to cryptographically prove a claim.
+message Proof {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  bytes key = 1 [ (gogoproto.moretags) = "yaml:\"key\"" ];
+  bytes data = 2 [ (gogoproto.moretags) = "yaml:\"data\"" ];
+  tendermint.crypto.ProofOps proof_ops = 3
+      [ (gogoproto.moretags) = "yaml:\"proof_ops\"" ];
+  int64 height = 4 [ (gogoproto.moretags) = "yaml:\"height\"" ];
+}
