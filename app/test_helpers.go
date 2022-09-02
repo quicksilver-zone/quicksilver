@@ -8,12 +8,13 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
+	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 )
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in

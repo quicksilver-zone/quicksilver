@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -84,35 +86,42 @@ func (k Keeper) AllIntentsAsPointer(ctx sdk.Context, zone types.Zone, snapshot b
 }
 
 // AllOrdinalizedIntents returns every intent in the store for the specified zone.
-// This function will panic on failure.
-func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot bool) []types.DelegatorIntent {
+func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot bool) ([]types.DelegatorIntent, error) {
 	intents := []types.DelegatorIntent{}
+	var err error
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
-		query := bankTypes.QueryBalanceRequest{Address: intent.Delegator, Denom: zone.LocalDenom}
-		balance, err := k.BankKeeper.Balance(sdk.WrapSDKContext(ctx), &query)
-		if err != nil {
-			panic(err)
+		addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
+		if localErr != nil {
+			err = localErr
+			return true
 		}
-		baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(balance.Balance.Amount)).TruncateInt()
-		intents = append(intents, intent.Ordinalize(baseBalance))
+		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
+
+		intents = append(intents, intent.Ordinalize(balance.Amount))
 		return false
 	})
-	return intents
+	if err != nil {
+		// check on nil here to ensure we don't return half a slice of intents
+		return []types.DelegatorIntent{}, err
+	}
+	return intents, nil
 }
 
-// This function will panic on failure.
-func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) {
+func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
+	var err error
 	snapshot := false
 	intents := map[string]*types.ValidatorIntent{}
 	ordinalizedIntentSum := sdk.ZeroDec()
+	// reduce intents
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
-		query := bankTypes.QueryBalanceRequest{Address: intent.Delegator, Denom: zone.LocalDenom}
-		balance, err := k.BankKeeper.Balance(sdk.WrapSDKContext(ctx), &query)
-		if err != nil {
-			panic(err)
+		addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
+		if localErr != nil {
+			err = localErr
+			return true
 		}
-		baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(balance.Balance.Amount)).TruncateInt()
-		for _, vIntent := range intent.Ordinalize(baseBalance).Intents {
+		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
+
+		for _, vIntent := range intent.Ordinalize(balance.Amount).Intents {
 			thisIntent, ok := intents[vIntent.ValoperAddress]
 			ordinalizedIntentSum = ordinalizedIntentSum.Add(vIntent.Weight)
 			if !ok {
@@ -125,11 +134,16 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) {
 
 		return false
 	})
-	// sum is zero, we must panic here, something is very wrong...
-	if len(intents) > 0 && ordinalizedIntentSum.IsZero() {
-		panic("ordinalized intent sum is zero, this should never happen")
+	if err != nil {
+		return err
 	}
 
+	// sum is zero, we must panic here, something is very wrong...
+	if len(intents) > 0 && ordinalizedIntentSum.IsZero() {
+		return fmt.Errorf("ordinalized intent sum is zero, this should never happen")
+	}
+
+	// normalise aggregated intents again.
 	for key, val := range intents {
 		val.Weight = val.Weight.Quo(ordinalizedIntentSum)
 		intents[key] = val
@@ -137,6 +151,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) {
 
 	zone.AggregateIntent = intents
 	k.SetZone(ctx, &zone)
+	return nil
 }
 
 func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types.Zone, inAmount sdk.Coins, memo string) error {

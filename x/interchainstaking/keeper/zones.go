@@ -459,6 +459,7 @@ func (k Keeper) InitPerformanceDelegations(ctx sdk.Context, zone types.Zone, res
 	k.Logger(ctx).Info("Initialize performance delegations")
 
 	resp := banktypes.QueryAllBalancesResponse{}
+	// balance response can be nil, so don't guard against this.
 	err := k.cdc.Unmarshal(response, &resp)
 	if err != nil {
 		return err

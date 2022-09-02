@@ -3,8 +3,10 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -30,6 +32,10 @@ func UnmarshalProtocolData(datatype string, data json.RawMessage) (IProtocolData
 		if err != nil {
 			return nil, err
 		}
+		var blank types.OsmosisPoolProtocolData
+		if reflect.DeepEqual(pd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal osmosispool protocol data from empty JSON object")
+		}
 		return pd, nil
 	case "connection":
 		pd := ConnectionProtocolData{}
@@ -37,12 +43,20 @@ func UnmarshalProtocolData(datatype string, data json.RawMessage) (IProtocolData
 		if err != nil {
 			return nil, err
 		}
+		var blank ConnectionProtocolData
+		if reflect.DeepEqual(pd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal connection protocol data from empty JSON object")
+		}
 		return pd, nil
-	case types.ClaimTypes[types.ClaimTypeLiquidToken]:
+	case "liquid":
 		pd := types.LiquidAllowedDenomProtocolData{}
 		err := json.Unmarshal(data, &pd)
 		if err != nil {
 			return nil, err
+		}
+		var blank types.LiquidAllowedDenomProtocolData
+		if reflect.DeepEqual(pd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal liquid protocol data from empty JSON object")
 		}
 		return pd, nil
 	default:

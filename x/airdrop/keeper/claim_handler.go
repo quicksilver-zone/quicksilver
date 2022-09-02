@@ -7,10 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
 
+	osmosislockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
+
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	osmosislockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
 
 	participationrewardskeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -264,7 +265,10 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 		}
 
 		var lockedResp osmosislockuptypes.LockedResponse
-		k.cdc.MustUnmarshal(proof.Data, &lockedResp)
+		err := k.cdc.Unmarshal(proof.Data, &lockedResp)
+		if err != nil {
+			return fmt.Errorf("unable to unmarshal locked response: %s", err.Error())
+		}
 
 		// verify proof lock owner address is claim record address
 		if lockedResp.Lock.Owner != cr.Address {

@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
@@ -49,6 +50,14 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 
 	if msg.Height == 0 {
 		errors["ProofOps"] = ErrUndefinedAttribute
+	}
+
+	if len(msg.Data) != len(msg.Key) {
+		errors["DataLength"] = ErrSliceLengthMismatch
+	}
+
+	if len(msg.ProofOps) != len(msg.Key) {
+		errors["DataLength"] = ErrSliceLengthMismatch
 	}
 
 	// check for errors and return

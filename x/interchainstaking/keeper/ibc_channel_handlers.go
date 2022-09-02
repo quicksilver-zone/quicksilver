@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 

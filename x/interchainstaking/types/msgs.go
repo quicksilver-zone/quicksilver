@@ -7,12 +7,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
 // interchainstaking message types
 const (
-	TypeMsgRegisterZone      = "registerzone"
 	TypeMsgRequestRedemption = "requestredemption"
 	TypeMsgSignalIntent      = "signalintent"
 )
@@ -26,7 +26,7 @@ func NewMsgRequestRedemption(value sdk.Coin, destinationAddress string, fromAddr
 func (msg MsgRequestRedemption) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (msg MsgRequestRedemption) Type() string { return TypeMsgRegisterZone }
+func (msg MsgRequestRedemption) Type() string { return TypeMsgRequestRedemption }
 
 // ValidateBasic Implements Msg.
 func (msg MsgRequestRedemption) ValidateBasic() error {

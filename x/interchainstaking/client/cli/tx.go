@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -171,6 +172,10 @@ func ParseZoneRegistrationProposal(cdc codec.JSONCodec, proposalFile string) (ty
 
 	if err = cdc.UnmarshalJSON(contents, &proposal); err != nil {
 		return proposal, err
+	}
+
+	if reflect.DeepEqual(proposal, types.RegisterZoneProposalWithDeposit{}) {
+		return proposal, fmt.Errorf("cannot unmarshal empty JSON object")
 	}
 
 	return proposal, nil

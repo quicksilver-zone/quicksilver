@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"sort"
 	"strings"
 	"time"
@@ -37,8 +39,20 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			k.Logger(ctx).Error("unable to unmarshal acknowledgement error", "error", err, "data", acknowledgement)
 			return err
 		}
+		// assert acknowledgement not empty struct.
+		if reflect.DeepEqual(ack, channeltypes.Acknowledgement_Error{}) {
+			return fmt.Errorf("unable to unmarshal acknowledgement error; got empty JSON object")
+		}
 		k.Logger(ctx).Error("unable to unmarshal acknowledgement result", "error", err, "remote_err", ackErr, "data", acknowledgement)
 		return err
+	}
+	// assert acknowledgement not empty struct.
+	if reflect.DeepEqual(ack, channeltypes.Acknowledgement_Result{}) {
+		return fmt.Errorf("unable to unmarshal acknowledgement result; got empty JSON object")
+	}
+
+	if bytes.Equal(ack.Result, []byte("")) {
+		return fmt.Errorf("unable to unmarshal empty byte slice")
 	}
 
 	txMsgData := &sdk.TxMsgData{}
@@ -54,6 +68,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		k.Logger(ctx).Error("unable to unmarshal acknowledgement packet data", "error", err, "data", packetData)
 		return err
 	}
+	if reflect.DeepEqual(packetData, icatypes.InterchainAccountPacketData{}) {
+		return fmt.Errorf("unable to unmarshal packet data; got empty JSON object")
+	}
+
 	msgs, err := icatypes.DeserializeCosmosTx(k.cdc, packetData.Data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to decode messages", "err", err)
@@ -61,6 +79,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	}
 
 	for msgIndex, msgData := range txMsgData.Data {
+		if bytes.Equal(msgData.Data, []byte("")) {
+			return fmt.Errorf("unable to unmarshal msg index: %d; empty byte slice is not valid", msgIndex)
+		}
 		src := msgs[msgIndex]
 		switch msgData.MsgType {
 		case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
@@ -607,6 +628,9 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, 
 
 func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.Zone, delegatorAddress string, args []byte) error {
 	var response stakingtypes.QueryDelegatorDelegationsResponse
+	if bytes.Equal(args, []byte("")) {
+		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+	}
 	err := k.cdc.Unmarshal(args, &response)
 	if err != nil {
 		return err

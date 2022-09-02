@@ -76,14 +76,6 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 // Callback Handlers
 // -----------------------------------
 
-func LatestBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetZone(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-	return SetValidatorsForZone(k, ctx, zone, args)
-}
-
 func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
@@ -99,6 +91,10 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 	blockResponse := tmservice.GetLatestBlockResponse{}
+	// block response is never expected to be nil
+	if bytes.Equal(args, []byte("")) {
+		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+	}
 	err := k.cdc.Unmarshal(args, &blockResponse)
 	if err != nil {
 		return err
@@ -125,6 +121,9 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 
 	// unmarshal request payload
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
+	if bytes.Equal(query.Request, []byte("")) {
+		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+	}
 	err := k.cdc.Unmarshal(query.Request, &rewardsQuery)
 	if err != nil {
 		return err
@@ -146,6 +145,9 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	}
 
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
+	if bytes.Equal(query.Request, []byte("")) {
+		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+	}
 	err := k.cdc.Unmarshal(query.Request, &delegationQuery)
 	if err != nil {
 		return err
@@ -161,6 +163,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	}
 
 	delegation := stakingtypes.Delegation{}
+	// delegations _can_ legitimately be nil here, so explicitly DON'T guard against this.
 	err := k.cdc.Unmarshal(args, &delegation)
 	if err != nil {
 		return err
@@ -222,6 +225,9 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 
 	txs := tx.GetTxsEventResponse{}
 
+	if bytes.Equal(args, []byte("")) {
+		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+	}
 	err := k.cdc.Unmarshal(args, &txs)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal txs for deposit account", "deposit_address", zone.DepositAddress.GetAddress(), "err", err)
@@ -231,6 +237,9 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	// TODO: use pagination.GetTotal() to dispatch the correct number of requests now; rather than iteratively.
 	if len(txs.GetTxs()) == types.TxRetrieveCount {
 		req := tx.GetTxsEventRequest{}
+		if bytes.Equal(query.Request, []byte("")) {
+			return fmt.Errorf("attempted to unmarshal zero length byte slice")
+		}
 		err := k.cdc.Unmarshal(query.Request, &req)
 		if err != nil {
 			return err
@@ -365,6 +374,9 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 	}
 
 	res := icqtypes.GetTxWithProofResponse{}
+	if bytes.Equal(args, []byte("")) {
+		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+	}
 	err := k.cdc.Unmarshal(args, &res)
 	if err != nil {
 		return err
@@ -446,6 +458,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 	}
 
 	coin := sdk.Coin{}
+	// this can legitimately be nil, so do not guard against nil byte slice here.
 	err = k.cdc.Unmarshal(args, &coin)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal balance info for zone", "zone", zone.ChainId, "err", err)
@@ -477,6 +490,9 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 
 func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	balanceQuery := banktypes.QueryAllBalancesRequest{}
+	if bytes.Equal(query.Request, []byte("")) {
+		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+	}
 	err := k.cdc.Unmarshal(query.Request, &balanceQuery)
 	if err != nil {
 		return err

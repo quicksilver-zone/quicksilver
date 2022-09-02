@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -40,6 +41,9 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 
 // unmarshal the current staking params value from store key
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
+	if bytes.Equal(value, []byte("")) {
+		return params, fmt.Errorf("unable to unmarshal empty byte slice")
+	}
 	err = cdc.Unmarshal(value, &params)
 	if err != nil {
 		return
@@ -64,6 +68,10 @@ func validateParams(i interface{}) error {
 
 	if v.ValidatorsetInterval <= 0 {
 		return fmt.Errorf("valset interval must be positive: %d", v.ValidatorsetInterval)
+	}
+
+	if v.CommissionRate.IsNil() {
+		return fmt.Errorf("commission rate must be non-nil")
 	}
 
 	if v.CommissionRate.IsNegative() {
