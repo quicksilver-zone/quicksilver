@@ -86,6 +86,8 @@ func (s *KeeperTestSuite) SetupZones() {
 	bz, err := s.GetQuicksilverApp(s.chainA).AppCodec().Marshal(&bondedQuery)
 	s.Require().NoError(err)
 
+	// proofOps is missing here
+	// we can no longer spoof a query/response for testing?
 	qmsg := icqtypes.MsgSubmitQueryResponse{
 		ChainId: s.chainB.ChainID,
 		QueryId: icqkeeper.GenerateQueryHash(

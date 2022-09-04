@@ -20,7 +20,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			"valid",
 			func() {
 				msg = icstypes.MsgRequestRedemption{
-					Coin:               "100000 uatom",
+					Value:              sdktypes.NewCoin("uatom", sdktypes.NewInt(10000000)),
 					DestinationAddress: TestOwnerAddress,
 					FromAddress:        TestOwnerAddress,
 				}
