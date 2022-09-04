@@ -247,5 +247,9 @@ func ParseZoneUpdateProposal(cdc codec.JSONCodec, proposalFile string) (types.Up
 		return proposal, err
 	}
 
+	if reflect.DeepEqual(proposal, types.UpdateZoneProposalWithDeposit{}) {
+		return proposal, fmt.Errorf("cannot unmarshal empty JSON object")
+	}
+
 	return proposal, nil
 }
