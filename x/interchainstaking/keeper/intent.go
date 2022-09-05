@@ -175,6 +175,6 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 	if len(intent.Intents) == 0 {
 		return nil
 	}
-	k.SetIntent(ctx, zone, intent, snapshot)
+	k.SetIntent(ctx, zone, intent.Normalize(), snapshot)
 	return nil
 }
