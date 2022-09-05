@@ -6,6 +6,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 var (
@@ -15,6 +16,7 @@ var (
 
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgClaim{}, "quicksilver/MsgClaim", nil)
+	cdc.RegisterConcrete(&RegisterZoneDropProposal{}, "quicksilver/RegisterZoneDropProposal", nil)
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
@@ -22,11 +24,17 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgClaim{},
 	)
 
+	registry.RegisterImplementations(
+		(*govv1beta1.Content)(nil),
+		&RegisterZoneDropProposal{},
+	)
+
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
 func init() {
 	RegisterLegacyAminoCodec(amino)
+	govv1beta1.RegisterProposalType(ProposalTypeRegisterZoneDrop)
 	cryptocodec.RegisterCrypto(amino)
 	sdk.RegisterLegacyAminoCodec(amino)
 }
