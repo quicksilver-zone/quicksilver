@@ -1,6 +1,11 @@
 package types
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+)
 
 func NewGenesisState(params Params, zoneDrops []*ZoneDrop, claimRecords []*ClaimRecord) *GenesisState {
 	return &GenesisState{
@@ -73,4 +78,16 @@ func ValidateGenesis(data GenesisState) error {
 	}
 
 	return nil
+}
+
+// GetGenesisStateFromAppState returns x/bank GenesisState given raw application
+// genesis state.
+func GetGenesisStateFromAppState(cdc codec.JSONCodec, appState map[string]json.RawMessage) *GenesisState {
+	var genesisState GenesisState
+
+	if appState[ModuleName] != nil {
+		cdc.MustUnmarshalJSON(appState[ModuleName], &genesisState)
+	}
+
+	return &genesisState
 }

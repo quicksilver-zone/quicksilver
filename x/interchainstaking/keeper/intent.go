@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -97,7 +96,7 @@ func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot
 		}
 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 
-		intents = append(intents, intent.Ordinalize(balance.Amount))
+		intents = append(intents, intent.Ordinalize(balance.Amount.ToDec()))
 		return false
 	})
 	if err != nil {
@@ -121,7 +120,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 		}
 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 
-		for _, vIntent := range intent.Ordinalize(balance.Amount).Intents {
+		for _, vIntent := range intent.Ordinalize(balance.Amount.ToDec()).Intents {
 			thisIntent, ok := intents[vIntent.ValoperAddress]
 			ordinalizedIntentSum = ordinalizedIntentSum.Add(vIntent.Weight)
 			if !ok {
@@ -159,21 +158,27 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 	intent, _ := k.GetIntent(ctx, zone, sender.String(), snapshot)
 
 	// ordinalize
-	query := bankTypes.QueryBalanceRequest{Address: sender.String(), Denom: zone.LocalDenom}
-	balance, err := k.BankKeeper.Balance(sdk.WrapSDKContext(ctx), &query)
-	if err != nil {
-		return err
+	balance := k.BankKeeper.GetBalance(ctx, sender, zone.BaseDenom)
+
+	// inAmount is ordinal with respect to the redemption rate, so we must scale
+	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(balance.Amount))
+
+	if inAmount.IsValid() {
+		intent = zone.UpdateIntentWithCoins(intent, baseBalance, inAmount)
 	}
-	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(balance.Balance.Amount)).TruncateInt()
-	intent = intent.AddOrdinal(baseBalance, zone.ConvertCoinsToOrdinalIntents(inAmount))
-	memoIntent, err := zone.ConvertMemoToOrdinalIntents(inAmount, memo)
-	if err != nil {
-		return err
+
+	if len(memo) > 0 {
+		var err error
+		intent, err = zone.UpdateIntentWithMemo(intent, memo, baseBalance, inAmount)
+		if err != nil {
+			return err
+		}
 	}
-	intent = intent.AddOrdinal(baseBalance, memoIntent)
+
 	if len(intent.Intents) == 0 {
 		return nil
 	}
+
 	k.SetIntent(ctx, zone, intent, snapshot)
 	return nil
 }

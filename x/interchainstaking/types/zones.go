@@ -64,6 +64,28 @@ COINS:
 	return nil
 }
 
+// this method exist to make testing easier!
+func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins) DelegatorIntent {
+	// coinIntent is ordinal
+	fmt.Println("YO", intent, inAmount)
+	intent = intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount))
+	fmt.Println("YO", intent)
+	return intent
+}
+
+// this method exist to make testing easier!
+func (z *Zone) UpdateIntentWithMemo(intent DelegatorIntent, memo string, multiplier sdk.Dec, inAmount sdk.Coins) (DelegatorIntent, error) {
+	// coinIntent is ordinal
+	memoIntent, err := z.ConvertMemoToOrdinalIntents(inAmount, memo)
+	if err != nil {
+		return DelegatorIntent{}, err
+	}
+
+	intent = intent.AddOrdinal(multiplier, memoIntent)
+
+	return intent, nil
+}
+
 func (z *Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins) ValidatorIntents {
 	// should we be return DelegatorIntent here?
 	out := make(ValidatorIntents)

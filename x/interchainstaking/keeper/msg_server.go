@@ -110,7 +110,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		userIntent = types.DelegatorIntent{Delegator: msg.FromAddress, Intents: vi}
 	}
 
-	intentMap := userIntent.ToAllocations(nativeTokens)
+	intentMap := userIntent.ToAllocations(nativeTokens.ToDec())
 
 	targets, err := k.GetRedemptionTargets(ctx, *zone, intentMap) // map[string][string]sdk.Coin
 	if err != nil {
