@@ -21,9 +21,10 @@ import (
 )
 
 const (
-	flagVestingStart = "vesting-start-time"
-	flagVestingEnd   = "vesting-end-time"
-	flagVestingAmt   = "vesting-amount"
+	flagVestingStart  = "vesting-start-time"
+	flagVestingEnd    = "vesting-end-time"
+	flagVestingAmt    = "vesting-amount"
+	flagVestingPeriod = "vesting-period"
 )
 
 // AddGenesisAccountCmd returns add-genesis-account cobra Command.
@@ -84,10 +85,36 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				return err
 			}
 
+			vestingPeriods, err := cmd.Flags().GetIntSlice(flagVestingPeriod)
+			if err != nil {
+				return err
+			}
+
 			vestingAmt, err := sdk.ParseCoinsNormalized(vestingAmtStr)
 			if err != nil {
 				return fmt.Errorf("failed to parse vesting amount: %w", err)
 			}
+
+			periods := make(authvesting.Periods, 0)
+
+			if periodCount := int64(len(vestingPeriods)); periodCount > 0 {
+				// if vesting-period flag was used, add the terms.
+				periodAmount := sdk.Coins{}
+				dust := sdk.Coins{}
+				for _, coin := range vestingAmt {
+					periodCoin := sdk.NewCoin(coin.Denom, coin.Amount.Quo(sdk.NewInt(periodCount)))
+					periodAmount = append(periodAmount, periodCoin)
+					// if there was truncation, determine the extent and add to the last period
+					if !periodCoin.Amount.Mul(sdk.NewInt(periodCount)).Equal(coin.Amount) { // truncation happened!
+						dust = append(dust, sdk.NewCoin(coin.Denom, coin.Amount.Sub(periodCoin.Amount.Mul(sdk.NewInt(periodCount)))))
+					}
+				}
+				for _, period := range vestingPeriods {
+					periods = append(periods, authvesting.Period{Length: int64(period), Amount: periodAmount})
+				}
+				periods[len(periods)-1].Amount = periods[len(periods)-1].Amount.Add(dust...)
+			}
+			fmt.Println(periods)
 
 			// create concrete account type based on input parameters
 			var genAccount authtypes.GenesisAccount
@@ -104,6 +131,9 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 				}
 
 				switch {
+				case len(periods) > 0 && vestingStart != 0:
+					genAccount = authvesting.NewPeriodicVestingAccount(baseAccount, vestingAmt.Sort(), vestingStart, periods)
+
 				case vestingStart != 0 && vestingEnd != 0:
 					genAccount = authvesting.NewContinuousVestingAccountRaw(baseVestingAccount, vestingStart)
 
@@ -111,7 +141,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 					genAccount = authvesting.NewDelayedVestingAccountRaw(baseVestingAccount)
 
 				default:
-					return errors.New("invalid vesting parameters; must supply start and end time or end time")
+					return errors.New("invalid vesting parameters; must supply start and end time, start time and vesting periods, or end time")
 				}
 			} else {
 				genAccount = baseAccount
@@ -183,6 +213,7 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 	cmd.Flags().String(flagVestingAmt, "", "amount of coins for vesting accounts")
 	cmd.Flags().Int64(flagVestingStart, 0, "schedule start time (unix epoch) for vesting accounts")
 	cmd.Flags().Int64(flagVestingEnd, 0, "schedule end time (unix epoch) for vesting accounts")
+	cmd.Flags().IntSliceP(flagVestingPeriod, "p", []int{}, "vesting periods (equal distribution")
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd
