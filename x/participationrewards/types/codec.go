@@ -35,8 +35,10 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 func init() {
+	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
+	sdk.RegisterLegacyAminoCodec(amino)
+
 	govtypes.RegisterProposalType(ProposalTypeAddProtocolData)
 	govtypes.RegisterProposalTypeCodec(&AddProtocolDataProposal{}, "quicksilver/AddProtocolDataProposal")
-	amino.Seal()
 }

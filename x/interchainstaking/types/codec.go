@@ -39,11 +39,14 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 func init() {
+	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
+	sdk.RegisterLegacyAminoCodec(amino)
+
 	govtypes.RegisterProposalType(ProposalTypeRegisterZone)
 	govtypes.RegisterProposalTypeCodec(&RegisterZoneProposal{}, "quicksilver/RegisterZoneProposal")
 
 	govtypes.RegisterProposalType(ProposalTypeUpdateZone)
 	govtypes.RegisterProposalTypeCodec(&UpdateZoneProposal{}, "quicksilver/UpdateZoneProposal")
-	amino.Seal()
+
 }
