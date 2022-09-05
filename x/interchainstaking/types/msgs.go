@@ -17,6 +17,11 @@ const (
 	TypeMsgSignalIntent      = "signalintent"
 )
 
+var (
+	_ sdk.Msg = &MsgRequestRedemption{}
+	_ sdk.Msg = &MsgSignalIntent{}
+)
+
 // NewMsgRequestRedemption - construct a msg to request redemption.
 func NewMsgRequestRedemption(value sdk.Coin, destinationAddress string, fromAddress sdk.Address) *MsgRequestRedemption {
 	return &MsgRequestRedemption{Value: value, DestinationAddress: destinationAddress, FromAddress: fromAddress.String()}

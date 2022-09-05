@@ -1,8 +1,6 @@
 package participationrewards
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -13,9 +11,19 @@ import (
 
 // NewHandler returns a handler for participationrewards module messages
 func NewHandler(k keeper.Keeper) sdk.Handler {
-	return func(_ sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		errMsg := fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg)
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
+	msgServer := keeper.NewMsgServerImpl(k)
+
+	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+		ctx = ctx.WithEventManager(sdk.NewEventManager())
+
+		switch msg := msg.(type) {
+		case *types.MsgSubmitClaim:
+			res, err := msgServer.SubmitClaim(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
+		default:
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized participationrewards message type: %T", msg)
+		}
 	}
 }
 
@@ -26,7 +34,7 @@ func NewProposalHandler(k keeper.Keeper) govtypes.Handler {
 			return keeper.HandleAddProtocolDataProposal(ctx, k, c)
 
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized interchainstaking proposal content type: %T", c)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized participationrewards proposal content type: %T", c)
 		}
 	}
 }

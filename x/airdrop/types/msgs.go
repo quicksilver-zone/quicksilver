@@ -13,6 +13,10 @@ const (
 	TypeMsgClaim = "claim"
 )
 
+var (
+	_ sdk.Msg = &MsgClaim{}
+)
+
 // NewMsgClaim constructs a msg to claim from a zone airdrop.
 func NewMsgClaim(chainID string, action int32, fromAddress sdk.Address) *MsgClaim {
 	return &MsgClaim{ChainId: chainID, Action: action, Address: fromAddress.String()}
