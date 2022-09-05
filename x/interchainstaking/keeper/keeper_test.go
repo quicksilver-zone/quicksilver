@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) SetupZones() {
 			bz,
 			icstypes.ModuleName,
 		),
-		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshalJSON(&qvr),
+		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshal(&qvr),
 		Height:      s.chainB.CurrentHeader.Height,
 		FromAddress: TestOwnerAddress,
 	}
