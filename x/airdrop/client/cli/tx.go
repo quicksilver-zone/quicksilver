@@ -59,7 +59,7 @@ func GetClaimTxCmd() *cobra.Command {
 
 			msg := &types.MsgClaim{
 				ChainId: chainID,
-				Action:  int32(action),
+				Action:  action,
 				Address: clientCtx.GetFromAddress().String(),
 			}
 
