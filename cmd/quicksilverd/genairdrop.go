@@ -87,10 +87,8 @@ func AddGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 
 			// Add the new account to the set of genesis accounts and sanitize the
 			// accounts afterwards.
-			crs := append(airdropGenState.ClaimRecords, &claimRecord)
+			airdropGenState.ClaimRecords = append(airdropGenState.ClaimRecords, &claimRecord)
 			zoneDrop.Allocation += claimRecord.MaxAllocation
-
-			airdropGenState.ClaimRecords = crs
 
 			airdropGenStateBz, err := clientCtx.Codec.MarshalJSON(airdropGenState)
 			if err != nil {
