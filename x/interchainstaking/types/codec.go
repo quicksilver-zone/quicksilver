@@ -44,5 +44,4 @@ func init() {
 	govv1beta1.RegisterProposalType(ProposalTypeRegisterZone)
 	govv1beta1.RegisterProposalType(ProposalTypeUpdateZone)
 	sdk.RegisterLegacyAminoCodec(amino)
-	amino.Seal()
 }
