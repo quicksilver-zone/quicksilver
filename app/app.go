@@ -729,8 +729,8 @@ func NewQuicksilver(
 	app.SetEndBlocker(app.EndBlocker)
 
 	app.UpgradeKeeper.SetUpgradeHandler(
-		"innuendo1",
-		GetInnuendo1Upgrade(app),
+		"v0.6.6",
+		Getv0_6_6Upgrade(app),
 	)
 
 	if loadLatest {
