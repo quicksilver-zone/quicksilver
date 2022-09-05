@@ -42,7 +42,7 @@ func init() {
 	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
 	govv1beta1.RegisterProposalType(ProposalTypeRegisterZone)
-
 	govv1beta1.RegisterProposalType(ProposalTypeUpdateZone)
+	sdk.RegisterLegacyAminoCodec(amino)
 	amino.Seal()
 }
