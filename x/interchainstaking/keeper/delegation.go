@@ -1,9 +1,6 @@
 package keeper
 
 import (
-	"bytes"
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -198,9 +195,6 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	var msgs []sdk.Msg
 
 	delegatorRewards := distrTypes.QueryDelegationTotalRewardsResponse{}
-	if bytes.Equal(response, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice")
-	}
 	err := k.cdc.Unmarshal(response, &delegatorRewards)
 	if err != nil {
 		return err

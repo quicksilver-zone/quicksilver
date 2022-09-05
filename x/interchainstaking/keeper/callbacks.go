@@ -93,7 +93,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	blockResponse := tmservice.GetLatestBlockResponse{}
 	// block response is never expected to be nil
 	if bytes.Equal(args, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+		return fmt.Errorf("attempted to unmarshal zero length byte slice (1)")
 	}
 	err := k.cdc.Unmarshal(args, &blockResponse)
 	if err != nil {
@@ -122,7 +122,7 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 	// unmarshal request payload
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	if bytes.Equal(query.Request, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+		return fmt.Errorf("attempted to unmarshal zero length byte slice (2)")
 	}
 	err := k.cdc.Unmarshal(query.Request, &rewardsQuery)
 	if err != nil {
@@ -146,7 +146,7 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
 	if bytes.Equal(query.Request, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+		return fmt.Errorf("attempted to unmarshal zero length byte slice (3)")
 	}
 	err := k.cdc.Unmarshal(query.Request, &delegationQuery)
 	if err != nil {
@@ -226,7 +226,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	txs := tx.GetTxsEventResponse{}
 
 	if bytes.Equal(args, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+		return fmt.Errorf("attempted to unmarshal zero length byte slice (4)")
 	}
 	err := k.cdc.Unmarshal(args, &txs)
 	if err != nil {
@@ -238,7 +238,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	if len(txs.GetTxs()) == types.TxRetrieveCount {
 		req := tx.GetTxsEventRequest{}
 		if bytes.Equal(query.Request, []byte("")) {
-			return fmt.Errorf("attempted to unmarshal zero length byte slice")
+			return fmt.Errorf("attempted to unmarshal zero length byte slice (5)")
 		}
 		err := k.cdc.Unmarshal(query.Request, &req)
 		if err != nil {
@@ -375,7 +375,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 
 	res := icqtypes.GetTxWithProofResponse{}
 	if bytes.Equal(args, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+		return fmt.Errorf("attempted to unmarshal zero length byte slice (6)")
 	}
 	err := k.cdc.Unmarshal(args, &res)
 	if err != nil {
@@ -485,7 +485,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	if bytes.Equal(query.Request, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+		return fmt.Errorf("attempted to unmarshal zero length byte slice (7)")
 	}
 	err := k.cdc.Unmarshal(query.Request, &balanceQuery)
 	if err != nil {

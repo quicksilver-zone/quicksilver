@@ -131,7 +131,7 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
 	if bytes.Equal(data, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+		return fmt.Errorf("attempted to unmarshal zero length byte slice (8)")
 	}
 	err := k.cdc.Unmarshal(data, &validatorsRes)
 	if err != nil {
@@ -190,7 +190,7 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validator := stakingTypes.Validator{}
 	if bytes.Equal(data, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice")
+		return fmt.Errorf("attempted to unmarshal zero length byte slice (9)")
 	}
 	err := k.cdc.Unmarshal(data, &validator)
 	if err != nil {

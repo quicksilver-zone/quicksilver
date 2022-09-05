@@ -80,7 +80,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 	for msgIndex, msgData := range txMsgData.Data {
 		if bytes.Equal(msgData.Data, []byte("")) {
-			return fmt.Errorf("unable to unmarshal msg index: %d; empty byte slice is not valid", msgIndex)
+			fmt.Printf("unable to unmarshal msg index: %d (%s); empty byte slice is not valid", msgIndex, msgData.MsgType)
 		}
 		src := msgs[msgIndex]
 		switch msgData.MsgType {
@@ -628,9 +628,6 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, 
 
 func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.Zone, delegatorAddress string, args []byte) error {
 	var response stakingtypes.QueryDelegatorDelegationsResponse
-	if bytes.Equal(args, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice")
-	}
 	err := k.cdc.Unmarshal(args, &response)
 	if err != nil {
 		return err

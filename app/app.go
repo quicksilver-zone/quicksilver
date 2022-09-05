@@ -196,7 +196,7 @@ var (
 		interchainstakingtypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		interchainquerytypes.ModuleName:   nil,
 		// TODO: Remove Burner from participationrewards - for dev/test only;
-		participationrewardstypes.ModuleName: nil,
+		participationrewardstypes.ModuleName: {authtypes.Burner},
 		airdroptypes.ModuleName:              nil,
 	}
 
