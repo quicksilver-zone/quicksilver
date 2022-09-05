@@ -45,4 +45,6 @@ func init() {
 
 	govtypes.RegisterProposalType(ProposalTypeUpdateZone)
 	govtypes.RegisterProposalTypeCodec(&UpdateZoneProposal{}, "quicksilver/UpdateZoneProposal")
+
+	amino.Seal()
 }

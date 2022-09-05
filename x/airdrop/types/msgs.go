@@ -45,24 +45,22 @@ func (msg MsgClaim) ValidateBasic() error {
 		errors["Proofs"] = ErrUndefinedAttribute
 	}
 
-	if len(msg.Proofs) > 0 {
-		for i, p := range msg.Proofs {
-			pLabel := fmt.Sprintf("Proof [%d]:", i)
-			if len(p.Key) == 0 {
-				errors[pLabel+" Key"] = ErrUndefinedAttribute
-			}
+	for i, p := range msg.Proofs {
+		pLabel := fmt.Sprintf("Proof [%d]:", i)
+		if len(p.Key) == 0 {
+			errors[pLabel+" Key"] = ErrUndefinedAttribute
+		}
 
-			if len(p.Data) == 0 {
-				errors[pLabel+" Data"] = ErrUndefinedAttribute
-			}
+		if len(p.Data) == 0 {
+			errors[pLabel+" Data"] = ErrUndefinedAttribute
+		}
 
-			if p.ProofOps == nil {
-				errors[pLabel+" ProofOps"] = ErrUndefinedAttribute
-			}
+		if p.ProofOps == nil {
+			errors[pLabel+" ProofOps"] = ErrUndefinedAttribute
+		}
 
-			if p.Height < 0 {
-				errors[pLabel+" Height"] = ErrNegativeAttribute
-			}
+		if p.Height < 0 {
+			errors[pLabel+" Height"] = ErrNegativeAttribute
 		}
 	}
 

@@ -38,4 +38,5 @@ func init() {
 	cryptocodec.RegisterCrypto(amino)
 	govtypes.RegisterProposalType(ProposalTypeAddProtocolData)
 	govtypes.RegisterProposalTypeCodec(&AddProtocolDataProposal{}, "quicksilver/AddProtocolDataProposal")
+	amino.Seal()
 }

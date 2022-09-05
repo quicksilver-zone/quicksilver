@@ -18,7 +18,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// GetTxCmd returns a root CLI command handler for all x/bank transaction commands.
+// GetTxCmd returns a root CLI command handler for all x/interchainstaking transaction commands.
 func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -68,7 +68,7 @@ e.g. "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzz
 	return cmd
 }
 
-// GetRegisterZoneTxCmd returns a CLI command handler for creating a MsgSend transaction.
+// GetRequestRedemptionTxCmd returns a CLI command handler for creating a Request transaction.
 func GetRequestRedemptionTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "redeem [coin] [destination_address]",
