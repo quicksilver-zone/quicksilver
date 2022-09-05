@@ -468,16 +468,10 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 	if coin.IsNil() {
 		// if the balance returned is zero for a given denom, we just get a nil response.
 		// lookup the denom from the request so we can set a zero value coin for the correct denom.
-		idx := bytes.Index(query.Request, accAddr)
-		if idx == -1 {
-			return errors.New("AccountBalanceCallback: invalid request query")
-		}
-		denom := string(query.Request[idx:])
-		if err = sdk.ValidateDenom(denom); err != nil {
+		coin, err = coinFromRequestKey(query.Request, accAddr)
+		if err != nil {
 			return err
 		}
-
-		coin = sdk.NewCoin(denom, sdk.ZeroInt())
 	}
 
 	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
@@ -511,4 +505,17 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	}
 
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
+}
+
+func coinFromRequestKey(query []byte, accAddr sdk.AccAddress) (sdk.Coin, error) {
+	idx := bytes.Index(query, accAddr)
+	if idx == -1 {
+		return sdk.Coin{}, errors.New("AccountBalanceCallback: invalid request query")
+	}
+	denom := string(query[idx+len(accAddr):])
+	if err := sdk.ValidateDenom(denom); err != nil {
+		return sdk.Coin{}, err
+	}
+
+	return sdk.NewCoin(denom, sdk.ZeroInt()), nil
 }
