@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,6 +10,13 @@ import (
 
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
+
+func Getv0_6_6Upgrade(app *Quicksilver) types.UpgradeHandler {
+	return func(ctx sdk.Context, _ types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		fmt.Println("Upgrade to v0.6.6; no state transitions to apply.")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
 
 func GetInnuendo1Upgrade(app *Quicksilver) types.UpgradeHandler {
 	return func(ctx sdk.Context, _ types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
