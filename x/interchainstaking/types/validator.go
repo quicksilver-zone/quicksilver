@@ -14,11 +14,12 @@ func (v Validator) SharesToTokens(shares sdk.Dec) sdk.Int {
 	return v.VotingPower.ToDec().Quo(v.DelegatorShares).TruncateInt()
 }
 
-func (di DelegatorIntent) AddOrdinal(multiplier sdk.Int, intents ValidatorIntents) DelegatorIntent {
+func (di DelegatorIntent) AddOrdinal(multiplier sdk.Dec, intents ValidatorIntents) DelegatorIntent {
 	if len(intents) == 0 {
 		return di
 	}
-	di.Ordinalize(multiplier)
+
+	di = di.Ordinalize(multiplier)
 
 OUTER:
 	for _, idx := range intents.Keys() {
@@ -53,23 +54,23 @@ func (di DelegatorIntent) Normalize() DelegatorIntent {
 	return di
 }
 
-func (di DelegatorIntent) Ordinalize(multiple sdk.Int) DelegatorIntent {
+func (di DelegatorIntent) Ordinalize(multiple sdk.Dec) DelegatorIntent {
 	for _, i := range di.Sorted() {
-		i.Weight = i.Weight.MulInt(multiple)
+		i.Weight = i.Weight.Mul(multiple)
 	}
 	return di
 }
 
-func (di DelegatorIntent) ToMap(multiple sdk.Int) map[string]sdk.Int {
-	out := make(map[string]sdk.Int)
-	di = di.Ordinalize(multiple)
-	for _, i := range di.Sorted() {
-		out[i.ValoperAddress] = i.Weight.TruncateInt()
-	}
-	return out
-}
+// func (di DelegatorIntent) ToMap(multiple sdk.Dec) map[string]sdk.Int {
+// 	out := make(map[string]sdk.Int)
+// 	di = di.Ordinalize(multiple)
+// 	for _, i := range di.Sorted() {
+// 		out[i.ValoperAddress] = i.Weight.TruncateInt()
+// 	}
+// 	return out
+// }
 
-func (di DelegatorIntent) ToAllocations(multiple sdk.Int) Allocations {
+func (di DelegatorIntent) ToAllocations(multiple sdk.Dec) Allocations {
 	out := Allocations{}
 	di = di.Ordinalize(multiple)
 	for _, i := range di.Sorted() {

@@ -18,7 +18,7 @@ func TestNormalizeIntentWithZeroLength(t *testing.T) {
 
 func TestOrdinalizeIntentWithZeroLength(t *testing.T) {
 	di := types.DelegatorIntent{Delegator: "cosmos12345667890", Intents: []*types.ValidatorIntent{}}
-	di = di.Ordinalize(sdk.NewInt(10000))
+	di = di.Ordinalize(sdk.NewDec(10000))
 	require.Equal(t, len(di.Intents), 0)
 }
 
@@ -37,15 +37,21 @@ func TestNormalizeIntentWithEqualIntents(t *testing.T) {
 	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper34567890", Weight: sdk.NewDec(1000)})
 	di = di.Normalize()
 	require.Equal(t, len(di.Intents), 3)
+	require.Equal(t, di.Intents[0].Weight, sdk.OneDec().Quo(sdk.NewDec(3)))
+	require.Equal(t, di.Intents[1].Weight, sdk.OneDec().Quo(sdk.NewDec(3)))
+	require.Equal(t, di.Intents[2].Weight, sdk.OneDec().Quo(sdk.NewDec(3)))
 }
 
 func TestNormalizeIntentWithNonEqualIntents(t *testing.T) {
 	di := types.DelegatorIntent{Delegator: "cosmos12345667890", Intents: []*types.ValidatorIntent{}}
-	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper12345678", Weight: sdk.NewDec(12108)})
-	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper23456789", Weight: sdk.NewDec(3)})
-	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper34567890", Weight: sdk.NewDec(4002881)})
+	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper12345678", Weight: sdk.NewDec(5)})
+	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper23456789", Weight: sdk.NewDec(10)})
+	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper34567890", Weight: sdk.NewDec(35)})
 	require.NotPanics(t, func() { di.Normalize() })
 	require.Equal(t, len(di.Intents), 3)
+	require.Equal(t, di.Intents[0].Weight, sdk.NewDecWithPrec(1, 1))
+	require.Equal(t, di.Intents[1].Weight, sdk.NewDecWithPrec(2, 1))
+	require.Equal(t, di.Intents[2].Weight, sdk.NewDecWithPrec(7, 1))
 }
 
 func TestOrdinalizeIntentWithEqualIntents(t *testing.T) {
@@ -53,9 +59,21 @@ func TestOrdinalizeIntentWithEqualIntents(t *testing.T) {
 	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper12345678", Weight: sdk.OneDec().QuoTruncate(sdk.NewDec(3))})
 	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper23456789", Weight: sdk.OneDec().QuoTruncate(sdk.NewDec(3))})
 	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper34567890", Weight: sdk.OneDec().QuoTruncate(sdk.NewDec(3))})
-	di = di.Ordinalize(sdk.NewInt(3000))
+	di = di.Ordinalize(sdk.NewDec(3000))
 	require.Equal(t, len(di.Intents), 3)
 	require.Equal(t, di.Intents[0].Weight.RoundInt(), sdk.NewInt(1000))
+}
+
+func TestOrdinalizeIntentWithNonEqualIntents(t *testing.T) {
+	di := types.DelegatorIntent{Delegator: "cosmos12345667890", Intents: []*types.ValidatorIntent{}}
+	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper12345678", Weight: sdk.NewDec(5)})
+	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper23456789", Weight: sdk.NewDec(10)})
+	di.Intents = append(di.Intents, &types.ValidatorIntent{ValoperAddress: "cosmosvaloper34567890", Weight: sdk.NewDec(35)})
+	require.NotPanics(t, func() { di.Normalize() }) // normalise here because are already ordinal
+	di = di.Ordinalize(sdk.NewDec(3000))
+	require.Equal(t, di.Intents[0].Weight.RoundInt(), sdk.NewInt(300))
+	require.Equal(t, di.Intents[1].Weight.RoundInt(), sdk.NewInt(600))
+	require.Equal(t, di.Intents[2].Weight.RoundInt(), sdk.NewInt(2100))
 }
 
 func TestAddOrdinal(t *testing.T) {
@@ -68,7 +86,7 @@ func TestAddOrdinal(t *testing.T) {
 	newIntents["cosmosvaloper12345678"] = &types.ValidatorIntent{ValoperAddress: "cosmosvaloper12345678", Weight: sdk.NewDec(1000)}
 	newIntents["cosmosvaloper34567890"] = &types.ValidatorIntent{ValoperAddress: "cosmosvaloper34567890", Weight: sdk.NewDec(2000)}
 
-	di = di.AddOrdinal(sdk.NewInt(6000), newIntents)
+	di = di.AddOrdinal(sdk.NewDec(6000), newIntents)
 
 	require.Equal(t, 3, len(di.Intents))
 
@@ -89,7 +107,7 @@ func TestAddOrdinalWithNewVal(t *testing.T) {
 	newIntents["cosmosvaloper98765432"] = &types.ValidatorIntent{ValoperAddress: "cosmosvaloper98765432", Weight: sdk.NewDec(1000)}
 	newIntents["cosmosvaloper34567890"] = &types.ValidatorIntent{ValoperAddress: "cosmosvaloper34567890", Weight: sdk.NewDec(2000)}
 
-	di = di.AddOrdinal(sdk.NewInt(6000), newIntents)
+	di = di.AddOrdinal(sdk.NewDec(6000), newIntents)
 
 	require.Equal(t, 4, len(di.Intents))
 

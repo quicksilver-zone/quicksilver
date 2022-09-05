@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"strings"
@@ -55,4 +56,28 @@ func ValAddressFromBech32(address string, checkHRP string) (addr sdk.ValAddress,
 	}
 
 	return sdk.ValAddress(bz), nil
+}
+
+func GenerateAccAddressForTest() sdk.AccAddress {
+	size := 32 // change the length of the generated random string here
+
+	rb := make([]byte, size)
+	_, err := rand.Read(rb)
+	if err != nil {
+		panic(err)
+	}
+
+	return sdk.AccAddress(rb)
+}
+
+func GenerateValAddressForTest() sdk.ValAddress {
+	size := 32 // change the length of the generated random string here
+
+	rb := make([]byte, size)
+	_, err := rand.Read(rb)
+	if err != nil {
+		panic(err)
+	}
+
+	return sdk.ValAddress(rb)
 }
