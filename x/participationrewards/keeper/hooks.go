@@ -14,6 +14,13 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	k.Logger(ctx).Info("distribute participation rewards...")
 
+	allocation := k.getRewardsAllocations(ctx)
+
+	k.Logger(ctx).Info("Triggering submodule hooks")
+	for _, sub := range k.prSubmodules {
+		sub.Hooks(ctx, k)
+	}
+
 	if epochNumber < epochsDeferred {
 		k.Logger(ctx).Info("defer...", "epoch", epochNumber)
 
@@ -31,17 +38,15 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		return
 	}
 
-	allocation := k.getRewardsAllocations(ctx)
-
-	// this function is completed in a callback
-	// TODO: implement and use this
-	/*if err := k.allocateZoneRewards(ctx, allocation); err != nil {
-		k.Logger(ctx).Error(err.Error())
-	}*/
+	tvs, err := k.calcTokenValues(ctx)
+	if err != nil {
+		k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
+		return
+	}
 
 	// TODO: remove this when the above is implemented
 	// >>>
-	tvs := tokenValues{
+	/*tvs := tokenValues{
 		Tokens: map[string]tokenValue{
 			"uatom": {
 				Symbol:     "atom",
@@ -54,7 +59,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				Value:      sdk.NewDec(2.0),
 			},
 		},
-	}
+	}*/
+	// <<<
+
 	if err := k.allocateZoneRewards(ctx, tvs, allocation); err != nil {
 		k.Logger(ctx).Error(err.Error())
 	}
@@ -64,11 +71,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
 			k.Logger(ctx).Error(err.Error())
 		}
-	}
-
-	k.Logger(ctx).Info("Triggering submodule hooks")
-	for _, sub := range k.prSubmodules {
-		sub.Hooks(ctx, k)
 	}
 }
 

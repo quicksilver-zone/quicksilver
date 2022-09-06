@@ -248,7 +248,7 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 	zone icstypes.Zone,
 	zs zoneScore,
 ) []userAllocation {
-	k.Logger(ctx).Info("calcUserAllocations", "zone", zone.ChainId, "scores", zs, "allocations", zone.ValidatorSelectionAllocation)
+	k.Logger(ctx).Info("calcUserValidatorSelectionAllocations", "zone", zone.ChainId, "scores", zs, "allocations", zone.ValidatorSelectionAllocation)
 
 	userAllocations := make([]userAllocation, 0)
 
