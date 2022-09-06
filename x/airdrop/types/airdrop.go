@@ -47,7 +47,7 @@ func (zd ZoneDrop) ValidateBasic() error {
 	}
 
 	// must have at least one defined
-	if zd.Actions == nil || len(zd.Actions) == 0 {
+	if len(zd.Actions) == 0 {
 		errors["Actions"] = ErrUndefinedAttribute
 	} else {
 		wsum := sdk.ZeroDec()
@@ -130,7 +130,7 @@ func (a Action) InBounds() bool {
 	ae := int(a)
 
 	// check action enum
-	if ae < 0 || ae >= len(Action_name) {
+	if ae < 1 || ae >= len(Action_name) {
 		return false
 	}
 
