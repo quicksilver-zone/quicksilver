@@ -8,103 +8,92 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidateGenesis(t *testing.T) {
-	type args struct {
-		data GenesisState
+func TestGenesisState_Validate(t *testing.T) {
+	type fields struct {
+		Params       Params
+		ZoneDrops    []*ZoneDrop
+		ClaimRecords []*ClaimRecord
 	}
 	tests := []struct {
 		name    string
-		args    args
+		fields  fields
 		wantErr bool
 	}{
 		{
 			"null genesis",
-			args{},
-			false,
-		},
-		{
-			"default genesis",
-			args{
-				*DefaultGenesisState(),
-			},
+			fields{},
 			false,
 		},
 		{
 			"duplicate zone drop",
-			args{
-				GenesisState{
-					DefaultParams(),
-					[]*ZoneDrop{
-						{
-							ChainId:    "test-1",
-							StartTime:  time.Now().Add(1 * time.Minute),
-							Duration:   time.Minute,
-							Decay:      time.Minute,
-							Allocation: 1000000,
-							Actions:    []sdk.Dec{sdk.OneDec()},
-						},
-						{
-							ChainId:    "test-1",
-							StartTime:  time.Now().Add(1 * time.Hour),
-							Duration:   time.Hour,
-							Decay:      time.Hour,
-							Allocation: 5000000,
-							Actions:    []sdk.Dec{sdk.OneDec()},
-						},
+			fields{
+				DefaultParams(),
+				[]*ZoneDrop{
+					{
+						ChainId:    "test-1",
+						StartTime:  time.Now().Add(1 * time.Minute),
+						Duration:   time.Minute,
+						Decay:      time.Minute,
+						Allocation: 1000000,
+						Actions:    []sdk.Dec{sdk.OneDec()},
 					},
-					[]*ClaimRecord{},
+					{
+						ChainId:    "test-1",
+						StartTime:  time.Now().Add(1 * time.Hour),
+						Duration:   time.Hour,
+						Decay:      time.Hour,
+						Allocation: 5000000,
+						Actions:    []sdk.Dec{sdk.OneDec()},
+					},
 				},
+				[]*ClaimRecord{},
 			},
 			true,
 		},
 		{
 			"invalid zone drop",
-			args{
-				GenesisState{
-					DefaultParams(),
-					[]*ZoneDrop{
-						{
-							ChainId:    "",
-							StartTime:  time.Now().Add(1 * time.Minute),
-							Duration:   -time.Minute,
-							Decay:      -time.Hour,
-							Allocation: 0,
-							Actions:    []sdk.Dec{},
-						},
+			fields{
+				DefaultParams(),
+				[]*ZoneDrop{
+					{
+						ChainId:    "",
+						StartTime:  time.Now().Add(1 * time.Minute),
+						Duration:   -time.Minute,
+						Decay:      -time.Hour,
+						Allocation: 0,
+						Actions:    []sdk.Dec{},
 					},
-					[]*ClaimRecord{},
 				},
+				[]*ClaimRecord{},
 			},
 			true,
 		},
 		{
 			"duplicate claim record",
-			args{
-				GenesisState{
-					DefaultParams(),
-					[]*ZoneDrop{
-						{
-							ChainId:    "test-1",
-							StartTime:  time.Now().Add(1 * time.Minute),
-							Duration:   time.Minute,
-							Decay:      time.Minute,
-							Allocation: 1000000,
-							Actions:    []sdk.Dec{sdk.OneDec()},
-						},
+			fields{
+				DefaultParams(),
+				[]*ZoneDrop{
+					{
+						ChainId:    "test-1",
+						StartTime:  time.Now().Add(1 * time.Minute),
+						Duration:   time.Minute,
+						Decay:      time.Minute,
+						Allocation: 1000000,
+						Actions:    []sdk.Dec{sdk.OneDec()},
 					},
-					[]*ClaimRecord{
-						{
-							ChainId:          "test-1",
-							Address:          "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-							ActionsCompleted: map[int32]*CompletedAction{},
-							MaxAllocation:    500000,
-						},
-						{
-							ChainId:          "test-1",
-							Address:          "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-							ActionsCompleted: map[int32]*CompletedAction{},
-							MaxAllocation:    500000,
-						},
+				},
+				[]*ClaimRecord{
+					{
+						ChainId:          "test-1",
+						Address:          "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+						ActionsCompleted: map[int32]*CompletedAction{},
+						MaxAllocation:    500000,
+					},
+					{
+						ChainId:          "test-1",
+						Address:          "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+						ActionsCompleted: map[int32]*CompletedAction{},
+						MaxAllocation:    500000,
 					},
 				},
 			},
@@ -112,31 +101,29 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			"invalid claim record",
-			args{
-				GenesisState{
-					DefaultParams(),
-					[]*ZoneDrop{
-						{
-							ChainId:    "test-1",
-							StartTime:  time.Now().Add(1 * time.Minute),
-							Duration:   time.Minute,
-							Decay:      time.Minute,
-							Allocation: 1000000,
-							Actions:    []sdk.Dec{sdk.OneDec()},
-						},
+			fields{
+				DefaultParams(),
+				[]*ZoneDrop{
+					{
+						ChainId:    "test-1",
+						StartTime:  time.Now().Add(1 * time.Minute),
+						Duration:   time.Minute,
+						Decay:      time.Minute,
+						Allocation: 1000000,
+						Actions:    []sdk.Dec{sdk.OneDec()},
 					},
-					[]*ClaimRecord{
-						{
-							ChainId: "",
-							Address: "",
-							ActionsCompleted: map[int32]*CompletedAction{
-								999: {
-									CompleteTime: time.Now().Add(time.Hour),
-									ClaimAmount:  1000000,
-								},
+				},
+				[]*ClaimRecord{
+					{
+						ChainId: "",
+						Address: "",
+						ActionsCompleted: map[int32]*CompletedAction{
+							999: {
+								CompleteTime: time.Now().Add(time.Hour),
+								ClaimAmount:  1000000,
 							},
-							MaxAllocation: 500000,
 						},
+						MaxAllocation: 500000,
 					},
 				},
 			},
@@ -144,31 +131,29 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			"claim record no zone drop",
-			args{
-				GenesisState{
-					DefaultParams(),
-					[]*ZoneDrop{
-						{
-							ChainId:    "test-1",
-							StartTime:  time.Now().Add(1 * time.Minute),
-							Duration:   time.Minute,
-							Decay:      time.Minute,
-							Allocation: 1000000,
-							Actions:    []sdk.Dec{sdk.OneDec()},
-						},
+			fields{
+				DefaultParams(),
+				[]*ZoneDrop{
+					{
+						ChainId:    "test-1",
+						StartTime:  time.Now().Add(1 * time.Minute),
+						Duration:   time.Minute,
+						Decay:      time.Minute,
+						Allocation: 1000000,
+						Actions:    []sdk.Dec{sdk.OneDec()},
 					},
-					[]*ClaimRecord{
-						{
-							ChainId: "test-2",
-							Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-							ActionsCompleted: map[int32]*CompletedAction{
-								0: {
-									CompleteTime: time.Now().Add(-time.Hour),
-									ClaimAmount:  100000,
-								},
+				},
+				[]*ClaimRecord{
+					{
+						ChainId: "test-2",
+						Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+						ActionsCompleted: map[int32]*CompletedAction{
+							0: {
+								CompleteTime: time.Now().Add(-time.Hour),
+								ClaimAmount:  100000,
 							},
-							MaxAllocation: 500000,
 						},
+						MaxAllocation: 500000,
 					},
 				},
 			},
@@ -176,32 +161,30 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			"claim record exceed zone drop",
-			args{
-				GenesisState{
-					DefaultParams(),
-					[]*ZoneDrop{
-						{
-							ChainId:    "test-1",
-							StartTime:  time.Now().Add(1 * time.Minute),
-							Duration:   time.Minute,
-							Decay:      time.Minute,
-							Allocation: 1000000,
-							Actions:    []sdk.Dec{sdk.OneDec()},
-						},
+			fields{
+				DefaultParams(),
+				[]*ZoneDrop{
+					{
+						ChainId:    "test-1",
+						StartTime:  time.Now().Add(1 * time.Minute),
+						Duration:   time.Minute,
+						Decay:      time.Minute,
+						Allocation: 1000000,
+						Actions:    []sdk.Dec{sdk.OneDec()},
 					},
-					[]*ClaimRecord{
-						{
-							ChainId:          "test-1",
-							Address:          "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-							ActionsCompleted: map[int32]*CompletedAction{},
-							MaxAllocation:    600000,
-						},
-						{
-							ChainId:          "test-1",
-							Address:          "cosmos1qnk2n4nlkpw9xfqntladh74w6ujtulwn7j8za9",
-							ActionsCompleted: map[int32]*CompletedAction{},
-							MaxAllocation:    600000,
-						},
+				},
+				[]*ClaimRecord{
+					{
+						ChainId:          "test-1",
+						Address:          "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+						ActionsCompleted: map[int32]*CompletedAction{},
+						MaxAllocation:    600000,
+					},
+					{
+						ChainId:          "test-1",
+						Address:          "cosmos1qnk2n4nlkpw9xfqntladh74w6ujtulwn7j8za9",
+						ActionsCompleted: map[int32]*CompletedAction{},
+						MaxAllocation:    600000,
 					},
 				},
 			},
@@ -209,40 +192,38 @@ func TestValidateGenesis(t *testing.T) {
 		},
 		{
 			"no claim records",
-			args{
-				GenesisState{
-					DefaultParams(),
-					[]*ZoneDrop{
-						{
-							ChainId:    "test-1",
-							StartTime:  time.Now().Add(1 * time.Minute),
-							Duration:   time.Minute,
-							Decay:      time.Minute,
-							Allocation: 1000000,
-							Actions:    []sdk.Dec{sdk.OneDec()},
-						},
-						{
-							ChainId:    "test-2",
-							StartTime:  time.Now().Add(1 * time.Hour),
-							Duration:   time.Hour,
-							Decay:      time.Hour,
-							Allocation: 1000000,
-							Actions:    []sdk.Dec{sdk.OneDec()},
-						},
+			fields{
+				DefaultParams(),
+				[]*ZoneDrop{
+					{
+						ChainId:    "test-1",
+						StartTime:  time.Now().Add(1 * time.Minute),
+						Duration:   time.Minute,
+						Decay:      time.Minute,
+						Allocation: 1000000,
+						Actions:    []sdk.Dec{sdk.OneDec()},
 					},
-					[]*ClaimRecord{
-						{
-							ChainId:          "test-1",
-							Address:          "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-							ActionsCompleted: map[int32]*CompletedAction{},
-							MaxAllocation:    500000,
-						},
-						{
-							ChainId:          "test-1",
-							Address:          "cosmos1qnk2n4nlkpw9xfqntladh74w6ujtulwn7j8za9",
-							ActionsCompleted: map[int32]*CompletedAction{},
-							MaxAllocation:    500000,
-						},
+					{
+						ChainId:    "test-2",
+						StartTime:  time.Now().Add(1 * time.Hour),
+						Duration:   time.Hour,
+						Decay:      time.Hour,
+						Allocation: 1000000,
+						Actions:    []sdk.Dec{sdk.OneDec()},
+					},
+				},
+				[]*ClaimRecord{
+					{
+						ChainId:          "test-1",
+						Address:          "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+						ActionsCompleted: map[int32]*CompletedAction{},
+						MaxAllocation:    500000,
+					},
+					{
+						ChainId:          "test-1",
+						Address:          "cosmos1qnk2n4nlkpw9xfqntladh74w6ujtulwn7j8za9",
+						ActionsCompleted: map[int32]*CompletedAction{},
+						MaxAllocation:    500000,
 					},
 				},
 			},
@@ -251,9 +232,15 @@ func TestValidateGenesis(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := ValidateGenesis(tt.args.data)
+			gs := GenesisState{
+				Params:       tt.fields.Params,
+				ZoneDrops:    tt.fields.ZoneDrops,
+				ClaimRecords: tt.fields.ClaimRecords,
+			}
+
+			err := gs.Validate()
 			if tt.wantErr {
-				t.Logf("Error:\n%v\n", err)
+				// t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
 				return
 			}

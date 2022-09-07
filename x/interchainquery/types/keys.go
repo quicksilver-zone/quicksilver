@@ -24,7 +24,3 @@ var (
 	KeyPrefixData  = []byte{prefixData}
 	KeyPrefixQuery = []byte{prefixQuery}
 )
-
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}

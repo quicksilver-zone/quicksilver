@@ -3,7 +3,7 @@ package quicksilver.interchainquery.v1;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "quicksilver/interchainquery/v1/genesis.proto";
+import "quicksilver/interchainquery/v1/interchainquery.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/abci/v1beta1/abci.proto";
 import "cosmos/tx/v1beta1/tx.proto";

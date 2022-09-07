@@ -16,19 +16,6 @@ type ClaimRecords []types.ClaimRecord
 
 // HandleRegisterZoneDropProposal is a handler for executing a passed airdrop proposal.
 func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.RegisterZoneDropProposal) error {
-	// validate ZoneDrop
-	if err := p.ZoneDrop.ValidateBasic(); err != nil {
-		return err
-	}
-
-	// check for ClaimRecords
-	if p.ClaimRecords == nil {
-		return types.ErrUndefinedAttribute
-	}
-	if len(p.ClaimRecords) == 0 {
-		return types.ErrUndefinedAttribute
-	}
-
 	// decompress claim records
 	crsb, err := k.decompress(p.ClaimRecords)
 	if err != nil {

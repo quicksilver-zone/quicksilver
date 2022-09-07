@@ -111,3 +111,38 @@ func TestIntentsFromStringInvalidValoperAddressesFailsOnValidate(t *testing.T) {
 	require.Contains(t, err.Error(), "invalid checksum")
 	require.Contains(t, err.Error(), "undefined")
 }
+
+func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
+	type fields struct {
+		ChainId     string
+		Intents     []*types.ValidatorIntent
+		FromAddress string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			"blank",
+			fields{},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgSignalIntent{
+				ChainId:     tt.fields.ChainId,
+				Intents:     tt.fields.Intents,
+				FromAddress: tt.fields.FromAddress,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}

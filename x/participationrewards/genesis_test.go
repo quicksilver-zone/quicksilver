@@ -76,7 +76,7 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 		Claims:       []*types.Claim{claim},
 		ProtocolData: []*types.KeyedProtocolData{kpd},
 	}
-	require.NoError(t, types.ValidateGenesis(genesisState), "genesis validation failed")
+	require.NoError(t, genesisState.Validate(), "genesis validation failed")
 
 	participationrewards.InitGenesis(ctx, app.ParticipationRewardsKeeper, genesisState)
 

@@ -19,12 +19,12 @@ func DefaultGenesisState() *GenesisState {
 
 // ValidateGenesis validates the provided genesis state to ensure the
 // expected invariants holds.
-func ValidateGenesis(data GenesisState) error {
-	if err := data.Params.Validate(); err != nil {
+func (gs GenesisState) Validate() error {
+	if err := gs.Params.Validate(); err != nil {
 		return err
 	}
 
-	for _, claim := range data.Claims {
+	for _, claim := range gs.Claims {
 		// check user address
 		_, err := utils.AccAddressFromBech32(claim.UserAddress, "")
 		if err != nil {
@@ -40,7 +40,7 @@ func ValidateGenesis(data GenesisState) error {
 
 	// TODO: validate protocol data is valid
 OUTER:
-	for _, pd := range data.ProtocolData {
+	for _, pd := range gs.ProtocolData {
 		for _, claimType := range ClaimTypes {
 			if claimType == pd.ProtocolData.Type {
 				continue OUTER
