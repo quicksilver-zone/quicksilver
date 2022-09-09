@@ -451,8 +451,7 @@ func (k Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64) 
 		return sdk.NewCoins(), err
 	}
 
-	zoneDropAccount := types.ModuleName + "." + cr.ChainId
-	if err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, zoneDropAccount, addr, coins); err != nil {
+	if err = k.bankKeeper.SendCoins(ctx, k.GetZoneDropAccountAddress(cr.ChainId), addr, coins); err != nil {
 		return sdk.NewCoins(), err
 	}
 
