@@ -38,7 +38,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 
 		if zs != zd.Allocation {
-			panic("zone sum does not match zone allocation")
+			panic(fmt.Sprintf("zone sum does not match zone allocation; got %d, allocated %d", zs, zd.Allocation))
 		}
 
 		zonedropAddress := k.GetZoneDropAccountAddress(zd.ChainId)
