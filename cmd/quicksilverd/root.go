@@ -101,6 +101,8 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 		genutilcli.ValidateGenesisCmd(app.ModuleBasics),
 		AddGenesisAccountCmd(app.DefaultNodeHome),
 		AddGenesisAirdropCmd(app.DefaultNodeHome),
+		BulkGenesisAirdropCmd(app.DefaultNodeHome),
+		AddZonedropCmd(app.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
 		config.Cmd(),
