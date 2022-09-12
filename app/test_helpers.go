@@ -94,6 +94,12 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 	return app
 }
 
+func GetAppWithContext(init bool) (*Quicksilver, sdk.Context) {
+	app := Setup(!init)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
+	return app, ctx
+}
+
 // SetupTestingApp initializes the IBC-go testing application
 func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	db := dbm.NewMemDB()

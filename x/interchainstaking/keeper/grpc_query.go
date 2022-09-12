@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -100,12 +99,19 @@ func (k Keeper) Delegations(c context.Context, req *types.QueryDelegationsReques
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
 
-	delegations := k.GetAllDelegations(ctx, &zone)
+	delegations := make([]types.Delegation, 0)
+	var sum int64 = 0
 
-	return &types.QueryDelegationsResponse{Delegations: delegations}, nil
+	k.IterateAllDelegations(ctx, &zone, func(delegation types.Delegation) (stop bool) {
+		delegations = append(delegations, delegation)
+		sum += delegation.Amount.Amount.Int64()
+		return false
+	})
+
+	return &types.QueryDelegationsResponse{Delegations: delegations, Tvl: sum}, nil
 }
 
-func (k Keeper) DelegatorDelegations(c context.Context, req *types.QueryDelegatorDelegationsRequest) (*types.QueryDelegatorDelegationsResponse, error) {
+func (k Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*types.QueryReceiptsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -117,48 +123,18 @@ func (k Keeper) DelegatorDelegations(c context.Context, req *types.QueryDelegato
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
 
-	_, addr, _ := bech32.DecodeAndConvert(req.DelegatorAddress)
-	delegations := k.GetDelegatorDelegations(ctx, &zone, addr)
+	receipts := make([]types.Receipt, 0)
 
-	return &types.QueryDelegatorDelegationsResponse{Delegations: delegations}, nil
-}
+	k.IterateZoneReceipts(ctx, &zone, func(_ int64, receipt types.Receipt) (stop bool) {
+		receipts = append(receipts, receipt)
+		return false
+	})
 
-func (k Keeper) ValidatorDelegations(c context.Context, req *types.QueryValidatorDelegationsRequest) (*types.QueryValidatorDelegationsResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-
-	zone, found := k.GetZone(ctx, req.GetChainId())
-	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
-	}
-
-	_, valAddr, _ := bech32.DecodeAndConvert(req.ValidatorAddress)
-	delegations := k.GetValidatorDelegations(ctx, &zone, valAddr)
-
-	return &types.QueryValidatorDelegationsResponse{Delegations: delegations}, nil
-}
-
-func (k Keeper) DelegationPlans(c context.Context, req *types.QueryDelegationPlansRequest) (*types.QueryDelegationPlansResponse, error) {
-	if req == nil {
-		return nil, status.Error(codes.InvalidArgument, "empty request")
-	}
-
-	ctx := sdk.UnwrapSDKContext(c)
-
-	zone, found := k.GetZone(ctx, req.GetChainId())
-	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
-	}
-
-	delegationplans := k.GetAllDelegationPlans(ctx, &zone)
-
-	return &types.QueryDelegationPlansResponse{Delegations: delegationplans}, nil
+	return &types.QueryReceiptsResponse{Receipts: receipts}, nil
 }
 
 func (k Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -170,12 +146,19 @@ func (k Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdra
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
 
-	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, &zone)
+	withdrawalrecords := make([]types.WithdrawalRecord, 0)
+	k.IterateZoneWithdrawalRecords(ctx, &zone, func(index int64, record types.WithdrawalRecord) (stop bool) {
+		if record.Delegator == req.DelegatorAddress {
+			withdrawalrecords = append(withdrawalrecords, record)
+		}
+		return false
+	})
 
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
 
 func (k Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

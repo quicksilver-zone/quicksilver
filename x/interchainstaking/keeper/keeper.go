@@ -129,7 +129,7 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
+func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
 	if bytes.Equal(data, []byte("")) {
 		return fmt.Errorf("attempted to unmarshal zero length byte slice (8)")
@@ -164,10 +164,6 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		if !val.CommissionRate.Equal(validator.GetCommission()) || !val.VotingPower.Equal(validator.Tokens) || !val.DelegatorShares.Equal(validator.DelegatorShares) {
 			k.Logger(ctx).Info("Validator state change; fetching proof", "valoper", validator.OperatorAddress)
 
-			if err != nil {
-				return err
-			}
-
 			data := stakingTypes.GetValidatorKey(addr)
 			k.ICQKeeper.MakeRequest(
 				ctx,
@@ -188,7 +184,7 @@ func SetValidatorsForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 	return nil
 }
 
-func SetValidatorForZone(k Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
+func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validator := stakingTypes.Validator{}
 	if bytes.Equal(data, []byte("")) {
 		return fmt.Errorf("attempted to unmarshal zero length byte slice (9)")
@@ -318,5 +314,48 @@ func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) e
 		0,
 	)
 
+	return nil
+}
+
+// redemption rate
+
+func (k *Keeper) assertRedemptionRateWithinBounds(ctx sdk.Context, previousRate sdk.Dec, newRate sdk.Dec) error {
+	// TODO: what is an acceptable deviation?
+	return nil
+}
+
+func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards sdk.Int) {
+	ratio := k.getRatio(ctx, zone, epochRewards)
+	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
+	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
+	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec(), "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards).ToDec())
+
+	if err := k.assertRedemptionRateWithinBounds(ctx, zone.RedemptionRate, ratio); err != nil {
+		panic("Redemption rate out of bounds")
+	}
+	zone.LastRedemptionRate = zone.RedemptionRate
+	zone.RedemptionRate = ratio
+	k.SetZone(ctx, &zone)
+}
+
+func (k *Keeper) getRatio(ctx sdk.Context, zone types.Zone, epochRewards sdk.Int) sdk.Dec {
+	// native asset amount
+	naAmount := k.GetDelegatedAmount(ctx, &zone).Amount
+	// qAsset amount
+	qaAmount := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
+
+	// check if zone is fully withdrawn (no qAssets remain)
+	if qaAmount.IsZero() {
+		// ratio 1.0 (default 1:1 ratio between nativeAssets and qAssets)
+		// native assets should not reach zero before qAssets (discount rate asymptote)
+		return sdk.OneDec()
+	}
+
+	return naAmount.Add(epochRewards).ToDec().Quo(qaAmount.ToDec())
+}
+
+func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone) error {
+	// TODO: rebalance
 	return nil
 }

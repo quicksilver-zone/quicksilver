@@ -81,7 +81,7 @@ func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	return SetValidatorsForZone(k, ctx, zone, args)
+	return SetValidatorsForZone(&k, ctx, zone, args)
 }
 
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
@@ -110,7 +110,7 @@ func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Qu
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	return SetValidatorForZone(k, ctx, zone, args)
+	return SetValidatorForZone(&k, ctx, zone, args)
 }
 
 func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -153,7 +153,7 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	return k.UpdateDelegationRecordsForAddress(ctx, &zone, delegationQuery.DelegatorAddr, args)
+	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
 }
 
 func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -168,6 +168,8 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	if err != nil {
 		return err
 	}
+
+	k.Logger(ctx).Error("Delegation callback", "delegation", delegation)
 
 	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
 		// delegation never gets removed, even with zero shares.
@@ -234,8 +236,10 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		return err
 	}
 
+	k.Logger(ctx).Info("GetTxs", txs)
+
 	// TODO: use pagination.GetTotal() to dispatch the correct number of requests now; rather than iteratively.
-	if len(txs.GetTxs()) == types.TxRetrieveCount {
+	if len(txs.Pagination.NextKey) > 0 {
 		req := tx.GetTxsEventRequest{}
 		if bytes.Equal(query.Request, []byte("")) {
 			return fmt.Errorf("attempted to unmarshal zero length byte slice (5)")
@@ -244,8 +248,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		if err != nil {
 			return err
 		}
-		req.Pagination.Offset += req.Pagination.Limit
-
+		req.Pagination.Key = txs.Pagination.NextKey
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
 	}
 
@@ -468,7 +471,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 	if coin.IsNil() {
 		// if the balance returned is zero for a given denom, we just get a nil response.
 		// lookup the denom from the request so we can set a zero value coin for the correct denom.
-		coin, err = coinFromRequestKey(query.Request, accAddr)
+		coin, err = CoinFromRequestKey(query.Request, accAddr)
 		if err != nil {
 			return err
 		}
@@ -507,7 +510,8 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
 }
 
-func coinFromRequestKey(query []byte, accAddr sdk.AccAddress) (sdk.Coin, error) {
+// coinFromRequestKey parses
+func CoinFromRequestKey(query []byte, accAddr sdk.AccAddress) (sdk.Coin, error) {
 	idx := bytes.Index(query, accAddr)
 	if idx == -1 {
 		return sdk.Coin{}, errors.New("AccountBalanceCallback: invalid request query")

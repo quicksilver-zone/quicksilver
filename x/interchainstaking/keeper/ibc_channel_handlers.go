@@ -76,24 +76,11 @@ func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connectionI
 		}
 
 	// delegation addresses
-	case len(portParts) == 3 && portParts[1] == types.ICASuffixDelegate:
-		delegationAccounts := zone.GetDelegationAccounts()
-		// check for duplicate address
-		for _, existing := range delegationAccounts {
-			if existing.Address == address {
-				err := fmt.Errorf("unexpectedly found existing address: %s", address)
-				ctx.Logger().Error(err.Error())
-				return err
-			}
-		}
-		account, err := types.NewICAAccount(address, portID, zone.BaseDenom)
+	case len(portParts) == 2 && portParts[1] == types.ICASuffixDelegate:
+		zone.DelegationAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
 		if err != nil {
 			return err
 		}
-
-		// append delegation account address
-		//nolint:gocritic
-		zone.DelegationAddresses = append(delegationAccounts, account)
 
 	// performance address
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixPerformance:

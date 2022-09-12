@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,6 +28,8 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 	senderAddress := UNSET
 	coins := sdk.Coins{}
 
+	k.Logger(ctx).Error("txr.Events", "events", txr.Events)
+
 	for _, event := range txr.Events {
 		if event.Type == "transfer" {
 			attrs := attributesToMap(event.Attributes)
@@ -41,7 +44,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 					k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
 				}
 
-				k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
+				k.Logger(ctx).Error("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
 				thisCoins, err := sdk.ParseCoinsNormalized(amount)
 				if err != nil {
 					k.Logger(ctx).Error("unable to parse coin", "string", amount)
@@ -83,13 +86,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 		return
 	}
 
-	sendPlan, err := k.DeterminePlanForDelegation(ctx, zone, coins, accAddress.String(), hash)
-	if err != nil {
-		k.Logger(ctx).Error("unable to determine delegation plan. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
-		return
-	}
-
-	if err := k.TransferToDelegate(ctx, zone, sendPlan, hash); err != nil {
+	if err := k.TransferToDelegate(ctx, zone, coins, hash); err != nil {
 		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 		return
 	}
@@ -112,8 +109,8 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Z
 	}
 
 	outCoins := sdk.Coins{}
-	for _, inCoin := range inCoins {
-		outAmount := sdk.NewDecFromInt(inCoin.Amount).Quo(zone.RedemptionRate).TruncateInt()
+	for _, inCoin := range inCoins.Sort() {
+		outAmount := inCoin.Amount.ToDec().Quo(zone.RedemptionRate).TruncateInt()
 		outCoin := sdk.NewCoin(zone.LocalDenom, outAmount)
 		outCoins = outCoins.Add(outCoin)
 	}
@@ -132,58 +129,10 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Z
 	return nil
 }
 
-func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.Zone, plan types.Allocations, memo string) error {
-	// if zone.SupportMultiSend() {
-	// 	return k.TransferToDelegateMulti(ctx, zone, plan, memo)
-	// } else {
-	var msgs []sdk.Msg
-	for _, allocation := range plan.Sorted() {
-		if !allocation.Amount.Empty() && !allocation.Amount.IsZero() {
-			msgs = append(msgs, &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: allocation.Address, Amount: allocation.Amount})
-		}
-	}
-
-	return k.SubmitTx(ctx, msgs, zone.DepositAddress, memo)
+func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.Zone, coins sdk.Coins, memo string) error {
+	msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
+	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo)
 }
-
-//}
-
-// func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.Zone, plan types.SendPlan, memo string) error {
-// 	eachAmount := sdk.Coins{}
-// 	splits := utils.MinU64(append([]uint64{}, k.GetParam(ctx, types.KeyDelegateAccountCount), uint64(len(zone.GetDelegationAccounts()))))
-
-// 	for _, asset := range inAmount {
-// 		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
-// 		// TODO: maybe set this to some param based threshold? 5000 is an arbitrary figure to avoid distributing dust continuously.
-// 		// 5000 * 100 accounts == 0.5 tokens
-// 		if thisAsset.Amount.GT(sdk.NewInt(5000)) {
-// 			eachAmount = eachAmount.Add(thisAsset)
-// 		}
-// 	}
-
-// 	if eachAmount.Empty() || eachAmount.IsZero() {
-// 		splits = 1
-// 	}
-
-// 	in := []bankTypes.Input{}
-// 	out := []bankTypes.Output{}
-
-// 	in = append(in, bankTypes.Input{Address: zone.DepositAddress.GetAddress(), Coins: inAmount})
-
-// 	accounts := zone.GetDelegationAccountsByLowestBalance(splits)
-// 	for _, account := range accounts {
-// 		out = append(out, bankTypes.Output{Address: account.GetAddress(), Coins: eachAmount})
-// 		inAmount = inAmount.Sub(eachAmount)
-// 	}
-
-// 	// ensure any remainder gets deposited in the first account (as it will have the lowest balance)
-// 	out[0].Coins = out[0].Coins.Add(inAmount...)
-
-// 	msg := bankTypes.NewMsgMultiSend(in, out)
-// 	// send from deposit to accounts
-
-// 	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo)
-// }
 
 func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string) error {
 	portID := account.GetPortName()
@@ -215,7 +164,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 	// timeoutTimestamp set to max value with the unsigned bit shifted to satisfy hermes timestamp conversion
 	// it is the responsibility of the auth module developer to ensure an appropriate timeout timestamp
-	timeoutTimestamp := ^uint64(0) >> 1
+	timeoutTimestamp := uint64(ctx.BlockTime().UnixNano()) + uint64(24*time.Hour.Nanoseconds())
 	_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
 	if err != nil {
 		return err

@@ -55,13 +55,11 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 	}
 
 	// generate delegate accounts
-	delegateAccountCount := int(k.GetParam(ctx, types.KeyDelegateAccountCount))
-	for i := 0; i < delegateAccountCount; i++ {
-		portOwner := fmt.Sprintf("%s.delegate.%d", chainID, i)
-		if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
-			return err
-		}
+	portOwner = chainID + ".delegate"
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+		return err
 	}
+
 	err = k.EmitValsetRequery(ctx, p.ConnectionId, chainID)
 	if err != nil {
 		return err

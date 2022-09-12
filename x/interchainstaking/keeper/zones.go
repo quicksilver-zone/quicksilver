@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"sort"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -102,11 +100,9 @@ func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.Zone {
 	var zone *types.Zone
 	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
-		for _, ica := range zoneInfo.GetDelegationAccounts() {
-			if ica.Address == address {
-				zone = &zoneInfo
-				return true
-			}
+		if zoneInfo.DelegationAddress.Address == address {
+			zone = &zoneInfo
+			return true
 		}
 		return false
 	})
@@ -125,37 +121,23 @@ func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *t
 	return zone
 }
 
-// GetZoneForDelegateAccount determines the zone, and returns the ICAAccount for a given address.
-func (k Keeper) GetICAForDelegateAccount(ctx sdk.Context, address string) (*types.Zone, *types.ICAAccount) {
-	var ica *types.ICAAccount
-	var zone *types.Zone
-	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
-		for _, delegateAccount := range zoneInfo.GetDelegationAccounts() {
-			if delegateAccount.Address == address {
-				ica = delegateAccount
-				zone = &zoneInfo
-				return true
-			}
-		}
-		return false
-	})
-	return zone, ica
-}
-
 func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {
 	if zone.WithdrawalAddress == nil {
 		k.Logger(ctx).Info("Withdrawal address not set")
 		return nil
 	}
+
+	if zone.DelegationAddress == nil {
+		k.Logger(ctx).Info("Delegation address not set")
+		return nil
+	}
 	withdrawalAddress := zone.WithdrawalAddress.Address
 
-	for _, da := range zone.GetDelegationAccounts() {
-		if da.WithdrawalAddress != zone.WithdrawalAddress.Address {
-			msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: da.Address, WithdrawAddress: withdrawalAddress}
-			err := k.SubmitTx(ctx, []sdk.Msg{&msg}, da, "")
-			if err != nil {
-				return err
-			}
+	if zone.DelegationAddress.WithdrawalAddress != zone.WithdrawalAddress.Address {
+		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
+		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "")
+		if err != nil {
+			return err
 		}
 	}
 
@@ -205,52 +187,51 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
 		k.Logger(ctx).Info("Matched performance address")
 	default:
-		icaAccount, err := zone.GetDelegationAccountByAddress(address)
-		if err != nil {
-			return err
-		}
-		existing := icaAccount.Balance.AmountOf(coin.Denom)
-		k.Logger(ctx).Info("Matched delegate address", "address", address, "wg", icaAccount.BalanceWaitgroup, "balance", icaAccount.Balance)
+		panic("does this ever happen?")
+		// icaAccount := zone.DelegationAddress
 
-		icaAccount.Balance = icaAccount.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))...) // zero this denom
+		// existing := icaAccount.Balance.AmountOf(coin.Denom)
+		// k.Logger(ctx).Info("Matched delegate address", "address", address, "wg", icaAccount.BalanceWaitgroup, "balance", icaAccount.Balance)
 
-		// TODO: figure out how this impacts delegations in progress / race conditions (in most cases, the duplicate delegation will just fail)
-		if !icaAccount.Balance.Empty() {
-			claims := k.AllZoneDelegatorWithdrawalRecords(ctx, &zone, icaAccount.Address)
-			if len(claims) > 0 {
-				// should we reconcile here?
-				k.Logger(ctx).Info("Outstanding Withdrawal Claims", "count", len(claims))
-				for _, claim := range claims {
-					if claim.Status == WithdrawStatusTokenize || claim.Status == WithdrawStatusUnbond {
-						// if the claim has tokenize status AND then remove any coins in the balance that match that validator.
-						// so we don't try to re-delegate any recently redeemed tokens that haven't been sent yet.
-						if strings.HasPrefix(coin.Denom, claim.Validator) {
-							k.Logger(ctx).Info("Ignoring denom this iteration", "denom", coin.GetDenom())
-							coin = coin.Sub(claim.Amount)
-						}
-					}
-				}
-			}
-		}
+		// icaAccount.Balance = icaAccount.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))) // zero this denom
 
-		icaAccount.Balance = icaAccount.Balance.Add(coin)
-		k.Logger(ctx).Info("Matched delegate address", "address", address, "wg", icaAccount.BalanceWaitgroup, "balance", icaAccount.Balance)
+		// // if !icaAccount.Balance.Empty() {
+		// // 	claims := k.AllZoneStatusWithdrawalRecords(ctx, &zone, icaAccount.Address)
+		// // 	if len(claims) > 0 {
+		// // 		// should we reconcile here?
+		// // 		k.Logger(ctx).Info("Outstanding Withdrawal Claims", "count", len(claims))
+		// // 		for _, claim := range claims {
+		// // 			if claim.Status == WithdrawStatusTokenize || claim.Status == WithdrawStatusUnbond {
+		// // 				// if the claim has tokenize status AND then remove any coins in the balance that match that validator.
+		// // 				// so we don't try to re-delegate any recently redeemed tokens that haven't been sent yet.
+		// // 				if strings.HasPrefix(coin.Denom, claim.Validator) {
+		// // 					k.Logger(ctx).Info("Ignoring denom this iteration", "denom", coin.GetDenom())
+		// // 					coin = coin.Sub(claim.Amount)
+		// // 				}
+		// // 			}
+		// // 		}
+		// // 	}
+		// // }
 
-		if zone.WithdrawalAddress.BalanceWaitgroup == 0 {
-			if !icaAccount.Balance.Empty() {
-				k.Logger(ctx).Info("Delegate account balance is non-zero; delegating!", "to_delegate", icaAccount.Balance)
-				valPlan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegatedAmount(ctx, &zone), k.GetDelegationBinsMap(ctx, &zone), coin, zone.GetAggregateIntentOrDefault())
-				if err != nil {
-					return err
-				}
-				err = k.Delegate(ctx, zone, icaAccount, valPlan)
-				if err != nil {
-					return err
-				}
-			}
-		}
+		// icaAccount.Balance = icaAccount.Balance.Add(coin)
+		// k.Logger(ctx).Info("Matched delegate address", "address", address, "wg", icaAccount.BalanceWaitgroup, "balance", icaAccount.Balance)
 
-		icaAccount.BalanceWaitgroup--
+		// if zone.WithdrawalAddress.BalanceWaitgroup == 0 {
+		// 	if !icaAccount.Balance.Empty() {
+		// 		// dlns, sum := k.GetDelegationMap(ctx, &zone)
+		// 		k.Logger(ctx).Error("Should we be delegating here?!", "to_delegate", icaAccount.Balance)
+		// 		// valPlan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegatedAmount(ctx, &zone), dlns, coin, zone.GetAggregateIntentOrDefault())
+		// 		// if err != nil {
+		// 		// 	return err
+		// 		// }
+		// 		// err = k.Delegate(ctx, zone, icaAccount, valPlan)
+		// 		// if err != nil {
+		// 		// 	return err
+		// 		// }
+		// 	}
+		// }
+
+		// icaAccount.BalanceWaitgroup--
 
 	}
 	k.SetZone(ctx, &zone)
@@ -279,10 +260,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
 		icaAccount = zone.WithdrawalAddress
 	default:
-		icaAccount, err = zone.GetDelegationAccountByAddress(address)
-		if err != nil {
-			return err
-		}
+		icaAccount = zone.DelegationAddress
 	}
 
 	if icaAccount == nil {
@@ -329,130 +307,6 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 
 	k.SetZone(ctx, &zone)
 	return nil
-}
-
-type (
-	RedemptionTarget  types.DelegationPlan
-	RedemptionTargets []RedemptionTarget
-)
-
-func (r RedemptionTargets) Sorted() RedemptionTargets {
-	sort.SliceStable(r, func(i, j int) bool {
-		return fmt.Sprintf("%s%s", r[i].DelegatorAddress, r[i].ValidatorAddress) < fmt.Sprintf("%s%s", r[j].DelegatorAddress, r[j].ValidatorAddress)
-	})
-	return r
-}
-
-func (r RedemptionTargets) Get(delAddr string, valAddr string) *RedemptionTarget {
-	for _, rt := range r.Sorted() {
-		if rt.DelegatorAddress == delAddr && rt.ValidatorAddress == valAddr {
-			return &rt
-		}
-	}
-	return nil
-}
-
-func (r RedemptionTargets) Add(delAddr string, valAddr string, amount sdk.Coins) RedemptionTargets {
-	for _, rt := range r.Sorted() {
-		if rt.DelegatorAddress == delAddr && rt.ValidatorAddress == valAddr {
-			rt.Value = rt.Value.Add(amount...)
-			return r
-		}
-	}
-	return append(r, RedemptionTarget{ValidatorAddress: valAddr, DelegatorAddress: delAddr, Value: amount})
-}
-
-func ApplyDeltasToIntent(requests types.Allocations, deltas types.Diffs, currentState types.Allocations) types.Allocations {
-OUT:
-	for fromIdx := 0; fromIdx < len(deltas) && deltas[fromIdx].Amount.LT(sdk.ZeroInt()); {
-		for idx := len(deltas) - 1; idx > fromIdx; idx-- {
-			if idx == fromIdx {
-				continue
-			}
-			if intent := requests.Get(deltas[idx].Valoper); intent != nil {
-				var remainder sdk.Coins
-				toSub := deltas[fromIdx].Amount.Abs()
-				requests, remainder = requests.Sub(sdk.Coins{sdk.NewCoin(types.GenericToken, toSub)}, intent.Address)
-				requests = requests.Allocate(deltas[fromIdx].Valoper, sdk.Coins{sdk.NewCoin(types.GenericToken, toSub)}.Sub(remainder...))
-				deltas[fromIdx].Amount = remainder.AmountOf(types.GenericToken).Neg()
-				if deltas[fromIdx].Amount.Equal(sdk.ZeroInt()) {
-					fromIdx++
-					continue OUT
-				}
-			}
-		}
-		if !deltas[fromIdx].Amount.Equal(sdk.ZeroInt()) {
-			break
-		}
-
-	}
-
-	return SatisfyRequestsForBins(requests, currentState, deltas).Sorted()
-}
-
-func SatisfyRequestsForBins(requests types.Allocations, bins types.Allocations, deltas types.Diffs) types.Allocations {
-	for dIdx, delta := range deltas {
-		maxWithdrawableForDenom := bins.SumForDenom(delta.Valoper)
-		r := requests.Get(delta.Valoper)
-		if r != nil {
-			if r.Amount.AmountOf(types.GenericToken).GT(maxWithdrawableForDenom) {
-				toReallocate := sdk.Coins{sdk.Coin{Denom: types.GenericToken, Amount: r.Amount.AmountOf(types.GenericToken).Sub(maxWithdrawableForDenom)}}
-				requests, _ = requests.Sub(toReallocate, r.Address)
-				if dIdx >= len(deltas)-1 {
-					requests = requests.Allocate(deltas[0].Valoper, toReallocate)
-					return SatisfyRequestsForBins(requests, bins, deltas)
-				}
-				requests = requests.Allocate(deltas[dIdx+1].Valoper, toReallocate)
-			}
-		}
-	}
-	return requests
-}
-
-func (k *Keeper) GetRedemptionTargets(ctx sdk.Context, zone types.Zone, requests types.Allocations) (RedemptionTargets, error) {
-	out := RedemptionTargets{}
-
-	bins := k.GetDelegationBinsMap(ctx, &zone)
-
-	deltas := types.DetermineIntentDelta(bins, k.GetDelegatedAmount(ctx, &zone).Amount, zone.GetAggregateIntentOrDefault())
-
-	requests = ApplyDeltasToIntent(requests, deltas, bins)
-
-	for _, allocation := range requests.Sorted() {
-
-		valoper := allocation.Address
-		remainingTokens := allocation.Amount.AmountOf(types.GenericToken)
-
-		_, valAddr, err := bech32.DecodeAndConvert(valoper)
-		if err != nil {
-			return RedemptionTargets{}, err
-		}
-
-		delegations := k.GetValidatorDelegations(ctx, &zone, valAddr)
-		sort.SliceStable(delegations, func(i, j int) bool {
-			return delegations[i].Amount.Amount.LT(delegations[j].Amount.Amount)
-		})
-
-		for _, delegation := range delegations {
-			if delegation.Amount.Amount.GTE(remainingTokens) {
-				out = out.Add(delegation.DelegationAddress, delegation.ValidatorAddress, sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, remainingTokens)))
-				remainingTokens = sdk.ZeroInt()
-				break
-			} else {
-				val := delegation.Amount.Amount
-				remainingTokens = remainingTokens.Sub(val)
-				out = out.Add(delegation.DelegationAddress, delegation.ValidatorAddress, sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, val)))
-			}
-		}
-
-		// panic if any tokens still remain
-		if remainingTokens.GT(sdk.ZeroInt()) {
-			return RedemptionTargets{}, fmt.Errorf("redemption with remaining amount: %s", remainingTokens.String())
-		}
-
-	}
-
-	return out, nil
 }
 
 func (k Keeper) InitPerformanceDelegations(ctx sdk.Context, zone types.Zone, response []byte) error {

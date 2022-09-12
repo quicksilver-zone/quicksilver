@@ -1,11 +1,9 @@
 package keeper
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
-	"sort"
 	"strings"
 	"time"
 
@@ -40,20 +38,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			k.Logger(ctx).Error("unable to unmarshal acknowledgement error", "error", err, "data", acknowledgement)
 			return err
 		}
-		// assert acknowledgement not empty struct.
-		if reflect.DeepEqual(ack, channeltypes.Acknowledgement_Error{}) {
-			return fmt.Errorf("unable to unmarshal acknowledgement error; got empty JSON object")
-		}
+
 		k.Logger(ctx).Error("unable to unmarshal acknowledgement result", "error", err, "remote_err", ackErr, "data", acknowledgement)
 		return err
-	}
-	// assert acknowledgement not empty struct.
-	if reflect.DeepEqual(ack, channeltypes.Acknowledgement_Result{}) {
-		return fmt.Errorf("unable to unmarshal acknowledgement result; got empty JSON object")
-	}
-
-	if bytes.Equal(ack.Result, []byte("")) {
-		return fmt.Errorf("unable to unmarshal empty byte slice")
 	}
 
 	txMsgData := &sdk.TxMsgData{}
@@ -227,7 +214,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 	// check if destination is interchainstaking module account (spoiler: it was)
 	if sMsg.Receiver != k.AccountKeeper.GetModuleAddress(types.ModuleName).String() {
 		k.Logger(ctx).Error("msgTransfer to unknown account!")
-		return nil
+		return fmt.Errorf("unexpected recipient")
 	}
 
 	return k.HandleDistributeFeesFromModuleAccount(ctx)
@@ -325,7 +312,7 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 	switch {
 	case sMsg.FromAddress == zone.WithdrawalAddress.GetAddress():
 		// WithdrawalAddress (for rewards) only send to DelegationAddresses.
-		// Target here is one of the DelegationAddresses.
+		// Target here is the DelegationAddresses.
 		return k.handleRewardsDelegation(ctx, *zone, sMsg)
 	case zone.IsDelegateAddress(sMsg.FromAddress):
 		return k.handleWithdrawForUser(ctx, zone, sMsg, memo)
@@ -339,47 +326,25 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 }
 
 func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.Zone, msg *banktypes.MsgSend) error {
-	da, err := zone.GetDelegationAccountByAddress(msg.ToAddress)
-	if err != nil {
-		return err
-	}
-	da.Balance = msg.Amount
-
-	plan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegatedAmount(ctx, &zone), k.GetDelegationBinsMap(ctx, &zone), sdk.NewCoin(zone.BaseDenom, msg.Amount.AmountOf(zone.BaseDenom)), zone.GetAggregateIntentOrDefault())
-	if err != nil {
-		return err
-	}
-	return k.Delegate(ctx, zone, da, plan)
+	return k.handleSendToDelegate(ctx, &zone, msg, "rewards")
 }
 
 func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
-	accAddr, err := utils.AccAddressFromBech32(msg.ToAddress, zone.AccountPrefix)
-	if err != nil {
-		return err
-	}
-	plan := types.Allocations{}
-
-	// NOTE: deleting mid-iteration breaks the iterator; cache the results and delete retrospectively.
-	toDelete := []types.DelegationPlan{}
-
-	k.IterateAllDelegationPlansForHashAndDelegator(ctx, zone, memo, accAddr, func(delegationPlan types.DelegationPlan) bool {
-		plan = plan.Allocate(delegationPlan.ValidatorAddress, delegationPlan.Value)
-		toDelete = append(toDelete, delegationPlan)
-		return false
-	})
-
-	for _, delegationPlan := range toDelete {
-		if err := k.RemoveDelegationPlan(ctx, zone, memo, delegationPlan); err != nil {
-			return err
+	var msgs []sdk.Msg
+	for _, coin := range msg.Amount {
+		if coin.Denom == zone.BaseDenom {
+			allocations := k.DeterminePlanForDelegation(ctx, zone, msg.Amount)
+			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(ctx, zone, allocations)...)
+		} else {
+			return fmt.Errorf("lsm currently unsupported.")
+			//msgs = append(msgs, k.PrepareDelegationMessagesForShares(ctx, zone, msg.Amount)...)
 		}
 	}
 
-	da, err := zone.GetDelegationAccountByAddress(msg.ToAddress)
-	if err != nil {
-		return err
-	}
-	da.Balance = da.Balance.Add(msg.Amount...)
-	return k.Delegate(ctx, *zone, da, plan)
+	k.Logger(ctx).Error("messages to send", "messages", msgs)
+
+	// zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Add(msg.Amount...)
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo)
 }
 
 // withdraw for user will check that the msgSend we have successfully executed matches an existing withdrawal record.
@@ -388,60 +353,79 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 // then burn the withdrawal_record's burn_amount.
 func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
 	var err error
-	end := false
-	// iterate all withdrawals pertaining to this zone / user / txhash triple.
-	k.IterateZoneDelegatorHashWithdrawalRecords(ctx, zone, memo, msg.FromAddress, func(idx int64, withdrawal types.WithdrawalRecord) bool {
-		if withdrawal.Recipient == msg.ToAddress {
-			k.Logger(ctx).Info("withdrawal: matched the recipient", "val", withdrawal.Validator, "delegator", withdrawal.Delegator, "recipient", withdrawal.Recipient)
-			if msg.Amount[0].Amount.Equal(withdrawal.Amount.Amount) {
-				k.Logger(ctx).Info("withdrawal:  matched the amount", "amount", msg.Amount, "record.amount", withdrawal.Amount.Amount)
-				if withdrawal.Status == WithdrawStatusSend {
-					k.Logger(ctx).Info("Found matching withdrawal; marking as completed")
-					k.DeleteWithdrawalRecord(ctx, zone, memo, withdrawal.Delegator, withdrawal.Validator)
-					if len(k.AllZoneDelegatorHashWithdrawalRecords(ctx, zone, memo, withdrawal.Delegator)) == 0 {
-						err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.Coins{withdrawal.BurnAmount})
-						if err != nil {
-							// if we can't burn the coins, stop iterating so we can return err outside of the iterator.
-							return true
-						}
-						k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawal.BurnAmount)
-						// stop iterating here, we reached the end of the possible withdrawal. set end to true to escape below.
-						end = true
-					}
+	var withdrawalRecord types.WithdrawalRecord
 
-					err = k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
-					// if we can't emit the query, stop iterating so we can return err outside of the iterator.
-					// additionally, if we have reach the end of this withdrawal, stop iterating.
-					return (err != nil || end)
-				}
-			}
-		}
-		// no errors, but we haven't matched yet either. continue iterating.
-		return false
-	})
-	if err == nil && !end {
-		// if we got to here, with no error causing an early exit, but without setting the end flag, we didn't find a withdrawal record.
-		err = fmt.Errorf("unable to find matching withdrawal record for MsgSend")
+	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone, memo, WithdrawStatusSend)
+
+	if !found {
+		return fmt.Errorf("no matching withdrawal record found")
 	}
+
+	for _, i := range utils.Keys(withdrawalRecord.Distribution) {
+		if msg.Amount[0].Amount.Equal(sdk.NewInt(withdrawalRecord.Distribution[i])) {
+			delete(withdrawalRecord.Distribution, i)
+			// matched amount
+			if len(withdrawalRecord.Distribution) == 0 {
+				// we just removed the last element
+				k.Logger(ctx).Info("found matching withdrawal; marking as completed")
+				k.DeleteWithdrawalRecord(ctx, zone, memo, withdrawalRecord.Status)
+				if err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
+					// if we can't burn the coins, fail.
+					return err
+				}
+				k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
+			} else {
+				k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
+				k.SetWithdrawalRecord(ctx, &withdrawalRecord)
+			}
+			break
+
+		}
+	}
+	return k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+}
+
+func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone) error {
+	var err error
+
+	// var out map[string]sdk.Int
+
+	// k.IterateZoneStatusWithdrawalRecords(ctx, zone, WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	// 	k.Logger(ctx).Info("iterating unbondings")
+
+	// 	k.Logger(ctx).Info("unbonding funds", "from", withdrawal., "to", withdrawal.Recipient, "amount", withdrawal.Amount)
+	// 	withdrawal.Status = WithdrawStatusSend
+	// 	k.SetWithdrawalRecord(ctx, &withdrawal)
+	// 	return false
+	// })
+
+	// TODO: once unbondings are amalgamated, how do we handle individual unbondings.
+	// UnbondingRecord?
+
+	// bingo!
+	// sendMsg := &banktypes.MsgSend{FromAddress: withdrawal.Delegator, ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
+
+	// err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, withdrawal.Txhash)
+	// if err != nil {
+	// 	k.Logger(ctx).Error("error", err)
+	// 	return true
+	// }
+
 	return err
 }
 
 func (k *Keeper) HandleCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error {
 	var err error
-	k.IterateZoneWithdrawalRecords(ctx, zone, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone, WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		k.Logger(ctx).Info("iterating unbondings")
-		if withdrawal.Status == WithdrawStatusUnbond && withdrawal.CompletionTime.After(ctx.BlockTime()) { // completion date has passed.
+		if withdrawal.CompletionTime.After(ctx.BlockTime()) { // completion date has passed.
 			k.Logger(ctx).Info("matched unbonding")
 
 			// bingo!
-			_, delegatorIca := k.GetICAForDelegateAccount(ctx, withdrawal.Delegator)
-			if delegatorIca == nil {
-				k.Logger(ctx).Error("unable to find delegator account for withdrawal; this shouldn't happen", err)
-				return true
-			}
-			sendMsg := &banktypes.MsgSend{FromAddress: withdrawal.Delegator, ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount}}
+			sendMsg := &banktypes.MsgSend{FromAddress: withdrawal.Delegator, ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
 
-			err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, delegatorIca, withdrawal.Txhash)
+			err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, withdrawal.Txhash)
 			if err != nil {
 				k.Logger(ctx).Error("error", err)
 				return true
@@ -456,9 +440,8 @@ func (k *Keeper) HandleCompletedUnbondings(ctx sdk.Context, zone *types.Zone) er
 }
 
 func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin, memo string) error {
-	k.Logger(ctx).Info("Received MsgTokenizeShares acknowledgement")
+	k.Logger(ctx).Info("received MsgTokenizeShares acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgTokenizeShares
-	var err error
 	tsMsg, ok := msg.(*lsmstakingtypes.MsgTokenizeShares)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgTokenizeShares")
@@ -466,39 +449,35 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.
 	}
 
 	zone := k.GetZoneForDelegateAccount(ctx, tsMsg.DelegatorAddress)
-	// here we are either withdrawing for a user _or_ rebalancing internally. lets check both action queues:
-	k.IterateZoneDelegatorHashWithdrawalRecords(ctx, zone, memo, tsMsg.DelegatorAddress, func(idx int64, withdrawal types.WithdrawalRecord) bool {
-		k.Logger(ctx).Debug("iterating withdraw record", "idx", idx, "record", withdrawal)
-		if strings.HasPrefix(amount.Denom, withdrawal.Validator) {
-			k.Logger(ctx).Debug("matched the prefix", "token", amount.Denom, "denom", "val", withdrawal.Validator)
-			if amount.Amount.Equal(withdrawal.Amount.Amount) {
-				k.Logger(ctx).Debug("matched the amount", "amount", amount.Amount, "record.amount", withdrawal.Amount.Amount)
-				if withdrawal.Status == WithdrawStatusTokenize {
-					k.Logger(ctx).Info("Found matching withdrawal", "request_amount", withdrawal.Amount, "actual_amount", amount)
-					// bingo!
-					_, delegatorIca := k.GetICAForDelegateAccount(ctx, withdrawal.Delegator)
-					if delegatorIca == nil {
-						k.Logger(ctx).Error("unable to find delegator account for withdrawal; this shouldn't happen", err)
-						return true
-					}
-					sendMsg := &banktypes.MsgSend{FromAddress: withdrawal.Delegator, ToAddress: withdrawal.Recipient, Amount: sdk.Coins{amount}}
 
-					err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, delegatorIca, memo)
-					if err != nil {
-						k.Logger(ctx).Error("error", err)
-						return true
-					}
-					k.Logger(ctx).Info("sending funds", "from", withdrawal.Delegator, "to", withdrawal.Recipient, "amount", amount)
-					withdrawal.Status = WithdrawStatusSend
-					k.SetWithdrawalRecord(ctx, &withdrawal)
-					return true
+	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone, memo, WithdrawStatusTokenize)
+
+	if !found {
+		return fmt.Errorf("no matching withdrawal record found")
+	}
+
+	for _, i := range utils.Keys(withdrawalRecord.Distribution) {
+		if sharesAmount.Equal(withdrawalRecord.Distribution[i]) {
+			withdrawalRecord.Amount.Add(sharesAmount)
+			// matched amount
+			if len(withdrawalRecord.Distribution) == len(withdrawalRecord.Amount) {
+				// we just added the last tokens
+				k.Logger(ctx).Info("Found matching withdrawal; marking for send")
+				k.DeleteWithdrawalRecord(ctx, zone, memo, WithdrawStatusTokenize)
+				withdrawalRecord.Status = WithdrawStatusSend
+				sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.Address, ToAddress: withdrawalRecord.Recipient, Amount: withdrawalRecord.Amount}
+				err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, memo)
+				if err != nil {
+					return err
 				}
+			} else {
+				k.Logger(ctx).Info("Found matching withdrawal; awaiting additional messages")
 			}
+			k.SetWithdrawalRecord(ctx, &withdrawalRecord)
+			break
 		}
-		return false
-	})
-
-	return err
+	}
+	return nil
 }
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time) error {
@@ -515,7 +494,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, undelegateMsg.DelegatorAddress)
 	k.Logger(ctx).Info("MsgUndelegate", "del", undelegateMsg.DelegatorAddress, "val", undelegateMsg.ValidatorAddress, "hash", hash, "chain", zone.ChainId)
-	record, found := k.GetWithdrawalRecord(ctx, zone, hash, undelegateMsg.DelegatorAddress, undelegateMsg.ValidatorAddress)
+	record, found := k.GetWithdrawalRecord(ctx, zone, hash, WithdrawStatusUnbond)
 	if !found {
 		return fmt.Errorf("unable to lookup withdrawal record")
 	}
@@ -586,7 +565,7 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 		k.Logger(ctx).Error("unable to cast source message to MsgSetWithdrawAddress")
 		return fmt.Errorf("unable to cast source message to MsgSetWithdrawAddress")
 	}
-	zone, ica := k.GetICAForDelegateAccount(ctx, original.DelegatorAddress)
+	zone := k.GetZoneForDelegateAccount(ctx, original.DelegatorAddress)
 	if zone == nil {
 		zone = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
 		if zone == nil {
@@ -596,7 +575,7 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 			return err
 		}
 	} else {
-		if err := ica.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
+		if err := zone.DelegationAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
 			return err
 		}
 	}
@@ -624,7 +603,7 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, 
 	return "", fmt.Errorf("unable to find validator for token %s", amount.Denom)
 }
 
-func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.Zone, delegatorAddress string, args []byte) error {
+func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Zone, delegatorAddress string, args []byte) error {
 	var response stakingtypes.QueryDelegatorDelegationsResponse
 	err := k.cdc.Unmarshal(args, &response)
 	if err != nil {
@@ -636,17 +615,11 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 		return err
 	}
 
-	delegatorDelegations := k.GetDelegatorDelegations(ctx, zone, delAddr)
+	delegatorDelegations := k.GetDelegatorDelegations(ctx, &zone, delAddr)
 	delMap := make(map[string]types.Delegation, len(delegatorDelegations))
 	for _, del := range delegatorDelegations {
 		delMap[del.ValidatorAddress] = del
 	}
-
-	da, err := zone.GetDelegationAccountByAddress(delegatorAddress)
-	if err != nil {
-		return err
-	}
-
 	for _, delegationRecord := range response.DelegationResponses {
 
 		_, valAddr, err := bech32.DecodeAndConvert(delegationRecord.Delegation.ValidatorAddress)
@@ -670,21 +643,14 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 				"delegation",
 				0,
 			)
-			da.IncrementBalanceWaitgroup()
+			// zone.DelegationAddress.IncrementBalanceWaitgroup() // does this get decremented?
 		}
 
 		if ok {
 			delete(delMap, delegationRecord.Delegation.ValidatorAddress)
 		}
 	}
-
-	sortedLeftAddrs := make([]string, 0, len(delMap))
-	for valAddr := range delMap {
-		sortedLeftAddrs = append(sortedLeftAddrs, valAddr)
-	}
-	sort.Strings(sortedLeftAddrs)
-
-	for _, existingValAddr := range sortedLeftAddrs {
+	for _, existingValAddr := range utils.Keys(delMap) {
 		existingDelegation := delMap[existingValAddr]
 		_, valAddr, err := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
 		if err != nil {
@@ -692,7 +658,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 		}
 		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-		if err := k.RemoveDelegation(ctx, zone, existingDelegation); err != nil {
+		if err := k.RemoveDelegation(ctx, &zone, existingDelegation); err != nil {
 			return err
 		}
 
@@ -710,7 +676,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone *types.
 		)
 	}
 
-	k.SetZone(ctx, zone)
+	// k.SetZone(ctx, &zone)
 
 	return nil
 }
@@ -721,14 +687,14 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 	if !found {
 		k.Logger(ctx).Info("Adding delegation tuple", "delegator", delegatorAddress, "validator", validatorAddress, "amount", amount.Amount)
 		delegation = types.NewDelegation(delegatorAddress, validatorAddress, amount)
-	} else if !delegation.Amount.Equal(sdk.NewDecFromInt(amount.Amount)) {
+	} else {
 		oldAmount := delegation.Amount
 		if !absolute {
 			delegation.Amount = delegation.Amount.Add(amount)
 		} else {
 			delegation.Amount = amount
 		}
-		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
+		k.Logger(ctx).Error("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
 	}
 	k.SetDelegation(ctx, zone, delegation)
 	if err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId); err != nil {
@@ -758,6 +724,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	// performance only.
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
 		zone.WithdrawalWaitgroup--
+		k.Logger(ctx).Error("WAITGROUP DECREMENTED", "wg", zone.WithdrawalWaitgroup)
 		k.SetZone(ctx, zone)
 	}
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.WithdrawalWaitgroup, "delegator", withdrawalMsg.DelegatorAddress)
@@ -769,7 +736,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 		if err != nil {
 			return err
 		}
-
+		k.Logger(ctx).Error("TRIGGER DISTRIBUTE REWARDS")
 		// total rewards balance withdrawn
 		k.ICQKeeper.MakeRequest(
 			ctx,
@@ -789,6 +756,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 }
 
 func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {
+	k.Logger(ctx).Error("DISTRIBUTE REWARDS")
 	zone, found := k.GetZone(ctx, query.ChainId)
 	if !found {
 		return fmt.Errorf("unable to find zone for %s", query.ChainId)
@@ -811,10 +779,8 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	// prepare rewards distribution
 	rewards := sdk.NewCoin(zone.BaseDenom, baseDenomAmount.Sub(baseDenomFee))
 
-	dust, msgs := k.prepareRewardsDistributionMsgs(zone, rewards.Amount)
-
-	// subtract dust from rewards
-	rewards = rewards.SubAmount(dust)
+	var msgs []sdk.Msg
+	msgs = append(msgs, k.prepareRewardsDistributionMsgs(zone, rewards.Amount))
 
 	// multiDenomFee is the balance of withdrawal account minus the redelegated rewards.
 	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards}...)
@@ -837,7 +803,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 		return fmt.Errorf("unable to find remote transfer connection")
 	}
 
-	for _, coin := range multiDenomFee {
+	for _, coin := range multiDenomFee.Sort() {
 		msgs = append(
 			msgs,
 			&ibctransfertypes.MsgTransfer{
@@ -859,57 +825,10 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "")
 }
 
-func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards sdk.Int) {
-	ratio := k.getRatio(ctx, zone, epochRewards)
-	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
-	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
-	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", sdk.NewDecFromInt(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount), "lv", sdk.NewDecFromInt(k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards)))
-
-	zone.LastRedemptionRate = zone.RedemptionRate
-	zone.RedemptionRate = ratio
-	k.SetZone(ctx, &zone)
-}
-
-func (k *Keeper) getRatio(ctx sdk.Context, zone types.Zone, epochRewards sdk.Int) sdk.Dec {
-	// native asset amount
-	naAmount := k.GetDelegatedAmount(ctx, &zone).Amount
-	// qAsset amount
-	qaAmount := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
-
-	// check if zone is fully withdrawn (no qAssets remain)
-	if qaAmount.IsZero() {
-		// ratio 1.0 (default 1:1 ratio between nativeAssets and qAssets)
-		// native assets should not reach zero before qAssets (discount rate asymptote)
-		return sdk.OneDec()
+func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdk.Int) sdk.Msg {
+	return &banktypes.MsgSend{
+		FromAddress: zone.WithdrawalAddress.GetAddress(),
+		ToAddress:   zone.DelegationAddress.GetAddress(),
+		Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, rewards)),
 	}
-
-	return sdk.NewDecFromInt(naAmount.Add(epochRewards)).Quo(sdk.NewDecFromInt(qaAmount))
-}
-
-func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdk.Int) (sdk.Int, []sdk.Msg) {
-	// todo: use multisend.
-	// todo: this will probably not want to be an equal distribution. we want to use this to even out the distribution between accounts.
-	var msgs []sdk.Msg
-
-	dust := rewards
-	numDelegators := len(zone.DelegationAddresses)
-	if numDelegators == 0 {
-		// zone has no delegators, we must panic here, something is very wrong...
-		panic("internal zone error, zone has no delegators")
-	}
-	portion := sdk.NewDecFromInt(rewards).Quo(sdk.NewDec(int64(numDelegators))).TruncateInt()
-	for _, da := range zone.GetDelegationAccounts() {
-		msgs = append(
-			msgs,
-			&banktypes.MsgSend{
-				FromAddress: zone.WithdrawalAddress.GetAddress(),
-				ToAddress:   da.GetAddress(),
-				Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, portion)),
-			},
-		)
-		dust = dust.Sub(portion)
-	}
-
-	return dust, msgs
 }

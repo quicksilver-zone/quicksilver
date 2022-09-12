@@ -35,6 +35,9 @@ services:
     command:
       - icad
       - start
+    ports:
+    - 27657:26657
+    - 23137:1317
   testzone1-2:
     image: quicksilverzone/testzone:latest
     hostname: testzone1-2

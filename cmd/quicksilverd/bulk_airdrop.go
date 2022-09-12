@@ -40,10 +40,10 @@ func AddZonedropCmd(defaultNodeHome string) *cobra.Command {
 
 			config.SetRoot(clientCtx.HomeDir)
 
-			chain_id := args[0]
+			chainID := args[0]
 
 			layout := "2006-01-02T15:04:05Z"
-			start_time, err := time.Parse(layout, args[1])
+			startTime, err := time.Parse(layout, args[1])
 			if err != nil {
 				panic(err)
 			}
@@ -59,8 +59,8 @@ func AddZonedropCmd(defaultNodeHome string) *cobra.Command {
 			actionString := args[4]
 
 			airdrop := types.ZoneDrop{
-				ChainId:     chain_id,
-				StartTime:   start_time,
+				ChainId:     chainID,
+				StartTime:   startTime,
 				Duration:    duration,
 				Decay:       decay,
 				Allocation:  0,
