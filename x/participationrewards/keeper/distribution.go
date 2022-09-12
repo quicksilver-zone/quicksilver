@@ -109,7 +109,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 	errors := make(map[string]error)
 	k.IteratePrefixedProtocolDatas(ctx, "osmosis/pools", func(idx int64, data types.ProtocolData) bool {
 		idxLabel := fmt.Sprintf("index[%d]", idx)
-		ipool, err := UnmarshalProtocolData("osmosispool", data.Data)
+		ipool, err := UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
 		if err != nil {
 			errors[idxLabel] = err
 			return true

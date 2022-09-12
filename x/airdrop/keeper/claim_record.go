@@ -217,13 +217,13 @@ func (k Keeper) Claim(
 
 	// zone airdrop not active
 	if !k.IsActiveZoneDrop(ctx, zd) {
-		return 0, nil
+		return 0, fmt.Errorf("zone airdrop for %s is not active", chainID)
 	}
 
 	// obtain claim record
 	cr, err := k.GetClaimRecord(ctx, chainID, address)
 	if err != nil {
-		return 0, nil
+		return 0, fmt.Errorf("no zone airdrop found for %s on %s", address, chainID)
 	}
 
 	return k.HandleClaim(ctx, cr, action, proofs)

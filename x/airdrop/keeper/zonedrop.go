@@ -7,6 +7,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
+// GetZoneDropAccount returns the zone airdrop account address.
 func (k Keeper) GetZoneDropAccountAddress(chainID string) sdk.AccAddress {
 	name := types.ModuleName + "." + chainID
 	return authtypes.NewModuleAddress(name)

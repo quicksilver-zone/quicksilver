@@ -14,7 +14,12 @@ import (
 func HandleAddProtocolDataProposal(ctx sdk.Context, k Keeper, p *types.AddProtocolDataProposal) error {
 	protocolData := NewProtocolData(p.Type, p.Protocol, p.Data)
 
-	_, err := UnmarshalProtocolData(p.Type, p.Data)
+	pdtv, exists := types.ProtocolDataType_value[p.Type]
+	if !exists {
+		return types.ErrUnknownProtocolDataType
+	}
+
+	_, err := UnmarshalProtocolData(pdtv, p.Data)
 	if err != nil {
 		return err
 	}
@@ -24,43 +29,49 @@ func HandleAddProtocolDataProposal(ctx sdk.Context, k Keeper, p *types.AddProtoc
 	return nil
 }
 
-func UnmarshalProtocolData(datatype string, data json.RawMessage) (IProtocolData, error) {
+func UnmarshalProtocolData(datatype types.ProtocolDataType, data json.RawMessage) (IProtocolData, error) {
 	switch datatype {
-	case types.ClaimTypes[types.ClaimTypeOsmosisPool]:
-		pd := types.OsmosisPoolProtocolData{}
-		err := json.Unmarshal(data, &pd)
-		if err != nil {
-			return nil, err
+	case types.ProtocolDataOsmosisPool:
+		{
+			pd := types.OsmosisPoolProtocolData{}
+			err := json.Unmarshal(data, &pd)
+			if err != nil {
+				return nil, err
+			}
+			var blank types.OsmosisPoolProtocolData
+			if reflect.DeepEqual(pd, blank) {
+				return nil, fmt.Errorf("unable to unmarshal osmosispool protocol data from empty JSON object")
+			}
+			return pd, nil
 		}
-		var blank types.OsmosisPoolProtocolData
-		if reflect.DeepEqual(pd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal osmosispool protocol data from empty JSON object")
+	case types.ProtocolDataConnection:
+		{
+			pd := ConnectionProtocolData{}
+			err := json.Unmarshal(data, &pd)
+			if err != nil {
+				return nil, err
+			}
+			var blank ConnectionProtocolData
+			if reflect.DeepEqual(pd, blank) {
+				return nil, fmt.Errorf("unable to unmarshal connection protocol data from empty JSON object")
+			}
+			return pd, nil
 		}
-		return pd, nil
-	case "connection":
-		pd := ConnectionProtocolData{}
-		err := json.Unmarshal(data, &pd)
-		if err != nil {
-			return nil, err
+	case types.ProtocolDataLiquidToken:
+		{
+			pd := types.LiquidAllowedDenomProtocolData{}
+			err := json.Unmarshal(data, &pd)
+			if err != nil {
+				return nil, err
+			}
+			var blank types.LiquidAllowedDenomProtocolData
+			if reflect.DeepEqual(pd, blank) {
+				return nil, fmt.Errorf("unable to unmarshal liquid protocol data from empty JSON object")
+			}
+			return pd, nil
 		}
-		var blank ConnectionProtocolData
-		if reflect.DeepEqual(pd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal connection protocol data from empty JSON object")
-		}
-		return pd, nil
-	case "liquid":
-		pd := types.LiquidAllowedDenomProtocolData{}
-		err := json.Unmarshal(data, &pd)
-		if err != nil {
-			return nil, err
-		}
-		var blank types.LiquidAllowedDenomProtocolData
-		if reflect.DeepEqual(pd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal liquid protocol data from empty JSON object")
-		}
-		return pd, nil
 	default:
-		return nil, fmt.Errorf("unsupported protocol %s", datatype)
+		return nil, types.ErrUnknownProtocolDataType
 	}
 }
 

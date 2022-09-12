@@ -95,7 +95,7 @@ func (k Keeper) GetAllocation(ctx sdk.Context, balance sdk.Coin, portion sdk.Dec
 
 func LoadSubmodules() map[int64]Submodule {
 	out := make(map[int64]Submodule, 0)
-	out[types.ClaimTypeOsmosisPool] = &OsmosisModule{}
-	out[types.ClaimTypeLiquidToken] = &LiquidTokensModule{}
+	out[int64(types.ClaimTypeOsmosisPool)] = &OsmosisModule{}
+	out[int64(types.ClaimTypeLiquidToken)] = &LiquidTokensModule{}
 	return out
 }

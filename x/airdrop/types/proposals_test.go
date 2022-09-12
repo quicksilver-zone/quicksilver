@@ -26,7 +26,7 @@ func TestRegisterZoneDropProposal_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"invalid-00",
+			"invalid-nil",
 			fields{
 				Title:        "Flashdrop",
 				Description:  "An airdrop that is valid for one hour only",
@@ -36,7 +36,7 @@ func TestRegisterZoneDropProposal_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"invalid-01",
+			"invalid-empty",
 			fields{
 				Title:        "Flashdrop",
 				Description:  "An airdrop that is valid for one hour only",

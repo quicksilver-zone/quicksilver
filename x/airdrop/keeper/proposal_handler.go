@@ -16,6 +16,19 @@ type ClaimRecords []types.ClaimRecord
 
 // HandleRegisterZoneDropProposal is a handler for executing a passed airdrop proposal.
 func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.RegisterZoneDropProposal) error {
+	if err := p.ValidateBasic(); err != nil {
+		return err
+	}
+
+	_, found := k.icsKeeper.GetZone(ctx, p.ZoneDrop.ChainId)
+	if !found {
+		return fmt.Errorf("zone not found, %s", p.ZoneDrop.ChainId)
+	}
+
+	if p.ZoneDrop.StartTime.Before(ctx.BlockTime()) {
+		return fmt.Errorf("zone airdrop already started")
+	}
+
 	// decompress claim records
 	crsb, err := k.decompress(p.ClaimRecords)
 	if err != nil {
@@ -28,6 +41,7 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.Register
 		return err
 	}
 
+	sumMax := uint64(0)
 	// validate ClaimRecords and process
 	for i, cr := range crs {
 		if err := cr.ValidateBasic(); err != nil {
@@ -38,13 +52,25 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.Register
 			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: contains completed actions", i)
 		}
 
-		if err := k.SetClaimRecord(ctx, cr); err != nil {
-			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: %w", i, err)
+		if cr.ChainId != p.ZoneDrop.ChainId {
+			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: chainID missmatch, expected %s got %s", i, p.ZoneDrop.ChainId, cr.ChainId)
 		}
+
+		sumMax += cr.MaxAllocation
+	}
+
+	// check allocations
+	if sumMax > p.ZoneDrop.Allocation {
+		return fmt.Errorf("sum of claim records max allocations (%v) exceed zone airdrop allocation (%v)", sumMax, p.ZoneDrop.Allocation)
 	}
 
 	// process ZoneDrop
 	k.SetZoneDrop(ctx, *p.ZoneDrop)
+	for i, cr := range crs {
+		if err := k.SetClaimRecord(ctx, cr); err != nil {
+			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: %w", i, err)
+		}
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

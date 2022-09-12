@@ -30,7 +30,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"invalid-00",
+			"invalid-weights-exceeded",
 			fields{
 				ChainId:    "",
 				StartTime:  time.Now().Add(time.Hour),
@@ -47,7 +47,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"invalid-01",
+			"invalid-weights-insufficient",
 			fields{
 				ChainId:    "",
 				StartTime:  time.Now().Add(time.Hour),
@@ -64,7 +64,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"invalid-02",
+			"invalid-actions-exceeded",
 			fields{
 				ChainId:    "test-1",
 				StartTime:  time.Now().Add(-time.Hour),
@@ -122,7 +122,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 
 			err := zd.ValidateBasic()
 			if tt.wantErr {
-				// t.Logf("Error:\n%v\n", err)
+				t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
 				return
 			}
