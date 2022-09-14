@@ -69,12 +69,18 @@ func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 // -------------------------------------------------------------------------
 // DelegationCandidates
 
-func (a Allocations) DetermineThreshold() sdk.Int {
-	return a.SortedByAmount()[int(float64(0.33)*float64(len(a)))].SumAll()
+func (a Allocations) DetermineThreshold() (th sdk.Int) {
+	if len(a) != 0 {
+		th = a.SortedByAmount()[int(float64(0.33)*float64(len(a)))].SumAll()
+	}
+	return th
 }
 
-func (a Allocations) SmallestBin() Allocation {
-	return *a.SortedByAmount()[0]
+func (a Allocations) SmallestBin() (alloc Allocation) {
+	if len(a) != 0 {
+		alloc = *a.SortedByAmount()[0]
+	}
+	return alloc
 }
 
 func (a Allocations) FindAccountForDelegation(validatorAddress string, coin sdk.Coin) (string, Allocations) {
