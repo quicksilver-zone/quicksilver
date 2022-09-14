@@ -12,7 +12,6 @@ func TestGenesisState_Validate(t *testing.T) {
 		Zones            []Zone
 		Receipts         []Receipt
 		Delegations      []DelegationsForZone
-		DelegationPlans  []DelegationPlansForZone
 		DelegatorIntents []DelegatorIntentsForZone
 		PortConnections  []PortConnectionTuple
 	}
@@ -30,7 +29,6 @@ func TestGenesisState_Validate(t *testing.T) {
 				Zones:            tt.fields.Zones,
 				Receipts:         tt.fields.Receipts,
 				Delegations:      tt.fields.Delegations,
-				DelegationPlans:  tt.fields.DelegationPlans,
 				DelegatorIntents: tt.fields.DelegatorIntents,
 				PortConnections:  tt.fields.PortConnections,
 			}
