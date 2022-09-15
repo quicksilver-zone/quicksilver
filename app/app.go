@@ -599,7 +599,7 @@ func NewQuicksilver(
 		airdroptypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
-		govv1beta1.ModuleName,
+		govtypes.ModuleName,
 		crisistypes.ModuleName,
 		genutiltypes.ModuleName,
 		authz.ModuleName,
@@ -611,7 +611,7 @@ func NewQuicksilver(
 	// NOTE: fee market module must go last in order to retrieve the block gas used.
 	app.mm.SetOrderEndBlockers(
 		crisistypes.ModuleName,
-		govv1beta1.ModuleName,
+		govtypes.ModuleName,
 		stakingtypes.ModuleName,
 		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
 		interchainquerytypes.ModuleName,
@@ -652,7 +652,7 @@ func NewQuicksilver(
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
-		govv1beta1.ModuleName,
+		govtypes.ModuleName,
 		minttypes.ModuleName,
 		ibchost.ModuleName,
 		genutiltypes.ModuleName,
