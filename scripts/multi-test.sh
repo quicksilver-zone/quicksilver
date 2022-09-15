@@ -60,9 +60,12 @@ docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$R
 docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_2" $CHAINID_1
 docker-compose run hermes hermes -c /tmp/hermes.toml keys restore --mnemonic "$RLY_MNEMONIC_3" $CHAINID_2
 sleep 10
+echo "Creating IBC connection"
+docker-compose run --rm hermes hermes -c /tmp/hermes.toml create connection $CHAINID_0 $CHAINID_1
+docker-compose run --rm hermes hermes -c /tmp/hermes.toml create connection $CHAINID_0 $CHAINID_2
 echo "Creating transfer channel"
-docker-compose run hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_0 $CHAINID_1
-docker-compose run hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_0 $CHAINID_2
+docker-compose run hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_0 connection-0
+docker-compose run hermes hermes -c /tmp/hermes.toml create channel --port-a transfer --port-b transfer $CHAINID_0 connection-1
 echo "Tranfer channel created"
 docker-compose up --force-recreate -d hermes
 
