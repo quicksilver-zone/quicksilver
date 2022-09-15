@@ -109,6 +109,7 @@ import (
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
 
 	"github.com/ingenuity-build/quicksilver/x/epochs"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
@@ -920,7 +921,7 @@ func (app *Quicksilver) GetBaseApp() *baseapp.BaseApp {
 }
 
 // GetStakingKeeper implements the TestingApp interface.
-func (app *Quicksilver) GetStakingKeeper() stakingkeeper.Keeper {
+func (app *Quicksilver) GetStakingKeeper() ibctestingtypes.StakingKeeper {
 	return app.StakingKeeper
 }
 
