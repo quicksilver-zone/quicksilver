@@ -4,14 +4,14 @@ import (
 	fmt "fmt"
 	"strings"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
 	ProposalTypeRegisterZoneDrop = "RegisterZoneDrop"
 )
 
-var _ govtypes.Content = &RegisterZoneDropProposal{}
+var _ govv1beta1.Content = &RegisterZoneDropProposal{}
 
 func (m RegisterZoneDropProposal) GetDescription() string { return m.Description }
 func (m RegisterZoneDropProposal) GetTitle() string       { return m.Title }
@@ -27,7 +27,7 @@ func (m RegisterZoneDropProposal) ProposalType() string   { return ProposalTypeR
 // to ClaimRecords. ClaimRecords are in compressed []byte slice format and
 // must be decompressed in order to be validated.
 func (m RegisterZoneDropProposal) ValidateBasic() error {
-	return govtypes.ValidateAbstract(m)
+	return govv1beta1.ValidateAbstract(m)
 }
 
 // String implements the Stringer interface.

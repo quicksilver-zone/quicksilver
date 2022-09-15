@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"strings"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
 	ProposalTypeAddProtocolData = "AddProtocolData"
 )
 
-var _ govtypes.Content = &AddProtocolDataProposal{}
+var _ govv1beta1.Content = &AddProtocolDataProposal{}
 
 func NewAddProtocolDataProposal(title string, description string, datatype string, protocol string, key string, data json.RawMessage) *AddProtocolDataProposal {
 	return &AddProtocolDataProposal{Title: title, Description: description, Type: datatype, Protocol: protocol, Key: key, Data: data}
@@ -25,7 +25,7 @@ func (m AddProtocolDataProposal) ProposalType() string   { return ProposalTypeAd
 
 // ValidateBasic runs basic stateless validity checks
 func (m AddProtocolDataProposal) ValidateBasic() error {
-	return govtypes.ValidateAbstract(m)
+	return govv1beta1.ValidateAbstract(m)
 }
 
 // String implements the Stringer interface.

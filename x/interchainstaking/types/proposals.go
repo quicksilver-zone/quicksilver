@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -14,8 +14,8 @@ const (
 )
 
 var (
-	_ govtypes.Content = &RegisterZoneProposal{}
-	_ govtypes.Content = &UpdateZoneProposal{}
+	_ govv1beta1.Content = &RegisterZoneProposal{}
+	_ govv1beta1.Content = &UpdateZoneProposal{}
 )
 
 func NewRegisterZoneProposal(title string, description string, connectionID string, baseDenom string, localDenom string, accountPrefix string, multiSend bool, liquidityModule bool) *RegisterZoneProposal {
@@ -29,7 +29,7 @@ func (m RegisterZoneProposal) ProposalType() string   { return ProposalTypeRegis
 
 // ValidateBasic runs basic stateless validity checks
 func (m RegisterZoneProposal) ValidateBasic() error {
-	err := govtypes.ValidateAbstract(m)
+	err := govv1beta1.ValidateAbstract(m)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (m UpdateZoneProposal) ProposalType() string   { return ProposalTypeUpdateZ
 
 // ValidateBasic runs basic stateless validity checks
 func (m UpdateZoneProposal) ValidateBasic() error {
-	return govtypes.ValidateAbstract(m)
+	return govv1beta1.ValidateAbstract(m)
 }
 
 // String implements the Stringer interface.

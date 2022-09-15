@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -102,7 +102,7 @@ Where proposal.json contains:
 			content := types.NewAddProtocolDataProposal(proposal.Title, proposal.Description, proposal.Type, proposal.Protocol, proposal.Key,
 				proposal.Data)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
