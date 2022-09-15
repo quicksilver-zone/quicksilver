@@ -244,8 +244,8 @@ func (a Allocations) Sub(amount sdk.Coins, address string) (Allocations, sdk.Coi
 			} else {
 				amountToSub = sdk.Coins{sdk.NewCoin(coin.Denom, subAmount.AmountOf(coin.Denom))}
 			}
-			subAmount = subAmount.Sub(amountToSub)
-			amount = amount.Sub(amountToSub)
+			subAmount = subAmount.Sub(amountToSub...)
+			amount = amount.Sub(amountToSub...)
 		}
 		allocation.Amount = subAmount
 	}
@@ -357,7 +357,7 @@ func DelegationPlanFromGlobalIntent(currentTotal sdk.Coin, currentState Allocati
 	}
 
 	if !allocations.Sum().IsEqual(sdk.Coins{coin}) {
-		remainder := sdk.Coins{coin}.Sub(allocations.Sum())
+		remainder := sdk.Coins{coin}.Sub(allocations.Sum()...)
 		allocations = allocations.Allocate(deltas[len(deltas)-1].Valoper, remainder)
 	}
 	return allocations, nil
