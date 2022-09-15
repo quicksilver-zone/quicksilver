@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
