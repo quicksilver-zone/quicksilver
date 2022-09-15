@@ -179,7 +179,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 	switch {
 	case zone.DepositAddress != nil && address == zone.DepositAddress.Address:
 		existing := zone.DepositAddress.Balance.AmountOf(coin.Denom)
-		err = zone.DepositAddress.SetBalance(zone.DepositAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin)) // reset this denom
+		err = zone.DepositAddress.SetBalance(zone.DepositAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))...).Add(coin)) // reset this denom
 		if err != nil {
 			return err
 		}
@@ -193,7 +193,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 		}
 	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
 		existing := zone.WithdrawalAddress.Balance.AmountOf(coin.Denom)
-		err = zone.WithdrawalAddress.SetBalance(zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))).Add(coin)) // reset this denom
+		err = zone.WithdrawalAddress.SetBalance(zone.WithdrawalAddress.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))...).Add(coin)) // reset this denom
 		if err != nil {
 			return err
 		}
@@ -212,7 +212,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 		existing := icaAccount.Balance.AmountOf(coin.Denom)
 		k.Logger(ctx).Info("Matched delegate address", "address", address, "wg", icaAccount.BalanceWaitgroup, "balance", icaAccount.Balance)
 
-		icaAccount.Balance = icaAccount.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))) // zero this denom
+		icaAccount.Balance = icaAccount.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))...) // zero this denom
 
 		// TODO: figure out how this impacts delegations in progress / race conditions (in most cases, the duplicate delegation will just fail)
 		if !icaAccount.Balance.Empty() {
@@ -373,7 +373,7 @@ OUT:
 				var remainder sdk.Coins
 				toSub := deltas[fromIdx].Amount.Abs()
 				requests, remainder = requests.Sub(sdk.Coins{sdk.NewCoin(types.GenericToken, toSub)}, intent.Address)
-				requests = requests.Allocate(deltas[fromIdx].Valoper, sdk.Coins{sdk.NewCoin(types.GenericToken, toSub)}.Sub(remainder))
+				requests = requests.Allocate(deltas[fromIdx].Valoper, sdk.Coins{sdk.NewCoin(types.GenericToken, toSub)}.Sub(remainder...))
 				deltas[fromIdx].Amount = remainder.AmountOf(types.GenericToken).Neg()
 				if deltas[fromIdx].Amount.Equal(sdk.ZeroInt()) {
 					fromIdx++

@@ -21,8 +21,8 @@ import (
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
-	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -819,7 +819,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	rewards = rewards.SubAmount(dust)
 
 	// multiDenomFee is the balance of withdrawal account minus the redelegated rewards.
-	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards})
+	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards}...)
 
 	channelReq := channeltypes.QueryConnectionChannelsRequest{Connection: zone.ConnectionId}
 	localChannelResp, err := k.IBCKeeper.ChannelKeeper.ConnectionChannels(sdk.WrapSDKContext(ctx), &channelReq)
