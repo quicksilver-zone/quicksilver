@@ -337,7 +337,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(ctx, zone, allocations)...)
 		} else {
 			return fmt.Errorf("lsm currently unsupported.")
-			//msgs = append(msgs, k.PrepareDelegationMessagesForShares(ctx, zone, msg.Amount)...)
+			// msgs = append(msgs, k.PrepareDelegationMessagesForShares(ctx, zone, msg.Amount)...)
 		}
 	}
 
