@@ -85,7 +85,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		rate = zone.RedemptionRate
 	}
 
-	nativeTokens := msg.Value.Amount.ToDec().Mul(rate).TruncateInt()
+	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
 
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
 	k.Logger(ctx).Error("outtokens", "o", outTokens)
@@ -110,7 +110,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		userIntent = types.DelegatorIntent{Delegator: msg.FromAddress, Intents: vi}
 	}
 
-	intentMap := userIntent.ToAllocations(nativeTokens.ToDec())
+	intentMap := userIntent.ToAllocations(sdk.NewDecFromInt(nativeTokens))
 
 	targets, err := k.GetRedemptionTargets(ctx, *zone, intentMap) // map[string][string]sdk.Coin
 	if err != nil {
