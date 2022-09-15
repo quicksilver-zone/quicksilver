@@ -21,6 +21,7 @@ require (
 	github.com/tendermint/tendermint v0.34.21
 	github.com/tendermint/tm-db v0.6.7
 	go.opencensus.io v0.23.0
+	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	google.golang.org/genproto v0.0.0-20220725144611-272f38e5d71b
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
@@ -83,7 +84,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
-	github.com/google/flatbuffers v1.12.1 // indirect
+	github.com/google/flatbuffers v2.0.0+incompatible // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
 	github.com/gorilla/handlers v1.5.1 // indirect
@@ -145,7 +146,6 @@ require (
 	github.com/zondax/hid v0.9.1-0.20220302062450-5552068d2266 // indirect
 	go.etcd.io/bbolt v1.3.6 // indirect
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/net v0.0.0-20220726230323-06994584191e // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
 	golang.org/x/sys v0.0.0-20220727055044-e65921a090b8 // indirect
