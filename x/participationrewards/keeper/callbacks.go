@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 
 	osmosisgammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
 
