@@ -31,12 +31,11 @@ type validator struct {
 	*icstypes.Validator
 }
 
-// userAllocation is an internal struct to track transient state for rewards
-// distribution. It contains the user address and the coins that are allocated
-// to it.
-type userAllocation struct {
+// userScore is an internal struct to track transient state for rewards
+// distribution. It contains the user address and individual score.
+type userScore struct {
 	Address string
-	Coins   sdk.Coins
+	Score   sdk.Dec
 }
 
 // allocateValidatorSelectionRewards utilizes IBC to query the performance
@@ -257,11 +256,6 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 		return userAllocations
 	}
 
-	type userScore struct {
-		address string
-		score   sdk.Dec
-	}
-
 	sum := sdk.NewDec(0)
 	userScores := make([]userScore, 0)
 	// obtain snapshotted intents of last epoch boundary
@@ -279,8 +273,8 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 			uSum = uSum.Add(score)
 		}
 		u := userScore{
-			address: di.GetDelegator(),
-			score:   uSum,
+			Address: di.GetDelegator(),
+			Score:   uSum,
 		}
 		k.Logger(ctx).Info("user score for zone", "user", di.GetDelegator(), "zone", zs.ZoneID, "score", uSum)
 		userScores = append(userScores, u)
@@ -297,11 +291,11 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
 		ua := userAllocation{
-			Address: us.address,
+			Address: us.Address,
 			Coins: sdk.NewCoins(
 				sdk.NewCoin(
 					k.stakingKeeper.BondDenom(ctx),
-					us.score.Mul(tokensPerPoint).TruncateInt(),
+					us.Score.Mul(tokensPerPoint).TruncateInt(),
 				),
 			),
 		}

@@ -38,6 +38,11 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 		errors["Zone"] = ErrUndefinedAttribute
 	}
 
+	ct := int(msg.ClaimType)
+	if ct < 1 || ct >= len(ClaimType_value) {
+		errors["Action"] = fmt.Errorf("%w, got %d", ErrClaimTypeOutOfBounds, msg.ClaimType)
+	}
+
 	if len(msg.Proofs) == 0 {
 		errors["Proofs"] = ErrUndefinedAttribute
 	}
@@ -76,6 +81,10 @@ func (p Proof) ValidateBasic() error {
 
 	if p.Height < 0 {
 		errors["Height"] = ErrNegativeAttribute
+	}
+
+	if len(p.ProofType) == 0 {
+		errors["ProofType"] = ErrUndefinedAttribute
 	}
 
 	// check for errors and return

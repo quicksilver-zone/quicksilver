@@ -60,8 +60,8 @@ func TestParams_ValidateBasic(t *testing.T) {
 func TestClaim_ValidateBasic(t *testing.T) {
 	type fields struct {
 		UserAddress string
-		Zone        string
-		HeldAmount  int64
+		ChainId     string
+		Amount      uint64
 	}
 	tests := []struct {
 		name    string
@@ -74,8 +74,8 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Claim{
 				UserAddress: tt.fields.UserAddress,
-				Zone:        tt.fields.Zone,
-				HeldAmount:  tt.fields.HeldAmount,
+				ChainId:     tt.fields.ChainId,
+				Amount:      tt.fields.Amount,
 			}
 			if err := c.ValidateBasic(); (err != nil) != tt.wantErr {
 				t.Errorf("Claim.ValidateBasic() error = %v, wantErr %v", err, tt.wantErr)

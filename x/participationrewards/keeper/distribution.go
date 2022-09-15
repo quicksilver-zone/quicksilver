@@ -179,12 +179,7 @@ func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation
 	k.allocateValidatorSelectionRewards(ctx)
 
 	if err := k.allocateHoldingsRewards(ctx); err != nil {
-		k.Logger(ctx).Error(err.Error())
-		// TODO: remove once allocateHoldingsRewards is implemented: >>>
-		if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, allocation.Holdings); err != nil {
-			k.Logger(ctx).Error(err.Error())
-		}
-		// <<<
+		return err
 	}
 
 	return nil

@@ -62,7 +62,7 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 		},
 	}
 
-	claim := &types.Claim{UserAddress: "cosmos1e9adutp4mvamq7m8eqarz57u8ymh7mhqxqfxpr", Zone: "cosmoshub-1", HeldAmount: 100}
+	claim := &types.Claim{UserAddress: "cosmos1e9adutp4mvamq7m8eqarz57u8ymh7mhqxqfxpr", ChainId: "cosmoshub-1", Amount: 100}
 
 	// test genesisState validation
 	genesisState := types.GenesisState{
@@ -89,7 +89,7 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	require.Equal(t, "osmosis", pd.Protocol)
 	require.Equal(t, "osmosispool", pd.Type)
 
-	clm, found := app.ParticipationRewardsKeeper.GetClaim(ctx, keeper.GetClaimKey("cosmoshub-1", "cosmos1e9adutp4mvamq7m8eqarz57u8ymh7mhqxqfxpr"))
+	clm, found := app.ParticipationRewardsKeeper.GetClaim(ctx, types.GetKeyClaim("cosmoshub-1", "cosmos1e9adutp4mvamq7m8eqarz57u8ymh7mhqxqfxpr"))
 	require.True(t, found)
-	require.Equal(t, int64(100), clm.HeldAmount)
+	require.Equal(t, uint64(100), clm.Amount)
 }

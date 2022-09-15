@@ -19,6 +19,14 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
+// userAllocation is an internal keeper struct to track transient state for
+// rewards distribution. It contains the user address and the coins that are
+// allocated to it.
+type userAllocation struct {
+	Address string
+	Coins   sdk.Coins
+}
+
 type Keeper struct {
 	cdc              codec.BinaryCodec
 	storeKey         storetypes.StoreKey
@@ -95,7 +103,7 @@ func (k Keeper) GetAllocation(ctx sdk.Context, balance sdk.Coin, portion sdk.Dec
 
 func LoadSubmodules() map[int64]Submodule {
 	out := make(map[int64]Submodule, 0)
-	out[int64(types.ClaimTypeOsmosisPool)] = &OsmosisModule{}
 	out[int64(types.ClaimTypeLiquidToken)] = &LiquidTokensModule{}
+	out[int64(types.ClaimTypeOsmosisPool)] = &OsmosisModule{}
 	return out
 }

@@ -39,3 +39,12 @@ var ProtocolDataType_value = map[string]ProtocolDataType{ //nolint:revive,stylec
 	"crescentpool": ProtocolDataCrescentPool,
 	"sifchainpool": ProtocolDataSifchainPool,
 }
+
+// ClaimKey returns the key for storing a given claim.
+func GetKeyClaim(chainID string, address string) []byte {
+	return append(append(KeyPrefixClaim, []byte(chainID)...), []byte(address)...)
+}
+
+func GetPrefixClaim(chainID string) []byte {
+	return append(KeyPrefixClaim, []byte(chainID)...)
+}

@@ -48,12 +48,12 @@ func (c Claim) ValidateBasic() error {
 		errors["UserAddress"] = err
 	}
 
-	if len(c.Zone) == 0 {
-		errors["Zone"] = ErrUndefinedAttribute
+	if len(c.ChainId) == 0 {
+		errors["ChainId"] = ErrUndefinedAttribute
 	}
 
-	if c.HeldAmount <= 0 {
-		errors["HeldAmount"] = ErrNotPositive
+	if c.Amount <= 0 {
+		errors["Amount"] = ErrNotPositive
 	}
 
 	if len(errors) > 0 {
@@ -122,6 +122,7 @@ func (pd ProtocolData) ValidateBasic() error {
 
 // unmarshal to appropriate concrete type and validate
 func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
+	var pdi ProtocolDataI
 	switch pdt {
 	case ProtocolDataLiquidToken:
 		pd := LiquidAllowedDenomProtocolData{}
@@ -129,14 +130,14 @@ func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 		if err != nil {
 			return err
 		}
-		return pd.ValidateBasic()
+		pdi = &pd
 	case ProtocolDataOsmosisPool:
 		pd := OsmosisPoolProtocolData{}
 		err := json.Unmarshal(data, &pd)
 		if err != nil {
 			return err
 		}
-		return pd.ValidateBasic()
+		pdi = &pd
 	case ProtocolDataCrescentPool:
 		return ErrUnimplementedProtocolDataType
 	case ProtocolDataSifchainPool:
@@ -144,4 +145,6 @@ func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 	default:
 		return ErrUnknownProtocolDataType
 	}
+
+	return pdi.ValidateBasic()
 }

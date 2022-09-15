@@ -55,8 +55,8 @@ message Claim {
   option (gogoproto.goproto_getters) = false;
   
   string user_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  string zone = 2;
-  int64 held_amount = 3;
+  string chain_id = 2;
+  uint64 amount = 3;
 }
 
 message KeyedProtocolData {

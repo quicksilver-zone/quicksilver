@@ -14,7 +14,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 	type fields struct {
 		UserAddress string
 		Zone        string
-		ProofType   int64
+		ClaimType   int64
 		Proofs      []*Proof
 	}
 	tests := []struct {
@@ -28,28 +28,29 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"invalid-00",
+			"invalid_empty_proof",
 			fields{
 				UserAddress: "cosmos1234567890abcde",
 				Zone:        "",
-				ProofType:   -1,
+				ClaimType:   -1,
 				Proofs:      []*Proof{},
 			},
 			true,
 		},
 		{
-			"invalid-01",
+			"invalid_with_proof",
 			fields{
 				UserAddress: "cosmos1234567890abcde",
 				Zone:        "",
-				ProofType:   -1,
+				ClaimType:   -1,
 				Proofs: []*Proof{
 					{}, // blank
 					{
-						Key:      []byte{1, 2, 3, 4, 5},
-						Data:     []byte{0, 0, 1, 1, 2, 3, 4, 5},
-						ProofOps: nil,
-						Height:   -1,
+						Key:       []byte{1, 2, 3, 4, 5},
+						Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},
+						ProofOps:  nil,
+						Height:    -1,
+						ProofType: "bank",
 					},
 				},
 			},
@@ -60,13 +61,14 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 			fields{
 				UserAddress: "osmo1pgfzn0zhxjjgte7hprwtnqyhrn534lqka2dkuu",
 				Zone:        "test-01",
-				ProofType:   int64(ProtocolDataOsmosisPool),
+				ClaimType:   int64(ClaimTypeOsmosisPool),
 				Proofs: []*Proof{
 					{
-						Key:      []byte{1, 2, 3, 4, 5},
-						Data:     []byte{0, 0, 1, 1, 2, 3, 4, 5},
-						ProofOps: &crypto.ProofOps{},
-						Height:   123,
+						Key:       []byte{1, 2, 3, 4, 5},
+						Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},
+						ProofOps:  &crypto.ProofOps{},
+						Height:    123,
+						ProofType: "lockup",
 					},
 				},
 			},
@@ -78,7 +80,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 			msg := MsgSubmitClaim{
 				UserAddress: tt.fields.UserAddress,
 				Zone:        tt.fields.Zone,
-				ProofType:   tt.fields.ProofType,
+				ClaimType:   tt.fields.ClaimType,
 				Proofs:      tt.fields.Proofs,
 			}
 			err := msg.ValidateBasic()
@@ -99,7 +101,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 	type fields struct {
 		UserAddress string
 		Zone        string
-		ProofType   int64
+		ClaimType   int64
 		Proofs      []*Proof
 	}
 	tests := []struct {
@@ -125,7 +127,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 			msg := MsgSubmitClaim{
 				UserAddress: tt.fields.UserAddress,
 				Zone:        tt.fields.Zone,
-				ProofType:   tt.fields.ProofType,
+				ClaimType:   tt.fields.ClaimType,
 				Proofs:      tt.fields.Proofs,
 			}
 			if got := msg.GetSigners(); !reflect.DeepEqual(got, tt.want) {

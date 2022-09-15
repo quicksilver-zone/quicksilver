@@ -20,12 +20,12 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			"empty MsgClaim",
+			"blank",
 			fields{},
 			true,
 		},
 		{
-			"no zone",
+			"invalid_no_zone",
 			fields{
 				ChainId: "",
 				Action:  0,
@@ -35,17 +35,17 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"action out of bounds",
+			"invalid_action_out_of_bounds_low",
 			fields{
 				ChainId: "cosmoshub-4",
-				Action:  -1,
+				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 				Proofs:  []*Proof{},
 			},
 			true,
 		},
 		{
-			"action out of bounds",
+			"invalid_action_out_of_bounds",
 			fields{
 				ChainId: "cosmoshub-4",
 				Action:  999,
@@ -55,7 +55,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"invalid address",
+			"invalid_address_empty",
 			fields{
 				ChainId: "cosmoshub-4",
 				Action:  0,
@@ -65,7 +65,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"invalid address",
+			"invalid_address",
 			fields{
 				ChainId: "cosmoshub-4",
 				Action:  0,
@@ -77,10 +77,27 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		// TODO: add more address checks
 		//   - currently it fails using quick address (no sdk setup done)
 		{
+			"invalid_ActionUndefined",
+			fields{
+				ChainId: "cosmoshub-4",
+				Action:  int64(ActionUndefined),
+				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+				Proofs: []*Proof{
+					{
+						Key:      []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						Data:     []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						ProofOps: &crypto.ProofOps{},
+						Height:   10,
+					},
+				},
+			},
+			true,
+		},
+		{
 			"valid",
 			fields{
 				ChainId: "cosmoshub-4",
-				Action:  0,
+				Action:  int64(ActionInitialClaim),
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 				Proofs: []*Proof{
 					{
