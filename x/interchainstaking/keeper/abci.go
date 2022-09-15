@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	tmtypes "github.com/cosmos/ibc-go/v3/modules/light-clients/07-tendermint/types"
+	tmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )

@@ -493,7 +493,7 @@ TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v
 GOGO_PROTO_URL      	= https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.7.1
 SDK_PROTO_URL 			= https://raw.githubusercontent.com/ingenuity-build/cosmos-sdk/v0.45.6-ls.1/proto/cosmos
-IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v3.1.0/proto
+IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v5.1.0/proto
 
 TM_CRYPTO_TYPES     	= third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       	= third_party/proto/tendermint/abci
