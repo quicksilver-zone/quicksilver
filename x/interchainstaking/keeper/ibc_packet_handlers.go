@@ -23,6 +23,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -91,7 +92,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
-			response := stakingtypes.MsgRedeemTokensforSharesResponse{}
+			response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
@@ -104,7 +105,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
-			response := stakingtypes.MsgTokenizeSharesResponse{}
+			response := lsmstakingtypes.MsgTokenizeSharesResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgTokenizeShares response", "error", err)
@@ -461,7 +462,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.
 	k.Logger(ctx).Info("Received MsgTokenizeShares acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgTokenizeShares
 	var err error
-	tsMsg, ok := msg.(*stakingtypes.MsgTokenizeShares)
+	tsMsg, ok := msg.(*lsmstakingtypes.MsgTokenizeShares)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgTokenizeShares")
 		return fmt.Errorf("unable to cast source message to MsgTokenizeShares")
@@ -545,7 +546,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin) error {
 	k.Logger(ctx).Info("Received MsgRedeemTokensforShares acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgRedeemTokensforShares
-	redeemMsg, ok := msg.(*stakingtypes.MsgRedeemTokensforShares)
+	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensforShares)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensforShares")
 		return fmt.Errorf("unable to cast source message to MsgRedeemTokensforShares")

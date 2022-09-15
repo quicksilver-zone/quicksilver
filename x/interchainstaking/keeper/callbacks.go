@@ -452,7 +452,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		return fmt.Errorf("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
-	accAddr, err := banktypes.AddressFromBalancesStore(balancesStore)
+	accAddr, _, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
