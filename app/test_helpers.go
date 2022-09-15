@@ -15,7 +15,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
-	"github.com/osmosis-labs/osmosis/v9/app"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -25,6 +24,8 @@ import (
 
 	dbm "github.com/tendermint/tm-db"
 )
+
+type GenesisState map[string]json.RawMessage
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // Quicksilver testing.
@@ -109,10 +110,10 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 }
 
 func genesisStateWithValSet(t *testing.T,
-	app *Quicksilver, genesisState app.GenesisState,
+	app *Quicksilver, genesisState GenesisState,
 	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
-) app.GenesisState {
+) GenesisState {
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)
