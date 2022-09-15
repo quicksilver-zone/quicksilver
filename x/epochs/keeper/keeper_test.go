@@ -24,7 +24,7 @@ type KeeperTestSuite struct {
 // Test helpers
 func (suite *KeeperTestSuite) DoSetupTest(t require.TestingT) {
 	checkTx := false
-	suite.app = app.Setup(checkTx)
+	suite.app = app.Setup(t, checkTx)
 
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 
