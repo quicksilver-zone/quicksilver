@@ -22,10 +22,16 @@ require (
 	github.com/tendermint/tendermint v0.34.21
 	github.com/tendermint/tm-db v0.6.7
 	go.opencensus.io v0.23.0
+<<<<<<< HEAD
 	google.golang.org/genproto v0.0.0-20220725144611-272f38e5d71b
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
 	golang.org/x/exp v0.0.0-20220914170420-dc92f8653013
+=======
+	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
+	google.golang.org/grpc v1.46.2
+	google.golang.org/protobuf v1.28.0
+>>>>>>> ffe74a4 (remove redundant tests)
 	gopkg.in/yaml.v2 v2.4.0
 
 )

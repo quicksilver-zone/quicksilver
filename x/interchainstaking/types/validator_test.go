@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -120,9 +119,4 @@ func TestAddOrdinalWithNewVal(t *testing.T) {
 	require.Equal(t, di.Intents["cosmosvaloper23456789"].Weight, sdk.NewDec(2).QuoTruncate(sdk.NewDec(9)))
 	require.Equal(t, di.Intents["cosmosvaloper34567890"].Weight, sdk.NewDec(4).QuoTruncate(sdk.NewDec(9)))
 	require.Equal(t, di.Intents["cosmosvaloper98765432"].Weight, sdk.NewDec(1).QuoTruncate(sdk.NewDec(9)))
-}
-
-func TestSharesToTokens(t *testing.T) {
-	v1 := utils.GenerateValAddressForTest()
-	val := types.Validator{ValoperAddress: v1.String()}
 }
