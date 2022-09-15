@@ -9,10 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	purningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -53,7 +54,7 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			0,
 			MakeEncodingConfig(),
 			simapp.EmptyAppOptions{},
-			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}
