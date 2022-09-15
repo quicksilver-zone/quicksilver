@@ -6,7 +6,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	"github.com/iqlusioninc/liquidity-staking-module/x/genutil/client/cli"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/app"
@@ -22,6 +22,6 @@ func TestInitCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, "quicksilver-1"),
 	})
 
-	err := svrcmd.Execute(rootCmd, "QUICKSILVERD" app.DefaultNodeHome)
+	err := svrcmd.Execute(rootCmd, "QUICKSILVERD", app.DefaultNodeHome)
 	require.NoError(t, err)
 }
