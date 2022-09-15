@@ -73,7 +73,7 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 	err := icskeeper.HandleRegisterZoneProposal(ctx, s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper, proposal)
 	s.Require().NoError(err)
 
-	chainBVals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext())
+	chainBVals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetLiquidBondedValidatorsByPower(s.chainB.GetContext())
 
 	for _, val := range chainBVals {
 		qvr := stakingtypes.QueryValidatorResponse{
