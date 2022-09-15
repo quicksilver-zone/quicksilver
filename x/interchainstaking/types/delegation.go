@@ -350,7 +350,7 @@ func DelegationPlanFromGlobalIntent(currentTotal sdk.Coin, currentState Allocati
 
 	if distributableValue.GT(sdk.ZeroInt()) {
 		for _, val := range intent.Keys() {
-			valCoin := distributableValue.ToDec().Mul(intent[val].Weight).TruncateInt()
+			valCoin := sdk.NewDecFromInt(distributableValue).Mul(intent[val].Weight).TruncateInt()
 			distributableValue = distributableValue.Sub(valCoin)
 			allocations = allocations.Allocate(val, sdk.Coins{sdk.NewCoin(currentTotal.Denom, valCoin)})
 		}
