@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -110,7 +111,7 @@ func (im IBCModule) OnRecvPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) ibcexported.Acknowledgement {
-	return channeltypes.NewErrorAcknowledgement("cannot receive packet via interchain accounts authentication module")
+	return channeltypes.NewErrorAcknowledgement(sdkerrors.Wrapf("cannot receive packet via interchain accounts authentication module"))
 }
 
 // OnAcknowledgementPacket implements the IBCModule interface

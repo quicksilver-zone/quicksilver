@@ -188,7 +188,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	// k.bankKeeper.AddSupplyOffset(ctx, mintedCoin.Denom, developerAccountBalance.Amount.Neg())
 
 	// subtract from original provision to ensure no coins left over after the allocations
-	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins).Sub(poolIncentivesCoins).Sub(participationRewardCoins)
+	communityPoolCoins := sdk.NewCoins(mintedCoin).Sub(stakingIncentivesCoins...).Sub(poolIncentivesCoins...).Sub(participationRewardCoins...)
 	err = k.distrKeeper.FundCommunityPool(ctx, communityPoolCoins, k.accountKeeper.GetModuleAddress(types.ModuleName))
 	if err != nil {
 		return err

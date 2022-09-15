@@ -3,8 +3,8 @@ package types_test
 import (
 	"testing"
 
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/app"
