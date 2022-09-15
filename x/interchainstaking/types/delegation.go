@@ -179,7 +179,7 @@ func DelegationPlanFromUserIntent(zone Zone, coin sdk.Coin, intent ValidatorInte
 	out := Allocations{}
 
 	for _, val := range intent.Keys() {
-		out = out.Allocate(val, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: coin.Amount.ToDec().Mul(intent[val].Weight).TruncateInt()}})
+		out = out.Allocate(val, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: sdk.NewDecFromInt(coin.Amount).Mul(intent[val].Weight).TruncateInt()}})
 	}
 	return out
 }
@@ -311,7 +311,7 @@ func DetermineIntentDelta(currentState Allocations, total sdk.Int, intent Valida
 
 	for _, val := range intent.Keys() {
 		current := currentState.SumForDenom(val)                                     // fetch current delegations to validator
-		percent := current.ToDec().Quo(total.ToDec())                                // what is this a percent of total + new
+		percent := sdk.NewDecFromInt(current).Quo(sdk.NewDecFromInt(total))          // what is this a percent of total + new
 		deltaToIntent := intent[val].Weight.Sub(percent).MulInt(total).TruncateInt() // what to we have to delegate to make it match intent?
 		deltas = append(deltas, &Diff{val, deltaToIntent})
 	}

@@ -96,7 +96,7 @@ func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot
 		}
 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 
-		intents = append(intents, intent.Ordinalize(balance.Amount.ToDec()))
+		intents = append(intents, intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)))
 		return false
 	})
 	if err != nil {
@@ -120,7 +120,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 		}
 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 
-		for _, vIntent := range intent.Ordinalize(balance.Amount.ToDec()).Intents {
+		for _, vIntent := range intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents {
 			thisIntent, ok := intents[vIntent.ValoperAddress]
 			ordinalizedIntentSum = ordinalizedIntentSum.Add(vIntent.Weight)
 			if !ok {

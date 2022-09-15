@@ -113,7 +113,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Z
 
 	outCoins := sdk.Coins{}
 	for _, inCoin := range inCoins {
-		outAmount := inCoin.Amount.ToDec().Quo(zone.RedemptionRate).TruncateInt()
+		outAmount := sdk.NewDecFromInt(inCoin.Amount).Quo(zone.RedemptionRate).TruncateInt()
 		outCoin := sdk.NewCoin(zone.LocalDenom, outAmount)
 		outCoins = outCoins.Add(outCoin)
 	}

@@ -723,7 +723,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 	if !found {
 		k.Logger(ctx).Info("Adding delegation tuple", "delegator", delegatorAddress, "validator", validatorAddress, "amount", amount.Amount)
 		delegation = types.NewDelegation(delegatorAddress, validatorAddress, amount)
-	} else if !delegation.Amount.Equal(amount.Amount.ToDec()) {
+	} else if !delegation.Amount.Equal(sdk.NewDecFromInt(amount.Amount)) {
 		oldAmount := delegation.Amount
 		if !absolute {
 			delegation.Amount = delegation.Amount.Add(amount)
@@ -806,7 +806,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	baseDenomAmount := withdrawBalance.Balances.AmountOf(zone.BaseDenom)
 	// calculate fee (fee = amount * rate)
 
-	baseDenomFee := baseDenomAmount.ToDec().
+	baseDenomFee := sdk.NewDecFromInt(baseDenomAmount).
 		Mul(k.GetCommissionRate(ctx)).
 		TruncateInt()
 
@@ -866,7 +866,7 @@ func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRew
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec(), "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards).ToDec())
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", sdk.NewDecFromInt(k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount), "lv", sdk.NewDecFromInt(k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards)))
 
 	zone.LastRedemptionRate = zone.RedemptionRate
 	zone.RedemptionRate = ratio
@@ -886,7 +886,7 @@ func (k *Keeper) getRatio(ctx sdk.Context, zone types.Zone, epochRewards sdk.Int
 		return sdk.OneDec()
 	}
 
-	return naAmount.Add(epochRewards).ToDec().Quo(qaAmount.ToDec())
+	return sdk.NewDecFromInt(naAmount.Add(epochRewards)).Quo(sdk.NewDecFromInt(qaAmount))
 }
 
 func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdk.Int) (sdk.Int, []sdk.Msg) {
@@ -900,7 +900,7 @@ func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdk.Int
 		// zone has no delegators, we must panic here, something is very wrong...
 		panic("internal zone error, zone has no delegators")
 	}
-	portion := rewards.ToDec().Quo(sdk.NewDec(int64(numDelegators))).TruncateInt()
+	portion := sdk.NewDecFromInt(rewards).Quo(sdk.NewDec(int64(numDelegators))).TruncateInt()
 	for _, da := range zone.GetDelegationAccounts() {
 		msgs = append(
 			msgs,
