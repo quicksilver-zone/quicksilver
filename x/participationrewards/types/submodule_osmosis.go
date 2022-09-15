@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	osmosisgammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
+	osmosisgammtypes "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 )
 
 type OsmosisPoolProtocolData struct {

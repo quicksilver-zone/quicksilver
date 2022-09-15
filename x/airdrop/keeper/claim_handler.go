@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	osmosislockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
+	osmosislockuptypes "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"

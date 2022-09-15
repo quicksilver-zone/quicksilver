@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 
-	osmosisgammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
+	osmosisgammtypes "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
