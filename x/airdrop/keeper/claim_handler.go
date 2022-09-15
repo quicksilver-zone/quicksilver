@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	osmosislockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
 
@@ -201,8 +201,8 @@ func (k Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) e
 	}
 
 	voted := false
-	k.govKeeper.IterateProposals(ctx, func(proposal gov.Proposal) (stop bool) {
-		_, found := k.govKeeper.GetVote(ctx, proposal.ProposalId, addr)
+	k.govKeeper.IterateProposals(ctx, func(proposal govv1.Proposal) (stop bool) {
+		_, found := k.govKeeper.GetVote(ctx, proposal.Id, addr)
 		if found {
 			voted = true
 			return true
