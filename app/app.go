@@ -490,7 +490,7 @@ func NewQuicksilver(
 
 	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
 
-	icaControllerIBCModule := icacontroller.NewIBCMiddleware(app.ICAControllerKeeper, interchainstakingIBCModule)
+	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, app.ICAControllerKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 
 	// Create static IBC router, add transfer route, then set and seal it
