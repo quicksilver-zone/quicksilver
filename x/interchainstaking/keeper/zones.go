@@ -116,7 +116,7 @@ func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *type
 func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *types.Zone {
 	var zone *types.Zone
 	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
-		if zoneInfo.PerformanceAddress.Address == address {
+		if zoneInfo.PerformanceAddress != nil && zoneInfo.PerformanceAddress.Address == address {
 			zone = &zoneInfo
 			return true
 		}
