@@ -7,7 +7,6 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
@@ -15,7 +14,7 @@ import (
 )
 
 // NewDefaultGenesisState generates the default state for the application.
-func NewDefaultGenesisState() simapp.GenesisState {
+func NewDefaultGenesisState() GenesisState {
 	encCfg := MakeEncodingConfig()
 	return ModuleBasics.DefaultGenesis(encCfg.Marshaler)
 }

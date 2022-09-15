@@ -7,6 +7,7 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,7 +48,7 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 }
 
 // Setup initializes a new Quicksilver. A Nop logger is set in Quicksilver.
-func Setup(isCheckTx bool) *Quicksilver {
+func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 	config := sdk.GetConfig()
 	cmdcfg.SetBech32Prefixes(config)
 	cmdcfg.SetBip44CoinType(config)
@@ -61,7 +62,7 @@ func Setup(isCheckTx bool) *Quicksilver {
 
 	// generate genesis account
 	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
+	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey().(cryptotypes.PubKey), 0, 0)
 	balance := banktypes.Balance{
 		Address: acc.GetAddress().String(),
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
@@ -70,7 +71,8 @@ func Setup(isCheckTx bool) *Quicksilver {
 	db := dbm.NewMemDB()
 	app := NewQuicksilver(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{})
 
-	genesisState := genesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState := NewDefaultGenesisState()
+	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	if !isCheckTx {
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
