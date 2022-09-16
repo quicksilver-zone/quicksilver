@@ -32,9 +32,10 @@ import (
 	"github.com/cosmos/ibc-go/v5/modules/core/types"
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	"github.com/cosmos/ibc-go/v5/testing/mock"
-	// "github.com/cosmos/ibc-go/v5/testing/simapp"
-
+	"github.com/cosmos/ibc-go/v5/testing/simapp"
 	"github.com/ingenuity-build/quicksilver/app"
+
+	// "github.com/cosmos/ibc-go/v5/testing/simapp"
 
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 )
@@ -130,7 +131,7 @@ func NewTestChainWithValSet(t *testing.T, coord *Coordinator, chainID string, va
 		Coins:   sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000000000))},
 	})
 
-	app :=  app.SetupWithGenesisValSet(t, valSet, genAccs, chainID, sdk.DefaultPowerReduction, genBals...)
+	app := SetupWithGenesisValSet(t, valSet, genAccs, chainID, sdk.DefaultPowerReduction, genBals...)
 
 	// create current header and call begin block
 	header := tmproto.Header{
@@ -160,7 +161,7 @@ func NewTestChainWithValSet(t *testing.T, coord *Coordinator, chainID string, va
 	}
 
 	// creates mock module account
-	mockModuleAcc := chain.GetSimApp().AccountKeeper.GetModuleAccount(chain.GetContext(), mock.ModuleName)
+	mockModuleAcc := chain.GetQuicksilverApp().AccountKeeper.GetModuleAccount(chain.GetContext(), mock.ModuleName)
 	require.NotNil(t, mockModuleAcc)
 
 	coord.CommitBlock(chain)
@@ -199,11 +200,8 @@ func (chain *TestChain) GetContext() sdk.Context {
 	return chain.App.GetBaseApp().NewContext(false, chain.CurrentHeader)
 }
 
-// GetSimApp returns the SimApp to allow usage ofnon-interface fields.
-// CONTRACT: This function should not be called by third parties implementing
-// their own SimApp.
-func (chain *TestChain) GetSimApp() *simapp.SimApp {
-	app, ok := chain.App.(*simapp.SimApp)
+func (chain *TestChain) GetQuicksilverApp() *app.Quicksilver {
+	app, ok := chain.App.(*app.Quicksilver)
 	require.True(chain.T, ok)
 
 	return app
