@@ -121,7 +121,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 		}
 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 
-		intents := intent.Ordinalize(balance.Amount.ToDec()).Intents
+		intents := intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
 		for _, vIntent := range utils.Keys(intents) {
 			thisIntent, ok := aggregate[vIntent]
 			ordinalizedIntentSum = ordinalizedIntentSum.Add(intents[vIntent].Weight)

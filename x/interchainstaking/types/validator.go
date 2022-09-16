@@ -30,7 +30,7 @@ func (v Validator) SharesToTokens(shares sdk.Dec) sdk.Int {
 		return sdk.ZeroInt()
 	}
 
-	return v.VotingPower.ToDec().Quo(v.DelegatorShares).Mul(shares).TruncateInt()
+	return sdk.NewDecFromInt(v.VotingPower).Quo(v.DelegatorShares).Mul(shares).TruncateInt()
 }
 
 func (di DelegatorIntent) AddOrdinal(multiplier sdk.Dec, intents ValidatorIntents) DelegatorIntent {

@@ -329,7 +329,7 @@ func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRew
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.ToDec(), "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards).ToDec())
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards))
 
 	if err := k.assertRedemptionRateWithinBounds(ctx, zone.RedemptionRate, ratio); err != nil {
 		panic("Redemption rate out of bounds")
@@ -341,18 +341,18 @@ func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRew
 
 func (k *Keeper) getRatio(ctx sdk.Context, zone types.Zone, epochRewards sdk.Int) sdk.Dec {
 	// native asset amount
-	naAmount := k.GetDelegatedAmount(ctx, &zone).Amount
+	nativeAssetAmount := k.GetDelegatedAmount(ctx, &zone).Amount
 	// qAsset amount
-	qaAmount := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
+	qAssetAmount := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
 
 	// check if zone is fully withdrawn (no qAssets remain)
-	if qaAmount.IsZero() {
+	if qAssetAmount.IsZero() {
 		// ratio 1.0 (default 1:1 ratio between nativeAssets and qAssets)
 		// native assets should not reach zero before qAssets (discount rate asymptote)
 		return sdk.OneDec()
 	}
 
-	return naAmount.Add(epochRewards).ToDec().Quo(qaAmount.ToDec())
+	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards)).Quo(sdk.NewDecFromInt(qAssetAmount))
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone) error {

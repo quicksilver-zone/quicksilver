@@ -94,8 +94,8 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 	return app
 }
 
-func GetAppWithContext(init bool) (*Quicksilver, sdk.Context) {
-	app := Setup(!init)
+func GetAppWithContext(t *testing.T, init bool) (*Quicksilver, sdk.Context) {
+	app := Setup(t, !init)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
 	return app, ctx
 }

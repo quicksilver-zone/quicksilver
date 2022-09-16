@@ -439,7 +439,8 @@ func (k *Keeper) HandleCompletedUnbondings(ctx sdk.Context, zone *types.Zone) er
 	return err
 }
 
-func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin, memo string) error {
+func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmount sdk.Coin, memo string) error {
+	var err error
 	k.Logger(ctx).Info("received MsgTokenizeShares acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgTokenizeShares
 	tsMsg, ok := msg.(*lsmstakingtypes.MsgTokenizeShares)

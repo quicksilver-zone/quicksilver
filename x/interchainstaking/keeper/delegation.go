@@ -176,7 +176,7 @@ func calculateDeltas(currentAllocations map[string]sdk.Int, currentSum sdk.Int, 
 		// diff between target and current allocations
 		// positive == below target, negative == above target
 		delta := target.Sub(current)
-		deltas = append(deltas, types.ValidatorIntent{Weight: delta.ToDec(), ValoperAddress: valoper})
+		deltas = append(deltas, types.ValidatorIntent{Weight: sdk.NewDecFromInt(delta), ValoperAddress: valoper})
 	}
 
 	return deltas
@@ -212,7 +212,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdk.Int, cu
 
 	// raise all deltas such that the minimum value is zero.
 	for idx := range deltas {
-		deltas[idx].Weight = deltas[idx].Weight.Add(minValue.Abs().ToDec())
+		deltas[idx].Weight = deltas[idx].Weight.Add(sdk.NewDecFromInt(minValue.Abs()))
 		sum = sum.Add(deltas[idx].Weight.TruncateInt())
 	}
 
@@ -226,7 +226,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdk.Int, cu
 	}
 
 	// equalSplit is the portion of input that should be distributed equally across all validators, once targets are zero.
-	equalSplit := input.Sub(unequalSplit).ToDec()
+	equalSplit := sdk.NewDecFromInt(input.Sub(unequalSplit))
 
 	if !equalSplit.IsZero() {
 		each := equalSplit.Quo(sdk.NewDec(int64(len(deltas))))
