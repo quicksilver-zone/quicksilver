@@ -157,10 +157,6 @@ func NewTestChainWithValSet(t *testing.T, coord *Coordinator, chainID string, va
 		SenderAccounts: senderAccs,
 	}
 
-	// creates mock module account
-	mockModuleAcc := chain.GetQuicksilverApp().AccountKeeper.GetModuleAccount(chain.GetContext(), mock.ModuleName)
-	require.NotNil(t, mockModuleAcc)
-
 	coord.CommitBlock(chain)
 
 	return chain

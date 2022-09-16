@@ -33,12 +33,7 @@ type InterChainQueryTestSuite struct {
 }
 
 func (suite *InterChainQueryTestSuite) GetSimApp(chain *ibctesting.TestChain) *app.Quicksilver {
-	app, ok := chain.App.(*app.Quicksilver)
-	if !ok {
-		panic("not quicksilver app")
-	}
-
-	return app
+	return chain.App
 }
 
 func (suite *InterChainQueryTestSuite) SetupTest() {
