@@ -105,8 +105,8 @@ func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	return path
 }
 
-func GetICSKeeper() (*icskeeper.Keeper, sdk.Context) {
-	app := app.Setup(false)
+func GetICSKeeper(t *testing.T) (*icskeeper.Keeper, sdk.Context) {
+	app := app.Setup(t, false)
 	keeper := app.InterchainstakingKeeper
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
 

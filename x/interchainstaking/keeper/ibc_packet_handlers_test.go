@@ -14,7 +14,7 @@ import (
 )
 
 func TestHandleMsgTransferGood(t *testing.T) {
-	app, ctx := app.GetAppWithContext(true)
+	app, ctx := app.GetAppWithContext(t, true)
 	app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
 
 	sender := utils.GenerateAccAddressForTest()
@@ -38,13 +38,13 @@ func TestHandleMsgTransferGood(t *testing.T) {
 	feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
 
 	// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
-	require.Equal(t, txMaccBalance.Sub(txMaccBalance2), sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+	require.Equal(t, txMaccBalance.AmountOf("denom").Sub(txMaccBalance2.AmountOf("denom")), sdk.NewInt(100))
 	// assert that fee collector module balance is now 100denom more than before HandleMsgTransfer()
-	require.Equal(t, feeMaccBalance2.Sub(feeMaccBalance), sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+	require.Equal(t, feeMaccBalance2.AmountOf("denom").Sub(feeMaccBalance.AmountOf("denom")), sdk.NewInt(100))
 }
 
 func TestHandleMsgTransferBadType(t *testing.T) {
-	app, ctx := app.GetAppWithContext(true)
+	app, ctx := app.GetAppWithContext(t, true)
 	app.BankKeeper.MintCoins(ctx, ibctransfertypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
 
 	transferMsg := banktypes.MsgSend{}
@@ -53,7 +53,7 @@ func TestHandleMsgTransferBadType(t *testing.T) {
 
 func TestHandleMsgTransferBadRecipient(t *testing.T) {
 	recipient := utils.GenerateAccAddressForTest()
-	app, ctx := app.GetAppWithContext(true)
+	app, ctx := app.GetAppWithContext(t, true)
 
 	sender := utils.GenerateAccAddressForTest()
 	senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
