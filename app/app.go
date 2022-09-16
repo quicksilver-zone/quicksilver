@@ -108,7 +108,7 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+
 	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
 
 	"github.com/ingenuity-build/quicksilver/x/epochs"
@@ -216,7 +216,6 @@ var (
 var (
 	_ servertypes.Application = (*Quicksilver)(nil)
 	_ simapp.App              = (*Quicksilver)(nil)
-	_ ibctesting.TestingApp   = (*Quicksilver)(nil)
 )
 
 // Quicksilver implements an extended ABCI application.

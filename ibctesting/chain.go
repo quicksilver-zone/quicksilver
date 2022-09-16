@@ -34,10 +34,7 @@ import (
 	"github.com/cosmos/ibc-go/v5/testing/mock"
 	"github.com/cosmos/ibc-go/v5/testing/simapp"
 	"github.com/ingenuity-build/quicksilver/app"
-
 	// "github.com/cosmos/ibc-go/v5/testing/simapp"
-
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 )
 
 var MaxAccounts = 10
@@ -56,7 +53,7 @@ type TestChain struct {
 	*testing.T
 
 	Coordinator   *Coordinator
-	App           ibctesting.TestingApp
+	App           *app.Quicksilver
 	ChainID       string
 	LastHeader    *ibctmtypes.Header // header for last block height committed
 	CurrentHeader tmproto.Header     // header for current block height
@@ -201,10 +198,7 @@ func (chain *TestChain) GetContext() sdk.Context {
 }
 
 func (chain *TestChain) GetQuicksilverApp() *app.Quicksilver {
-	app, ok := chain.App.(*app.Quicksilver)
-	require.True(chain.T, ok)
-
-	return app
+	return chain.App
 }
 
 // QueryProof performs an abci query with the given key and returns the proto encoded merkle proof

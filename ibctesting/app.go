@@ -6,17 +6,12 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -25,32 +20,12 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
 	"github.com/ingenuity-build/quicksilver/app"
 )
 
 var DefaultTestingAppInit = SetupTestingApp
 
-type TestingApp interface {
-	abci.Application
-
-	// ibc-go additions
-	GetBaseApp() *baseapp.BaseApp
-	GetStakingKeeper() ibctestingtypes.StakingKeeper
-	GetIBCKeeper() *keeper.Keeper
-	GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper
-	GetTxConfig() client.TxConfig
-
-	// Implemented by SimApp
-	AppCodec() codec.Codec
-
-	// Implemented by BaseApp
-	LastCommitID() storetypes.CommitID
-	LastBlockHeight() int64
-}
-
-func SetupTestingApp() (TestingApp, map[string]json.RawMessage) {
+func SetupTestingApp() (*app.Quicksilver, map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
 	encCdc := app.MakeEncodingConfig()
 	quicksilverApp := app.NewQuicksilver(log.NewNopLogger(), db, nil, true, map[int64]bool{}, app.DefaultNodeHome, 5, encCdc, simapp.EmptyAppOptions{})
@@ -61,7 +36,7 @@ func SetupTestingApp() (TestingApp, map[string]json.RawMessage) {
 // that also act as delegators. For simplicity, each validator is bonded with a delegation
 // of one consensus engine unit (10^6) in the default token of the simapp from first genesis
 // account. A Nop logger is set in SimApp.
-func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, chainID string, powerReduction math.Int, balances ...banktypes.Balance) TestingApp {
+func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount, chainID string, powerReduction math.Int, balances ...banktypes.Balance) *app.Quicksilver {
 	app, genesisState := DefaultTestingAppInit()
 
 	// set genesis accounts
