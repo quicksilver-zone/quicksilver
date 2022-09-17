@@ -7,7 +7,7 @@ import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/distribution/v1beta1/distribution.proto";
 
-option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types";
+option go_package = "github.com/cosmos/cosmos-sdk/x/distribution/types";
 
 // Query defines the gRPC querier service for distribution module.
 service Query {
