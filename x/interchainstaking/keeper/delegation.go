@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -140,7 +141,7 @@ func (k *Keeper) Delegate(ctx sdk.Context, zone types.Zone, account *types.ICAAc
 			if coin.Denom == zone.BaseDenom {
 				msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: account.GetAddress(), ValidatorAddress: allocation.Address, Amount: coin})
 			} else {
-				msgs = append(msgs, &stakingTypes.MsgRedeemTokensforShares{DelegatorAddress: account.GetAddress(), Amount: coin})
+				msgs = append(msgs, &lsmstakingtypes.MsgRedeemTokensforShares{DelegatorAddress: account.GetAddress(), Amount: coin})
 			}
 		}
 	}

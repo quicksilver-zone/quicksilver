@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -139,7 +140,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 				msgs[target.DelegatorAddress] = make([]sdk.Msg, 0)
 			}
 			if redeemType == "tokenize" {
-				msgs[target.DelegatorAddress] = append(msgs[target.DelegatorAddress], &stakingtypes.MsgTokenizeShares{
+				msgs[target.DelegatorAddress] = append(msgs[target.DelegatorAddress], &lsmstakingtypes.MsgTokenizeShares{
 					DelegatorAddress:    target.DelegatorAddress,
 					ValidatorAddress:    target.ValidatorAddress,
 					Amount:              target.Value[0],
