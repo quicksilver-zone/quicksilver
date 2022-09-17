@@ -15,6 +15,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	sdkstakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -99,7 +100,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 }
 
 // SetupTestingApp initializes the IBC-go testing application
-func SetupTestingApp() (*Quicksilver, map[string]json.RawMessage) {
+func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
 	app := NewQuicksilver(
 		log.NewNopLogger(),

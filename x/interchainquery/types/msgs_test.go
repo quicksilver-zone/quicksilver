@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ingenuity-build/quicksilver/ibctesting"
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/stretchr/testify/require"
 
@@ -27,7 +27,12 @@ func init() {
 }
 
 func GetSimApp(chain *ibctesting.TestChain) *app.Quicksilver {
-	return chain.App
+	app, ok := chain.App.(*app.Quicksilver)
+	if !ok {
+		panic("not quicksilver app")
+	}
+
+	return app
 }
 
 func newSimAppPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
