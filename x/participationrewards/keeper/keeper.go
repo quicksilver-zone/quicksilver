@@ -90,7 +90,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) GetAllocation(ctx sdk.Context, balance sdk.Coin, portion sdk.Dec) sdk.Coin {
-	return sdk.NewCoin(balance.Denom, balance.Amount)
+	return sdk.NewCoin(balance.Denom, sdk.NewDecFromInt(balance.Amount).Mul(portion).TruncateInt())
 }
 
 func LoadSubmodules() map[int64]Submodule {
