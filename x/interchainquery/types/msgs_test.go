@@ -3,23 +3,25 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/app"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
-
-const TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
 
 var (
 	coordinator *ibctesting.Coordinator
 	chainA      *ibctesting.TestChain
 	chainB      *ibctesting.TestChain
 	path        *ibctesting.Path
+
+	testAddress sdk.AccAddress = utils.GenerateAccAddressForTest()
 )
 
 func init() {
@@ -63,11 +65,11 @@ func TestMsgSubmitQueryResponse(t *testing.T) {
 		QueryId:     keeper.GenerateQueryHash(path.EndpointB.ConnectionID, chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, ""),
 		Result:      GetSimApp(chainB).AppCodec().MustMarshalJSON(&qvr),
 		Height:      chainB.CurrentHeader.Height,
-		FromAddress: TestOwnerAddress,
+		FromAddress: testAddress.String(),
 	}
 
 	require.NoError(t, msg.ValidateBasic())
 	require.Equal(t, types.RouterKey, msg.Route())
 	require.Equal(t, types.TypeMsgSubmitQueryResponse, msg.Type())
-	require.Equal(t, TestOwnerAddress, msg.GetSigners()[0].String())
+	require.Equal(t, testAddress.String(), msg.GetSigners()[0].String())
 }
