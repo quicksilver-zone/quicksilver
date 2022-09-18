@@ -30,6 +30,7 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		5,
 		app.MakeEncodingConfig(),
 		simapp.EmptyAppOptions{},
+		app.GetWasmOpts(simapp.EmptyAppOptions{}),
 	)
 }
 

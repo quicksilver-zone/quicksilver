@@ -74,7 +74,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 	}
 
 	db := dbm.NewMemDB()
-	app := NewQuicksilver(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{})
+	app := NewQuicksilver(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{}, GetWasmOpts(simapp.EmptyAppOptions{}))
 
 	genesisState := NewDefaultGenesisState()
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
@@ -112,6 +112,7 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 		5,
 		MakeEncodingConfig(),
 		simapp.EmptyAppOptions{},
+		GetWasmOpts(simapp.EmptyAppOptions{}),
 	)
 	return app, NewDefaultGenesisState()
 }

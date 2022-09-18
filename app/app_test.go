@@ -16,7 +16,7 @@ import (
 
 func TestQuicksilverExport(t *testing.T) {
 	db := dbm.NewMemDB()
-	app := NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), simapp.EmptyAppOptions{})
+	app := NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), simapp.EmptyAppOptions{}, GetWasmOpts(simapp.EmptyAppOptions{}))
 
 	genesisState := NewDefaultGenesisState()
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
@@ -33,7 +33,7 @@ func TestQuicksilverExport(t *testing.T) {
 	app.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), simapp.EmptyAppOptions{})
+	app2 := NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), simapp.EmptyAppOptions{}, GetWasmOpts(simapp.EmptyAppOptions{}))
 	_, err = app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }

@@ -8,10 +8,11 @@ import (
 	"os"
 	"path/filepath"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
@@ -132,6 +133,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/airdrop"
 	airdropkeeper "github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
+
+	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
 func Init() {
@@ -186,6 +189,7 @@ var (
 		interchainquery.AppModuleBasic{},
 		participationrewards.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
+		wasm.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -204,6 +208,7 @@ var (
 		// TODO: Remove Burner from participationrewards - for dev/test only;
 		participationrewardstypes.ModuleName: {authtypes.Burner},
 		airdroptypes.ModuleName:              nil,
+		wasm.ModuleName:                      {authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -268,6 +273,9 @@ type Quicksilver struct {
 	ScopedICAHostKeeper                  capabilitykeeper.ScopedKeeper
 	ScopedInterchainStakingAccountKeeper capabilitykeeper.ScopedKeeper
 
+	wasmKeeper       wasm.Keeper
+	scopedWasmKeeper capabilitykeeper.ScopedKeeper
+
 	// the module manager
 	mm *module.Manager
 
@@ -291,6 +299,7 @@ func NewQuicksilver(
 	invCheckPeriod uint,
 	encodingConfig EncodingConfig,
 	appOpts servertypes.AppOptions,
+	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *Quicksilver {
 	appCodec := encodingConfig.Marshaler
@@ -326,6 +335,7 @@ func NewQuicksilver(
 		interchainquerytypes.StoreKey,
 		participationrewardstypes.StoreKey,
 		airdroptypes.StoreKey,
+		wasm.StoreKey,
 	)
 
 	// Add the transient store key
@@ -356,6 +366,7 @@ func NewQuicksilver(
 	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	scopedInterchainStakingKeeper := app.CapabilityKeeper.ScopeToModule(interchainstakingtypes.ModuleName)
+	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
@@ -487,6 +498,37 @@ func NewQuicksilver(
 		),
 	)
 
+	// this line is used by starport scaffolding # stargate/app/keeperDefinition
+	wasmDir := filepath.Join(homePath, "data")
+
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic("error while reading wasm config: " + err.Error())
+	}
+
+	// The last arguments can contain custom message handlers, and custom query handlers,
+	// if we want to allow any custom callbacks
+	supportedFeatures := "iterator,staking,stargate"
+	app.wasmKeeper = wasm.NewKeeper(
+		appCodec,
+		keys[wasm.StoreKey],
+		app.GetSubspace(wasm.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.DistrKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		&app.IBCKeeper.PortKeeper,
+		scopedWasmKeeper,
+		app.TransferKeeper,
+		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(),
+		wasmDir,
+		wasmConfig,
+		supportedFeatures,
+		wasmOpts...,
+	)
+
 	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
 
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, app.ICAControllerKeeper)
@@ -496,6 +538,7 @@ func NewQuicksilver(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
+		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.wasmKeeper, app.IBCKeeper.ChannelKeeper)).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		AddRoute(interchainstakingtypes.ModuleName, icaControllerIBCModule)
@@ -507,7 +550,6 @@ func NewQuicksilver(
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
-
 	govConfig := govtypes.DefaultConfig()
 
 	// register the proposal types
@@ -571,6 +613,7 @@ func NewQuicksilver(
 		interchainQueryModule,
 		participationrewardsModule,
 		airdropModule,
+		wasm.NewAppModule(appCodec, &app.wasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
@@ -606,6 +649,7 @@ func NewQuicksilver(
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
+		wasm.ModuleName,
 	)
 
 	// NOTE: fee market module must go last in order to retrieve the block gas used.
@@ -636,6 +680,7 @@ func NewQuicksilver(
 		interchainstakingtypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
+		wasm.ModuleName,
 		// currently no-op.
 	)
 
@@ -670,6 +715,8 @@ func NewQuicksilver(
 		interchainquerytypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
+		// wasmd
+		wasm.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
 	)
@@ -731,7 +778,9 @@ func NewQuicksilver(
 			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-		IBCKeeper: app.IBCKeeper,
+		WasmConfig:        wasmConfig,
+		TxCounterStoreKey: keys[wasm.StoreKey],
+		IBCKeeper:         app.IBCKeeper,
 	}
 
 	app.SetAnteHandler(NewAnteHandler(options))
@@ -990,4 +1039,15 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
 	paramsKeeper.Subspace(airdroptypes.ModuleName)
 	return paramsKeeper
+}
+
+func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
+	var wasmOpts []wasm.Option
+	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
+		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
+	}
+
+	wasmOpts = append(wasmOpts, wasmkeeper.WithGasRegister(NewWasmGasRegister()))
+
+	return wasmOpts
 }
