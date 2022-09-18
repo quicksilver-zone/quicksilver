@@ -40,6 +40,12 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				k.Logger(ctx).Error("encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch", "error", err.Error())
 			}
 
+			if zoneInfo.DelegationAddress == nil {
+				// we have reached the end of the epoch and the delegation address is nil.
+				// This shouldn't happen in normal operation, but can if the zone was registered right on the epoch boundary.
+				return false
+			}
+
 			err = k.Rebalance(ctx, zoneInfo)
 			if err != nil {
 				k.Logger(ctx).Error("encountered a problem rebalancing", "error", err.Error())
