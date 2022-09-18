@@ -80,9 +80,6 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	}
 
 	for msgIndex, msgData := range txMsgData.Data {
-		if bytes.Equal(msgData.Data, []byte("")) {
-			fmt.Printf("unable to unmarshal msg index: %d (%s); empty byte slice is not valid", msgIndex, msgData.MsgType)
-		}
 		src := msgs[msgIndex]
 		switch msgData.MsgType {
 		case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":

@@ -43,10 +43,6 @@ func (msg MsgClaim) ValidateBasic() error {
 		errors["Address"] = err
 	}
 
-	if len(msg.Proofs) == 0 {
-		errors["Proofs"] = ErrUndefinedAttribute
-	}
-
 	for i, p := range msg.Proofs {
 		pLabel := fmt.Sprintf("Proof [%d]:", i)
 		if len(p.Key) == 0 {

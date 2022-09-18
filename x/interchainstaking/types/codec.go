@@ -39,6 +39,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 func init() {
+	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
 	govv1beta1.RegisterProposalType(ProposalTypeRegisterZone)
 
