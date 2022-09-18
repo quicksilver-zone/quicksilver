@@ -10,17 +10,11 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-<<<<<<< HEAD
 	"github.com/ingenuity-build/quicksilver/app"
-	qapp "github.com/ingenuity-build/quicksilver/app"
-=======
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"github.com/ingenuity-build/quicksilver/app"
->>>>>>> 26bb442 (simplify quicksilver logic)
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 var TestOwnerAddress = "quick17dtl0mjt3t77kpuhg2edqzjpszulwhgzhk4dtz"

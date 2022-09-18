@@ -147,7 +147,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sende
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
 		distribution[valoper] = thisAmount
 		outstanding = outstanding.Sub(thisAmount)
-		msgs = append(msgs, &stakingtypes.MsgTokenizeShares{
+		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
 			DelegatorAddress:    zone.DelegationAddress.Address,
 			ValidatorAddress:    intent.ValoperAddress,
 			Amount:              sdk.NewCoin(zone.BaseDenom, thisAmount),

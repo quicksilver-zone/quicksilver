@@ -12,7 +12,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,25 +32,25 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 
 	tests := []struct {
 		name   string
-		valset func(in lsmstakingtypes.Validators) lsmstakingtypes.QueryValidatorsResponse
-		checks func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in lsmstakingtypes.Validators)
+		valset func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse
+		checks func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in stakingtypes.Validators)
 	}{
 		{
 			name: "valid - no-op",
-			valset: func(in lsmstakingtypes.Validators) lsmstakingtypes.QueryValidatorsResponse {
-				return lsmstakingtypes.QueryValidatorsResponse{Validators: in}
+			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(_ *require.Assertions, _ sdk.Context, _ *app.Quicksilver, _ lsmstakingtypes.Validators) {
+			checks: func(_ *require.Assertions, _ sdk.Context, _ *app.Quicksilver, _ stakingtypes.Validators) {
 				// no op
 			},
 		},
 		{
 			name: "valid - shares +1000 val[0]",
-			valset: func(in lsmstakingtypes.Validators) lsmstakingtypes.QueryValidatorsResponse {
+			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
 				in[0].DelegatorShares = in[0].DelegatorShares.Add(sdk.NewDec(1000))
-				return lsmstakingtypes.QueryValidatorsResponse{Validators: in}
+				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in lsmstakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in stakingtypes.Validators) {
 				foundQuery := false
 				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
 				data := stakingtypes.GetValidatorKey(addr)
@@ -66,12 +65,12 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - shares +1000 val[1], +2000 val[2]",
-			valset: func(in lsmstakingtypes.Validators) lsmstakingtypes.QueryValidatorsResponse {
+			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
 				in[1].DelegatorShares = in[1].DelegatorShares.Add(sdk.NewDec(1000))
 				in[2].DelegatorShares = in[2].DelegatorShares.Add(sdk.NewDec(2000))
-				return lsmstakingtypes.QueryValidatorsResponse{Validators: in}
+				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in lsmstakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in stakingtypes.Validators) {
 				foundQuery := false
 				foundQuery2 := false
 				_, addr, _ := bech32.DecodeAndConvert(in[1].OperatorAddress)
@@ -92,11 +91,11 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - tokens +1000 val[0]",
-			valset: func(in lsmstakingtypes.Validators) lsmstakingtypes.QueryValidatorsResponse {
+			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
 				in[0].Tokens = in[0].Tokens.Add(sdk.NewInt(1000))
-				return lsmstakingtypes.QueryValidatorsResponse{Validators: in}
+				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in lsmstakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in stakingtypes.Validators) {
 				foundQuery := false
 				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
 				data := stakingtypes.GetValidatorKey(addr)
@@ -111,12 +110,12 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - tokens +1000 val[1], +2000 val[2]",
-			valset: func(in lsmstakingtypes.Validators) lsmstakingtypes.QueryValidatorsResponse {
+			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
 				in[1].Tokens = in[1].Tokens.Add(sdk.NewInt(1000))
 				in[2].Tokens = in[2].Tokens.Add(sdk.NewInt(2000))
-				return lsmstakingtypes.QueryValidatorsResponse{Validators: in}
+				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in lsmstakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in stakingtypes.Validators) {
 				foundQuery := false
 				foundQuery2 := false
 				_, addr, _ := bech32.DecodeAndConvert(in[1].OperatorAddress)
@@ -137,12 +136,12 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - tokens -10 val[1], -20 val[2]",
-			valset: func(in lsmstakingtypes.Validators) lsmstakingtypes.QueryValidatorsResponse {
+			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
 				in[1].Tokens = in[1].Tokens.Sub(sdk.NewInt(10))
 				in[2].Tokens = in[2].Tokens.Sub(sdk.NewInt(20))
-				return lsmstakingtypes.QueryValidatorsResponse{Validators: in}
+				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in lsmstakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in stakingtypes.Validators) {
 				foundQuery := false
 				foundQuery2 := false
 				_, addr, _ := bech32.DecodeAndConvert(in[1].OperatorAddress)
@@ -163,12 +162,12 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - commission 0.5 val[0], 0.05 val[2]",
-			valset: func(in lsmstakingtypes.Validators) lsmstakingtypes.QueryValidatorsResponse {
+			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
 				in[0].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 1)
 				in[2].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 2)
-				return lsmstakingtypes.QueryValidatorsResponse{Validators: in}
+				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in lsmstakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in stakingtypes.Validators) {
 				foundQuery := false
 				foundQuery2 := false
 				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
@@ -189,13 +188,13 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 		},
 		{
 			name: "valid - new validator",
-			valset: func(in lsmstakingtypes.Validators) lsmstakingtypes.QueryValidatorsResponse {
+			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
 				new := in[0]
 				new.OperatorAddress = newVal.String()
 				in = append(in, new)
-				return lsmstakingtypes.QueryValidatorsResponse{Validators: in}
+				return stakingtypes.QueryValidatorsResponse{Validators: in}
 			},
-			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in lsmstakingtypes.Validators) {
+			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in stakingtypes.Validators) {
 				foundQuery := false
 				data := stakingtypes.GetValidatorKey(newVal)
 				for _, i := range app.InterchainQueryKeeper.AllQueries(ctx) {
