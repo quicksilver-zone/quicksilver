@@ -14,7 +14,7 @@ import (
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
-const TestOwnerAddress = "osmo1ad2w96t58m0drxcgkf5unm9tg3f9adhjw3m5j5"
+const TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
