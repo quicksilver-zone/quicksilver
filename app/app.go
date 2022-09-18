@@ -1038,6 +1038,8 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
 	paramsKeeper.Subspace(airdroptypes.ModuleName)
+	paramsKeeper.Subspace(wasm.ModuleName)
+
 	return paramsKeeper
 }
 
