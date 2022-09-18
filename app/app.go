@@ -87,6 +87,7 @@ import (
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/x/mint"
 	mintkeeper "github.com/ingenuity-build/quicksilver/x/mint/keeper"
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
@@ -142,6 +143,9 @@ func Init() {
 	if err != nil {
 		panic(err)
 	}
+	config := sdk.GetConfig()
+	cmdcfg.SetBech32Prefixes(config)
+	cmdcfg.SetBip44CoinType(config)
 
 	DefaultNodeHome = filepath.Join(userHomeDir, ".quicksilverd")
 }

@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/simapp"
@@ -24,9 +23,6 @@ import (
 )
 
 func TestQuicksilverExport(t *testing.T) {
-	config := sdk.GetConfig()
-	cmdcfg.SetBech32Prefixes(config)
-	cmdcfg.SetBip44CoinType(config)
 
 	privVal := mock.NewPV()
 	pubKey, _ := privVal.GetPubKey()
