@@ -40,6 +40,7 @@ jobs:
           make install
 
       - name: Archive quicksilver binaries
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v3
         with:
           name: quicksilverd-${{ matrix.targetos }}-${{ matrix.arch }}
