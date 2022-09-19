@@ -17,7 +17,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-var TestOwnerAddress = "quick17dtl0mjt3t77kpuhg2edqzjpszulwhgzhk4dtz"
+var TestOwnerAddress = utils.GenerateAccAddressForTest().String()
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
