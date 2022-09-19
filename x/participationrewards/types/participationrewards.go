@@ -29,11 +29,24 @@ func (dp DistributionProportions) ValidateBasic() error {
 		errors["LockupAllocation"] = ErrNegativeAttribute
 	}
 
+	// no errors yet: check total proportions
+	if len(errors) == 0 {
+		totalProportions := dp.ValidatorSelectionAllocation.Add(dp.HoldingsAllocation).Add(dp.LockupAllocation)
+
+		if !totalProportions.Equal(sdk.OneDec()) {
+			errors["TotalProportions"] = ErrInvalidTotalProportions
+		}
+	}
+
 	if len(errors) > 0 {
 		return multierror.New(errors)
 	}
 
 	return nil
+}
+
+func (dp DistributionProportions) TotalProportions() sdk.Dec {
+	return dp.ValidatorSelectionAllocation.Add(dp.HoldingsAllocation).Add(dp.LockupAllocation)
 }
 
 func (p Params) ValidateBasic() error {
