@@ -23,7 +23,6 @@ import (
 )
 
 func TestQuicksilverExport(t *testing.T) {
-
 	privVal := mock.NewPV()
 	pubKey, _ := privVal.GetPubKey()
 
