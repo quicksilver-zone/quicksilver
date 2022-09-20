@@ -54,7 +54,7 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 		return fmt.Errorf("account prefix must be at least 2 characters") // ki is shortest to date.
 	}
 
-	if m.LiquidityModule == true {
+	if m.LiquidityModule {
 		return fmt.Errorf("liquidity module is unsupported")
 	}
 	return nil

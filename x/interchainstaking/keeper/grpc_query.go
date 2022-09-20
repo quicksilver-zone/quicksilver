@@ -100,7 +100,7 @@ func (k Keeper) Delegations(c context.Context, req *types.QueryDelegationsReques
 	}
 
 	delegations := make([]types.Delegation, 0)
-	var sum int64 = 0
+	var sum int64
 
 	k.IterateAllDelegations(ctx, &zone, func(delegation types.Delegation) (stop bool) {
 		delegations = append(delegations, delegation)

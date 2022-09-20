@@ -4,6 +4,7 @@ import (
 	"math"
 	"sort"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -135,7 +136,7 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Zone, d
 	}
 }
 
-func (k *Keeper) PrepareDelegationMessagesForCoins(ctx sdk.Context, zone *types.Zone, allocations map[string]sdk.Int) []sdk.Msg {
+func (k *Keeper) PrepareDelegationMessagesForCoins(ctx sdk.Context, zone *types.Zone, allocations map[string]sdkmath.Int) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
 		if !allocations[valoper].IsZero() {
@@ -155,7 +156,7 @@ func (k *Keeper) PrepareDelegationMessagesForCoins(ctx sdk.Context, zone *types.
 // 	return msgs
 // }
 
-func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) map[string]sdk.Int {
+func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) map[string]sdkmath.Int {
 	currentAllocations, currentSum := k.GetDelegationMap(ctx, zone)
 	targetAllocations := zone.GetAggregateIntentOrDefault()
 	allocations := DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
@@ -163,7 +164,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, am
 }
 
 // CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
-func calculateDeltas(currentAllocations map[string]sdk.Int, currentSum sdk.Int, targetAllocations map[string]*types.ValidatorIntent) []types.ValidatorIntent {
+func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations map[string]*types.ValidatorIntent) []types.ValidatorIntent {
 	deltas := make([]types.ValidatorIntent, 0)
 
 	// for target allocations, raise the intent weight by the total delegated value to get target amount
@@ -183,7 +184,7 @@ func calculateDeltas(currentAllocations map[string]sdk.Int, currentSum sdk.Int, 
 }
 
 // minDeltas returns the lowest value in a slice of Deltas.
-func minDeltas(deltas []types.ValidatorIntent) sdk.Int {
+func minDeltas(deltas []types.ValidatorIntent) sdkmath.Int {
 	minValue := sdk.NewInt(math.MaxInt64)
 	for _, intent := range deltas {
 		if minValue.GT(intent.Weight.TruncateInt()) {
@@ -194,7 +195,7 @@ func minDeltas(deltas []types.ValidatorIntent) sdk.Int {
 	return minValue
 }
 
-func DetermineAllocationsForDelegation(currentAllocations map[string]sdk.Int, currentSum sdk.Int, targetAllocations map[string]*types.ValidatorIntent, amount sdk.Coins) map[string]sdk.Int {
+func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations map[string]*types.ValidatorIntent, amount sdk.Coins) map[string]sdkmath.Int {
 	input := amount[0].Amount
 	deltas := calculateDeltas(currentAllocations, currentSum, targetAllocations)
 	minValue := minDeltas(deltas)
@@ -239,7 +240,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdk.Int, cu
 	// once sorted alphabetically. This will always be a small amount, and will count toward the delta calculations on the next run.
 
 	outSum := sdk.ZeroInt()
-	outWeights := make(map[string]sdk.Int)
+	outWeights := make(map[string]sdkmath.Int)
 	for _, delta := range deltas {
 		outWeights[delta.ValoperAddress] = delta.Weight.TruncateInt()
 		outSum = outSum.Add(delta.Weight.TruncateInt())
@@ -298,8 +299,8 @@ func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalReward
 	return sdk.NewDecCoins()
 }
 
-func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string]sdk.Int, sdk.Int) {
-	out := make(map[string]sdk.Int)
+func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string]sdkmath.Int, sdkmath.Int) {
+	out := make(map[string]sdkmath.Int)
 	sum := sdk.ZeroInt()
 
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
