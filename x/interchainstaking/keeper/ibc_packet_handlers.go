@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	//nolint:staticcheck
-	"github.com/golang/protobuf/proto"
+	"cosmossdk.io/math"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -336,7 +336,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 			allocations := k.DeterminePlanForDelegation(ctx, zone, msg.Amount)
 			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(ctx, zone, allocations)...)
 		} else {
-			return fmt.Errorf("lsm currently unsupported.")
+			return fmt.Errorf("lsm currently unsupported")
 			// msgs = append(msgs, k.PrepareDelegationMessagesForShares(ctx, zone, msg.Amount)...)
 		}
 	}
@@ -826,7 +826,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "")
 }
 
-func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdk.Int) sdk.Msg {
+func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards math.Int) sdk.Msg {
 	return &banktypes.MsgSend{
 		FromAddress: zone.WithdrawalAddress.GetAddress(),
 		ToAddress:   zone.DelegationAddress.GetAddress(),

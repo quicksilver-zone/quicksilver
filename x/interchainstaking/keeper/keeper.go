@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -324,7 +325,7 @@ func (k *Keeper) assertRedemptionRateWithinBounds(ctx sdk.Context, previousRate 
 	return nil
 }
 
-func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards sdk.Int) {
+func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards math.Int) {
 	ratio := k.getRatio(ctx, zone, epochRewards)
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
@@ -339,7 +340,7 @@ func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRew
 	k.SetZone(ctx, &zone)
 }
 
-func (k *Keeper) getRatio(ctx sdk.Context, zone types.Zone, epochRewards sdk.Int) sdk.Dec {
+func (k *Keeper) getRatio(ctx sdk.Context, zone types.Zone, epochRewards math.Int) sdk.Dec {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, &zone).Amount
 	// qAsset amount
