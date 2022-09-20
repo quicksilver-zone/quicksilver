@@ -15,9 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/wasmbinding"
 	"github.com/ingenuity-build/quicksilver/wasmbinding/bindings"
-	"github.com/ingenuity-build/quicksilver/x/gamm/pool-models/balancer"
 )
 
 // we must pay this many uosmo for every pool we create
@@ -62,50 +60,6 @@ func TestQueryFullDenom(t *testing.T) {
 	require.EqualValues(t, expected, resp.Denom)
 }
 
-func TestQueryPool(t *testing.T) {
-	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
-
-	fundAccount(t, ctx, osmosis, actor, defaultFunds)
-
-	poolFunds := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 12000000),
-		sdk.NewInt64Coin("ustar", 240000000),
-	}
-	// 2 star to 1 osmo
-	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
-
-	pool2Funds := []sdk.Coin{
-		sdk.NewInt64Coin("uatom", 6000000),
-		sdk.NewInt64Coin("uosmo", 12000000),
-	}
-	// 2 star to 1 osmo
-	atomPool := preparePool(t, ctx, osmosis, actor, pool2Funds)
-
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
-	require.NotEmpty(t, reflect)
-
-	// query pool state
-	query := bindings.OsmosisQuery{
-		PoolState: &bindings.PoolState{PoolId: starPool},
-	}
-	resp := bindings.PoolStateResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-	expected := wasmbinding.ConvertSdkCoinsToWasmCoins(poolFunds)
-	require.EqualValues(t, expected, resp.Assets)
-	assertValidShares(t, resp.Shares, starPool)
-
-	// query second pool state
-	query = bindings.OsmosisQuery{
-		PoolState: &bindings.PoolState{PoolId: atomPool},
-	}
-	resp = bindings.PoolStateResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-	expected = wasmbinding.ConvertSdkCoinsToWasmCoins(pool2Funds)
-	require.EqualValues(t, expected, resp.Assets)
-	assertValidShares(t, resp.Shares, atomPool)
-}
-
 type ReflectQuery struct {
 	Chain *ChainRequest `json:"chain,omitempty"`
 }
@@ -130,20 +84,13 @@ func queryCustom(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, co
 	queryBz, err := json.Marshal(query)
 	require.NoError(t, err)
 
-	resBz, err := quicksilver.wasmKeeper.QuerySmart(ctx, contract, queryBz)
+	resBz, err := quicksilver.WasmKeeper.QuerySmart(ctx, contract, queryBz)
 	require.NoError(t, err)
 	var resp ChainResponse
 	err = json.Unmarshal(resBz, &resp)
 	require.NoError(t, err)
 	err = json.Unmarshal(resp.Data, response)
 	require.NoError(t, err)
-}
-
-func assertValidShares(t *testing.T, shares wasmvmtypes.Coin, poolID uint64) {
-	// sanity check: check the denom and ensure at least 18 decimal places
-	denom := fmt.Sprintf("gamm/pool/%d", poolID)
-	require.Equal(t, denom, shares.Denom)
-	require.Greater(t, len(shares.Amount), 18)
 }
 
 func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
@@ -176,32 +123,12 @@ func instantiateReflectContract(t *testing.T, ctx sdk.Context, osmosis *app.Osmo
 	return addr
 }
 
-func fundAccount(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress, coins sdk.Coins) {
+func fundAccount(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, addr sdk.AccAddress, coins sdk.Coins) {
 	err := simapp.FundAccount(
-		osmosis.BankKeeper,
+		quicksilver.BankKeeper,
 		ctx,
 		addr,
 		coins,
 	)
 	require.NoError(t, err)
-}
-
-func preparePool(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress, funds []sdk.Coin) uint64 {
-	var assets []balancer.PoolAsset
-	for _, coin := range funds {
-		assets = append(assets, balancer.PoolAsset{
-			Weight: sdk.NewInt(100),
-			Token:  coin,
-		})
-	}
-
-	poolParams := balancer.PoolParams{
-		SwapFee: sdk.NewDec(0),
-		ExitFee: sdk.NewDec(0),
-	}
-
-	msg := balancer.NewMsgCreateBalancerPool(addr, poolParams, assets, "")
-	poolId, err := osmosis.GAMMKeeper.CreatePool(ctx, &msg)
-	require.NoError(t, err)
-	return poolId
 }

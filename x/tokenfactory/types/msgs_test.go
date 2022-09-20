@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/osmosis-labs/osmosis/v12/app/apptesting"
+	"github.com/ingenuity-build/quicksilver/app/apptesting"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
