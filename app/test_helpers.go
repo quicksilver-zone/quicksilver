@@ -27,6 +27,8 @@ import (
 
 type GenesisState map[string]json.RawMessage
 
+type EmptyAppOptions struct{}
+
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // Quicksilver testing.
 var DefaultConsensusParams = &abci.ConsensusParams{
