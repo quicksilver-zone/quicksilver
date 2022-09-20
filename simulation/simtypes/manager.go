@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/eve-network/eve/osmoutils"
+	osmoutils "github.com/ingenuity-build/quicksilver/utils"
 	"golang.org/x/exp/maps"
 )
 

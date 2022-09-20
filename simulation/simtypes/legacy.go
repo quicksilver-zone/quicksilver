@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
@@ -71,10 +72,5 @@ func GenAndDeliverTx(
 		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
 	}
 
-	gasInfo, _, err := app.Deliver(txGen.TxEncoder(), tx)
-	if err != nil {
-		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to deliver tx"), nil, err
-	}
-
-	return simulation.NewOperationMsg(msg, true, "", gasInfo.GasWanted, gasInfo.GasUsed, nil), nil, nil
+	return simulation.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), nil, nil
 }
