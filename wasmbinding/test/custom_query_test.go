@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -107,156 +106,6 @@ func TestQueryPool(t *testing.T) {
 	assertValidShares(t, resp.Shares, atomPool)
 }
 
-func TestQuerySpotPrice(t *testing.T) {
-	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
-	swapFee := 0. // FIXME: Set / support an actual fee
-	epsilon := 1e-6
-
-	fundAccount(t, ctx, osmosis, actor, defaultFunds)
-
-	poolFunds := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 12000000),
-		sdk.NewInt64Coin("ustar", 240000000),
-	}
-	// 20 star to 1 osmo
-	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
-
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
-	require.NotEmpty(t, reflect)
-
-	// query spot price
-	query := bindings.OsmosisQuery{
-		SpotPrice: &bindings.SpotPrice{
-			Swap: bindings.Swap{
-				PoolId:   starPool,
-				DenomIn:  "ustar",
-				DenomOut: "uosmo",
-			},
-			WithSwapFee: false,
-		},
-	}
-	resp := bindings.SpotPriceResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-
-	price, err := strconv.ParseFloat(resp.Price, 64)
-	require.NoError(t, err)
-
-	uosmo, err := poolFunds[0].Amount.ToDec().Float64()
-	require.NoError(t, err)
-	ustar, err := poolFunds[1].Amount.ToDec().Float64()
-	require.NoError(t, err)
-
-	expected := ustar / uosmo
-	require.InEpsilonf(t, expected, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
-
-	// and the reverse conversion (with swap fee)
-	// query spot price
-	query = bindings.OsmosisQuery{
-		SpotPrice: &bindings.SpotPrice{
-			Swap: bindings.Swap{
-				PoolId:   starPool,
-				DenomIn:  "uosmo",
-				DenomOut: "ustar",
-			},
-			WithSwapFee: true,
-		},
-	}
-	resp = bindings.SpotPriceResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-
-	price, err = strconv.ParseFloat(resp.Price, 32)
-	require.NoError(t, err)
-
-	expected = 1. / expected
-	require.InEpsilonf(t, expected+swapFee, price, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
-}
-
-func TestQueryEstimateSwap(t *testing.T) {
-	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
-	epsilon := 2e-3
-
-	fundAccount(t, ctx, osmosis, actor, defaultFunds)
-
-	poolFunds := []sdk.Coin{
-		sdk.NewInt64Coin("uosmo", 12000000),
-		sdk.NewInt64Coin("ustar", 240000000),
-	}
-	// 2 star to 1 osmo
-	starPool := preparePool(t, ctx, osmosis, actor, poolFunds)
-
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
-	require.NotEmpty(t, reflect)
-
-	// The contract/sender needs to have funds for estimating the price
-	fundAccount(t, ctx, osmosis, reflect, defaultFunds)
-
-	// Estimate swap rate
-	uosmo, err := poolFunds[0].Amount.ToDec().Float64()
-	require.NoError(t, err)
-	ustar, err := poolFunds[1].Amount.ToDec().Float64()
-	require.NoError(t, err)
-	swapRate := ustar / uosmo
-
-	// Query estimate cost (Exact in. No route)
-	amountIn := sdk.NewInt(10000)
-	query := bindings.OsmosisQuery{
-		EstimateSwap: &bindings.EstimateSwap{
-			Sender: reflect.String(),
-			First: bindings.Swap{
-				PoolId:   starPool,
-				DenomIn:  "uosmo",
-				DenomOut: "ustar",
-			},
-			Route: []bindings.Step{},
-			Amount: bindings.SwapAmount{
-				In: &amountIn,
-			},
-		},
-	}
-	resp := bindings.EstimatePriceResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-	require.NotNil(t, resp.Amount.Out)
-	require.Nil(t, resp.Amount.In)
-	cost, err := (*resp.Amount.Out).ToDec().Float64()
-	require.NoError(t, err)
-
-	amount, err := amountIn.ToDec().Float64()
-	require.NoError(t, err)
-	expected := amount * swapRate // out
-	require.InEpsilonf(t, expected, cost, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
-
-	// And the other way around
-	// Query estimate cost (Exact out. No route)
-	amountOut := sdk.NewInt(10000)
-	query = bindings.OsmosisQuery{
-		EstimateSwap: &bindings.EstimateSwap{
-			Sender: reflect.String(),
-			First: bindings.Swap{
-				PoolId:   starPool,
-				DenomIn:  "uosmo",
-				DenomOut: "ustar",
-			},
-			Route: []bindings.Step{},
-			Amount: bindings.SwapAmount{
-				Out: &amountOut,
-			},
-		},
-	}
-	resp = bindings.EstimatePriceResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
-	require.NotNil(t, resp.Amount.In)
-	require.Nil(t, resp.Amount.Out)
-	cost, err = (*resp.Amount.In).ToDec().Float64()
-	require.NoError(t, err)
-
-	amount, err = amountOut.ToDec().Float64()
-	require.NoError(t, err)
-	expected = amount * 1. / swapRate
-	require.InEpsilonf(t, expected, cost, epsilon, fmt.Sprintf("Outside of tolerance (%f)", epsilon))
-}
-
 type ReflectQuery struct {
 	Chain *ChainRequest `json:"chain,omitempty"`
 }
@@ -269,7 +118,7 @@ type ChainResponse struct {
 	Data []byte `json:"data"`
 }
 
-func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contract sdk.AccAddress, request bindings.OsmosisQuery, response interface{}) {
+func queryCustom(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, contract sdk.AccAddress, request bindings.OsmosisQuery, response interface{}) {
 	msgBz, err := json.Marshal(request)
 	require.NoError(t, err)
 
@@ -281,7 +130,7 @@ func queryCustom(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, contrac
 	queryBz, err := json.Marshal(query)
 	require.NoError(t, err)
 
-	resBz, err := osmosis.WasmKeeper.QuerySmart(ctx, contract, queryBz)
+	resBz, err := quicksilver.wasmKeeper.QuerySmart(ctx, contract, queryBz)
 	require.NoError(t, err)
 	var resp ChainResponse
 	err = json.Unmarshal(resBz, &resp)

@@ -273,7 +273,7 @@ type Quicksilver struct {
 	ScopedICAHostKeeper                  capabilitykeeper.ScopedKeeper
 	ScopedInterchainStakingAccountKeeper capabilitykeeper.ScopedKeeper
 
-	wasmKeeper       wasm.Keeper
+	WasmKeeper       wasm.Keeper
 	scopedWasmKeeper capabilitykeeper.ScopedKeeper //nolint:unused //TODO: we can use this for testing
 
 	// the module manager
@@ -534,7 +534,7 @@ func NewQuicksilver(
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate"
-	app.wasmKeeper = wasm.NewKeeper(
+	app.WasmKeeper = wasm.NewKeeper(
 		appCodec,
 		keys[wasm.StoreKey],
 		app.GetSubspace(wasm.ModuleName),
@@ -563,7 +563,7 @@ func NewQuicksilver(
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
 		AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
-		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.wasmKeeper, app.IBCKeeper.ChannelKeeper)).
+		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper)).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
 		AddRoute(interchainstakingtypes.ModuleName, icaControllerIBCModule)
@@ -615,7 +615,7 @@ func NewQuicksilver(
 		interchainQueryModule,
 		participationrewardsModule,
 		airdropModule,
-		wasm.NewAppModule(appCodec, &app.wasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// During begin block slashing happens after distr.BeginBlocker so that

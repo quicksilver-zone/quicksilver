@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	"github.com/ingenuity-build/quicksilver/app"
-	appparams "github.com/ingenuity-build/quicksilver/app/params"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -40,19 +39,25 @@ func New(t *testing.T, configs ...network.Config) *network.Network {
 // DefaultConfig will initialize config for the network with custom application,
 // genesis and single validator. All other parameters are inherited from cosmos-sdk/testutil/network.DefaultConfig
 func DefaultConfig() network.Config {
-	encoding := appparams.MakeTestEncodingConfig()
+	encoding := app.MakeEncodingConfig()
 	return network.Config{
-		Codec:             encoding.Codec,
+		Codec:             encoding.Marshaler,
 		TxConfig:          encoding.TxConfig,
 		LegacyAmino:       encoding.Amino,
 		InterfaceRegistry: encoding.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor: func(val network.Validator) servertypes.Application {
 			return app.NewQuicksilver(
-				val.Ctx.Logger, tmdb.NewMemDB(), nil, true, map[int64]bool{}, val.Ctx.Config.RootDir, 0,
+				val.Ctx.Logger,
+				tmdb.NewMemDB(),
+				nil,
+				true,
+				map[int64]bool{},
+				val.Ctx.Config.RootDir,
+				0,
 				encoding,
-				app.GetEnabledProposals(),
 				app.EmptyAppOptions{},
+				app.GetEnabledProposals(),
 				nil,
 				// baseapp.SetPruning(types.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 				// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),

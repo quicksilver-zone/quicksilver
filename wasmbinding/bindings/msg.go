@@ -1,6 +1,6 @@
 package bindings
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import "cosmossdk.io/math"
 
 type OsmosisMsg struct {
 	/// Contracts can create denoms, namespaced under the contract's address.
@@ -16,7 +16,6 @@ type OsmosisMsg struct {
 	/// Currently, the burn from address must be the admin contract.
 	BurnTokens *BurnTokens `json:"burn_tokens,omitempty"`
 	/// Swap over one or more pools
-	Swap *SwapMsg `json:"swap,omitempty"`
 }
 
 // CreateDenom creates a new factory denom, of denomination:
@@ -37,20 +36,14 @@ type ChangeAdmin struct {
 }
 
 type MintTokens struct {
-	Denom         string  `json:"denom"`
-	Amount        sdk.Int `json:"amount"`
-	MintToAddress string  `json:"mint_to_address"`
+	Denom         string   `json:"denom"`
+	Amount        math.Int `json:"amount"`
+	MintToAddress string   `json:"mint_to_address"`
 }
 
 type BurnTokens struct {
-	Denom  string  `json:"denom"`
-	Amount sdk.Int `json:"amount"`
+	Denom  string   `json:"denom"`
+	Amount math.Int `json:"amount"`
 	// BurnFromAddress must be set to "" for now.
 	BurnFromAddress string `json:"burn_from_address"`
-}
-
-type SwapMsg struct {
-	First  Swap                `json:"first"`
-	Route  []Step              `json:"route"`
-	Amount SwapAmountWithLimit `json:"amount"`
 }
