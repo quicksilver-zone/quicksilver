@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -131,7 +132,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 // processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.
 //
 //nolint:unused
-func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sender sdk.AccAddress, destination string, nativeTokens sdk.Int, burnAmount sdk.Coin, hash string) error {
+func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error {
 	intent, found := k.GetIntent(ctx, zone, sender.String(), false)
 	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
 	var msgs []*lsmstakingtypes.MsgTokenizeShares
@@ -142,7 +143,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sende
 		intents = zone.AggregateIntent
 	}
 	outstanding := nativeTokens
-	distribution := make(map[string]sdk.Int, 0)
+	distribution := make(map[string]math.Int, 0)
 	for _, valoper := range utils.Keys(intents) {
 		intent := intents[valoper]
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
@@ -168,8 +169,8 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sende
 }
 
 // queueRedemption will determine based on zone intent, the tokens to unbond, and add a withdrawal record with status QUEUED.
-func (k *Keeper) queueRedemption(ctx sdk.Context, zone types.Zone, sender sdk.AccAddress, destination string, nativeTokens sdk.Int, burnAmount sdk.Coin, hash string) error {
-	distribution := make(map[string]sdk.Int, 0)
+func (k *Keeper) queueRedemption(ctx sdk.Context, zone types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error { //nolint:unparam // we know that the error is always nil
+	distribution := make(map[string]math.Int, 0)
 	outstanding := nativeTokens
 
 	for _, valoper := range utils.Keys(zone.AggregateIntent) {

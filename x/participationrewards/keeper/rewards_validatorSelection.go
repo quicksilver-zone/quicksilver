@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
@@ -15,7 +16,7 @@ import (
 // calculations to determine validator voting power percentages;
 type zoneScore struct {
 	ZoneID           string // chainID
-	TotalVotingPower sdk.Int
+	TotalVotingPower math.Int
 	ValidatorScores  map[string]*validator
 }
 

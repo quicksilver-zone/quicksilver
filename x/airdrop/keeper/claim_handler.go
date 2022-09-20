@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
@@ -299,7 +300,7 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 	return nil
 }
 
-func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, cr types.ClaimRecord) (sdk.Int, error) {
+func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, cr types.ClaimRecord) (math.Int, error) {
 	gammdenom := lockedResp.Lock.Coins.GetDenomByIndex(0)
 	poolID := "osmosis/pool" + gammdenom[strings.LastIndex(gammdenom, "/"):]
 	pd, ok := k.prKeeper.GetProtocolData(ctx, poolID)

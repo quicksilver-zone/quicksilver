@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -19,7 +20,7 @@ const (
 	WithdrawStatusSend     int32 = iota + 1
 )
 
-func deprotoizeIntMap(m map[string]sdk.Int) map[string]int64 {
+func deprotoizeIntMap(m map[string]math.Int) map[string]int64 {
 	n := make(map[string]int64, 0)
 	for _, j := range utils.Keys(m) {
 		n[j] = m[j].Int64()
@@ -27,7 +28,7 @@ func deprotoizeIntMap(m map[string]sdk.Int) map[string]int64 {
 	return n
 }
 
-func (k Keeper) AddWithdrawalRecord(ctx sdk.Context, zone types.Zone, delegator string, distribution map[string]sdk.Int, recipient string, amount sdk.Coins, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time) {
+func (k Keeper) AddWithdrawalRecord(ctx sdk.Context, zone types.Zone, delegator string, distribution map[string]math.Int, recipient string, amount sdk.Coins, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time) {
 	record := &types.WithdrawalRecord{ChainId: zone.ChainId, Delegator: delegator, Distribution: deprotoizeIntMap(distribution), Recipient: recipient, Amount: amount, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime}
 	k.SetWithdrawalRecord(ctx, record)
 }

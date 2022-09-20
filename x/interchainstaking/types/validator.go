@@ -1,6 +1,7 @@
 package types
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 )
@@ -25,7 +26,7 @@ func (v Validator) IsEqual(other Validator) bool {
 	return true
 }
 
-func (v Validator) SharesToTokens(shares sdk.Dec) sdk.Int {
+func (v Validator) SharesToTokens(shares sdk.Dec) math.Int {
 	if v.DelegatorShares.IsZero() {
 		return sdk.ZeroInt()
 	}
