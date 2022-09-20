@@ -99,7 +99,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	if err != nil {
 		return err
 	}
-	zone.LastEpochHeight = blockResponse.Block.Header.Height
+	zone.LastEpochHeight = blockResponse.SdkBlock.Header.Height
 	k.SetZone(ctx, &zone)
 	return nil
 }

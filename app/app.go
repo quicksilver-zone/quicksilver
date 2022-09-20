@@ -278,7 +278,7 @@ type Quicksilver struct {
 	ScopedInterchainStakingAccountKeeper capabilitykeeper.ScopedKeeper
 
 	wasmKeeper       wasm.Keeper
-	scopedWasmKeeper capabilitykeeper.ScopedKeeper
+	scopedWasmKeeper capabilitykeeper.ScopedKeeper //nolint:unused //TODO: we can use this for testing
 
 	// the module manager
 	mm *module.Manager
