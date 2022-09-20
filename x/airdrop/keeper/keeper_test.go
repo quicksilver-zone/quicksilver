@@ -11,14 +11,14 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v3/testing"
 	"github.com/stretchr/testify/suite"
 
-	qapp "github.com/ingenuity-build/quicksilver/app"
+	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
 func init() {
-	ibctesting.DefaultTestingAppInit = qapp.SetupTestingApp
+	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
 }
 
 // TestKeeperTestSuite runs all the tests within this package.
@@ -46,10 +46,10 @@ type KeeperTestSuite struct {
 	path *ibctesting.Path
 }
 
-func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *qapp.Quicksilver {
-	app, ok := chain.App.(*qapp.Quicksilver)
+func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
+	app, ok := chain.App.(*app.Quicksilver)
 	if !ok {
-		panic("not Quicksilver app")
+		panic("not quicksilver app")
 	}
 
 	return app

@@ -24,7 +24,7 @@ import (
 // allocated to it.
 type userAllocation struct {
 	Address string
-	Coins   sdk.Coins
+	Amount  sdk.Int
 }
 
 type Keeper struct {
@@ -97,9 +97,14 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) GetAllocation(ctx sdk.Context, balance sdk.Coin, portion sdk.Dec) sdk.Coin {
-	amount := sdk.NewDecFromInt(balance.Amount).Mul(portion)
-	return sdk.NewCoin(balance.Denom, amount.TruncateInt())
+func (k Keeper) GetModuleBalance(ctx sdk.Context) sdk.Int {
+	denom := k.stakingKeeper.BondDenom(ctx)
+	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	moduleBalance := k.bankKeeper.GetBalance(ctx, moduleAddress, denom)
+
+	k.Logger(ctx).Info("module account", "address", moduleAddress, "balance", moduleBalance)
+
+	return moduleBalance.Amount
 }
 
 func LoadSubmodules() map[int64]Submodule {

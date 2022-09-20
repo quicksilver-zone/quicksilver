@@ -251,7 +251,7 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 
 	userAllocations := make([]userAllocation, 0)
 
-	if zone.ValidatorSelectionAllocation.IsZero() {
+	if zone.ValidatorSelectionAllocation == 0 {
 		k.Logger(ctx).Info("validator selection allocation is zero, nothing to allocate")
 		return userAllocations
 	}
@@ -287,17 +287,13 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 		return userAllocations
 	}
 
-	tokensPerPoint := sdk.NewDecFromInt(zone.ValidatorSelectionAllocation.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx))).Quo(sum)
+	allocation := sdk.NewDecFromInt(sdk.NewIntFromUint64(zone.ValidatorSelectionAllocation))
+	tokensPerPoint := allocation.Quo(sum)
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
 		ua := userAllocation{
 			Address: us.Address,
-			Coins: sdk.NewCoins(
-				sdk.NewCoin(
-					k.stakingKeeper.BondDenom(ctx),
-					us.Score.Mul(tokensPerPoint).TruncateInt(),
-				),
-			),
+			Amount:  us.Score.Mul(tokensPerPoint).TruncateInt(),
 		}
 		userAllocations = append(userAllocations, ua)
 	}

@@ -10,78 +10,40 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-type rewardsAllocation struct {
-	ValidatorSelection sdk.Coins
-	Holdings           sdk.Coins
-	Lockup             sdk.Coins
+type RewardsAllocation struct {
+	ValidatorSelection sdk.Int
+	Holdings           sdk.Int
+	Lockup             sdk.Int
 }
 
 type tokenValues map[string]sdk.Dec
 
-// getRewardsAllocations returns an instance of rewardsAllocation with values
-// set according to the module balance and set DistributionProportions
-// parameters.
-func (k Keeper) getRewardsAllocations(ctx sdk.Context) rewardsAllocation {
-	var allocation rewardsAllocation
-
-	denom := k.stakingKeeper.BondDenom(ctx)
-	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
-	moduleBalance := k.bankKeeper.GetBalance(ctx, moduleAddress, denom)
-
-	k.Logger(ctx).Info("module account", "address", moduleAddress, "balance", moduleBalance)
-
-	if moduleBalance.IsZero() {
-		k.Logger(ctx).Info("nothing to distribute...")
-
-		return allocation
+// GetRewardsAllocations returns an instance of rewardsAllocation with values
+// set according to the given moduleBalance and distribution proportions.
+func GetRewardsAllocations(moduleBalance sdk.Int, proportions types.DistributionProportions) (*RewardsAllocation, error) {
+	if moduleBalance.IsNil() || moduleBalance.IsZero() {
+		return nil, types.ErrNothingToAllocate
 	}
 
-	// get distribution proportions (params)
-	params := k.GetParams(ctx)
-	k.Logger(ctx).Info("module parameters", "params", params)
+	if sum := proportions.Total(); !sum.Equal(sdk.OneDec()) {
+		return nil, fmt.Errorf("%w: got %v", types.ErrInvalidTotalProportions, sum)
+	}
+
+	var allocation RewardsAllocation
 
 	// split participation rewards allocations
-	allocation.ValidatorSelection = sdk.NewCoins(
-		k.GetAllocation(
-			ctx,
-			moduleBalance,
-			params.DistributionProportions.ValidatorSelectionAllocation,
-		),
-	)
-	allocation.Holdings = sdk.NewCoins(
-		k.GetAllocation(
-			ctx,
-			moduleBalance,
-			params.DistributionProportions.HoldingsAllocation,
-		),
-	)
-	allocation.Lockup = sdk.NewCoins(
-		k.GetAllocation(
-			ctx,
-			moduleBalance,
-			params.DistributionProportions.LockupAllocation,
-		),
-	)
+	allocation.ValidatorSelection = sdk.NewDecFromInt(moduleBalance).Mul(proportions.ValidatorSelectionAllocation).TruncateInt()
+	allocation.Holdings = sdk.NewDecFromInt(moduleBalance).Mul(proportions.HoldingsAllocation).TruncateInt()
+	allocation.Lockup = sdk.NewDecFromInt(moduleBalance).Mul(proportions.LockupAllocation).TruncateInt()
 
 	// use sum to check total distribution to collect and allocate dust
-	total := moduleBalance
-	sum := allocation.Lockup.Add(allocation.ValidatorSelection...).Add(allocation.Holdings...)
-	dust := total.SubAmount(sum.AmountOf(denom))
-	k.Logger(ctx).Info(
-		"rewards distribution",
-		"total", total,
-		"validatorSelectionAllocation", allocation.ValidatorSelection,
-		"holdingsAllocation", allocation.Holdings,
-		"lockupAllocation", allocation.Lockup,
-		"sum", sum,
-		"dust", dust,
-	)
+	sum := allocation.Lockup.Add(allocation.ValidatorSelection).Add(allocation.Holdings)
+	dust := moduleBalance.Sub(sum)
 
 	// Add dust to validator choice allocation (favors decentralization)
-	k.Logger(ctx).Info("add dust to validatorSelectionAllocation...")
 	allocation.ValidatorSelection = allocation.ValidatorSelection.Add(dust)
 
-	return allocation
+	return &allocation, nil
 }
 
 func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
@@ -169,7 +131,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 // allocateZoneRewards executes zone based rewards allocation. This entails
 // rewards that are proportionally distributed to zones based on the tvl for
 // each zone relative to the tvl of the QS protocol.
-func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation rewardsAllocation) error {
+func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation RewardsAllocation) error {
 	k.Logger(ctx).Info("allocateZoneRewards", "token values", tvs, "allocation", allocation)
 
 	if err := k.setZoneAllocations(ctx, tvs, allocation); err != nil {
@@ -187,7 +149,7 @@ func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation
 
 // setZoneAllocations returns the proportional zone rewards allocations as a
 // map indexed by the zone id.
-func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation rewardsAllocation) error {
+func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation RewardsAllocation) error {
 	k.Logger(ctx).Info("setZoneAllocations", "allocation", allocation)
 
 	otvl := sdk.NewDec(0)
@@ -229,21 +191,8 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 		zp := zone.Tvl.Quo(otvl)
 		k.Logger(ctx).Info("zone proportion", "zone", zone.ChainId, "proportion", zp)
 
-		zone.ValidatorSelectionAllocation = sdk.NewCoins(
-			sdk.NewCoin(
-				k.stakingKeeper.BondDenom(ctx),
-				sdk.NewDecFromInt(allocation.ValidatorSelection.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx))).
-					Mul(zp).TruncateInt(),
-			),
-		)
-
-		zone.HoldingsAllocation = sdk.NewCoins(
-			sdk.NewCoin(
-				k.stakingKeeper.BondDenom(ctx),
-				sdk.NewDecFromInt(allocation.Holdings.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx))).
-					Mul(zp).TruncateInt(),
-			),
-		)
+		zone.ValidatorSelectionAllocation = sdk.NewDecFromInt(allocation.ValidatorSelection).Mul(zp).TruncateInt().Uint64()
+		zone.HoldingsAllocation = sdk.NewDecFromInt(allocation.Holdings).Mul(zp).TruncateInt().Uint64()
 
 		k.icsKeeper.SetZone(ctx, &zone)
 	}
@@ -257,9 +206,15 @@ func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocat
 	hasError := false
 
 	for _, ua := range userAllocations {
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(ua.Address), ua.Coins)
+		coins := sdk.NewCoins(
+			sdk.NewCoin(
+				k.stakingKeeper.BondDenom(ctx),
+				ua.Amount,
+			),
+		)
+		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(ua.Address), coins)
 		if err != nil {
-			k.Logger(ctx).Error("distribute to user", "address", ua.Address, "coins", ua.Coins)
+			k.Logger(ctx).Error("distribute to user", "address", ua.Address, "coins", coins)
 			hasError = true
 		}
 	}

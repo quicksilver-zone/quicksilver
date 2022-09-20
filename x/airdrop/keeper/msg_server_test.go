@@ -475,7 +475,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 
 			suite.Require().NoError(err)
 			suite.Require().NotNil(resp)
-			suite.Require().Equal(resp, tt.want)
+			suite.Require().Equal(tt.want, resp)
 		})
 	}
 }

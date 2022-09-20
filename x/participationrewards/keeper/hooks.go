@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 var epochsDeferred = int64(3)
@@ -14,7 +15,17 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	k.Logger(ctx).Info("distribute participation rewards...")
 
-	allocation := k.getRewardsAllocations(ctx)
+	allocation, err := GetRewardsAllocations(
+		k.GetModuleBalance(ctx),
+		k.GetParams(ctx).DistributionProportions,
+	)
+	if err != nil {
+		if err == types.ErrNothingToAllocate {
+			k.Logger(ctx).Info(err.Error())
+		} else {
+			k.Logger(ctx).Error(err.Error())
+		}
+	}
 
 	k.Logger(ctx).Info("Triggering submodule hooks")
 	for _, sub := range k.prSubmodules {
@@ -62,7 +73,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	}*/
 	// <<<
 
-	if err := k.allocateZoneRewards(ctx, tvs, allocation); err != nil {
+	if err := k.allocateZoneRewards(ctx, tvs, *allocation); err != nil {
 		k.Logger(ctx).Error(err.Error())
 	}
 

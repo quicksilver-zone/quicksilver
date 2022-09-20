@@ -45,7 +45,7 @@ func (dp DistributionProportions) ValidateBasic() error {
 	return nil
 }
 
-func (dp DistributionProportions) TotalProportions() sdk.Dec {
+func (dp DistributionProportions) Total() sdk.Dec {
 	return dp.ValidatorSelectionAllocation.Add(dp.HoldingsAllocation).Add(dp.LockupAllocation)
 }
 

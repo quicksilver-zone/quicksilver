@@ -37,7 +37,7 @@ func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone)
 
 	userAllocations := make([]userAllocation, 0)
 
-	if zone.HoldingsAllocation.IsZero() {
+	if zone.HoldingsAllocation == 0 {
 		k.Logger(ctx).Info("holdings allocation is zero, nothing to allocate")
 		return userAllocations
 	}
@@ -85,18 +85,14 @@ func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone)
 	}
 	k.Logger(ctx).Info("rewards limit adjustment", "zoneAmount", zoneAmount, "adjustedZoneAmount", adjustedZoneAmount)
 
-	tokensPerAsset := zone.HoldingsAllocation.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx)).ToDec().Quo(adjustedZoneAmount.ToDec())
+	allocation := sdk.NewDecFromInt(sdk.NewIntFromUint64(zone.HoldingsAllocation))
+	tokensPerAsset := allocation.Quo(adjustedZoneAmount.ToDec())
 	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset)
 
 	for _, ua := range userAmounts {
 		allocation := userAllocation{
 			Address: ua.Address,
-			Coins: sdk.NewCoins(
-				sdk.NewCoin(
-					k.stakingKeeper.BondDenom(ctx),
-					ua.Amount.ToDec().Mul(tokensPerAsset).TruncateInt(),
-				),
-			),
+			Amount:  ua.Amount.ToDec().Mul(tokensPerAsset).TruncateInt(),
 		}
 		userAllocations = append(userAllocations, allocation)
 	}
