@@ -13,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	sdkstakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	"github.com/stretchr/testify/require"
@@ -141,7 +140,7 @@ func genesisStateWithValSet(t *testing.T,
 			OperatorAddress: sdk.ValAddress(val.Address).String(),
 			ConsensusPubkey: pkAny,
 			Jailed:          false,
-			Status:          sdkstakingtypes.Bonded,
+			Status:          stakingtypes.Bonded,
 			Tokens:          bondAmt,
 			DelegatorShares: sdk.OneDec(),
 			Description:     stakingtypes.Description{},
