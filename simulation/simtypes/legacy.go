@@ -2,6 +2,7 @@ package simtypes
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -31,7 +32,7 @@ func GenAndDeliverTxWithRandFees(
 	var fees sdk.Coins
 	var err error
 
-	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg)
+	coins, hasNeg := spendable.SafeSub(coinsSpentInMsg...)
 	if hasNeg {
 		return simulation.NoOpMsg(moduleName, msg.Type(), "message doesn't leave room for fees"), nil, err
 	}
@@ -58,7 +59,8 @@ func GenAndDeliverTx(
 	moduleName string,
 ) (simulation.OperationMsg, []simulation.FutureOperation, error) {
 	account := ak.GetAccount(ctx, simAccount.Address)
-	tx, err := helpers.GenTx(
+	tx, err := helpers.GenSignedMockTx(
+		rand.New(rand.NewSource(time.Now().UnixNano())),
 		txGen,
 		[]sdk.Msg{msg},
 		fees,
@@ -70,6 +72,11 @@ func GenAndDeliverTx(
 	)
 	if err != nil {
 		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to generate mock tx"), nil, err
+	}
+
+	_, _, err = app.SimDeliver(txGen.TxEncoder(), tx)
+	if err != nil {
+		return simulation.NoOpMsg(moduleName, msg.Type(), "unable to deliver tx"), nil, err
 	}
 
 	return simulation.NewOperationMsg(msg, true, "", &codec.ProtoCodec{}), nil, nil

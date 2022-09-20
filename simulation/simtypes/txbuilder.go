@@ -56,7 +56,6 @@ func (sim *SimCtx) defaultTxBuilder(
 // TODO: Fix these args
 func (sim *SimCtx) deliverTx(tx sdk.Tx, msg sdk.Msg, msgName string) (simulation.OperationMsg, []simulation.FutureOperation, []byte, error) {
 	txConfig := params.MakeTestEncodingConfig().TxConfig // TODO: unhardcode
-	codec := params.MakeTestEncodingConfig().Codec
 	gasInfo, results, err := sim.BaseApp().SimDeliver(txConfig.TxEncoder(), tx)
 	if err != nil {
 		return simulation.NoOpMsg(msgName, msgName, fmt.Sprintf("unable to deliver tx. \nreason: %v\n results: %v\n msg: %s\n tx: %s", err, results, msg, tx)), nil, nil, err
