@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
@@ -29,7 +30,7 @@ func (k Keeper) GetClaimRecord(ctx sdk.Context, chainID string, address string) 
 
 // SetClaimRecord creates/updates the given airdrop ClaimRecord.
 func (k Keeper) SetClaimRecord(ctx sdk.Context, cr types.ClaimRecord) error {
-	addr, err := sdk.AccAddressFromBech32(cr.Address)
+	_, addr, err := bech32.DecodeAndConvert(cr.Address)
 	if err != nil {
 		return err
 	}

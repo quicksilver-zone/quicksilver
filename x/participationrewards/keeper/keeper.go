@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +25,7 @@ import (
 // allocated to it.
 type userAllocation struct {
 	Address string
-	Amount  sdk.Int
+	Amount  math.Int
 }
 
 type Keeper struct {
@@ -97,7 +98,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) GetModuleBalance(ctx sdk.Context) sdk.Int {
+func (k Keeper) GetModuleBalance(ctx sdk.Context) math.Int {
 	denom := k.stakingKeeper.BondDenom(ctx)
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	moduleBalance := k.bankKeeper.GetBalance(ctx, moduleAddress, denom)

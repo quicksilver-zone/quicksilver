@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 		IsConcluded: false,
 	}
 	userAddresses := []string{
-		"osmo1pgfzn0zhxjjgte7hprwtnqyhrn534lqka2dkuu",
+		"cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 	}
 
 	prop := types.RegisterZoneDropProposal{}

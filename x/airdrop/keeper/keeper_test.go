@@ -8,7 +8,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibctesting "github.com/cosmos/ibc-go/v3/testing"
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app"
@@ -74,13 +74,13 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (suite *KeeperTestSuite) initTestZone() {
-	// osmosis zone
+	// cosmos zone
 	zone := icstypes.Zone{
 		ConnectionId:  suite.path.EndpointB.ConnectionID,
 		ChainId:       suite.chainB.ChainID,
-		AccountPrefix: "osmo",
-		LocalDenom:    "uosmo",
-		BaseDenom:     "stake",
+		AccountPrefix: "cosmos",
+		LocalDenom:    "uqatom",
+		BaseDenom:     "uatom",
 	}
 
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)

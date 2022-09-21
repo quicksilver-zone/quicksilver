@@ -6,11 +6,14 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
 func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
+	userAddress := utils.GenerateAccAddressForTest().String()
+
 	type fields struct {
 		UserAddress string
 		Zone        string
@@ -59,7 +62,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 		{
 			"valid",
 			fields{
-				UserAddress: "osmo1pgfzn0zhxjjgte7hprwtnqyhrn534lqka2dkuu",
+				UserAddress: userAddress,
 				Zone:        "test-01",
 				ClaimType:   int64(ClaimTypeOsmosisPool),
 				Proofs: []*Proof{
@@ -95,7 +98,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgSubmitClaim_GetSigners(t *testing.T) {
-	validAddress := "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w"
+	validAddress := utils.GenerateAccAddressForTest().String()
 	validAcc, _ := sdk.AccAddressFromBech32(validAddress)
 
 	type fields struct {
@@ -139,7 +142,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 }
 
 func TestNewMsgSubmitClaim(t *testing.T) {
-	validAddress := "osmo1pgfzn0zhxjjgte7hprwtnqyhrn534lqka2dkuu"
+	validAddress := utils.GenerateAccAddressForTest().String()
 	testZone := "test-01"
 
 	type args struct {

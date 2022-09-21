@@ -2,10 +2,11 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
@@ -16,8 +17,8 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 	appA := suite.GetQuicksilverApp(suite.chainA)
 	// appB := suite.GetQuicksilverApp(suite.chainB)
 
-	denom := "stake"
-	userAddress := "osmo1pgfzn0zhxjjgte7hprwtnqyhrn534lqka2dkuu"
+	userAddress := utils.GenerateAccAddressForTest().String()
+	denom := "uatom" // same as test zone setup in keeper_test
 
 	msg := types.MsgClaim{}
 	tests := []struct {
@@ -40,7 +41,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 				msg = types.MsgClaim{
 					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionInitialClaim),
-					Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+					Address: userAddress,
 					Proofs:  nil,
 				}
 			},
@@ -56,7 +57,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 				msg = types.MsgClaim{
 					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionInitialClaim),
-					Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+					Address: userAddress,
 					Proofs:  nil,
 				}
 			},
@@ -102,7 +103,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 				rcpt := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
-					Txhash:  "T5_01",
+					Txhash:  "TestDeposit01",
 					Amount: sdk.NewCoins(
 						sdk.NewCoin(
 							denom,
@@ -351,16 +352,21 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 				// use existing state (from prev test)
 
 				// add proposal and vote
-				prop := gov.Proposal{
-					ProposalId: 0,
-					Status:     gov.StatusPassed,
+				prop := govv1.Proposal{
+					Id:     0,
+					Status: govv1.StatusPassed,
 				}
 				appA.GovKeeper.SetProposal(suite.chainA.GetContext(), prop)
 
-				vote := gov.Vote{
+				vote := govv1.Vote{
 					ProposalId: 0,
 					Voter:      userAddress,
-					Option:     gov.OptionYes,
+					Options: []*govv1.WeightedVoteOption{
+						{
+							Option: govv1.VoteOption_VOTE_OPTION_YES,
+							Weight: "1.0",
+						},
+					},
 				}
 				appA.GovKeeper.SetVote(suite.chainA.GetContext(), vote)
 

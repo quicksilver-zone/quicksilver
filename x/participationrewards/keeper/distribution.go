@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
@@ -11,16 +12,16 @@ import (
 )
 
 type RewardsAllocation struct {
-	ValidatorSelection sdk.Int
-	Holdings           sdk.Int
-	Lockup             sdk.Int
+	ValidatorSelection math.Int
+	Holdings           math.Int
+	Lockup             math.Int
 }
 
 type tokenValues map[string]sdk.Dec
 
 // GetRewardsAllocations returns an instance of rewardsAllocation with values
 // set according to the given moduleBalance and distribution proportions.
-func GetRewardsAllocations(moduleBalance sdk.Int, proportions types.DistributionProportions) (*RewardsAllocation, error) {
+func GetRewardsAllocations(moduleBalance math.Int, proportions types.DistributionProportions) (*RewardsAllocation, error) {
 	if moduleBalance.IsNil() || moduleBalance.IsZero() {
 		return nil, types.ErrNothingToAllocate
 	}

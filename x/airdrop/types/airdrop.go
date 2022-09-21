@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
@@ -89,7 +90,7 @@ func (cr ClaimRecord) ValidateBasic() error {
 	}
 
 	// must be valid bech32
-	if _, err := sdk.AccAddressFromBech32(cr.Address); err != nil {
+	if _, _, err := bech32.DecodeAndConvert(cr.Address); err != nil {
 		errors["Address"] = err
 	}
 

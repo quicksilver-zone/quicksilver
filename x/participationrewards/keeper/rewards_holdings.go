@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -10,7 +11,7 @@ import (
 // distribution. It contains the user address and held amount.
 type userAmount struct {
 	Address string
-	Amount  sdk.Int
+	Amount  math.Int
 }
 
 func (k Keeper) allocateHoldingsRewards(ctx sdk.Context) error {
@@ -75,10 +76,10 @@ func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone)
 	limit := sdk.MustNewDecFromStr("0.02")
 	adjustedZoneAmount := sdk.ZeroInt()
 	for i, userAmount := range userAmounts {
-		userPortion := userAmount.Amount.ToDec().Quo(zoneAmount.ToDec())
+		userPortion := sdk.NewDecFromInt(userAmount.Amount).Quo(sdk.NewDecFromInt(zoneAmount))
 		// check for and apply limit
 		if userPortion.GT(limit) {
-			userAmount.Amount = zoneAmount.ToDec().Mul(limit).TruncateInt()
+			userAmount.Amount = sdk.NewDecFromInt(zoneAmount).Mul(limit).TruncateInt()
 			userAmounts[i] = userAmount
 		}
 		adjustedZoneAmount = adjustedZoneAmount.Add(userAmount.Amount)
@@ -86,13 +87,13 @@ func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone)
 	k.Logger(ctx).Info("rewards limit adjustment", "zoneAmount", zoneAmount, "adjustedZoneAmount", adjustedZoneAmount)
 
 	allocation := sdk.NewDecFromInt(sdk.NewIntFromUint64(zone.HoldingsAllocation))
-	tokensPerAsset := allocation.Quo(adjustedZoneAmount.ToDec())
+	tokensPerAsset := allocation.Quo(sdk.NewDecFromInt(adjustedZoneAmount))
 	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset)
 
 	for _, ua := range userAmounts {
 		allocation := userAllocation{
 			Address: ua.Address,
-			Amount:  ua.Amount.ToDec().Mul(tokensPerAsset).TruncateInt(),
+			Amount:  sdk.NewDecFromInt(ua.Amount).Mul(tokensPerAsset).TruncateInt(),
 		}
 		userAllocations = append(userAllocations, allocation)
 	}
