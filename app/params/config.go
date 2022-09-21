@@ -17,7 +17,7 @@ var (
 	// customGaiaConfigTemplate defines Gaia's custom application configuration TOML template.
 	customEveConfigTemplate = `
 ###############################################################################
-###                        Custom Eve Configuration                         ###
+###                        Custom Configuration                         ###
 ###############################################################################
 # bypass-min-fee-msg-types defines custom message types the operator may set that
 # will bypass minimum fee checks during CheckTx.
