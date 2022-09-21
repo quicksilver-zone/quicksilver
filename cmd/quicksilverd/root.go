@@ -138,7 +138,7 @@ func initTendermintConfig() *tmcfg.Config {
 
 	// block times
 	cfg.Consensus.TimeoutCommit = 2 * time.Second                 // 2s blocks, think more on it later
-	cfg.Consensus.SkipTimeoutCommit = true                        // when we have 100% of signatures, block is done, don't wait for the TimeoutCommit
+	cfg.Consensus.SkipTimeoutCommit = false                       // when we have 100% of signatures, block is done, don't wait for the TimeoutCommit
 	cfg.Consensus.PeerGossipSleepDuration = 25 * time.Millisecond // a p2p keepalive more or less
 
 	return cfg
