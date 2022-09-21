@@ -23,7 +23,7 @@ message MsgClaim {
   option (gogoproto.goproto_getters) = false;
 
   string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
-  int32 action = 2 [ (gogoproto.moretags) = "yaml:\"action\"" ];
+  int64 action = 2 [ (gogoproto.moretags) = "yaml:\"action\"" ];
   string address = 3 [ (gogoproto.moretags) = "yaml:\"address\"" ];
   repeated Proof proofs = 4
       [ (gogoproto.moretags) = "yaml:\"proofs\"" ];

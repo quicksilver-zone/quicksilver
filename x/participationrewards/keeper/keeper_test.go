@@ -6,9 +6,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctesting "github.com/cosmos/ibc-go/v3/testing"
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+
 	"github.com/stretchr/testify/suite"
 
+	"github.com/ingenuity-build/quicksilver/app"
 	qapp "github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -36,9 +38,9 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *qapp.Quicksilver {
-	app, ok := chain.App.(*qapp.Quicksilver)
+	app, ok := chain.App.(*app.Quicksilver)
 	if !ok {
-		panic("not Quicksilver app")
+		panic("not quicksilver app")
 	}
 
 	return app

@@ -35,6 +35,9 @@ services:
     command:
       - icad
       - start
+    ports:
+    - 27657:26657
+    - 23137:1317
   testzone1-2:
     image: quicksilverzone/testzone:latest
     hostname: testzone1-2
@@ -110,7 +113,7 @@ services:
       context: .
       dockerfile: Dockerfile.hermes
   icq:
-    image: quicksilverzone/interchain-queries:v0.4.0
+    image: quicksilverzone/interchain-queries:v0.4.5
     volumes:
       - ./data/icq:/icq/.icq
     command:

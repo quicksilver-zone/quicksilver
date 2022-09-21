@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
@@ -15,7 +16,7 @@ import (
 // calculations to determine validator voting power percentages;
 type zoneScore struct {
 	ZoneID           string // chainID
-	TotalVotingPower sdk.Int
+	TotalVotingPower math.Int
 	ValidatorScores  map[string]*validator
 }
 
@@ -138,11 +139,11 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	}
 
 	// calculate power percentage and normalized distribution scores
-	maxp := max.ToDec().Quo(zs.TotalVotingPower.ToDec())
-	minp := min.ToDec().Quo(zs.TotalVotingPower.ToDec())
+	maxp := sdk.NewDecFromInt(max).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
+	minp := sdk.NewDecFromInt(min).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
 	for _, vs := range zs.ValidatorScores {
 		// calculate power percentage
-		vs.PowerPercentage = vs.VotingPower.ToDec().Quo(zs.TotalVotingPower.ToDec())
+		vs.PowerPercentage = sdk.NewDecFromInt(vs.VotingPower).Quo(sdk.NewDecFromInt(zs.TotalVotingPower))
 
 		// calculate normalized distribution score
 		vs.DistributionScore = sdk.NewDec(1).Sub(
@@ -292,7 +293,7 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 		return userAllocations
 	}
 
-	tokensPerPoint := zone.ValidatorSelectionAllocation.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx)).ToDec().Quo(sum)
+	tokensPerPoint := sdk.NewDecFromInt(zone.ValidatorSelectionAllocation.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx))).Quo(sum)
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
 		ua := userAllocation{

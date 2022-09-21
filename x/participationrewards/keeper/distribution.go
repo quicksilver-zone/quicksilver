@@ -130,7 +130,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 			err := fmt.Errorf("unable to obtain token value for zone %s", zone.ChainId)
 			return err
 		}
-		ztvl := k.icsKeeper.GetDelegatedAmount(ctx, &zone).Amount.ToDec().
+		ztvl := sdk.NewDecFromInt(k.icsKeeper.GetDelegatedAmount(ctx, &zone).Amount).
 			Quo(sdk.NewDec(tv.Multiplier)).
 			Mul(tv.Value)
 		// set the zone tvl here, we will overwrite it with the correct
@@ -165,7 +165,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 		zone.ValidatorSelectionAllocation = sdk.NewCoins(
 			sdk.NewCoin(
 				k.stakingKeeper.BondDenom(ctx),
-				allocation.ValidatorSelection.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx)).ToDec().
+				sdk.NewDecFromInt(allocation.ValidatorSelection.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx))).
 					Mul(zp).TruncateInt(),
 			),
 		)
@@ -173,7 +173,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 		zone.HoldingsAllocation = sdk.NewCoins(
 			sdk.NewCoin(
 				k.stakingKeeper.BondDenom(ctx),
-				allocation.Holdings.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx)).ToDec().
+				sdk.NewDecFromInt(allocation.Holdings.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx))).
 					Mul(zp).TruncateInt(),
 			),
 		)

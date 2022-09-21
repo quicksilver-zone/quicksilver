@@ -13,7 +13,7 @@ var (
 	ErrUnknownStatus        = sdkerrors.Register(ModuleName, 3, "unknown status")
 	ErrUndefinedAttribute   = sdkerrors.Register(ModuleName, 4, "expected attribute not defined")
 	ErrInvalidDuration      = sdkerrors.Register(ModuleName, 5, "invalid duration")
-	ErrActionOutOfBounds    = sdkerrors.Register(ModuleName, 6, fmt.Sprintf("invalid action, expects range [0-%d]", len(Action_value)-1))
+	ErrActionOutOfBounds    = sdkerrors.Register(ModuleName, 6, fmt.Sprintf("invalid action, expects range [1-%d]", len(Action_value)-1))
 	ErrActionWeights        = sdkerrors.Register(ModuleName, 7, "sum of action weights must be 1.0")
 	ErrDuplicateZoneDrop    = sdkerrors.Register(ModuleName, 8, "duplicate zone drop")
 	ErrDuplicateClaimRecord = sdkerrors.Register(ModuleName, 9, "duplicate claim record")

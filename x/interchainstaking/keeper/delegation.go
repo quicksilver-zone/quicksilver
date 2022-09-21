@@ -1,11 +1,16 @@
 package keeper
 
 import (
+	"math"
+	"sort"
+
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -131,64 +136,119 @@ func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Zone, d
 	}
 }
 
-// Delegate determines how the balance of a DelegateAccount should be distributed across validators.
-func (k *Keeper) Delegate(ctx sdk.Context, zone types.Zone, account *types.ICAAccount, allocations types.Allocations) error {
+func (k *Keeper) PrepareDelegationMessagesForCoins(ctx sdk.Context, zone *types.Zone, allocations map[string]sdkmath.Int) []sdk.Msg {
 	var msgs []sdk.Msg
-
-	for _, allocation := range allocations.Sorted() {
-		for _, coin := range allocation.Amount {
-			if coin.Denom == zone.BaseDenom {
-				msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: account.GetAddress(), ValidatorAddress: allocation.Address, Amount: coin})
-			} else {
-				msgs = append(msgs, &stakingTypes.MsgRedeemTokensforShares{DelegatorAddress: account.GetAddress(), Amount: coin})
-			}
+	for _, valoper := range utils.Keys(allocations) {
+		if !allocations[valoper].IsZero() {
+			msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
 		}
 	}
-	return k.SubmitTx(ctx, msgs, account, "")
+	return msgs
 }
 
-func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone types.Zone, amount sdk.Coins, delegator string, txhash string) (types.Allocations, error) {
-	bins := k.GetDelegationBinsMap(ctx, &zone)
+// func (k *Keeper) PrepareDelegationMessagesForShares(ctx sdk.Context, zone *types.Zone, coins sdk.Coins) []sdk.Msg {
+// 	var msgs []sdk.Msg
+// 	for _, coin := range coins.Sort() {
+// 		if !coin.IsZero() {
+// 			msgs = append(msgs, &stakingTypes.MsgRedeemTokensforShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
+// 		}
+// 	}
+// 	return msgs
+// }
 
-	sendPlan := types.Allocations{}
+func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) map[string]sdkmath.Int {
+	currentAllocations, currentSum := k.GetDelegationMap(ctx, zone)
+	targetAllocations := zone.GetAggregateIntentOrDefault()
+	allocations := DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	return allocations
+}
 
-	for _, coin := range amount {
-		var delPlan types.Allocations
-		var err error
-		if coin.Denom == zone.BaseDenom {
-			var valPlan types.ValidatorIntents
-			plan, found := k.GetIntent(ctx, zone, delegator, false)
-			if !found || len(plan.Intents) == 0 {
-				valPlan = zone.GetAggregateIntentOrDefault()
-				delPlan, err = types.DelegationPlanFromGlobalIntent(k.GetDelegatedAmount(ctx, &zone), bins, coin, valPlan)
-				if err != nil {
-					return types.Allocations{}, err
-				}
-			} else {
-				valPlan = plan.ToValidatorIntents()
-				delPlan = types.DelegationPlanFromUserIntent(zone, coin, valPlan) // TODO: does it make sense to do this? why don't we just use the global intent?
-				if err != nil {
-					return types.Allocations{}, err
-				}
-			}
+// CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
+func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations map[string]*types.ValidatorIntent) []types.ValidatorIntent {
+	deltas := make([]types.ValidatorIntent, 0)
 
-		} else {
-			delPlan = types.DelegationPlanFromCoins(zone, coin)
+	// for target allocations, raise the intent weight by the total delegated value to get target amount
+	for _, valoper := range utils.Keys(targetAllocations) {
+		current, ok := currentAllocations[valoper]
+		if !ok {
+			current = sdk.ZeroInt()
 		}
+		target := targetAllocations[valoper].Weight.MulInt(currentSum).TruncateInt()
+		// diff between target and current allocations
+		// positive == below target, negative == above target
+		delta := target.Sub(current)
+		deltas = append(deltas, types.ValidatorIntent{Weight: sdk.NewDecFromInt(delta), ValoperAddress: valoper})
+	}
 
-		for _, allocation := range delPlan.Sorted() {
-			var delegatorAddress string
-			for _, coin := range allocation.Amount {
-				delegatorAddress, bins = bins.FindAccountForDelegation(allocation.Address, sdk.NewCoin(zone.BaseDenom, coin.Amount))
+	return deltas
+}
 
-				delegationPlan := types.NewDelegationPlan(delegatorAddress, allocation.Address, sdk.NewCoins(coin))
-				sendPlan = sendPlan.Allocate(delegatorAddress, sdk.NewCoins(coin))
-				k.SetDelegationPlan(ctx, &zone, txhash, delegationPlan)
-			}
+// minDeltas returns the lowest value in a slice of Deltas.
+func minDeltas(deltas []types.ValidatorIntent) sdkmath.Int {
+	minValue := sdk.NewInt(math.MaxInt64)
+	for _, intent := range deltas {
+		if minValue.GT(intent.Weight.TruncateInt()) {
+			minValue = intent.Weight.TruncateInt()
 		}
 	}
 
-	return sendPlan, nil
+	return minValue
+}
+
+func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations map[string]*types.ValidatorIntent, amount sdk.Coins) map[string]sdkmath.Int {
+	input := amount[0].Amount
+	deltas := calculateDeltas(currentAllocations, currentSum, targetAllocations)
+	minValue := minDeltas(deltas)
+	sum := sdk.ZeroInt()
+
+	// sort keys by relative value of delta
+	sort.SliceStable(deltas, func(i, j int) bool {
+		return deltas[i].ValoperAddress > deltas[j].ValoperAddress
+	})
+
+	// sort keys by relative value of delta
+	sort.SliceStable(deltas, func(i, j int) bool {
+		return deltas[i].Weight.GT(deltas[j].Weight)
+	})
+
+	// raise all deltas such that the minimum value is zero.
+	for idx := range deltas {
+		deltas[idx].Weight = deltas[idx].Weight.Add(sdk.NewDecFromInt(minValue.Abs()))
+		sum = sum.Add(deltas[idx].Weight.TruncateInt())
+	}
+
+	// unequalSplit is the portion of input that should be distributed in attempt to make targets == 0
+	unequalSplit := sdk.MinInt(sum, input)
+
+	if !unequalSplit.IsZero() {
+		for idx := range deltas {
+			deltas[idx].Weight = deltas[idx].Weight.QuoInt(sum).MulInt(unequalSplit)
+		}
+	}
+
+	// equalSplit is the portion of input that should be distributed equally across all validators, once targets are zero.
+	equalSplit := sdk.NewDecFromInt(input.Sub(unequalSplit))
+
+	if !equalSplit.IsZero() {
+		each := equalSplit.Quo(sdk.NewDec(int64(len(deltas))))
+		for idx := range deltas {
+			deltas[idx].Weight = deltas[idx].Weight.Add(each)
+		}
+	}
+
+	// dust is the portion of the input that was truncated in previous calculations; add this to the first validator in the list,
+	// once sorted alphabetically. This will always be a small amount, and will count toward the delta calculations on the next run.
+
+	outSum := sdk.ZeroInt()
+	outWeights := make(map[string]sdkmath.Int)
+	for _, delta := range deltas {
+		outWeights[delta.ValoperAddress] = delta.Weight.TruncateInt()
+		outSum = outSum.Add(delta.Weight.TruncateInt())
+	}
+	dust := input.Sub(outSum)
+	outWeights[deltas[0].ValoperAddress] = outWeights[deltas[0].ValoperAddress].Add(dust)
+
+	return outWeights
 }
 
 func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *types.Zone, delegator string, response []byte) error {
@@ -199,10 +259,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	if err != nil {
 		return err
 	}
-	account, err := zone.GetDelegationAccountByAddress(delegator)
-	if err != nil {
-		return err
-	}
+	account := zone.DelegationAddress
 
 	var delAddr sdk.AccAddress
 	_, delAddr, _ = bech32.DecodeAndConvert(delegator)
@@ -218,6 +275,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	})
 
 	if len(msgs) == 0 {
+		// always setZone here because calling method update waitgroup.
 		k.SetZone(ctx, zone)
 		return nil
 	}
@@ -241,16 +299,20 @@ func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalReward
 	return sdk.NewDecCoins()
 }
 
-func (k *Keeper) GetDelegationBinsMap(ctx sdk.Context, zone *types.Zone) types.Allocations {
-	out := types.Allocations{}
-	for _, da := range zone.DelegationAddresses {
-		out = out.Allocate(da.Address, sdk.Coins{sdk.Coin{Denom: zone.BaseDenom, Amount: sdk.ZeroInt()}})
-	}
+func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string]sdkmath.Int, sdkmath.Int) {
+	out := make(map[string]sdkmath.Int)
+	sum := sdk.ZeroInt()
 
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
-		out = out.Allocate(delegation.DelegationAddress, sdk.Coins{sdk.Coin{Denom: delegation.ValidatorAddress, Amount: delegation.Amount.Amount}})
+		existing, found := out[delegation.ValidatorAddress]
+		if !found {
+			out[delegation.ValidatorAddress] = delegation.Amount.Amount
+		} else {
+			out[delegation.ValidatorAddress] = existing.Add(delegation.Amount.Amount)
+		}
+		sum = sum.Add(delegation.Amount.Amount)
 		return false
 	})
 
-	return out.Sorted()
+	return out, sum
 }

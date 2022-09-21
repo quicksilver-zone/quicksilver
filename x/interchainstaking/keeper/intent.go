@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -23,7 +24,7 @@ func (k Keeper) GetIntent(ctx sdk.Context, zone types.Zone, delegator string, sn
 	bz := store.Get([]byte(delegator))
 	if len(bz) == 0 {
 		// usually we'd return false here, but we always want to return an empty intent if one doesn't exist; keep standard Get* interface for consistency.
-		return types.DelegatorIntent{Delegator: delegator, Intents: []*types.ValidatorIntent{}}, true
+		return types.DelegatorIntent{Delegator: delegator, Intents: nil}, true
 	}
 	k.cdc.MustUnmarshal(bz, &intent)
 	return intent, true
@@ -96,7 +97,7 @@ func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot
 		}
 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 
-		intents = append(intents, intent.Ordinalize(balance.Amount.ToDec()))
+		intents = append(intents, intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)))
 		return false
 	})
 	if err != nil {
@@ -109,7 +110,7 @@ func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot
 func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 	var err error
 	snapshot := false
-	intents := map[string]*types.ValidatorIntent{}
+	aggregate := map[string]*types.ValidatorIntent{}
 	ordinalizedIntentSum := sdk.ZeroDec()
 	// reduce intents
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
@@ -120,14 +121,15 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 		}
 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 
-		for _, vIntent := range intent.Ordinalize(balance.Amount.ToDec()).Intents {
-			thisIntent, ok := intents[vIntent.ValoperAddress]
-			ordinalizedIntentSum = ordinalizedIntentSum.Add(vIntent.Weight)
+		intents := intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
+		for _, vIntent := range utils.Keys(intents) {
+			thisIntent, ok := aggregate[vIntent]
+			ordinalizedIntentSum = ordinalizedIntentSum.Add(intents[vIntent].Weight)
 			if !ok {
-				intents[vIntent.ValoperAddress] = vIntent
+				aggregate[vIntent] = intents[vIntent]
 			} else {
-				thisIntent.Weight = thisIntent.Weight.Add(vIntent.Weight)
-				intents[vIntent.ValoperAddress] = thisIntent
+				thisIntent.Weight = thisIntent.Weight.Add(intents[vIntent].Weight)
+				aggregate[vIntent] = thisIntent
 			}
 		}
 
@@ -137,17 +139,18 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 		return err
 	}
 
-	if len(intents) > 0 && ordinalizedIntentSum.IsZero() {
+	if len(aggregate) > 0 && ordinalizedIntentSum.IsZero() {
 		return fmt.Errorf("ordinalized intent sum is zero, this should never happen")
 	}
 
 	// normalise aggregated intents again.
-	for key, val := range intents {
-		val.Weight = val.Weight.Quo(ordinalizedIntentSum)
-		intents[key] = val
+	for _, key := range utils.Keys(aggregate) {
+		aggregate[key].Weight = aggregate[key].Weight.Quo(ordinalizedIntentSum)
 	}
 
-	zone.AggregateIntent = intents
+	k.Logger(ctx).Error("aggregates", "agg", aggregate)
+
+	zone.AggregateIntent = aggregate
 	k.SetZone(ctx, &zone)
 	return nil
 }
@@ -167,13 +170,13 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 		intent = zone.UpdateIntentWithCoins(intent, baseBalance, inAmount)
 	}
 
-	if len(memo) > 0 {
-		var err error
-		intent, err = zone.UpdateIntentWithMemo(intent, memo, baseBalance, inAmount)
-		if err != nil {
-			return err
-		}
-	}
+	// if len(memo) > 0 {
+	// 	var err error
+	// 	intent, err = zone.UpdateIntentWithMemo(intent, memo, baseBalance, inAmount)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	if len(intent.Intents) == 0 {
 		return nil

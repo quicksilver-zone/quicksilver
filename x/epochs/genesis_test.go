@@ -13,7 +13,7 @@ import (
 )
 
 func TestEpochsExportGenesis(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	chainStartTime := ctx.BlockTime()
@@ -40,7 +40,7 @@ func TestEpochsExportGenesis(t *testing.T) {
 
 func TestEpochsInitGenesis(t *testing.T) {
 	// setup feemarketGenesis params
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	// On init genesis, default epochs information is set

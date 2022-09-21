@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -18,10 +17,8 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/ingenuity-build/quicksilver/x/mint/client/cli"
-	"github.com/ingenuity-build/quicksilver/x/mint/client/rest"
 	"github.com/ingenuity-build/quicksilver/x/mint/keeper"
 
-	// "github.com/ingenuity-build/quicksilver/x/mint/simulation"
 	"github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
@@ -61,11 +58,6 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 	}
 
 	return types.ValidateGenesis(data)
-}
-
-// RegisterRESTRoutes registers the REST routes for the mint module.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterRoutes(clientCtx, rtr)
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.

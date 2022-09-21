@@ -6,14 +6,14 @@ name: compile quicksilver
 # or API.
 on: [push, pull_request, workflow_dispatch]
 
-# This workflow makes x86_64 and arm binaries for windows, and linux.
+# This workflow makes x86_64 for windows, and linux.
 
 jobs:
   build:
     strategy:
       matrix:
         targetos: [linux, windows]
-        arch: [amd64, arm64]
+        arch: [amd64]
     runs-on: ubuntu-latest
     name: build quicksilver
     steps:

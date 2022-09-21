@@ -3,24 +3,24 @@ package keeper_test
 import (
 	"context"
 	"testing"
+	"time"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctesting "github.com/cosmos/ibc-go/v3/testing"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+
 	"github.com/stretchr/testify/suite"
 
-	qapp "github.com/ingenuity-build/quicksilver/app"
+	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
-	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
-var TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
+var TestOwnerAddress = utils.GenerateAccAddressForTest().String()
 
 func init() {
-	ibctesting.DefaultTestingAppInit = qapp.SetupTestingApp
+	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -37,10 +37,10 @@ type KeeperTestSuite struct {
 	path   *ibctesting.Path
 }
 
-func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *qapp.Quicksilver {
-	app, ok := chain.App.(*qapp.Quicksilver)
+func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
+	app, ok := chain.App.(*app.Quicksilver)
 	if !ok {
-		panic("not Quicksilver app")
+		panic("not quicksilver app")
 	}
 
 	return app
@@ -76,37 +76,19 @@ func (s *KeeperTestSuite) SetupZones() {
 	s.Require().NoError(err)
 
 	// Simulate "cosmos.staking.v1beta1.Query/Validators" response
-	// - this is not working anymore;
-	qvr := stakingtypes.QueryValidatorsResponse{
-		Validators: s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()),
+
+	qApp := s.GetQuicksilverApp(s.chainA)
+
+	for _, val := range s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()) {
+		// refetch the zone for each validator, else we end up with an empty valset each time!
+		zone, found := qApp.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+		s.Require().True(found)
+		s.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, s.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
 	}
-	icqmsgSrv := icqkeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainQueryKeeper)
 
-	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
-	bz, err := s.GetQuicksilverApp(s.chainA).AppCodec().Marshal(&bondedQuery)
-	s.Require().NoError(err)
-
-	// proofOps is missing here
-	// we can no longer spoof a query/response for testing?
-	qmsg := icqtypes.MsgSubmitQueryResponse{
-		ChainId: s.chainB.ChainID,
-		QueryId: icqkeeper.GenerateQueryHash(
-			s.path.EndpointA.ConnectionID,
-			s.chainB.ChainID,
-			"cosmos.staking.v1beta1.Query/Validators",
-			bz,
-			icstypes.ModuleName,
-		),
-		Result:      s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshal(&qvr),
-		Height:      s.chainB.CurrentHeader.Height,
-		FromAddress: TestOwnerAddress,
-	}
-	_, err = icqmsgSrv.SubmitQueryResponse(sdktypes.WrapSDKContext(ctx), &qmsg)
-	s.Require().NoError(err)
-
-	valsetInterval := uint64(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetParam(ctx, icstypes.KeyValidatorSetInterval))
-	s.coordinator.CommitNBlocks(s.chainA, valsetInterval)
-	s.coordinator.CommitNBlocks(s.chainB, valsetInterval)
+	// valsetInterval := uint64(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetParam(ctx, icstypes.KeyValidatorSetInterval))
+	s.coordinator.CommitNBlocks(s.chainA, 2)
+	s.coordinator.CommitNBlocks(s.chainB, 2)
 }
 
 func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
@@ -115,4 +97,12 @@ func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
 
 	return path
+}
+
+func GetICSKeeper(t *testing.T) (*icskeeper.Keeper, sdk.Context) {
+	app := app.Setup(t, false)
+	keeper := app.InterchainstakingKeeper
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
+
+	return &keeper, ctx
 }

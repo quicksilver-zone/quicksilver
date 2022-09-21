@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -55,13 +55,11 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 	}
 
 	// generate delegate accounts
-	delegateAccountCount := int(k.GetParam(ctx, types.KeyDelegateAccountCount))
-	for i := 0; i < delegateAccountCount; i++ {
-		portOwner := fmt.Sprintf("%s.delegate.%d", chainID, i)
-		if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
-			return err
-		}
+	portOwner = chainID + ".delegate"
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+		return err
 	}
+
 	err = k.EmitValsetRequery(ctx, p.ConnectionId, chainID)
 	if err != nil {
 		return err
@@ -83,7 +81,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 }
 
 func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, portOwner string) error {
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionID, portOwner); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionID, portOwner, ""); err != nil { // todo: add version
 		return err
 	}
 	portID, _ := icatypes.NewControllerPortID(portOwner)

@@ -12,37 +12,40 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 enum Action {
   option (gogoproto.goproto_enum_prefix) = false;
 
+  // Undefined action (per protobuf spec)
+  ActionUndefined = 0;
   // Initial claim action
-  ActionInitialClaim = 0;
+  ActionInitialClaim = 1;
   // Deposit tier 1 (e.g. > 5% of base_value)
-  ActionDepositT1 = 1;
+  ActionDepositT1 = 2;
   // Deposit tier 2 (e.g. > 10% of base_value)
-  ActionDepositT2 = 2;
+  ActionDepositT2 = 3;
   // Deposit tier 3 (e.g. > 15% of base_value)
-  ActionDepositT3 = 3;
+  ActionDepositT3 = 4;
   // Deposit tier 4 (e.g. > 22% of base_value)
-  ActionDepositT4 = 4;
+  ActionDepositT4 = 5;
   // Deposit tier 5 (e.g. > 30% of base_value)
-  ActionDepositT5 = 5;
+  ActionDepositT5 = 6;
   // Active QCK delegation
-  ActionStakeQCK = 6;
+  ActionStakeQCK = 7;
   // Intent is set
-  ActionSignalIntent = 7;
+  ActionSignalIntent = 8;
   // Cast governance vote on QS
-  ActionQSGov = 8;
+  ActionQSGov = 9;
   // Governance By Proxy (GbP): cast vote on remote zone
-  ActionGbP = 9;
+  ActionGbP = 10;
   // Provide liquidity on Osmosis
-  ActionOsmosis = 10;
+  ActionOsmosis = 11;
 }
 
 // Status is used as an enum to denote zone status.
 enum Status {
   option (gogoproto.goproto_enum_prefix) = false;
 
-  StatusActive = 0;
-  StatusFuture = 1;
-  StatusExpired = 2;
+  StatusUndefined = 0;
+  StatusActive = 1;
+  StatusFuture = 2;
+  StatusExpired = 3;
 }
 
 // ZoneDrop represents an airdrop for a specific zone.

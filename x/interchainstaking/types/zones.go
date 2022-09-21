@@ -8,18 +8,14 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 func (z Zone) SupportMultiSend() bool { return z.MultiSend }
 func (z Zone) SupportLsm() bool       { return z.LiquidityModule }
 
 func (z Zone) IsDelegateAddress(addr string) bool {
-	for _, acc := range z.DelegationAddresses {
-		if acc.Address == addr {
-			return true
-		}
-	}
-	return false
+	return z.DelegationAddress.Address == addr
 }
 
 func (z *Zone) GetValidatorByValoper(valoper string) (*Validator, bool) {
@@ -31,23 +27,18 @@ func (z *Zone) GetValidatorByValoper(valoper string) (*Validator, bool) {
 	return nil, false
 }
 
-func (z *Zone) GetDelegationAccountByAddress(address string) (*ICAAccount, error) {
-	if z.DelegationAddresses == nil {
-		return nil, fmt.Errorf("no delegation accounts set: %v", z)
+func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
+	if z.DelegationAddress == nil {
+		return nil, fmt.Errorf("no delegation account set: %v", z)
 	}
-	for _, account := range z.DelegationAddresses {
-		if account.GetAddress() == address {
-			return account, nil
-		}
-	}
-	return nil, fmt.Errorf("unable to find delegation account: %s", address)
+	return z.DelegationAddress, nil
 }
 
 func (z *Zone) ValidateCoinsForZone(ctx sdk.Context, coins sdk.Coins) error {
 	zoneVals := z.GetValidatorsAddressesAsSlice()
 
 COINS:
-	for _, coin := range coins {
+	for _, coin := range coins.Sort() {
 		if coin.Denom == z.BaseDenom {
 			continue
 		}
@@ -67,9 +58,7 @@ COINS:
 // this method exist to make testing easier!
 func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins) DelegatorIntent {
 	// coinIntent is ordinal
-	fmt.Println("YO", intent, inAmount)
 	intent = intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount))
-	fmt.Println("YO", intent)
 	return intent
 }
 
@@ -82,7 +71,6 @@ func (z *Zone) UpdateIntentWithMemo(intent DelegatorIntent, memo string, multipl
 	}
 
 	intent = intent.AddOrdinal(multiplier, memoIntent)
-
 	return intent, nil
 }
 
@@ -152,7 +140,7 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 }
 
 func (z *Zone) GetValidatorsSorted() []*Validator {
-	sort.Slice(z.Validators, func(i, j int) bool {
+	sort.SliceStable(z.Validators, func(i, j int) bool {
 		return z.Validators[i].ValoperAddress < z.Validators[j].ValoperAddress
 	})
 	return z.Validators
@@ -167,14 +155,6 @@ func (z Zone) GetValidatorsAddressesAsSlice() []string {
 	sort.Strings(l)
 
 	return l
-}
-
-func (z *Zone) GetDelegationAccounts() []*ICAAccount {
-	delegationAccounts := z.DelegationAddresses
-	sort.Slice(delegationAccounts, func(i, j int) bool {
-		return delegationAccounts[i].Address < delegationAccounts[j].Address
-	})
-	return delegationAccounts
 }
 
 func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
@@ -196,7 +176,7 @@ func (z *Zone) DefaultAggregateIntents() ValidatorIntents {
 	valCount := sdk.NewInt(int64(len(out)))
 
 	// normalise the array (divide everything by length of intent list)
-	for _, key := range out.Keys() {
+	for _, key := range utils.Keys(out) {
 		if val, ok := out[key]; ok {
 			val.Weight = val.Weight.Quo(sdk.NewDecFromInt(valCount))
 			out[key] = val

@@ -10,7 +10,7 @@ import (
 func TestMsgClaim_ValidateBasic(t *testing.T) {
 	type fields struct {
 		ChainId string
-		Action  int32
+		Action  int64
 		Address string
 		Proofs  []*Proof
 	}

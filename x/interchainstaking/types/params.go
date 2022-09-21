@@ -58,10 +58,6 @@ func validateParams(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.DelegationAccountCount <= 0 {
-		return fmt.Errorf("delegate account count must be positive: %d", v.DelegationAccountCount)
-	}
-
 	if v.DepositInterval <= 0 {
 		return fmt.Errorf("deposit interval must be positive: %d", v.DepositInterval)
 	}
@@ -88,10 +84,9 @@ func NewParams(
 	commissionRate sdk.Dec,
 ) Params {
 	return Params{
-		DelegationAccountCount: delegateAccountCount,
-		DepositInterval:        depositInterval,
-		ValidatorsetInterval:   valsetInterval,
-		CommissionRate:         commissionRate,
+		DepositInterval:      depositInterval,
+		ValidatorsetInterval: valsetInterval,
+		CommissionRate:       commissionRate,
 	}
 }
 
@@ -113,7 +108,6 @@ func ParamKeyTable() paramtypes.KeyTable {
 // ParamSetPairs implements params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyDelegateAccountCount, &p.DelegationAccountCount, validatePositiveInt),
 		paramtypes.NewParamSetPair(KeyDepositInterval, &p.DepositInterval, validatePositiveInt),
 		paramtypes.NewParamSetPair(KeyValidatorSetInterval, &p.ValidatorsetInterval, validatePositiveInt),
 		paramtypes.NewParamSetPair(KeyCommissionRate, &p.CommissionRate, validateNonNegativeDec),

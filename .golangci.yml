@@ -2,12 +2,13 @@ run:
   tests: false
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 5m
+  skip-dirs:
+    - osmosis-types/*
 
 linters:
   disable-all: true
   enable:
     - bodyclose
-    - deadcode
     - depguard
     - dogsled
     - errcheck
@@ -25,7 +26,6 @@ linters:
     - nakedret
     - exportloopref
     - staticcheck
-    - structcheck
     - stylecheck
     - typecheck
     - unconvert
@@ -33,3 +33,8 @@ linters:
     - unparam
     - misspell
     - nolintlint
+
+exclude-rules:
+  - linters:
+      - nolintlint
+    text: "without leading space"

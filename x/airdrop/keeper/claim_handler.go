@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"strings"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	osmosislockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
+	osmosislockuptypes "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
@@ -201,8 +202,8 @@ func (k Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) e
 	}
 
 	voted := false
-	k.govKeeper.IterateProposals(ctx, func(proposal gov.Proposal) (stop bool) {
-		_, found := k.govKeeper.GetVote(ctx, proposal.ProposalId, addr)
+	k.govKeeper.IterateProposals(ctx, func(proposal govv1.Proposal) (stop bool) {
+		_, found := k.govKeeper.GetVote(ctx, proposal.Id, addr)
 		if found {
 			voted = true
 			return true
@@ -299,7 +300,7 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 	return nil
 }
 
-func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, cr types.ClaimRecord) (sdk.Int, error) {
+func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, cr types.ClaimRecord) (math.Int, error) {
 	gammdenom := lockedResp.Lock.Coins.GetDenomByIndex(0)
 	poolID := "osmosis/pool" + gammdenom[strings.LastIndex(gammdenom, "/"):]
 	pd, ok := k.prKeeper.GetProtocolData(ctx, poolID)
@@ -451,8 +452,7 @@ func (k Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64) 
 		return sdk.NewCoins(), err
 	}
 
-	zoneDropAccount := types.ModuleName + "." + cr.ChainId
-	if err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, zoneDropAccount, addr, coins); err != nil {
+	if err = k.bankKeeper.SendCoins(ctx, k.GetZoneDropAccountAddress(cr.ChainId), addr, coins); err != nil {
 		return sdk.NewCoins(), err
 	}
 

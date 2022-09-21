@@ -6,12 +6,13 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
-	"sort"
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -85,7 +86,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		rate = zone.RedemptionRate
 	}
 
-	nativeTokens := msg.Value.Amount.ToDec().Mul(rate).TruncateInt()
+	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
 
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
 	k.Logger(ctx).Error("outtokens", "o", outTokens)
@@ -100,90 +101,13 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, err
 	}
 
-	userIntent, found := k.GetIntent(ctx, *zone, msg.FromAddress, false)
-
-	if !found || len(userIntent.Intents) == 0 {
-		vi := []*types.ValidatorIntent{}
-		for _, v := range zone.GetAggregateIntentOrDefault() {
-			vi = append(vi, v)
-		}
-		userIntent = types.DelegatorIntent{Delegator: msg.FromAddress, Intents: vi}
+	if zone.LiquidityModule {
+		return nil, fmt.Errorf("lsm not currently supported")
+		// if err = k.processRedemptionForLsm(ctx, *zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+		//	return nil, err
+		// }
 	}
-
-	intentMap := userIntent.ToAllocations(nativeTokens.ToDec())
-
-	targets, err := k.GetRedemptionTargets(ctx, *zone, intentMap) // map[string][string]sdk.Coin
-	if err != nil {
-		return nil, err
-	}
-
-	if len(targets) == 0 {
-		return nil, fmt.Errorf("targets can never be zero length")
-	}
-
-	sumAmount := sdk.NewCoins()
-
-	// redeemType := "tokenize"
-	redeemType := "unbond" // TODO: revert to "tokenize"
-	// does zone have LSM enabled?
-	// if !zone.LiquidityModule {
-	// 	// unbond workflow.
-	// 	redeemType = "unbond"
-	// }
-
-	msgs := make(map[string][]sdk.Msg, 0)
-
-	for _, target := range targets.Sorted() {
-		if len(target.Value) == 1 {
-			if _, ok := msgs[target.DelegatorAddress]; !ok {
-				msgs[target.DelegatorAddress] = make([]sdk.Msg, 0)
-			}
-			if redeemType == "tokenize" {
-				msgs[target.DelegatorAddress] = append(msgs[target.DelegatorAddress], &stakingtypes.MsgTokenizeShares{
-					DelegatorAddress:    target.DelegatorAddress,
-					ValidatorAddress:    target.ValidatorAddress,
-					Amount:              target.Value[0],
-					TokenizedShareOwner: msg.DestinationAddress,
-				})
-			} else {
-				msgs[target.DelegatorAddress] = append(msgs[target.DelegatorAddress], &stakingtypes.MsgUndelegate{
-					DelegatorAddress: target.DelegatorAddress,
-					ValidatorAddress: target.ValidatorAddress,
-					Amount:           target.Value[0],
-				})
-			}
-			sumAmount = sumAmount.Add(target.Value[0])
-			if _, found := k.GetWithdrawalRecord(ctx, zone, hashString, target.DelegatorAddress, target.ValidatorAddress); found {
-				return nil, fmt.Errorf("cannot withdraw twice for the same delegator/validator tuple in a single transaction")
-			}
-			k.Logger(ctx).Info("Store", "del", target.DelegatorAddress, "val", target.ValidatorAddress, "hash", hashString, "chain", zone.ChainId)
-			k.AddWithdrawalRecord(ctx, zone, target.DelegatorAddress, target.ValidatorAddress, msg.DestinationAddress, target.Value[0], msg.Value, hashString, time.Unix(0, 0))
-		}
-	}
-
-	k.Logger(ctx).Error("messages", "m", msgs)
-
-	delegators := make([]string, 0, len(msgs))
-	for delegator := range msgs {
-		delegators = append(delegators, delegator)
-	}
-	sort.Strings(delegators)
-
-	for _, delegator := range delegators {
-		icaAccount, err := zone.GetDelegationAccountByAddress(delegator)
-		if err != nil {
-			// panic here because something is terribly wrong if we can't find the delegation bucket here!!!
-			panic(err)
-		}
-		err = k.SubmitTx(ctx, msgs[delegator], icaAccount, hashString)
-		if err != nil {
-			k.Logger(ctx).Error("error submitting tx", "err", err)
-			return nil, err
-		}
-	}
-
-	if !sumAmount.IsAllLTE(sdk.NewCoins(outTokens)) {
-		k.Logger(ctx).Error("output coins > than expected!", "sum", sumAmount, "expected", outTokens)
+	if err = k.queueRedemption(ctx, *zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
 		return nil, err
 	}
 
@@ -195,7 +119,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		sdk.NewEvent(
 			types.EventTypeRedemptionRequest,
 			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Value.String()),
-			sdk.NewAttribute(types.AttributeKeyRedeemAmount, sumAmount.String()),
+			sdk.NewAttribute(types.AttributeKeyRedeemAmount, nativeTokens.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
 			sdk.NewAttribute(types.AttributeKeyRecipientChain, zone.ChainId),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, zone.ConnectionId),
@@ -203,6 +127,70 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	})
 
 	return &types.MsgRequestRedemptionResponse{}, nil
+}
+
+// processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.
+//
+//nolint:unused
+func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error {
+	intent, found := k.GetIntent(ctx, zone, sender.String(), false)
+	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
+	var msgs []*lsmstakingtypes.MsgTokenizeShares
+	intents := intent.Intents
+	if !found {
+		// if user has no intent set (this can happen if redeeming tokens that were obtained offchain), use global intent.
+		// Note: this can be improved; user will receive a bunch of tokens.
+		intents = zone.AggregateIntent
+	}
+	outstanding := nativeTokens
+	distribution := make(map[string]math.Int, 0)
+	for _, valoper := range utils.Keys(intents) {
+		intent := intents[valoper]
+		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
+		distribution[valoper] = thisAmount
+		outstanding = outstanding.Sub(thisAmount)
+		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
+			DelegatorAddress:    zone.DelegationAddress.Address,
+			ValidatorAddress:    intent.ValoperAddress,
+			Amount:              sdk.NewCoin(zone.BaseDenom, thisAmount),
+			TokenizedShareOwner: destination,
+		})
+	}
+
+	// add unallocated dust.
+	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding)
+	var sdkMsgs []sdk.Msg
+	for _, msg := range msgs {
+		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
+	}
+	k.AddWithdrawalRecord(ctx, zone, sender.String(), distribution, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
+
+	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash)
+}
+
+// queueRedemption will determine based on zone intent, the tokens to unbond, and add a withdrawal record with status QUEUED.
+func (k *Keeper) queueRedemption(ctx sdk.Context, zone types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error { //nolint:unparam // we know that the error is always nil
+	distribution := make(map[string]math.Int, 0)
+	outstanding := nativeTokens
+
+	for _, valoper := range utils.Keys(zone.AggregateIntent) {
+		intent := zone.AggregateIntent[valoper]
+		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
+		outstanding = outstanding.Sub(thisAmount)
+		distribution[valoper] = thisAmount
+	}
+
+	k.AddWithdrawalRecord(ctx, zone, sender.String(), distribution, destination, sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens)), burnAmount, hash, WithdrawStatusQueued, time.Unix(0, 0))
+
+	return nil
+}
+
+func IntentSliceToMap(in []*types.ValidatorIntent) (out map[string]*types.ValidatorIntent) {
+	out = make(map[string]*types.ValidatorIntent, 0)
+	for _, intent := range in {
+		out[intent.ValoperAddress] = intent
+	}
+	return
 }
 
 func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {
@@ -221,7 +209,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 
 	intent := types.DelegatorIntent{
 		Delegator: msg.FromAddress,
-		Intents:   msg.Intents,
+		Intents:   IntentSliceToMap(msg.Intents),
 	}
 
 	k.SetIntent(ctx, zone, intent, false)
@@ -259,18 +247,8 @@ func (k msgServer) validateIntents(zone types.Zone, intents []*types.ValidatorIn
 }
 
 func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionID string, chainID string) error {
-	bondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
-	bz1, err := k.cdc.Marshal(&bondedQuery)
-	if err != nil {
-		return err
-	}
-	unbondedQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusUnbonded}
-	bz2, err := k.cdc.Marshal(&unbondedQuery)
-	if err != nil {
-		return err
-	}
-	unbondingQuery := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusUnbonding}
-	bz3, err := k.cdc.Marshal(&unbondingQuery)
+	query := stakingtypes.QueryValidatorsRequest{}
+	bz1, err := k.cdc.Marshal(&query)
 	if err != nil {
 		return err
 	}
@@ -283,28 +261,6 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionID string, chainID 
 		chainID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz1,
-		sdk.NewInt(period),
-		types.ModuleName,
-		"valset",
-		0,
-	)
-	k.ICQKeeper.MakeRequest(
-		ctx,
-		connectionID,
-		chainID,
-		"cosmos.staking.v1beta1.Query/Validators",
-		bz2,
-		sdk.NewInt(period),
-		types.ModuleName,
-		"valset",
-		0,
-	)
-	k.ICQKeeper.MakeRequest(
-		ctx,
-		connectionID,
-		chainID,
-		"cosmos.staking.v1beta1.Query/Validators",
-		bz3,
 		sdk.NewInt(period),
 		types.ModuleName,
 		"valset",

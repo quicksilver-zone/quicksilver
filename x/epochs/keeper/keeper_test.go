@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -22,9 +21,9 @@ type KeeperTestSuite struct {
 }
 
 // Test helpers
-func (suite *KeeperTestSuite) DoSetupTest(t require.TestingT) {
+func (suite *KeeperTestSuite) DoSetupTest(t *testing.T) {
 	checkTx := false
-	suite.app = app.Setup(checkTx)
+	suite.app = app.Setup(t, checkTx)
 
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{})
 
