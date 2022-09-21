@@ -49,9 +49,10 @@ var (
 	KeyPrefixPortMapping      = []byte{0x03}
 	KeyPrefixReceipt          = []byte{0x04}
 	KeyPrefixWithdrawalRecord = []byte{0x05}
-	KeyPrefixDelegation       = []byte{0x06}
-	KeyPrefixDelegationPlan   = []byte{0x07}
-	KeyPrefixSnapshotIntent   = []byte{0x08}
+	KeyPrefixUnbondingRecord  = []byte{0x06}
+	KeyPrefixDelegation       = []byte{0x07}
+	KeyPrefixDelegationPlan   = []byte{0x08}
+	KeyPrefixSnapshotIntent   = []byte{0x09}
 )
 
 func KeyPrefix(p string) []byte {

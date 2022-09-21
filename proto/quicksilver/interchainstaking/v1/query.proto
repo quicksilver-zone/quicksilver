@@ -56,6 +56,14 @@ service Query {
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/withdrawal_records";
   }
+
+
+  // UnbondingRecords provides data on the active unbondings.
+  rpc UnbondingRecords(QueryUnbondingRecordsRequest)
+      returns (QueryUnbondingRecordsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/interchainstaking/v1/unbonding_records";
+  }
 }
 
 message QueryZonesInfoRequest {
@@ -118,5 +126,15 @@ message QueryWithdrawalRecordsRequest {
 
 message QueryWithdrawalRecordsResponse {
   repeated WithdrawalRecord withdrawals = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryUnbondingRecordsRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryUnbondingRecordsResponse {
+  repeated UnbondingRecord Unbondings = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

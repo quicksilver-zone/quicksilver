@@ -147,7 +147,7 @@ func (k Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdra
 	}
 
 	withdrawalrecords := make([]types.WithdrawalRecord, 0)
-	k.IterateZoneWithdrawalRecords(ctx, &zone, func(index int64, record types.WithdrawalRecord) (stop bool) {
+	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
 		if record.Delegator == req.DelegatorAddress {
 			withdrawalrecords = append(withdrawalrecords, record)
 		}
@@ -168,4 +168,17 @@ func (k Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalR
 	withdrawalrecords := k.AllWithdrawalRecords(ctx)
 
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+}
+
+func (k Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRecordsRequest) (*types.QueryUnbondingRecordsResponse, error) {
+	// TODO: implement pagination
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	unbondings := k.AllUnbondingRecords(ctx)
+
+	return &types.QueryUnbondingRecordsResponse{Unbondings: unbondings}, nil
 }

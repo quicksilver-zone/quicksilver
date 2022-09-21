@@ -453,7 +453,7 @@ func NewQuicksilver(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.ICAControllerKeeper,
-		scopedInterchainStakingKeeper,
+		&scopedInterchainStakingKeeper,
 		app.InterchainQueryKeeper,
 		*app.IBCKeeper,
 		app.GetSubspace(interchainstakingtypes.ModuleName),

@@ -1,13 +1,40 @@
 FROM golang:1.18-alpine3.15 AS builder
-RUN apk add --no-cache make git gcc musl-dev openssl-dev linux-headers 
+RUN apk add --no-cache git musl-dev openssl-dev linux-headers ca-certificates build-base
 
 WORKDIR /src/app/
 
 COPY go.mod go.sum* ./
-RUN go mod download
+
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/root/go/pkg/mod \
+    go mod download
+
+# Cosmwasm - download correct libwasmvm version
+RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/libwasmvm_muslc.$(uname -m).a \
+      -O /lib/libwasmvm_muslc.a
+
+# Cosmwasm - verify checksum
+RUN wget https://github.com/CosmWasm/wasmvm/releases/download/v1.0.0/checksums.txt -O /tmp/checksums.txt && \
+    sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep $(uname -m) | cut -d ' ' -f 1)
 
 COPY . .
-RUN make build
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/root/go/pkg/mod \
+    VERSION=$(echo $(git describe --tags) | sed 's/^v//') && \
+    COMMIT=$(git log -1 --format='%H') && \
+    go build \
+      -mod=readonly \
+      -tags "netgo,ledger,muslc" \
+      -ldflags "-X github.com/cosmos/cosmos-sdk/version.Name="quicksilver" \
+              -X github.com/cosmos/cosmos-sdk/version.AppName="quicksilverd" \
+              -X github.com/cosmos/cosmos-sdk/version.Version=$VERSION \
+              -X github.com/cosmos/cosmos-sdk/version.Commit=$COMMIT \
+              -X github.com/cosmos/cosmos-sdk/version.BuildTags='netgo,ledger,muslc' \
+              -w -s -linkmode=external -extldflags '-Wl,-z,muldefs -static'" \
+      -trimpath \
+      -o /src/app/build/ \
+      ./...
 
 # Add to a distroless container
 FROM alpine:3.15

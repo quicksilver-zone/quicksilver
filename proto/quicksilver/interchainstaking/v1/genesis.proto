@@ -42,6 +42,7 @@ message Zone {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+  int64 unbonding_period = 22;
 }
 
 message ICAAccount {
@@ -56,10 +57,15 @@ message ICAAccount {
   uint32 balance_waitgroup = 5;
 }
 
+message Distribution {
+  string valoper = 1;
+  uint64 amount = 2;
+}
+
 message WithdrawalRecord {
   string chain_id = 1;
   string delegator = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  map<string, int64> distribution = 3;
+  repeated Distribution distribution = 3;
   string recipient = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   repeated cosmos.base.v1beta1.Coin amount = 5 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
@@ -72,8 +78,15 @@ message WithdrawalRecord {
   ];
   string txhash = 7;
   int32 status = 8;
-  google.protobuf.Timestamp completion_time = 9
-      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+    google.protobuf.Timestamp completion_time = 9
+     [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+}
+
+message UnbondingRecord {
+  string chain_id = 1;
+  int64 epoch_number = 2;
+  string validator = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated string related_txhash = 4;
 }
 
 message TransferRecord {
@@ -187,5 +200,7 @@ message GenesisState {
   repeated DelegatorIntentsForZone delegator_intents = 5
       [ (gogoproto.nullable) = false ];
   repeated PortConnectionTuple port_connections = 6
+      [ (gogoproto.nullable) = false ];
+  repeated WithdrawalRecord withdrawal_records = 7
       [ (gogoproto.nullable) = false ];
 }

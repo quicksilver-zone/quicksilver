@@ -6,11 +6,11 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"sort"
 	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
@@ -40,13 +40,13 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, err
 	}
 
+	if msg.Value.IsZero() {
+		return nil, fmt.Errorf("cannot redeem zero-value coins")
+	}
+
 	// validate recipient address
 	if len(msg.DestinationAddress) == 0 {
 		return nil, fmt.Errorf("recipient address not provided")
-	}
-
-	if _, _, err = bech32.DecodeAndConvert(msg.DestinationAddress); err != nil {
-		return nil, err
 	}
 
 	var zone *types.Zone
@@ -102,11 +102,11 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	if zone.LiquidityModule {
-		return nil, fmt.Errorf("lsm not currently supported")
-		// if err = k.processRedemptionForLsm(ctx, *zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
-		//	return nil, err
-		// }
+		if err = k.processRedemptionForLsm(ctx, *zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+			return nil, err
+		}
 	}
+
 	if err = k.queueRedemption(ctx, *zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
 		return nil, err
 	}
@@ -130,59 +130,79 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 }
 
 // processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.
-//
-//nolint:unused
 func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error {
 	intent, found := k.GetIntent(ctx, zone, sender.String(), false)
 	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
-	var msgs []*lsmstakingtypes.MsgTokenizeShares
+	msgs := make([]*lsmstakingtypes.MsgTokenizeShares, 0)
 	intents := intent.Intents
-	if !found {
+	if !found || len(intents) == 0 {
 		// if user has no intent set (this can happen if redeeming tokens that were obtained offchain), use global intent.
 		// Note: this can be improved; user will receive a bunch of tokens.
-		intents = zone.AggregateIntent
+		intents = zone.GetAggregateIntentOrDefault()
 	}
 	outstanding := nativeTokens
-	distribution := make(map[string]math.Int, 0)
-	for _, valoper := range utils.Keys(intents) {
+	distribution := make(map[string]uint64, 0)
+	intentKeys := utils.Keys(intents)
+	for _, valoper := range intentKeys {
 		intent := intents[valoper]
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
-		distribution[valoper] = thisAmount
+		distribution[valoper] = thisAmount.Uint64()
 		outstanding = outstanding.Sub(thisAmount)
+	}
+
+	distribution[intentKeys[0]] += outstanding.Uint64()
+
+	for _, valoper := range utils.Keys(distribution) {
 		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
 			DelegatorAddress:    zone.DelegationAddress.Address,
-			ValidatorAddress:    intent.ValoperAddress,
-			Amount:              sdk.NewCoin(zone.BaseDenom, thisAmount),
+			ValidatorAddress:    valoper,
+			Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(distribution[valoper])),
 			TokenizedShareOwner: destination,
 		})
 	}
-
 	// add unallocated dust.
 	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding)
-	var sdkMsgs []sdk.Msg
+	sdkMsgs := make([]sdk.Msg, 0)
 	for _, msg := range msgs {
 		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
 	}
-	k.AddWithdrawalRecord(ctx, zone, sender.String(), distribution, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
+	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
 
 	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash)
 }
 
 // queueRedemption will determine based on zone intent, the tokens to unbond, and add a withdrawal record with status QUEUED.
-func (k *Keeper) queueRedemption(ctx sdk.Context, zone types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error { //nolint:unparam // we know that the error is always nil
-	distribution := make(map[string]math.Int, 0)
+func (k *Keeper) queueRedemption(
+	ctx sdk.Context,
+	zone types.Zone,
+	sender sdk.AccAddress,
+	destination string,
+	nativeTokens math.Int,
+	burnAmount sdk.Coin,
+	hash string,
+) error { //nolint:unparam // we know that the error is always nil
+	distribution := make([]*types.Distribution, 0)
 	outstanding := nativeTokens
 
-	for _, valoper := range utils.Keys(zone.AggregateIntent) {
-		intent := zone.AggregateIntent[valoper]
+	aggregateIntent := zone.GetAggregateIntentOrDefault()
+	sortedAIKeys := utils.Keys(aggregateIntent)
+	for i, valoper := range sortedAIKeys {
+		intent := aggregateIntent[valoper]
+		fmt.Printf("[%d] key %v: %v\n", i, valoper, intent)
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
 		outstanding = outstanding.Sub(thisAmount)
-		distribution[valoper] = thisAmount
+		dist := types.Distribution{
+			Valoper: valoper,
+			Amount:  thisAmount.Uint64(),
+		}
+		distribution = append(distribution, &dist)
 	}
+	// handle dust ? ok to do uint64 calc here or do we use math.Int (just more verbose) ?
+	distribution[0].Amount += outstanding.Uint64()
 
 	k.AddWithdrawalRecord(
 		ctx,
-		zone,
+		zone.ChainId,
 		sender.String(),
 		distribution,
 		destination,
@@ -190,7 +210,7 @@ func (k *Keeper) queueRedemption(ctx sdk.Context, zone types.Zone, sender sdk.Ac
 		burnAmount,
 		hash,
 		WithdrawStatusQueued,
-		time.Unix(0, 0),
+		time.Time{},
 	)
 
 	return nil
@@ -198,6 +218,11 @@ func (k *Keeper) queueRedemption(ctx sdk.Context, zone types.Zone, sender sdk.Ac
 
 func IntentSliceToMap(in []*types.ValidatorIntent) (out map[string]*types.ValidatorIntent) {
 	out = make(map[string]*types.ValidatorIntent, 0)
+
+	sort.SliceStable(in, func(i, j int) bool {
+		return in[i].ValoperAddress > in[j].ValoperAddress
+	})
+
 	for _, intent := range in {
 		out[intent.ValoperAddress] = intent
 	}

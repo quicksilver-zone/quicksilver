@@ -98,14 +98,14 @@ services:
       - osmosisd
       - start
   hermes:
-    image: quicksilverzone/hermes:v0.15.0
+    image: quicksilverzone/hermes:v1.0.0
     hostname: hermes
     volumes:
       - ./scripts/config/hermes.toml:/tmp/hermes.toml
       - ./data/hermes:/hermes/.hermes
     command:
       - hermes
-      - -c
+      - --config
       - /tmp/hermes.toml
       - start
     restart: always
@@ -113,7 +113,7 @@ services:
       context: .
       dockerfile: Dockerfile.hermes
   icq:
-    image: quicksilverzone/interchain-queries:v0.4.5
+    image: quicksilverzone/interchain-queries:v0.5.0
     volumes:
       - ./data/icq:/icq/.icq
     command:
@@ -121,14 +121,18 @@ services:
       - run
     restart: always
   relayer:
-    image: quicksilverzone/relayer:v2.0.0
+    image: quicksilverzone/relayer:v2.1.1
+    build:
+      context: .
+      dockerfile: Dockerfile.relayer
     volumes:
-      - ./data/rly:/relayer/.relayer
+      - ./data/rly:/rly/.relayer
     command:
+      - rly
       - start
       - demo
-      - -p
-      - events
-      - -b
-      - "100"
+      #- -p
+      #- events
+      #- -b
+      #- "100"
     restart: always

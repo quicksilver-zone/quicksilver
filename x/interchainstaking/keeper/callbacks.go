@@ -153,10 +153,14 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
+	k.Logger(ctx).Error("-------------- delegations callback ----------")
+
 	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
 }
 
 func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	k.Logger(ctx).Error("-------------- delegation callback ----------")
+
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())

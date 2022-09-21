@@ -1,6 +1,6 @@
-default_chain: quicksilver
+default_chain: qstest-1
 chains:
-  quicksilver:
+  qstest-1:
     key: test
     chain-id: qstest-1
     rpc-addr: http://quicksilver:26657
@@ -14,7 +14,7 @@ chains:
     timeout: 20s
     output-format: json
     sign-mode: direct
-  liquidstaking1:
+  lstest-1:
     key: test
     chain-id: lstest-1
     rpc-addr: http://testzone1-1:26657
@@ -28,14 +28,14 @@ chains:
     timeout: 20s
     output-format: json
     sign-mode: direct
-  liquidstaking2:
+  lstest-2:
     key: test
     chain-id: lstest-2
     rpc-addr: http://testzone2-1:26657
     grpc-addr: http://testzone2-1:9090
     account-prefix: osmo
     keyring-backend: test
-    gas-adjustment: 1.2
+    gas-adjustment: 1.5
     gas-prices: 0.00uosmo
     key-directory: /root/.icq/keys
     debug: false

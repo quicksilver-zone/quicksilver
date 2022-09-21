@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
@@ -14,6 +15,12 @@ import (
 func main() {
 	setupConfig()
 	cmdcfg.RegisterDenoms()
+
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	app.DefaultNodeHome = filepath.Join(userHomeDir, ".quicksilverd")
 
 	rootCmd, _ := NewRootCmd()
 
