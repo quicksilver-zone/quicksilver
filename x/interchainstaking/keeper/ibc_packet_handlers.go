@@ -77,7 +77,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
 			response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			responseAny := txMsgData.MsgResponses[msgIndex]
+			err = k.cdc.UnpackAny(responseAny, &response)
+
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
 				return err
@@ -90,7 +92,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
 			response := lsmstakingtypes.MsgTokenizeSharesResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			responseAny := txMsgData.MsgResponses[msgIndex]
+			err = k.cdc.UnpackAny(responseAny, &response)
+
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgTokenizeShares response", "error", err)
 				return err
@@ -103,7 +107,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgDelegate":
 			response := stakingtypes.MsgDelegateResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			responseAny := txMsgData.MsgResponses[msgIndex]
+			err = k.cdc.UnpackAny(responseAny, &response)
+
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgDelegate response", "error", err)
 				return err
@@ -116,7 +122,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
 			response := stakingtypes.MsgBeginRedelegateResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			responseAny := txMsgData.MsgResponses[msgIndex]
+			err = k.cdc.UnpackAny(responseAny, &response)
+
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgBeginRedelegate response", "error", err)
 				return err
@@ -128,7 +136,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgUndelegate":
 			response := stakingtypes.MsgUndelegateResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			responseAny := txMsgData.MsgResponses[msgIndex]
+			err = k.cdc.UnpackAny(responseAny, &response)
+
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgDelegate response", "error", err)
 				return err
@@ -141,7 +151,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.bank.v1beta1.MsgSend":
 			response := banktypes.MsgSendResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			responseAny := txMsgData.MsgResponses[msgIndex]
+			err = k.cdc.UnpackAny(responseAny, &response)
+
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgSend response", "error", err)
 				return err
@@ -154,7 +166,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.bank.v1beta1.MsgMultiSend":
 			response := banktypes.MsgMultiSendResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			responseAny := txMsgData.MsgResponses[msgIndex]
+			err = k.cdc.UnpackAny(responseAny, &response)
+
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
 				return err
@@ -166,7 +180,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":
 			response := distrtypes.MsgSetWithdrawAddressResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			responseAny := txMsgData.MsgResponses[msgIndex]
+			err = k.cdc.UnpackAny(responseAny, &response)
+
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
 				return err
@@ -178,7 +194,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/ibc.applications.transfer.v1.MsgTransfer":
 			response := ibctransfertypes.MsgTransferResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			responseAny := txMsgData.MsgResponses[msgIndex]
+			err = k.cdc.UnpackAny(responseAny, &response)
+
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgTransfer response", "error", err)
 				return err
