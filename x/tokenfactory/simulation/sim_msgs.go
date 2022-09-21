@@ -3,9 +3,9 @@ package simulation
 import (
 	"errors"
 
+	"github.com/cosmos/cosmos-sdk/store"
 	legacysimulationtype "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/ingenuity-build/quicksilver/osmoutils"
 	"github.com/ingenuity-build/quicksilver/simulation/simtypes"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
@@ -116,7 +116,7 @@ func accountCreatedTokenFactoryDenom(k keeper.Keeper, ctx sdk.Context) simtypes.
 
 func getTokenFactoryDenomAndItsAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx sdk.Context, acc legacysimulationtype.Account) (string, sdk.AccAddress, error) {
 	store := k.GetCreatorPrefixStore(ctx, acc.Address.String())
-	denoms := osmoutils.GatherAllKeysFromStore(store)
+	denoms := GatherAllKeysFromStore(store)
 	denom := simtypes.RandSelect(sim, denoms...)
 
 	authData, err := k.GetAuthorityMetadata(ctx, denom)
@@ -129,4 +129,15 @@ func getTokenFactoryDenomAndItsAdmin(k keeper.Keeper, sim *simtypes.SimCtx, ctx 
 		return "", nil, err
 	}
 	return denom, addr, nil
+}
+
+func GatherAllKeysFromStore(storeObj store.KVStore) []string {
+	iterator := storeObj.Iterator(nil, nil)
+	defer iterator.Close()
+
+	keys := []string{}
+	for ; iterator.Valid(); iterator.Next() {
+		keys = append(keys, string(iterator.Key()))
+	}
+	return keys
 }

@@ -2,23 +2,64 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-
-	"github.com/ingenuity-build/quicksilver/app/apptesting"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/stretchr/testify/suite"
+	"github.com/tendermint/tendermint/crypto/ed25519"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 type KeeperTestSuite struct {
-	apptesting.KeeperTestHelper
+	suite.Suite
+
+	App *app.Quicksilver
+	Ctx sdk.Context
 
 	queryClient types.QueryClient
 	msgServer   types.MsgServer
+	QueryHelper *baseapp.QueryServiceTestHelper
 	// defaultDenom is on the suite, as it depends on the creator test address.
 	defaultDenom string
+	TestAccs     []sdk.AccAddress
+}
+
+// Setup sets up basic environment for suite (App, Ctx, and test accounts)
+func (s *KeeperTestSuite) Setup() {
+	s.App = app.Setup(s.T(), false)
+	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
+	s.QueryHelper = &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: s.App.GRPCQueryRouter(),
+		Ctx:             s.Ctx,
+	}
+
+	s.TestAccs = CreateRandomAccounts(3)
+}
+
+// CreateRandomAccounts is a function return a list of randomly generated AccAddresses
+func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
+	testAddrs := make([]sdk.AccAddress, numAccts)
+	for i := 0; i < numAccts; i++ {
+		pk := ed25519.GenPrivKey().PubKey()
+		testAddrs[i] = sdk.AccAddress(pk.Address())
+	}
+
+	return testAddrs
+}
+
+// FundAcc funds target address with specified amount.
+func (s *KeeperTestSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
+	err := s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, amounts)
+	s.NoError(err)
+	err = s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, acc, amounts)
+	s.NoError(err)
+
 }
 
 func TestKeeperTestSuite(t *testing.T) {
