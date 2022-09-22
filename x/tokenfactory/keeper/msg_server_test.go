@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 
 // TestCreateDenomMsg tests TypeMsgCreateDenom message is emitted on a successful denom creation
 func (suite *KeeperTestSuite) TestCreateDenomMsg() {
-	defaultDenomCreationFee := types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uosmo", sdk.NewInt(50000000)))}
+	defaultDenomCreationFee := types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000000)))}
 	for _, tc := range []struct {
 		desc                  string
 		denomCreationFee      types.Params
@@ -201,12 +201,12 @@ func (suite *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "uosmo",
+						Denom:    "uqck",
 						Exponent: 6,
 					},
 				},
 				Base:    suite.defaultDenom,
-				Display: "uosmo",
+				Display: "uqck",
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
@@ -223,12 +223,12 @@ func (suite *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 						Exponent: 0,
 					},
 					{
-						Denom:    "uosmo",
+						Denom:    "uqck",
 						Exponent: 6,
 					},
 				},
 				Base:    fmt.Sprintf("factory/%s/litecoin", suite.TestAccs[0].String()),
-				Display: "uosmo",
+				Display: "uqck",
 				Name:    "OSMO",
 				Symbol:  "OSMO",
 			}),
