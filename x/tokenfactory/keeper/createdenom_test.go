@@ -5,7 +5,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/app/apptesting"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
@@ -64,7 +63,7 @@ func (suite *KeeperTestSuite) TestMsgCreateDenom() {
 func (suite *KeeperTestSuite) TestCreateDenom() {
 	var (
 		primaryDenom            = types.DefaultParams().DenomCreationFee[0].Denom
-		secondaryDenom          = apptesting.SecondaryDenom
+		secondaryDenom          = SecondaryDenom
 		defaultDenomCreationFee = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdk.NewInt(50000000)))}
 		twoDenomCreationFee     = types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin(primaryDenom, sdk.NewInt(50000000)), sdk.NewCoin(secondaryDenom, sdk.NewInt(50000000)))}
 		nilCreationFee          = types.Params{DenomCreationFee: nil}

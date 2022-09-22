@@ -7,6 +7,10 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
+const (
+	BaseCoinUnit = "uqck"
+)
+
 // Parameter store keys.
 var (
 	KeyDenomCreationFee = []byte("DenomCreationFee")
@@ -50,4 +54,10 @@ func validateDenomCreationFee(i interface{}) error {
 	}
 
 	return nil
+}
+
+func DefaultParams() Params {
+	return Params{
+		DenomCreationFee: sdk.NewCoins(sdk.NewInt64Coin(BaseCoinUnit, 10_000_000)), // 10 OSMO
+	}
 }

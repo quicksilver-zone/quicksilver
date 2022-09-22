@@ -16,6 +16,11 @@ import (
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
+var (
+	SecondaryDenom  = "ura"
+	SecondaryAmount = sdk.NewInt(100000000)
+)
+
 type KeeperTestSuite struct {
 	suite.Suite
 
@@ -62,6 +67,26 @@ func (s *KeeperTestSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 
 }
 
+func (s *KeeperTestSuite) SetupTestForInitGenesis() {
+	// Setting to True, leads to init genesis not running
+	s.App = app.Setup(s.T(), false)
+	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{})
+}
+
+// AssertEventEmitted asserts that ctx's event manager has emitted the given number of events
+// of the given type.
+func (s *KeeperTestSuite) AssertEventEmitted(ctx sdk.Context, eventTypeExpected string, numEventsExpected int) {
+	allEvents := ctx.EventManager().Events()
+	// filter out other events
+	actualEvents := make([]sdk.Event, 0)
+	for _, event := range allEvents {
+		if event.Type == eventTypeExpected {
+			actualEvents = append(actualEvents, event)
+		}
+	}
+	s.Equal(numEventsExpected, len(actualEvents))
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
@@ -69,7 +94,7 @@ func TestKeeperTestSuite(t *testing.T) {
 func (suite *KeeperTestSuite) SetupTest() {
 	suite.Setup()
 	// Fund every TestAcc with two denoms, one of which is the denom creation fee
-	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)), sdk.NewCoin(apptesting.SecondaryDenom, apptesting.SecondaryAmount))
+	fundAccsAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)), sdk.NewCoin(SecondaryDenom, SecondaryAmount))
 	for _, acc := range suite.TestAccs {
 		suite.FundAcc(acc, fundAccsAmount)
 	}

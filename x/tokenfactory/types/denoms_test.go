@@ -3,14 +3,15 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
-	appparams "github.com/ingenuity-build/quicksilver/app/params"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDeconstructDenom(t *testing.T) {
-	appparams.SetAddressPrefixes()
+	config := sdk.GetConfig()
+	cmdcfg.SetBech32Prefixes(config)
 
 	for _, tc := range []struct {
 		desc             string
@@ -69,7 +70,9 @@ func TestDeconstructDenom(t *testing.T) {
 }
 
 func TestGetTokenDenom(t *testing.T) {
-	appparams.SetAddressPrefixes()
+	config := sdk.GetConfig()
+	cmdcfg.SetBech32Prefixes(config)
+
 	for _, tc := range []struct {
 		desc     string
 		creator  string

@@ -9,11 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/CosmWasm/wasmd/x/wasm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/app"
 )
 
 func TestNoStorageWithoutProposal(t *testing.T) {
@@ -29,36 +26,36 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 	// upload reflect code
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
-	_, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
+	_, _, err = contractKeeper.Create(ctx, creator, wasmCode, nil)
 	require.Error(t, err)
 }
 
-func storeCodeViaProposal(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
-	govKeeper := osmosis.GovKeeper
-	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
-	require.NoError(t, err)
+// func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksilver, addr sdk.AccAddress) {
+// 	govKeeper := quicksilverApp.GovKeeper
+// 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
+// 	require.NoError(t, err)
 
-	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
-		p.RunAs = addr.String()
-		p.WASMByteCode = wasmCode
-	})
+// 	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
+// 		p.RunAs = addr.String()
+// 		p.WASMByteCode = wasmCode
+// 	})
 
-	// when stored
-	storedProposal, err := govKeeper.SubmitProposal(ctx, src, false)
-	require.NoError(t, err)
+// 	// when stored
+// 	storedProposal, err := govKeeper.SubmitProposal(ctx, src, false)
+// 	require.NoError(t, err)
 
-	// and proposal execute
-	handler := govKeeper.Router().GetRoute(storedProposal.ProposalRoute())
-	err = handler(ctx, storedProposal.GetContent())
-	require.NoError(t, err)
-}
+// 	// and proposal execute
+// 	handler := govKeeper.Router().GetRoute(storedProposal.ProposalRoute())
+// 	err = handler(ctx, storedProposal.GetContent())
+// 	require.NoError(t, err)
+// }
 
 func TestStoreCodeProposal(t *testing.T) {
-	osmosis, ctx := CreateTestInput()
+	quicksilver, ctx := CreateTestInput()
 	myActorAddress := RandomAccountAddress()
 	wasmKeeper := quicksilver.WasmKeeper
 
-	storeCodeViaProposal(t, ctx, osmosis, myActorAddress)
+	storeCodeViaProposal(t, ctx, quicksilver, myActorAddress)
 
 	// then
 	cInfo := wasmKeeper.GetCodeInfo(ctx, 1)
