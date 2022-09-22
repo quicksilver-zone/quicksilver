@@ -15,11 +15,11 @@ import (
 
 func TestCreateDenom(t *testing.T) {
 	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
+	quicksilver, ctx := SetupCustomApp(t, actor)
 
 	// Fund actor with 100 base denom creation fees
 	actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, actor, actorAmount)
+	fundAccount(t, ctx, quicksilver, actor, actorAmount)
 
 	specs := map[string]struct {
 		createDenom *bindings.CreateDenom
@@ -50,7 +50,7 @@ func TestCreateDenom(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, actor, spec.createDenom)
+			gotErr := wasmbinding.PerformCreateDenom(quicksilver.TokenFactoryKeeper, &quicksilver.BankKeeper, ctx, actor, spec.createDenom)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -142,18 +142,18 @@ func TestChangeAdmin(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// Setup
-			osmosis, ctx := SetupCustomApp(t, tokenCreator)
+			quicksilver, ctx := SetupCustomApp(t, tokenCreator)
 
 			// Fund actor with 100 base denom creation fees
 			actorAmount := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-			fundAccount(t, ctx, osmosis, tokenCreator, actorAmount)
+			fundAccount(t, ctx, quicksilver, tokenCreator, actorAmount)
 
-			err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
+			err := wasmbinding.PerformCreateDenom(quicksilver.TokenFactoryKeeper, &quicksilver.BankKeeper, ctx, tokenCreator, &bindings.CreateDenom{
 				Subdenom: validDenom,
 			})
 			require.NoError(t, err)
 
-			err = wasmbinding.ChangeAdmin(osmosis.TokenFactoryKeeper, ctx, spec.actor, spec.changeAdmin)
+			err = wasmbinding.ChangeAdmin(quicksilver.TokenFactoryKeeper, ctx, spec.actor, spec.changeAdmin)
 			if len(spec.expErrMsg) > 0 {
 				require.Error(t, err)
 				actualErrMsg := err.Error()
@@ -167,23 +167,23 @@ func TestChangeAdmin(t *testing.T) {
 
 func TestMint(t *testing.T) {
 	creator := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, creator)
+	quicksilverApp, ctx := SetupCustomApp(t, creator)
 
 	// Fund actor with 100 base denom creation fees
 	tokenCreationFeeAmt := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
+	fundAccount(t, ctx, quicksilverApp, creator, tokenCreationFeeAmt)
 
 	// Create denoms for valid mint tests
 	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
 	}
-	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
+	err := wasmbinding.PerformCreateDenom(quicksilverApp.TokenFactoryKeeper, &quicksilverApp.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
 	emptyDenom := bindings.CreateDenom{
 		Subdenom: "",
 	}
-	err = wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &emptyDenom)
+	err = wasmbinding.PerformCreateDenom(quicksilverApp.TokenFactoryKeeper, &quicksilverApp.BankKeeper, ctx, creator, &emptyDenom)
 	require.NoError(t, err)
 
 	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
@@ -192,7 +192,7 @@ func TestMint(t *testing.T) {
 	lucky := RandomAccountAddress()
 
 	// lucky was broke
-	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	balances := quicksilverApp.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Empty(t, balances)
 
 	amount, ok := sdk.NewIntFromString("8080")
@@ -273,7 +273,7 @@ func TestMint(t *testing.T) {
 	for name, spec := range specs {
 		t.Run(name, func(t *testing.T) {
 			// when
-			gotErr := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, spec.mint)
+			gotErr := wasmbinding.PerformMint(quicksilverApp.TokenFactoryKeeper, &quicksilverApp.BankKeeper, ctx, creator, spec.mint)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)
@@ -286,29 +286,29 @@ func TestMint(t *testing.T) {
 
 func TestBurn(t *testing.T) {
 	creator := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, creator)
+	quicksilverApp, ctx := SetupCustomApp(t, creator)
 
 	// Fund actor with 100 base denom creation fees
 	tokenCreationFeeAmt := sdk.NewCoins(sdk.NewCoin(types.DefaultParams().DenomCreationFee[0].Denom, types.DefaultParams().DenomCreationFee[0].Amount.MulRaw(100)))
-	fundAccount(t, ctx, osmosis, creator, tokenCreationFeeAmt)
+	fundAccount(t, ctx, quicksilverApp, creator, tokenCreationFeeAmt)
 
 	// Create denoms for valid burn tests
 	validDenom := bindings.CreateDenom{
 		Subdenom: "MOON",
 	}
-	err := wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &validDenom)
+	err := wasmbinding.PerformCreateDenom(quicksilverApp.TokenFactoryKeeper, &quicksilverApp.BankKeeper, ctx, creator, &validDenom)
 	require.NoError(t, err)
 
 	emptyDenom := bindings.CreateDenom{
 		Subdenom: "",
 	}
-	err = wasmbinding.PerformCreateDenom(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, &emptyDenom)
+	err = wasmbinding.PerformCreateDenom(quicksilverApp.TokenFactoryKeeper, &quicksilverApp.BankKeeper, ctx, creator, &emptyDenom)
 	require.NoError(t, err)
 
 	lucky := RandomAccountAddress()
 
 	// lucky was broke
-	balances := osmosis.BankKeeper.GetAllBalances(ctx, lucky)
+	balances := quicksilverApp.BankKeeper.GetAllBalances(ctx, lucky)
 	require.Empty(t, balances)
 
 	validDenomStr := fmt.Sprintf("factory/%s/%s", creator.String(), validDenom.Subdenom)
@@ -390,7 +390,7 @@ func TestBurn(t *testing.T) {
 				Amount:        mintAmount,
 				MintToAddress: creator.String(),
 			}
-			err := wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, mintBinding)
+			err := wasmbinding.PerformMint(quicksilverApp.TokenFactoryKeeper, &quicksilverApp.BankKeeper, ctx, creator, mintBinding)
 			require.NoError(t, err)
 
 			emptyDenomMintBinding := &bindings.MintTokens{
@@ -398,11 +398,11 @@ func TestBurn(t *testing.T) {
 				Amount:        mintAmount,
 				MintToAddress: creator.String(),
 			}
-			err = wasmbinding.PerformMint(osmosis.TokenFactoryKeeper, osmosis.BankKeeper, ctx, creator, emptyDenomMintBinding)
+			err = wasmbinding.PerformMint(quicksilverApp.TokenFactoryKeeper, &quicksilverApp.BankKeeper, ctx, creator, emptyDenomMintBinding)
 			require.NoError(t, err)
 
 			// when
-			gotErr := wasmbinding.PerformBurn(osmosis.TokenFactoryKeeper, ctx, creator, spec.burn)
+			gotErr := wasmbinding.PerformBurn(quicksilverApp.TokenFactoryKeeper, ctx, creator, spec.burn)
 			// then
 			if spec.expErr {
 				require.Error(t, gotErr)

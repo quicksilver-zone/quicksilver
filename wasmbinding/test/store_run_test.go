@@ -5,10 +5,12 @@ import (
 	"os"
 	"testing"
 
+	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
+	"github.com/CosmWasm/wasmd/x/wasm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -30,25 +32,25 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 	require.Error(t, err)
 }
 
-// func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksilver, addr sdk.AccAddress) {
-// 	govKeeper := quicksilverApp.GovKeeper
-// 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
-// 	require.NoError(t, err)
+func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksilver, addr sdk.AccAddress) {
+	govKeeper := quicksilverApp.GovKeeper
+	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
+	require.NoError(t, err)
 
-// 	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
-// 		p.RunAs = addr.String()
-// 		p.WASMByteCode = wasmCode
-// 	})
+	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
+		p.RunAs = addr.String()
+		p.WASMByteCode = wasmCode
+	})
 
-// 	// when stored
-// 	storedProposal, err := govKeeper.SubmitProposal(ctx, src, false)
-// 	require.NoError(t, err)
+	// when stored
+	storedProposal, err := govKeeper.SubmitProposal(ctx, src, false)
+	require.NoError(t, err)
 
-// 	// and proposal execute
-// 	handler := govKeeper.Router().GetRoute(storedProposal.ProposalRoute())
-// 	err = handler(ctx, storedProposal.GetContent())
-// 	require.NoError(t, err)
-// }
+	// and proposal execute
+	handler := govKeeper.Router().GetRoute(storedProposal.ProposalRoute())
+	err = handler(ctx, storedProposal.GetContent())
+	require.NoError(t, err)
+}
 
 func TestStoreCodeProposal(t *testing.T) {
 	quicksilver, ctx := CreateTestInput()

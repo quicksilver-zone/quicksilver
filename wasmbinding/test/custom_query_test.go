@@ -27,7 +27,7 @@ var defaultFunds = sdk.NewCoins(
 	sdk.NewInt64Coin("ustar", 999000000),
 )
 
-func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.OsmosisApp, sdk.Context) {
+func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.Quicksilver, sdk.Context) {
 	osmosis, ctx := CreateTestInput()
 	wasmKeeper := osmosis.WasmKeeper
 
@@ -93,7 +93,7 @@ func queryCustom(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, co
 	require.NoError(t, err)
 }
 
-func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.OsmosisApp, addr sdk.AccAddress) {
+func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.Quicksilver, addr sdk.AccAddress) {
 	govKeeper := osmosis.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
 	require.NoError(t, err)
