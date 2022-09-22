@@ -60,8 +60,8 @@ func init() {
 	// quicksilver queries
 
 	// epochs
-	setWhitelistedQuery("/quicksilver.epochs.v1beta1.Query/EpochInfos", &epochtypes.QueryEpochsInfoResponse{})
-	setWhitelistedQuery("/quicksilver.epochs.v1beta1.Query/CurrentEpoch", &epochtypes.QueryCurrentEpochResponse{})
+	setWhitelistedQuery("/quicksilver.epochs.v1.Query/EpochInfos", &epochtypes.QueryEpochsInfoResponse{})
+	setWhitelistedQuery("/quicksilver.epochs.v1.Query/CurrentEpoch", &epochtypes.QueryCurrentEpochResponse{})
 
 	// mint
 	setWhitelistedQuery("/quicksilver.mint.v1beta1.Query/EpochProvisions", &minttypes.QueryEpochProvisionsResponse{})
