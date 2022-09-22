@@ -66,7 +66,7 @@ func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 	}{
 		{
 			desc:      "denom does not exist",
-			burnDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
+			burnDenom: "factory/quick1vprpg84y4c50fxpf9ngza2y0p0q3k7yrw2q8tf/evmos",
 			admin:     suite.TestAccs[0].String(),
 			valid:     false,
 		},
