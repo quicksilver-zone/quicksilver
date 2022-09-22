@@ -28,33 +28,33 @@ var defaultFunds = sdk.NewCoins(
 )
 
 func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.Quicksilver, sdk.Context) {
-	osmosis, ctx := CreateTestInput(t)
-	wasmKeeper := osmosis.WasmKeeper
+	quicksilverApp, ctx := CreateTestInput(t)
+	wasmKeeper := quicksilverApp.WasmKeeper
 
-	storeReflectCode(t, ctx, osmosis, addr)
+	storeReflectCode(t, ctx, quicksilverApp, addr)
 
 	cInfo := wasmKeeper.GetCodeInfo(ctx, 1)
 	require.NotNil(t, cInfo)
 
-	return osmosis, ctx
+	return quicksilverApp, ctx
 }
 
 func TestQueryFullDenom(t *testing.T) {
 	actor := RandomAccountAddress()
-	osmosis, ctx := SetupCustomApp(t, actor)
+	quicksilverApp, ctx := SetupCustomApp(t, actor)
 
-	reflect := instantiateReflectContract(t, ctx, osmosis, actor)
+	reflect := instantiateReflectContract(t, ctx, quicksilverApp, actor)
 	require.NotEmpty(t, reflect)
 
 	// query full denom
-	query := bindings.OsmosisQuery{
+	query := bindings.QuickSilverQuery{
 		FullDenom: &bindings.FullDenom{
 			CreatorAddr: reflect.String(),
 			Subdenom:    "ustart",
 		},
 	}
 	resp := bindings.FullDenomResponse{}
-	queryCustom(t, ctx, osmosis, reflect, query, &resp)
+	queryCustom(t, ctx, quicksilverApp, reflect, query, &resp)
 
 	expected := fmt.Sprintf("factory/%s/ustart", reflect.String())
 	require.EqualValues(t, expected, resp.Denom)
@@ -72,7 +72,7 @@ type ChainResponse struct {
 	Data []byte `json:"data"`
 }
 
-func queryCustom(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, contract sdk.AccAddress, request bindings.OsmosisQuery, response interface{}) {
+func queryCustom(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, contract sdk.AccAddress, request bindings.QuickSilverQuery, response interface{}) {
 	msgBz, err := json.Marshal(request)
 	require.NoError(t, err)
 

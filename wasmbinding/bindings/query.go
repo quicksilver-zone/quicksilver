@@ -1,8 +1,7 @@
 package bindings
 
-// OsmosisQuery contains osmosis custom queries.
-// See https://github.com/osmosis-labs/osmosis-bindings/blob/main/packages/bindings/src/query.rs
-type OsmosisQuery struct {
+// QuickSilverQuery contains quicksilver custom queries.
+type QuickSilverQuery struct {
 	/// Given a subdenom minted by a contract via `OsmosisMsg::MintTokens`,
 	/// returns the full denom as used by `BankMsg::Send`.
 	FullDenom *FullDenom `json:"full_denom,omitempty"`

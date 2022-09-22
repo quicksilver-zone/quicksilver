@@ -47,7 +47,7 @@ func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(
 // CustomQuerier dispatches custom CosmWasm bindings queries.
 func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
-		var contractQuery bindings.OsmosisQuery
+		var contractQuery bindings.QuickSilverQuery
 		if err := json.Unmarshal(request, &contractQuery); err != nil {
 			return nil, sdkerrors.Wrap(err, "osmosis query")
 		}

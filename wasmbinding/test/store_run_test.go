@@ -84,11 +84,11 @@ type HackatomExampleInitMsg struct {
 }
 
 func TestInstantiateContract(t *testing.T) {
-	coin := sdk.NewCoin("uosmo", sdk.NewInt(10000000000))
+	coin := sdk.NewCoin("uqck", sdk.NewInt(10000000000))
 	quicksilverApp, ctx := CreateTestInput(t)
 	funder := RandomAccountAddress()
 	benefit, arb := RandomAccountAddress(), RandomAccountAddress()
-	FundAccount(quicksilverApp.BankKeeper, ctx, benefit, sdk.NewCoins(coin))
+	FundAccount(quicksilverApp.BankKeeper, ctx, funder, sdk.NewCoins(coin))
 
 	storeCodeViaProposal(t, ctx, quicksilverApp, funder)
 	contractKeeper := keeper.NewDefaultPermissionKeeper(quicksilverApp.WasmKeeper)
@@ -101,7 +101,7 @@ func TestInstantiateContract(t *testing.T) {
 	initMsgBz, err := json.Marshal(initMsg)
 	require.NoError(t, err)
 
-	funds := sdk.NewInt64Coin("uosmo", 123456)
+	funds := sdk.NewInt64Coin("uqck", 123456)
 	_, _, err = contractKeeper.Instantiate(ctx, codeID, funder, funder, initMsgBz, "demo contract", sdk.Coins{funds})
 	require.NoError(t, err)
 }

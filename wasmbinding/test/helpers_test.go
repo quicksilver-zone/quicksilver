@@ -14,19 +14,10 @@ import (
 )
 
 func CreateTestInput(t *testing.T) (*app.Quicksilver, sdk.Context) {
-	osmosis := app.Setup(t, false)
-	ctx := osmosis.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "osmosis-1", Time: time.Now().UTC()})
-	return osmosis, ctx
+	quicksilverApp := app.Setup(t, false)
+	ctx := quicksilverApp.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quicksilver-1", Time: time.Now().UTC()})
+	return quicksilverApp, ctx
 }
-
-/*
-func FundAccount(t *testing.T, ctx sdk.Context, osmosis *app.Quicksilver, acct sdk.AccAddress) {
-	err := simapp.FundAccount(osmosis.BankKeeper, ctx, acct, sdk.NewCoins(
-		sdk.NewCoin("uosmo", sdk.NewInt(10000000000)),
-	))
-	require.NoError(t, err)
-}
-*/
 
 // we need to make this deterministic (same every test run), as content might affect gas costs
 func keyPubAddr() (crypto.PrivKey, crypto.PubKey, sdk.AccAddress) {

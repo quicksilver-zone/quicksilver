@@ -64,12 +64,12 @@ func init() {
 	setWhitelistedQuery("/quicksilver.epochs.v1beta1.Query/CurrentEpoch", &epochtypes.QueryCurrentEpochResponse{})
 
 	// mint
-	setWhitelistedQuery("/osmosis.mint.v1beta1.Query/EpochProvisions", &minttypes.QueryEpochProvisionsResponse{})
-	setWhitelistedQuery("/osmosis.mint.v1beta1.Query/Params", &minttypes.QueryParamsResponse{})
+	setWhitelistedQuery("/quicksilver.mint.v1beta1.Query/EpochProvisions", &minttypes.QueryEpochProvisionsResponse{})
+	setWhitelistedQuery("/quicksilver.mint.v1beta1.Query/Params", &minttypes.QueryParamsResponse{})
 
 	// tokenfactory //todo: put the proto file here and make it quicksilver.tokenfactory yadda yadda
-	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/params", &tokenfactorytypes.QueryParamsResponse{})
-	setWhitelistedQuery("/osmosis.tokenfactory.v1beta1.Query/DenomAuthorityMetadata", &tokenfactorytypes.QueryDenomAuthorityMetadataResponse{})
+	setWhitelistedQuery("/quicksilver.tokenfactory.v1beta1.Query/params", &tokenfactorytypes.QueryParamsResponse{})
+	setWhitelistedQuery("/quicksilver.tokenfactory.v1beta1.Query/DenomAuthorityMetadata", &tokenfactorytypes.QueryDenomAuthorityMetadataResponse{})
 	// Does not include denoms_from_creator, TBD if this is the index we want contracts to use instead of admin
 }
 

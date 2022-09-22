@@ -31,8 +31,7 @@ type StargateTestSuite struct {
 }
 
 func (suite *StargateTestSuite) SetupTest() {
-	var t *testing.T
-	suite.app = app.Setup(t, false)
+	suite.app = app.Setup(suite.T(), false)
 	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quicksilver-1", Time: time.Now().UTC()})
 }
 
@@ -53,7 +52,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 	}{
 		{
 			name: "happy path",
-			path: "/osmosis.epochs.v1beta1.Query/EpochInfos",
+			path: "/quicksilver.epochs.v1.Query/EpochInfos",
 			requestData: func() []byte {
 				epochrequest := epochtypes.QueryEpochsInfoRequest{}
 				bz, err := proto.Marshal(&epochrequest)
@@ -62,53 +61,6 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			},
 			responseProtoStruct: &epochtypes.QueryEpochsInfoResponse{},
 		},
-		/*
-				{
-					name: "test query using iterator",
-					testSetup: func() {
-						accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
-						suite.Require().NoError(err)
-
-						// fund account to recieve non-empty response
-						simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
-
-						wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
-					},
-					path: "/cosmos.bank.v1beta1.Query/AllBalances",
-					requestData: func() []byte {
-						bankrequest := banktypes.QueryAllBalancesRequest{
-							Address: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
-						}
-						bz, err := proto.Marshal(&bankrequest)
-						suite.Require().NoError(err)
-						return bz
-					},
-					responseProtoStruct: &banktypes.QueryAllBalancesResponse{},
-				},
-			{
-				name: "edge case: resending request",
-				testSetup: func() {
-					accAddr, err := sdk.AccAddressFromBech32("osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44")
-					suite.Require().NoError(err)
-
-					// fund account to recieve non-empty response
-					simapp.FundAccount(suite.app.BankKeeper, suite.ctx, accAddr, sdk.Coins{sdk.NewCoin("stake", sdk.NewInt(10))})
-
-					wasmbinding.SetWhitelistedQuery("/cosmos.bank.v1beta1.Query/AllBalances", &banktypes.QueryAllBalancesResponse{})
-				},
-				path: "/cosmos.bank.v1beta1.Query/AllBalances",
-				requestData: func() []byte {
-					bankrequest := banktypes.QueryAllBalancesRequest{
-						Address: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
-					}
-					bz, err := proto.Marshal(&bankrequest)
-					suite.Require().NoError(err)
-					return bz
-				},
-				responseProtoStruct: &banktypes.QueryAllBalancesResponse{},
-				resendRequest:       true,
-			},
-		*/
 		{
 			name: "invalid query router route",
 			testSetup: func() {
@@ -122,7 +74,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 		},
 		{
 			name: "unmatching path and data in request",
-			path: "/osmosis.epochs.v1beta1.Query/EpochInfos",
+			path: "/quicksilver.epochs.v1.Query/EpochInfos",
 			requestData: func() []byte {
 				epochrequest := epochtypes.QueryCurrentEpochRequest{}
 				bz, err := proto.Marshal(&epochrequest)
@@ -136,10 +88,10 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			name: "error in unmarshalling response",
 			// set up whitelist with wrong data
 			testSetup: func() {
-				wasmbinding.SetWhitelistedQuery("/osmosis.epochs.v1beta1.Query/EpochInfos",
+				wasmbinding.SetWhitelistedQuery("/quicksilver.epochs.v1.Query/EpochInfos",
 					&banktypes.QueryAllBalancesResponse{})
 			},
-			path: "/osmosis.epochs.v1beta1.Query/EpochInfos",
+			path: "/quicksilver.epochs.v1.Query/EpochInfos",
 			requestData: func() []byte {
 				return []byte{}
 			},
