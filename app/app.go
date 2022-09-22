@@ -135,6 +135,10 @@ import (
 	airdropkeeper "github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 
+	//tokenfactory
+	tokenfactorykeeper "github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+
 	"github.com/CosmWasm/wasmd/x/wasm"
 )
 
@@ -265,7 +269,7 @@ type Quicksilver struct {
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
 	ParticipationRewardsKeeper participationrewardskeeper.Keeper
 	AirdropKeeper              airdropkeeper.Keeper
-
+	TokenFactoryKeeper         *tokenfactorykeeper.Keeper
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper                      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper                 capabilitykeeper.ScopedKeeper
@@ -336,6 +340,7 @@ func NewQuicksilver(
 		participationrewardstypes.StoreKey,
 		airdroptypes.StoreKey,
 		wasm.StoreKey,
+		tokenfactorytypes.StoreKey,
 	)
 
 	// Add the transient store key
@@ -512,7 +517,15 @@ func NewQuicksilver(
 		app.ParticipationRewardsKeeper,
 	)
 	airdropModule := airdrop.NewAppModule(appCodec, app.AirdropKeeper)
+	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
+		keys[tokenfactorytypes.StoreKey],
+		app.GetSubspace(tokenfactorytypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper.WithMintCoinsRestriction(tokenfactorytypes.NewTokenFactoryDenomMintCoinsRestriction()),
+		app.DistrKeeper,
+	)
 
+	app.TokenFactoryKeeper = &tokenFactoryKeeper
 	// Quicksilver Keepers
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	app.EpochsKeeper = *epochsKeeper.SetHooks(
@@ -1041,6 +1054,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
 	paramsKeeper.Subspace(airdroptypes.ModuleName)
 	paramsKeeper.Subspace(wasm.ModuleName)
+	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
 
 	return paramsKeeper
 }
