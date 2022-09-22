@@ -214,6 +214,7 @@ var (
 		participationrewardstypes.ModuleName: {authtypes.Burner},
 		airdroptypes.ModuleName:              nil,
 		wasm.ModuleName:                      {authtypes.Burner},
+		tokenfactorytypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
 	}
 
 	// module accounts that are allowed to receive tokens
@@ -631,6 +632,7 @@ func NewQuicksilver(
 		interchainQueryModule,
 		participationrewardsModule,
 		airdropModule,
+		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
@@ -735,6 +737,7 @@ func NewQuicksilver(
 		interchainquerytypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 		// wasmd
 		wasm.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
