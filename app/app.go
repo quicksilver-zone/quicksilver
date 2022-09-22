@@ -136,7 +136,6 @@ import (
 	airdropkeeper "github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 
-	//tokenfactory
 	tokenfactorykeeper "github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 

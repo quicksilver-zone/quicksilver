@@ -64,7 +64,6 @@ func (s *KeeperTestSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 	s.NoError(err)
 	err = s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, acc, amounts)
 	s.NoError(err)
-
 }
 
 func (s *KeeperTestSuite) SetupTestForInitGenesis() {

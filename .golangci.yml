@@ -37,4 +37,4 @@ linters:
 exclude-rules:
   - linters:
       - nolintlint
-    text: "without leading space"
+    text: "should be written without leading space"
