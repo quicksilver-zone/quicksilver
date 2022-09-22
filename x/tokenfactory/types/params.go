@@ -58,6 +58,6 @@ func validateDenomCreationFee(i interface{}) error {
 
 func DefaultParams() Params {
 	return Params{
-		DenomCreationFee: sdk.NewCoins(sdk.NewInt64Coin(BaseCoinUnit, 10_000_000)), // 10 OSMO
+		DenomCreationFee: sdk.NewCoins(sdk.NewInt64Coin(BaseCoinUnit, 10_000_000)),
 	}
 }

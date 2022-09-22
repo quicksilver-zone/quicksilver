@@ -91,6 +91,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/mint"
 	mintkeeper "github.com/ingenuity-build/quicksilver/x/mint/keeper"
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
+	"github.com/ingenuity-build/quicksilver/x/tokenfactory"
 
 	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
 	icacontroller "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller"
@@ -193,6 +194,7 @@ var (
 		interchainquery.AppModuleBasic{},
 		participationrewards.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
+		tokenfactory.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 	)
 
