@@ -93,8 +93,8 @@ func queryCustom(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, co
 	require.NoError(t, err)
 }
 
-func storeReflectCode(t *testing.T, ctx sdk.Context, osmosis *app.Quicksilver, addr sdk.AccAddress) {
-	govKeeper := osmosis.GovKeeper
+func storeReflectCode(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksilver, addr sdk.AccAddress) {
+	govKeeper := quicksilverApp.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
 	govAddress := govKeeper.GetGovernanceAccount(ctx).GetAddress().String()
 

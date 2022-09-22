@@ -57,7 +57,7 @@ func init() {
 	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Params", &stakingtypes.QueryParamsResponse{})
 	setWhitelistedQuery("/cosmos.staking.v1beta1.Query/Validator", &stakingtypes.QueryValidatorResponse{})
 
-	// osmosis queries
+	// quicksilver queries
 
 	// epochs
 	setWhitelistedQuery("/quicksilver.epochs.v1beta1.Query/EpochInfos", &epochtypes.QueryEpochsInfoResponse{})
