@@ -245,11 +245,10 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 		proof := p
 
 		// check for duplicate proof submission
-		pkey := string(proof.Key)
-		if _, exists := dupCheck[pkey]; exists {
+		if _, exists := dupCheck[string(proof.Key)]; exists {
 			return fmt.Errorf("duplicate proof submitted, %s", proof.Key)
 		}
-		dupCheck[pkey] = struct{}{}
+		dupCheck[string(proof.Key)] = struct{}{}
 
 		// validate proof tx
 		if err := utils.ValidateProofOps(

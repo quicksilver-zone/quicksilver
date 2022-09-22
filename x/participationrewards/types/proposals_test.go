@@ -21,7 +21,60 @@ func TestAddProtocolDataProposal_ValidateBasic(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			"blank",
+			fields{},
+			true,
+		},
+		{
+			"invalid_protocol",
+			fields{
+				Title:       "Add Test Protocol",
+				Description: "A new protocol for testing protocols",
+				Protocol:    "",
+				Type:        "",
+				Key:         "",
+				Data:        nil,
+			},
+			true,
+		},
+		{
+			"invalid_type",
+			fields{
+				Title:       "Add Test Protocol",
+				Description: "A new protocol for testing protocols",
+				Protocol:    "TestProtocol",
+				Type:        "",
+				Key:         "",
+				Data:        nil,
+			},
+			true,
+		},
+		{
+			"invalid_key",
+			fields{
+				Title:       "Add Test Protocol",
+				Description: "A new protocol for testing protocols",
+				Protocol:    "TestProtocol",
+				Type:        "TestType",
+				Key:         "",
+				Data:        nil,
+			},
+			true,
+		},
+		{
+			"invalid_data",
+			fields{
+				Title:       "Add Test Protocol",
+				Description: "A new protocol for testing protocols",
+				Protocol:    "TestProtocol",
+				Type:        "TestType",
+				Key:         "TestKey",
+				Data:        nil,
+			},
+			true,
+		},
+		// TODO: add valid case
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

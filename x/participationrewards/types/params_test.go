@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,7 +16,24 @@ func TestParams_Validate(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			"blank",
+			fields{},
+			true,
+		},
+		// currently params sturct only contains DistributionProportions,
+		// thus its testcases are to provide sufficient coverage.
+		{
+			"valid",
+			fields{
+				DistributionProportions: DistributionProportions{
+					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.34"),
+					HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
+					LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
+				},
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -99,6 +99,23 @@ func (suite *KeeperTestSuite) TestGetRewardsAllocations() {
 		{
 			"valid",
 			args{
+				sdk.NewInt(1000000000),
+				types.DistributionProportions{
+					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.6"),
+					HoldingsAllocation:           sdk.MustNewDecFromStr("0.4"),
+					LockupAllocation:             sdk.MustNewDecFromStr("0"),
+				},
+			},
+			&keeper.RewardsAllocation{
+				ValidatorSelection: sdk.NewInt(600000000),
+				Holdings:           sdk.NewInt(400000000),
+				Lockup:             sdk.NewInt(0),
+			},
+			false,
+		},
+		{
+			"valid",
+			args{
 				sdk.NewInt(164133471813),
 				types.DistributionProportions{
 					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.34"),
@@ -127,6 +144,23 @@ func (suite *KeeperTestSuite) TestGetRewardsAllocations() {
 				ValidatorSelection: sdk.NewInt(82066735907),
 				Holdings:           sdk.NewInt(41033367953),
 				Lockup:             sdk.NewInt(41033367953),
+			},
+			false,
+		},
+		{
+			"valid",
+			args{
+				sdk.NewInt(164133471813),
+				types.DistributionProportions{
+					ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.6"),
+					HoldingsAllocation:           sdk.MustNewDecFromStr("0.4"),
+					LockupAllocation:             sdk.MustNewDecFromStr("0"),
+				},
+			},
+			&keeper.RewardsAllocation{
+				ValidatorSelection: sdk.NewInt(98480083088),
+				Holdings:           sdk.NewInt(65653388725),
+				Lockup:             sdk.NewInt(0),
 			},
 			false,
 		},

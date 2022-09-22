@@ -34,7 +34,7 @@ func (dp DistributionProportions) ValidateBasic() error {
 		totalProportions := dp.ValidatorSelectionAllocation.Add(dp.HoldingsAllocation).Add(dp.LockupAllocation)
 
 		if !totalProportions.Equal(sdk.OneDec()) {
-			errors["TotalProportions"] = ErrInvalidTotalProportions
+			errors["TotalProportions"] = fmt.Errorf("%w, got %v", ErrInvalidTotalProportions, totalProportions)
 		}
 	}
 
@@ -47,10 +47,6 @@ func (dp DistributionProportions) ValidateBasic() error {
 
 func (dp DistributionProportions) Total() sdk.Dec {
 	return dp.ValidatorSelectionAllocation.Add(dp.HoldingsAllocation).Add(dp.LockupAllocation)
-}
-
-func (p Params) ValidateBasic() error {
-	return p.DistributionProportions.ValidateBasic()
 }
 
 func (c Claim) ValidateBasic() error {

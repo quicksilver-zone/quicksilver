@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDistributionProportions_ValidateBasic(t *testing.T) {
@@ -18,7 +20,29 @@ func TestDistributionProportions_ValidateBasic(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			"blank",
+			fields{},
+			true,
+		},
+		{
+			"invalid_proportions_gt",
+			fields{
+				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
+				HoldingsAllocation:           sdk.MustNewDecFromStr("0.5"),
+				LockupAllocation:             sdk.MustNewDecFromStr("0.5"),
+			},
+			true,
+		},
+		{
+			"invalid_proportions_lt",
+			fields{
+				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.3"),
+				HoldingsAllocation:           sdk.MustNewDecFromStr("0.3"),
+				LockupAllocation:             sdk.MustNewDecFromStr("0.3"),
+			},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -27,32 +51,13 @@ func TestDistributionProportions_ValidateBasic(t *testing.T) {
 				HoldingsAllocation:           tt.fields.HoldingsAllocation,
 				LockupAllocation:             tt.fields.LockupAllocation,
 			}
-			if err := dp.ValidateBasic(); (err != nil) != tt.wantErr {
-				t.Errorf("DistributionProportions.ValidateBasic() error = %v, wantErr %v", err, tt.wantErr)
+			err := dp.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
 			}
-		})
-	}
-}
-
-func TestParams_ValidateBasic(t *testing.T) {
-	type fields struct {
-		DistributionProportions DistributionProportions
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := Params{
-				DistributionProportions: tt.fields.DistributionProportions,
-			}
-			if err := p.ValidateBasic(); (err != nil) != tt.wantErr {
-				t.Errorf("Params.ValidateBasic() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			require.NoError(t, err)
 		})
 	}
 }
@@ -68,7 +73,56 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			"blank",
+			fields{},
+			true,
+		},
+		{
+			"invalid_address",
+			fields{
+				UserAddress: "cosmos1234567890",
+				ChainId:     "testzone-1",
+				Amount:      10000,
+			},
+			true,
+		},
+		{
+			"invalid_chain_id",
+			fields{
+				UserAddress: utils.GenerateAccAddressForTest().String(),
+				ChainId:     "",
+				Amount:      10000,
+			},
+			true,
+		},
+		{
+			"invalid_chain_id",
+			fields{
+				UserAddress: utils.GenerateAccAddressForTest().String(),
+				ChainId:     "",
+				Amount:      10000,
+			},
+			true,
+		},
+		{
+			"invalid_amount",
+			fields{
+				UserAddress: utils.GenerateAccAddressForTest().String(),
+				ChainId:     "testzone-1",
+				Amount:      0,
+			},
+			true,
+		},
+		{
+			"valid",
+			fields{
+				UserAddress: utils.GenerateAccAddressForTest().String(),
+				ChainId:     "testzone-1",
+				Amount:      1000000,
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -77,9 +131,13 @@ func TestClaim_ValidateBasic(t *testing.T) {
 				ChainId:     tt.fields.ChainId,
 				Amount:      tt.fields.Amount,
 			}
-			if err := c.ValidateBasic(); (err != nil) != tt.wantErr {
-				t.Errorf("Claim.ValidateBasic() error = %v, wantErr %v", err, tt.wantErr)
+			err := c.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
 			}
+			require.NoError(t, err)
 		})
 	}
 }

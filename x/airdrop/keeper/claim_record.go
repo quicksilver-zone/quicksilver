@@ -224,7 +224,7 @@ func (k Keeper) Claim(
 	// obtain claim record
 	cr, err := k.GetClaimRecord(ctx, chainID, address)
 	if err != nil {
-		return 0, fmt.Errorf("no zone airdrop found for %s on %s", address, chainID)
+		return 0, fmt.Errorf("no zone airdrop found for %q on %q", address, chainID)
 	}
 
 	return k.HandleClaim(ctx, cr, action, proofs)

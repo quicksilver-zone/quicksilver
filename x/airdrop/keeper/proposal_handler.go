@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/zlib"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -22,11 +23,11 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.Register
 
 	_, found := k.icsKeeper.GetZone(ctx, p.ZoneDrop.ChainId)
 	if !found {
-		return fmt.Errorf("zone not found, %s", p.ZoneDrop.ChainId)
+		return fmt.Errorf("zone not found, %q", p.ZoneDrop.ChainId)
 	}
 
 	if p.ZoneDrop.StartTime.Before(ctx.BlockTime()) {
-		return fmt.Errorf("zone airdrop already started")
+		return errors.New("zone airdrop already started")
 	}
 
 	// decompress claim records
@@ -53,7 +54,7 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.Register
 		}
 
 		if cr.ChainId != p.ZoneDrop.ChainId {
-			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: chainID missmatch, expected %s got %s", i, p.ZoneDrop.ChainId, cr.ChainId)
+			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: chainID missmatch, expected %q got %q", i, p.ZoneDrop.ChainId, cr.ChainId)
 		}
 
 		sumMax += cr.MaxAllocation

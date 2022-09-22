@@ -82,8 +82,8 @@ func TestRegisterZoneDropProposal_ValidateBasic(t *testing.T) {
 
 			err := m.ValidateBasic()
 			if tt.wantErr {
-				require.Error(t, err)
 				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
 				return
 			}
 			require.NoError(t, err)
