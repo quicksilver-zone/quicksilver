@@ -26,37 +26,37 @@ func TestDeconstructDenom(t *testing.T) {
 		},
 		{
 			desc:             "normal",
-			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin",
+			denom:            "factory/quick1ve2nremzdnu7e55khlrt2282qhh98dh4708ppf/bitcoin",
 			expectedSubdenom: "bitcoin",
 		},
 		{
 			desc:             "multiple slashes in subdenom",
-			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin/1",
+			denom:            "factory/quick1ve2nremzdnu7e55khlrt2282qhh98dh4708ppf/bitcoin/1",
 			expectedSubdenom: "bitcoin/1",
 		},
 		{
 			desc:             "no subdenom",
-			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/",
+			denom:            "factory/quick1ve2nremzdnu7e55khlrt2282qhh98dh4708ppf/",
 			expectedSubdenom: "",
 		},
 		{
 			desc:  "incorrect prefix",
-			denom: "ibc/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/bitcoin",
+			denom: "ibc/quick1ve2nremzdnu7e55khlrt2282qhh98dh4708ppf/bitcoin",
 			err:   types.ErrInvalidDenom,
 		},
 		{
 			desc:             "subdenom of only slashes",
-			denom:            "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/////",
+			denom:            "factory/quick1ve2nremzdnu7e55khlrt2282qhh98dh4708ppf/////",
 			expectedSubdenom: "////",
 		},
 		{
 			desc:  "too long name",
-			denom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/adsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsf",
+			denom: "factory/quick1ve2nremzdnu7e55khlrt2282qhh98dh4708ppf/adsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsfadsf",
 			err:   types.ErrInvalidDenom,
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			expectedCreator := "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44"
+			expectedCreator := "quick1ve2nremzdnu7e55khlrt2282qhh98dh4708ppf"
 			creator, subdenom, err := types.DeconstructDenom(tc.denom)
 			if tc.err != nil {
 				require.ErrorContains(t, err, tc.err.Error())
@@ -70,9 +70,6 @@ func TestDeconstructDenom(t *testing.T) {
 }
 
 func TestGetTokenDenom(t *testing.T) {
-	config := sdk.GetConfig()
-	cmdcfg.SetBech32Prefixes(config)
-
 	for _, tc := range []struct {
 		desc     string
 		creator  string

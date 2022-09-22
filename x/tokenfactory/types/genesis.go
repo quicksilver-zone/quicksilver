@@ -32,6 +32,7 @@ func (gs GenesisState) Validate() error {
 		if seenDenoms[denom.GetDenom()] {
 			return sdkerrors.Wrapf(ErrInvalidGenesis, "duplicate denom: %s", denom.GetDenom())
 		}
+
 		seenDenoms[denom.GetDenom()] = true
 
 		_, _, err := DeconstructDenom(denom.GetDenom())

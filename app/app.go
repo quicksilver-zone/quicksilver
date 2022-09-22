@@ -303,6 +303,7 @@ func NewQuicksilver(
 	homePath string,
 	invCheckPeriod uint,
 	encodingConfig EncodingConfig,
+	enabledProposals []wasm.ProposalType,
 	appOpts servertypes.AppOptions,
 	wasmOpts []wasm.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
@@ -480,44 +481,6 @@ func NewQuicksilver(
 		panic(err)
 	}
 
-	govConfig := govtypes.DefaultConfig()
-
-	// register the proposal types
-	govRouter := govv1beta1.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(interchainstakingtypes.RouterKey, interchainstaking.NewProposalHandler(app.InterchainstakingKeeper)).
-		AddRoute(participationrewardstypes.RouterKey, participationrewards.NewProposalHandler(app.ParticipationRewardsKeeper))
-	// add custom proposal routes here.
-
-	govKeeper := govkeeper.NewKeeper(
-		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		&stakingKeeper, govRouter, app.MsgServiceRouter(), govConfig,
-	)
-
-	app.GovKeeper = *govKeeper.SetHooks(
-		govtypes.NewMultiGovHooks(
-		// register the governance hooks
-		),
-	)
-
-	app.AirdropKeeper = airdropkeeper.NewKeeper(
-		appCodec,
-		keys[airdroptypes.StoreKey],
-		app.GetSubspace(airdroptypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		app.GovKeeper,
-		app.InterchainstakingKeeper,
-		app.InterchainQueryKeeper,
-		app.ParticipationRewardsKeeper,
-	)
-	airdropModule := airdrop.NewAppModule(appCodec, app.AirdropKeeper)
 	tokenFactoryKeeper := tokenfactorykeeper.NewKeeper(
 		keys[tokenfactorytypes.StoreKey],
 		app.GetSubspace(tokenfactorytypes.ModuleName),
@@ -589,6 +552,45 @@ func NewQuicksilver(
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
 	app.EvidenceKeeper = *evidenceKeeper
+
+	govConfig := govtypes.DefaultConfig()
+
+	// register the proposal types
+	govRouter := govv1beta1.NewRouter()
+
+	// The gov proposal types can be individually enabled
+	if len(enabledProposals) != 0 {
+		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, enabledProposals))
+	}
+
+	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
+		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
+		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
+		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
+		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
+		AddRoute(interchainstakingtypes.RouterKey, interchainstaking.NewProposalHandler(app.InterchainstakingKeeper)).
+		AddRoute(participationrewardstypes.RouterKey, participationrewards.NewProposalHandler(app.ParticipationRewardsKeeper))
+	// add custom proposal routes here.
+
+	app.GovKeeper = govkeeper.NewKeeper(
+		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
+		&stakingKeeper, govRouter, app.MsgServiceRouter(), govConfig,
+	)
+
+	app.AirdropKeeper = airdropkeeper.NewKeeper(
+		appCodec,
+		keys[airdroptypes.StoreKey],
+		app.GetSubspace(airdroptypes.ModuleName),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		app.GovKeeper,
+		app.InterchainstakingKeeper,
+		app.InterchainQueryKeeper,
+		app.ParticipationRewardsKeeper,
+	)
+	airdropModule := airdrop.NewAppModule(appCodec, app.AirdropKeeper)
 
 	/****  Module Options ****/
 
@@ -665,6 +667,7 @@ func NewQuicksilver(
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		vestingtypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 		wasm.ModuleName,
 	)
 
@@ -696,6 +699,7 @@ func NewQuicksilver(
 		interchainstakingtypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
+		tokenfactorytypes.ModuleName,
 		wasm.ModuleName,
 		// currently no-op.
 	)
