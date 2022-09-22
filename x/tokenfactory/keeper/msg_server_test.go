@@ -3,10 +3,9 @@ package keeper_test
 import (
 	"fmt"
 
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 // TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint
@@ -25,7 +24,7 @@ func (suite *KeeperTestSuite) TestMintDenomMsg() {
 		{
 			desc:      "denom does not exist",
 			amount:    10,
-			mintDenom: "factory/osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
+			mintDenom: "factory/QCK1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
 			admin:     suite.TestAccs[0].String(),
 			valid:     false,
 		},
@@ -207,8 +206,8 @@ func (suite *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 				},
 				Base:    suite.defaultDenom,
 				Display: "uqck",
-				Name:    "OSMO",
-				Symbol:  "OSMO",
+				Name:    "QCK",
+				Symbol:  "QCK",
 			}),
 			expectedPass:          true,
 			expectedMessageEvents: 1,
@@ -229,8 +228,8 @@ func (suite *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 				},
 				Base:    fmt.Sprintf("factory/%s/litecoin", suite.TestAccs[0].String()),
 				Display: "uqck",
-				Name:    "OSMO",
-				Symbol:  "OSMO",
+				Name:    "QCK",
+				Symbol:  "QCK",
 			}),
 			expectedPass: false,
 		},
