@@ -31,12 +31,11 @@ type validator struct {
 	*icstypes.Validator
 }
 
-// userAllocation is an internal struct to track transient state for rewards
-// distribution. It contains the user address and the coins that are allocated
-// to it.
-type userAllocation struct {
+// userScore is an internal struct to track transient state for rewards
+// distribution. It contains the user address and individual score.
+type userScore struct {
 	Address string
-	Coins   sdk.Coins
+	Score   sdk.Dec
 }
 
 // allocateValidatorSelectionRewards utilizes IBC to query the performance
@@ -248,18 +247,13 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 	zone icstypes.Zone,
 	zs zoneScore,
 ) []userAllocation {
-	k.Logger(ctx).Info("calcUserAllocations", "zone", zone.ChainId, "scores", zs, "allocations", zone.ValidatorSelectionAllocation)
+	k.Logger(ctx).Info("calcUserValidatorSelectionAllocations", "zone", zone.ChainId, "scores", zs, "allocations", zone.ValidatorSelectionAllocation)
 
 	userAllocations := make([]userAllocation, 0)
 
-	if zone.ValidatorSelectionAllocation.IsZero() {
+	if zone.ValidatorSelectionAllocation == 0 {
 		k.Logger(ctx).Info("validator selection allocation is zero, nothing to allocate")
 		return userAllocations
-	}
-
-	type userScore struct {
-		address string
-		score   sdk.Dec
 	}
 
 	sum := sdk.NewDec(0)
@@ -279,8 +273,8 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 			uSum = uSum.Add(score)
 		}
 		u := userScore{
-			address: di.GetDelegator(),
-			score:   uSum,
+			Address: di.GetDelegator(),
+			Score:   uSum,
 		}
 		k.Logger(ctx).Info("user score for zone", "user", di.GetDelegator(), "zone", zs.ZoneID, "score", uSum)
 		userScores = append(userScores, u)
@@ -293,17 +287,13 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 		return userAllocations
 	}
 
-	tokensPerPoint := sdk.NewDecFromInt(zone.ValidatorSelectionAllocation.AmountOfNoDenomValidation(k.stakingKeeper.BondDenom(ctx))).Quo(sum)
+	allocation := sdk.NewDecFromInt(sdk.NewIntFromUint64(zone.ValidatorSelectionAllocation))
+	tokensPerPoint := allocation.Quo(sum)
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
 		ua := userAllocation{
-			Address: us.address,
-			Coins: sdk.NewCoins(
-				sdk.NewCoin(
-					k.stakingKeeper.BondDenom(ctx),
-					us.score.Mul(tokensPerPoint).TruncateInt(),
-				),
-			),
+			Address: us.Address,
+			Amount:  us.Score.Mul(tokensPerPoint).TruncateInt(),
 		}
 		userAllocations = append(userAllocations, ua)
 	}

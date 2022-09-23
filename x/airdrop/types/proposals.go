@@ -27,7 +27,24 @@ func (m RegisterZoneDropProposal) ProposalType() string   { return ProposalTypeR
 // to ClaimRecords. ClaimRecords are in compressed []byte slice format and
 // must be decompressed in order to be validated.
 func (m RegisterZoneDropProposal) ValidateBasic() error {
-	return govv1beta1.ValidateAbstract(m)
+	if err := govv1beta1.ValidateAbstract(m); err != nil {
+		return err
+	}
+
+	if m.ZoneDrop == nil {
+		return fmt.Errorf("proposal must contain a valid ZoneDrop")
+	}
+
+	if len(m.ClaimRecords) == 0 {
+		return fmt.Errorf("proposal must contain valid ClaimRecords")
+	}
+
+	// validate ZoneDrop
+	if err := m.ZoneDrop.ValidateBasic(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // String implements the Stringer interface.

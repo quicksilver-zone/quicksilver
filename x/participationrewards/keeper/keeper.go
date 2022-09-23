@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,6 +19,14 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
+
+// userAllocation is an internal keeper struct to track transient state for
+// rewards distribution. It contains the user address and the coins that are
+// allocated to it.
+type userAllocation struct {
+	Address string
+	Amount  math.Int
+}
 
 type Keeper struct {
 	cdc              codec.BinaryCodec
@@ -89,13 +98,19 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) GetAllocation(ctx sdk.Context, balance sdk.Coin, portion sdk.Dec) sdk.Coin {
-	return sdk.NewCoin(balance.Denom, sdk.NewDecFromInt(balance.Amount).Mul(portion).TruncateInt())
+func (k Keeper) GetModuleBalance(ctx sdk.Context) math.Int {
+	denom := k.stakingKeeper.BondDenom(ctx)
+	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
+	moduleBalance := k.bankKeeper.GetBalance(ctx, moduleAddress, denom)
+
+	k.Logger(ctx).Info("module account", "address", moduleAddress, "balance", moduleBalance)
+
+	return moduleBalance.Amount
 }
 
 func LoadSubmodules() map[int64]Submodule {
 	out := make(map[int64]Submodule, 0)
-	out[types.ClaimTypeOsmosisPool] = &OsmosisModule{}
-	out[types.ClaimTypeLiquidToken] = &LiquidTokensModule{}
+	out[int64(types.ClaimTypeLiquidToken)] = &LiquidTokensModule{}
+	out[int64(types.ClaimTypeOsmosisPool)] = &OsmosisModule{}
 	return out
 }

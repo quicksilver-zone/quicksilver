@@ -1,30 +1,32 @@
 package keeper_test
 
 import (
-	"context"
 	"testing"
+	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	qapp "github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 var TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
 
 func init() {
-	ibctesting.DefaultTestingAppInit = qapp.SetupTestingApp
+	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
 }
 
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
+}
+
+func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
+	path := ibctesting.NewPath(chainA, chainB)
+	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
+	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
+
+	return path
 }
 
 type KeeperTestSuite struct {
@@ -32,12 +34,14 @@ type KeeperTestSuite struct {
 
 	coordinator *ibctesting.Coordinator
 
+	// testing chains used for convenience and readability
 	chainA *ibctesting.TestChain
 	chainB *ibctesting.TestChain
-	path   *ibctesting.Path
+
+	path *ibctesting.Path
 }
 
-func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *qapp.Quicksilver {
+func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
 	app, ok := chain.App.(*app.Quicksilver)
 	if !ok {
 		panic("not quicksilver app")
@@ -46,16 +50,36 @@ func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *qapp.Q
 	return app
 }
 
-func (s *KeeperTestSuite) SetupTest() {
-	s.coordinator = ibctesting.NewCoordinator(s.T(), 2)
-	s.chainA = s.coordinator.GetChain(ibctesting.GetChainID(1))
-	s.chainB = s.coordinator.GetChain(ibctesting.GetChainID(2))
+func (suite *KeeperTestSuite) SetupTest() {
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1))
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2))
 
-	s.path = newQuicksilverPath(s.chainA, s.chainB)
-	s.coordinator.SetupConnections(s.path)
+	suite.path = newQuicksilverPath(suite.chainA, suite.chainB)
+	suite.coordinator.SetupConnections(suite.path)
+
+	suite.coordinator.CurrentTime = time.Now().UTC()
+	suite.coordinator.UpdateTime()
+
+	suite.initTestZone()
 }
 
-func (s *KeeperTestSuite) SetupRegisteredZones() {
+func (suite *KeeperTestSuite) initTestZone() {
+	// test zone
+	zone := icstypes.Zone{
+		ConnectionId:    suite.path.EndpointA.ConnectionID,
+		ChainId:         suite.chainB.ChainID,
+		AccountPrefix:   "cosmos",
+		LocalDenom:      "uqatom",
+		BaseDenom:       "uatom",
+		MultiSend:       true,
+		LiquidityModule: true,
+	}
+
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+}
+
+/*func (s *KeeperTestSuite) SetupRegisteredZones() {
 	proposal := &icstypes.RegisterZoneProposal{
 		Title:           "register zone A",
 		Description:     "register zone A",
@@ -105,16 +129,8 @@ func (s *KeeperTestSuite) SetupRegisteredZones() {
 	valsetInterval := uint64(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetParam(ctx, icstypes.KeyValidatorSetInterval))
 	s.coordinator.CommitNBlocks(s.chainA, valsetInterval)
 	s.coordinator.CommitNBlocks(s.chainB, valsetInterval)
-}
+}*/
 
-func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
-	path := ibctesting.NewPath(chainA, chainB)
-	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
-	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
-
-	return path
-}
-
-func (s *KeeperTestSuite) Test() {
+/*func (s *KeeperTestSuite) Test() {
 	s.SetupRegisteredZones()
-}
+}*/

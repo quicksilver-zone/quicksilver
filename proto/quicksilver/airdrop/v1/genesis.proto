@@ -2,6 +2,7 @@ syntax = "proto3";
 package quicksilver.airdrop.v1;
 
 import "gogoproto/gogo.proto";
+
 import "quicksilver/airdrop/v1/params.proto";
 import "quicksilver/airdrop/v1/airdrop.proto";
 

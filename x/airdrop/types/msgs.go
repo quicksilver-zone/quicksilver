@@ -35,7 +35,7 @@ func (msg MsgClaim) ValidateBasic() error {
 	}
 
 	action := int(msg.Action)
-	if action < 0 || action >= len(Action_value) {
+	if action < 1 || action >= len(Action_value) {
 		errors["Action"] = fmt.Errorf("%w, got %d", ErrActionOutOfBounds, msg.Action)
 	}
 

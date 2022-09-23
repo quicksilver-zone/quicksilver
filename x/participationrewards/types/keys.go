@@ -1,5 +1,7 @@
 package types
 
+type ProtocolDataType int32
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "participationrewards"
@@ -10,20 +12,39 @@ const (
 	// RouterKey is the message route for participationrewards
 	RouterKey = ModuleName
 
-	ClaimTypeLiquidToken  = 0
-	ClaimTypeOsmosisPool  = 1
-	ClaimTypeCrescentPool = 2
-	ClaimTypeSifchainPool = 3
+	ProtocolDataConnection   ProtocolDataType = 0
+	ProtocolDataLiquidToken  ProtocolDataType = 1
+	ProtocolDataOsmosisPool  ProtocolDataType = 2
+	ProtocolDataCrescentPool ProtocolDataType = 3
+	ProtocolDataSifchainPool ProtocolDataType = 4
 )
 
 var (
 	KeyPrefixProtocolData = []byte{0x00}
 	KeyPrefixClaim        = []byte{0x01}
-
-	ClaimTypes = map[int32]string{
-		ClaimTypeLiquidToken:  "liquidtoken",
-		ClaimTypeOsmosisPool:  "osmosispool",
-		ClaimTypeCrescentPool: "crescentpool",
-		ClaimTypeSifchainPool: "sifchainpool",
-	}
 )
+
+var ProtocolDataType_name = map[ProtocolDataType]string{ //nolint:revive,stylecheck // conform with protobuf3 enum
+	ProtocolDataConnection:   "connection",
+	ProtocolDataLiquidToken:  "liquidtoken",
+	ProtocolDataOsmosisPool:  "osmosispool",
+	ProtocolDataCrescentPool: "crescentpool",
+	ProtocolDataSifchainPool: "sifchainpool",
+}
+
+var ProtocolDataType_value = map[string]ProtocolDataType{ //nolint:revive,stylecheck // conform with protobuf3 enum
+	"connection":   ProtocolDataConnection,
+	"liquidtoken":  ProtocolDataLiquidToken,
+	"osmosispool":  ProtocolDataOsmosisPool,
+	"crescentpool": ProtocolDataCrescentPool,
+	"sifchainpool": ProtocolDataSifchainPool,
+}
+
+// ClaimKey returns the key for storing a given claim.
+func GetKeyClaim(chainID string, address string) []byte {
+	return append(append(KeyPrefixClaim, []byte(chainID)...), []byte(address)...)
+}
+
+func GetPrefixClaim(chainID string) []byte {
+	return append(KeyPrefixClaim, []byte(chainID)...)
+}

@@ -26,14 +26,14 @@ func DefaultGenesisState() *GenesisState {
 
 // ValidateGenesis validates the provided genesis state to ensure the
 // expected invariants hold.
-func ValidateGenesis(data GenesisState) error {
-	if err := data.Params.Validate(); err != nil {
+func (gs GenesisState) Validate() error {
+	if err := gs.Params.Validate(); err != nil {
 		return err
 	}
 
 	zoneMap := make(map[string]int)
 	sumMap := make(map[string]uint64)
-	for i, zd := range data.ZoneDrops {
+	for i, zd := range gs.ZoneDrops {
 		// check for duplicate zone chain id
 		if zdi, exists := zoneMap[zd.ChainId]; exists {
 			return fmt.Errorf("%w, [%d] %s already used for zone drop [%d]", ErrDuplicateZoneDrop, i, zd.ChainId, zdi)
@@ -48,7 +48,7 @@ func ValidateGenesis(data GenesisState) error {
 	}
 
 	claimMap := make(map[string]int)
-	for i, cr := range data.ClaimRecords {
+	for i, cr := range gs.ClaimRecords {
 		// check for duplicate
 		key := cr.ChainId + "." + cr.Address
 		if cmi, exists := claimMap[key]; exists {
@@ -68,7 +68,7 @@ func ValidateGenesis(data GenesisState) error {
 		claimMap[key] = i
 	}
 
-	for i, zd := range data.ZoneDrops {
+	for i, zd := range gs.ZoneDrops {
 		if zd.Allocation < sumMap[zd.ChainId] {
 			return fmt.Errorf("%w, zone drop [%d], max %v, got %v", ErrAllocationExceeded, i, zd.Allocation, sumMap[zd.ChainId])
 		}

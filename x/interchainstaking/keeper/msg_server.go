@@ -180,7 +180,18 @@ func (k *Keeper) queueRedemption(ctx sdk.Context, zone types.Zone, sender sdk.Ac
 		distribution[valoper] = thisAmount
 	}
 
-	k.AddWithdrawalRecord(ctx, zone, sender.String(), distribution, destination, sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens)), burnAmount, hash, WithdrawStatusQueued, time.Unix(0, 0))
+	k.AddWithdrawalRecord(
+		ctx,
+		zone,
+		sender.String(),
+		distribution,
+		destination,
+		sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens)),
+		burnAmount,
+		hash,
+		WithdrawStatusQueued,
+		time.Unix(0, 0),
+	)
 
 	return nil
 }

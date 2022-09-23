@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
@@ -16,10 +17,14 @@ func (zd ZoneDrop) ValidateBasic() error {
 		errors["ChainId"] = ErrUndefinedAttribute
 	}
 
-	// must be at least one hour
+	// must be greater or equal to 0
+	//
+	// - equal will result in immediate decay;
+	// - greater specifies period of full claim;
+	//
 	// specific bounds can be applied via proposal process
 	if zd.Duration.Microseconds() < 0 {
-		errors["Duration"] = fmt.Errorf("%w, must be positive", ErrInvalidDuration)
+		errors["Duration"] = fmt.Errorf("%w, must not be negative", ErrInvalidDuration)
 	}
 
 	// must be greater or equal to 0
@@ -30,15 +35,19 @@ func (zd ZoneDrop) ValidateBasic() error {
 	//   the duration of decay;
 	//
 	// specific bounds can be applied via proposal process
-	if zd.Decay.Microseconds() <= 0 {
+	if zd.Decay.Microseconds() < 0 {
 		errors["Decay"] = fmt.Errorf("%w, must not be negative", ErrInvalidDuration)
 	}
 
 	// sum of Duration and Decay may not be zero as this will result in
 	// immediate expiery of the zone airdrop
 	if zd.Duration.Microseconds()+zd.Decay.Microseconds() == 0 {
-		errors["Duration"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
-		errors["Decay"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
+		if _, exists := errors["Duration"]; !exists {
+			errors["Duration"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
+		}
+		if _, exists := errors["Decay"]; !exists {
+			errors["Decay"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
+		}
 	}
 
 	// must be positive value
@@ -50,12 +59,18 @@ func (zd ZoneDrop) ValidateBasic() error {
 	if len(zd.Actions) == 0 {
 		errors["Actions"] = ErrUndefinedAttribute
 	} else {
-		wsum := sdk.ZeroDec()
-		for _, aw := range zd.Actions {
-			wsum = wsum.Add(aw)
-		}
-		if !wsum.Equal(sdk.OneDec()) {
-			errors["Actions"] = fmt.Errorf("%w, got %s", ErrActionWeights, wsum)
+		// may not exceed defined types.Action bounds
+		// * (-1) to account for enum: 0 = undefined (protobuf3 spec)
+		if len(zd.Actions) > len(Action_name)-1 {
+			errors["Action"] = fmt.Errorf("exceeds number of defined actions (%d)", len(Action_name)-1)
+		} else {
+			wsum := sdk.ZeroDec()
+			for _, aw := range zd.Actions {
+				wsum = wsum.Add(aw)
+			}
+			if !wsum.Equal(sdk.OneDec()) {
+				errors["Actions"] = fmt.Errorf("%w, got %s", ErrActionWeights, wsum)
+			}
 		}
 	}
 
@@ -75,7 +90,7 @@ func (cr ClaimRecord) ValidateBasic() error {
 	}
 
 	// must be valid bech32
-	if _, err := sdk.AccAddressFromBech32(cr.Address); err != nil {
+	if _, _, err := bech32.DecodeAndConvert(cr.Address); err != nil {
 		errors["Address"] = err
 	}
 
@@ -85,37 +100,37 @@ func (cr ClaimRecord) ValidateBasic() error {
 	}
 
 	// check action enum in bounds and sum <= max allocation
-	if cr.ActionsCompleted != nil {
-		// action enum, completed action
-		i := 0
-		sum := uint64(0)
-		for ae, ca := range cr.ActionsCompleted {
-			// check enum bounds
-			kstr := fmt.Sprintf("ActionsCompleted[%d]", i)
-			if int(ae) >= len(Action_name) {
-				errors[kstr+" Enum"] = fmt.Errorf("%w, got %d", ErrActionOutOfBounds, ae)
-			}
-			// calc sum
-			sum += ca.ClaimAmount
-
-			// CompleteTime must be in the past, but the check should be done
-			// as part of stateful validation as it depends on the state of the
-			// chain's BlockTime. Validated in HandleRegisterZoneDropProposal.
-
-			// check claim amount
-			if ca.ClaimAmount > cr.MaxAllocation {
-				errors[kstr+" ClaimAmount"] = fmt.Errorf("exceeds max allocation")
-			}
-			i++
+	// action enum, completed action
+	sum := uint64(0)
+	i := 0
+	// map[actionEnum]*CompletedAction
+	for ae, ca := range cr.ActionsCompleted {
+		// action enum (+1 protobuf3 enum spec)
+		// check enum bounds
+		kstr := fmt.Sprintf("ActionsCompleted[%d]", i)
+		if !Action(ae).InBounds() {
+			errors[kstr+": enum:"] = fmt.Errorf("%w, got %d", ErrActionOutOfBounds, ae)
 		}
+		// calc sum
+		sum += ca.ClaimAmount
 
-		if sum > cr.MaxAllocation {
-			errors["ActionsCompleted"] = fmt.Errorf(
-				"sum of claims exceed max allocation, expected %d got %d",
-				cr.MaxAllocation,
-				sum,
-			)
+		// check claim amount
+		if ca.ClaimAmount > cr.MaxAllocation {
+			errors[kstr+": ClaimAmount:"] = fmt.Errorf("exceeds max allocation of %d", cr.MaxAllocation)
 		}
+		i++
+	}
+
+	if sum > cr.MaxAllocation {
+		errors["ActionsCompleted"] = fmt.Errorf(
+			"sum of claims exceed max allocation, expected %d got %d",
+			cr.MaxAllocation,
+			sum,
+		)
+	}
+
+	if cr.BaseValue == 0 {
+		errors["BaseValue"] = ErrUndefinedAttribute
 	}
 
 	if len(errors) > 0 {

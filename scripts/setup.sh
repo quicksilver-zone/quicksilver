@@ -393,6 +393,7 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
     ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
     ${SED} -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
     ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
+    ${SED} -e "s/seeds = \".*\"/seeds = \"\"/g" ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
     ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node9,$node10,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
     ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/app.toml
     ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/app.toml
@@ -401,6 +402,7 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
     ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
     ${SED} -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
     ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
+    ${SED} -e "s/seeds = \".*\"/seeds = \"\"/g" ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
     ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node10,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
     ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/app.toml
     ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/app.toml
@@ -409,6 +411,7 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
     ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
     ${SED} -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
     ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
+    ${SED} -e "s/seeds = \".*\"/seeds = \"\"/g" ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
     ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node9,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
     ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/app.toml
     ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/app.toml
@@ -417,6 +420,7 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
     ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
     ${SED} -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
     ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
+    ${SED} -e "s/seeds = \".*\"/seeds = \"\"/g" ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
     ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node9,$node10\"/g" ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
     ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/app.toml
     ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/app.toml

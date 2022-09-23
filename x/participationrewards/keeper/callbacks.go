@@ -89,12 +89,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	}
 
 	// set zone ValidatorSelectionAllocation to zero
-	zone.ValidatorSelectionAllocation = sdk.NewCoins(
-		sdk.NewCoin(
-			k.stakingKeeper.BondDenom(ctx),
-			sdk.ZeroInt(),
-		),
-	)
+	zone.ValidatorSelectionAllocation = 0
 	k.icsKeeper.SetZone(ctx, &zone)
 
 	return nil
@@ -120,7 +115,7 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for osmosis/pools/%d", poolID)
 	}
-	ipool, err := UnmarshalProtocolData("osmosispool", data.Data)
+	ipool, err := UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
 	if err != nil {
 		return err
 	}

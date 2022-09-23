@@ -38,6 +38,11 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 		errors["Zone"] = ErrUndefinedAttribute
 	}
 
+	ct := int(msg.ClaimType)
+	if ct < 1 || ct >= len(ClaimType_value) {
+		errors["Action"] = fmt.Errorf("%w, got %d", ErrClaimTypeOutOfBounds, msg.ClaimType)
+	}
+
 	if len(msg.Proofs) == 0 {
 		errors["Proofs"] = ErrUndefinedAttribute
 	}
@@ -45,22 +50,41 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 	if len(msg.Proofs) > 0 {
 		for i, p := range msg.Proofs {
 			pLabel := fmt.Sprintf("Proof [%d]:", i)
-			if len(p.Key) == 0 {
-				errors[pLabel+" Key"] = ErrUndefinedAttribute
-			}
-
-			if len(p.Data) == 0 {
-				errors[pLabel+" Data"] = ErrUndefinedAttribute
-			}
-
-			if p.ProofOps == nil {
-				errors[pLabel+" ProofOps"] = ErrUndefinedAttribute
-			}
-
-			if p.Height < 0 {
-				errors[pLabel+" Height"] = ErrNegativeAttribute
+			if err := p.ValidateBasic(); err != nil {
+				errors[pLabel] = err
 			}
 		}
+	}
+
+	// check for errors and return
+	if len(errors) > 0 {
+		return multierror.New(errors)
+	}
+
+	return nil
+}
+
+func (p Proof) ValidateBasic() error {
+	errors := make(map[string]error)
+
+	if len(p.Key) == 0 {
+		errors["Key"] = ErrUndefinedAttribute
+	}
+
+	if len(p.Data) == 0 {
+		errors["Data"] = ErrUndefinedAttribute
+	}
+
+	if p.ProofOps == nil {
+		errors["ProofOps"] = ErrUndefinedAttribute
+	}
+
+	if p.Height < 0 {
+		errors["Height"] = ErrNegativeAttribute
+	}
+
+	if len(p.ProofType) == 0 {
+		errors["ProofType"] = ErrUndefinedAttribute
 	}
 
 	// check for errors and return

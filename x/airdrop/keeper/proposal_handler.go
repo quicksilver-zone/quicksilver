@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/zlib"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 
@@ -16,17 +17,17 @@ type ClaimRecords []types.ClaimRecord
 
 // HandleRegisterZoneDropProposal is a handler for executing a passed airdrop proposal.
 func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.RegisterZoneDropProposal) error {
-	// validate ZoneDrop
-	if err := p.ZoneDrop.ValidateBasic(); err != nil {
+	if err := p.ValidateBasic(); err != nil {
 		return err
 	}
 
-	// check for ClaimRecords
-	if p.ClaimRecords == nil {
-		return types.ErrUndefinedAttribute
+	_, found := k.icsKeeper.GetZone(ctx, p.ZoneDrop.ChainId)
+	if !found {
+		return fmt.Errorf("zone not found, %q", p.ZoneDrop.ChainId)
 	}
-	if len(p.ClaimRecords) == 0 {
-		return types.ErrUndefinedAttribute
+
+	if p.ZoneDrop.StartTime.Before(ctx.BlockTime()) {
+		return errors.New("zone airdrop already started")
 	}
 
 	// decompress claim records
@@ -41,6 +42,7 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.Register
 		return err
 	}
 
+	sumMax := uint64(0)
 	// validate ClaimRecords and process
 	for i, cr := range crs {
 		if err := cr.ValidateBasic(); err != nil {
@@ -51,13 +53,25 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.Register
 			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: contains completed actions", i)
 		}
 
-		if err := k.SetClaimRecord(ctx, cr); err != nil {
-			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: %w", i, err)
+		if cr.ChainId != p.ZoneDrop.ChainId {
+			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: chainID missmatch, expected %q got %q", i, p.ZoneDrop.ChainId, cr.ChainId)
 		}
+
+		sumMax += cr.MaxAllocation
+	}
+
+	// check allocations
+	if sumMax > p.ZoneDrop.Allocation {
+		return fmt.Errorf("sum of claim records max allocations (%v) exceed zone airdrop allocation (%v)", sumMax, p.ZoneDrop.Allocation)
 	}
 
 	// process ZoneDrop
 	k.SetZoneDrop(ctx, *p.ZoneDrop)
+	for i, cr := range crs {
+		if err := k.SetClaimRecord(ctx, cr); err != nil {
+			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: %w", i, err)
+		}
+	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

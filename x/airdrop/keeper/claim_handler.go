@@ -151,7 +151,7 @@ func (k Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold s
 	tAmount := threshold.MulInt64(int64(cr.BaseValue)).TruncateInt()
 
 	if gdAmount.LT(tAmount) {
-		return fmt.Errorf("insufficient deposit amount")
+		return fmt.Errorf("insufficient deposit amount, expects %v got %v", tAmount, gdAmount)
 	}
 
 	return nil
@@ -167,7 +167,7 @@ func (k Keeper) verifyBondedDelegation(ctx sdk.Context, address string) error {
 
 	amount := k.stakingKeeper.GetDelegatorBonded(ctx, addr)
 	if !amount.IsPositive() {
-		return fmt.Errorf("ActionStakeQCK: no bonded delegation")
+		return fmt.Errorf("no bonded delegation for %s", addr)
 	}
 	return nil
 }
@@ -308,7 +308,7 @@ func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lockedResp osmosislockup
 		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for %s", poolID)
 	}
 
-	ipool, err := participationrewardskeeper.UnmarshalProtocolData("osmosispool", pd.Data)
+	ipool, err := participationrewardskeeper.UnmarshalProtocolData(participationrewardstypes.ProtocolDataOsmosisPool, pd.Data)
 	if err != nil {
 		return sdk.ZeroInt(), err
 	}
@@ -444,7 +444,7 @@ func (k Keeper) getClaimAmountAndUpdateRecord(ctx sdk.Context, cr *types.ClaimRe
 
 func (k Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64) (sdk.Coins, error) {
 	coins := sdk.NewCoins(
-		sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(amount)),
+		sdk.NewCoin(k.BondDenom(ctx), sdk.NewIntFromUint64(amount)),
 	)
 
 	addr, err := sdk.AccAddressFromBech32(cr.Address)
