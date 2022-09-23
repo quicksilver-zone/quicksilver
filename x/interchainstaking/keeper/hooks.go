@@ -37,6 +37,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.Logger(ctx).Info("taking a snapshot of intents")
 			err := k.AggregateIntents(ctx, zoneInfo)
 			if err != nil {
+				// we can and need not panic here; logging the error is sufficient.
+				// an error here is not expected, but also not terminal.
+				// we don't return on failure here as we still want to attempt
+				// the unrelated tasks below.
 				k.Logger(ctx).Error("encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch", "error", err.Error())
 			}
 
@@ -48,7 +52,19 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 			err = k.Rebalance(ctx, zoneInfo)
 			if err != nil {
+				// we can and need not panic here; logging the error is sufficient.
+				// an error here is not expected, but also not terminal.
+				// we don't return on failure here as we still want to attempt
+				// the unrelated tasks below.
 				k.Logger(ctx).Error("encountered a problem rebalancing", "error", err.Error())
+			}
+
+			if err := k.HandleQueuedUnbondings(ctx, &zoneInfo, epochNumber); err != nil {
+				k.Logger(ctx).Error(err.Error())
+				// we can and need not panic here; logging the error is sufficient.
+				// an error here is not expected, but also not terminal.
+				// we don't return on failure here as we still want to attempt
+				// the unrelated tasks below.
 			}
 
 			if zoneInfo.WithdrawalWaitgroup > 0 {

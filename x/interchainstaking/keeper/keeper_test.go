@@ -6,12 +6,20 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/stretchr/testify/suite"
 
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
+	ics "github.com/ingenuity-build/quicksilver/x/interchainstaking"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -55,6 +63,40 @@ func (s *KeeperTestSuite) SetupTest() {
 	s.coordinator.SetupConnections(s.path)
 }
 
+func setupChannelForICA(ctx sdk.Context, qApp *app.Quicksilver, chainID string, connectionID string, accountSuffix string, remotePrefix string) error {
+	ibcModule := ics.NewIBCModule(qApp.InterchainstakingKeeper)
+	portID, err := icatypes.NewControllerPortID(chainID + "." + accountSuffix)
+	if err != nil {
+		return err
+	}
+	channelID := qApp.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctx)
+	qApp.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{ConnectionHops: []string{connectionID}, State: channeltypes.OPEN, Counterparty: channeltypes.Counterparty{PortId: "icahost", ChannelId: channelID}})
+	qApp.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, portID, channelID, 1)
+	qApp.ICAControllerKeeper.SetActiveChannelID(ctx, connectionID, portID, channelID)
+	key, err := qApp.InterchainstakingKeeper.ScopedKeeper().NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
+	if err != nil {
+		return err
+	}
+	// err = qApp.InterchainstakingKeeper.ClaimCapability(ctx, key, host.ChannelCapabilityPath(portID, channelID))
+	// if err != nil {
+	// 	return err
+	// }
+	// key, err = qApp.GetScopedIBCKeeper().NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
+	// if err != nil {
+	// 	return err
+	// }
+	err = qApp.GetScopedIBCKeeper().ClaimCapability(ctx, key, host.ChannelCapabilityPath(portID, channelID))
+	if err != nil {
+		return err
+	}
+	addr, err := bech32.ConvertAndEncode(remotePrefix, utils.GenerateAccAddressForTest())
+	if err != nil {
+		return err
+	}
+	qApp.ICAControllerKeeper.SetInterchainAccountAddress(ctx, connectionID, portID, addr)
+	return ibcModule.OnChanOpenAck(ctx, portID, channelID, "", "")
+}
+
 func (s *KeeperTestSuite) SetupZones() {
 	proposal := &icstypes.RegisterZoneProposal{
 		Title:           "register zone A",
@@ -78,6 +120,15 @@ func (s *KeeperTestSuite) SetupZones() {
 	// Simulate "cosmos.staking.v1beta1.Query/Validators" response
 
 	qApp := s.GetQuicksilverApp(s.chainA)
+	zone, _ := qApp.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+
+	qApp.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", &tmclienttypes.ClientState{ChainId: s.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
+	qApp.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: ctx.BlockTime()})
+	qApp.IBCKeeper.ConnectionKeeper.SetConnection(ctx, s.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0"})
+	s.Require().NoError(setupChannelForICA(ctx, qApp, s.chainB.ChainID, s.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
+	s.Require().NoError(setupChannelForICA(ctx, qApp, s.chainB.ChainID, s.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
+	s.Require().NoError(setupChannelForICA(ctx, qApp, s.chainB.ChainID, s.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
+	s.Require().NoError(setupChannelForICA(ctx, qApp, s.chainB.ChainID, s.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
 
 	for _, val := range s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()) {
 		// refetch the zone for each validator, else we end up with an empty valset each time!
@@ -86,7 +137,6 @@ func (s *KeeperTestSuite) SetupZones() {
 		s.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, s.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
 	}
 
-	// valsetInterval := uint64(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetParam(ctx, icstypes.KeyValidatorSetInterval))
 	s.coordinator.CommitNBlocks(s.chainA, 2)
 	s.coordinator.CommitNBlocks(s.chainB, 2)
 }

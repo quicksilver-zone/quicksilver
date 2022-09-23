@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -146,15 +147,15 @@ func (k *Keeper) PrepareDelegationMessagesForCoins(ctx sdk.Context, zone *types.
 	return msgs
 }
 
-// func (k *Keeper) PrepareDelegationMessagesForShares(ctx sdk.Context, zone *types.Zone, coins sdk.Coins) []sdk.Msg {
-// 	var msgs []sdk.Msg
-// 	for _, coin := range coins.Sort() {
-// 		if !coin.IsZero() {
-// 			msgs = append(msgs, &stakingTypes.MsgRedeemTokensforShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
-// 		}
-// 	}
-// 	return msgs
-// }
+func (k *Keeper) PrepareDelegationMessagesForShares(ctx sdk.Context, zone *types.Zone, coins sdk.Coins) []sdk.Msg {
+	var msgs []sdk.Msg
+	for _, coin := range coins.Sort() {
+		if !coin.IsZero() {
+			msgs = append(msgs, &lsmstakingTypes.MsgRedeemTokensforShares{DelegatorAddress: zone.DelegationAddress.Address, Amount: coin})
+		}
+	}
+	return msgs
+}
 
 func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) map[string]sdkmath.Int {
 	currentAllocations, currentSum := k.GetDelegationMap(ctx, zone)

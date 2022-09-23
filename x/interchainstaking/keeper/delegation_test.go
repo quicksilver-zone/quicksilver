@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -22,15 +23,15 @@ func TestDetermineAllocations(t *testing.T) {
 	val4 := utils.GenerateValAddressForTest()
 
 	tc := []struct {
-		current  map[string]sdk.Int
-		sum      sdk.Int
+		current  map[string]cosmosmath.Int
+		sum      cosmosmath.Int
 		target   map[string]*types.ValidatorIntent
 		inAmount sdk.Coins
-		expected map[string]sdk.Int
-		dust     sdk.Int
+		expected map[string]cosmosmath.Int
+		dust     cosmosmath.Int
 	}{
 		{
-			current: map[string]sdk.Int{
+			current: map[string]cosmosmath.Int{
 				val1.String(): sdk.NewInt(350000),
 				val2.String(): sdk.NewInt(650000),
 				val3.String(): sdk.NewInt(75000),
@@ -42,14 +43,14 @@ func TestDetermineAllocations(t *testing.T) {
 				val3.String(): {ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000))),
-			expected: map[string]sdk.Int{
+			expected: map[string]cosmosmath.Int{
 				val1.String(): sdk.ZeroInt(),
 				val2.String(): sdk.NewInt(33182),
 				val3.String(): sdk.NewInt(16818),
 			},
 		},
 		{
-			current: map[string]sdk.Int{
+			current: map[string]cosmosmath.Int{
 				val1.String(): sdk.NewInt(52),
 				val2.String(): sdk.NewInt(24),
 				val3.String(): sdk.NewInt(20),
@@ -63,7 +64,7 @@ func TestDetermineAllocations(t *testing.T) {
 				val4.String(): {ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(20))),
-			expected: map[string]sdk.Int{
+			expected: map[string]cosmosmath.Int{
 				val4.String(): sdk.NewInt(11),
 				val3.String(): sdk.ZeroInt(),
 				val2.String(): sdk.NewInt(6),
@@ -71,7 +72,7 @@ func TestDetermineAllocations(t *testing.T) {
 			},
 		},
 		{
-			current: map[string]sdk.Int{
+			current: map[string]cosmosmath.Int{
 				val1.String(): sdk.NewInt(52),
 				val2.String(): sdk.NewInt(24),
 				val3.String(): sdk.NewInt(20),
@@ -85,7 +86,7 @@ func TestDetermineAllocations(t *testing.T) {
 				val4.String(): {ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50))),
-			expected: map[string]sdk.Int{
+			expected: map[string]cosmosmath.Int{
 				val4.String(): sdk.NewInt(20),
 				val2.String(): sdk.NewInt(13),
 				val1.String(): sdk.NewInt(10),

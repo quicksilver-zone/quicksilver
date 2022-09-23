@@ -16,7 +16,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, zone := range genState.Zones {
 		// explicit memory referencing
 		zone := zone
-		// TODO: instantiate connections to ICAs based upon genesis values
 		k.SetZone(ctx, &zone)
 	}
 
@@ -47,17 +46,22 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	for _, receipt := range genState.Receipts {
 		k.SetReceipt(ctx, receipt)
 	}
+
+	for _, withdrawal := range genState.WithdrawalRecords {
+		k.SetWithdrawalRecord(ctx, withdrawal)
+	}
 }
 
 // ExportGenesis returns the capability module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
-		Params:           k.GetParams(ctx),
-		Zones:            k.AllZones(ctx),
-		Receipts:         k.AllReceipts(ctx),
-		Delegations:      ExportDelegationsPerZone(ctx, k),
-		DelegatorIntents: ExportDelegatorIntentsPerZone(ctx, k),
-		PortConnections:  k.AllPortConnections(ctx),
+		Params:            k.GetParams(ctx),
+		Zones:             k.AllZones(ctx),
+		Receipts:          k.AllReceipts(ctx),
+		Delegations:       ExportDelegationsPerZone(ctx, k),
+		DelegatorIntents:  ExportDelegatorIntentsPerZone(ctx, k),
+		PortConnections:   k.AllPortConnections(ctx),
+		WithdrawalRecords: k.AllWithdrawalRecords(ctx),
 	}
 }
 

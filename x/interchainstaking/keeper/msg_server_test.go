@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -11,36 +13,176 @@ import (
 func (s *KeeperTestSuite) TestRequestRedemption() {
 	var msg icstypes.MsgRequestRedemption
 
+	testAccount, err := utils.AccAddressFromBech32(TestOwnerAddress, "")
+	s.Require().NoError(err)
+
 	tests := []struct {
 		name      string
 		malleate  func()
 		expectErr bool
 	}{
-		// TODO: setup test cases for RequestRedemption
-		/*{
+		{
 			"valid",
 			func() {
+				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				s.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdktypes.NewCoin("uatom", sdktypes.NewInt(10000000)),
-					DestinationAddress: TestOwnerAddress,
+					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					DestinationAddress: addr,
 					FromAddress:        TestOwnerAddress,
 				}
 			},
 			false,
-		},*/
+		},
+		{
+			"invalid - wrong denom",
+			func() {
+				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				s.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uatom", sdk.NewInt(10000000)),
+					DestinationAddress: addr,
+					FromAddress:        TestOwnerAddress,
+				}
+			},
+			true,
+		},
+		{
+			"invalid - insufficient funds",
+			func() {
+				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				s.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uqatom", sdk.NewInt(1000000000)),
+					DestinationAddress: addr,
+					FromAddress:        TestOwnerAddress,
+				}
+			},
+			true,
+		},
+		{
+			"invalid - zero coins",
+			func() {
+				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				s.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uqatom", sdk.ZeroInt()),
+					DestinationAddress: addr,
+					FromAddress:        TestOwnerAddress,
+				}
+			},
+			true,
+		},
+		{
+			"invalid - negative coins",
+			func() {
+				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				s.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.Coin{Denom: "uqatom", Amount: sdk.NewInt(-1)},
+					DestinationAddress: addr,
+					FromAddress:        TestOwnerAddress,
+				}
+			},
+			true,
+		},
+		{
+			"invalid - bad prefix",
+			func() {
+				addr, err := bech32.ConvertAndEncode("bob", utils.GenerateAccAddressForTest())
+				s.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					DestinationAddress: addr,
+					FromAddress:        TestOwnerAddress,
+				}
+			},
+			true,
+		},
+		{
+			"invalid - bad from address",
+			func() {
+				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				s.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					DestinationAddress: addr,
+					FromAddress:        addr,
+				}
+			},
+			true,
+		},
+		{
+			"invalid - nil recipient address",
+			func() {
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					DestinationAddress: "",
+					FromAddress:        TestOwnerAddress,
+				}
+			},
+			true,
+		},
+		{
+			"invalid - nil from address",
+			func() {
+				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				s.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					DestinationAddress: addr,
+					FromAddress:        "",
+				}
+			},
+			true,
+		},
 	}
 
 	for _, tt := range tests {
 		tt := tt
 
+		// run tests with LSM enabled.
 		s.Run(tt.name, func() {
 			s.SetupTest()
 			s.SetupZones()
 
+			ctx := s.chainA.GetContext()
+
+			s.GetQuicksilverApp(s.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+
 			tt.malleate()
 
 			msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
-			res, err := msgSrv.RequestRedemption(sdktypes.WrapSDKContext(s.chainA.GetContext()), &msg)
+			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(s.chainA.GetContext()), &msg)
+
+			if tt.expectErr {
+				s.Require().Error(err)
+				s.Require().Nil(res)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotNil(res)
+			}
+		})
+
+		// run tests with LSM disabled.
+		s.Run(tt.name, func() {
+			s.SetupTest()
+			s.SetupZones()
+
+			ctx := s.chainA.GetContext()
+
+			s.GetQuicksilverApp(s.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			s.Require().True(found)
+			zone.LiquidityModule = false
+			s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
+
+			tt.malleate()
+
+			msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(s.chainA.GetContext()), &msg)
 
 			if tt.expectErr {
 				s.Require().Error(err)
@@ -64,7 +206,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 		{
 			"invalid - weight sum < 1",
 			func(s *KeeperTestSuite) *icstypes.MsgSignalIntent {
-				val1, err := sdktypes.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
+				val1, err := sdk.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
 				s.Require().NoError(err)
 
 				return &icstypes.MsgSignalIntent{
@@ -72,7 +214,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 					Intents: []*icstypes.ValidatorIntent{
 						{
 							ValoperAddress: val1.String(),
-							Weight:         sdktypes.MustNewDecFromStr("0.3"),
+							Weight:         sdk.MustNewDecFromStr("0.3"),
 						},
 					},
 					FromAddress: TestOwnerAddress,
@@ -85,7 +227,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 		{
 			"invalid - weight sum > 1",
 			func(s *KeeperTestSuite) *icstypes.MsgSignalIntent {
-				val1, err := sdktypes.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
+				val1, err := sdk.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
 				s.Require().NoError(err)
 
 				return &icstypes.MsgSignalIntent{
@@ -93,7 +235,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 					Intents: []*icstypes.ValidatorIntent{
 						{
 							ValoperAddress: val1.String(),
-							Weight:         sdktypes.MustNewDecFromStr("3.0"),
+							Weight:         sdk.MustNewDecFromStr("3.0"),
 						},
 					},
 					FromAddress: TestOwnerAddress,
@@ -106,7 +248,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 		{
 			"invalid - chain id",
 			func(s *KeeperTestSuite) *icstypes.MsgSignalIntent {
-				val1, err := sdktypes.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
+				val1, err := sdk.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
 				s.Require().NoError(err)
 
 				return &icstypes.MsgSignalIntent{
@@ -114,7 +256,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 					Intents: []*icstypes.ValidatorIntent{
 						{
 							ValoperAddress: val1.String(),
-							Weight:         sdktypes.MustNewDecFromStr("1.0"),
+							Weight:         sdk.MustNewDecFromStr("1.0"),
 						},
 					},
 					FromAddress: TestOwnerAddress,
@@ -127,7 +269,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 		{
 			"valid - single weight",
 			func(s *KeeperTestSuite) *icstypes.MsgSignalIntent {
-				val1, err := sdktypes.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
+				val1, err := sdk.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
 				s.Require().NoError(err)
 
 				return &icstypes.MsgSignalIntent{
@@ -135,7 +277,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 					Intents: []*icstypes.ValidatorIntent{
 						{
 							ValoperAddress: val1.String(),
-							Weight:         sdktypes.MustNewDecFromStr("1.0"),
+							Weight:         sdk.MustNewDecFromStr("1.0"),
 						},
 					},
 					FromAddress: TestOwnerAddress,
@@ -148,11 +290,11 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 		{
 			"valid - multi weight",
 			func(s *KeeperTestSuite) *icstypes.MsgSignalIntent {
-				val1, err := sdktypes.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
+				val1, err := sdk.ValAddressFromHex(s.chainB.Vals.Validators[0].Address.String())
 				s.Require().NoError(err)
-				val2, err := sdktypes.ValAddressFromHex(s.chainB.Vals.Validators[1].Address.String())
+				val2, err := sdk.ValAddressFromHex(s.chainB.Vals.Validators[1].Address.String())
 				s.Require().NoError(err)
-				val3, err := sdktypes.ValAddressFromHex(s.chainB.Vals.Validators[2].Address.String())
+				val3, err := sdk.ValAddressFromHex(s.chainB.Vals.Validators[2].Address.String())
 				s.Require().NoError(err)
 
 				return &icstypes.MsgSignalIntent{
@@ -160,15 +302,15 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 					Intents: []*icstypes.ValidatorIntent{
 						{
 							ValoperAddress: val1.String(),
-							Weight:         sdktypes.MustNewDecFromStr("0.5"),
+							Weight:         sdk.MustNewDecFromStr("0.5"),
 						},
 						{
 							ValoperAddress: val2.String(),
-							Weight:         sdktypes.MustNewDecFromStr("0.2"),
+							Weight:         sdk.MustNewDecFromStr("0.2"),
 						},
 						{
 							ValoperAddress: val3.String(),
-							Weight:         sdktypes.MustNewDecFromStr("0.3"),
+							Weight:         sdk.MustNewDecFromStr("0.3"),
 						},
 					},
 					FromAddress: TestOwnerAddress,
@@ -203,7 +345,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 			}
 
 			msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
-			res, err := msgSrv.SignalIntent(sdktypes.WrapSDKContext(s.chainA.GetContext()), msg)
+			res, err := msgSrv.SignalIntent(sdk.WrapSDKContext(s.chainA.GetContext()), msg)
 			if tt.expectErr {
 				s.Require().Error(err)
 				s.Require().Nil(res)
@@ -222,7 +364,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 			intents := intent.GetIntents()
 
 			for idx, weight := range tt.expected {
-				val, err := sdktypes.ValAddressFromHex(s.chainB.Vals.Validators[idx].Address.String())
+				val, err := sdk.ValAddressFromHex(s.chainB.Vals.Validators[idx].Address.String())
 				s.Require().NoError(err)
 
 				valIntent, found := intents[val.String()]

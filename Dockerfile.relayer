@@ -1,7 +1,7 @@
 FROM golang:1.18-alpine3.15 AS builder
 RUN apk add --no-cache make git gcc musl-dev openssl-dev linux-headers 
 
-RUN git clone https://github.com/ingenuity-build/relayer --branch master /src/app
+RUN git clone https://github.com/cosmos/relayer --branch v2.1.1 /src/app
 WORKDIR /src/app/
 
 RUN go mod download

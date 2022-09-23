@@ -128,7 +128,11 @@ func (im IBCModule) OnAcknowledgementPacket(
 	}
 	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), connectionID))
 
-	return im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement)
+	err = im.keeper.HandleAcknowledgement(ctx, packet, acknowledgement)
+	if err != nil {
+		im.keeper.Logger(ctx).Error("CALLBACK ERROR:", "error", err.Error())
+	}
+	return err
 }
 
 // OnTimeoutPacket implements the IBCModule interface.

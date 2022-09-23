@@ -381,16 +381,16 @@ func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 // func TestApplyDiffsToDistribution(t *testing.T) {
 // 	testCases := []struct {
 // 		distribution         map[string]sdk.Coin
-// 		diff                 map[string]sdk.Int
+// 		diff                 map[string]cosmosmath.Int
 // 		expectedDistribution map[string]sdk.Coin
-// 		expectedRemainder    sdk.Int
+// 		expectedRemainder    cosmosmath.Int
 // 	}{
 // 		{
 // 			distribution: map[string]sdk.Coin{
 // 				"val1": sdk.NewInt64Coin("uatom", 3),
 // 				"val2": sdk.NewInt64Coin("uatom", 3),
 // 			},
-// 			diff: map[string]sdk.Int{
+// 			diff: map[string]cosmosmath.Int{
 // 				"val1": sdk.NewInt(-1),
 // 				"val2": sdk.NewInt(1),
 // 			},
@@ -406,7 +406,7 @@ func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 // 				"val1": sdk.NewInt64Coin("uatom", 1),
 // 				"val2": sdk.NewInt64Coin("uatom", 5),
 // 			},
-// 			diff: map[string]sdk.Int{
+// 			diff: map[string]cosmosmath.Int{
 // 				"val1": sdk.NewInt(-1),
 // 				"val2": sdk.NewInt(1),
 // 			},
@@ -421,7 +421,7 @@ func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 // 				"val1": sdk.NewInt64Coin("uatom", 1),
 // 				"val2": sdk.NewInt64Coin("uatom", 5),
 // 			},
-// 			diff: map[string]sdk.Int{
+// 			diff: map[string]cosmosmath.Int{
 // 				"val1": sdk.NewInt(2),
 // 				"val2": sdk.NewInt(2),
 // 				"val3": sdk.NewInt(-4),
@@ -438,7 +438,7 @@ func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 // 				"val2": sdk.NewInt64Coin("uatom", 5),
 // 				"val3": sdk.NewInt64Coin("uatom", 0),
 // 			},
-// 			diff: map[string]sdk.Int{
+// 			diff: map[string]cosmosmath.Int{
 // 				"val1": sdk.NewInt(2),
 // 				"val2": sdk.NewInt(2),
 // 				"val3": sdk.NewInt(-4),

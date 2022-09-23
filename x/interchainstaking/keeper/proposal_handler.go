@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -23,6 +24,21 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		return fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainID)
 	}
 
+	connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, p.ConnectionId)
+	if !found {
+		return fmt.Errorf("unable to fetch connection")
+	}
+
+	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
+	if !found {
+		return fmt.Errorf("unable to fetch client state")
+	}
+
+	tmClientState, ok := clientState.(*tmclienttypes.ClientState)
+	if !ok {
+		return fmt.Errorf("error unmarshaling client state")
+	}
+
 	zone := types.Zone{
 		ChainId:            chainID,
 		ConnectionId:       p.ConnectionId,
@@ -33,6 +49,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		LastRedemptionRate: sdk.NewDec(1),
 		MultiSend:          p.MultiSend,
 		LiquidityModule:    p.LiquidityModule,
+		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 	}
 	k.SetZone(ctx, &zone)
 

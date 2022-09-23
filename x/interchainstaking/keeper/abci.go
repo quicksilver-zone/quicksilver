@@ -17,20 +17,19 @@ type zoneItrFn func(index int64, zoneInfo types.Zone) (stop bool)
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	k.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
-		if ctx.BlockHeight()%10 == 0 {
+		if ctx.BlockHeight()%30 == 0 {
+			// for the tasks below, we cannot panic in begin blocker; as this will crash the chain.
+			// and as failing here is not terminal we panicking is not necessary, but we should log
+			// as an error. we don't return on failure here as we still want to attempt the unrelated
+			// tasks below.
 			if err := k.EnsureWithdrawalAddresses(ctx, &zone); err != nil {
 				k.Logger(ctx).Error(err.Error())
-				// cannot panic in begin blocker; as this will crash the chain.
-				// failing here is not terminal, but we should log as an error.
-				// we don't return on failure here as we still want to attempt
-				// the unrelated tasks below.
 			}
-			if err := k.HandleCompletedUnbondings(ctx, &zone); err != nil {
+			if err := k.HandleMaturedUnbondings(ctx, &zone); err != nil {
 				k.Logger(ctx).Error(err.Error())
-				// similar to above, we can and need not panic here; logging the error is sufficient.
-				// an error here is not expected, but also not terminal.
-				// we don't return on failure here as we still want to attempt
-				// the unrelated tasks below.
+			}
+			if err := k.GCCompletedUnbondings(ctx, &zone); err != nil {
+				k.Logger(ctx).Error(err.Error())
 			}
 		}
 		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)

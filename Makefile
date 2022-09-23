@@ -210,50 +210,6 @@ $(STATIK):
 	@echo "Installing statik..."
 	@(cd /tmp && go install github.com/rakyll/statik@v0.1.6)
 
-contract-tools:
-ifeq (, $(shell which stringer))
-	@echo "Installing stringer..."
-	@go get golang.org/x/tools/cmd/stringer
-else
-	@echo "stringer already installed; skipping..."
-endif
-
-ifeq (, $(shell which go-bindata))
-	@echo "Installing go-bindata..."
-	@go get github.com/kevinburke/go-bindata/go-bindata
-else
-	@echo "go-bindata already installed; skipping..."
-endif
-
-ifeq (, $(shell which gencodec))
-	@echo "Installing gencodec..."
-	@go get github.com/fjl/gencodec
-else
-	@echo "gencodec already installed; skipping..."
-endif
-
-ifeq (, $(shell which protoc-gen-go))
-	@echo "Installing protoc-gen-go..."
-	@go get github.com/fjl/gencodec github.com/golang/protobuf/protoc-gen-go
-else
-	@echo "protoc-gen-go already installed; skipping..."
-endif
-
-ifeq (, $(shell which protoc))
-	@echo "Please istalling protobuf according to your OS"
-	@echo "macOS: brew install protobuf"
-	@echo "linux: apt-get install -f -y protobuf-compiler"
-else
-	@echo "protoc already installed; skipping..."
-endif
-
-ifeq (, $(shell which solcjs))
-	@echo "Installing solcjs..."
-	@npm install -g solc@0.5.11
-else
-	@echo "solcjs already installed; skipping..."
-endif
-
 docs-tools:
 ifeq (, $(shell which yarn))
 	@echo "Installing yarn..."
@@ -434,18 +390,8 @@ benchmark:
 lint:
 	golangci-lint run --out-format=tab
 
-lint-contracts:
-	@cd contracts && \
-	npm i && \
-	npm run lint
-
 lint-fix:
 	golangci-lint run --fix --out-format=tab --issues-exit-code=0
-
-lint-fix-contracts:
-	@cd contracts && \
-	npm i && \
-	npm run lint-fix
 
 .PHONY: lint lint-fix
 
@@ -489,29 +435,30 @@ proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 
-TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.19/proto/tendermint
+TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.21/proto/tendermint
 GOGO_PROTO_URL      	= https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.7.1
-SDK_PROTO_URL 			= https://raw.githubusercontent.com/ingenuity-build/cosmos-sdk/v0.45.6-ls.1/proto/cosmos
-IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v5.1.0/proto
+SDK_PROTO_URL 			= https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.46.1/proto/cosmos
+IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v5.0.0-rc2/proto
 
-TM_CRYPTO_TYPES     	= third_party/proto/tendermint/crypto
-TM_ABCI_TYPES       	= third_party/proto/tendermint/abci
-TM_TYPES            	= third_party/proto/tendermint/types
-TM_VERSION          	= third_party/proto/tendermint/version
-TM_LIBS             	= third_party/proto/tendermint/libs/bits
-TM_P2P              	= third_party/proto/tendermint/p2p
+TM_CRYPTO_TYPES     			= third_party/proto/tendermint/crypto
+TM_ABCI_TYPES       			= third_party/proto/tendermint/abci
+TM_TYPES            			= third_party/proto/tendermint/types
+TM_VERSION          			= third_party/proto/tendermint/version
+TM_LIBS             			= third_party/proto/tendermint/libs/bits
+TM_P2P              			= third_party/proto/tendermint/p2p
 
 SDK_QUERY 				= third_party/proto/cosmos/base/query/v1beta1
 SDK_BASE 				= third_party/proto/cosmos/base/v1beta1
 SDK_UPGRADE				= third_party/proto/cosmos/upgrade/v1beta1
+SDK_GOV					= third_party/proto/cosmos/gov/v1
 
-GOGO_PROTO_TYPES    	= third_party/proto/gogoproto
-CONFIO_TYPES        	= third_party/proto
+GOGO_PROTO_TYPES    			= third_party/proto/gogoproto
+CONFIO_TYPES        			= third_party/proto
 
-IBC_TM_TYPES 			= third_party/proto/ibc/lightclients/tendermint/v1
-IBC_CLIENT_TYPES 		= third_party/proto/ibc/core/client/v1
-IBC_COMMITMENT_TYPES	= third_party/proto/ibc/core/commitment/v1
+IBC_TM_TYPES 				= third_party/proto/ibc/lightclients/tendermint/v1
+IBC_CLIENT_TYPES 			= third_party/proto/ibc/core/client/v1
+IBC_COMMITMENT_TYPES			= third_party/proto/ibc/core/commitment/v1
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)
@@ -525,6 +472,9 @@ proto-update-deps:
 
 	@mkdir -p $(SDK_UPGRADE)
 	@curl -sSL $(SDK_PROTO_URL)/upgrade/v1beta1/upgrade.proto > $(SDK_UPGRADE)/upgrade.proto
+
+	@mkdir -p $(SDK_GOV)
+	@curl -sSL $(SDK_PROTO_URL)/gov/v1/gov.proto > $(SDK_GOV)/gov.proto
 
 	@mkdir -p $(IBC_TM_TYPES)
 	@curl -sSL $(IBC_PROTO_URL)/ibc/lightclients/tendermint/v1/tendermint.proto > $(IBC_TM_TYPES)/tendermint.proto
