@@ -14,9 +14,7 @@ linters:
     - errcheck
     - goconst
     - gocritic
-    - gofmt
     - gofumpt
-    - goimports
     - revive
     - gosec
     - gosimple
@@ -37,4 +35,4 @@ linters:
 exclude-rules:
   - linters:
       - nolintlint
-    text: "without leading space"
+    text: "should be written without leading space"

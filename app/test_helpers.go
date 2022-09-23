@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -26,6 +27,8 @@ import (
 )
 
 type GenesisState map[string]json.RawMessage
+
+type EmptyAppOptions struct{}
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // Quicksilver testing.
@@ -68,7 +71,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 	}
 
 	db := dbm.NewMemDB()
-	app := NewQuicksilver(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), simapp.EmptyAppOptions{}, GetWasmOpts(simapp.EmptyAppOptions{}))
+	app := NewQuicksilver(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5, MakeEncodingConfig(), wasm.EnableAllProposals, simapp.EmptyAppOptions{}, GetWasmOpts(simapp.EmptyAppOptions{}))
 
 	genesisState := NewDefaultGenesisState()
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
@@ -111,6 +114,7 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 		DefaultNodeHome,
 		5,
 		MakeEncodingConfig(),
+		wasm.EnableAllProposals,
 		simapp.EmptyAppOptions{},
 		GetWasmOpts(simapp.EmptyAppOptions{}),
 	)

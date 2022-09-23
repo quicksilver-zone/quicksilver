@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -53,6 +54,7 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			DefaultNodeHome,
 			0,
 			MakeEncodingConfig(),
+			wasm.EnableAllProposals,
 			simapp.EmptyAppOptions{},
 			GetWasmOpts(simapp.EmptyAppOptions{}),
 			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),

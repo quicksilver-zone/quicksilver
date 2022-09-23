@@ -1,6 +1,10 @@
 package utils
 
-import "sort"
+import (
+	"sort"
+
+	"golang.org/x/exp/constraints"
+)
 
 func Keys[V interface{}](in map[string]V) []string {
 	out := make([]string, 0)
@@ -12,4 +16,12 @@ func Keys[V interface{}](in map[string]V) []string {
 	sort.Strings(out)
 
 	return out
+}
+
+// SortSlice sorts a slice of type T elements that implement constraints.Ordered.
+// Mutates input slice s
+func SortSlice[T constraints.Ordered](s []T) {
+	sort.Slice(s, func(i, j int) bool {
+		return s[i] < s[j]
+	})
 }
