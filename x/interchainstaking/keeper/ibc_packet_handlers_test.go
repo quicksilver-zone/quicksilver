@@ -207,9 +207,8 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				_, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusQueued)
 				s.Require().False(found)
 				// check record with new status can be found
-				r, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusUnbond)
+				_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusUnbond)
 				s.Require().True(found)
-				s.Require().Greater(r.CompletionTime.Unix(), int64(0))
 			}
 		})
 	}
