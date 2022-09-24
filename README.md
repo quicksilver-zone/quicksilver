@@ -68,3 +68,5 @@ x/epochs
 x/tokenfactory
 ```
 
+We're also using CosmWasm, developed over the course of years with lead from Confio and support from the whole of Cosmos. 
+
