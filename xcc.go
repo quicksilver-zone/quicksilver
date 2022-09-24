@@ -8,10 +8,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/cosmos/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
+	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	osmolockup "github.com/osmosis-labs/osmosis/v10/x/lockup/types"
 	tmcrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
@@ -20,18 +22,7 @@ import (
 )
 
 type Response struct {
-	Osmosis *OsmosisResponse `json:"osmosis"`
-}
-
-type OsmosisResponse struct {
-	Locks []LockWithProof `json:"locks"`
-}
-
-type LockWithProof struct {
-	Lock   []byte            `json:"lock"`
-	Key    []byte            `json:"key"`
-	Proof  tmcrypto.ProofOps `json:"proof"`
-	Height int64             `json:"height"`
+	Messages []prewards.MsgSubmitClaim `json:"messages"`
 }
 
 func handle(w http.ResponseWriter, req *http.Request) {
@@ -43,8 +34,11 @@ func handle(w http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(w, "Error: %s", err)
 		return
 	}
-	// validate ts
-	response.Osmosis, err = handleOsmo(vars["address"], ts)
+	// query epoch time
+
+	// query zones and last heights
+
+	response.Messages, err = handleOsmo(vars["address"], ts)
 	if err != nil {
 		fmt.Fprintf(w, "Error: %s", err)
 		return
@@ -58,12 +52,24 @@ func handle(w http.ResponseWriter, req *http.Request) {
 
 }
 
-func handleOsmo(address string, timestamp int64) (*OsmosisResponse, error) {
-	client, err := NewRPCClient("https://osmosis.chorus.one:443", 5*time.Second)
+type poolMap map[string][]int64
+
+func handleOsmo(address string, timestamp int64) ([]prewards.MsgSubmitClaim, error) {
+	_, addrBytes, err := bech32.Decode(address, 51)
 	if err != nil {
 		return nil, err
 	}
-	query := osmolockup.AccountLockedPastTimeRequest{Owner: address, Timestamp: time.Unix(timestamp, 0)}
+	osmoAddress, err := bech32.Encode("osmo", addrBytes)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("b")
+
+	client, err := NewRPCClient("https://rpc-osmosis.whispernode.com:443", 30*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	query := osmolockup.AccountLockedPastTimeRequest{Owner: osmoAddress, Timestamp: time.Unix(timestamp, 0)}
 	interfaceRegistry := cdctypes.NewInterfaceRegistry()
 	osmolockup.RegisterInterfaces(interfaceRegistry)
 	marshaler := codec.NewProtoCodec(interfaceRegistry)
@@ -73,6 +79,7 @@ func handleOsmo(address string, timestamp int64) (*OsmosisResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("done 1")
 	queryResponse := osmolockup.AccountLockedPastTimeResponse{}
 	err = marshaler.Unmarshal(abciquery.Response.Value, &queryResponse)
 	if err != nil {
@@ -80,41 +87,65 @@ func handleOsmo(address string, timestamp int64) (*OsmosisResponse, error) {
 	}
 
 	// filter by pool id - query this from Quicksilver (and cache hourly)
-	poolIds := []int64{3, 625, 465}
+	poolIds := poolMap{"osmosis-1": []int64{3, 625, 465}, "juno-1": []int64{2, 5, 7}}
 
-	o := &OsmosisResponse{}
+	msg := map[string]prewards.MsgSubmitClaim{}
 
 OUTER:
 	for _, lockup := range queryResponse.Locks {
-		for _, p := range poolIds {
-			if fmt.Sprintf("gamm/pool/%d", p) == lockup.Coins.GetDenomByIndex(0) {
-				abciquery, err := client.ABCIQueryWithOptions(
-					context.Background(), "/store/lockup/key",
-					append(osmolockup.KeyPrefixPeriodLock, append(osmolockup.KeyIndexSeparator, sdk.Uint64ToBigEndian(lockup.ID)...)...),
-					rpcclient.ABCIQueryOptions{Height: 0, Prove: true},
-				)
-				if err != nil {
-					return nil, err
-				}
-				lockupResponse := osmolockup.PeriodLock{}
-				err = marshaler.Unmarshal(abciquery.Response.Value, &lockupResponse)
-				if err != nil {
-					return nil, err
-				}
-				o.Locks = append(o.Locks,
-					LockWithProof{
-						Lock:   abciquery.Response.Value,
-						Proof:  *abciquery.Response.ProofOps,
-						Height: abciquery.Response.Height,
-						Key:    abciquery.Response.Key,
-					})
+		fmt.Println("a")
+		for chainID, chainPools := range poolIds {
+			fmt.Println("b")
 
-				continue OUTER
+			for _, p := range chainPools {
+				fmt.Println("c")
+
+				if fmt.Sprintf("gamm/pool/%d", p) == lockup.Coins.GetDenomByIndex(0) {
+					fmt.Println("matched")
+					if _, ok := msg[chainID]; !ok {
+						msg[chainID] = prewards.MsgSubmitClaim{
+							UserAddress: address,
+							Zone:        chainID,
+							ProofType:   0,
+							Key:         make([][]byte, 0),
+							Data:        make([][]byte, 0),
+							ProofOps:    make([]*tmcrypto.ProofOps, 0),
+							Height:      abciquery.Response.Height,
+						}
+					}
+
+					abciquery, err := client.ABCIQueryWithOptions(
+						context.Background(), "/store/lockup/key",
+						append(osmolockup.KeyPrefixPeriodLock, append(osmolockup.KeyIndexSeparator, sdk.Uint64ToBigEndian(lockup.ID)...)...),
+						rpcclient.ABCIQueryOptions{Height: 0, Prove: true},
+					)
+					if err != nil {
+						return nil, err
+					}
+					lockupResponse := osmolockup.PeriodLock{}
+					err = marshaler.Unmarshal(abciquery.Response.Value, &lockupResponse)
+					if err != nil {
+						return nil, err
+					}
+					chainMsg := msg[chainID]
+
+					chainMsg.Data = append(chainMsg.Data, abciquery.Response.Value)
+					chainMsg.ProofOps = append(chainMsg.ProofOps, abciquery.Response.ProofOps)
+					chainMsg.Key = append(chainMsg.Key, abciquery.Response.Key)
+					msg[chainID] = chainMsg
+					continue OUTER
+
+				}
+
 			}
 		}
 	}
 
-	return o, nil
+	out := []prewards.MsgSubmitClaim{}
+	for _, m := range msg {
+		out = append(out, m)
+	}
+	return out, nil
 
 }
 
