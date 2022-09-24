@@ -181,7 +181,6 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 	for _, test := range tests {
 		s.Run(test.name, func() {
-
 			s.SetupTest()
 			s.SetupZones()
 
@@ -219,7 +218,6 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					s.Require().Equal(r.RelatedTxhash[0], record.Txhash)
 				}
 			}
-
 		})
 	}
 }

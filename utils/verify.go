@@ -19,8 +19,8 @@ func VerifyNonAdjacent(
 	trustingPeriod time.Duration,
 	now time.Time,
 	maxClockDrift time.Duration,
-	trustLevel tmmath.Fraction) error {
-
+	trustLevel tmmath.Fraction,
+) error {
 	if untrustedHeader.Height == trustedHeader.Height+1 {
 		return errors.New("headers must be non adjacent in height")
 	}

@@ -13,7 +13,6 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 }
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-
 	if epochIdentifier == "epoch" {
 		k.Logger(ctx).Info("distribute participation rewards...")
 

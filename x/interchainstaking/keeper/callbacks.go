@@ -107,7 +107,6 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	} else {
 		// v0.46 and above
 		zone.LastEpochHeight = blockResponse.SdkBlock.Header.Height
-
 	}
 	k.SetZone(ctx, &zone)
 	return nil
@@ -273,7 +272,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 			k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
 			continue
 		}
-		//k.HandleReceiptTransaction(ctx, txn, txs.Txs[idx], zone)
+		// k.HandleReceiptTransaction(ctx, txn, txs.Txs[idx], zone)
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}
 	return nil
