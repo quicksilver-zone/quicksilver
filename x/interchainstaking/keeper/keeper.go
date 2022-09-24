@@ -6,7 +6,6 @@ import (
 	"sort"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -384,7 +383,7 @@ type RebalanceTarget struct {
 	Target string
 }
 
-func DetermineAllocationsForRebalancing(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations map[string]*types.ValidatorIntent) []RebalanceTarget {
+func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations map[string]*types.ValidatorIntent) []RebalanceTarget {
 	out := make([]RebalanceTarget, 0)
 	deltas := calculateDeltas(currentAllocations, currentSum, targetAllocations)
 
@@ -424,7 +423,7 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]sdkmath.In
 			break
 		}
 		var amount math.Int
-		if src.Weight.Abs().TruncateInt().IsZero() {
+		if src.Weight.Abs().TruncateInt().IsZero() { //nolint:gocritic
 			srcIdx--
 			continue
 		} else if src.Weight.Abs().TruncateInt().GT(toRebalance) { // amount == rebalance
@@ -433,7 +432,7 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]sdkmath.In
 			amount = src.Weight.Abs().TruncateInt()
 		}
 
-		if tgt.Weight.Abs().TruncateInt().IsZero() {
+		if tgt.Weight.Abs().TruncateInt().IsZero() { //nolint:gocritic
 			tgtIdx++
 			continue
 		} else if tgt.Weight.Abs().TruncateInt().GT(toRebalance) {

@@ -26,7 +26,7 @@ func VerifyNonAdjacent(
 	}
 
 	if light.HeaderExpired(trustedHeader, trustingPeriod, now) {
-		return light.ErrOldHeaderExpired{trustedHeader.Time.Add(trustingPeriod), now}
+		return light.ErrOldHeaderExpired{At: trustedHeader.Time.Add(trustingPeriod), Now: now}
 	}
 
 	// if err := verifyNewHeaderAndVals(
@@ -41,7 +41,7 @@ func VerifyNonAdjacent(
 	if err != nil {
 		switch e := err.(type) {
 		case types.ErrNotEnoughVotingPowerSigned:
-			return light.ErrNewValSetCantBeTrusted{e}
+			return light.ErrNewValSetCantBeTrusted{Reason: e}
 		default:
 			return e
 		}
@@ -54,7 +54,7 @@ func VerifyNonAdjacent(
 	// VerifyAdjacent, where validator set is known in advance.
 	if err := untrustedVals.VerifyCommitLight(trustedHeader.ChainID, untrustedHeader.Commit.BlockID,
 		untrustedHeader.Height, untrustedHeader.Commit); err != nil {
-		return light.ErrInvalidHeader{err}
+		return light.ErrInvalidHeader{Reason: err}
 	}
 
 	return nil
