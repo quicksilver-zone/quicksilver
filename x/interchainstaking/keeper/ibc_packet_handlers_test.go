@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -70,6 +71,7 @@ func TestHandleMsgTransferBadRecipient(t *testing.T) {
 	require.Error(t, app.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
 }
 
+// TODO: add test cases for send.
 // func (s *KeeperTestSuite) TestHandleSendToDelegate() {
 // 	tests := []struct {
 // 		name string
@@ -124,10 +126,10 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						ChainId:   chainID,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{utils.GenerateValAddressForTest().String(), 1000000},
-							{utils.GenerateValAddressForTest().String(), 1000000},
-							{utils.GenerateValAddressForTest().String(), 1000000},
-							{utils.GenerateValAddressForTest().String(), 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
 						},
 						Recipient:  mustGetTestBech32Address(hrp),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
@@ -146,10 +148,10 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						ChainId:   chainID,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{utils.GenerateValAddressForTest().String(), 1000000},
-							{utils.GenerateValAddressForTest().String(), 1000000},
-							{utils.GenerateValAddressForTest().String(), 1000000},
-							{utils.GenerateValAddressForTest().String(), 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
 						},
 						Recipient:  mustGetTestBech32Address(hrp),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
@@ -161,10 +163,10 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						ChainId:   chainID,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{utils.GenerateValAddressForTest().String(), 5000000},
-							{utils.GenerateValAddressForTest().String(), 1250000},
-							{utils.GenerateValAddressForTest().String(), 5000000},
-							{utils.GenerateValAddressForTest().String(), 1250000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 5000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1250000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 5000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1250000},
 						},
 						Recipient:  mustGetTestBech32Address(hrp),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
@@ -209,7 +211,15 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				// check record with new status can be found
 				_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusUnbond)
 				s.Require().True(found)
+
+				for _, unbonding := range record.Distribution {
+					r, found := app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, unbonding.Valoper, 1)
+					s.Require().True(found)
+					fmt.Println(r.RelatedTxhash)
+					s.Require().Equal(r.RelatedTxhash[0], record.Txhash)
+				}
 			}
+
 		})
 	}
 }

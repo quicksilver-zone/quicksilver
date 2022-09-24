@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
@@ -16,9 +17,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	"github.com/tendermint/tendermint/light"
 	tmtypes "github.com/tendermint/tendermint/types"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -99,7 +100,15 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	if err != nil {
 		return err
 	}
-	zone.LastEpochHeight = blockResponse.SdkBlock.Header.Height
+	if blockResponse.SdkBlock == nil {
+		// v0.45 and below
+		//nolint:staticcheck
+		zone.LastEpochHeight = blockResponse.Block.Header.Height
+	} else {
+		// v0.46 and above
+		zone.LastEpochHeight = blockResponse.SdkBlock.Header.Height
+
+	}
 	k.SetZone(ctx, &zone)
 	return nil
 }
@@ -256,16 +265,16 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
 	}
 
-	for idx, txn := range txs.TxResponses {
-		// req := tx.GetTxRequest{Hash: txn.TxHash}
-		// hashBytes := k.cdc.MustMarshal(&req)
+	for _, txn := range txs.TxResponses {
+		req := tx.GetTxRequest{Hash: txn.TxHash}
+		hashBytes := k.cdc.MustMarshal(&req)
 		_, found = k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, txn.TxHash))
 		if found {
 			k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
 			continue
 		}
-		k.HandleReceiptTransaction(ctx, txn, txs.Txs[idx], zone)
-		// k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
+		//k.HandleReceiptTransaction(ctx, txn, txs.Txs[idx], zone)
+		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}
 	return nil
 }
@@ -328,12 +337,12 @@ func checkValidity(
 	}
 
 	// assert header height is newer than consensus state
-	if header.GetHeight().LTE(header.TrustedHeight) {
-		return sdkerrors.Wrapf(
-			tmclienttypes.ErrInvalidHeader,
-			"header height ≤ consensus state height (%s ≤ %s)", header.GetHeight(), header.TrustedHeight,
-		)
-	}
+	// if header.GetHeight().LTE(header.TrustedHeight) {
+	// 	return sdkerrors.Wrapf(
+	// 		tmclienttypes.ErrInvalidHeader,
+	// 		"header height ≤ consensus state height (%s ≤ %s)", header.GetHeight(), header.TrustedHeight,
+	// 	)
+	// }
 
 	chainID := clientState.GetChainID()
 	// If chainID is in revision format, then set revision number of chainID with the revision number
@@ -363,7 +372,7 @@ func checkValidity(
 	// - assert header timestamp is not past the trusting period
 	// - assert header timestamp is past latest stored consensus state timestamp
 	// - assert that a TrustLevel proportion of TrustedValidators signed new Commit
-	err = light.Verify(
+	err = utils.VerifyNonAdjacent(
 		&signedHeader,
 		tmTrustedValidators, tmSignedHeader, tmValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
@@ -375,6 +384,7 @@ func checkValidity(
 }
 
 func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	k.Logger(ctx).Error("RECEIVED DEPOSITTX")
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -424,6 +434,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 	err = checkValidity(tmclientState, tmconsensusState, res.GetHeader(), ctx.BlockHeader().Time)
 	if err != nil {
 		k.Logger(ctx).Info("unable to validate header", "header", res.Header)
+		return fmt.Errorf("unable to validate header; %q", err.Error())
 	}
 
 	// _, _, err = clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.IBCKeeper.ClientKeeper.ClientStore(ctx, connection.ClientId), res.GetHeader())
@@ -435,7 +446,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 	if err != nil {
 		return fmt.Errorf("unable to marshal proof: %s", err)
 	}
-	// k.Logger(ctx).Error("hashes", "proof", tmproof.RootHash, "header", hex.EncodeToString(res.Header.Header.DataHash))
+	k.Logger(ctx).Error("hashes", "proof", tmproof.RootHash, "header", hex.EncodeToString(res.Header.Header.DataHash))
 	err = tmproof.Validate(res.Header.Header.DataHash)
 	if err != nil {
 		return fmt.Errorf("unable to validate proof: %s", err)

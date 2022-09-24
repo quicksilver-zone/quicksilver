@@ -3,8 +3,10 @@ package keeper
 import (
 	"bytes"
 	"fmt"
+	"sort"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -361,6 +363,105 @@ func (k *Keeper) getRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone) error {
-	// TODO: rebalance
-	return nil
+	currentAllocations, currentSum := k.GetDelegationMap(ctx, &zone)
+	targetAllocations := zone.GetAggregateIntentOrDefault()
+	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations)
+	msgs := make([]sdk.Msg, 0)
+	for _, rebalance := range rebalances {
+		msgs = append(msgs, &stakingTypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
+	}
+	if len(msgs) == 0 {
+		k.Logger(ctx).Info("No rebalancing required")
+		return nil
+	}
+	k.Logger(ctx).Info("Send rebalancing messages", "msgs", msgs)
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "epoch %d rebalancing")
+}
+
+type RebalanceTarget struct {
+	Amount math.Int
+	Source string
+	Target string
+}
+
+func DetermineAllocationsForRebalancing(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations map[string]*types.ValidatorIntent) []RebalanceTarget {
+	out := make([]RebalanceTarget, 0)
+	deltas := calculateDeltas(currentAllocations, currentSum, targetAllocations)
+
+	wantToRebalance := sdk.ZeroInt()
+	maxCanRebalance := currentSum.Quo(sdk.NewInt(2))
+
+	// sort keys by relative value of delta
+	sort.SliceStable(deltas, func(i, j int) bool {
+		return deltas[i].ValoperAddress > deltas[j].ValoperAddress
+	})
+
+	// sort keys by relative value of delta
+	sort.SliceStable(deltas, func(i, j int) bool {
+		return deltas[i].Weight.GT(deltas[j].Weight)
+	})
+
+	for _, delta := range deltas {
+		if delta.Weight.GT(sdk.ZeroDec()) {
+			wantToRebalance = wantToRebalance.Add(delta.Weight.TruncateInt())
+		}
+	}
+
+	toRebalance := sdk.MinInt(wantToRebalance, maxCanRebalance)
+
+	fmt.Println("deltas", deltas, wantToRebalance, maxCanRebalance, toRebalance)
+
+	tgtIdx := 0
+	srcIdx := len(deltas) - 1
+	for i := 0; toRebalance.GT(sdk.ZeroInt()); {
+		i++
+		if i > 20 {
+			break
+		}
+		src := deltas[srcIdx]
+		tgt := deltas[tgtIdx]
+		if src.ValoperAddress == tgt.ValoperAddress {
+			break
+		}
+		var amount math.Int
+		if src.Weight.Abs().TruncateInt().IsZero() {
+			srcIdx--
+			continue
+		} else if src.Weight.Abs().TruncateInt().GT(toRebalance) { // amount == rebalance
+			amount = toRebalance
+		} else {
+			amount = src.Weight.Abs().TruncateInt()
+		}
+
+		if tgt.Weight.Abs().TruncateInt().IsZero() {
+			tgtIdx++
+			continue
+		} else if tgt.Weight.Abs().TruncateInt().GT(toRebalance) {
+			// amount == amount!
+		} else {
+			amount = sdk.MinInt(amount, tgt.Weight.Abs().TruncateInt())
+		}
+		out = append(out, RebalanceTarget{Amount: amount, Target: tgt.ValoperAddress, Source: src.ValoperAddress})
+		deltas[srcIdx].Weight = src.Weight.Add(sdk.NewDecFromInt(amount))
+		deltas[tgtIdx].Weight = tgt.Weight.Sub(sdk.NewDecFromInt(amount))
+		toRebalance = toRebalance.Sub(amount)
+		fmt.Printf("source: %s [%d], target : %s [%d], amount: %d, toRebalance: %d\n", src.ValoperAddress, src.Weight.TruncateInt().Int64(), tgt.ValoperAddress, tgt.Weight.TruncateInt().Int64(), amount.Int64(), toRebalance.Int64())
+
+	}
+
+	// sort keys by relative value of delta
+	sort.SliceStable(out, func(i, j int) bool {
+		return out[i].Source > out[j].Source
+	})
+
+	sort.SliceStable(out, func(i, j int) bool {
+		return out[i].Target > out[j].Target
+	})
+
+	// sort keys by relative value of delta
+	sort.SliceStable(out, func(i, j int) bool {
+		return out[i].Amount.GT(out[j].Amount)
+	})
+
+	return out
 }

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"sort"
 
 	"golang.org/x/exp/constraints"
@@ -24,4 +25,16 @@ func SortSlice[T constraints.Ordered](s []T) {
 	sort.Slice(s, func(i, j int) bool {
 		return s[i] < s[j]
 	})
+}
+
+func Unique[V interface{}](in []V) []V {
+	keys := make(map[string]bool)
+	list := []V{}
+	for _, entry := range in {
+		if _, value := keys[fmt.Sprintf("%v", entry)]; !value {
+			keys[fmt.Sprintf("%v", entry)] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }

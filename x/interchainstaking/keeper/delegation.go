@@ -168,16 +168,23 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, am
 func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations map[string]*types.ValidatorIntent) []types.ValidatorIntent {
 	deltas := make([]types.ValidatorIntent, 0)
 
+	keySet := utils.Unique(append(utils.Keys(targetAllocations), utils.Keys(currentAllocations)...))
+	sort.Strings(keySet)
 	// for target allocations, raise the intent weight by the total delegated value to get target amount
-	for _, valoper := range utils.Keys(targetAllocations) {
+	for _, valoper := range keySet {
 		current, ok := currentAllocations[valoper]
 		if !ok {
 			current = sdk.ZeroInt()
 		}
-		target := targetAllocations[valoper].Weight.MulInt(currentSum).TruncateInt()
+
+		target, ok := targetAllocations[valoper]
+		if !ok {
+			target = &types.ValidatorIntent{ValoperAddress: valoper, Weight: sdk.ZeroDec()}
+		}
+		targetAmount := target.Weight.MulInt(currentSum).TruncateInt()
 		// diff between target and current allocations
 		// positive == below target, negative == above target
-		delta := target.Sub(current)
+		delta := targetAmount.Sub(current)
 		deltas = append(deltas, types.ValidatorIntent{Weight: sdk.NewDecFromInt(delta), ValoperAddress: valoper})
 	}
 

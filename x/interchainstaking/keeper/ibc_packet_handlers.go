@@ -371,7 +371,7 @@ func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch int64) error {
 	// out here will only ever be in native bond denom
 	out := make(map[string]sdk.Coin, 0)
-	txhashes := make([]string, 0)
+	txhashes := make(map[string][]string, 0)
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		k.Logger(ctx).Info("unbonding funds", "from", withdrawal.Delegator, "to", withdrawal.Recipient, "amount", withdrawal.Amount)
 		for _, dist := range withdrawal.Distribution {
@@ -379,10 +379,13 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 			existing, found := out[valoper]
 			if !found {
 				out[valoper] = sdk.NewCoin(zone.BaseDenom, math.NewIntFromUint64(dist.Amount))
+				txhashes[valoper] = []string{withdrawal.Txhash}
+
 			} else {
 				out[valoper] = existing.AddAmount(math.NewIntFromUint64(dist.Amount))
+				txhashes[valoper] = append(txhashes[valoper], withdrawal.Txhash)
+
 			}
-			txhashes = append(txhashes, withdrawal.Txhash)
 		}
 
 		k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, WithdrawStatusUnbond)
@@ -393,15 +396,14 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return nil
 	}
 
-	sort.Strings(txhashes)
-
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(out) {
-		k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txhashes})
+		sort.Strings(txhashes[valoper])
+		k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txhashes[valoper]})
 		msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: out[valoper]})
 	}
 
-	k.Logger(ctx).Error("Sending unbonding messages", "msgs", msgs)
+	fmt.Println("Sending unbonding messages", "msgs", msgs)
 
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch))
 }

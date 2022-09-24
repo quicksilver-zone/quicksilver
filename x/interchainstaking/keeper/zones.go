@@ -187,52 +187,7 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
 		k.Logger(ctx).Info("Matched performance address")
 	default:
-		panic("does this ever happen?")
-		// icaAccount := zone.DelegationAddress
-
-		// existing := icaAccount.Balance.AmountOf(coin.Denom)
-		// k.Logger(ctx).Info("Matched delegate address", "address", address, "wg", icaAccount.BalanceWaitgroup, "balance", icaAccount.Balance)
-
-		// icaAccount.Balance = icaAccount.Balance.Sub(sdk.NewCoins(sdk.NewCoin(coin.Denom, existing))) // zero this denom
-
-		// // if !icaAccount.Balance.Empty() {
-		// // 	claims := k.AllZoneStatusWithdrawalRecords(ctx, &zone, icaAccount.Address)
-		// // 	if len(claims) > 0 {
-		// // 		// should we reconcile here?
-		// // 		k.Logger(ctx).Info("Outstanding Withdrawal Claims", "count", len(claims))
-		// // 		for _, claim := range claims {
-		// // 			if claim.Status == WithdrawStatusTokenize || claim.Status == WithdrawStatusUnbond {
-		// // 				// if the claim has tokenize status AND then remove any coins in the balance that match that validator.
-		// // 				// so we don't try to re-delegate any recently redeemed tokens that haven't been sent yet.
-		// // 				if strings.HasPrefix(coin.Denom, claim.Validator) {
-		// // 					k.Logger(ctx).Info("Ignoring denom this iteration", "denom", coin.GetDenom())
-		// // 					coin = coin.Sub(claim.Amount)
-		// // 				}
-		// // 			}
-		// // 		}
-		// // 	}
-		// // }
-
-		// icaAccount.Balance = icaAccount.Balance.Add(coin)
-		// k.Logger(ctx).Info("Matched delegate address", "address", address, "wg", icaAccount.BalanceWaitgroup, "balance", icaAccount.Balance)
-
-		// if zone.WithdrawalAddress.BalanceWaitgroup == 0 {
-		// 	if !icaAccount.Balance.Empty() {
-		// 		// dlns, sum := k.GetDelegationMap(ctx, &zone)
-		// 		k.Logger(ctx).Error("Should we be delegating here?!", "to_delegate", icaAccount.Balance)
-		// 		// valPlan, err := types.DelegationPlanFromGlobalIntent(k.GetDelegatedAmount(ctx, &zone), dlns, coin, zone.GetAggregateIntentOrDefault())
-		// 		// if err != nil {
-		// 		// 	return err
-		// 		// }
-		// 		// err = k.Delegate(ctx, zone, icaAccount, valPlan)
-		// 		// if err != nil {
-		// 		// 	return err
-		// 		// }
-		// 	}
-		// }
-
-		// icaAccount.BalanceWaitgroup--
-
+		panic("unexpected")
 	}
 	k.SetZone(ctx, &zone)
 	return nil
