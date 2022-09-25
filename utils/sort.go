@@ -28,11 +28,12 @@ func SortSlice[T constraints.Ordered](s []T) {
 }
 
 func Unique[V interface{}](in []V) []V {
-	keys := make(map[string]bool)
+	keys := make(map[string]struct{}, len(in))
 	list := []V{}
 	for _, entry := range in {
-		if _, value := keys[fmt.Sprintf("%v", entry)]; !value {
-			keys[fmt.Sprintf("%v", entry)] = true
+		key := fmt.Sprintf("%v", entry)
+		if _, ok := keys[key]; !ok {
+			keys[key] = struct{}{}
 			list = append(list, entry)
 		}
 	}

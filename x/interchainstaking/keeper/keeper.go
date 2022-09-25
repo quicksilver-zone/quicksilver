@@ -392,7 +392,7 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 
 	// sort keys by relative value of delta
 	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].ValoperAddress > deltas[j].ValoperAddress
+		return deltas[i].ValoperAddress < deltas[j].ValoperAddress
 	})
 
 	// sort keys by relative value of delta
@@ -401,7 +401,7 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 	})
 
 	for _, delta := range deltas {
-		if delta.Weight.GT(sdk.ZeroDec()) {
+		if delta.Weight.IsPositive() {
 			wantToRebalance = wantToRebalance.Add(delta.Weight.TruncateInt())
 		}
 	}
@@ -450,11 +450,11 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 
 	// sort keys by relative value of delta
 	sort.SliceStable(out, func(i, j int) bool {
-		return out[i].Source > out[j].Source
+		return out[i].Source < out[j].Source
 	})
 
 	sort.SliceStable(out, func(i, j int) bool {
-		return out[i].Target > out[j].Target
+		return out[i].Target < out[j].Target
 	})
 
 	// sort keys by relative value of delta
