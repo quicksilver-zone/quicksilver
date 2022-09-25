@@ -24,7 +24,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 
 	tc := []struct {
 		current  map[string]cosmosmath.Int
-		target   map[string]*types.ValidatorIntent
+		target   types.ValidatorIntents
 		inAmount sdk.Coins
 		expected map[string]cosmosmath.Int
 		dust     cosmosmath.Int
@@ -35,10 +35,10 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				val2.String(): sdk.NewInt(650000),
 				val3.String(): sdk.NewInt(75000),
 			},
-			target: map[string]*types.ValidatorIntent{
-				val1.String(): {ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(30, 2)},
-				val2.String(): {ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(63, 2)},
-				val3.String(): {ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
+			target: types.ValidatorIntents{
+				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(30, 2)},
+				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(63, 2)},
+				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000))),
 			expected: map[string]cosmosmath.Int{
@@ -54,11 +54,11 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				val3.String(): sdk.NewInt(20),
 				val4.String(): sdk.NewInt(4),
 			},
-			target: map[string]*types.ValidatorIntent{
-				val1.String(): {ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
-				val2.String(): {ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
-				val3.String(): {ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
-				val4.String(): {ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
+			target: types.ValidatorIntents{
+				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
+				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
+				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
+				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(20))),
 			expected: map[string]cosmosmath.Int{
@@ -75,11 +75,11 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				val3.String(): sdk.NewInt(20),
 				val4.String(): sdk.NewInt(4),
 			},
-			target: map[string]*types.ValidatorIntent{
-				val1.String(): {ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
-				val2.String(): {ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
-				val3.String(): {ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
-				val4.String(): {ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
+			target: types.ValidatorIntents{
+				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
+				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
+				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
+				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50))),
 			expected: map[string]cosmosmath.Int{
@@ -257,7 +257,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 
 	tc := []struct {
 		current  map[string]cosmosmath.Int
-		target   map[string]*types.ValidatorIntent
+		target   types.ValidatorIntents
 		expected []icskeeper.RebalanceTarget
 		dust     cosmosmath.Int
 	}{
@@ -267,10 +267,10 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				val2.String(): sdk.NewInt(650000),
 				val3.String(): sdk.NewInt(75000),
 			},
-			target: map[string]*types.ValidatorIntent{
-				val1.String(): {ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(30, 2)},
-				val2.String(): {ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(63, 2)},
-				val3.String(): {ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
+			target: types.ValidatorIntents{
+				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(30, 2)},
+				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(63, 2)},
+				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
 			},
 			expected: []icskeeper.RebalanceTarget{
 				{Amount: cosmosmath.NewInt(27250), Source: val1.String(), Target: val2.String()},
@@ -284,11 +284,11 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				val3.String(): sdk.NewInt(14),
 				val4.String(): sdk.NewInt(5),
 			},
-			target: map[string]*types.ValidatorIntent{
-				val1.String(): {ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
-				val2.String(): {ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(28, 2)},
-				val3.String(): {ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(12, 2)},
-				val4.String(): {ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
+			target: types.ValidatorIntents{
+				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
+				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(28, 2)},
+				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(12, 2)},
+				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			expected: []icskeeper.RebalanceTarget{
 				{Amount: cosmosmath.NewInt(4), Source: val1.String(), Target: val4.String()},
@@ -302,11 +302,11 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				val3.String(): sdk.NewInt(20),
 				val4.String(): sdk.NewInt(60),
 			},
-			target: map[string]*types.ValidatorIntent{
-				val1.String(): {ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
-				val2.String(): {ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
-				val3.String(): {ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
-				val4.String(): {ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
+			target: types.ValidatorIntents{
+				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
+				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
+				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
+				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			expected: []icskeeper.RebalanceTarget{
 				{Amount: cosmosmath.NewInt(40), Source: val4.String(), Target: val1.String()},

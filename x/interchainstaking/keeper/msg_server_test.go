@@ -367,7 +367,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				val, err := sdk.ValAddressFromHex(s.chainB.Vals.Validators[idx].Address.String())
 				s.Require().NoError(err)
 
-				valIntent, found := intents[val.String()]
+				valIntent, found := intents.GetForValoper(val.String())
 				s.Require().True(found)
 
 				s.Require().Equal(weight, valIntent.Weight)

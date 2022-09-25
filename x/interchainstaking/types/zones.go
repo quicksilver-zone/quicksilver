@@ -8,7 +8,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 func (z Zone) SupportMultiSend() bool { return z.MultiSend }
@@ -69,26 +68,25 @@ func (z *Zone) UpdateIntentWithMemo(intent DelegatorIntent, memo string, multipl
 	if err != nil {
 		return DelegatorIntent{}, err
 	}
-
 	intent = intent.AddOrdinal(multiplier, memoIntent)
 	return intent, nil
 }
 
 func (z *Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins) ValidatorIntents {
 	// should we be return DelegatorIntent here?
-	out := make(ValidatorIntents)
+	out := make(ValidatorIntents, 0)
 	zoneVals := z.GetValidatorsAddressesAsSlice()
 COINS:
 	for _, coin := range coins {
 		for _, v := range zoneVals {
 			// if token share, add amount to
 			if strings.HasPrefix(coin.Denom, v) {
-				val, ok := out[v]
+				val, ok := out.GetForValoper(v)
 				if !ok {
 					val = &ValidatorIntent{ValoperAddress: v, Weight: sdk.ZeroDec()}
 				}
 				val.Weight = val.Weight.Add(sdk.NewDecFromInt(coin.Amount))
-				out[v] = val
+				out = out.SetForValoper(v, val)
 				continue COINS
 			}
 		}
@@ -99,7 +97,7 @@ COINS:
 
 func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (ValidatorIntents, error) {
 	// should we be return DelegatorIntent here?
-	out := make(ValidatorIntents)
+	out := make(ValidatorIntents, 0)
 
 	if len(memo) == 0 {
 		return out, fmt.Errorf("memo length unexpectedly zero")
@@ -129,12 +127,13 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 		if err != nil {
 			return ValidatorIntents{}, err
 		}
-		val, ok := out[valAddr]
+		val, ok := out.GetForValoper(valAddr)
 		if !ok {
 			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
 		}
 		val.Weight = val.Weight.Add(coinWeight)
-		out[valAddr] = val
+		fmt.Printf("setting %s to %0.2f\n", val.ValoperAddress, val.Weight.MustFloat64())
+		out = out.SetForValoper(valAddr, val)
 	}
 	return out, nil
 }
@@ -166,21 +165,18 @@ func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
 
 // defaultAggregateIntents determines the default aggregate intent (for epoch 0)
 func (z *Zone) DefaultAggregateIntents() ValidatorIntents {
-	out := make(ValidatorIntents)
+	out := make(ValidatorIntents, 0)
 	for _, val := range z.GetValidatorsSorted() {
 		if val.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
-			out[val.GetValoperAddress()] = &ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()}
+			out = append(out, &ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()})
 		}
 	}
 
 	valCount := sdk.NewInt(int64(len(out)))
 
 	// normalise the array (divide everything by length of intent list)
-	for _, key := range utils.Keys(out) {
-		if val, ok := out[key]; ok {
-			val.Weight = val.Weight.Quo(sdk.NewDecFromInt(valCount))
-			out[key] = val
-		}
+	for idx, intent := range out.Sort() {
+		out[idx].Weight = intent.Weight.Quo(sdk.NewDecFromInt(valCount))
 	}
 
 	return out

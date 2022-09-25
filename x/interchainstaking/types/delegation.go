@@ -3,11 +3,11 @@ package types
 import (
 	"bytes"
 	"fmt"
+	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 // NewDelegation creates a new delegation object
@@ -65,8 +65,43 @@ func (d Delegation) GetValidatorAddr() sdk.ValAddress {
 	return valAddr
 }
 
-type ValidatorIntents map[string]*ValidatorIntent
+type ValidatorIntents []*ValidatorIntent
 
-func (v ValidatorIntents) Keys() []string {
-	return utils.Keys(v)
+func (vi ValidatorIntents) Sort() ValidatorIntents {
+	sort.SliceStable(vi, func(i, j int) bool {
+		return vi[i].ValoperAddress < vi[j].ValoperAddress
+	})
+	return vi
+}
+
+func (vi ValidatorIntents) GetForValoper(valoper string) (*ValidatorIntent, bool) {
+	for _, i := range vi.Sort() {
+		if i.ValoperAddress == valoper {
+			return i, true
+		}
+	}
+	return nil, false
+}
+
+func (vi ValidatorIntents) SetForValoper(valoper string, intent *ValidatorIntent) ValidatorIntents {
+	for idx, i := range vi.Sort() {
+		if i.ValoperAddress == valoper {
+			var part []*ValidatorIntent
+			if idx != 0 {
+				part = vi[:idx-1]
+			}
+			vi = append(part, vi[idx:]...)
+		}
+	}
+	vi = append(vi, intent)
+
+	return vi.Sort()
+}
+
+func (vi ValidatorIntents) MustGetForValoper(valoper string) *ValidatorIntent {
+	intent, found := vi.GetForValoper(valoper)
+	if !found {
+		panic("could not find intent for valoper")
+	}
+	return intent
 }

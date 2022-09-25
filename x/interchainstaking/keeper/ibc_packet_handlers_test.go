@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -214,7 +213,6 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				for _, unbonding := range record.Distribution {
 					r, found := app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, unbonding.Valoper, 1)
 					s.Require().True(found)
-					fmt.Println(r.RelatedTxhash)
 					s.Require().Equal(r.RelatedTxhash[0], record.Txhash)
 				}
 			}

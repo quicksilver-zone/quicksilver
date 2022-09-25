@@ -165,10 +165,18 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, am
 }
 
 // CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
-func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations map[string]*types.ValidatorIntent) []types.ValidatorIntent {
-	deltas := make([]types.ValidatorIntent, 0)
+func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents) types.ValidatorIntents {
+	deltas := make(types.ValidatorIntents, 0)
 
-	keySet := utils.Unique(append(utils.Keys(targetAllocations), utils.Keys(currentAllocations)...))
+	targetValopers := func(in types.ValidatorIntents) []string {
+		out := make([]string, 0)
+		for _, i := range in.Sort() {
+			out = append(out, i.ValoperAddress)
+		}
+		return out
+	}(targetAllocations)
+
+	keySet := utils.Unique(append(targetValopers, utils.Keys(currentAllocations)...))
 	sort.Strings(keySet)
 	// for target allocations, raise the intent weight by the total delegated value to get target amount
 	for _, valoper := range keySet {
@@ -177,7 +185,7 @@ func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkma
 			current = sdk.ZeroInt()
 		}
 
-		target, ok := targetAllocations[valoper]
+		target, ok := targetAllocations.GetForValoper(valoper)
 		if !ok {
 			target = &types.ValidatorIntent{ValoperAddress: valoper, Weight: sdk.ZeroDec()}
 		}
@@ -185,14 +193,14 @@ func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkma
 		// diff between target and current allocations
 		// positive == below target, negative == above target
 		delta := targetAmount.Sub(current)
-		deltas = append(deltas, types.ValidatorIntent{Weight: sdk.NewDecFromInt(delta), ValoperAddress: valoper})
+		deltas = append(deltas, &types.ValidatorIntent{Weight: sdk.NewDecFromInt(delta), ValoperAddress: valoper})
 	}
 
 	return deltas
 }
 
 // minDeltas returns the lowest value in a slice of Deltas.
-func minDeltas(deltas []types.ValidatorIntent) sdkmath.Int {
+func minDeltas(deltas types.ValidatorIntents) sdkmath.Int {
 	minValue := sdk.NewInt(math.MaxInt64)
 	for _, intent := range deltas {
 		if minValue.GT(intent.Weight.TruncateInt()) {
@@ -203,7 +211,7 @@ func minDeltas(deltas []types.ValidatorIntent) sdkmath.Int {
 	return minValue
 }
 
-func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations map[string]*types.ValidatorIntent, amount sdk.Coins) map[string]sdkmath.Int {
+func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents, amount sdk.Coins) map[string]sdkmath.Int {
 	input := amount[0].Amount
 	deltas := calculateDeltas(currentAllocations, currentSum, targetAllocations)
 	minValue := minDeltas(deltas)

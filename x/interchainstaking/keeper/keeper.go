@@ -388,7 +388,7 @@ type RebalanceTarget struct {
 	Target string
 }
 
-func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations map[string]*types.ValidatorIntent) []RebalanceTarget {
+func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents) []RebalanceTarget {
 	out := make([]RebalanceTarget, 0)
 	deltas := calculateDeltas(currentAllocations, currentSum, targetAllocations)
 
@@ -412,8 +412,6 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 	}
 
 	toRebalance := sdk.MinInt(wantToRebalance, maxCanRebalance)
-
-	fmt.Println("deltas", deltas, wantToRebalance, maxCanRebalance, toRebalance)
 
 	tgtIdx := 0
 	srcIdx := len(deltas) - 1

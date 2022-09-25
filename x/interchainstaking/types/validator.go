@@ -3,7 +3,6 @@ package types
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 // check to see if two validator instances are equal. Used in testing.
@@ -40,31 +39,52 @@ func (di DelegatorIntent) AddOrdinal(multiplier sdk.Dec, intents ValidatorIntent
 	}
 
 	if len(di.Intents) == 0 {
-		di.Intents = make(map[string]*ValidatorIntent, 0)
+		di.Intents = make(ValidatorIntents, 0)
 	}
 
 	di = di.Ordinalize(multiplier)
 
 OUTER:
-	for _, idx := range utils.Keys(intents) {
-		if i, ok := intents[idx]; ok {
-			for _, j := range utils.Keys(di.Intents) {
-				if i.ValoperAddress == di.Intents[j].ValoperAddress {
-					di.Intents[j].Weight = di.Intents[j].Weight.Add(i.Weight)
-					continue OUTER
-				}
+	for _, i := range intents.Sort() {
+		for jdx, j := range di.SortedIntents() {
+			//for _, j := range utils.Keys(di.Intents) {
+			if i.ValoperAddress == j.ValoperAddress {
+				di.Intents[jdx].Weight = j.Weight.Add(i.Weight)
+				continue OUTER
 			}
-			di.Intents[i.ValoperAddress] = i
 		}
+		di.Intents = append(di.Intents, i)
 	}
+
+	// we may have appended above, so resort intents.
+	di.SortedIntents()
 
 	return di.Normalize()
 }
 
+func (di DelegatorIntent) IntentForValoper(valoper string) (*ValidatorIntent, bool) {
+	for _, intent := range di.Intents {
+		if intent.ValoperAddress == valoper {
+			return intent, true
+		}
+	}
+	return nil, false
+}
+
+func (di DelegatorIntent) MustIntentForValoper(valoper string) *ValidatorIntent {
+	intent, found := di.IntentForValoper(valoper)
+	if !found {
+		panic("intent not found")
+	}
+	return intent
+}
+
 func (di DelegatorIntent) Normalize() DelegatorIntent {
 	summedWeight := sdk.ZeroDec()
-	for _, i := range utils.Keys(di.Intents) {
-		summedWeight = summedWeight.Add(di.Intents[i].Weight)
+	// cached sorted intents as we don't modify in the first iteration.
+	sortedIntents := di.SortedIntents()
+	for _, i := range sortedIntents {
+		summedWeight = summedWeight.Add(i.Weight)
 	}
 
 	// zero summed weight, we should panic here, something is very wrong...
@@ -72,16 +92,22 @@ func (di DelegatorIntent) Normalize() DelegatorIntent {
 		return di
 	}
 
-	for _, i := range utils.Keys(di.Intents) {
-		di.Intents[i].Weight = di.Intents[i].Weight.QuoTruncate(summedWeight)
+	for idx, i := range sortedIntents {
+		di.Intents[idx].Weight = i.Weight.QuoTruncate(summedWeight)
 	}
+
 	return di
 }
 
 func (di DelegatorIntent) Ordinalize(multiple sdk.Dec) DelegatorIntent {
-	for _, i := range utils.Keys(di.Intents) {
-		di.Intents[i].Weight = di.Intents[i].Weight.Mul(multiple)
+	for idx, i := range di.SortedIntents() {
+		di.Intents[idx].Weight = i.Weight.Mul(multiple)
 	}
 
 	return di
+}
+
+func (di *DelegatorIntent) SortedIntents() ValidatorIntents {
+	di.Intents = di.Intents.Sort()
+	return di.Intents
 }

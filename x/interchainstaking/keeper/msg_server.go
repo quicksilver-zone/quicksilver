@@ -142,15 +142,14 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sende
 	}
 	outstanding := nativeTokens
 	distribution := make(map[string]uint64, 0)
-	intentKeys := utils.Keys(intents)
-	for _, valoper := range intentKeys {
-		intent := intents[valoper]
+
+	for _, intent := range intents.Sort() {
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
-		distribution[valoper] = thisAmount.Uint64()
+		distribution[intent.ValoperAddress] = thisAmount.Uint64()
 		outstanding = outstanding.Sub(thisAmount)
 	}
 
-	distribution[intentKeys[0]] += outstanding.Uint64()
+	distribution[intents[0].ValoperAddress] += outstanding.Uint64()
 
 	for _, valoper := range utils.Keys(distribution) {
 		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
@@ -185,14 +184,12 @@ func (k *Keeper) queueRedemption(
 	outstanding := nativeTokens
 
 	aggregateIntent := zone.GetAggregateIntentOrDefault()
-	sortedAIKeys := utils.Keys(aggregateIntent)
-	for i, valoper := range sortedAIKeys {
-		intent := aggregateIntent[valoper]
-		fmt.Printf("[%d] key %v: %v\n", i, valoper, intent)
+	for idx, intent := range aggregateIntent {
+		fmt.Printf("[%d] key %v: %v\n", idx, intent.ValoperAddress, intent)
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
 		outstanding = outstanding.Sub(thisAmount)
 		dist := types.Distribution{
-			Valoper: valoper,
+			Valoper: intent.ValoperAddress,
 			Amount:  thisAmount.Uint64(),
 		}
 		distribution = append(distribution, &dist)
@@ -245,7 +242,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 
 	intent := types.DelegatorIntent{
 		Delegator: msg.FromAddress,
-		Intents:   IntentSliceToMap(msg.Intents),
+		Intents:   msg.Intents,
 	}
 
 	k.SetIntent(ctx, zone, intent, false)

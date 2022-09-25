@@ -305,8 +305,8 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 
 				intent := icstypes.DelegatorIntent{
 					Delegator: userAddress,
-					Intents: map[string]*icstypes.ValidatorIntent{
-						valAddress.String(): {
+					Intents: []*icstypes.ValidatorIntent{
+						{
 							ValoperAddress: valAddress.String(),
 							Weight:         sdk.OneDec(),
 						},
