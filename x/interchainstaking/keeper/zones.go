@@ -71,6 +71,15 @@ func (k Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	return out
 }
 
+func (k Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
+		out = out.Add(wr.Amount[0])
+		return false
+	})
+	return out
+}
+
 // AllZonesInfos returns every zoneInfo in the store
 func (k Keeper) AllZones(ctx sdk.Context) []types.Zone {
 	zones := []types.Zone{}

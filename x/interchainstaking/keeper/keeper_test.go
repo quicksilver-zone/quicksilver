@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
+	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
@@ -155,4 +157,309 @@ func GetICSKeeper(t *testing.T) (*icskeeper.Keeper, sdk.Context) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
 
 	return &keeper, ctx
+}
+
+func (s *KeeperTestSuite) TestGetDelegatedAmount() {
+
+	tc := []struct {
+		name        string
+		delegations func(zone icstypes.Zone) []icstypes.Delegation
+		expected    cosmosmath.Int
+	}{
+		{
+			name: "empty delegations",
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				out := make([]icstypes.Delegation, 0)
+				return out
+			},
+			expected: math.NewInt(0),
+		},
+		{
+			name: "one delegation",
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				validators := zone.GetValidatorsAddressesAsSlice()
+				out := make([]icstypes.Delegation, 0)
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				return out
+			},
+			expected: math.NewInt(3000000),
+		},
+		{
+			name: "multi delegation",
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				validators := zone.GetValidatorsAddressesAsSlice()
+				out := make([]icstypes.Delegation, 0)
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[1], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000000))))
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[2], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(20000000))))
+				return out
+			},
+			expected: math.NewInt(40000000),
+		},
+	}
+
+	for _, tt := range tc {
+		s.Run(tt.name, func() {
+			s.SetupTest()
+			s.SetupZones()
+
+			qapp := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+			icsKeeper := qapp.InterchainstakingKeeper
+			zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
+			s.Require().True(found)
+
+			for _, delegation := range tt.delegations(zone) {
+				icsKeeper.SetDelegation(ctx, &zone, delegation)
+			}
+
+			actual := icsKeeper.GetDelegatedAmount(ctx, &zone)
+			s.Require().Equal(tt.expected, actual.Amount)
+			s.Require().Equal(zone.BaseDenom, actual.Denom)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetUnbondingAmount() {
+
+	tc := []struct {
+		name     string
+		records  func(zone icstypes.Zone) []icstypes.WithdrawalRecord
+		expected cosmosmath.Int
+	}{
+		{
+			name: "no withdrawals",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				return out
+			},
+			expected: math.ZeroInt(),
+		},
+		{
+			name: "one unbonding withdrawal",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				return out
+			},
+			expected: math.NewInt(3000000),
+		},
+		{
+			name: "one non-unbonding withdrawal",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusQueued, Txhash: utils.GenerateRandomHashAsHex()})
+				return out
+			},
+			expected: math.ZeroInt(),
+		},
+		{
+			name: "multi unbonding withdrawal",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(10000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1500000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				return out
+			},
+			expected: math.NewInt(14500000),
+		},
+		{
+			name: "multi mixed withdrawal",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(10000000))), Status: icskeeper.WithdrawStatusQueued, Txhash: utils.GenerateRandomHashAsHex()})
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1500000))), Status: icskeeper.WithdrawStatusCompleted, Txhash: utils.GenerateRandomHashAsHex()})
+				return out
+			},
+			expected: math.NewInt(3000000),
+		},
+	}
+
+	for _, tt := range tc {
+		s.Run(tt.name, func() {
+			s.SetupTest()
+			s.SetupZones()
+
+			qapp := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+			icsKeeper := qapp.InterchainstakingKeeper
+			zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
+			s.Require().True(found)
+
+			for _, record := range tt.records(zone) {
+				icsKeeper.SetWithdrawalRecord(ctx, record)
+			}
+
+			actual := icsKeeper.GetUnbondingAmount(ctx, &zone)
+			s.Require().Equal(tt.expected, actual.Amount)
+			s.Require().Equal(zone.BaseDenom, actual.Denom)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestGetRatio() {
+
+	tc := []struct {
+		name        string
+		records     func(zone icstypes.Zone) []icstypes.WithdrawalRecord
+		delegations func(zone icstypes.Zone) []icstypes.Delegation
+		supply      cosmosmath.Int
+		expected    sdk.Dec
+	}{
+		{
+			name: "no withdrawals, no unbonding, no supply",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				return out
+			},
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				out := make([]icstypes.Delegation, 0)
+				return out
+			},
+			supply:   math.ZeroInt(),
+			expected: sdk.OneDec(),
+		},
+		{
+			name: "no withdrawals, one delegation, expect 1.0",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				return out
+			},
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				validators := zone.GetValidatorsAddressesAsSlice()
+				out := make([]icstypes.Delegation, 0)
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				return out
+			},
+			supply:   math.NewInt(3000000),
+			expected: sdk.OneDec(),
+		},
+		{
+			name: "one withdrawal, no delegation, expect 1.0",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				return out
+			},
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				out := make([]icstypes.Delegation, 0)
+				return out
+			},
+			supply:   math.NewInt(3000000),
+			expected: sdk.OneDec(),
+		},
+		{
+			name: "one withdrawals, one delegation, one unbonding, expect 1.0",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				return out
+			},
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				validators := zone.GetValidatorsAddressesAsSlice()
+				out := make([]icstypes.Delegation, 0)
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				return out
+			},
+			supply:   math.NewInt(6000000),
+			expected: sdk.OneDec(),
+		},
+		{
+			name: "one non-unbond withdrawals, one delegation, one unbonding, expect 1.0",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusCompleted, Txhash: utils.GenerateRandomHashAsHex()})
+				return out
+			},
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				validators := zone.GetValidatorsAddressesAsSlice()
+				out := make([]icstypes.Delegation, 0)
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				return out
+			},
+			supply:   math.NewInt(3000000),
+			expected: sdk.OneDec(),
+		},
+		{
+			name: "multi unbonding withdrawal, delegation, expect 1.0",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(10000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1500000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				return out
+			},
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				validators := zone.GetValidatorsAddressesAsSlice()
+				out := make([]icstypes.Delegation, 0)
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				return out
+			},
+			supply:   math.NewInt(17500000),
+			expected: sdk.OneDec(),
+		},
+		{
+			name: "multi unbonding withdrawal, delegation, sub 1.0",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1500000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				return out
+			},
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				validators := zone.GetValidatorsAddressesAsSlice()
+				out := make([]icstypes.Delegation, 0)
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				return out
+			},
+			supply:   math.NewInt(10000000),
+			expected: sdk.NewDecWithPrec(75, 2),
+		},
+		{
+			name: "multi unbonding withdrawal, delegation, gt 1.0",
+			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				out := make([]icstypes.WithdrawalRecord, 0)
+				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
+				return out
+			},
+			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+				validators := zone.GetValidatorsAddressesAsSlice()
+				out := make([]icstypes.Delegation, 0)
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[1], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(16000000))))
+				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[2], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(8000000))))
+				return out
+			},
+			supply:   math.NewInt(22500000),
+			expected: sdk.NewDec(4).Quo(sdk.NewDec(3)),
+		},
+	}
+
+	for _, tt := range tc {
+		s.Run(tt.name, func() {
+			s.SetupTest()
+			s.SetupZones()
+
+			qapp := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+			icsKeeper := qapp.InterchainstakingKeeper
+			zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
+			s.Require().True(found)
+
+			for _, record := range tt.records(zone) {
+				icsKeeper.SetWithdrawalRecord(ctx, record)
+			}
+
+			for _, delegation := range tt.delegations(zone) {
+				icsKeeper.SetDelegation(ctx, &zone, delegation)
+			}
+
+			qapp.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.supply)))
+
+			actual := icsKeeper.GetRatio(ctx, zone, sdk.ZeroInt())
+			s.Require().Equal(tt.expected, actual)
+		})
+	}
 }

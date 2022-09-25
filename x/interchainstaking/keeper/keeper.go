@@ -326,28 +326,33 @@ func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) e
 // redemption rate
 
 func (k *Keeper) assertRedemptionRateWithinBounds(ctx sdk.Context, previousRate sdk.Dec, newRate sdk.Dec) error {
-	// TODO: what is an acceptable deviation?
+	ratio := newRate.Quo(previousRate)
+	if ratio.GT(sdk.NewDecWithPrec(120, 2)) || ratio.LT(sdk.NewDecWithPrec(95, 2)) {
+		return fmt.Errorf("redemption rate is outside of expected bounds; got %0.2f of previous rate", ratio.MustFloat64())
+	}
 	return nil
 }
 
-func (k *Keeper) updateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards math.Int) {
-	ratio := k.getRatio(ctx, zone, epochRewards)
+func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards math.Int) {
+	ratio := k.GetRatio(ctx, zone, epochRewards)
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
 	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards))
 
 	if err := k.assertRedemptionRateWithinBounds(ctx, zone.RedemptionRate, ratio); err != nil {
-		panic("Redemption rate out of bounds")
+		panic(err.Error())
 	}
 	zone.LastRedemptionRate = zone.RedemptionRate
 	zone.RedemptionRate = ratio
 	k.SetZone(ctx, &zone)
 }
 
-func (k *Keeper) getRatio(ctx sdk.Context, zone types.Zone, epochRewards math.Int) sdk.Dec {
+func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.Int) sdk.Dec {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, &zone).Amount
+	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, &zone).Amount
+
 	// qAsset amount
 	qAssetAmount := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
 
@@ -358,7 +363,7 @@ func (k *Keeper) getRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 		return sdk.OneDec()
 	}
 
-	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards)).Quo(sdk.NewDecFromInt(qAssetAmount))
+	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount))
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone) error {

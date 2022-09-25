@@ -844,7 +844,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	}
 
 	// update redemption rate
-	k.updateRedemptionRate(ctx, zone, rewards.Amount)
+	k.UpdateRedemptionRate(ctx, zone, rewards.Amount)
 
 	// send tx
 	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "")
