@@ -1,13 +1,16 @@
 package utils
 
 import (
+	"crypto/rand"
 	"encoding/hex"
-	"math/rand"
 )
 
 func GenerateRandomHash() []byte {
 	bytes := make([]byte, 32)
-	rand.Read(bytes)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		panic("unable to read random bytes")
+	}
 	return bytes
 }
 

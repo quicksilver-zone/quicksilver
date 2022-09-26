@@ -325,7 +325,7 @@ func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) e
 
 // redemption rate
 
-func (k *Keeper) assertRedemptionRateWithinBounds(ctx sdk.Context, previousRate sdk.Dec, newRate sdk.Dec) error {
+func (k *Keeper) assertRedemptionRateWithinBounds(_ sdk.Context, previousRate sdk.Dec, newRate sdk.Dec) error {
 	ratio := newRate.Quo(previousRate)
 	if ratio.GT(sdk.NewDecWithPrec(120, 2)) || ratio.LT(sdk.NewDecWithPrec(95, 2)) {
 		return fmt.Errorf("redemption rate is outside of expected bounds; got %0.2f of previous rate", ratio.MustFloat64())

@@ -47,7 +47,6 @@ func (di DelegatorIntent) AddOrdinal(multiplier sdk.Dec, intents ValidatorIntent
 OUTER:
 	for _, i := range intents.Sort() {
 		for jdx, j := range di.SortedIntents() {
-			//for _, j := range utils.Keys(di.Intents) {
 			if i.ValoperAddress == j.ValoperAddress {
 				di.Intents[jdx].Weight = j.Weight.Add(i.Weight)
 				continue OUTER
