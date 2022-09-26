@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
@@ -164,7 +163,7 @@ func (s *KeeperTestSuite) TestGetDelegatedAmount() {
 	tc := []struct {
 		name        string
 		delegations func(zone icstypes.Zone) []icstypes.Delegation
-		expected    cosmosmath.Int
+		expected    math.Int
 	}{
 		{
 			name: "empty delegations",
@@ -225,7 +224,7 @@ func (s *KeeperTestSuite) TestGetUnbondingAmount() {
 	tc := []struct {
 		name     string
 		records  func(zone icstypes.Zone) []icstypes.WithdrawalRecord
-		expected cosmosmath.Int
+		expected math.Int
 	}{
 		{
 			name: "no withdrawals",
@@ -305,7 +304,7 @@ func (s *KeeperTestSuite) TestGetRatio() {
 		name        string
 		records     func(zone icstypes.Zone) []icstypes.WithdrawalRecord
 		delegations func(zone icstypes.Zone) []icstypes.Delegation
-		supply      cosmosmath.Int
+		supply      math.Int
 		expected    sdk.Dec
 	}{
 		{

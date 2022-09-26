@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/require"
 )
@@ -24,7 +23,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 
 	tc := []struct {
 		current  map[string]cosmosmath.Int
-		target   types.ValidatorIntents
+		target   icstypes.ValidatorIntents
 		inAmount sdk.Coins
 		expected map[string]cosmosmath.Int
 		dust     cosmosmath.Int
@@ -35,7 +34,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				val2.String(): sdk.NewInt(650000),
 				val3.String(): sdk.NewInt(75000),
 			},
-			target: types.ValidatorIntents{
+			target: icstypes.ValidatorIntents{
 				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(30, 2)},
 				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(63, 2)},
 				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
@@ -54,7 +53,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				val3.String(): sdk.NewInt(20),
 				val4.String(): sdk.NewInt(4),
 			},
-			target: types.ValidatorIntents{
+			target: icstypes.ValidatorIntents{
 				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
 				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
 				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
@@ -75,7 +74,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				val3.String(): sdk.NewInt(20),
 				val4.String(): sdk.NewInt(4),
 			},
-			target: types.ValidatorIntents{
+			target: icstypes.ValidatorIntents{
 				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
 				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
 				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
@@ -109,7 +108,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 }
 
 type delegationUpdate struct {
-	delegation types.Delegation
+	delegation icstypes.Delegation
 	absolute   bool
 }
 
@@ -125,83 +124,83 @@ func (s *KeeperTestSuite) TestUpdateDelegation() {
 
 	tests := []struct {
 		name       string
-		delegation *types.Delegation
+		delegation *icstypes.Delegation
 		updates    []delegationUpdate
-		expected   types.Delegation
+		expected   icstypes.Delegation
 	}{
 		{
 			"single update, relative increase +3000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 					absolute:   false,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(6000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(6000))},
 		},
 		{
 			"single update, relative increase +3000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 					absolute:   true,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 		},
 		{
 			"multi update, relative increase +3000, +2000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 					absolute:   false,
 				},
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
 					absolute:   false,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(8000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(8000))},
 		},
 		{
 			"multi update, relative +3000, absolute +2000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 					absolute:   false,
 				},
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
 					absolute:   true,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
 		},
 		{
 			"new delegation, relative increase +10000",
 			nil,
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(10000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(10000))},
 					absolute:   false,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(10000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(10000))},
 		},
 		{
 			"new delegation, absolute increase +15000",
 			nil,
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(15000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(15000))},
 					absolute:   true,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(15000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(15000))},
 		},
 	}
 
@@ -257,7 +256,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 
 	tc := []struct {
 		current  map[string]cosmosmath.Int
-		target   types.ValidatorIntents
+		target   icstypes.ValidatorIntents
 		expected []icskeeper.RebalanceTarget
 		dust     cosmosmath.Int
 	}{
@@ -267,7 +266,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				val2.String(): sdk.NewInt(650000),
 				val3.String(): sdk.NewInt(75000),
 			},
-			target: types.ValidatorIntents{
+			target: icstypes.ValidatorIntents{
 				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(30, 2)},
 				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(63, 2)},
 				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
@@ -284,7 +283,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				val3.String(): sdk.NewInt(14),
 				val4.String(): sdk.NewInt(5),
 			},
-			target: types.ValidatorIntents{
+			target: icstypes.ValidatorIntents{
 				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
 				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(28, 2)},
 				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(12, 2)},
@@ -302,7 +301,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				val3.String(): sdk.NewInt(20),
 				val4.String(): sdk.NewInt(60),
 			},
-			target: types.ValidatorIntents{
+			target: icstypes.ValidatorIntents{
 				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
 				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
 				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
