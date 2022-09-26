@@ -159,7 +159,6 @@ func GetICSKeeper(t *testing.T) (*icskeeper.Keeper, sdk.Context) {
 }
 
 func (s *KeeperTestSuite) TestGetDelegatedAmount() {
-
 	tc := []struct {
 		name        string
 		delegations func(zone icstypes.Zone) []icstypes.Delegation
@@ -220,7 +219,6 @@ func (s *KeeperTestSuite) TestGetDelegatedAmount() {
 }
 
 func (s *KeeperTestSuite) TestGetUnbondingAmount() {
-
 	tc := []struct {
 		name     string
 		records  func(zone icstypes.Zone) []icstypes.WithdrawalRecord
@@ -299,7 +297,6 @@ func (s *KeeperTestSuite) TestGetUnbondingAmount() {
 }
 
 func (s *KeeperTestSuite) TestGetRatio() {
-
 	tc := []struct {
 		name        string
 		records     func(zone icstypes.Zone) []icstypes.WithdrawalRecord

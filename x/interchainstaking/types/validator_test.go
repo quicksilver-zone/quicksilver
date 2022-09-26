@@ -54,7 +54,6 @@ func TestNormalizeIntentWithEqualIntents(t *testing.T) {
 }
 
 func TestNormalizeIntentWithNonEqualIntents(t *testing.T) {
-
 	di := types.DelegatorIntent{Delegator: utils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
 		{ValoperAddress: v1, Weight: sdk.NewDec(5).Quo(sdk.NewDec(50))},
 		{ValoperAddress: v2, Weight: sdk.NewDec(10).Quo(sdk.NewDec(50))},
