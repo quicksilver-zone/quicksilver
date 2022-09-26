@@ -170,13 +170,13 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 		intent = zone.UpdateIntentWithCoins(intent, baseBalance, inAmount)
 	}
 
-	// if len(memo) > 0 {
-	// 	var err error
-	// 	intent, err = zone.UpdateIntentWithMemo(intent, memo, baseBalance, inAmount)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
+	if len(memo) > 0 {
+		var err error
+		intent, err = zone.UpdateIntentWithMemo(intent, memo, baseBalance, inAmount)
+		if err != nil {
+			return err
+		}
+	}
 
 	if len(intent.Intents) == 0 {
 		return nil
