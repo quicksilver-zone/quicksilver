@@ -45,8 +45,8 @@ func TestSetForValoper(t *testing.T) {
 	}
 
 	intents = intents.SetForValoper(v1, &types.ValidatorIntent{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(40, 1)})
-	intents = intents.SetForValoper(v1, &types.ValidatorIntent{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(60, 1)})
+	intents = intents.SetForValoper(v2, &types.ValidatorIntent{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(60, 1)})
 
-	require.Equal(t, intents.MustGetForValoper(v1).Weight, sdk.NewDecWithPrec(40, 1))
-	require.Equal(t, intents.MustGetForValoper(v2).Weight, sdk.NewDecWithPrec(60, 1))
+	require.Equal(t, sdk.NewDecWithPrec(40, 1), intents.MustGetForValoper(v1).Weight)
+	require.Equal(t, sdk.NewDecWithPrec(60, 1), intents.MustGetForValoper(v2).Weight)
 }

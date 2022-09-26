@@ -84,13 +84,15 @@ func (vi ValidatorIntents) GetForValoper(valoper string) (*ValidatorIntent, bool
 }
 
 func (vi ValidatorIntents) SetForValoper(valoper string, intent *ValidatorIntent) ValidatorIntents {
+	fmt.Println("Replacing valoper" + valoper)
 	for idx, i := range vi.Sort() {
 		if i.ValoperAddress == valoper {
-			var part []*ValidatorIntent
-			if idx != 0 {
-				part = vi[:idx-1]
-			}
-			vi = append(part, vi[idx:]...)
+			fmt.Println("Found valoper at " + fmt.Sprint(idx))
+			fmt.Println("before", vi)
+			vi[idx] = vi[len(vi)-1]
+			vi = vi[:len(vi)-1]
+			fmt.Println("after", vi)
+			break
 		}
 	}
 	vi = append(vi, intent)
