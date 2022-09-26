@@ -203,11 +203,10 @@ func (k Keeper) EndZoneDrop(ctx sdk.Context, chainID string) error {
 func (k Keeper) returnUnclaimedZoneDropTokens(ctx sdk.Context, chainID string) error {
 	zonedropAccountAddress := k.GetZoneDropAccountAddress(chainID)
 	zonedropAccountBalance := k.GetZoneDropAccountBalance(ctx, chainID)
-	airdropAccountAddress := k.GetModuleAccountAddress(ctx)
 	return k.bankKeeper.SendCoinsFromAccountToModule(
 		ctx,
 		zonedropAccountAddress,
-		airdropAccountAddress.String(),
+		types.ModuleName,
 		sdk.NewCoins(zonedropAccountBalance),
 	)
 }
