@@ -132,7 +132,6 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
 		}
 		val.Weight = val.Weight.Add(coinWeight)
-		fmt.Printf("setting %s to %0.2f\n", val.ValoperAddress, val.Weight.MustFloat64())
 		out = out.SetForValoper(valAddr, val)
 	}
 	return out, nil
