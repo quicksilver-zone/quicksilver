@@ -313,7 +313,6 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 
 	k.Logger(ctx).Error("messages to send", "messages", msgs)
 
-	// zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Add(msg.Amount...)
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo)
 }
 
@@ -486,7 +485,8 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 }
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time) error {
-	return fmt.Errorf("not implemented")
+	// we don't currently take any action on acknowledgement of rebalacing.
+	return nil
 }
 
 func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
