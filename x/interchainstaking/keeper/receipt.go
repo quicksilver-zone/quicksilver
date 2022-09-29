@@ -30,7 +30,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 	coins := sdk.Coins{}
 
 	for _, event := range txr.Events {
-		if event.Type == "transfer" {
+		if event.Type == transferPort {
 			attrs := attributesToMap(event.Attributes)
 			sender := attrs["sender"]
 			amount := attrs["amount"]
@@ -132,7 +132,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 		var srcPort string
 		var srcChannel string
 		for _, localChannel := range localChannelResp.Channels {
-			if localChannel.PortId == "transfer" {
+			if localChannel.PortId == transferPort {
 				srcChannel = localChannel.ChannelId
 				srcPort = localChannel.PortId
 				break
