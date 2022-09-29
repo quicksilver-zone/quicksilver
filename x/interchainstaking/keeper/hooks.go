@@ -16,8 +16,9 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	// every epoch
-	k.Logger(ctx).Info("handling epoch end")
 	if epochIdentifier == "epoch" {
+		k.Logger(ctx).Info("handling epoch end")
+
 		k.IterateZones(ctx, func(index int64, zoneInfo types.Zone) (stop bool) {
 			blockQuery := tmservice.GetLatestBlockRequest{}
 			bz := k.cdc.MustMarshal(&blockQuery)

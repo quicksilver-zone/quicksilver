@@ -6,7 +6,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -110,7 +109,7 @@ func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot
 func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 	var err error
 	snapshot := false
-	aggregate := map[string]*types.ValidatorIntent{}
+	aggregate := make(types.ValidatorIntents, 0)
 	ordinalizedIntentSum := sdk.ZeroDec()
 	// reduce intents
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
@@ -122,14 +121,14 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 
 		intents := intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
-		for _, vIntent := range utils.Keys(intents) {
-			thisIntent, ok := aggregate[vIntent]
+		for vIntent := range intents.Sort() {
+			thisIntent, ok := aggregate.GetForValoper(intents[vIntent].ValoperAddress)
 			ordinalizedIntentSum = ordinalizedIntentSum.Add(intents[vIntent].Weight)
 			if !ok {
-				aggregate[vIntent] = intents[vIntent]
+				aggregate = append(aggregate, intents[vIntent])
 			} else {
 				thisIntent.Weight = thisIntent.Weight.Add(intents[vIntent].Weight)
-				aggregate[vIntent] = thisIntent
+				aggregate = aggregate.SetForValoper(intents[vIntent].ValoperAddress, thisIntent)
 			}
 		}
 
@@ -144,8 +143,9 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 	}
 
 	// normalise aggregated intents again.
-	for _, key := range utils.Keys(aggregate) {
-		aggregate[key].Weight = aggregate[key].Weight.Quo(ordinalizedIntentSum)
+	for idx, intent := range aggregate.Sort() {
+		intent.Weight = intent.Weight.Quo(ordinalizedIntentSum)
+		aggregate[idx] = intent
 	}
 
 	k.Logger(ctx).Error("aggregates", "agg", aggregate)
@@ -170,13 +170,13 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 		intent = zone.UpdateIntentWithCoins(intent, baseBalance, inAmount)
 	}
 
-	// if len(memo) > 0 {
-	// 	var err error
-	// 	intent, err = zone.UpdateIntentWithMemo(intent, memo, baseBalance, inAmount)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
+	if len(memo) > 0 {
+		var err error
+		intent, err = zone.UpdateIntentWithMemo(intent, memo, baseBalance, inAmount)
+		if err != nil {
+			return err
+		}
+	}
 
 	if len(intent.Intents) == 0 {
 		return nil

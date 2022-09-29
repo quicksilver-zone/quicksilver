@@ -81,3 +81,19 @@ func GenerateValAddressForTest() sdk.ValAddress {
 
 	return sdk.ValAddress(rb)
 }
+
+func GenerateValAddressForTestWithPrefix(hrp string) string {
+	addr, err := bech32.ConvertAndEncode(hrp, GenerateValAddressForTest())
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+func GenerateAccAddressForTestWithPrefix(hrp string) string {
+	addr, err := bech32.ConvertAndEncode(hrp, GenerateAccAddressForTest())
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}

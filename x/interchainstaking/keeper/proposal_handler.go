@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strconv"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
@@ -116,17 +117,46 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 	}
 
 	for _, change := range p.Changes {
-		if change.Key == "base_denom" {
+		switch change.Key {
+		case "base_denom":
 			if err := sdk.ValidateDenom(change.Value); err != nil {
 				return err
 			}
 			zone.BaseDenom = change.Value
-			k.SetZone(ctx, &zone)
+
+		case "local_denom":
+			if err := sdk.ValidateDenom(change.Value); err != nil {
+				return err
+			}
+			zone.LocalDenom = change.Value
+
+		case "liquidity_module":
+			if err := sdk.ValidateDenom(change.Value); err != nil {
+				return err
+			}
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return err
+			}
+			zone.LiquidityModule = boolValue
+
+		case "multi_send":
+			if err := sdk.ValidateDenom(change.Value); err != nil {
+				return err
+			}
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return err
+			}
+			zone.LiquidityModule = boolValue
+
+		default:
+			return fmt.Errorf("unexpected key")
 		}
 	}
+	k.SetZone(ctx, &zone)
 
-	logger := k.Logger(ctx)
-	logger.Info("applied changes to zone", "changes", p.Changes, "zone", zone.ChainId)
+	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ChainId)
 
 	return nil
 }

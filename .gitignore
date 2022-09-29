@@ -27,3 +27,6 @@ data
 # python script
 autotest.py
 scripts/wallets.sh
+
+# Coverage
+coverage.txt

@@ -29,7 +29,7 @@ message Zone {
     (gogoproto.nullable) = false
   ];
   repeated Validator validators = 12;
-  map<string, ValidatorIntent> aggregate_intent = 13;
+  repeated ValidatorIntent aggregate_intent = 13 [ (gogoproto.castrepeated) = "ValidatorIntents" ];
   bool multi_send = 14;
   bool liquidity_module = 15;
   uint32 withdrawal_waitgroup = 16;
@@ -125,7 +125,7 @@ message Validator {
 
 message DelegatorIntent {
   string delegator = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  map<string, ValidatorIntent> intents = 2;
+  repeated ValidatorIntent intents = 2 [ (gogoproto.castrepeated) = "ValidatorIntents" ];
 }
 
 message ValidatorIntent {

@@ -4,7 +4,7 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 source ${SCRIPT_DIR}/vars.sh
 
-#docker-compose down
+docker-compose down
 
 IS_MULTI_ZONE_TEST=false
 export IS_MULTI_ZONE_TEST

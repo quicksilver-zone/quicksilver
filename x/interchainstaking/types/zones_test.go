@@ -79,9 +79,9 @@ func TestCoinsToIntent(t *testing.T) {
 
 	for _, tc := range testCases {
 		out := zone.ConvertCoinsToOrdinalIntents(tc.amount)
-		for k, v := range out {
-			if !tc.expectedIntent[k].Equal(v.Weight) {
-				t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[k])
+		for _, v := range out {
+			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
+				t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
 			}
 		}
 	}
@@ -133,9 +133,9 @@ func TestBase64MemoToIntent(t *testing.T) {
 	for _, tc := range testCases {
 		out, err := zone.ConvertMemoToOrdinalIntents(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
 		require.NoError(t, err)
-		for k, v := range out {
-			if !tc.expectedIntent[k].Equal(v.Weight) {
-				t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[k])
+		for _, v := range out {
+			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
+				t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
 			}
 		}
 	}
@@ -212,13 +212,13 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 		},
 	}
 
-	for _, tc := range testCases {
+	for caseidx, tc := range testCases {
 
 		intent, err := zone.UpdateIntentWithMemo(intentFromDecSlice(tc.originalIntent), tc.memo, sdk.NewDec(int64(tc.baseAmount)), sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))))
 		require.NoError(t, err)
-		for _, v := range intent.Intents {
+		for idx, v := range intent.Intents.Sort() {
 			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
-				t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
+				t.Errorf("Case [%d:%d] -> Got %v expected %v", caseidx, idx, v.Weight, tc.expectedIntent[v.ValoperAddress])
 			}
 		}
 	}
@@ -351,10 +351,10 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 	out := types.DelegatorIntent{
 		Delegator: utils.GenerateAccAddressForTest().String(),
-		Intents:   map[string]*types.ValidatorIntent{},
+		Intents:   []*types.ValidatorIntent{},
 	}
 	for addr, weight := range in {
-		out.Intents[addr] = &types.ValidatorIntent{addr, weight}
+		out.Intents = append(out.Intents, &types.ValidatorIntent{addr, weight})
 	}
 	return out
 }

@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -33,4 +34,19 @@ func TestRoundtripDelegationMarshalToUnmarshal(t *testing.T) {
 	// Finally ensure that the 2nd round marshaled bytes equal the original ones.
 	marshalDelBytes2ndRound := types.MustMarshalDelegation(types.ModuleCdc, unmarshaledDel)
 	require.Equal(t, marshaledDelBytes, marshalDelBytes2ndRound, "all the marshaled bytes should be equal!")
+}
+
+func TestSetForValoper(t *testing.T) {
+	v1 := utils.GenerateValAddressForTest().String()
+	v2 := utils.GenerateValAddressForTest().String()
+	intents := types.ValidatorIntents{
+		{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(10, 1)},
+		{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(90, 1)},
+	}
+
+	intents = intents.SetForValoper(v1, &types.ValidatorIntent{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(40, 1)})
+	intents = intents.SetForValoper(v2, &types.ValidatorIntent{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(60, 1)})
+
+	require.Equal(t, sdk.NewDecWithPrec(40, 1), intents.MustGetForValoper(v1).Weight)
+	require.Equal(t, sdk.NewDecWithPrec(60, 1), intents.MustGetForValoper(v2).Weight)
 }
