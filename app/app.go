@@ -456,6 +456,7 @@ func NewQuicksilver(
 		&scopedInterchainStakingKeeper,
 		app.InterchainQueryKeeper,
 		*app.IBCKeeper,
+		app.TransferKeeper,
 		app.GetSubspace(interchainstakingtypes.ModuleName),
 	)
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)

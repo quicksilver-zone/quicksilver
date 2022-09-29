@@ -19,6 +19,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -41,12 +42,13 @@ type Keeper struct {
 	AccountKeeper       authKeeper.AccountKeeper
 	BankKeeper          bankkeeper.Keeper
 	IBCKeeper           ibckeeper.Keeper
+	TransferKeeper      ibctransferkeeper.Keeper
 	paramStore          paramtypes.Subspace
 }
 
 // NewKeeper returns a new instance of zones Keeper.
 // This function will panic on failure.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, ps paramtypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, ps paramtypes.Subspace) Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -64,6 +66,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 		BankKeeper:          bankKeeper,
 		AccountKeeper:       accountKeeper,
 		IBCKeeper:           ibcKeeper,
+		TransferKeeper:      transferKeeper,
 		paramStore:          ps,
 	}
 }
