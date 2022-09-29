@@ -44,7 +44,9 @@ func (msg MsgRequestRedemption) ValidateBasic() error {
 	}
 
 	// check coin
-	if err = msg.Value.Validate(); err != nil {
+	if msg.Value.IsNil() || msg.Value.Amount.IsNil() {
+		errors["Value"] = ErrCoinAmountNil
+	} else if err = msg.Value.Validate(); err != nil {
 		errors["Value"] = err
 	}
 
