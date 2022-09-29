@@ -3,10 +3,11 @@ package types_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIntentsFromString(t *testing.T) {
@@ -135,6 +136,76 @@ func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
 				ChainId:     tt.fields.ChainId,
 				Intents:     tt.fields.Intents,
 				FromAddress: tt.fields.FromAddress,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
+	type fields struct {
+		Value              sdk.Coin
+		DestinationAddress string
+		FromAddress        string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			"nil",
+			fields{},
+			true,
+		},
+		{
+			"empty_coin",
+			fields{
+				Value: sdk.Coin{
+					Denom: "stake",
+				},
+				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				FromAddress:        utils.GenerateAccAddressForTest().String(),
+			},
+			true,
+		},
+		{
+			"valid_zero",
+			fields{
+				Value: sdk.Coin{
+					Denom:  "stake",
+					Amount: math.ZeroInt(),
+				},
+				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				FromAddress:        utils.GenerateAccAddressForTest().String(),
+			},
+			false,
+		},
+		{
+			"valid_value",
+			fields{
+				Value: sdk.Coin{
+					Denom:  "stake",
+					Amount: math.ZeroInt(),
+				},
+				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				FromAddress:        utils.GenerateAccAddressForTest().String(),
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgRequestRedemption{
+				Value:              tt.fields.Value,
+				DestinationAddress: tt.fields.DestinationAddress,
+				FromAddress:        tt.fields.FromAddress,
 			}
 			err := msg.ValidateBasic()
 			if tt.wantErr {
