@@ -15,7 +15,6 @@ require (
 	github.com/iqlusioninc/liquidity-staking-module v1.0.0
 	github.com/prometheus/client_golang v1.13.0
 	github.com/rakyll/statik v0.1.7
-	github.com/regen-network/cosmos-proto v0.3.1
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.13.0
@@ -30,6 +29,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 
 )
+
+require github.com/regen-network/cosmos-proto v0.3.1 // indirect
 
 require (
 	cloud.google.com/go v0.100.2 // indirect

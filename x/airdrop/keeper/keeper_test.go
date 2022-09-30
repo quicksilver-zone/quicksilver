@@ -74,7 +74,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (suite *KeeperTestSuite) initTestZone() {
-	// cosmos zone
+	// osmosis zone
 	zone := icstypes.Zone{
 		ConnectionId:  suite.path.EndpointB.ConnectionID,
 		ChainId:       suite.chainB.ChainID,
