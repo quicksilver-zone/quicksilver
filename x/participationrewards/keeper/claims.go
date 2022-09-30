@@ -12,10 +12,10 @@ func (k Keeper) NewClaim(ctx sdk.Context, address string, chainID string, amount
 }
 
 // GetClaim returns claim
-func (k Keeper) GetClaim(ctx sdk.Context, chainID string, address string, module types.ClaimType, srcChainId string) (types.Claim, bool) {
+func (k Keeper) GetClaim(ctx sdk.Context, chainID string, address string, module types.ClaimType, srcChainID string) (types.Claim, bool) {
 	data := types.Claim{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
-	key := types.GetKeyClaim(chainID, address, module, srcChainId)
+	key := types.GetKeyClaim(chainID, address, module, srcChainID)
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return data, false
@@ -26,10 +26,10 @@ func (k Keeper) GetClaim(ctx sdk.Context, chainID string, address string, module
 }
 
 // GetLastEpochClaim returns claim from last epoch
-func (k Keeper) GetLastEpochClaim(ctx sdk.Context, chainID string, address string, module types.ClaimType, srcChainId string) (types.Claim, bool) {
+func (k Keeper) GetLastEpochClaim(ctx sdk.Context, chainID string, address string, module types.ClaimType, srcChainID string) (types.Claim, bool) {
 	data := types.Claim{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
-	key := types.GetKeyLastEpochClaim(chainID, address, module, srcChainId)
+	key := types.GetKeyLastEpochClaim(chainID, address, module, srcChainID)
 	bz := store.Get(key)
 	if len(bz) == 0 {
 		return data, false
@@ -215,7 +215,8 @@ func (k Keeper) ArchiveAndGarbageCollectClaims(ctx sdk.Context, chainID string) 
 	for ; iterator.Valid(); iterator.Next() {
 		key := iterator.Key()
 		store.Delete(key)
-		newKey := append(types.KeyPrefixLastEpochClaim, key[1:]...) // update prefix from KeyPrefixClaim to KeyPrefixLastEpochClaim
+		newKey := types.KeyPrefixLastEpochClaim
+		newKey = append(newKey, key[1:]...) // update prefix from KeyPrefixClaim to KeyPrefixLastEpochClaim
 		store.Set(newKey, iterator.Value())
 	}
 }
