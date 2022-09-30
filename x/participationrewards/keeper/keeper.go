@@ -30,8 +30,10 @@ type userAllocation struct {
 	Amount  math.Int
 }
 
-var _ icstypes.ParticipationRewardsKeeper = Keeper{}
-var _ osmosistypes.ParticipationRewardsKeeper = Keeper{}
+var (
+	_ icstypes.ParticipationRewardsKeeper     = Keeper{}
+	_ osmosistypes.ParticipationRewardsKeeper = Keeper{}
+)
 
 type Keeper struct {
 	cdc              codec.BinaryCodec

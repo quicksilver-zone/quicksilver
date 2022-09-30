@@ -49,7 +49,6 @@ func (m *OsmosisModule) IsReady() bool {
 }
 
 func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
-
 	var amount uint64 = 0
 	for _, proof := range msg.Proofs {
 		lockupResponse := osmolockup.LockedResponse{}
