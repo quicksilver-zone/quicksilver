@@ -52,12 +52,12 @@ func (m AddProtocolDataProposal) ValidateBasic() error {
 func (m AddProtocolDataProposal) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf(`Add Protocol Data Proposal:
-  Title:                            %s
-  Description:                      %s
-  Protocol:                         %s
-  Type:						 %s
-  Key:                       %s
-  Data:                      %s
+Title:			%s
+Description:	%s
+Protocol:		%s
+Type:			%s
+Key:			%s
+Data:			%s
 `, m.Title, m.Description, m.Protocol, m.Type, m.Key, m.Data))
 	return b.String()
 }

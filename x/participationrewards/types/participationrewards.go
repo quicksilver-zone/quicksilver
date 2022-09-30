@@ -31,7 +31,7 @@ func (dp DistributionProportions) ValidateBasic() error {
 
 	// no errors yet: check total proportions
 	if len(errors) == 0 {
-		totalProportions := dp.ValidatorSelectionAllocation.Add(dp.HoldingsAllocation).Add(dp.LockupAllocation)
+		totalProportions := dp.Total()
 
 		if !totalProportions.Equal(sdk.OneDec()) {
 			errors["TotalProportions"] = fmt.Errorf("%w, got %v", ErrInvalidTotalProportions, totalProportions)

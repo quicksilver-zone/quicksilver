@@ -2,6 +2,8 @@ package types
 
 import (
 	fmt "fmt"
+
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
 func NewGenesisState(params Params) *GenesisState {
@@ -37,6 +39,10 @@ func (gs GenesisState) Validate() error {
 			errors[el] = err
 			continue
 		}
+	}
+
+	if len(errors) > 0 {
+		return multierror.New(errors)
 	}
 
 	return nil

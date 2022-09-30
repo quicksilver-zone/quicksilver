@@ -41,6 +41,10 @@ func (opd OsmosisPoolProtocolData) ValidateBasic() error {
 		i++
 	}
 
+	if i == 0 {
+		errors["Zones"] = ErrUndefinedAttribute
+	}
+
 	if len(errors) > 0 {
 		return multierror.New(errors)
 	}
