@@ -43,7 +43,7 @@ type Keeper struct {
 	BankKeeper                 bankkeeper.Keeper
 	IBCKeeper                  ibckeeper.Keeper
 	TransferKeeper             ibctransferkeeper.Keeper
-	ParticipationRewardsKeeper *types.ParticipationRewardsKeeper
+	ParticipationRewardsKeeper types.ParticipationRewardsKeeper
 	paramStore                 paramtypes.Subspace
 }
 
@@ -76,7 +76,7 @@ func (k *Keeper) SetParticipationRewardsKeeper(prk types.ParticipationRewardsKee
 	if k.ParticipationRewardsKeeper != nil {
 		panic("Participation Rewards Keeper is already set")
 	}
-	k.ParticipationRewardsKeeper = &prk
+	k.ParticipationRewardsKeeper = prk
 }
 
 // Logger returns a module-specific logger.
