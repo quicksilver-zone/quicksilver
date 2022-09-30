@@ -23,5 +23,6 @@ type PortKeeper interface {
 }
 
 type ParticipationRewardsKeeper interface {
+	IterateUserClaims(ctx sdk.Context, chainID string, address string, fn func(index int64, data prtypes.Claim) (stop bool))
 	IterateLastEpochUserClaims(ctx sdk.Context, chainID string, address string, fn func(index int64, data prtypes.Claim) (stop bool))
 }

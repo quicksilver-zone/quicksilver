@@ -114,6 +114,8 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 	aggregate := make(types.ValidatorIntents, 0)
 	ordinalizedIntentSum := sdk.ZeroDec()
 	// reduce intents
+	prk := *k.ParticipationRewardsKeeper
+
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
 		if localErr != nil {
@@ -121,6 +123,12 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 			return true
 		}
 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
+
+		// grab offchain asset value, and raise the users' base value by this amount.
+		prk.IterateLastEpochUserClaims(ctx, zone.ChainId, intent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
+			balance.Amount = balance.Amount.Add(math.NewIntFromUint64(data.Amount))
+			return false
+		})
 
 		intents := intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
 		for vIntent := range intents.Sort() {
