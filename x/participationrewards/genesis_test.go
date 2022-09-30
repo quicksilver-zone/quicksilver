@@ -53,12 +53,19 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1)
 	ctx = ctx.WithBlockTime(now)
 
+	validOsmosisData := `{
+		"poolname": "osmosis/pools/1",
+		"zones": {
+			"zone_id": "IBC/zone_denom"
+		}
+	}`
+
 	kpd := &types.KeyedProtocolData{
 		Key: "pools/6",
 		ProtocolData: &types.ProtocolData{
 			Protocol: "osmosis",
 			Type:     "osmosispool",
-			Data:     []byte("{\"test\": true}"),
+			Data:     []byte(validOsmosisData),
 		},
 	}
 
