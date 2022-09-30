@@ -50,3 +50,23 @@ func TestParams_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestParams(t *testing.T) {
+	// test default params
+	testParams := Params{
+		DistributionProportions: DistributionProportions{
+			ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.34"),
+			HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
+			LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
+		},
+	}
+	defaultParams := DefaultParams()
+	require.Equal(t, defaultParams, testParams)
+
+	str := `distributionproportions:
+  validatorselectionallocation: "0.340000000000000000"
+  holdingsallocation: "0.330000000000000000"
+  lockupallocation: "0.330000000000000000"
+`
+	require.Equal(t, str, testParams.String())
+}

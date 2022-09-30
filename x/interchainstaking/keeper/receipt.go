@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
@@ -28,10 +29,8 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 	senderAddress := UNSET
 	coins := sdk.Coins{}
 
-	k.Logger(ctx).Error("txr.Events", "events", txr.Events)
-
 	for _, event := range txr.Events {
-		if event.Type == "transfer" {
+		if event.Type == transferPort {
 			attrs := attributesToMap(event.Attributes)
 			sender := attrs["sender"]
 			amount := attrs["amount"]
@@ -81,7 +80,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 		return
 	}
-	if err := k.MintQAsset(ctx, accAddress, zone, coins); err != nil {
+	if err := k.MintQAsset(ctx, accAddress, senderAddress, zone, coins, false); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 		return
 	}
@@ -90,6 +89,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
 		return
 	}
+
 	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
 
 	k.SetReceipt(ctx, *receipt)
@@ -103,10 +103,12 @@ func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
 	return out
 }
 
-func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Zone, inCoins sdk.Coins) error {
+func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone types.Zone, inCoins sdk.Coins, returnToSender bool) error {
 	if zone.RedemptionRate.IsZero() {
 		return fmt.Errorf("zero redemption rate")
 	}
+
+	var err error
 
 	outCoins := sdk.Coins{}
 	for _, inCoin := range inCoins.Sort() {
@@ -115,18 +117,39 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Z
 		outCoins = outCoins.Add(outCoin)
 	}
 	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", outCoins)
-	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, outCoins)
+	err = k.BankKeeper.MintCoins(ctx, types.ModuleName, outCoins)
 	if err != nil {
 		return err
 	}
 
-	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, outCoins)
-	if err != nil {
-		return err
-	}
-	k.Logger(ctx).Info("Transferred qAssets to sender", "assets", outCoins, "sender", sender)
+	if returnToSender { // do we set this on the zone?
+		var localChannelResp *channeltypes.QueryConnectionChannelsResponse
+		channelReq := channeltypes.QueryConnectionChannelsRequest{Connection: zone.ConnectionId}
+		localChannelResp, err = k.IBCKeeper.ChannelKeeper.ConnectionChannels(sdk.WrapSDKContext(ctx), &channelReq)
+		if err != nil {
+			return err
+		}
+		var srcPort string
+		var srcChannel string
+		for _, localChannel := range localChannelResp.Channels {
+			if localChannel.PortId == transferPort {
+				srcChannel = localChannel.ChannelId
+				srcPort = localChannel.PortId
+				break
+			}
+		}
+		if srcPort == "" {
+			return fmt.Errorf("unable to find remote transfer connection")
+		}
 
-	return nil
+		err = k.TransferKeeper.SendTransfer(ctx, srcPort, srcChannel, outCoins[0], k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0}, uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()))
+	} else {
+
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, outCoins)
+		k.Logger(ctx).Info("Transferred qAssets to sender", "assets", outCoins, "sender", sender)
+
+	}
+	return err
 }
 
 func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.Zone, coins sdk.Coins, memo string) error {

@@ -109,7 +109,7 @@ func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.Zone {
 	var zone *types.Zone
 	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
-		if zoneInfo.DelegationAddress.Address == address {
+		if zoneInfo.DelegationAddress != nil && zoneInfo.DelegationAddress.Address == address {
 			zone = &zoneInfo
 			return true
 		}

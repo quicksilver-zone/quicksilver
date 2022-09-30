@@ -30,6 +30,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
+const transferPort = "transfer"
+
 func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte) error {
 	ack := channeltypes.Acknowledgement_Result{}
 	err := json.Unmarshal(acknowledgement, &ack)
@@ -816,7 +818,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	var remotePort string
 	var remoteChannel string
 	for _, localChannel := range localChannelResp.Channels {
-		if localChannel.PortId == "transfer" {
+		if localChannel.PortId == transferPort {
 			remoteChannel = localChannel.Counterparty.ChannelId
 			remotePort = localChannel.Counterparty.PortId
 			break

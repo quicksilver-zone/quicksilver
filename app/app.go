@@ -456,6 +456,7 @@ func NewQuicksilver(
 		&scopedInterchainStakingKeeper,
 		app.InterchainQueryKeeper,
 		*app.IBCKeeper,
+		app.TransferKeeper,
 		app.GetSubspace(interchainstakingtypes.ModuleName),
 	)
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
@@ -479,6 +480,7 @@ func NewQuicksilver(
 	)
 	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
 
+	app.InterchainstakingKeeper.SetParticipationRewardsKeeper(app.ParticipationRewardsKeeper)
 	if err := app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler()); err != nil {
 		panic(err)
 	}

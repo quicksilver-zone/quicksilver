@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/ingenuity-build/quicksilver/app"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -53,16 +54,24 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1)
 	ctx = ctx.WithBlockTime(now)
 
+	validOsmosisData := `{
+		"poolname": "osmosis/pools/1",
+		"zones": {
+			"zone_id": "IBC/zone_denom"
+		}
+	}`
+
 	kpd := &types.KeyedProtocolData{
 		Key: "pools/6",
 		ProtocolData: &types.ProtocolData{
 			Protocol: "osmosis",
 			Type:     "osmosispool",
-			Data:     []byte("{\"test\": true}"),
+			Data:     []byte(validOsmosisData),
 		},
 	}
 
-	claim := &types.Claim{UserAddress: "cosmos1e9adutp4mvamq7m8eqarz57u8ymh7mhqxqfxpr", ChainId: "cosmoshub-1", Amount: 100}
+	userAddress := utils.GenerateAccAddressForTest()
+	claim := &types.Claim{UserAddress: userAddress.String(), ChainId: "cosmoshub-4", Amount: 100, Module: types.ClaimTypeLiquidToken, SourceChainId: "osmosis-1"}
 
 	// test genesisState validation
 	genesisState := types.GenesisState{
@@ -89,7 +98,7 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	require.Equal(t, "osmosis", pd.Protocol)
 	require.Equal(t, "osmosispool", pd.Type)
 
-	clm, found := app.ParticipationRewardsKeeper.GetClaim(ctx, types.GetKeyClaim("cosmoshub-1", "cosmos1e9adutp4mvamq7m8eqarz57u8ymh7mhqxqfxpr"))
+	clm, found := app.ParticipationRewardsKeeper.GetClaim(ctx, "cosmoshub-4", userAddress.String(), types.ClaimTypeLiquidToken, "osmosis-1")
 	require.True(t, found)
 	require.Equal(t, uint64(100), clm.Amount)
 }

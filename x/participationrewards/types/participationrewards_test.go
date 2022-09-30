@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,6 +39,15 @@ func TestDistributionProportions_ValidateBasic(t *testing.T) {
 				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.3"),
 				HoldingsAllocation:           sdk.MustNewDecFromStr("0.3"),
 				LockupAllocation:             sdk.MustNewDecFromStr("0.3"),
+			},
+			true,
+		},
+		{
+			"invalid_proportions_negative",
+			fields{
+				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("-0.4"),
+				HoldingsAllocation:           sdk.MustNewDecFromStr("-0.3"),
+				LockupAllocation:             sdk.MustNewDecFromStr("-0.3"),
 			},
 			true,
 		},
@@ -143,6 +151,23 @@ func TestClaim_ValidateBasic(t *testing.T) {
 }
 
 func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
+	invalidOsmosisData := `{
+	"poolname": "osmosis/pools/1",
+	"zones": {
+		"": ""
+	}
+}`
+	validOsmosisData := `{
+	"poolname": "osmosis/pools/1",
+	"zones": {
+		"zone_id": "IBC/zone_denom"
+	}
+}`
+	validLiquidData := `{
+	"chainid": "somechain",
+	"localdenom": "lstake",
+	"denom": "qstake"
+}`
 	type fields struct {
 		Key          string
 		ProtocolData *ProtocolData
@@ -152,7 +177,103 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			"blank",
+			fields{},
+			true,
+		},
+		{
+			"blank_pd",
+			fields{
+				"somekey",
+				&ProtocolData{},
+			},
+			true,
+		},
+		{
+			"pd_osmosis_nil_data",
+			fields{
+				"osmosis/pools/1",
+				&ProtocolData{
+					Protocol: "osmosis",
+					Type:     "osmosispool",
+					Data:     nil,
+				},
+			},
+			true,
+		},
+		{
+			"pd_osmosis_empty_data",
+			fields{
+				"osmosis/pools/1",
+				&ProtocolData{
+					Protocol: "osmosis",
+					Type:     "osmosispool",
+					Data:     []byte("{}"),
+				},
+			},
+			true,
+		},
+		{
+			"pd_osmosis_invalid",
+			fields{
+				"osmosis/pools/1",
+				&ProtocolData{
+					Protocol: "osmosis",
+					Type:     "osmosispool",
+					Data:     []byte(invalidOsmosisData),
+				},
+			},
+			true,
+		},
+		{
+			"pd_osmosis_valid",
+			fields{
+				"osmosis/pools/1",
+				&ProtocolData{
+					Protocol: "osmosis",
+					Type:     "osmosispool",
+					Data:     []byte(validOsmosisData),
+				},
+			},
+			false,
+		},
+		{
+			"pd_liquid_invalid",
+			fields{
+				"liquid",
+				&ProtocolData{
+					Protocol: "liquid",
+					Type:     "liquidtoken",
+					Data:     []byte("{}"),
+				},
+			},
+			true,
+		},
+		{
+			"pd_liquid_valid",
+			fields{
+				"liquid",
+				&ProtocolData{
+					Protocol: "liquid",
+					Type:     "liquidtoken",
+					Data:     []byte(validLiquidData),
+				},
+			},
+			false,
+		},
+		{
+			"pd_unknown",
+			fields{
+				"unknown",
+				&ProtocolData{
+					Protocol: "unknown",
+					Type:     "unknown",
+					Data:     []byte("{}"),
+				},
+			},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -160,36 +281,13 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 				Key:          tt.fields.Key,
 				ProtocolData: tt.fields.ProtocolData,
 			}
-			if err := kpd.ValidateBasic(); (err != nil) != tt.wantErr {
-				t.Errorf("KeyedProtocolData.ValidateBasic() error = %v, wantErr %v", err, tt.wantErr)
+			err := kpd.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
 			}
-		})
-	}
-}
-
-func TestProtocolData_ValidateBasic(t *testing.T) {
-	type fields struct {
-		Protocol string
-		Type     string
-		Data     json.RawMessage
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			pd := ProtocolData{
-				Protocol: tt.fields.Protocol,
-				Type:     tt.fields.Type,
-				Data:     tt.fields.Data,
-			}
-			if err := pd.ValidateBasic(); (err != nil) != tt.wantErr {
-				t.Errorf("ProtocolData.ValidateBasic() error = %v, wantErr %v", err, tt.wantErr)
-			}
+			require.NoError(t, err)
 		})
 	}
 }

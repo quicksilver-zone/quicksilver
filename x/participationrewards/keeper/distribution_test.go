@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -8,7 +9,7 @@ import (
 
 func (suite *KeeperTestSuite) TestGetRewardsAllocations() {
 	type args struct {
-		moduleBalance sdk.Int
+		moduleBalance math.Int
 		proportions   types.DistributionProportions
 	}
 	tests := []struct {
