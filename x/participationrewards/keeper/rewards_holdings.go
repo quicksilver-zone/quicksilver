@@ -27,7 +27,7 @@ func (k Keeper) allocateHoldingsRewards(ctx sdk.Context) error {
 			return err
 		}
 
-		k.ClearClaims(ctx, zone.ChainId)
+		k.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
 	}
 
 	return nil

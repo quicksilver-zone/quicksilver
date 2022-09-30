@@ -34,16 +34,17 @@ import (
 
 // Keeper of this module maintains collections of registered zones.
 type Keeper struct {
-	cdc                 codec.Codec
-	storeKey            storetypes.StoreKey
-	scopedKeeper        *capabilitykeeper.ScopedKeeper
-	ICAControllerKeeper icacontrollerkeeper.Keeper
-	ICQKeeper           interchainquerykeeper.Keeper
-	AccountKeeper       authKeeper.AccountKeeper
-	BankKeeper          bankkeeper.Keeper
-	IBCKeeper           ibckeeper.Keeper
-	TransferKeeper      ibctransferkeeper.Keeper
-	paramStore          paramtypes.Subspace
+	cdc                        codec.Codec
+	storeKey                   storetypes.StoreKey
+	scopedKeeper               *capabilitykeeper.ScopedKeeper
+	ICAControllerKeeper        icacontrollerkeeper.Keeper
+	ICQKeeper                  interchainquerykeeper.Keeper
+	AccountKeeper              authKeeper.AccountKeeper
+	BankKeeper                 bankkeeper.Keeper
+	IBCKeeper                  ibckeeper.Keeper
+	TransferKeeper             ibctransferkeeper.Keeper
+	ParticipationRewardsKeeper *types.ParticipationRewardsKeeper
+	paramStore                 paramtypes.Subspace
 }
 
 // NewKeeper returns a new instance of zones Keeper.
@@ -69,6 +70,13 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 		TransferKeeper:      transferKeeper,
 		paramStore:          ps,
 	}
+}
+
+func (k *Keeper) SetParticipationRewardsKeeper(prk types.ParticipationRewardsKeeper) {
+	if k.ParticipationRewardsKeeper != nil {
+		panic("Participation Rewards Keeper is already set")
+	}
+	k.ParticipationRewardsKeeper = &prk
 }
 
 // Logger returns a module-specific logger.

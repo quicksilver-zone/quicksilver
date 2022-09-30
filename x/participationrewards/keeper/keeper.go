@@ -16,6 +16,7 @@ import (
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -27,6 +28,8 @@ type userAllocation struct {
 	Address string
 	Amount  math.Int
 }
+
+var _ icstypes.ParticipationRewardsKeeper = Keeper{}
 
 type Keeper struct {
 	cdc              codec.BinaryCodec

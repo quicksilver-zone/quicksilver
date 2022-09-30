@@ -46,8 +46,8 @@ func (m *OsmosisModule) IsReady() bool {
 	return true
 }
 
-func (m *OsmosisModule) VerifyClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) error {
-	return nil
+func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+	return 0, nil
 }
 
 func (m *OsmosisModule) GetKeyPrefixPools(poolID uint64) []byte {

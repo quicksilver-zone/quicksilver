@@ -3,10 +3,12 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func (k Keeper) getStoreKey(zone types.Zone, snapshot bool) []byte {
@@ -162,6 +164,13 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 
 	// ordinalize
 	balance := k.BankKeeper.GetBalance(ctx, sender, zone.BaseDenom)
+
+	// grab offchain asset value, and raise the users' base value by this amount.
+	prk := *k.ParticipationRewardsKeeper
+	prk.IterateLastEpochUserClaims(ctx, zone.ChainId, sender.String(), func(index int64, data prtypes.Claim) (stop bool) {
+		balance.Amount = balance.Amount.Add(math.NewIntFromUint64(data.Amount))
+		return false
+	})
 
 	// inAmount is ordinal with respect to the redemption rate, so we must scale
 	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(balance.Amount))
