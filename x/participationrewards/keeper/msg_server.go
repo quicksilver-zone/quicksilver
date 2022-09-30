@@ -67,8 +67,8 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 		if err != nil {
 			return nil, fmt.Errorf("claim validation failed: %v", err)
 		}
-		claim := k.NewClaim(ctx, msg.UserAddress, zone.ChainId, amount)
-		k.SetClaim(ctx, claim)
+		claim := k.NewClaim(ctx, msg.UserAddress, zone.ChainId, msg.ClaimType, msg.SrcZone, amount)
+		k.SetClaim(ctx, &claim)
 	}
 
 	return &types.MsgSubmitClaimResponse{}, nil

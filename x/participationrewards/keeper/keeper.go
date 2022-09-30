@@ -13,6 +13,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
+	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -30,6 +31,7 @@ type userAllocation struct {
 }
 
 var _ icstypes.ParticipationRewardsKeeper = Keeper{}
+var _ osmosistypes.ParticipationRewardsKeeper = Keeper{}
 
 type Keeper struct {
 	cdc              codec.BinaryCodec
@@ -42,7 +44,7 @@ type Keeper struct {
 	icsKeeper        icskeeper.Keeper
 	epochsKeeper     epochskeeper.Keeper
 	feeCollectorName string
-	prSubmodules     map[int64]Submodule
+	prSubmodules     map[types.ClaimType]Submodule
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -111,9 +113,9 @@ func (k Keeper) GetModuleBalance(ctx sdk.Context) math.Int {
 	return moduleBalance.Amount
 }
 
-func LoadSubmodules() map[int64]Submodule {
-	out := make(map[int64]Submodule, 0)
-	out[int64(types.ClaimTypeLiquidToken)] = &LiquidTokensModule{}
-	out[int64(types.ClaimTypeOsmosisPool)] = &OsmosisModule{}
+func LoadSubmodules() map[types.ClaimType]Submodule {
+	out := make(map[types.ClaimType]Submodule, 0)
+	out[types.ClaimTypeLiquidToken] = &LiquidTokensModule{}
+	out[types.ClaimTypeOsmosisPool] = &OsmosisModule{}
 	return out
 }

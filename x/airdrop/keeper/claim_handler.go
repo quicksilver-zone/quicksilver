@@ -2,20 +2,17 @@ package keeper
 
 import (
 	"fmt"
-	"strings"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
+	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	osmosislockuptypes "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-
-	participationrewardskeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
-	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 var (
@@ -301,43 +298,7 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 }
 
 func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, cr types.ClaimRecord) (math.Int, error) {
-	gammdenom := lockedResp.Lock.Coins.GetDenomByIndex(0)
-	poolID := "osmosis/pool" + gammdenom[strings.LastIndex(gammdenom, "/"):]
-	pd, ok := k.prKeeper.GetProtocolData(ctx, poolID)
-	if !ok {
-		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for %s", poolID)
-	}
-
-	ipool, err := participationrewardskeeper.UnmarshalProtocolData(participationrewardstypes.ProtocolDataOsmosisPool, pd.Data)
-	if err != nil {
-		return sdk.ZeroInt(), err
-	}
-	pool, _ := ipool.(participationrewardstypes.OsmosisPoolProtocolData)
-
-	poolDenom := ""
-	for zk, zd := range pool.Zones {
-		if zk == cr.ChainId {
-			poolDenom = zd
-			break
-		}
-	}
-
-	if poolDenom == "" {
-		return sdk.ZeroInt(), fmt.Errorf("invalid zone, pool zone must match %s", cr.ChainId)
-	}
-
-	// calculate user gamm ratio and LP asset amount
-	ugamm := lockedResp.Lock.Coins.AmountOf(gammdenom) // user's gamm amount
-	pgamm := pool.PoolData.GetTotalShares()            // total pool gamm amount
-	if pgamm.IsZero() {
-		return sdk.ZeroInt(), fmt.Errorf("empty pool, %s", poolID)
-	}
-	uratio := sdk.NewDecFromInt(ugamm).QuoInt(pgamm)
-
-	zasset := pool.PoolData.GetTotalPoolLiquidity(ctx).AmountOf(poolDenom) // pool zone asset amount
-	uAmount := uratio.MulInt(zasset).TruncateInt()
-
-	return uAmount, nil
+	return osmosistypes.DetermineApplicableTokensInPool(ctx, k.prKeeper, lockedResp, cr.ChainId)
 }
 
 // -----------

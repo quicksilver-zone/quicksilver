@@ -7,8 +7,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (k Keeper) NewClaim(ctx sdk.Context, address string, chainID string, amount uint64) *types.Claim {
-	return &types.Claim{UserAddress: address, ChainId: chainID, Amount: amount}
+func (k Keeper) NewClaim(ctx sdk.Context, address string, chainID string, module types.ClaimType, srcChainID string, amount uint64) types.Claim {
+	return types.Claim{UserAddress: address, ChainId: chainID, Module: module, SourceChainId: srcChainID, Amount: amount}
 }
 
 // GetClaim returns claim

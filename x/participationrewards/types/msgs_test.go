@@ -17,7 +17,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 	type fields struct {
 		UserAddress string
 		Zone        string
-		ClaimType   int64
+		ClaimType   ClaimType
 		Proofs      []*Proof
 	}
 	tests := []struct {
@@ -64,7 +64,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 			fields{
 				UserAddress: userAddress,
 				Zone:        "test-01",
-				ClaimType:   int64(ClaimTypeOsmosisPool),
+				ClaimType:   ClaimTypeOsmosisPool,
 				Proofs: []*Proof{
 					{
 						Key:       []byte{1, 2, 3, 4, 5},
@@ -104,7 +104,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 	type fields struct {
 		UserAddress string
 		Zone        string
-		ClaimType   int64
+		ClaimType   ClaimType
 		Proofs      []*Proof
 	}
 	tests := []struct {

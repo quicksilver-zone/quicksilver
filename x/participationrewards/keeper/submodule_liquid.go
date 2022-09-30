@@ -63,7 +63,7 @@ func (m *LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *type
 			}
 			amount += coin.Amount.Uint64()
 		}
-	}
 
+	}
 	return amount, nil
 }

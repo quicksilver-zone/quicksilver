@@ -5,6 +5,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
+	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -19,14 +21,14 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 		k.Logger(ctx).Error("unable to query osmosis/connection in OsmosisModule hook")
 		return
 	}
-	connectionData := ConnectionProtocolData{}
+	connectionData := types.ConnectionProtocolData{}
 	if err := json.Unmarshal(data.Data, &connectionData); err != nil {
 		k.Logger(ctx).Error("unable to unmarshal osmosis/connection in OsmosisModule hook", "error", err)
 		return
 	}
 
 	k.IteratePrefixedProtocolDatas(ctx, "osmosis/pools", func(idx int64, data types.ProtocolData) bool {
-		ipool, err := UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
+		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
 		if err != nil {
 			return false
 		}
@@ -47,7 +49,22 @@ func (m *OsmosisModule) IsReady() bool {
 }
 
 func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
-	return 0, nil
+
+	var amount uint64 = 0
+	for _, proof := range msg.Proofs {
+		lockupResponse := osmolockup.LockedResponse{}
+		err := k.cdc.Unmarshal(proof.Data, &lockupResponse)
+		if err != nil {
+			return 0, err
+		}
+
+		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lockupResponse, msg.Zone)
+		if err != nil {
+			return 0, err
+		}
+		amount += sdkAmount.Uint64()
+	}
+	return amount, nil
 }
 
 func (m *OsmosisModule) GetKeyPrefixPools(poolID uint64) []byte {
