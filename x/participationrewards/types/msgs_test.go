@@ -141,37 +141,37 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 	}
 }
 
-func TestNewMsgSubmitClaim(t *testing.T) {
-	validAddress := utils.GenerateAccAddressForTest().String()
-	testZone := "test-01"
+// func TestNewMsgSubmitClaim(t *testing.T) {
+// 	validAddress := utils.GenerateAccAddressForTest().String()
+// 	testZone := "test-01"
 
-	type args struct {
-		userAddress sdk.Address
-		zone        string
-	}
-	tests := []struct {
-		name string
-		args args
-		want *MsgSubmitClaim
-	}{
-		{
-			"valid",
-			args{
-				userAddress: sdk.MustAccAddressFromBech32(validAddress),
-				zone:        testZone,
-			},
-			&MsgSubmitClaim{
-				UserAddress: validAddress,
-				Zone:        testZone,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := NewMsgSubmitClaim(tt.args.userAddress, tt.args.zone); !reflect.DeepEqual(got, tt.want) {
-				err := fmt.Errorf("NewMsgSubmitClaim() = %v, want %v", got, tt.want)
-				require.NoError(t, err)
-			}
-		})
-	}
-}
+// 	type args struct {
+// 		userAddress sdk.Address
+// 		zone        string
+// 	}
+// 	tests := []struct {
+// 		name string
+// 		args args
+// 		want *MsgSubmitClaim
+// 	}{
+// 		{
+// 			"valid",
+// 			args{
+// 				userAddress: sdk.MustAccAddressFromBech32(validAddress),
+// 				zone:        testZone,
+// 			},
+// 			&MsgSubmitClaim{
+// 				UserAddress: validAddress,
+// 				Zone:        testZone,
+// 			},
+// 		},
+// 	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			if got := NewMsgSubmitClaim(tt.args.userAddress, tt.args.zone); !reflect.DeepEqual(got, tt.want) {
+// 				err := fmt.Errorf("NewMsgSubmitClaim() = %v, want %v", got, tt.want)
+// 				require.NoError(t, err)
+// 			}
+// 		})
+// 	}
+// }

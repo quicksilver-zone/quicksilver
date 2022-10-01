@@ -16,6 +16,11 @@ type zoneItrFn func(index int64, zoneInfo types.Zone) (stop bool)
 // BeginBlocker of interchainstaking module
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+	if ctx.BlockHeight()%30 == 0 {
+		if err := k.GCCompletedRedelegations(ctx); err != nil {
+			k.Logger(ctx).Error(err.Error())
+		}
+	}
 	k.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
 		if ctx.BlockHeight()%30 == 0 {
 			// for the tasks below, we cannot panic in begin blocker; as this will crash the chain.
@@ -31,6 +36,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			if err := k.GCCompletedUnbondings(ctx, &zone); err != nil {
 				k.Logger(ctx).Error(err.Error())
 			}
+
 		}
 		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
 		if found {

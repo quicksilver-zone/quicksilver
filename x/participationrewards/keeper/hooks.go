@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
@@ -14,6 +15,30 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	if epochIdentifier == "epoch" {
+		k.IteratePrefixedProtocolDatas(ctx, "connection", func(index int64, data types.ProtocolData) (stop bool) {
+			blockQuery := tmservice.GetLatestBlockRequest{}
+			bz := k.cdc.MustMarshal(&blockQuery)
+
+			iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataConnection, data.Data)
+			if err != nil {
+				k.Logger(ctx).Error("Error unmarshalling protocol data")
+			}
+			connectionData := iConnectionData.(types.ConnectionProtocolData)
+
+			k.icsKeeper.ICQKeeper.MakeRequest(
+				ctx,
+				connectionData.ConnectionID,
+				connectionData.ChainID,
+				"cosmos.base.tendermint.v1beta1.Service/GetLatestBlock",
+				bz,
+				sdk.NewInt(-1),
+				types.ModuleName,
+				"epochblock",
+				0,
+			)
+			return false
+		})
+
 		k.Logger(ctx).Info("distribute participation rewards...")
 
 		allocation, err := GetRewardsAllocations(

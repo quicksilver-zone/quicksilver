@@ -182,3 +182,16 @@ func (k Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRec
 
 	return &types.QueryUnbondingRecordsResponse{Unbondings: unbondings}, nil
 }
+
+func (k Keeper) RedelegationRecords(c context.Context, req *types.QueryRedelegationRecordsRequest) (*types.QueryRedelegationRecordsResponse, error) {
+	// TODO: implement pagination
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	redelegations := k.AllRedelegationRecords(ctx)
+
+	return &types.QueryRedelegationRecordsResponse{Redelegations: redelegations}, nil
+}

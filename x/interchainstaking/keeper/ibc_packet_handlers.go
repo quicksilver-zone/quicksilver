@@ -422,6 +422,21 @@ func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error 
 	return err
 }
 
+func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
+	var err error
+
+	k.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation types.RedelegationRecord) bool {
+		k.Logger(ctx).Info("garbage collecting completed redelegations")
+
+		if ctx.BlockTime().After(redelegation.CompletionTime) {
+			k.DeleteRedelegationRecordByKey(ctx, key)
+		}
+		return false
+	})
+
+	return err
+}
+
 func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) error {
 	var err error
 
@@ -487,7 +502,21 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 }
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time) error {
-	// we don't currently take any action on acknowledgement of rebalacing.
+	k.Logger(ctx).Info("Received MsgBeginRedelegate acknowledgement")
+	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
+	redelegateMsg, ok := msg.(*stakingtypes.MsgBeginRedelegate)
+	if !ok {
+		return fmt.Errorf("unable to unmarshal MsgBeginRedelegate")
+	}
+	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
+	epochInfo := k.EpochsKeeper.GetEpochInfo(ctx, "epoch")
+	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.DelegatorAddress, epochInfo.CurrentEpoch)
+	if !found {
+		return fmt.Errorf("unable to find redelegation record")
+	}
+
+	record.CompletionTime = completion
+	k.SetRedelegationRecord(ctx, record)
 	return nil
 }
 

@@ -29,6 +29,9 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 
 	// fetch zone
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
+	// this is fine for launch, but we cannot always guarantee the zone we are querying is a registered zone.
+	// add last_epoch_height to connection protocol, so we can fetch this epochly.
+
 	if !ok {
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}

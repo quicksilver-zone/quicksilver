@@ -51,5 +51,3 @@ func (opd OsmosisPoolProtocolData) ValidateBasic() error {
 
 	return nil
 }
-
-var _ ProtocolDataI = &OsmosisPoolProtocolData{}

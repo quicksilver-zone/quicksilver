@@ -25,6 +25,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -43,13 +44,14 @@ type Keeper struct {
 	BankKeeper                 bankkeeper.Keeper
 	IBCKeeper                  ibckeeper.Keeper
 	TransferKeeper             ibctransferkeeper.Keeper
+	EpochsKeeper               epochskeeper.Keeper
 	ParticipationRewardsKeeper types.ParticipationRewardsKeeper
 	paramStore                 paramtypes.Subspace
 }
 
 // NewKeeper returns a new instance of zones Keeper.
 // This function will panic on failure.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, ps paramtypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, epochKeeper epochskeeper.Keeper, ps paramtypes.Subspace) Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -68,7 +70,8 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 		AccountKeeper:       accountKeeper,
 		IBCKeeper:           ibcKeeper,
 		TransferKeeper:      transferKeeper,
-		paramStore:          ps,
+
+		paramStore: ps,
 	}
 }
 
@@ -377,13 +380,20 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount))
 }
 
-func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone) error {
+func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
 	currentAllocations, currentSum := k.GetDelegationMap(ctx, &zone)
 	targetAllocations := zone.GetAggregateIntentOrDefault()
 	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations)
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingTypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
+		k.SetRedelegationRecord(ctx, types.RedelegationRecord{
+			ChainId:     zone.ChainId,
+			EpochNumber: epochNumber,
+			Delegator:   zone.DelegationAddress.Address,
+			Validator:   rebalance.Source,
+			Amount:      rebalance.Amount.Int64(),
+		})
 	}
 	if len(msgs) == 0 {
 		k.Logger(ctx).Info("No rebalancing required")

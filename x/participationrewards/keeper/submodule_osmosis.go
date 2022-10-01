@@ -16,9 +16,9 @@ var _ Submodule = &OsmosisModule{}
 
 func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 	// osmosis params
-	data, found := k.GetProtocolData(ctx, "osmosis/connection")
+	data, found := k.GetProtocolData(ctx, "connection/osmosis")
 	if !found {
-		k.Logger(ctx).Error("unable to query osmosis/connection in OsmosisModule hook")
+		k.Logger(ctx).Error("unable to query connection/osmosis in OsmosisModule hook")
 		return
 	}
 	connectionData := types.ConnectionProtocolData{}
@@ -27,7 +27,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 		return
 	}
 
-	k.IteratePrefixedProtocolDatas(ctx, "osmosis/pools", func(idx int64, data types.ProtocolData) bool {
+	k.IteratePrefixedProtocolDatas(ctx, "osmosispools", func(idx int64, data types.ProtocolData) bool {
 		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
 		if err != nil {
 			return false
