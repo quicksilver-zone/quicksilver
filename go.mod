@@ -167,6 +167,7 @@ require (
 replace (
 	// https://github.com/CosmWasm/wasmd/pull/938
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.25.1-0.20220918064224-459cefae5a9a
+	github.com/cosmos/ledger-go => github.com/cosmos/ledger-go v0.9.3
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
