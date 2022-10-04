@@ -356,3 +356,39 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 		}
 	}
 }
+
+func (s *KeeperTestSuite) TestStoreGetDeleteDelegation() {
+	s.Run("delegation - store / get / delete", func() {
+		s.SetupTest()
+		s.SetupZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		ctx := s.chainA.GetContext()
+
+		zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().True(found)
+
+		delegator := utils.GenerateAccAddressForTest()
+		validator := utils.GenerateValAddressForTest()
+
+		_, found = app.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegator.String(), validator.String())
+		s.Require().False(found)
+
+		newDelegation := icstypes.NewDelegation(delegator.String(), validator.String(), sdk.NewCoin("uatom", sdk.NewInt(5000)))
+		app.InterchainstakingKeeper.SetDelegation(ctx, &zone, newDelegation)
+
+		fetchedDelegation, found := app.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegator.String(), validator.String())
+		s.Require().True(found)
+		s.Require().Equal(newDelegation, fetchedDelegation)
+
+		allDelegations := app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)
+		s.Require().Len(allDelegations, 1)
+
+		err := app.InterchainstakingKeeper.RemoveDelegation(ctx, &zone, newDelegation)
+		s.Require().NoError(err)
+
+		allDelegations2 := app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)
+		s.Require().Len(allDelegations2, 0)
+
+	})
+}

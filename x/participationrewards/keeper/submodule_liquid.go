@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -34,13 +35,21 @@ func (m *LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *type
 		return 0, fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)
 	}
 
+	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
+	if err != nil {
+		return 0, err
+	}
+
 	amount := uint64(0)
 	for _, proof := range msg.Proofs {
 		// determine denoms from key
 		if proof.Data == nil {
 			continue
 		}
-		denom, err := utils.DenomFromRequestKey(proof.Key, make([]byte, 20))
+
+		// DenomFromRequestKey will error if the user address does not match the address in the key
+		// or if the denom found is not valid.
+		denom, err := utils.DenomFromRequestKey(proof.Key, addr)
 		if err != nil {
 			return 0, err
 		}

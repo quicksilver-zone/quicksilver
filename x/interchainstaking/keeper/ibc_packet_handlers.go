@@ -345,6 +345,7 @@ func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 					// if we can't burn the coins, fail.
 					return err
 				}
+				k.SetWithdrawalRecord(ctx, withdrawalRecord)
 				k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
 			}
 			break
@@ -450,9 +451,7 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 				return true
 			}
 			k.Logger(ctx).Info("sending funds", "for", withdrawal.Delegator, "delegate_account", zone.DelegationAddress.GetAddress(), "to", withdrawal.Recipient, "amount", withdrawal.Amount)
-			k.DeleteWithdrawalRecord(ctx, zone.ChainId, withdrawal.Txhash, WithdrawStatusUnbond)
-			withdrawal.Status = WithdrawStatusSend
-			k.SetWithdrawalRecord(ctx, withdrawal)
+			k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, WithdrawStatusSend)
 		}
 		return false
 	})

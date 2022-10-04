@@ -78,14 +78,7 @@ func setupChannelForICA(ctx sdk.Context, qApp *app.Quicksilver, chainID string, 
 	if err != nil {
 		return err
 	}
-	// err = qApp.InterchainstakingKeeper.ClaimCapability(ctx, key, host.ChannelCapabilityPath(portID, channelID))
-	// if err != nil {
-	// 	return err
-	// }
-	// key, err = qApp.GetScopedIBCKeeper().NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
-	// if err != nil {
-	// 	return err
-	// }
+
 	err = qApp.GetScopedIBCKeeper().ClaimCapability(ctx, key, host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return err

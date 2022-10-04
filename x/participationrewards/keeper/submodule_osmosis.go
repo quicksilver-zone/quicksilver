@@ -2,8 +2,10 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
@@ -57,9 +59,22 @@ func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 			return 0, err
 		}
 
+		_, lockupOwner, err := bech32.DecodeAndConvert(lockupResponse.Lock.Owner)
+		if err != nil {
+			return 0, err
+		}
+
+		if sdk.AccAddress(lockupOwner).String() != msg.UserAddress {
+			return 0, fmt.Errorf("not a valid proof for submitting user")
+		}
+
 		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lockupResponse, msg.Zone)
 		if err != nil {
 			return 0, err
+		}
+
+		if sdkAmount.IsNegative() {
+			return 0, fmt.Errorf("unexpected negative amount")
 		}
 		amount += sdkAmount.Uint64()
 	}

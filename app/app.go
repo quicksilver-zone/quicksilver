@@ -459,7 +459,6 @@ func NewQuicksilver(
 		app.InterchainQueryKeeper,
 		*app.IBCKeeper,
 		app.TransferKeeper,
-		*epochsKeeper,
 		app.GetSubspace(interchainstakingtypes.ModuleName),
 	)
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
@@ -506,6 +505,9 @@ func NewQuicksilver(
 		),
 	)
 
+	app.InterchainstakingKeeper.SetEpochsKeeper(app.EpochsKeeper)
+	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
+
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	wasmDir := filepath.Join(homePath, "data")
 
@@ -539,8 +541,6 @@ func NewQuicksilver(
 		supportedFeatures,
 		wasmOpts...,
 	)
-
-	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
 
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, app.ICAControllerKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)

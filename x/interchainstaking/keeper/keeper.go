@@ -51,7 +51,7 @@ type Keeper struct {
 
 // NewKeeper returns a new instance of zones Keeper.
 // This function will panic on failure.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, epochKeeper epochskeeper.Keeper, ps paramtypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, ps paramtypes.Subspace) Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -80,6 +80,10 @@ func (k *Keeper) SetParticipationRewardsKeeper(prk types.ParticipationRewardsKee
 		panic("Participation Rewards Keeper is already set")
 	}
 	k.ParticipationRewardsKeeper = prk
+}
+
+func (k *Keeper) SetEpochsKeeper(ek epochskeeper.Keeper) {
+	k.EpochsKeeper = ek
 }
 
 // Logger returns a module-specific logger.
