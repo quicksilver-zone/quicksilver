@@ -1,5 +1,5 @@
 #!/usr/bin/make -f
-
+DOCKER_BUILDKIT=1
 COSMOS_BUILD_OPTIONS=""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
