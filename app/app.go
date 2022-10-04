@@ -447,8 +447,6 @@ func NewQuicksilver(
 	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
 	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper)
 
-	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
-
 	app.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(
 		appCodec,
 		keys[interchainstakingtypes.StoreKey],
@@ -497,6 +495,7 @@ func NewQuicksilver(
 
 	app.TokenFactoryKeeper = &tokenFactoryKeeper
 	// Quicksilver Keepers
+	epochsKeeper := epochskeeper.NewKeeper(appCodec, keys[epochstypes.StoreKey])
 	app.EpochsKeeper = *epochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 			app.MintKeeper.Hooks(),

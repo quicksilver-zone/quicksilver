@@ -19,8 +19,8 @@ type Keeper struct {
 }
 
 // NewKeeper returns a new instance of epochs Keeper
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) *Keeper {
-	return &Keeper{
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) Keeper {
+	return Keeper{
 		cdc:      cdc,
 		storeKey: storeKey,
 	}
