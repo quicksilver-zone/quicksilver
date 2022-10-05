@@ -504,7 +504,6 @@ func NewQuicksilver(
 		),
 	)
 
-	app.InterchainstakingKeeper.SetEpochsKeeper(app.EpochsKeeper)
 	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition

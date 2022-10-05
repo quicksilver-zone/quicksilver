@@ -126,7 +126,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			k.Logger(ctx).Debug("Redelegation initiated", "response", response)
-			if err := k.HandleBeginRedelegate(ctx, src, response.CompletionTime); err != nil {
+			if err := k.HandleBeginRedelegate(ctx, src, response.CompletionTime, packetData.Memo); err != nil {
 				return err
 			}
 			continue
@@ -500,7 +500,17 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	return nil
 }
 
-func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time) error {
+func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
+	parts := strings.Split(memo, "/")
+	if len(parts) != 2 {
+		return fmt.Errorf("unexpected epoch rebalance memo format")
+	}
+
+	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return fmt.Errorf("unexpected epoch rebalance memo format (2)")
+	}
+
 	k.Logger(ctx).Info("Received MsgBeginRedelegate acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
 	redelegateMsg, ok := msg.(*stakingtypes.MsgBeginRedelegate)
@@ -508,8 +518,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		return fmt.Errorf("unable to unmarshal MsgBeginRedelegate")
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
-	epochInfo := k.EpochsKeeper.GetEpochInfo(ctx, "epoch")
-	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.DelegatorAddress, epochInfo.CurrentEpoch)
+	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.DelegatorAddress, epochNumber)
 	if !found {
 		return fmt.Errorf("unable to find redelegation record")
 	}

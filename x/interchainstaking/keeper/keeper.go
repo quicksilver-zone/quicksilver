@@ -25,7 +25,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/utils"
-	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -44,7 +43,6 @@ type Keeper struct {
 	BankKeeper                 bankkeeper.Keeper
 	IBCKeeper                  ibckeeper.Keeper
 	TransferKeeper             ibctransferkeeper.Keeper
-	EpochsKeeper               epochskeeper.Keeper
 	ParticipationRewardsKeeper types.ParticipationRewardsKeeper
 	paramStore                 paramtypes.Subspace
 }
@@ -80,10 +78,6 @@ func (k *Keeper) SetParticipationRewardsKeeper(prk types.ParticipationRewardsKee
 		panic("Participation Rewards Keeper is already set")
 	}
 	k.ParticipationRewardsKeeper = prk
-}
-
-func (k *Keeper) SetEpochsKeeper(ek epochskeeper.Keeper) {
-	k.EpochsKeeper = ek
 }
 
 // Logger returns a module-specific logger.
@@ -404,7 +398,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) 
 		return nil
 	}
 	k.Logger(ctx).Info("Send rebalancing messages", "msgs", msgs)
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "epoch %d rebalancing")
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber))
 }
 
 type RebalanceTarget struct {
