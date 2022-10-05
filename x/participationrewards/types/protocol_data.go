@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	fmt "fmt"
 	"reflect"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
@@ -10,32 +11,6 @@ import (
 
 func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (ProtocolDataI, error) {
 	switch datatype {
-	case ProtocolDataOsmosisPool:
-		{
-			pd := OsmosisPoolProtocolData{}
-			err := json.Unmarshal(data, &pd)
-			if err != nil {
-				return nil, err
-			}
-			var blank OsmosisPoolProtocolData
-			if reflect.DeepEqual(pd, blank) {
-				return nil, errors.New("unable to unmarshal osmosispool protocol data from empty JSON object")
-			}
-			return pd, nil
-		}
-	case ProtocolDataOsmosisParams:
-		{
-			pd := OsmosisParamsProtocolData{}
-			err := json.Unmarshal(data, &pd)
-			if err != nil {
-				return nil, err
-			}
-			var blank OsmosisParamsProtocolData
-			if reflect.DeepEqual(pd, blank) {
-				return nil, errors.New("unable to unmarshal osmosisparams protocol data from empty JSON object")
-			}
-			return pd, nil
-		}
 	case ProtocolDataConnection:
 		{
 			pd := ConnectionProtocolData{}
@@ -59,6 +34,32 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 			var blank LiquidAllowedDenomProtocolData
 			if reflect.DeepEqual(pd, blank) {
 				return nil, errors.New("unable to unmarshal liquid protocol data from empty JSON object")
+			}
+			return pd, nil
+		}
+	case ProtocolDataOsmosisPool:
+		{
+			pd := OsmosisPoolProtocolData{}
+			err := json.Unmarshal(data, &pd)
+			if err != nil {
+				return nil, err
+			}
+			var blank OsmosisPoolProtocolData
+			if reflect.DeepEqual(pd, blank) {
+				return nil, fmt.Errorf("unable to unmarshal osmosispool protocol data from empty JSON object")
+			}
+			return pd, nil
+		}
+	case ProtocolDataOsmosisParams:
+		{
+			pd := OsmosisParamsProtocolData{}
+			err := json.Unmarshal(data, &pd)
+			if err != nil {
+				return nil, err
+			}
+			var blank OsmosisParamsProtocolData
+			if reflect.DeepEqual(pd, blank) {
+				return nil, fmt.Errorf("unable to unmarshal osmosisparams protocol data from empty JSON object")
 			}
 			return pd, nil
 		}

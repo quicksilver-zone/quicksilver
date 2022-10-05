@@ -29,17 +29,25 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 
 	// fetch zone
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
-	// this is fine for launch, but we cannot always guarantee the zone we are querying is a registered zone.
-	// add last_epoch_height to connection protocol, so we can fetch this epochly.
-
 	if !ok {
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
+	connstr := fmt.Sprintf("connection/%s", zone.ChainId)
+	pd, ok := k.GetProtocolData(ctx, connstr)
+	if !ok {
+		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", zone.ChainId)
+	}
+
+	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataConnection, pd.Data)
+	if err != nil {
+		k.Logger(ctx).Error("SubmitClaim: error unmarshalling protocol data")
+	}
+	connectionData := iConnectionData.(types.ConnectionProtocolData)
 
 	for i, proof := range msg.Proofs {
 		pl := fmt.Sprintf("Proof [%d]", i)
 
-		if proof.Height != zone.LastEpochHeight {
+		if proof.Height != connectionData.LastEpoch {
 			return nil, fmt.Errorf(
 				"invalid claim for last epoch, %s expected height %d, got %d",
 				pl,

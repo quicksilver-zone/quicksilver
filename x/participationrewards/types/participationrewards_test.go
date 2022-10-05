@@ -158,7 +158,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 	}
 }`
 	validOsmosisData := `{
-	"poolname": "osmosis/pools/1",
+	"poolid": 1,
+	"poolname": "atom/osmo",
 	"zones": {
 		"zone_id": "IBC/zone_denom"
 	}

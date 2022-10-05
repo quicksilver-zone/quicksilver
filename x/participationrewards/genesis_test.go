@@ -55,11 +55,12 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	ctx = ctx.WithBlockTime(now)
 
 	validOsmosisData := `{
-		"poolname": "osmosis/pools/1",
-		"zones": {
-			"zone_id": "IBC/zone_denom"
-		}
-	}`
+	"poolid": 1,
+	"poolname": "atom/osmo",
+	"zones": {
+		"zone_id": "IBC/zone_denom"
+	}
+}`
 
 	kpd := &types.KeyedProtocolData{
 		Key: "pools/6",

@@ -22,6 +22,10 @@ type OsmosisPoolProtocolData struct {
 func (opd OsmosisPoolProtocolData) ValidateBasic() error {
 	errors := make(map[string]error)
 
+	if opd.PoolID == 0 {
+		errors["PoolID"] = ErrUndefinedAttribute
+	}
+
 	if len(opd.PoolName) == 0 {
 		errors["PoolName"] = ErrUndefinedAttribute
 	}

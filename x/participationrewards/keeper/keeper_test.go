@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -9,14 +10,14 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/app"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
-
-var TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
 }
 
+// TestKeeperTestSuite runs all the tests within this package.
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(KeeperTestSuite))
 }
@@ -50,10 +51,11 @@ func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Qu
 	return app
 }
 
+// SetupTest creates a coordinator with 2 test chains.
 func (suite *KeeperTestSuite) SetupTest() {
-	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)
-	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1))
-	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2))
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)         // initializes 2 test chains
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1)) // convenience and readability
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2)) // convenience and readability
 
 	suite.path = newQuicksilverPath(suite.chainA, suite.chainB)
 	suite.coordinator.SetupConnections(suite.path)
@@ -62,6 +64,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator.UpdateTime()
 
 	suite.initTestZone()
+
+	// suite.coordinator.CommitNBlocks(suite.chainA, 100)
+	// suite.coordinator.CommitNBlocks(suite.chainB, 100)
 }
 
 func (suite *KeeperTestSuite) initTestZone() {
@@ -77,60 +82,15 @@ func (suite *KeeperTestSuite) initTestZone() {
 	}
 
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+
+	pdType := types.ProtocolDataType_name[types.ProtocolDataConnection]
+	connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)
+	pd := types.ProtocolData{
+		Protocol: "connection",
+		Type:     pdType,
+		Data:     []byte(connpdstr),
+	}
+
+	connstr := fmt.Sprintf("connection/%s", suite.chainB.ChainID)
+	suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper.SetProtocolData(suite.chainA.GetContext(), connstr, &pd)
 }
-
-/*func (s *KeeperTestSuite) SetupRegisteredZones() {
-	proposal := &icstypes.RegisterZoneProposal{
-		Title:           "register zone A",
-		Description:     "register zone A",
-		ConnectionId:    s.path.EndpointA.ConnectionID,
-		LocalDenom:      "uqatom",
-		BaseDenom:       "uatom",
-		AccountPrefix:   "cosmos",
-		MultiSend:       true,
-		LiquidityModule: true,
-	}
-
-	ctx := s.chainA.GetContext()
-
-	// Set special testing context (e.g. for test / debug output)
-	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("TEST"), "TEST"))
-
-	err := icskeeper.HandleRegisterZoneProposal(ctx, s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper, proposal)
-	s.Require().NoError(err)
-
-	chainBVals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext())
-
-	for _, val := range chainBVals {
-		qvr := stakingtypes.QueryValidatorResponse{
-			Validator: val,
-		}
-
-		addr, err := utils.ValAddressFromBech32(val.OperatorAddress, "")
-		s.Require().NoError(err)
-
-		data := stakingtypes.GetValidatorKey(addr)
-
-		query := s.GetQuicksilverApp(s.chainA).InterchainQueryKeeper.NewQuery(
-			ctx,
-			icstypes.ModuleName,
-			s.path.EndpointA.ConnectionID,
-			s.chainB.ChainID,
-			"store/staking/key",
-			data,
-			sdk.ZeroInt(),
-			"validator",
-			0,
-		)
-		err = icskeeper.ValidatorCallback(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper, ctx, s.GetQuicksilverApp(s.chainB).AppCodec().MustMarshal(&qvr), *query)
-		s.Require().NoError(err)
-	}
-
-	valsetInterval := uint64(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetParam(ctx, icstypes.KeyValidatorSetInterval))
-	s.coordinator.CommitNBlocks(s.chainA, valsetInterval)
-	s.coordinator.CommitNBlocks(s.chainB, valsetInterval)
-}*/
-
-/*func (s *KeeperTestSuite) Test() {
-	s.SetupRegisteredZones()
-}*/

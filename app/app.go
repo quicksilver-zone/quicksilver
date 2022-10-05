@@ -476,13 +476,13 @@ func NewQuicksilver(
 		app.InterchainstakingKeeper,
 		authtypes.FeeCollectorName,
 	)
-	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
-
-	app.InterchainstakingKeeper.SetParticipationRewardsKeeper(app.ParticipationRewardsKeeper)
-
 	if err := app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler()); err != nil {
 		panic(err)
 	}
+
+	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
+	app.InterchainstakingKeeper.SetParticipationRewardsKeeper(app.ParticipationRewardsKeeper)
+
 	if err := app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler()); err != nil {
 		panic(err)
 	}
