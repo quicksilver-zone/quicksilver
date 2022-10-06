@@ -819,6 +819,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 }
 
 func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {
+
 	zone, found := k.GetZone(ctx, query.ChainId)
 	if !found {
 		return fmt.Errorf("unable to find zone for %s", query.ChainId)
@@ -856,9 +857,11 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	var remoteChannel string
 	for _, localChannel := range localChannelResp.Channels {
 		if localChannel.PortId == transferPort {
-			remoteChannel = localChannel.Counterparty.ChannelId
-			remotePort = localChannel.Counterparty.PortId
-			break
+			if localChannel.State == channeltypes.OPEN {
+				remoteChannel = localChannel.Counterparty.ChannelId
+				remotePort = localChannel.Counterparty.PortId
+				break
+			}
 		}
 	}
 	if remotePort == "" {
