@@ -73,6 +73,8 @@ echo "Launch and configure interchain query daemon"
 ICQ_ADDRESS_1=$($ICQ_RUN keys add test --chain qstest-1 | jq .address -r)
 ICQ_ADDRESS_2=$($ICQ_RUN keys add test --chain lstest-1 | jq .address -r)
 
+sleep 3
+
 $QS1_EXEC tx bank send val1 $ICQ_ADDRESS_1 1000uqck --chain-id $CHAINID_0 -y --keyring-backend=test
 $TZ1_1_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_1 -y --keyring-backend=test
 

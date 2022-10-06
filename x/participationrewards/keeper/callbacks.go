@@ -169,6 +169,9 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	}
 
 	data.Data, err = json.Marshal(connectionData)
+	if err != nil {
+		return err
+	}
 	k.SetProtocolData(ctx, fmt.Sprintf("connection/%s", query.ChainId), &data)
 	return nil
 }

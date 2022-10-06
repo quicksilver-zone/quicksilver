@@ -18,7 +18,6 @@ func NewMsgSubmitClaim(
 	claimType ClaimType,
 	proofs []*Proof,
 ) *MsgSubmitClaim {
-
 	return &MsgSubmitClaim{
 		UserAddress: userAddress.String(),
 		SrcZone:     srcZone,

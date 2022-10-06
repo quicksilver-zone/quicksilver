@@ -86,10 +86,11 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	// check for and delete non-repeating queries, update any other
 	// - Period.IsNegative() indicates a single query;
 	// - noDelete indicates a response that triggered a re-query;
-	if q.Period.IsNegative() && !noDelete {
-		k.DeleteQuery(ctx, msg.QueryId)
+	if q.Period.IsNegative() {
+		if !noDelete {
+			k.DeleteQuery(ctx, msg.QueryId)
+		}
 	} else {
-		// logic condition: !q.Period.IsNegative() || noDelete == true
 		q.LastHeight = sdk.NewInt(ctx.BlockHeight())
 		k.SetQuery(ctx, q)
 	}
