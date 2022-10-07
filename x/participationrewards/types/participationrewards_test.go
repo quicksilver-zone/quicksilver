@@ -152,7 +152,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 
 func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 	invalidOsmosisData := `{
-	"poolname": "osmosis/pools/1",
+	"poolname": "osmosispools/1",
 	"zones": {
 		"": ""
 	}
@@ -194,7 +194,7 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 		{
 			"pd_osmosis_nil_data",
 			fields{
-				"osmosis/pools/1",
+				"osmosispools/1",
 				&ProtocolData{
 					Protocol: "osmosis",
 					Type:     "osmosispool",
@@ -206,7 +206,7 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 		{
 			"pd_osmosis_empty_data",
 			fields{
-				"osmosis/pools/1",
+				"osmosispools/1",
 				&ProtocolData{
 					Protocol: "osmosis",
 					Type:     "osmosispool",
@@ -218,7 +218,7 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 		{
 			"pd_osmosis_invalid",
 			fields{
-				"osmosis/pools/1",
+				"osmosispools/1",
 				&ProtocolData{
 					Protocol: "osmosis",
 					Type:     "osmosispool",
@@ -230,7 +230,7 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 		{
 			"pd_osmosis_valid",
 			fields{
-				"osmosis/pools/1",
+				"osmosispools/1",
 				&ProtocolData{
 					Protocol: "osmosis",
 					Type:     "osmosispool",

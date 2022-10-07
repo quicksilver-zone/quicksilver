@@ -7,6 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// tests that {} is an invalid string, and that an error is thrown when unmarshalled.
+// see: https://github.com/ingenuity-build/quicksilver/issues/214
+func TestUnmarshalProtocolDataRejectsZeroLengthJson(t *testing.T) {
+	_, err := UnmarshalProtocolData(ProtocolDataOsmosisPool, []byte("{}"))
+	require.Error(t, err)
+}
+
 func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 	type fields struct {
 		ConnectionID string

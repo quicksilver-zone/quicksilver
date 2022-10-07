@@ -36,11 +36,11 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 	}
 	protocolData := keeper.NewProtocolData("osmosispool", "osmosis", bz)
 
-	app.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("osmosis/pools/%d", pool.PoolID), protocolData)
+	app.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("osmosispools/%d", pool.PoolID), protocolData)
 
 	genesis := participationrewards.ExportGenesis(ctx, app.ParticipationRewardsKeeper)
 
-	require.Equal(t, "osmosis/pools/1", genesis.ProtocolData[0].Key)
+	require.Equal(t, "osmosispools/1", genesis.ProtocolData[0].Key)
 	require.Equal(t, "osmosis", genesis.ProtocolData[0].ProtocolData.Protocol)
 	require.Equal(t, "osmosispool", genesis.ProtocolData[0].ProtocolData.Type)
 }

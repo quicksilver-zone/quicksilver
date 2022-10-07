@@ -160,7 +160,7 @@ func (m *QueryProtocolDataRequest) GetProtocol() string {
 
 // QueryProtocolDataResponse is the response type for querying Protocol Data.
 type QueryProtocolDataResponse struct {
-	// params defines the parameters of the module.
+	// data defines the underlying protocol data.
 	Data []encoding_json.RawMessage `protobuf:"bytes,1,rep,name=data,proto3,casttype=encoding/json.RawMessage" json:"data,omitempty" yaml:"data"`
 }
 

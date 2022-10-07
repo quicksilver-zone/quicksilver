@@ -2,10 +2,10 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
 const (
@@ -29,20 +29,26 @@ func (m AddProtocolDataProposal) ValidateBasic() error {
 		return err
 	}
 
+	errors := make(map[string]error)
+
 	if len(m.Protocol) == 0 {
-		return errors.New("proposal must specify Protocol")
+		errors["Protocol"] = ErrUndefinedAttribute
 	}
 
 	if len(m.Type) == 0 {
-		return errors.New("proposal must specify Type")
+		errors["Type"] = ErrUndefinedAttribute
 	}
 
 	if len(m.Key) == 0 {
-		return errors.New("proposal must specify Key")
+		errors["Key"] = ErrUndefinedAttribute
 	}
 
-	if m.Data == nil {
-		return errors.New("proposal must specify Data")
+	if len(m.Data) == 0 {
+		errors["Data"] = ErrUndefinedAttribute
+	}
+
+	if len(errors) > 0 {
+		return multierror.New(errors)
 	}
 
 	return nil

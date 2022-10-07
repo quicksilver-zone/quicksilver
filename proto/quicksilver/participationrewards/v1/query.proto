@@ -36,7 +36,7 @@ message QueryProtocolDataRequest { string protocol = 1; }
 
 // QueryProtocolDataResponse is the response type for querying Protocol Data.
 message QueryProtocolDataResponse {
-  // params defines the parameters of the module.
+  // data defines the underlying protocol data.
   repeated bytes data = 1 [
     (gogoproto.moretags) = "yaml:\"data\"",
     (gogoproto.casttype) = "encoding/json.RawMessage"

@@ -83,7 +83,7 @@ func TestAddProtocolDataProposal_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"valid_data",
+			"valid_liquid_data",
 			fields{
 				Title:       "Valid Protocol Data",
 				Description: "A valid protocol that is valid",

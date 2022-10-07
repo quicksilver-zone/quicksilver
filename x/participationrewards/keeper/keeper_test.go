@@ -64,9 +64,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator.UpdateTime()
 
 	suite.initTestZone()
-
-	// suite.coordinator.CommitNBlocks(suite.chainA, 100)
-	// suite.coordinator.CommitNBlocks(suite.chainB, 100)
 }
 
 func (suite *KeeperTestSuite) initTestZone() {
@@ -74,23 +71,72 @@ func (suite *KeeperTestSuite) initTestZone() {
 	zone := icstypes.Zone{
 		ConnectionId:    suite.path.EndpointA.ConnectionID,
 		ChainId:         suite.chainB.ChainID,
+		AccountPrefix:   "bcosmos",
+		LocalDenom:      "uqatom",
+		BaseDenom:       "uatom",
+		MultiSend:       true,
+		LiquidityModule: true,
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+
+	// cosmos zone
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-77001",
+		ChainId:         "cosmoshub-4",
 		AccountPrefix:   "cosmos",
 		LocalDenom:      "uqatom",
 		BaseDenom:       "uatom",
 		MultiSend:       true,
 		LiquidityModule: true,
 	}
-
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
-	pdType := types.ProtocolDataType_name[types.ProtocolDataConnection]
-	connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)
+	// osmosis zone
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-77002",
+		ChainId:         "osmosis-1",
+		AccountPrefix:   "osmo",
+		LocalDenom:      "uqosmo",
+		BaseDenom:       "uosmo",
+		MultiSend:       true,
+		LiquidityModule: true,
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+
+	// connection type
+	suite.addProtocolData(
+		"connection",
+		types.ProtocolDataType_name[types.ProtocolDataConnection],
+		fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0),
+		fmt.Sprintf("connection/%s", suite.chainB.ChainID),
+	)
+	// osmosis
+	suite.addProtocolData(
+		"osmosis",
+		types.ProtocolDataType_name[types.ProtocolDataOsmosisPool],
+		fmt.Sprintf(
+			"{\"poolid\":%d,\"poolname\":%q,\"zones\":{%q:%q,%q:%q}}",
+			1,
+			"atom/osmo",
+			"cosmoshub-4",
+			"IBC/atom",
+			"osmosis-1",
+			"IBC/osmo",
+		),
+		"osmosispools/1",
+	)
+
+	// ensure that epoch boundaries are reached...
+	suite.coordinator.CommitNBlocks(suite.chainA, 10)
+	suite.coordinator.CommitNBlocks(suite.chainB, 5)
+}
+
+func (suite *KeeperTestSuite) addProtocolData(Protocol string, Type string, Data string, Key string) {
 	pd := types.ProtocolData{
-		Protocol: "connection",
-		Type:     pdType,
-		Data:     []byte(connpdstr),
+		Protocol: Protocol,
+		Type:     Type,
+		Data:     []byte(Data),
 	}
 
-	connstr := fmt.Sprintf("connection/%s", suite.chainB.ChainID)
-	suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper.SetProtocolData(suite.chainA.GetContext(), connstr, &pd)
+	suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper.SetProtocolData(suite.chainA.GetContext(), Key, &pd)
 }
