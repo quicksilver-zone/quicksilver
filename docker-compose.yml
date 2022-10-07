@@ -101,12 +101,9 @@ services:
     image: quicksilverzone/hermes:v1.0.0
     hostname: hermes
     volumes:
-      - ./scripts/config/hermes.toml:/tmp/hermes.toml
       - ./data/hermes:/hermes/.hermes
     command:
       - hermes
-      - --config
-      - /tmp/hermes.toml
       - start
     restart: always
     build:

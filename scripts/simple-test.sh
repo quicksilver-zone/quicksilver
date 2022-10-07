@@ -39,6 +39,7 @@ else
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1}c ${CHAIN_DIR}/${CHAINID_1}c
   mkdir ${CHAIN_DIR}/hermes ${CHAIN_DIR}/icq
   cp ./scripts/config/icq.yaml ./${CHAIN_DIR}/icq/config.yaml
+  cp ./scripts/config/hermes.toml ./${CHAIN_DIR}/hermes/config.toml
   cp -rf ./scripts/config/rly ./${CHAIN_DIR}/rly
 fi
 

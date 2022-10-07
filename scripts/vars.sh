@@ -47,7 +47,7 @@ TZ2_2_RUN="docker-compose --ansi never run --rm -T testzone2-2 osmosisd"
 TZ2_3_RUN="docker-compose --ansi never run --rm -T testzone2-3 osmosisd"
 TZ2_4_RUN="docker-compose --ansi never run --rm -T testzone2-4 osmosisd"
 RLY_RUN="docker-compose --ansi never run --rm -T relayer rly"
-HERMES_RUN="docker-compose --ansi never run --rm -T hermes hermes --config /tmp/hermes.toml"
+HERMES_RUN="docker-compose --ansi never run --rm -T hermes hermes"
 
 QS1_EXEC="docker-compose --ansi never exec -T quicksilver quicksilverd"
 QS2_EXEC="docker-compose --ansi never exec -T quicksilver2 quicksilverd"
