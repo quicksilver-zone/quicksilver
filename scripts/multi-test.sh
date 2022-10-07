@@ -95,7 +95,7 @@ $QS1_EXEC tx gov vote 2 yes --from val1 --chain-id $CHAINID_0 -y --keyring-backe
 $QS2_EXEC tx gov vote 2 yes --from val6 --chain-id $CHAINID_0 -y --keyring-backend=test
 $QS3_EXEC tx gov vote 2 yes --from val7 --chain-id $CHAINID_0 -y --keyring-backend=test
 sleep 30
-docker-compsoe restart hermes
+docker-compose restart hermes
 
 ## TODO: get val2 valoper from keys
 $TZ1_1_EXEC tx staking tokenize-share $VAL_VALOPER_2 10000000uatom $VAL_ADDRESS_2 --from val2 --gas 400000 --chain-id $CHAINID_1 -y --keyring-backend=test  #1
