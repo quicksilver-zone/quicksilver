@@ -157,7 +157,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 		aggregate[idx] = intent
 	}
 
-	k.Logger(ctx).Error("aggregates", "agg", aggregate)
+	k.Logger(ctx).Info("aggregates", "agg", aggregate, "chain", zone.ChainId)
 
 	zone.AggregateIntent = aggregate
 	k.SetZone(ctx, &zone)

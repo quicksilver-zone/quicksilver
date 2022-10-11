@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/gorilla/mux"
@@ -439,6 +440,7 @@ func NewQuicksilver(
 	)
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
+		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, scopedICAHostKeeper, app.MsgServiceRouter(),
 	)
@@ -504,6 +506,8 @@ func NewQuicksilver(
 		),
 	)
 
+	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
+
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	wasmDir := filepath.Join(homePath, "data")
 
@@ -537,8 +541,6 @@ func NewQuicksilver(
 		supportedFeatures,
 		wasmOpts...,
 	)
-
-	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
 
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, app.ICAControllerKeeper)
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
@@ -753,30 +755,21 @@ func NewQuicksilver(
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	// handle upgrades here/
-	app.UpgradeKeeper.SetUpgradeHandler("v0.9.2", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		app.UpgradeKeeper.Logger(ctx).Info("Fixing bitcanna-dev-5 zone")
-		app.InterchainstakingKeeper.DeleteZone(ctx, "bitcanna-dev-5")
-		bcnaProp := interchainstakingtypes.NewRegisterZoneProposal("", "", "connection-0", "ubcna", "uqbcna", "bcna", false, false)
-		err := interchainstakingkeeper.HandleRegisterZoneProposal(ctx, app.InterchainstakingKeeper, bcnaProp)
-		if err != nil {
-			panic("unable to reregister bitcanna-dev-5 zone")
-		}
-		app.UpgradeKeeper.Logger(ctx).Info("Done")
+	// handle upgrades here
 
-		app.UpgradeKeeper.Logger(ctx).Info("Adding fauxgaia-1 zone")
+	app.UpgradeKeeper.SetUpgradeHandler("v0.9.6", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		app.UpgradeKeeper.Logger(ctx).Info("Fixing epoch duration")
+		dayEpoch := app.EpochsKeeper.GetEpochInfo(ctx, "day")
+		dayEpoch.Duration = time.Hour * 2
+		app.EpochsKeeper.SetEpochInfo(ctx, dayEpoch)
 
-		secretProp := interchainstakingtypes.NewRegisterZoneProposal("", "", "connection-1", "umuon", "uqmuon", "cosmos", false, false)
-		err = interchainstakingkeeper.HandleRegisterZoneProposal(ctx, app.InterchainstakingKeeper, secretProp)
-		if err != nil {
-			panic("unable to register new fauxgaia-1 zone")
-		}
-		app.UpgradeKeeper.Logger(ctx).Info("Done")
+		weekEpoch := app.EpochsKeeper.GetEpochInfo(ctx, "week")
+		weekEpoch.Duration = time.Hour * 6
+		weekEpoch.Identifier = "epoch"
+		app.EpochsKeeper.SetEpochInfo(ctx, weekEpoch)
 
-		app.UpgradeKeeper.Logger(ctx).Info("Updating slashing params")
-		slashingParams := app.SlashingKeeper.GetParams(ctx)
-		slashingParams.SignedBlocksWindow = 10000
-		app.SlashingKeeper.SetParams(ctx, slashingParams)
+		app.EpochsKeeper.DeleteEpochInfo(ctx, "week")
+
 		app.UpgradeKeeper.Logger(ctx).Info("Done")
 
 		return app.mm.RunMigrations(ctx, app.configurator, vm)

@@ -126,7 +126,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			k.Logger(ctx).Debug("Redelegation initiated", "response", response)
-			if err := k.HandleBeginRedelegate(ctx, src, response.CompletionTime); err != nil {
+			if err := k.HandleBeginRedelegate(ctx, src, response.CompletionTime, packetData.Memo); err != nil {
 				return err
 			}
 			continue
@@ -288,7 +288,7 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 		// Target here is the DelegationAddresses.
 		return k.handleRewardsDelegation(ctx, *zone, sMsg)
 	case zone.IsDelegateAddress(sMsg.FromAddress):
-		return k.handleWithdrawForUser(ctx, zone, sMsg, memo)
+		return k.HandleWithdrawForUser(ctx, zone, sMsg, memo)
 	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.DepositAddress.Address == sMsg.FromAddress:
 		return k.handleSendToDelegate(ctx, zone, sMsg, memo)
 	default:
@@ -322,7 +322,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 // on a match (recipient = msg.ToAddress + amount + status == SEND), we mark the record as complete.
 // if no other withdrawal records exist for this triple (i.e. no further withdrawal from this delegator account for this user (i.e. different validator))
 // then burn the withdrawal_record's burn_amount.
-func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
+func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
 	var err error
 	var withdrawalRecord types.WithdrawalRecord
 
@@ -332,36 +332,54 @@ func (k *Keeper) handleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 		return fmt.Errorf("no matching withdrawal record found")
 	}
 
-	dlist := make(map[int]struct{})
-	for i, dist := range withdrawalRecord.Distribution {
-		if msg.Amount[0].Amount.Equal(sdk.NewIntFromUint64(dist.Amount)) {
-			dlist[i] = struct{}{}
-			// matched amount
-			if len(withdrawalRecord.Distribution) == len(dlist) {
-				// we just removed the last element
-				k.Logger(ctx).Info("found matching withdrawal; marking as completed")
-				k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, WithdrawStatusCompleted)
-				if err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
-					// if we can't burn the coins, fail.
-					return err
-				}
-				k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
-			}
-			break
+	// case 1: total amount - native unbonding
+	// this statement is ridiculous, but currently calling coins.Equals against coins with different denoms panics; which is pretty useless.
+	if len(withdrawalRecord.Amount) == 1 && len(msg.Amount) == 1 && msg.Amount[0].Denom == withdrawalRecord.Amount[0].Denom && withdrawalRecord.Amount.IsEqual(msg.Amount) {
+		k.Logger(ctx).Info("found matching withdrawal; marking as completed")
+		k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, WithdrawStatusCompleted)
+		if err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
+			// if we can't burn the coins, fail.
+			return err
 		}
-	}
-
-	if len(dlist) > 0 {
-		newDist := make([]*types.Distribution, len(withdrawalRecord.Distribution)-len(dlist))
-		i := 0
-		for idx := range withdrawalRecord.Distribution {
-			if _, delete := dlist[i]; !delete {
-				newDist[i] = withdrawalRecord.Distribution[idx]
-			}
-			i++
-		}
-		k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
 		k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
+	} else {
+
+		// case 2: per validator amounts - LSM unbonding
+
+		dlist := make(map[int]struct{})
+		for i, dist := range withdrawalRecord.Distribution {
+			if msg.Amount[0].Amount.Equal(sdk.NewIntFromUint64(dist.Amount)) { // check valoper here too?
+				dlist[i] = struct{}{}
+				// matched amount
+				if len(withdrawalRecord.Distribution) == len(dlist) {
+					// we just removed the last element
+					k.Logger(ctx).Info("found matching withdrawal; marking as completed")
+					k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, WithdrawStatusCompleted)
+					if err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
+						// if we can't burn the coins, fail.
+						return err
+					}
+					k.SetWithdrawalRecord(ctx, withdrawalRecord)
+					k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
+				}
+				break
+			}
+		}
+
+		if len(dlist) > 0 {
+			newDist := make([]*types.Distribution, 0)
+			i := 0
+			for idx := range withdrawalRecord.Distribution {
+				if _, delete := dlist[idx]; !delete {
+					newDist = append(newDist, withdrawalRecord.Distribution[idx])
+				}
+				i++
+			}
+			k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
+			withdrawalRecord.Distribution = newDist
+			k.SetWithdrawalRecord(ctx, withdrawalRecord)
+		}
 	}
 
 	return k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
@@ -422,6 +440,21 @@ func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error 
 	return err
 }
 
+func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
+	var err error
+
+	k.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation types.RedelegationRecord) bool {
+		k.Logger(ctx).Info("garbage collecting completed redelegations")
+
+		if ctx.BlockTime().After(redelegation.CompletionTime) {
+			k.DeleteRedelegationRecordByKey(ctx, key)
+		}
+		return false
+	})
+
+	return err
+}
+
 func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) error {
 	var err error
 
@@ -435,9 +468,7 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 				return true
 			}
 			k.Logger(ctx).Info("sending funds", "for", withdrawal.Delegator, "delegate_account", zone.DelegationAddress.GetAddress(), "to", withdrawal.Recipient, "amount", withdrawal.Amount)
-			k.DeleteWithdrawalRecord(ctx, zone.ChainId, withdrawal.Txhash, WithdrawStatusUnbond)
-			withdrawal.Status = WithdrawStatusSend
-			k.SetWithdrawalRecord(ctx, withdrawal)
+			k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, WithdrawStatusSend)
 		}
 		return false
 	})
@@ -486,8 +517,31 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	return nil
 }
 
-func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time) error {
-	// we don't currently take any action on acknowledgement of rebalacing.
+func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
+	parts := strings.Split(memo, "/")
+	if len(parts) != 2 {
+		return fmt.Errorf("unexpected epoch rebalance memo format")
+	}
+
+	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return fmt.Errorf("unexpected epoch rebalance memo format (2)")
+	}
+
+	k.Logger(ctx).Info("Received MsgBeginRedelegate acknowledgement")
+	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
+	redelegateMsg, ok := msg.(*stakingtypes.MsgBeginRedelegate)
+	if !ok {
+		return fmt.Errorf("unable to unmarshal MsgBeginRedelegate")
+	}
+	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
+	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.DelegatorAddress, epochNumber)
+	if !found {
+		return fmt.Errorf("unable to find redelegation record")
+	}
+
+	record.CompletionTime = completion
+	k.SetRedelegationRecord(ctx, record)
 	return nil
 }
 
@@ -819,9 +873,11 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	var remoteChannel string
 	for _, localChannel := range localChannelResp.Channels {
 		if localChannel.PortId == transferPort {
-			remoteChannel = localChannel.Counterparty.ChannelId
-			remotePort = localChannel.Counterparty.PortId
-			break
+			if localChannel.State == channeltypes.OPEN {
+				remoteChannel = localChannel.Counterparty.ChannelId
+				remotePort = localChannel.Counterparty.PortId
+				break
+			}
 		}
 	}
 	if remotePort == "" {

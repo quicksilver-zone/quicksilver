@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -346,24 +347,22 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackBadChain() {
 	})
 }
 
-// func (s *KeeperTestSuite) TestHandleValidatorCallbackEmptyValue() {
-// 	s.Run("empty value", func() {
-// 		s.SetupTest()
-// 		s.SetupZones()
+func (s *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
+	s.Run("empty value", func() {
+		s.SetupTest()
+		s.SetupZones()
 
-// 		app := s.GetQuicksilverApp(s.chainA)
-// 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-// 		ctx := s.chainA.GetContext()
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
 
-// 		query := stakingtypes.QueryValidatorResponse{Validator: stakingtypes.Validator{}}
-// 		bz, err := app.AppCodec().Marshal(&query)
-// 		s.Require().NoError(err)
+		bz := []byte{}
 
-// 		err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
-// 		// this should error on unmarshalling an empty slice, which is not a valid response here.
-// 		s.Require().Error(err)
-// 	})
-// }
+		err := keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
+		// this should error on unmarshalling an empty slice, which is not a valid response here.
+		s.Require().Error(err)
+	})
+}
 
 // func (s *KeeperTestSuite) TestHandleValidatorCallback() {
 // 	newVal := utils.GenerateValAddressForTest()
@@ -536,3 +535,140 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackBadChain() {
 // 		})
 // 	}
 // }
+
+func (s *KeeperTestSuite) TestHandleRewardsCallbackBadChain() {
+	s.Run("bad chain", func() {
+		s.SetupTest()
+		s.SetupZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		query := distrtypes.QueryDelegationTotalRewardsResponse{}
+		bz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
+		// this should bail on a non-matching chain id.
+		s.Require().Error(err)
+	})
+}
+
+func (s *KeeperTestSuite) TestHandleRewardsEmptyRequestCallback() {
+	s.Run("empty request", func() {
+		s.SetupTest()
+		s.SetupZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		query := distrtypes.QueryDelegationTotalRewardsRequest{}
+		bz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
+		// this should fail because the waitgroup becomes negative.
+		s.Require().Errorf(err, "attempted to unmarshal zero length byte slice (2)")
+	})
+}
+
+func (s *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
+	s.Run("valid response, bad delegator", func() {
+		s.SetupTest()
+		s.SetupZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.WithdrawalWaitgroup++
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		user := utils.GenerateAccAddressForTest()
+
+		query := distrtypes.QueryDelegationTotalRewardsRequest{
+			DelegatorAddress: user.String(),
+		}
+
+		response := distrtypes.QueryDelegationTotalRewardsResponse{
+			Rewards: []distrtypes.DelegationDelegatorReward{
+				{ValidatorAddress: s.chainB.Vals.Validators[0].String(), Reward: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdk.NewInt((1000))))},
+			},
+			Total: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdk.NewInt((1000)))),
+		}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		//
+		s.Require().Errorf(err, "failed attempting to withdraw rewards from non-delegation account")
+	})
+}
+
+func (s *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
+	s.Run("empty response", func() {
+		s.SetupTest()
+		s.SetupZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.WithdrawalWaitgroup++
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		query := distrtypes.QueryDelegationTotalRewardsRequest{
+			DelegatorAddress: zone.DelegationAddress.Address,
+		}
+
+		response := distrtypes.QueryDelegationTotalRewardsResponse{}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		//
+		s.Require().NoError(err)
+	})
+}
+
+func (s *KeeperTestSuite) TestHandleValideRewardsCallback() {
+	s.Run("valid response, negative waitgroup", func() {
+		s.SetupTest()
+		s.SetupZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.WithdrawalWaitgroup++
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		query := distrtypes.QueryDelegationTotalRewardsRequest{
+			DelegatorAddress: zone.DelegationAddress.Address,
+		}
+
+		response := distrtypes.QueryDelegationTotalRewardsResponse{
+			Rewards: []distrtypes.DelegationDelegatorReward{
+				{ValidatorAddress: s.chainB.Vals.Validators[0].String(), Reward: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdk.NewInt((1000))))},
+			},
+			Total: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdk.NewInt((1000)))),
+		}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		//
+		s.Require().NoError(err)
+	})
+}

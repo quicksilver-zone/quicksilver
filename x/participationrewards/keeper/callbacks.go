@@ -1,12 +1,15 @@
 package keeper
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	osmosisgammtypes "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -45,7 +48,8 @@ func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallback
 func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 	a := c.
 		AddCallback("validatorselectionrewards", Callback(ValidatorSelectionRewardsCallback)).
-		AddCallback("osmosispoolupdate", Callback(OsmosisPoolUpdateCallback))
+		AddCallback("osmosispoolupdate", Callback(OsmosisPoolUpdateCallback)).
+		AddCallback("epochblock", Callback(SetEpochBlockCallback))
 
 	return a.(Callbacks)
 }
@@ -111,9 +115,9 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	}
 
 	poolID := sdk.BigEndianToUint64(query.Request[1:])
-	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("pools/%d", poolID))
+	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("%s/%d", osmosistypes.PoolsPrefix, poolID))
 	if !ok {
-		return fmt.Errorf("unable to find protocol data for osmosis/pools/%d", poolID)
+		return fmt.Errorf("unable to find protocol data for osmosispools/%d", poolID)
 	}
 	ipool, err := types.UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
 	if err != nil {
@@ -121,14 +125,54 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	}
 	pool, ok := ipool.(types.OsmosisPoolProtocolData)
 	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for osmosis/pools/%d", poolID)
+		return fmt.Errorf("unable to unmarshal protocol data for osmosispools/%d", poolID)
 	}
 	pool.PoolData = acc
 	data.Data, err = json.Marshal(pool)
 	if err != nil {
 		return err
 	}
-	k.SetProtocolData(ctx, fmt.Sprintf("osmosis/pools/%d", poolID), &data)
+	k.SetProtocolData(ctx, fmt.Sprintf("osmosispools/%d", poolID), &data)
 
+	return nil
+}
+
+// SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
+func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("connection/%s", query.ChainId))
+	if !ok {
+		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
+	}
+
+	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataConnection, data.Data)
+	connectionData := iConnectionData.(types.ConnectionProtocolData)
+
+	if err != nil {
+		return err
+	}
+
+	blockResponse := tmservice.GetLatestBlockResponse{}
+	// block response is never expected to be nil
+	if bytes.Equal(args, []byte("")) {
+		return fmt.Errorf("attempted to unmarshal zero length byte slice (1)")
+	}
+	err = k.cdc.Unmarshal(args, &blockResponse)
+	if err != nil {
+		return err
+	}
+	if blockResponse.SdkBlock == nil {
+		// v0.45 and below
+		//nolint:staticcheck
+		connectionData.LastEpoch = blockResponse.Block.Header.Height
+	} else {
+		// v0.46 and above
+		connectionData.LastEpoch = blockResponse.SdkBlock.Header.Height
+	}
+
+	data.Data, err = json.Marshal(connectionData)
+	if err != nil {
+		return err
+	}
+	k.SetProtocolData(ctx, fmt.Sprintf("connection/%s", query.ChainId), &data)
 	return nil
 }

@@ -68,7 +68,8 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 		AccountKeeper:       accountKeeper,
 		IBCKeeper:           ibcKeeper,
 		TransferKeeper:      transferKeeper,
-		paramStore:          ps,
+
+		paramStore: ps,
 	}
 }
 
@@ -377,20 +378,27 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount))
 }
 
-func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone) error {
+func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
 	currentAllocations, currentSum := k.GetDelegationMap(ctx, &zone)
 	targetAllocations := zone.GetAggregateIntentOrDefault()
 	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations)
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingTypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
+		k.SetRedelegationRecord(ctx, types.RedelegationRecord{
+			ChainId:     zone.ChainId,
+			EpochNumber: epochNumber,
+			Delegator:   zone.DelegationAddress.Address,
+			Validator:   rebalance.Source,
+			Amount:      rebalance.Amount.Int64(),
+		})
 	}
 	if len(msgs) == 0 {
 		k.Logger(ctx).Info("No rebalancing required")
 		return nil
 	}
 	k.Logger(ctx).Info("Send rebalancing messages", "msgs", msgs)
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "epoch %d rebalancing")
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber))
 }
 
 type RebalanceTarget struct {

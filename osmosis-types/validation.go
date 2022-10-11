@@ -10,13 +10,15 @@ import (
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
+const PoolsPrefix = "osmosispools"
+
 type ParticipationRewardsKeeper interface {
 	GetProtocolData(ctx sdk.Context, key string) (participationrewardstypes.ProtocolData, bool)
 }
 
 func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, lockedResponse osmosislockuptypes.LockedResponse, chainID string) (math.Int, error) {
 	gammdenom := lockedResponse.Lock.Coins.GetDenomByIndex(0)
-	poolID := "osmosis/pool" + gammdenom[strings.LastIndex(gammdenom, "/"):]
+	poolID := PoolsPrefix + gammdenom[strings.LastIndex(gammdenom, "/"):]
 	pd, ok := prKeeper.GetProtocolData(ctx, poolID)
 	if !ok {
 		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for %s", poolID)

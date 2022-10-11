@@ -6,6 +6,6 @@
 "local_denom": "uqosmo",
 "account_prefix": "osmo",
 "multi_send": false,
-"liquidity_module": false,
+"liquidity_module": true,
 "deposit": "1000uqck"
 }

@@ -13,11 +13,17 @@ var _ sdk.Msg = &MsgSubmitClaim{}
 // NewMsgSubmitClaim - construct a msg to submit a claim.
 func NewMsgSubmitClaim(
 	userAddress sdk.Address,
+	srcZone string,
 	zone string,
+	claimType ClaimType,
+	proofs []*Proof,
 ) *MsgSubmitClaim {
 	return &MsgSubmitClaim{
 		UserAddress: userAddress.String(),
+		SrcZone:     srcZone,
 		Zone:        zone,
+		ClaimType:   claimType,
+		Proofs:      proofs,
 	}
 }
 

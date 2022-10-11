@@ -15,8 +15,12 @@ func HandleAddProtocolDataProposal(ctx sdk.Context, k Keeper, p *types.AddProtoc
 		return types.ErrUnknownProtocolDataType
 	}
 
-	_, err := types.UnmarshalProtocolData(pdtv, p.Data)
+	pd, err := types.UnmarshalProtocolData(pdtv, p.Data)
 	if err != nil {
+		return err
+	}
+
+	if err = pd.ValidateBasic(); err != nil {
 		return err
 	}
 

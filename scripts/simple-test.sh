@@ -39,6 +39,7 @@ else
   cp -fr ${CHAIN_DIR}/backup/${CHAINID_1}c ${CHAIN_DIR}/${CHAINID_1}c
   mkdir ${CHAIN_DIR}/hermes ${CHAIN_DIR}/icq
   cp ./scripts/config/icq.yaml ./${CHAIN_DIR}/icq/config.yaml
+  cp ./scripts/config/hermes.toml ./${CHAIN_DIR}/hermes/config.toml
   cp -rf ./scripts/config/rly ./${CHAIN_DIR}/rly
 fi
 
@@ -72,6 +73,8 @@ echo "Launch and configure interchain query daemon"
 
 ICQ_ADDRESS_1=$($ICQ_RUN keys add test --chain qstest-1 | jq .address -r)
 ICQ_ADDRESS_2=$($ICQ_RUN keys add test --chain lstest-1 | jq .address -r)
+
+sleep 3
 
 $QS1_EXEC tx bank send val1 $ICQ_ADDRESS_1 1000uqck --chain-id $CHAINID_0 -y --keyring-backend=test
 $TZ1_1_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_1 -y --keyring-backend=test

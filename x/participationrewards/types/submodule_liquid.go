@@ -29,5 +29,3 @@ func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
 
 	return nil
 }
-
-var _ ProtocolDataI = &LiquidAllowedDenomProtocolData{}

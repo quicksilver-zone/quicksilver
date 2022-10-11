@@ -11,6 +11,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/require"
 )
@@ -216,6 +217,272 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					s.Require().Equal(r.RelatedTxhash[0], record.Txhash)
 				}
 			}
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
+	tests := []struct {
+		name    string
+		records func(chainID string, hrp string) []icstypes.WithdrawalRecord
+		message banktypes.MsgSend
+		memo    string
+		err     bool
+	}{
+		{
+			name: "invalid - no matching record",
+			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   chainID,
+						Delegator: utils.GenerateAccAddressForTest().String(),
+						Distribution: []*icstypes.Distribution{
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+						},
+						Recipient:  mustGetTestBech32Address(hrp),
+						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
+						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:     icskeeper.WithdrawStatusQueued,
+					},
+				}
+			},
+			message: banktypes.MsgSend{},
+			memo:    "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:     true,
+		},
+		{
+			name: "valid",
+			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   chainID,
+						Delegator: utils.GenerateAccAddressForTest().String(),
+						Distribution: []*icstypes.Distribution{
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+						},
+						Recipient:  mustGetTestBech32Address(hrp),
+						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
+						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:     icskeeper.WithdrawStatusSend,
+					},
+				}
+			},
+			message: banktypes.MsgSend{
+				Amount: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
+			},
+			memo: "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:  false,
+		},
+		{
+			name: "valid - two",
+			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   chainID,
+						Delegator: utils.GenerateAccAddressForTest().String(),
+						Distribution: []*icstypes.Distribution{
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+						},
+						Recipient:  mustGetTestBech32Address(hrp),
+						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
+						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:     icskeeper.WithdrawStatusSend,
+					},
+					{
+						ChainId:   chainID,
+						Delegator: utils.GenerateAccAddressForTest().String(),
+						Distribution: []*icstypes.Distribution{
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 5000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1250000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 5000000},
+							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1250000},
+						},
+						Recipient:  mustGetTestBech32Address(hrp),
+						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
+						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
+						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
+						Status:     icskeeper.WithdrawStatusSend,
+					},
+				}
+			},
+			message: banktypes.MsgSend{
+				Amount: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
+			},
+			memo: "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
+			err:  false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			s.SetupZones()
+
+			app := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+
+			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			if !found {
+				s.Fail("unable to retrieve zone for test")
+			}
+
+			records := test.records(s.chainB.ChainID, zone.AccountPrefix)
+
+			// set up zones
+			for _, record := range records {
+				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
+			}
+
+			// trigger handler
+			err := app.InterchainstakingKeeper.HandleWithdrawForUser(ctx, &zone, &test.message, test.memo)
+			if test.err {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
+
+			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusSend, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+				if withdrawal.Txhash == test.memo {
+					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
+				}
+				return false
+			})
+
+			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+				if withdrawal.Txhash != test.memo {
+					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
+				}
+				return false
+			})
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
+	v1 := utils.GenerateValAddressForTest().String()
+	v2 := utils.GenerateValAddressForTest().String()
+	tests := []struct {
+		name    string
+		records func(chainID string, hrp string) []icstypes.WithdrawalRecord
+		message []banktypes.MsgSend
+		memo    string
+		err     bool
+	}{
+		{
+			name: "valid",
+			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   chainID,
+						Delegator: utils.GenerateAccAddressForTest().String(),
+						Distribution: []*icstypes.Distribution{
+							{Valoper: v1, Amount: 1000000},
+							{Valoper: v2, Amount: 1000000},
+						},
+						Recipient:  mustGetTestBech32Address(hrp),
+						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2000000)),
+						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:     icskeeper.WithdrawStatusSend,
+					},
+				}
+			},
+			message: []banktypes.MsgSend{
+				{Amount: sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000)))},
+				{Amount: sdk.NewCoins(sdk.NewCoin(v2+"2", sdk.NewInt(1000000)))},
+			},
+			memo: "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:  false,
+		},
+		{
+			name: "valid - unequal",
+			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   chainID,
+						Delegator: utils.GenerateAccAddressForTest().String(),
+						Distribution: []*icstypes.Distribution{
+							{Valoper: v1, Amount: 1000000},
+							{Valoper: v2, Amount: 1500000},
+						},
+						Recipient:  mustGetTestBech32Address(hrp),
+						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2500000))),
+						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2500000)),
+						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:     icskeeper.WithdrawStatusSend,
+					},
+				}
+			},
+			message: []banktypes.MsgSend{
+				{Amount: sdk.NewCoins(sdk.NewCoin(v2+"1", sdk.NewInt(1500000)))},
+				{Amount: sdk.NewCoins(sdk.NewCoin(v1+"2", sdk.NewInt(1000000)))},
+			},
+			memo: "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:  false,
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			s.SetupZones()
+
+			app := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+
+			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			if !found {
+				s.Fail("unable to retrieve zone for test")
+			}
+
+			records := test.records(s.chainB.ChainID, zone.AccountPrefix)
+
+			startBalance := app.BankKeeper.GetAllBalances(ctx, app.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
+			// set up zones
+			for _, record := range records {
+				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
+			}
+
+			// trigger handler
+			for _, msg := range test.message {
+				err := app.InterchainstakingKeeper.HandleWithdrawForUser(ctx, &zone, &msg, test.memo)
+				if test.err {
+					s.Require().Error(err)
+				} else {
+					s.Require().NoError(err)
+				}
+			}
+
+			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusSend, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+				if withdrawal.Txhash == test.memo {
+					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
+				}
+				return false
+			})
+
+			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+				if withdrawal.Txhash != test.memo {
+					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
+				}
+				return false
+			})
+
+			postBurnBalance := app.BankKeeper.GetAllBalances(ctx, app.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
+			s.Require().Equal(startBalance, postBurnBalance)
 		})
 	}
 }

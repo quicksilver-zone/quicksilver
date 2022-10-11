@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"math"
 	"sort"
 
@@ -275,20 +276,18 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	if err != nil {
 		return err
 	}
-	account := zone.DelegationAddress
 
-	var delAddr sdk.AccAddress
-	_, delAddr, _ = bech32.DecodeAndConvert(delegator)
+	if zone.DelegationAddress.Address != delegator {
+		return fmt.Errorf("failed attempting to withdraw rewards from non-delegation account")
+	}
 
-	// send withdrawal msg for each delegation (delegator:validator pairs)
-	k.IterateDelegatorDelegations(ctx, zone, delAddr, func(delegation types.Delegation) bool {
-		amount := rewardsForDelegation(delegatorRewards, delegation.ValidatorAddress)
-		k.Logger(ctx).Info("Withdraw rewards", "delegator", delegation.DelegationAddress, "validator", delegation.ValidatorAddress, "amount", amount)
-		if !amount.IsZero() || !amount.Empty() {
-			msgs = append(msgs, &distrTypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegation.GetDelegationAddress(), ValidatorAddress: delegation.GetValidatorAddress()})
+	for _, del := range delegatorRewards.Rewards {
+		if !del.Reward.IsZero() && !del.Reward.Empty() {
+			k.Logger(ctx).Info("Withdraw rewards", "delegator", delegator, "validator", del.ValidatorAddress, "amount", del.Reward)
+
+			msgs = append(msgs, &distrTypes.MsgWithdrawDelegatorReward{DelegatorAddress: delegator, ValidatorAddress: del.ValidatorAddress})
 		}
-		return false
-	})
+	}
 
 	if len(msgs) == 0 {
 		// always setZone here because calling method update waitgroup.
@@ -303,16 +302,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	k.SetZone(ctx, zone)
 	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup, "address", delegator)
 
-	return k.SubmitTx(ctx, msgs, account, "")
-}
-
-func rewardsForDelegation(delegatorRewards distrTypes.QueryDelegationTotalRewardsResponse, validator string) sdk.DecCoins {
-	for _, reward := range delegatorRewards.Rewards {
-		if reward.ValidatorAddress == validator {
-			return reward.Reward
-		}
-	}
-	return sdk.NewDecCoins()
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "")
 }
 
 func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string]sdkmath.Int, sdkmath.Int) {

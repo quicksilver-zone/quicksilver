@@ -63,7 +63,7 @@ services:
       - icad
       - start
   testzone2-1:
-    image: quicksilverzone/qsosmosis:v10.1.1
+    image: quicksilverzone/qsosmosis:v12.1.0
     hostname: testzone2-1
     build:
       context: .
@@ -74,7 +74,7 @@ services:
       - osmosisd
       - start
   testzone2-2:
-    image: quicksilverzone/qsosmosis:v10.1.1
+    image: quicksilverzone/qsosmosis:v12.1.0
     hostname: testzone2-2
     volumes:
       - ./data/lstest-2a:/osmosis/.osmosisd
@@ -82,7 +82,7 @@ services:
       - osmosisd
       - start
   testzone2-3:
-    image: quicksilverzone/qsosmosis:v10.1.1
+    image: quicksilverzone/qsosmosis:v12.1.0
     hostname: testzone2-3
     volumes:
       - ./data/lstest-2b:/osmosis/.osmosisd
@@ -90,7 +90,7 @@ services:
       - osmosisd
       - start
   testzone2-4:
-    image: quicksilverzone/qsosmosis:v10.1.1
+    image: quicksilverzone/qsosmosis:v12.1.0
     hostname: testzone2-4
     volumes:
       - ./data/lstest-2c:/osmosis/.osmosisd
@@ -101,12 +101,9 @@ services:
     image: quicksilverzone/hermes:v1.0.0
     hostname: hermes
     volumes:
-      - ./scripts/config/hermes.toml:/tmp/hermes.toml
       - ./data/hermes:/hermes/.hermes
     command:
       - hermes
-      - --config
-      - /tmp/hermes.toml
       - start
     restart: always
     build:
