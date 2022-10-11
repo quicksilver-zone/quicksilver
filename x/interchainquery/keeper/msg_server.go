@@ -82,9 +82,9 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 		}
 	}
 
-	if callbackExecuted == false && q.CallbackId != "" {
+	if !callbackExecuted && q.CallbackId != "" {
 		k.Logger(ctx).Error("callback expected but not found", "callbackId", q.CallbackId, "msg", msg.QueryId, "type", q.QueryType)
-		return nil, fmt.Errorf("expected callback %s, but did not find it!", q.CallbackId)
+		return nil, fmt.Errorf("expected callback %s, but did not find it", q.CallbackId)
 	}
 
 	if q.Ttl > 0 {
