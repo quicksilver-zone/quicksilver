@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -36,7 +37,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	// check if query was previously processed
 	// - indicated by query.LastHeight matching current Block Height;
 	if q.LastHeight.Int64() == ctx.BlockHeader().Height {
-		k.Logger(ctx).Info("ignoring duplicate query")
+		k.Logger(ctx).Info("ignoring duplicate query", "id", q.Id, "type", q.QueryType)
 		// technically this is an error, but will cause the entire tx to fail
 		// if we have one 'bad' message, so we can just no-op here.
 		return &types.MsgSubmitQueryResponseResponse{}, nil
@@ -45,6 +46,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	pathParts := strings.Split(q.QueryType, "/")
 	if pathParts[len(pathParts)-1] == "key" {
 		if err := utils.ValidateProofOps(ctx, k.IBCKeeper, q.ConnectionId, q.ChainId, msg.Height, pathParts[1], q.Request, msg.Result, msg.ProofOps); err != nil {
+			k.Logger(ctx).Error("failed to validate proofops", "id", q.Id, "type", q.QueryType)
 			return nil, err
 		}
 	}
@@ -58,6 +60,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	}
 
 	sort.Strings(keys)
+	callbackExecuted := false
 
 	for _, key := range keys {
 		module := k.callbacks[key]
@@ -69,16 +72,25 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 					k.Logger(ctx).Error("error in callback", "error", err, "msg", msg.QueryId, "result", msg.Result, "type", q.QueryType, "params", q.Request)
 					return nil, err
 				}
+				callbackExecuted = true
 				// edge case: the callback has resent the same query (re-query)!
 				// action:    set noDelete to true and continue (short circuit error handling)!
 				noDelete = true
+				// we have executed a callback; only a single callback is expected per request, so break here.
+				break
 			}
 		}
+	}
+
+	if callbackExecuted == false && q.CallbackId != "" {
+		k.Logger(ctx).Error("callback expected but not found", "callbackId", q.CallbackId, "msg", msg.QueryId, "type", q.QueryType)
+		return nil, fmt.Errorf("expected callback %s, but did not find it!", q.CallbackId)
 	}
 
 	if q.Ttl > 0 {
 		// don't store if ttl is 0
 		if err := k.SetDatapointForID(ctx, msg.QueryId, msg.Result, sdk.NewInt(msg.Height)); err != nil {
+			k.Logger(ctx).Error("failed to set datapoint", "id", q.Id, "type", q.QueryType)
 			return nil, err
 		}
 	}
