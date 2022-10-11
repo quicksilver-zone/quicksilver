@@ -45,14 +45,14 @@ func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID
 	if len(data) != 0 {
 		// if we got a non-nil response, verify inclusion proof.
 		if err := merkleProof.VerifyMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path, data); err != nil {
-			return fmt.Errorf("unable to verify inclusion proof: %s", err)
+			return fmt.Errorf("unable to verify inclusion proof: %w", err)
 		}
 		return nil
 
 	}
 	// if we got a nil response, verify non inclusion proof.
 	if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path); err != nil {
-		return fmt.Errorf("unable to verify non-inclusion proof: %s", err)
+		return fmt.Errorf("unable to verify non-inclusion proof: %w", err)
 	}
 	return nil
 }
