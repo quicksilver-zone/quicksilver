@@ -30,15 +30,15 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 		return
 	}
 
-	data, found := k.GetProtocolData(ctx, fmt.Sprintf("connection/%s", paramsData.ChainId))
+	data, found := k.GetProtocolData(ctx, fmt.Sprintf("connection/%s", paramsData.ChainID))
 	if !found {
-		k.Logger(ctx).Error(fmt.Sprintf("unable to query connection/%s in OsmosisModule hook", paramsData.ChainId))
+		k.Logger(ctx).Error(fmt.Sprintf("unable to query connection/%s in OsmosisModule hook", paramsData.ChainID))
 		return
 	}
 
 	connectionData := types.ConnectionProtocolData{}
 	if err := json.Unmarshal(data.Data, &connectionData); err != nil {
-		k.Logger(ctx).Error(fmt.Sprintf("unable to unmarshal connection/%s in OsmosisModule hook", paramsData.ChainId))
+		k.Logger(ctx).Error(fmt.Sprintf("unable to unmarshal connection/%s in OsmosisModule hook", paramsData.ChainID))
 		return
 	}
 

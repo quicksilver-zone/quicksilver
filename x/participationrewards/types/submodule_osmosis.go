@@ -55,7 +55,7 @@ func (opd OsmosisPoolProtocolData) ValidateBasic() error {
 // -----------------------------------------------------
 
 type OsmosisParamsProtocolData struct {
-	ChainId string
+	ChainID string
 }
 
 // ValidateBasic satisfies ProtocolDataI and validates basic stateless data.
@@ -63,8 +63,8 @@ type OsmosisParamsProtocolData struct {
 func (oppd OsmosisParamsProtocolData) ValidateBasic() error {
 	errors := make(map[string]error)
 
-	if len(oppd.ChainId) == 0 {
-		errors["ChainId"] = ErrUndefinedAttribute
+	if len(oppd.ChainID) == 0 {
+		errors["ChainID"] = ErrUndefinedAttribute
 	}
 
 	if len(errors) > 0 {
