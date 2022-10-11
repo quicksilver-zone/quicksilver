@@ -178,6 +178,8 @@ ${SED} 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}b/config/genesis.json
 ${SED} 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}c/config/genesis.json
 
 if [ "$IS_MULTI_ZONE_TEST" = true ]; then
+
+
     ${SED} 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}/config/genesis.json
     ${SED} 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}a/config/genesis.json
     ${SED} 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}b/config/genesis.json
@@ -449,6 +451,11 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
     cp ./${CHAIN_DIR}/${CHAINID_2}{,a}/config/genesis.json
     cp ./${CHAIN_DIR}/${CHAINID_2}{,b}/config/genesis.json
     cp ./${CHAIN_DIR}/${CHAINID_2}{,c}/config/genesis.json
+
+    jq '.epochs.epochs[0].duration = "180s"'  ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json{.new,}
+    jq '.epochs.epochs[1].duration = "20s"'  ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json{.new,}
+    jq '.epochs.epochs[2].duration = "300s"'  ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json{.new,}
+
 fi
 
 ## set the 'epoch' epoch to 5m interval

@@ -9,7 +9,7 @@ RUN apk add git
 # Needed by github.com/zondax/hid
 RUN apk add linux-headers
 
-RUN git clone https://github.com/osmosis-labs/osmosis /osmosis --branch v10.1.1
+RUN git clone https://github.com/osmosis-labs/osmosis /osmosis --branch v12.1.0
 WORKDIR /osmosis
 
 # CosmWasm: see https://github.com/CosmWasm/wasmvm/releases

@@ -3,7 +3,7 @@ RUN apk add --no-cache git musl-dev openssl-dev linux-headers ca-certificates bu
 
 WORKDIR /src/app/
 
-COPY go.mod go.sum* ./
+COPY go.mod go.sum* ics23 ./
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \

@@ -4,6 +4,7 @@ COSMOS_BUILD_OPTIONS=""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION=$(shell git describe --tags | head -n1)
+DOCKER_VERSION ?= $(VERSION)
 TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
@@ -121,6 +122,7 @@ endif
 
 BUILD_TARGETS := build install
 
+
 build: BUILD_ARGS=-o $(BUILDDIR)/
 build-linux:
 	GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
@@ -143,12 +145,15 @@ build-reproducible: go.sum
         --name latest-build tendermintdev/rbuilder:latest
 	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
 
-
 build-docker:
-	$(DOCKERCOMPOSE) build quicksilver
+	DOCKER_BUILDKIT=1 $(DOCKER) build . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION)
 
 build-docker-local: build
-	$(DOCKER) build -f Dockerfile.local . -t quicksilverzone/quicksilver:latest
+	DOCKER_BUILDKIT=1 $(DOCKER) build -f Dockerfile.local . -t quicksilverzone/quicksilver:$(DOCKER_VERSION)
+
+build-docker-release: build-docker
+	docker run -v /tmp:/tmp quicksilverzone/quicksilver:$(DOCKER_VERSION) cp /usr/local/bin/quicksilverd /tmp/quicksilverd
+	mv /tmp/quicksilverd build/quicksilverd-$(DOCKER_VERSION)-amd64
 
 push-docker: build-docker
 	$(DOCKERCOMPOSE) push quicksilver
