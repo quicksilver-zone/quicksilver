@@ -389,6 +389,5 @@ func (s *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 
 		allDelegations2 := app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)
 		s.Require().Len(allDelegations2, 0)
-
 	})
 }
