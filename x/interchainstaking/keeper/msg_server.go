@@ -89,7 +89,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
 
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
-	k.Logger(ctx).Error("outtokens", "o", outTokens)
+	k.Logger(ctx).Info("tokens to distribute", "amount", outTokens)
 
 	heightBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(heightBytes, uint64(ctx.BlockHeight()))

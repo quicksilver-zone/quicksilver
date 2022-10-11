@@ -25,7 +25,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				// an error here is not expected, but also not terminal.
 				// we don't return on failure here as we still want to attempt
 				// the unrelated tasks below.
-				k.Logger(ctx).Error("encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch", "error", err.Error())
+				k.Logger(ctx).Error("encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch", "error", err)
 			}
 
 			if zoneInfo.DelegationAddress == nil {

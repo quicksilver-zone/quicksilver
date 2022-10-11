@@ -18,7 +18,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	if ctx.BlockHeight()%30 == 0 {
 		if err := k.GCCompletedRedelegations(ctx); err != nil {
-			k.Logger(ctx).Error(err.Error())
+			k.Logger(ctx).Error("error in GCCompletedRedelegations", "error", err)
 		}
 	}
 	k.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
@@ -28,13 +28,13 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			// as an error. we don't return on failure here as we still want to attempt the unrelated
 			// tasks below.
 			if err := k.EnsureWithdrawalAddresses(ctx, &zone); err != nil {
-				k.Logger(ctx).Error(err.Error())
+				k.Logger(ctx).Error("error in EnsureWithdrawalAddresses", "error", err)
 			}
 			if err := k.HandleMaturedUnbondings(ctx, &zone); err != nil {
-				k.Logger(ctx).Error(err.Error())
+				k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err)
 			}
 			if err := k.GCCompletedUnbondings(ctx, &zone); err != nil {
-				k.Logger(ctx).Error(err.Error())
+				k.Logger(ctx).Error("error in GCCompletedUnbondings", "error", err)
 			}
 
 		}
@@ -49,7 +49,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 						// trigger valset update.
 						err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
 						if err != nil {
-							k.Logger(ctx).Error("unable to trigger valset update query")
+							k.Logger(ctx).Error("unable to trigger valset update query", "error", err)
 							// failing to emit the valset update is not terminal but constitutes
 							// an error, as if this starts happening frequent it is something
 							// we should investigate.

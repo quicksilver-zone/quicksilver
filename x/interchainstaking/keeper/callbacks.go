@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"bytes"
-	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -97,6 +96,8 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
+	k.Logger(ctx).Info("rewards callback", "zone", query.ChainId)
+
 	// unmarshal request payload
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	if bytes.Equal(query.Request, []byte("")) {
@@ -111,7 +112,7 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 	// (initially incremented in AfterEpochEnd)
 	zone.WithdrawalWaitgroup--
 
-	k.Logger(ctx).Info("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress)
+	k.Logger(ctx).Info("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
 
 	return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 }
@@ -131,14 +132,12 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	k.Logger(ctx).Error("-------------- delegations callback ----------")
+	k.Logger(ctx).Info("Delegations callback triggered", "chain", zone.ChainId)
 
 	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
 }
 
 func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	k.Logger(ctx).Error("-------------- delegation callback ----------")
-
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -151,7 +150,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
-	k.Logger(ctx).Error("Delegation callback", "delegation", delegation)
+	k.Logger(ctx).Info("Delegation callback", "delegation", delegation, "chain", zone.ChainId)
 
 	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
 		// delegation never gets removed, even with zero shares.
@@ -207,6 +206,8 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
+	k.Logger(ctx).Info("Deposit interval callback", "zone", zone.ChainId)
+
 	txs := tx.GetTxsEventResponse{}
 
 	if bytes.Equal(args, []byte("")) {
@@ -217,8 +218,6 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		k.Logger(ctx).Error("unable to unmarshal txs for deposit account", "deposit_address", zone.DepositAddress.GetAddress(), "err", err)
 		return err
 	}
-
-	k.Logger(ctx).Info("GetTxs", txs)
 
 	// TODO: use pagination.GetTotal() to dispatch the correct number of requests now; rather than iteratively.
 	if len(txs.Pagination.NextKey) > 0 {
@@ -353,11 +352,12 @@ func checkValidity(
 }
 
 func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	k.Logger(ctx).Error("RECEIVED DEPOSITTX")
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
+
+	k.Logger(ctx).Info("DepositTx callback", "zone", zone.ChainId)
 
 	res := icqtypes.GetTxWithProofResponse{}
 	if bytes.Equal(args, []byte("")) {
@@ -403,22 +403,16 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 	err = checkValidity(tmclientState, tmconsensusState, res.GetHeader(), ctx.BlockHeader().Time)
 	if err != nil {
 		k.Logger(ctx).Info("unable to validate header", "header", res.Header)
-		return fmt.Errorf("unable to validate header; %q", err.Error())
+		return fmt.Errorf("unable to validate header; %w", err)
 	}
-
-	// _, _, err = clientState.CheckHeaderAndUpdateState(ctx, k.cdc, k.IBCKeeper.ClientKeeper.ClientStore(ctx, connection.ClientId), res.GetHeader())
-	// if err != nil {
-	// 	k.Logger(ctx).Info("Invalid header", "datahash", hex.EncodeToString(res.Header.Header.DataHash), "err", err)
-	// }
 
 	tmproof, err := tmtypes.TxProofFromProto(*res.GetProof())
 	if err != nil {
-		return fmt.Errorf("unable to marshal proof: %s", err)
+		return fmt.Errorf("unable to marshal proof: %w", err)
 	}
-	k.Logger(ctx).Error("hashes", "proof", tmproof.RootHash, "header", hex.EncodeToString(res.Header.Header.DataHash))
 	err = tmproof.Validate(res.Header.Header.DataHash)
 	if err != nil {
-		return fmt.Errorf("unable to validate proof: %s", err)
+		return fmt.Errorf("unable to validate proof: %w", err)
 	}
 
 	k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone)
@@ -483,6 +477,8 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
+
+	k.Logger(ctx).Info("AllBalances callback", "chain", zone.ChainId)
 
 	//
 	if zone.DepositAddress.BalanceWaitgroup != 0 {
