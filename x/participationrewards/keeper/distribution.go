@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -70,7 +71,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 
 	// capture errors from iterator
 	errors := make(map[string]error)
-	k.IteratePrefixedProtocolDatas(ctx, "osmosispools", func(idx int64, data types.ProtocolData) bool {
+	k.IteratePrefixedProtocolDatas(ctx, osmosistypes.PoolsPrefix, func(idx int64, data types.ProtocolData) bool {
 		idxLabel := fmt.Sprintf("index[%d]", idx)
 		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
 		if err != nil {

@@ -42,7 +42,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 		return
 	}
 
-	k.IteratePrefixedProtocolDatas(ctx, "osmosispools", func(idx int64, data types.ProtocolData) bool {
+	k.IteratePrefixedProtocolDatas(ctx, osmosistypes.PoolsPrefix, func(idx int64, data types.ProtocolData) bool {
 		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
 		if err != nil {
 			return false

@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	osmosisgammtypes "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -114,7 +115,7 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	}
 
 	poolID := sdk.BigEndianToUint64(query.Request[1:])
-	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("osmosispools/%d", poolID))
+	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("%s/%d", osmosistypes.PoolsPrefix, poolID))
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for osmosispools/%d", poolID)
 	}
