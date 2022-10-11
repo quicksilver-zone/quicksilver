@@ -16,7 +16,7 @@ type ParticipationRewardsKeeper interface {
 
 func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, lockedResponse osmosislockuptypes.LockedResponse, chainID string) (math.Int, error) {
 	gammdenom := lockedResponse.Lock.Coins.GetDenomByIndex(0)
-	poolID := "osmosis/pool" + gammdenom[strings.LastIndex(gammdenom, "/"):]
+	poolID := "osmosispool" + gammdenom[strings.LastIndex(gammdenom, "/"):]
 	pd, ok := prKeeper.GetProtocolData(ctx, poolID)
 	if !ok {
 		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for %s", poolID)

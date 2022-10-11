@@ -16,11 +16,12 @@ const (
 	// RouterKey is the message route for participationrewards
 	RouterKey = ModuleName
 
-	ProtocolDataConnection   ProtocolDataType = 0
-	ProtocolDataLiquidToken  ProtocolDataType = 1
-	ProtocolDataOsmosisPool  ProtocolDataType = 2
-	ProtocolDataCrescentPool ProtocolDataType = 3
-	ProtocolDataSifchainPool ProtocolDataType = 4
+	ProtocolDataConnection    ProtocolDataType = 0
+	ProtocolDataLiquidToken   ProtocolDataType = 1
+	ProtocolDataOsmosisPool   ProtocolDataType = 2
+	ProtocolDataCrescentPool  ProtocolDataType = 3
+	ProtocolDataSifchainPool  ProtocolDataType = 4
+	ProtocolDataOsmosisParams ProtocolDataType = 5
 )
 
 var (
@@ -30,19 +31,21 @@ var (
 )
 
 var ProtocolDataType_name = map[ProtocolDataType]string{ //nolint:revive,stylecheck // conform with protobuf3 enum
-	ProtocolDataConnection:   "connection",
-	ProtocolDataLiquidToken:  "liquidtoken",
-	ProtocolDataOsmosisPool:  "osmosispool",
-	ProtocolDataCrescentPool: "crescentpool",
-	ProtocolDataSifchainPool: "sifchainpool",
+	ProtocolDataConnection:    "connection",
+	ProtocolDataLiquidToken:   "liquidtoken",
+	ProtocolDataOsmosisPool:   "osmosispool",
+	ProtocolDataCrescentPool:  "crescentpool",
+	ProtocolDataSifchainPool:  "sifchainpool",
+	ProtocolDataOsmosisParams: "osmosisparams",
 }
 
 var ProtocolDataType_value = map[string]ProtocolDataType{ //nolint:revive,stylecheck // conform with protobuf3 enum
-	"connection":   ProtocolDataConnection,
-	"liquidtoken":  ProtocolDataLiquidToken,
-	"osmosispool":  ProtocolDataOsmosisPool,
-	"crescentpool": ProtocolDataCrescentPool,
-	"sifchainpool": ProtocolDataSifchainPool,
+	"connection":    ProtocolDataConnection,
+	"liquidtoken":   ProtocolDataLiquidToken,
+	"osmosispool":   ProtocolDataOsmosisPool,
+	"crescentpool":  ProtocolDataCrescentPool,
+	"sifchainpool":  ProtocolDataSifchainPool,
+	"osmosisparams": ProtocolDataOsmosisParams,
 }
 
 // ClaimKey returns the key for storing a given claim.

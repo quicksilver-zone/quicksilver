@@ -23,6 +23,19 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 			}
 			return pd, nil
 		}
+	case ProtocolDataOsmosisParams:
+		{
+			pd := OsmosisParamsProtocolData{}
+			err := json.Unmarshal(data, &pd)
+			if err != nil {
+				return nil, err
+			}
+			var blank OsmosisParamsProtocolData
+			if reflect.DeepEqual(pd, blank) {
+				return nil, fmt.Errorf("unable to unmarshal osmosisparams protocol data from empty JSON object")
+			}
+			return pd, nil
+		}
 	case ProtocolDataConnection:
 		{
 			pd := ConnectionProtocolData{}
@@ -86,5 +99,6 @@ func (cpd ConnectionProtocolData) ValidateBasic() error {
 var (
 	_ ProtocolDataI = &ConnectionProtocolData{}
 	_ ProtocolDataI = &OsmosisPoolProtocolData{}
+	_ ProtocolDataI = &OsmosisParamsProtocolData{}
 	_ ProtocolDataI = &LiquidAllowedDenomProtocolData{}
 )

@@ -18,14 +18,27 @@ var _ Submodule = &OsmosisModule{}
 
 func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 	// osmosis params
-	data, found := k.GetProtocolData(ctx, "connection/osmosis")
+	params, found := k.GetProtocolData(ctx, "osmosis/params")
 	if !found {
-		k.Logger(ctx).Error("unable to query connection/osmosis in OsmosisModule hook")
+		k.Logger(ctx).Error("unable to query osmosis/params in OsmosisModule hook")
 		return
 	}
+
+	paramsData := types.OsmosisParamsProtocolData{}
+	if err := json.Unmarshal(params.Data, &paramsData); err != nil {
+		k.Logger(ctx).Error("unable to unmarshal osmosis/params in OsmosisModule hook", "error", err)
+		return
+	}
+
+	data, found := k.GetProtocolData(ctx, fmt.Sprintf("connection/%s", paramsData.ChainId))
+	if !found {
+		k.Logger(ctx).Error(fmt.Sprintf("unable to query connection/%s in OsmosisModule hook", paramsData.ChainId))
+		return
+	}
+
 	connectionData := types.ConnectionProtocolData{}
 	if err := json.Unmarshal(data.Data, &connectionData); err != nil {
-		k.Logger(ctx).Error("unable to unmarshal osmosis/connection in OsmosisModule hook", "error", err)
+		k.Logger(ctx).Error(fmt.Sprintf("unable to unmarshal connection/%s in OsmosisModule hook", paramsData.ChainId))
 		return
 	}
 
