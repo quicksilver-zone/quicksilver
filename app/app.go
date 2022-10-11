@@ -440,6 +440,7 @@ func NewQuicksilver(
 	)
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
+		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, scopedICAHostKeeper, app.MsgServiceRouter(),
 	)
@@ -756,7 +757,7 @@ func NewQuicksilver(
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	// handle upgrades here
 
-	app.UpgradeKeeper.SetUpgradeHandler("v0.9.5", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+	app.UpgradeKeeper.SetUpgradeHandler("v0.9.6", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		app.UpgradeKeeper.Logger(ctx).Info("Fixing epoch duration")
 		dayEpoch := app.EpochsKeeper.GetEpochInfo(ctx, "day")
 		dayEpoch.Duration = time.Hour * 2
