@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"net/url"
 
@@ -14,7 +15,7 @@ import (
 
 func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
 	if proofOps == nil {
-		return fmt.Errorf("unable to validate proof. No proof submitted")
+		return errors.New("unable to validate proof. No proof submitted")
 	}
 	connection, _ := ibcKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 
@@ -22,24 +23,24 @@ func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID
 	consensusState, found := ibcKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, csHeight)
 
 	if !found {
-		return fmt.Errorf("unable to fetch consensus state")
+		return errors.New("unable to fetch consensus state")
 	}
 
 	clientState, found := ibcKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
 	if !found {
-		return fmt.Errorf("unable to fetch client state")
+		return errors.New("unable to fetch client state")
 	}
 
 	path := commitmenttypes.NewMerklePath([]string{module, url.PathEscape(string(key))}...)
 
 	merkleProof, err := commitmenttypes.ConvertProofs(proofOps)
 	if err != nil {
-		return fmt.Errorf("error converting proofs")
+		return errors.New("error converting proofs")
 	}
 
 	tmClientState, ok := clientState.(*tmclienttypes.ClientState)
 	if !ok {
-		return fmt.Errorf("error unmarshaling client state")
+		return errors.New("error unmarshaling client state")
 	}
 
 	if len(data) != 0 {

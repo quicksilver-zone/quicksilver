@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -78,7 +79,7 @@ func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 		}
 
 		if sdk.AccAddress(lockupOwner).String() != msg.UserAddress {
-			return 0, fmt.Errorf("not a valid proof for submitting user")
+			return 0, errors.New("not a valid proof for submitting user")
 		}
 
 		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lockupResponse, msg.Zone)
@@ -87,7 +88,7 @@ func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 		}
 
 		if sdkAmount.IsNegative() {
-			return 0, fmt.Errorf("unexpected negative amount")
+			return 0, errors.New("unexpected negative amount")
 		}
 		amount += sdkAmount.Uint64()
 	}

@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"fmt"
+	"errors"
 	"math"
 	"sort"
 
@@ -278,7 +278,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	}
 
 	if zone.DelegationAddress.Address != delegator {
-		return fmt.Errorf("failed attempting to withdraw rewards from non-delegation account")
+		return errors.New("failed attempting to withdraw rewards from non-delegation account")
 	}
 
 	for _, del := range delegatorRewards.Rewards {

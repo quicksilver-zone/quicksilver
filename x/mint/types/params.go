@@ -133,7 +133,7 @@ func validateGenesisEpochProvisions(i interface{}) error {
 	}
 
 	if v.LT(sdk.ZeroDec()) {
-		return fmt.Errorf("genesis epoch provision must be non-negative")
+		return errors.New("genesis epoch provision must be non-negative")
 	}
 
 	return nil
@@ -159,11 +159,11 @@ func validateReductionFactor(i interface{}) error {
 	}
 
 	if v.GT(sdk.NewDec(1)) {
-		return fmt.Errorf("reduction factor cannot be greater than 1")
+		return errors.New("reduction factor cannot be greater than 1")
 	}
 
 	if v.IsNegative() {
-		return fmt.Errorf("reduction factor cannot be negative")
+		return errors.New("reduction factor cannot be negative")
 	}
 
 	return nil
@@ -203,7 +203,7 @@ func validateMintingRewardsDistributionStartEpoch(i interface{}) error {
 	}
 
 	if v < 0 {
-		return fmt.Errorf("start epoch must be non-negative")
+		return errors.New("start epoch must be non-negative")
 	}
 
 	return nil

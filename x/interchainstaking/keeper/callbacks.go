@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"time"
 
@@ -101,7 +102,7 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 	// unmarshal request payload
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	if bytes.Equal(query.Request, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice (2)")
+		return errors.New("attempted to unmarshal zero length byte slice (2)")
 	}
 	err := k.cdc.Unmarshal(query.Request, &rewardsQuery)
 	if err != nil {
@@ -125,7 +126,7 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
 	if bytes.Equal(query.Request, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice (3)")
+		return errors.New("attempted to unmarshal zero length byte slice (3)")
 	}
 	err := k.cdc.Unmarshal(query.Request, &delegationQuery)
 	if err != nil {
@@ -211,7 +212,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	txs := tx.GetTxsEventResponse{}
 
 	if bytes.Equal(args, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice (4)")
+		return errors.New("attempted to unmarshal zero length byte slice (4)")
 	}
 	err := k.cdc.Unmarshal(args, &txs)
 	if err != nil {
@@ -223,7 +224,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	if len(txs.Pagination.NextKey) > 0 {
 		req := tx.GetTxsEventRequest{}
 		if bytes.Equal(query.Request, []byte("")) {
-			return fmt.Errorf("attempted to unmarshal zero length byte slice (5)")
+			return errors.New("attempted to unmarshal zero length byte slice (5)")
 		}
 		err := k.cdc.Unmarshal(query.Request, &req)
 		if err != nil {
@@ -361,7 +362,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 
 	res := icqtypes.GetTxWithProofResponse{}
 	if bytes.Equal(args, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice (6)")
+		return errors.New("attempted to unmarshal zero length byte slice (6)")
 	}
 	err := k.cdc.Unmarshal(args, &res)
 	if err != nil {
@@ -379,7 +380,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 
 	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
 	if !found {
-		return fmt.Errorf("unable to fetch client state")
+		return errors.New("unable to fetch client state")
 	}
 
 	/** we can call ClientKeeper.CheckHeaderAndUpdateState() here, but this causes state changes inside the IBCKeeper which feels bad.
@@ -392,12 +393,12 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 
 	tmclientState, ok := clientState.(*tmclienttypes.ClientState)
 	if !ok {
-		return fmt.Errorf("unable to marshal client state")
+		return errors.New("unable to marshal client state")
 	}
 
 	tmconsensusState, ok := consensusState.(*tmclienttypes.ConsensusState)
 	if !ok {
-		return fmt.Errorf("unable to marshal consensus state")
+		return errors.New("unable to marshal consensus state")
 	}
 
 	err = checkValidity(tmclientState, tmconsensusState, res.GetHeader(), ctx.BlockHeader().Time)
@@ -430,7 +431,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 	// but lets us be safe here :)
 	if len(query.Request) < 2 {
 		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainId, "error", "request length is too short")
-		return fmt.Errorf("account balance icq request must always have a length of at least 2 bytes")
+		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
 	accAddr, _, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
@@ -466,7 +467,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	if bytes.Equal(query.Request, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice (7)")
+		return errors.New("attempted to unmarshal zero length byte slice (7)")
 	}
 	err := k.cdc.Unmarshal(query.Request, &balanceQuery)
 	if err != nil {

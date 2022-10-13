@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -51,19 +52,18 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 
 	// validate account prefix
 	if len(m.AccountPrefix) < 2 {
-		return fmt.Errorf("account prefix must be at least 2 characters") // ki is shortest to date.
+		return errors.New("account prefix must be at least 2 characters") // ki is shortest to date.
 	}
 
 	if m.LiquidityModule {
-		return fmt.Errorf("liquidity module is unsupported")
+		return errors.New("liquidity module is unsupported")
 	}
 	return nil
 }
 
 // String implements the Stringer interface.
 func (m RegisterZoneProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Interchain Staking  Zone Registration Proposal:
+	return fmt.Sprintf(`Interchain Staking  Zone Registration Proposal:
   Title:                            %s
   Description:                      %s
   Connection Id:                    %s
@@ -71,8 +71,7 @@ func (m RegisterZoneProposal) String() string {
   Local Denom:                      %s
   Multi Send Enabled:               %t
   Liquidity Staking Module Enabled: %t
-`, m.Title, m.Description, m.ConnectionId, m.BaseDenom, m.LocalDenom, m.MultiSend, m.LiquidityModule))
-	return b.String()
+`, m.Title, m.Description, m.ConnectionId, m.BaseDenom, m.LocalDenom, m.MultiSend, m.LiquidityModule)
 }
 
 func NewUpdateZoneProposal(title string, description string, chainID string, changes []*UpdateZoneValue) *UpdateZoneProposal {
@@ -91,18 +90,18 @@ func (m UpdateZoneProposal) ValidateBasic() error {
 
 // String implements the Stringer interface.
 func (m UpdateZoneProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Interchain Staking Zone Update Proposal:
+	b := new(strings.Builder)
+	fmt.Fprintf(b, `Interchain Staking Zone Update Proposal:
   Title:       %s
   Description: %s
   Changes:\n
-`, m.Title, m.Description))
+`, m.Title, m.Description)
 	for _, change := range m.Changes {
-		b.WriteString(fmt.Sprintf(`
+		fmt.Fprintf(b, `
 	  Key:   %s
 	  Value: %s
 	  -----------------------
-	`, change.Key, change.Value))
+	`, change.Key, change.Value)
 	}
 	return b.String()
 }

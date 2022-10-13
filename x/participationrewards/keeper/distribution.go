@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -63,7 +64,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 		return false
 	})
 	if cosmosZone == nil {
-		return nil, fmt.Errorf("unable to find Cosmos zone")
+		return nil, errors.New("unable to find Cosmos zone")
 	}
 
 	// add base value
@@ -177,7 +178,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 
 	// check overall protocol tvl
 	if otvl.IsZero() {
-		err := fmt.Errorf("protocol tvl is zero")
+		err := errors.New("protocol tvl is zero")
 		return err
 	}
 
@@ -222,7 +223,7 @@ func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocat
 	}
 
 	if hasError {
-		return fmt.Errorf("errors occurred while distributing rewards, review logs")
+		return errors.New("errors occurred while distributing rewards, review logs")
 	}
 
 	return nil

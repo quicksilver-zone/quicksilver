@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -107,7 +108,7 @@ func (k Keeper) handleGovernanceParticipation(ctx sdk.Context, cr *types.ClaimRe
 // handleOsmosisLP
 func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proofs []*types.Proof) (uint64, error) {
 	if len(proofs) == 0 {
-		return 0, fmt.Errorf("expects at least one LP proof")
+		return 0, errors.New("expects at least one LP proof")
 	}
 	if err := k.verifyOsmosisLP(ctx, proofs, *cr); err != nil {
 		return 0, err
@@ -233,7 +234,7 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 		return false
 	})
 	if osmoZone == nil {
-		return fmt.Errorf("unable to find Osmosis zone")
+		return errors.New("unable to find Osmosis zone")
 	}
 
 	uAmount := sdk.ZeroInt()

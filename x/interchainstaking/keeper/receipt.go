@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
@@ -105,7 +106,7 @@ func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
 
 func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone types.Zone, inCoins sdk.Coins, returnToSender bool) error {
 	if zone.RedemptionRate.IsZero() {
-		return fmt.Errorf("zero redemption rate")
+		return errors.New("zero redemption rate")
 	}
 
 	var err error
@@ -139,7 +140,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 			}
 		}
 		if srcPort == "" {
-			return fmt.Errorf("unable to find remote transfer connection")
+			return errors.New("unable to find remote transfer connection")
 		}
 
 		err = k.TransferKeeper.SendTransfer(ctx, srcPort, srcChannel, outCoins[0], k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0}, uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()))

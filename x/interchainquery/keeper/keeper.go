@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -101,12 +102,12 @@ func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module string, connectio
 	if err != nil {
 		// no datapoint
 		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdk.NewInt(-1), "", "", maxAge)
-		return types.DataPoint{}, fmt.Errorf("no data; query submitted")
+		return types.DataPoint{}, errors.New("no data; query submitted")
 	}
 
 	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - int64(maxAge))) { // this is somewhat arbitrary; TODO: make this better
 		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdk.NewInt(-1), "", "", maxAge)
-		return types.DataPoint{}, fmt.Errorf("stale data; query submitted")
+		return types.DataPoint{}, errors.New("stale data; query submitted")
 	}
 	// check ttl
 	return val, nil

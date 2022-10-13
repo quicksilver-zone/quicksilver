@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -27,17 +28,17 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 
 	connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, p.ConnectionId)
 	if !found {
-		return fmt.Errorf("unable to fetch connection")
+		return errors.New("unable to fetch connection")
 	}
 
 	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
 	if !found {
-		return fmt.Errorf("unable to fetch client state")
+		return errors.New("unable to fetch client state")
 	}
 
 	tmClientState, ok := clientState.(*tmclienttypes.ClientState)
 	if !ok {
-		return fmt.Errorf("error unmarshaling client state")
+		return errors.New("error unmarshaling client state")
 	}
 
 	zone := types.Zone{
@@ -151,7 +152,7 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 			zone.LiquidityModule = boolValue
 
 		default:
-			return fmt.Errorf("unexpected key")
+			return errors.New("unexpected key")
 		}
 	}
 	k.SetZone(ctx, &zone)

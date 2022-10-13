@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -107,11 +108,11 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	}
 	// check query.Request is at least 9 bytes in length. (0x02 + 8 bytes for uint64)
 	if len(query.Request) < 9 {
-		return fmt.Errorf("query request not sufficient length")
+		return errors.New("query request not sufficient length")
 	}
 	// assert first character is 0x02 as expected.
 	if query.Request[0] != 0x02 {
-		return fmt.Errorf("query request has unexpected prefix")
+		return errors.New("query request has unexpected prefix")
 	}
 
 	poolID := sdk.BigEndianToUint64(query.Request[1:])
@@ -154,7 +155,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	blockResponse := tmservice.GetLatestBlockResponse{}
 	// block response is never expected to be nil
 	if bytes.Equal(args, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice (1)")
+		return errors.New("attempted to unmarshal zero length byte slice (1)")
 	}
 	err = k.cdc.Unmarshal(args, &blockResponse)
 	if err != nil {

@@ -32,7 +32,7 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 
 	bz, err := json.Marshal(pool)
 	if err != nil {
-		t.Fatal(fmt.Errorf("unable to marshal protocol data"))
+		t.Fatalf("unable to marshal protocol data: %v", err)
 	}
 	protocolData := keeper.NewProtocolData("osmosispool", "osmosis", bz)
 

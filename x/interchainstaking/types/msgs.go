@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -86,7 +87,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 	// {intent}(,{intent})...
 	pexpr := regexp.MustCompile(fmt.Sprintf("^%s(,%s)*$", iexpr.String(), iexpr.String()))
 	if !pexpr.MatchString(input) {
-		return nil, fmt.Errorf("invalid intents string")
+		return nil, errors.New("invalid intents string")
 	}
 
 	out := []*ValidatorIntent{}
@@ -114,7 +115,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 	}
 
 	if !wsum.Equal(sdk.OneDec()) {
-		return nil, fmt.Errorf("combined weight must be 1.0")
+		return nil, errors.New("combined weight must be 1.0")
 	}
 
 	return out, nil
@@ -133,13 +134,13 @@ func (msg MsgSignalIntent) Type() string { return TypeMsgSignalIntent }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSignalIntent) ValidateBasic() error {
-	errors := make(map[string]error)
+	errm := make(map[string]error)
 	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		errors["FromAddress"] = err
+		errm["FromAddress"] = err
 	}
 
 	if msg.ChainId == "" {
-		errors["ChainId"] = fmt.Errorf("undefined")
+		errm["ChainId"] = errors.New("undefined")
 	}
 
 	wantSum := sdk.OneDec()
@@ -147,22 +148,22 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 	for i, intent := range msg.Intents {
 		if _, _, err := bech32.DecodeAndConvert(intent.ValoperAddress); err != nil {
 			istr := fmt.Sprintf("Intent_%02d_ValoperAddress", i)
-			errors[istr] = err
+			errm[istr] = err
 		}
 
 		if intent.Weight.GT(wantSum) {
 			istr := fmt.Sprintf("Intent_%02d_Weight", i)
-			errors[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, wantSum)
+			errm[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, wantSum)
 		}
 		weightSum = weightSum.Add(intent.Weight)
 	}
 
 	if !weightSum.Equal(wantSum) {
-		errors["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weightSum, wantSum)
+		errm["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weightSum, wantSum)
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errm) > 0 {
+		return multierror.New(errm)
 	}
 
 	return nil

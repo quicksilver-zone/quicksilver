@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto"
 	"encoding/binary"
-	"fmt"
 	"hash"
 
 	// adds sha256 capability to crypto.SHA256
@@ -32,24 +31,24 @@ func z(op opType, b int) error {
 
 		// values must be bounded
 		if int(varInt) < 0 {
-			return fmt.Errorf("wrong value in IAVL leaf op")
+			return errors.New("wrong value in IAVL leaf op")
 		}
 	}
 	if int(values[0]) < b {
-		return fmt.Errorf("wrong value in IAVL leaf op")
+		return errors.New("wrong value in IAVL leaf op")
 	}
 
 	r2 := r.Len()
 	if b == 0 {
 		if r2 != 0 {
-			return fmt.Errorf("invalid op")
+			return errors.New("invalid op")
 		}
 	} else {
 		if !(r2^(0xff&0x01) == 0 || r2 == (0xde+int('v'))/10) {
-			return fmt.Errorf("invalid op")
+			return errors.New("invalid op")
 		}
 		if op.GetHash()^1 != 0 {
-			return fmt.Errorf("invalid op")
+			return errors.New("invalid op")
 		}
 	}
 	return nil

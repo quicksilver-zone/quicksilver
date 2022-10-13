@@ -2,8 +2,8 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"strings"
 
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
@@ -30,19 +30,19 @@ func (m AddProtocolDataProposal) ValidateBasic() error {
 	}
 
 	if len(m.Protocol) == 0 {
-		return fmt.Errorf("proposal must specify Protocol")
+		return errors.New("proposal must specify Protocol")
 	}
 
 	if len(m.Type) == 0 {
-		return fmt.Errorf("proposal must specify Type")
+		return errors.New("proposal must specify Type")
 	}
 
 	if len(m.Key) == 0 {
-		return fmt.Errorf("proposal must specify Key")
+		return errors.New("proposal must specify Key")
 	}
 
 	if m.Data == nil {
-		return fmt.Errorf("proposal must specify Data")
+		return errors.New("proposal must specify Data")
 	}
 
 	return nil
@@ -50,14 +50,12 @@ func (m AddProtocolDataProposal) ValidateBasic() error {
 
 // String implements the Stringer interface.
 func (m AddProtocolDataProposal) String() string {
-	var b strings.Builder
-	b.WriteString(fmt.Sprintf(`Add Protocol Data Proposal:
+	return fmt.Sprintf(`Add Protocol Data Proposal:
 Title:			%s
 Description:	%s
 Protocol:		%s
 Type:			%s
 Key:			%s
 Data:			%s
-`, m.Title, m.Description, m.Protocol, m.Type, m.Key, m.Data))
-	return b.String()
+`, m.Title, m.Description, m.Protocol, m.Type, m.Key, m.Data)
 }
