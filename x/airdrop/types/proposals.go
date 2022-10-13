@@ -1,7 +1,8 @@
 package types
 
 import (
-	fmt "fmt"
+	"errors"
+	"fmt"
 	"strings"
 
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -32,11 +33,11 @@ func (m RegisterZoneDropProposal) ValidateBasic() error {
 	}
 
 	if m.ZoneDrop == nil {
-		return fmt.Errorf("proposal must contain a valid ZoneDrop")
+		return errors.New("proposal must contain a valid ZoneDrop")
 	}
 
 	if len(m.ClaimRecords) == 0 {
-		return fmt.Errorf("proposal must contain valid ClaimRecords")
+		return errors.New("proposal must contain valid ClaimRecords")
 	}
 
 	// validate ZoneDrop
@@ -52,10 +53,10 @@ func (m RegisterZoneDropProposal) String() string {
 	var b strings.Builder
 
 	b.WriteString("Airdrop - ZoneDrop Registration Proposal:\n")
-	b.WriteString(fmt.Sprintf("\tTitle:       %s\n", m.Title))
-	b.WriteString(fmt.Sprintf("\tDescription: %s\n", m.Description))
+	fmt.Fprintf(&b, "\tTitle:       %s\n", m.Title)
+	fmt.Fprintf(&b, "\tDescription: %s\n", m.Description)
 	b.WriteString("\tZoneDrop:\n")
-	b.WriteString(fmt.Sprintf("\n%v\n", m.ZoneDrop))
+	fmt.Fprintf(&b, "\n%v\n", m.ZoneDrop)
 	b.WriteString("\n----------\n")
 	return b.String()
 }

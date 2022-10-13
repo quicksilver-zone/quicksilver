@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"fmt"
+	"errors"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -148,7 +148,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 	}
 
 	if len(aggregate) > 0 && ordinalizedIntentSum.IsZero() {
-		return fmt.Errorf("ordinalized intent sum is zero, this should never happen")
+		return errors.New("ordinalized intent sum is zero, this should never happen")
 	}
 
 	// normalise aggregated intents again.

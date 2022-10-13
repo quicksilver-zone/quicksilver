@@ -2,7 +2,8 @@ package types
 
 import (
 	"encoding/base64"
-	fmt "fmt"
+	"errors"
+	"fmt"
 	"sort"
 	"strings"
 
@@ -100,7 +101,7 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 	out := make(ValidatorIntents, 0)
 
 	if len(memo) == 0 {
-		return out, fmt.Errorf("memo length unexpectedly zero")
+		return out, errors.New("memo length unexpectedly zero")
 	}
 
 	memoBytes, err := base64.StdEncoding.DecodeString(memo)

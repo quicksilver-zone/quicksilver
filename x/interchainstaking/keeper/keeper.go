@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"sort"
 
@@ -150,7 +151,7 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
 	if bytes.Equal(data, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice (8)")
+		return errors.New("attempted to unmarshal zero length byte slice (8)")
 	}
 	err := k.cdc.Unmarshal(data, &validatorsRes)
 	if err != nil {
@@ -205,7 +206,7 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validator := stakingTypes.Validator{}
 	if bytes.Equal(data, []byte("")) {
-		return fmt.Errorf("attempted to unmarshal zero length byte slice (9)")
+		return errors.New("attempted to unmarshal zero length byte slice (9)")
 	}
 	err := k.cdc.Unmarshal(data, &validator)
 	if err != nil {
@@ -307,7 +308,7 @@ func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error)
 func (k Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
 	connectionID := ctx.Context().Value(utils.ContextKey("connectionID"))
 	if connectionID == nil {
-		return "", fmt.Errorf("connectionID not in context")
+		return "", errors.New("connectionID not in context")
 	}
 
 	return k.GetChainID(ctx, connectionID.(string))

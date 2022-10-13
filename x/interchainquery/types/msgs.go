@@ -1,7 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
+	"errors"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,17 +28,17 @@ func (msg MsgSubmitQueryResponse) ValidateBasic() error {
 	}
 
 	if msg.Height < 0 {
-		return fmt.Errorf("height must be non-negative")
+		return errors.New("height must be non-negative")
 	}
 
 	// TODO: is there a chain validation spec in ICS?
 	chainParts := strings.Split(msg.ChainId, "-")
 	if len(chainParts) < 2 {
-		return fmt.Errorf("chainID must be of form XXXX-N")
+		return errors.New("chainID must be of form XXXX-N")
 	}
 
 	if len(msg.QueryId) != 64 {
-		return fmt.Errorf("invalid query id")
+		return errors.New("invalid query id")
 	}
 
 	return nil

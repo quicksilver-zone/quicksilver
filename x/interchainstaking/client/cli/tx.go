@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -175,7 +176,7 @@ func ParseZoneRegistrationProposal(cdc codec.JSONCodec, proposalFile string) (ty
 	}
 
 	if reflect.DeepEqual(proposal, types.RegisterZoneProposalWithDeposit{}) {
-		return proposal, fmt.Errorf("cannot unmarshal empty JSON object")
+		return proposal, errors.New("cannot unmarshal empty JSON object")
 	}
 
 	return proposal, nil
@@ -248,7 +249,7 @@ func ParseZoneUpdateProposal(cdc codec.JSONCodec, proposalFile string) (types.Up
 	}
 
 	if reflect.DeepEqual(proposal, types.UpdateZoneProposalWithDeposit{}) {
-		return proposal, fmt.Errorf("cannot unmarshal empty JSON object")
+		return proposal, errors.New("cannot unmarshal empty JSON object")
 	}
 
 	return proposal, nil

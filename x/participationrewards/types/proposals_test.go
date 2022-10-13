@@ -1,6 +1,7 @@
 package types
 
 import (
+	"bytes"
 	"encoding/json"
 	encoding_json "encoding/json"
 	"testing"
@@ -159,4 +160,36 @@ Data:			{
 		got := m.String()
 		require.Equal(t, want, got)
 	})
+}
+
+var sink interface{}
+
+func BenchmarkUpdateZoneProposalString(b *testing.B) {
+	adp := &AddProtocolDataProposal{
+		Title:       "Testing right here",
+		Description: "Testing description",
+		Protocol:    "https",
+		Key:         "This is my key",
+		Data: bytes.Join(
+			[][]byte{
+				[]byte(`{"box":`),
+				bytes.Repeat([]byte("{"), 1<<10),
+				bytes.Repeat([]byte("}"), 1<<10),
+				[]byte(`}`),
+			},
+			[]byte("")),
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		str := adp.String()
+		b.SetBytes(int64(len(str)))
+		sink = str
+	}
+
+	if sink == nil {
+		b.Fatal("Benchmark did not run")
+	}
+	sink = (interface{})(nil)
 }

@@ -2,7 +2,7 @@ package types
 
 import (
 	"encoding/json"
-	fmt "fmt"
+	"errors"
 	"reflect"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
@@ -19,7 +19,7 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 			}
 			var blank OsmosisPoolProtocolData
 			if reflect.DeepEqual(pd, blank) {
-				return nil, fmt.Errorf("unable to unmarshal osmosispool protocol data from empty JSON object")
+				return nil, errors.New("unable to unmarshal osmosispool protocol data from empty JSON object")
 			}
 			return pd, nil
 		}
@@ -32,7 +32,7 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 			}
 			var blank OsmosisParamsProtocolData
 			if reflect.DeepEqual(pd, blank) {
-				return nil, fmt.Errorf("unable to unmarshal osmosisparams protocol data from empty JSON object")
+				return nil, errors.New("unable to unmarshal osmosisparams protocol data from empty JSON object")
 			}
 			return pd, nil
 		}
@@ -45,7 +45,7 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 			}
 			var blank ConnectionProtocolData
 			if reflect.DeepEqual(pd, blank) {
-				return nil, fmt.Errorf("unable to unmarshal connection protocol data from empty JSON object")
+				return nil, errors.New("unable to unmarshal connection protocol data from empty JSON object")
 			}
 			return pd, nil
 		}
@@ -58,7 +58,7 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 			}
 			var blank LiquidAllowedDenomProtocolData
 			if reflect.DeepEqual(pd, blank) {
-				return nil, fmt.Errorf("unable to unmarshal liquid protocol data from empty JSON object")
+				return nil, errors.New("unable to unmarshal liquid protocol data from empty JSON object")
 			}
 			return pd, nil
 		}

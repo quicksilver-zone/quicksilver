@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -61,7 +62,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		return err
 	}
 	if reflect.DeepEqual(packetData, icatypes.InterchainAccountPacketData{}) {
-		return fmt.Errorf("unable to unmarshal packet data; got empty JSON object")
+		return errors.New("unable to unmarshal packet data; got empty JSON object")
 	}
 
 	msgs, err := icatypes.DeserializeCosmosTx(k.cdc, packetData.Data)
@@ -211,13 +212,13 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 	sMsg, ok := msg.(*ibctransfertypes.MsgTransfer)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgTransfer")
-		return fmt.Errorf("unable to cast source message to MsgTransfer")
+		return errors.New("unable to cast source message to MsgTransfer")
 	}
 
 	// check if destination is interchainstaking module account (spoiler: it was)
 	if sMsg.Receiver != k.AccountKeeper.GetModuleAddress(types.ModuleName).String() {
 		k.Logger(ctx).Error("msgTransfer to unknown account!")
-		return fmt.Errorf("unexpected recipient")
+		return errors.New("unexpected recipient")
 	}
 
 	return k.HandleDistributeFeesFromModuleAccount(ctx)
@@ -236,7 +237,7 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg, memo stri
 	sMsg, ok := msg.(*banktypes.MsgMultiSend)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgMultiSend")
-		return fmt.Errorf("unable to cast source message to MsgMultiSend")
+		return errors.New("unable to cast source message to MsgMultiSend")
 	}
 
 	// check for sending of tokens from deposit -> delegate.
@@ -268,7 +269,7 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 	// first, type assertion. we should have banktypes.MsgSend
 	sMsg, ok := msg.(*banktypes.MsgSend)
 	if !ok {
-		err := fmt.Errorf("unable to cast source message to MsgSend")
+		err := errors.New("unable to cast source message to MsgSend")
 		k.Logger(ctx).Error(err.Error())
 		return err
 	}
@@ -292,7 +293,7 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.DepositAddress.Address == sMsg.FromAddress:
 		return k.handleSendToDelegate(ctx, zone, sMsg, memo)
 	default:
-		err = fmt.Errorf("unexpected completed send")
+		err = errors.New("unexpected completed send")
 		k.Logger(ctx).Error(err.Error())
 		return err
 	}
@@ -329,7 +330,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ChainId, memo, WithdrawStatusSend)
 
 	if !found {
-		return fmt.Errorf("no matching withdrawal record found")
+		return errors.New("no matching withdrawal record found")
 	}
 
 	// case 1: total amount - native unbonding
@@ -482,7 +483,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	tsMsg, ok := msg.(*lsmstakingtypes.MsgTokenizeShares)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgTokenizeShares")
-		return fmt.Errorf("unable to cast source message to MsgTokenizeShares")
+		return errors.New("unable to cast source message to MsgTokenizeShares")
 	}
 
 	zone := k.GetZoneForDelegateAccount(ctx, tsMsg.DelegatorAddress)
@@ -490,7 +491,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ChainId, memo, WithdrawStatusTokenize)
 
 	if !found {
-		return fmt.Errorf("no matching withdrawal record found")
+		return errors.New("no matching withdrawal record found")
 	}
 
 	for _, dist := range withdrawalRecord.Distribution {
@@ -520,24 +521,24 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
 	parts := strings.Split(memo, "/")
 	if len(parts) != 2 {
-		return fmt.Errorf("unexpected epoch rebalance memo format")
+		return errors.New("unexpected epoch rebalance memo format")
 	}
 
 	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
-		return fmt.Errorf("unexpected epoch rebalance memo format (2)")
+		return errors.New("unexpected epoch rebalance memo format (2)")
 	}
 
 	k.Logger(ctx).Info("Received MsgBeginRedelegate acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
 	redelegateMsg, ok := msg.(*stakingtypes.MsgBeginRedelegate)
 	if !ok {
-		return fmt.Errorf("unable to unmarshal MsgBeginRedelegate")
+		return errors.New("unable to unmarshal MsgBeginRedelegate")
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
 	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.DelegatorAddress, epochNumber)
 	if !found {
-		return fmt.Errorf("unable to find redelegation record")
+		return errors.New("unable to find redelegation record")
 	}
 
 	record.CompletionTime = completion
@@ -551,11 +552,11 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	undelegateMsg, ok := msg.(*stakingtypes.MsgUndelegate)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgUndelegate")
-		return fmt.Errorf("unable to cast source message to MsgUndelegate")
+		return errors.New("unable to cast source message to MsgUndelegate")
 	}
 	memoParts := strings.Split(memo, "/")
 	if len(memoParts) != 2 {
-		return fmt.Errorf("unexpected memo form")
+		return errors.New("unexpected memo form")
 	}
 
 	epochNumber, err := strconv.ParseInt(memoParts[1], 10, 64)
@@ -574,7 +575,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 
 		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, WithdrawStatusUnbond)
 		if !found {
-			return fmt.Errorf("unable to lookup withdrawal record")
+			return errors.New("unable to lookup withdrawal record")
 		}
 		if completion.After(record.CompletionTime) {
 			record.CompletionTime = completion
@@ -605,7 +606,7 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensforShares)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensforShares")
-		return fmt.Errorf("unable to cast source message to MsgRedeemTokensforShares")
+		return errors.New("unable to cast source message to MsgRedeemTokensforShares")
 	}
 	validatorAddress, err := k.GetValidatorForToken(ctx, redeemMsg.DelegatorAddress, redeemMsg.Amount)
 	if err != nil {
@@ -622,7 +623,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
 	delegateMsg, ok := msg.(*stakingtypes.MsgDelegate)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgDelegate")
-		return fmt.Errorf("unable to cast source message to MsgDelegate")
+		return errors.New("unable to cast source message to MsgDelegate")
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, delegateMsg.DelegatorAddress)
 	if zone == nil {
@@ -643,13 +644,13 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 	original, ok := msg.(*distrtypes.MsgSetWithdrawAddress)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgSetWithdrawAddress")
-		return fmt.Errorf("unable to cast source message to MsgSetWithdrawAddress")
+		return errors.New("unable to cast source message to MsgSetWithdrawAddress")
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, original.DelegatorAddress)
 	if zone == nil {
 		zone = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
 		if zone == nil {
-			return fmt.Errorf("unable to find zone")
+			return errors.New("unable to find zone")
 		}
 		if err := zone.PerformanceAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
 			return err
@@ -787,7 +788,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	withdrawalMsg, ok := msg.(*distrtypes.MsgWithdrawDelegatorReward)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgWithdrawDelegatorReward")
-		return fmt.Errorf("unable to cast source message to MsgWithdrawDelegatorReward")
+		return errors.New("unable to cast source message to MsgWithdrawDelegatorReward")
 	}
 
 	zone, err := k.GetZoneFromContext(ctx)
@@ -881,7 +882,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 		}
 	}
 	if remotePort == "" {
-		return fmt.Errorf("unable to find remote transfer connection")
+		return errors.New("unable to find remote transfer connection")
 	}
 
 	for _, coin := range multiDenomFee.Sort() {

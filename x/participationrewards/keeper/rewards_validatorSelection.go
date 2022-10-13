@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -132,7 +133,7 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	k.Logger(ctx).Info("zone voting power", "zone", zone.ChainId, "total voting power", zs.TotalVotingPower)
 
 	if zs.TotalVotingPower.IsZero() {
-		err := fmt.Errorf("invalid zone, zero voting power")
+		err := errors.New("invalid zone, zero voting power")
 		k.Logger(ctx).Error(err.Error(), "zone", zone)
 		return err
 	}

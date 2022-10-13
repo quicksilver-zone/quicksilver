@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"sort"
 	"time"
@@ -41,12 +42,12 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	if msg.Value.IsZero() {
-		return nil, fmt.Errorf("cannot redeem zero-value coins")
+		return nil, errors.New("cannot redeem zero-value coins")
 	}
 
 	// validate recipient address
 	if len(msg.DestinationAddress) == 0 {
-		return nil, fmt.Errorf("recipient address not provided")
+		return nil, errors.New("recipient address not provided")
 	}
 
 	var zone *types.Zone
@@ -76,7 +77,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	// does the user have sufficient assets to burn
 	if !k.BankKeeper.HasBalance(ctx, sender, msg.Value) {
-		return nil, fmt.Errorf("account has insufficient balance of qasset to burn")
+		return nil, errors.New("account has insufficient balance of qasset to burn")
 	}
 
 	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
