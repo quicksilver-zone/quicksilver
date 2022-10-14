@@ -165,7 +165,6 @@ func BenchmarkUpdateZoneProposalString(b *testing.B) {
 	adp := &AddProtocolDataProposal{
 		Title:       "Testing right here",
 		Description: "Testing description",
-		Protocol:    "https",
 		Key:         "This is my key",
 		Data: bytes.Join(
 			[][]byte{
