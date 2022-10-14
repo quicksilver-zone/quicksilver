@@ -56,8 +56,6 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 			ippd := osmosisPoolProtocolData{}
 			err := json.Unmarshal(data, &ippd)
 			if err != nil {
-				fmt.Println("HERE")
-				// TODO: PoolData fails here... needs custom Marshal/Unmarshal on OsmosisPoolProtocolData
 				return nil, fmt.Errorf("unable to unmarshal intermediary osmosisPoolProtocolData: %w", err)
 			}
 			var blank osmosisPoolProtocolData
@@ -65,10 +63,9 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 				return nil, fmt.Errorf("unable to unmarshal osmosispool protocol data from empty JSON object")
 			}
 
-			var poolData balancer.Pool
+			var poolData *balancer.Pool
 			if len(ippd.PoolData) > 0 {
-				fmt.Printf("json: %s\n", ippd.PoolData)
-				err = json.Unmarshal(ippd.PoolData, &poolData)
+				err = json.Unmarshal(ippd.PoolData, poolData)
 				if err != nil {
 					return nil, fmt.Errorf("unable to unmarshal concrete PoolData: %w", err)
 				}
@@ -78,8 +75,10 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 				PoolID:      ippd.PoolID,
 				PoolName:    ippd.PoolName,
 				LastUpdated: ippd.LastUpdated,
-				PoolData:    &poolData,
 				Zones:       ippd.Zones,
+			}
+			if poolData != nil {
+				ppd.PoolData = poolData
 			}
 
 			return ppd, nil
