@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -14,6 +15,14 @@ type OsmosisPoolProtocolData struct {
 	PoolName    string
 	LastUpdated time.Time
 	PoolData    osmosisgammtypes.PoolI
+	Zones       map[string]string // chainID: IBC/denom
+}
+
+type osmosisPoolProtocolData struct {
+	PoolID      uint64
+	PoolName    string
+	LastUpdated time.Time
+	PoolData    json.RawMessage
 	Zones       map[string]string // chainID: IBC/denom
 }
 

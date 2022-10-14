@@ -131,9 +131,9 @@ func (suite *KeeperTestSuite) initTestZone() {
 			1,
 			"atom/osmo",
 			"cosmoshub-4",
-			"IBC/atom",
+			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 			"osmosis-1",
-			"IBC/osmo",
+			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159",
 		),
 		"1",
 	)
