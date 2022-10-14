@@ -1,7 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -17,6 +17,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 	type fields struct {
 		UserAddress string
 		Zone        string
+		SrcZone     string
 		ClaimType   ClaimType
 		Proofs      []*Proof
 	}
@@ -35,6 +36,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 			fields{
 				UserAddress: "cosmos1234567890abcde",
 				Zone:        "",
+				SrcZone:     "",
 				ClaimType:   -1,
 				Proofs:      []*Proof{},
 			},
@@ -45,6 +47,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 			fields{
 				UserAddress: "cosmos1234567890abcde",
 				Zone:        "",
+				SrcZone:     "",
 				ClaimType:   -1,
 				Proofs: []*Proof{
 					{}, // blank
@@ -64,6 +67,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 			fields{
 				UserAddress: userAddress,
 				Zone:        "test-01",
+				SrcZone:     "test-02",
 				ClaimType:   ClaimTypeOsmosisPool,
 				Proofs: []*Proof{
 					{
@@ -83,6 +87,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 			msg := MsgSubmitClaim{
 				UserAddress: tt.fields.UserAddress,
 				Zone:        tt.fields.Zone,
+				SrcZone:     tt.fields.SrcZone,
 				ClaimType:   tt.fields.ClaimType,
 				Proofs:      tt.fields.Proofs,
 			}
@@ -141,37 +146,59 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 	}
 }
 
-// func TestNewMsgSubmitClaim(t *testing.T) {
-// 	validAddress := utils.GenerateAccAddressForTest().String()
-// 	testZone := "test-01"
-
-// 	type args struct {
-// 		userAddress sdk.Address
-// 		zone        string
-// 	}
-// 	tests := []struct {
-// 		name string
-// 		args args
-// 		want *MsgSubmitClaim
-// 	}{
-// 		{
-// 			"valid",
-// 			args{
-// 				userAddress: sdk.MustAccAddressFromBech32(validAddress),
-// 				zone:        testZone,
-// 			},
-// 			&MsgSubmitClaim{
-// 				UserAddress: validAddress,
-// 				Zone:        testZone,
-// 			},
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := NewMsgSubmitClaim(tt.args.userAddress, tt.args.zone); !reflect.DeepEqual(got, tt.want) {
-// 				err := fmt.Errorf("NewMsgSubmitClaim() = %v, want %v", got, tt.want)
-// 				require.NoError(t, err)
-// 			}
-// 		})
-// 	}
-// }
+func TestNewMsgSubmitClaim(t *testing.T) {
+	userAddress := utils.GenerateAccAddressForTest()
+	type args struct {
+		userAddress sdk.Address
+		srcZone     string
+		zone        string
+		claimType   ClaimType
+		proofs      []*Proof
+	}
+	tests := []struct {
+		name string
+		args args
+		want *MsgSubmitClaim
+	}{
+		{
+			"test",
+			args{
+				userAddress,
+				"osmosis-1",
+				"juno",
+				ClaimTypeOsmosisPool,
+				[]*Proof{
+					{
+						Key:       []byte{1, 2, 3, 4, 5},
+						Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},
+						ProofOps:  &crypto.ProofOps{},
+						Height:    123,
+						ProofType: "lockup",
+					},
+				},
+			},
+			&MsgSubmitClaim{
+				userAddress.String(),
+				"juno",
+				"osmosis-1",
+				ClaimTypeOsmosisPool,
+				[]*Proof{
+					{
+						Key:       []byte{1, 2, 3, 4, 5},
+						Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},
+						ProofOps:  &crypto.ProofOps{},
+						Height:    123,
+						ProofType: "lockup",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewMsgSubmitClaim(tt.args.userAddress, tt.args.srcZone, tt.args.zone, tt.args.claimType, tt.args.proofs); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewMsgSubmitClaim() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

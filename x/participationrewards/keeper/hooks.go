@@ -15,11 +15,11 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	if epochIdentifier == "epoch" {
-		k.IteratePrefixedProtocolDatas(ctx, "connection", func(index int64, data types.ProtocolData) (stop bool) {
+		k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, data types.ProtocolData) (stop bool) {
 			blockQuery := tmservice.GetLatestBlockRequest{}
 			bz := k.cdc.MustMarshal(&blockQuery)
 
-			iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataConnection, data.Data)
+			iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
 			if err != nil {
 				k.Logger(ctx).Error("Error unmarshalling protocol data")
 			}

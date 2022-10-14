@@ -32,13 +32,12 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	if !ok {
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
-	connstr := fmt.Sprintf("connection/%s", zone.ChainId)
-	pd, ok := k.GetProtocolData(ctx, connstr)
+	pd, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, zone.ChainId)
 	if !ok {
 		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", zone.ChainId)
 	}
 
-	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataConnection, pd.Data)
+	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, pd.Data)
 	if err != nil {
 		k.Logger(ctx).Error("SubmitClaim: error unmarshalling protocol data")
 	}

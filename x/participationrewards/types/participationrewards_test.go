@@ -196,9 +196,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			fields{
 				"osmosispools/1",
 				&ProtocolData{
-					Protocol: "osmosis",
-					Type:     "osmosispool",
-					Data:     nil,
+					Type: ProtocolDataType_name[int32(ProtocolDataTypeOsmosisPool)],
+					Data: nil,
 				},
 			},
 			true,
@@ -208,9 +207,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			fields{
 				"osmosispools/1",
 				&ProtocolData{
-					Protocol: "osmosis",
-					Type:     "osmosispool",
-					Data:     []byte("{}"),
+					Type: ProtocolDataType_name[int32(ProtocolDataTypeOsmosisPool)],
+					Data: []byte("{}"),
 				},
 			},
 			true,
@@ -220,9 +218,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			fields{
 				"osmosispools/1",
 				&ProtocolData{
-					Protocol: "osmosis",
-					Type:     "osmosispool",
-					Data:     []byte(invalidOsmosisData),
+					Type: ProtocolDataType_name[int32(ProtocolDataTypeOsmosisPool)],
+					Data: []byte(invalidOsmosisData),
 				},
 			},
 			true,
@@ -232,9 +229,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			fields{
 				"osmosispools/1",
 				&ProtocolData{
-					Protocol: "osmosis",
-					Type:     "osmosispool",
-					Data:     []byte(validOsmosisData),
+					Type: ProtocolDataType_name[int32(ProtocolDataTypeOsmosisPool)],
+					Data: []byte(validOsmosisData),
 				},
 			},
 			false,
@@ -244,9 +240,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			fields{
 				"liquid",
 				&ProtocolData{
-					Protocol: "liquid",
-					Type:     "liquidtoken",
-					Data:     []byte("{}"),
+					Type: ProtocolDataType_name[int32(ProtocolDataTypeLiquidToken)],
+					Data: []byte("{}"),
 				},
 			},
 			true,
@@ -256,9 +251,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			fields{
 				"liquid",
 				&ProtocolData{
-					Protocol: "liquid",
-					Type:     "liquidtoken",
-					Data:     []byte(validLiquidData),
+					Type: ProtocolDataType_name[int32(ProtocolDataTypeLiquidToken)],
+					Data: []byte(validLiquidData),
 				},
 			},
 			false,
@@ -268,9 +262,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			fields{
 				"unknown",
 				&ProtocolData{
-					Protocol: "unknown",
-					Type:     "unknown",
-					Data:     []byte("{}"),
+					Type: "unknown",
+					Data: []byte("{}"),
 				},
 			},
 			true,

@@ -62,15 +62,26 @@ func request_Query_ProtocolData_0(ctx context.Context, marshaler runtime.Marshal
 		_   = err
 	)
 
-	val, ok = pathParams["protocol"]
+	val, ok = pathParams["type"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "protocol")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
 	}
 
-	protoReq.Protocol, err = runtime.String(val)
+	protoReq.Type, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "protocol", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
+	}
+
+	val, ok = pathParams["key"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key")
+	}
+
+	protoReq.Key, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key", err)
 	}
 
 	msg, err := client.ProtocolData(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -89,15 +100,26 @@ func local_request_Query_ProtocolData_0(ctx context.Context, marshaler runtime.M
 		_   = err
 	)
 
-	val, ok = pathParams["protocol"]
+	val, ok = pathParams["type"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "protocol")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
 	}
 
-	protoReq.Protocol, err = runtime.String(val)
+	protoReq.Type, err = runtime.String(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "protocol", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
+	}
+
+	val, ok = pathParams["key"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "key")
+	}
+
+	protoReq.Key, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "key", err)
 	}
 
 	msg, err := server.ProtocolData(ctx, &protoReq)
@@ -244,7 +266,7 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 var (
 	pattern_Query_Params_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"quicksilver", "participationrewards", "v1", "params"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ProtocolData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "participationrewards", "v1", "protocoldata", "protocol"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_ProtocolData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"quicksilver", "participationrewards", "v1", "protocoldata", "type", "key"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

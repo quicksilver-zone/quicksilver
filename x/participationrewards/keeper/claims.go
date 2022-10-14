@@ -61,8 +61,8 @@ func (k Keeper) DeleteClaim(ctx sdk.Context, claim *types.Claim) {
 
 // DeleteLastEpochClaim deletes claim for last epoch
 func (k Keeper) DeleteLastEpochClaim(ctx sdk.Context, claim *types.Claim) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixClaim)
-	store.Delete(types.GetKeyClaim(claim.ChainId, claim.UserAddress, claim.Module, claim.SourceChainId))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
+	store.Delete(types.GetKeyLastEpochClaim(claim.ChainId, claim.UserAddress, claim.Module, claim.SourceChainId))
 }
 
 // IterateClaims iterates through zone claims.
@@ -169,9 +169,27 @@ func (k Keeper) AllZoneClaims(ctx sdk.Context, chainID string) []*types.Claim {
 	return claims
 }
 
+func (k Keeper) AllZoneUserClaims(ctx sdk.Context, chainID string, address string) []*types.Claim {
+	claims := []*types.Claim{}
+	k.IterateUserClaims(ctx, chainID, address, func(_ int64, claim types.Claim) (stop bool) {
+		claims = append(claims, &claim)
+		return false
+	})
+	return claims
+}
+
 func (k Keeper) AllZoneLastEpochClaims(ctx sdk.Context, chainID string) []*types.Claim {
 	claims := []*types.Claim{}
 	k.IterateLastEpochClaims(ctx, chainID, func(_ int64, claim types.Claim) (stop bool) {
+		claims = append(claims, &claim)
+		return false
+	})
+	return claims
+}
+
+func (k Keeper) AllZoneLastEpochUserClaims(ctx sdk.Context, chainID string, address string) []*types.Claim {
+	claims := []*types.Claim{}
+	k.IterateLastEpochUserClaims(ctx, chainID, address, func(_ int64, claim types.Claim) (stop bool) {
 		claims = append(claims, &claim)
 		return false
 	})

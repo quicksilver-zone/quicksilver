@@ -23,6 +23,28 @@ func TestGenesisState(t *testing.T) {
 	}
 	defaultGenesisState := DefaultGenesisState()
 	require.Equal(t, *defaultGenesisState, testGenesisState)
+	// test new genesis state
+	newGenesisState := NewGenesisState(
+		Params{
+			DistributionProportions: DistributionProportions{
+				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
+				HoldingsAllocation:           sdk.MustNewDecFromStr("0.3"),
+				LockupAllocation:             sdk.MustNewDecFromStr("0.2"),
+			},
+		},
+	)
+	testGenesisState = GenesisState{
+		Params{
+			DistributionProportions: DistributionProportions{
+				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
+				HoldingsAllocation:           sdk.MustNewDecFromStr("0.3"),
+				LockupAllocation:             sdk.MustNewDecFromStr("0.2"),
+			},
+		},
+		nil,
+		nil,
+	}
+	require.Equal(t, *newGenesisState, testGenesisState)
 }
 
 func TestGenesisState_Validate(t *testing.T) {
@@ -80,9 +102,8 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						"liquid",
 						&ProtocolData{
-							Protocol: "liquid",
-							Type:     "liquidtoken",
-							Data:     []byte("{}"),
+							Type: "liquidtoken",
+							Data: []byte("{}"),
 						},
 					},
 				},
@@ -98,9 +119,8 @@ func TestGenesisState_Validate(t *testing.T) {
 					{
 						"liquid",
 						&ProtocolData{
-							Protocol: "liquid",
-							Type:     "liquidtoken",
-							Data:     []byte(validLiquidData),
+							Type: ProtocolDataType_name[int32(ProtocolDataTypeLiquidToken)],
+							Data: []byte(validLiquidData),
 						},
 					},
 				},

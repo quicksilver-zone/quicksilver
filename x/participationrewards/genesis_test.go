@@ -34,15 +34,16 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to marshal protocol data: %v", err)
 	}
-	protocolData := keeper.NewProtocolData("osmosispool", "osmosis", bz)
+	protocolData := keeper.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)], bz)
 
-	app.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("osmosispools/%d", pool.PoolID), protocolData)
+	app.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("%d", pool.PoolID), protocolData)
 
 	genesis := participationrewards.ExportGenesis(ctx, app.ParticipationRewardsKeeper)
 
-	require.Equal(t, "osmosispools/1", genesis.ProtocolData[0].Key)
-	require.Equal(t, "osmosis", genesis.ProtocolData[0].ProtocolData.Protocol)
-	require.Equal(t, "osmosispool", genesis.ProtocolData[0].ProtocolData.Type)
+	// 0,0,0,4 (binary encoded types.ProtocolDataTypeOsmosisPool)
+	// 49 (ASCII value of '1')
+	require.Equal(t, string([]byte{0, 0, 0, 0, 0, 0, 0, 4, 49}), genesis.ProtocolData[0].Key)
+	require.Equal(t, types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)], genesis.ProtocolData[0].ProtocolData.Type)
 }
 
 func TestParticipationRewardsInitGenesis(t *testing.T) {
@@ -63,11 +64,10 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 }`
 
 	kpd := &types.KeyedProtocolData{
-		Key: "pools/6",
+		Key: "6",
 		ProtocolData: &types.ProtocolData{
-			Protocol: "osmosis",
-			Type:     "osmosispool",
-			Data:     []byte(validOsmosisData),
+			Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)],
+			Data: []byte(validOsmosisData),
 		},
 	}
 
@@ -94,10 +94,9 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.HoldingsAllocation, sdk.NewDecWithPrec(5, 1))
 	require.Equal(t, app.ParticipationRewardsKeeper.GetParams(ctx).DistributionProportions.LockupAllocation, sdk.ZeroDec())
 
-	pd, found := app.ParticipationRewardsKeeper.GetProtocolData(ctx, "pools/6")
+	pd, found := app.ParticipationRewardsKeeper.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, "6")
 	require.True(t, found)
-	require.Equal(t, "osmosis", pd.Protocol)
-	require.Equal(t, "osmosispool", pd.Type)
+	require.Equal(t, types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)], pd.Type)
 
 	clm, found := app.ParticipationRewardsKeeper.GetClaim(ctx, "cosmoshub-4", userAddress.String(), types.ClaimTypeLiquidToken, "osmosis-1")
 	require.True(t, found)

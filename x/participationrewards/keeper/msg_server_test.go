@@ -26,6 +26,27 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			true,
 		},
 		{
+			"invalid_height",
+			func() {
+				msg = types.MsgSubmitClaim{
+					UserAddress: utils.GenerateAccAddressForTest().String(),
+					Zone:        suite.chainB.ChainID,
+					ClaimType:   types.ClaimTypeOsmosisPool,
+					Proofs: []*types.Proof{
+						{
+							Key:       []byte{1, 2, 3, 4, 5},
+							Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},
+							ProofOps:  &crypto.ProofOps{},
+							Height:    123,
+							ProofType: "lockup",
+						},
+					},
+				}
+			},
+			nil,
+			true,
+		},
+		{
 			"test",
 			func() {
 				msg = types.MsgSubmitClaim{

@@ -68,7 +68,19 @@ message KeyedProtocolData {
 // Protocol Data is an arbitrary data type held against a given zone for the
 // determination of rewards.
 message ProtocolData {
-  string protocol = 1;
-  string type = 2;
-  bytes data = 3 [ (gogoproto.casttype) = "encoding/json.RawMessage" ];
+  string type = 1;
+  bytes data = 2 [ (gogoproto.casttype) = "encoding/json.RawMessage" ];
+}
+
+enum ProtocolDataType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Undefined action (per protobuf spec)
+  ProtocolDataTypeUndefined = 0;
+  ProtocolDataTypeConnection = 1;
+  ProtocolDataTypeOsmosisParams = 2;
+  ProtocolDataTypeLiquidToken = 3;
+  ProtocolDataTypeOsmosisPool = 4;
+	ProtocolDataTypeCrescentPool = 5;
+	ProtocolDataTypeSifchainPool = 6;
 }

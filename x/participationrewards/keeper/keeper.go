@@ -105,6 +105,10 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
+func (k Keeper) GetCodec() codec.BinaryCodec {
+	return k.cdc
+}
+
 func (k Keeper) GetModuleBalance(ctx sdk.Context) math.Int {
 	denom := k.stakingKeeper.BondDenom(ctx)
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)

@@ -27,10 +27,9 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 				prop = types.AddProtocolDataProposal{
 					Title:       "Add connection protocol for test chain B",
 					Description: "A connection protocol for testing connection protocols",
-					Protocol:    "",
 					Type:        "",
-					Key:         "",
 					Data:        nil,
+					Key:         "",
 				}
 			},
 			true,
@@ -41,10 +40,9 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 				prop = types.AddProtocolDataProposal{
 					Title:       "Add connection protocol for test chain B",
 					Description: "A connection protocol for testing connection protocols",
-					Protocol:    fmt.Sprintf("connection/%s", suite.chainB.ChainID),
 					Type:        "testtype",
-					Key:         "testkey",
 					Data:        []byte("{}"),
+					Key:         "testkey",
 				}
 			},
 			true,
@@ -55,10 +53,9 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 				prop = types.AddProtocolDataProposal{
 					Title:       "Add connection protocol for test chain B",
 					Description: "A connection protocol for testing connection protocols",
-					Protocol:    fmt.Sprintf("connection/%s", suite.chainB.ChainID),
-					Type:        types.ProtocolDataType_name[types.ProtocolDataConnection],
-					Key:         "connection",
+					Type:        types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 					Data:        []byte("{}"),
+					Key:         "connection",
 				}
 			},
 			true,
@@ -71,10 +68,9 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 				prop = types.AddProtocolDataProposal{
 					Title:       "Add connection protocol for test chain B",
 					Description: "A connection protocol for testing connection protocols",
-					Protocol:    fmt.Sprintf("connection/%s", suite.chainB.ChainID),
-					Type:        types.ProtocolDataType_name[types.ProtocolDataConnection],
-					Key:         "connection",
+					Type:        types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 					Data:        []byte(connpdstr),
+					Key:         "connection",
 				}
 			},
 			true,
@@ -87,10 +83,9 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 				prop = types.AddProtocolDataProposal{
 					Title:       "Add connection protocol for test chain B",
 					Description: "A connection protocol for testing connection protocols",
-					Protocol:    fmt.Sprintf("connection/%s", suite.chainB.ChainID),
-					Type:        types.ProtocolDataType_name[types.ProtocolDataConnection],
-					Key:         "connection",
+					Type:        types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 					Data:        []byte(connpdstr),
+					Key:         "connection",
 				}
 			},
 			false,

@@ -21,7 +21,6 @@ func (suite *KeeperTestSuite) TestKeeper_Params() {
 }
 
 func (suite *KeeperTestSuite) TestKeeper_ProtocolData() {
-	connstr := fmt.Sprintf("connection/%s", suite.chainB.ChainID)
 	connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)
 	suite.Run("ProtocolData", func() {
 		k := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
@@ -30,7 +29,13 @@ func (suite *KeeperTestSuite) TestKeeper_ProtocolData() {
 				[]byte(connpdstr),
 			},
 		}
-		got, err := k.ProtocolData(suite.chainA.GetContext(), &types.QueryProtocolDataRequest{Protocol: connstr})
+		got, err := k.ProtocolData(
+			suite.chainA.GetContext(),
+			&types.QueryProtocolDataRequest{
+				Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
+				Key:  suite.chainB.ChainID,
+			},
+		)
 		suite.Require().NoError(err)
 		suite.Require().NotNil(got)
 		suite.Require().Equal(want, *got)

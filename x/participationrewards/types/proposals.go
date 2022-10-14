@@ -15,7 +15,7 @@ const (
 var _ govv1beta1.Content = &AddProtocolDataProposal{}
 
 func NewAddProtocolDataProposal(title string, description string, datatype string, protocol string, key string, data json.RawMessage) *AddProtocolDataProposal {
-	return &AddProtocolDataProposal{Title: title, Description: description, Type: datatype, Protocol: protocol, Key: key, Data: data}
+	return &AddProtocolDataProposal{Title: title, Description: description, Type: datatype, Data: data, Key: key}
 }
 
 func (m AddProtocolDataProposal) GetDescription() string { return m.Description }
@@ -30,10 +30,6 @@ func (m AddProtocolDataProposal) ValidateBasic() error {
 	}
 
 	errors := make(map[string]error)
-
-	if len(m.Protocol) == 0 {
-		errors["Protocol"] = ErrUndefinedAttribute
-	}
 
 	if len(m.Type) == 0 {
 		errors["Type"] = ErrUndefinedAttribute
@@ -59,9 +55,8 @@ func (m AddProtocolDataProposal) String() string {
 	return fmt.Sprintf(`Add Protocol Data Proposal:
 Title:			%s
 Description:	%s
-Protocol:		%s
 Type:			%s
-Key:			%s
 Data:			%s
-`, m.Title, m.Description, m.Protocol, m.Type, m.Key, m.Data)
+Key:			%s
+`, m.Title, m.Description, m.Type, m.Data, m.Key)
 }

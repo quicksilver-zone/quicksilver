@@ -100,10 +100,9 @@ func TestAddProtocolDataProposal_ValidateBasic(t *testing.T) {
 			m := AddProtocolDataProposal{
 				Title:       tt.fields.Title,
 				Description: tt.fields.Description,
-				Protocol:    tt.fields.Protocol,
 				Type:        tt.fields.Type,
-				Key:         tt.fields.Key,
 				Data:        tt.fields.Data,
+				Key:         tt.fields.Key,
 			}
 			err := m.ValidateBasic()
 			if tt.wantErr {
@@ -138,24 +137,22 @@ func TestAddProtocolDataProposal_String(t *testing.T) {
 	want := `Add Protocol Data Proposal:
 Title:			Valid Protocol Data
 Description:	A valid protocol that is valid
-Protocol:		ValidProtocol
 Type:			liquidtoken
-Key:			liquid
 Data:			{
 	"chainid": "somechain",
 	"localdenom": "lstake",
 	"denom": "qstake"
 }
+Key:			liquid
 `
 
 	t.Run("stringer", func(t *testing.T) {
 		m := AddProtocolDataProposal{
 			Title:       tt.Title,
 			Description: tt.Description,
-			Protocol:    tt.Protocol,
 			Type:        tt.Type,
-			Key:         tt.Key,
 			Data:        tt.Data,
+			Key:         tt.Key,
 		}
 		got := m.String()
 		require.Equal(t, want, got)

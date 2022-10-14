@@ -44,6 +44,10 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 		errors["Zone"] = ErrUndefinedAttribute
 	}
 
+	if len(msg.SrcZone) == 0 {
+		errors["SrcZone"] = ErrUndefinedAttribute
+	}
+
 	ct := int(msg.ClaimType)
 	if ct < 1 || ct >= len(ClaimType_value) {
 		errors["Action"] = fmt.Errorf("%w, got %d", ErrClaimTypeOutOfBounds, msg.ClaimType)

@@ -10,7 +10,7 @@ import (
 // tests that {} is an invalid string, and that an error is thrown when unmarshalled.
 // see: https://github.com/ingenuity-build/quicksilver/issues/214
 func TestUnmarshalProtocolDataRejectsZeroLengthJson(t *testing.T) {
-	_, err := UnmarshalProtocolData(ProtocolDataOsmosisPool, []byte("{}"))
+	_, err := UnmarshalProtocolData(ProtocolDataTypeOsmosisPool, []byte("{}"))
 	require.Error(t, err)
 }
 
@@ -96,7 +96,7 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		{
 			"connection_data",
 			args{
-				datatype: 0,
+				datatype: ProtocolDataTypeConnection,
 				data:     []byte(`{"connectionid": "connection-0","chainid": "somechain","lastepoch": 10000}`),
 			},
 			ConnectionProtocolData{
@@ -109,7 +109,7 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		{
 			"liquid_data_empty",
 			args{
-				datatype: 1,
+				datatype: ProtocolDataTypeLiquidToken,
 				data:     []byte(`{}`),
 			},
 			nil,
@@ -118,7 +118,7 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		{
 			"liquid_data",
 			args{
-				datatype: 1,
+				datatype: ProtocolDataTypeLiquidToken,
 				data:     []byte(`{"chainid": "somechain","localdenom": "lstake","denom": "qstake"}`),
 			},
 			LiquidAllowedDenomProtocolData{
@@ -129,24 +129,44 @@ func TestUnmarshalProtocolData(t *testing.T) {
 			false,
 		},
 		{
-			"osmosis_data_empty",
+			"osmosispool_data_empty",
 			args{
-				datatype: 2,
+				datatype: ProtocolDataTypeOsmosisPool,
 				data:     []byte(`{}`),
 			},
 			nil,
 			true,
 		},
 		{
-			"osmosis_data",
+			"osmosispool_data",
 			args{
-				datatype: 2,
+				datatype: ProtocolDataTypeOsmosisPool,
 				data:     []byte(`{"poolid": 1, "poolname": "atom/osmo","zones": {"cosmoshub-4": "IBC/atom_denom", "osmosis-1": "IBC/osmo_denom"}}`),
 			},
 			OsmosisPoolProtocolData{
 				PoolID:   1,
 				PoolName: "atom/osmo",
 				Zones:    map[string]string{"cosmoshub-4": "IBC/atom_denom", "osmosis-1": "IBC/osmo_denom"},
+			},
+			false,
+		},
+		{
+			"osmosis_params_empty",
+			args{
+				datatype: ProtocolDataTypeOsmosisParams,
+				data:     []byte(`{}`),
+			},
+			nil,
+			true,
+		},
+		{
+			"osmosis_params",
+			args{
+				datatype: ProtocolDataTypeOsmosisParams,
+				data:     []byte(`{"ChainID": "test-01"}`),
+			},
+			OsmosisParamsProtocolData{
+				ChainID: "test-01",
 			},
 			false,
 		},

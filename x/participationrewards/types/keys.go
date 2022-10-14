@@ -2,9 +2,9 @@ package types
 
 import (
 	"encoding/binary"
-)
 
-type ProtocolDataType int32
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 const (
 	// ModuleName defines the module name
@@ -15,13 +15,6 @@ const (
 	QuerierRoute = StoreKey
 	// RouterKey is the message route for participationrewards
 	RouterKey = ModuleName
-
-	ProtocolDataConnection    ProtocolDataType = 0
-	ProtocolDataLiquidToken   ProtocolDataType = 1
-	ProtocolDataOsmosisPool   ProtocolDataType = 2
-	ProtocolDataCrescentPool  ProtocolDataType = 3
-	ProtocolDataSifchainPool  ProtocolDataType = 4
-	ProtocolDataOsmosisParams ProtocolDataType = 5
 )
 
 var (
@@ -29,24 +22,6 @@ var (
 	KeyPrefixClaim          = []byte{0x01}
 	KeyPrefixLastEpochClaim = []byte{0x02}
 )
-
-var ProtocolDataType_name = map[ProtocolDataType]string{ //nolint:revive,stylecheck // conform with protobuf3 enum
-	ProtocolDataConnection:    "connection",
-	ProtocolDataLiquidToken:   "liquidtoken",
-	ProtocolDataOsmosisPool:   "osmosispool",
-	ProtocolDataCrescentPool:  "crescentpool",
-	ProtocolDataSifchainPool:  "sifchainpool",
-	ProtocolDataOsmosisParams: "osmosisparams",
-}
-
-var ProtocolDataType_value = map[string]ProtocolDataType{ //nolint:revive,stylecheck // conform with protobuf3 enum
-	"connection":    ProtocolDataConnection,
-	"liquidtoken":   ProtocolDataLiquidToken,
-	"osmosispool":   ProtocolDataOsmosisPool,
-	"crescentpool":  ProtocolDataCrescentPool,
-	"sifchainpool":  ProtocolDataSifchainPool,
-	"osmosisparams": ProtocolDataOsmosisParams,
-}
 
 // ClaimKey returns the key for storing a given claim.
 func GetGenericKeyClaim(key []byte, chainID string, address string, module ClaimType, srcChainID string) []byte {
@@ -80,4 +55,12 @@ func GetPrefixLastEpochClaim(chainID string) []byte {
 
 func GetPrefixLastEpochUserClaim(chainID string, address string) []byte {
 	return append(append(KeyPrefixLastEpochClaim, []byte(chainID)...), []byte(address)...)
+}
+
+func GetProtocolDataKey(pdType ProtocolDataType, key string) []byte {
+	return append(sdk.Uint64ToBigEndian(uint64(pdType)), []byte(key)...)
+}
+
+func GetPrefixProtocolDataKey(pdType ProtocolDataType) []byte {
+	return sdk.Uint64ToBigEndian(uint64(pdType))
 }

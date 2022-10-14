@@ -97,10 +97,6 @@ func (kpd KeyedProtocolData) ValidateBasic() error {
 func (pd ProtocolData) ValidateBasic() error {
 	errors := make(map[string]error)
 
-	if len(pd.Protocol) == 0 {
-		errors["Protocol"] = ErrUndefinedAttribute
-	}
-
 	// type enumerator
 	var te ProtocolDataType
 	if len(pd.Type) == 0 {
@@ -110,7 +106,7 @@ func (pd ProtocolData) ValidateBasic() error {
 			errors["Type"] = fmt.Errorf("%w: %s", ErrUnknownProtocolDataType, pd.Type)
 		} else {
 			// capture enum value to validate protocol data according to type
-			te = tv
+			te = ProtocolDataType(tv)
 		}
 	}
 
@@ -133,23 +129,23 @@ func (pd ProtocolData) ValidateBasic() error {
 func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 	var pdi ProtocolDataI
 	switch pdt {
-	case ProtocolDataLiquidToken:
+	case ProtocolDataTypeLiquidToken:
 		pd := LiquidAllowedDenomProtocolData{}
 		err := json.Unmarshal(data, &pd)
 		if err != nil {
 			return err
 		}
 		pdi = &pd
-	case ProtocolDataOsmosisPool:
+	case ProtocolDataTypeOsmosisPool:
 		pd := OsmosisPoolProtocolData{}
 		err := json.Unmarshal(data, &pd)
 		if err != nil {
 			return err
 		}
 		pdi = &pd
-	case ProtocolDataCrescentPool:
+	case ProtocolDataTypeCrescentPool:
 		return ErrUnimplementedProtocolDataType
-	case ProtocolDataSifchainPool:
+	case ProtocolDataTypeSifchainPool:
 		return ErrUnimplementedProtocolDataType
 	default:
 		return ErrUnknownProtocolDataType
