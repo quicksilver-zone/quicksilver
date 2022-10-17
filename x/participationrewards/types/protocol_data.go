@@ -7,7 +7,6 @@ import (
 	"reflect"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/balancer"
 )
 
 func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (ProtocolDataI, error) {
@@ -53,35 +52,17 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 		}
 	case ProtocolDataTypeOsmosisPool:
 		{
-			ippd := osmosisPoolProtocolData{}
-			err := json.Unmarshal(data, &ippd)
+			oppd := OsmosisPoolProtocolData{}
+			err := json.Unmarshal(data, &oppd)
 			if err != nil {
 				return nil, fmt.Errorf("unable to unmarshal intermediary osmosisPoolProtocolData: %w", err)
 			}
-			var blank osmosisPoolProtocolData
-			if reflect.DeepEqual(ippd, blank) {
+			var blank OsmosisPoolProtocolData
+			if reflect.DeepEqual(oppd, blank) {
 				return nil, fmt.Errorf("unable to unmarshal osmosispool protocol data from empty JSON object")
 			}
 
-			var poolData *balancer.Pool
-			if len(ippd.PoolData) > 0 {
-				err = json.Unmarshal(ippd.PoolData, poolData)
-				if err != nil {
-					return nil, fmt.Errorf("unable to unmarshal concrete PoolData: %w", err)
-				}
-			}
-
-			ppd := OsmosisPoolProtocolData{
-				PoolID:      ippd.PoolID,
-				PoolName:    ippd.PoolName,
-				LastUpdated: ippd.LastUpdated,
-				Zones:       ippd.Zones,
-			}
-			if poolData != nil {
-				ppd.PoolData = poolData
-			}
-
-			return ppd, nil
+			return oppd, nil
 		}
 	default:
 		return nil, ErrUnknownProtocolDataType

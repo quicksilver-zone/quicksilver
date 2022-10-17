@@ -40,15 +40,19 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 		return sdk.ZeroInt(), fmt.Errorf("invalid zone, pool zone must match %s", chainID)
 	}
 
+	poolData, err := pool.GetPool()
+	if err != nil {
+		return sdk.ZeroInt(), err
+	}
 	// calculate user gamm ratio and LP asset amount
 	ugamm := lockedResponse.Lock.Coins.AmountOf(gammdenom) // user's gamm amount
-	pgamm := pool.PoolData.GetTotalShares()                // total pool gamm amount
+	pgamm := poolData.GetTotalShares()                     // total pool gamm amount
 	if pgamm.IsZero() {
 		return sdk.ZeroInt(), fmt.Errorf("empty pool, %s", poolID)
 	}
 	uratio := sdk.NewDecFromInt(ugamm).QuoInt(pgamm)
 
-	zasset := pool.PoolData.GetTotalPoolLiquidity(ctx).AmountOf(poolDenom) // pool zone asset amount
+	zasset := poolData.GetTotalPoolLiquidity(ctx).AmountOf(poolDenom) // pool zone asset amount
 	uAmount := uratio.MulInt(zasset).TruncateInt()
 
 	return uAmount, nil

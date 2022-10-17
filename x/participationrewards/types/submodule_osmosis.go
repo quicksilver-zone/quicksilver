@@ -5,25 +5,53 @@ import (
 	"fmt"
 	"time"
 
-	osmosisgammtypes "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
+	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/balancer"
+	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/stableswap"
 )
 
 type OsmosisPoolProtocolData struct {
 	PoolID      uint64
 	PoolName    string
 	LastUpdated time.Time
-	PoolData    osmosisgammtypes.PoolI
+	PoolData    json.RawMessage
+	PoolType    string
 	Zones       map[string]string // chainID: IBC/denom
 }
 
-type osmosisPoolProtocolData struct {
-	PoolID      uint64
-	PoolName    string
-	LastUpdated time.Time
-	PoolData    json.RawMessage
-	Zones       map[string]string // chainID: IBC/denom
+func (p *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
+	switch p.PoolType {
+	case "balancer":
+		var poolData balancer.Pool
+		if len(p.PoolData) > 0 {
+			err := json.Unmarshal(p.PoolData, &poolData)
+			if err != nil {
+				return nil, fmt.Errorf("1: unable to unmarshal concrete PoolData: %w", err)
+			}
+		}
+		return &poolData, nil
+
+	case "stableswap":
+		var poolData stableswap.Pool
+		if len(p.PoolData) > 0 {
+			err := json.Unmarshal(p.PoolData, &poolData)
+			if err != nil {
+				return nil, fmt.Errorf("2: unable to unmarshal concrete PoolData: %w", err)
+			}
+		}
+		return &poolData, nil
+	default:
+		var poolData balancer.Pool
+		if len(p.PoolData) > 0 {
+			fmt.Println(p.PoolData)
+			err := json.Unmarshal(p.PoolData, &poolData)
+			if err != nil {
+				return nil, fmt.Errorf("3: unable to unmarshal concrete PoolData: %w", err)
+			}
+		}
+		return &poolData, nil
+	}
 }
 
 // ValidateBasic satisfies ProtocolDataI and validates basic stateless data.
@@ -37,6 +65,10 @@ func (opd OsmosisPoolProtocolData) ValidateBasic() error {
 
 	if len(opd.PoolName) == 0 {
 		errors["PoolName"] = ErrUndefinedAttribute
+	}
+
+	if len(opd.PoolType) == 0 {
+		errors["PoolType"] = ErrUndefinedAttribute
 	}
 
 	i := 0

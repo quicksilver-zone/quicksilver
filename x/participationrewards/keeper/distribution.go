@@ -115,7 +115,12 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 				errors[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
 				return true
 			}
-			value, err := pool.PoolData.SpotPrice(ctx, baseIBCDenom, queryIBCDenom)
+			pool, err := pool.GetPool()
+			if err != nil {
+				errors[idxLabel] = err
+				return true
+			}
+			value, err := pool.SpotPrice(ctx, baseIBCDenom, queryIBCDenom)
 			if err != nil {
 				errors[idxLabel] = err
 				return true
