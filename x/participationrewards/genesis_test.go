@@ -58,6 +58,7 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	validOsmosisData := `{
 	"poolid": 1,
 	"poolname": "atom/osmo",
+	"pooltype": "balancer",
 	"zones": {
 		"zone_id": "IBC/zone_denom"
 	}

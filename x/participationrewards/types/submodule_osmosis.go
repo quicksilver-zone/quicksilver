@@ -20,12 +20,12 @@ type OsmosisPoolProtocolData struct {
 	Zones       map[string]string // chainID: IBC/denom
 }
 
-func (p *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
-	switch p.PoolType {
+func (opd *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
+	switch opd.PoolType {
 	case "balancer":
 		var poolData balancer.Pool
-		if len(p.PoolData) > 0 {
-			err := json.Unmarshal(p.PoolData, &poolData)
+		if len(opd.PoolData) > 0 {
+			err := json.Unmarshal(opd.PoolData, &poolData)
 			if err != nil {
 				return nil, fmt.Errorf("1: unable to unmarshal concrete PoolData: %w", err)
 			}
@@ -34,18 +34,21 @@ func (p *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
 
 	case "stableswap":
 		var poolData stableswap.Pool
-		if len(p.PoolData) > 0 {
-			err := json.Unmarshal(p.PoolData, &poolData)
+		if len(opd.PoolData) > 0 {
+			err := json.Unmarshal(opd.PoolData, &poolData)
 			if err != nil {
 				return nil, fmt.Errorf("2: unable to unmarshal concrete PoolData: %w", err)
 			}
 		}
 		return &poolData, nil
 	default:
+		// this looks like an upgrade case fallback handler?
+		// should probably be changed to a proper error case for unknown type
+		// at some future point...
 		var poolData balancer.Pool
-		if len(p.PoolData) > 0 {
-			fmt.Println(p.PoolData)
-			err := json.Unmarshal(p.PoolData, &poolData)
+		if len(opd.PoolData) > 0 {
+			fmt.Println(opd.PoolData)
+			err := json.Unmarshal(opd.PoolData, &poolData)
 			if err != nil {
 				return nil, fmt.Errorf("3: unable to unmarshal concrete PoolData: %w", err)
 			}

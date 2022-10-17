@@ -19,6 +19,7 @@ func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 		ConnectionID string
 		ChainID      string
 		LastEpoch    int64
+		Prefix       string
 	}
 	tests := []struct {
 		name    string
@@ -36,6 +37,7 @@ func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 				ConnectionID: "connection-0",
 				ChainID:      "testchain-1",
 				LastEpoch:    30000,
+				Prefix:       "cosmos",
 			},
 			false,
 		},
@@ -46,6 +48,7 @@ func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 				ConnectionID: tt.fields.ConnectionID,
 				ChainID:      tt.fields.ChainID,
 				LastEpoch:    tt.fields.LastEpoch,
+				Prefix:       tt.fields.Prefix,
 			}
 			err := cpd.ValidateBasic()
 			if tt.wantErr {

@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 		{
 			"valid_prop",
 			func() {
-				connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)
+				connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d, \"prefix\": \"cosmos\"}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)
 
 				prop = types.AddProtocolDataProposal{
 					Title:       "Add connection protocol for test chain B",

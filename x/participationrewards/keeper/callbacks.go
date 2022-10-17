@@ -127,6 +127,9 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 		return fmt.Errorf("unable to unmarshal protocol data for osmosispools/%d", poolID)
 	}
 	pool.PoolData, err = json.Marshal(pd)
+	if err != nil {
+		return err
+	}
 	pool.LastUpdated = ctx.BlockTime()
 	data.Data, err = json.Marshal(pool)
 	if err != nil {
