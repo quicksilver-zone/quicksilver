@@ -3,9 +3,10 @@ package types
 import "github.com/ingenuity-build/quicksilver/internal/multierror"
 
 type LiquidAllowedDenomProtocolData struct {
-	ChainID    string
-	Denom      string
-	LocalDenom string
+	ChainID       string
+	OriginChainID string
+	Denom         string
+	LocalDenom    string
 }
 
 func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
@@ -13,6 +14,10 @@ func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
 
 	if len(lpd.ChainID) == 0 {
 		errors["ChainID"] = ErrUndefinedAttribute
+	}
+
+	if len(lpd.OriginChainID) == 0 {
+		errors["OriginChainID"] = ErrUndefinedAttribute
 	}
 
 	if len(lpd.Denom) == 0 {
