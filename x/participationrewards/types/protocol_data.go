@@ -77,6 +77,7 @@ type ConnectionProtocolData struct {
 	ConnectionID string
 	ChainID      string
 	LastEpoch    int64
+	Prefix       string
 }
 
 // ValidateBasic satisfies ProtocolDataI and validates basic stateless data.
@@ -89,6 +90,10 @@ func (cpd ConnectionProtocolData) ValidateBasic() error {
 
 	if len(cpd.ChainID) == 0 {
 		errors["ChainID"] = ErrUndefinedAttribute
+	}
+
+	if len(cpd.Prefix) == 0 {
+		errors["Prefix"] = ErrUndefinedAttribute
 	}
 
 	if len(errors) > 0 {
