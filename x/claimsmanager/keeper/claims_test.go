@@ -53,52 +53,6 @@ var (
 	}
 )
 
-var (
-	testAddress = utils.GenerateAccAddressForTest().String()
-	setClaims   = []types.Claim{
-		// test user claim on chainB (using osmosis pool)
-		{
-			UserAddress: testAddress,
-			// ChainId:       suite.chainB.ChainID,
-			Module:        types.ClaimTypeOsmosisPool,
-			SourceChainId: "osmosis-1",
-			Amount:        5000000,
-		},
-		// test user claim on chainB (liquid)
-		{
-			UserAddress: testAddress,
-			// ChainId:       suite.chainB.ChainID,
-			Module:        types.ClaimTypeLiquidToken,
-			SourceChainId: "",
-			Amount:        5000000,
-		},
-		// random user claim on chainB (using osmosis pool)
-		{
-			UserAddress: utils.GenerateAccAddressForTest().String(),
-			// ChainId:       suite.chainB.ChainID,
-			Module:        types.ClaimTypeOsmosisPool,
-			SourceChainId: "osmosis-1",
-			Amount:        15000000,
-		},
-		// test user claim on "cosmoshub-4" (liquid)
-		{
-			UserAddress:   testAddress,
-			ChainId:       "cosmoshub-4",
-			Module:        types.ClaimTypeLiquidToken,
-			SourceChainId: "",
-			Amount:        10000000,
-		},
-		// random user claim on "cosmoshub-4" (liquid)
-		{
-			UserAddress:   utils.GenerateAccAddressForTest().String(),
-			ChainId:       "cosmoshub-4",
-			Module:        types.ClaimTypeLiquidToken,
-			SourceChainId: "",
-			Amount:        15000000,
-		},
-	}
-)
-
 func (suite *KeeperTestSuite) TestKeeper_NewClaim() {
 	type args struct {
 		address    string
@@ -243,11 +197,7 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 }
 
 func (suite *KeeperTestSuite) TestKeeper_IterateLastEpochUserClaims() {
-<<<<<<< HEAD:x/claimsmanager/keeper/claims_test.go
 	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
-=======
-	k := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
->>>>>>> c5e05db (testing: updates & fixes):x/participationrewards/keeper/claims_test.go
 
 	setClaims[0].ChainId = suite.chainB.ChainID
 	setClaims[1].ChainId = suite.chainB.ChainID
