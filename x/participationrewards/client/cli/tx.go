@@ -50,6 +50,11 @@ func GetSubmitClaimTxCmd() *cobra.Command {
 			claimTypeStr := args[2]
 			fileName := args[3]
 
+			claimType, ok := types.ClaimType_value[claimTypeStr]
+			if !ok {
+				return fmt.Errorf("invalid claim type: %s", claimTypeStr)
+			}
+
 			contents, err := os.ReadFile(fileName)
 			if err != nil {
 				return err
@@ -59,11 +64,6 @@ func GetSubmitClaimTxCmd() *cobra.Command {
 
 			if err = json.Unmarshal(contents, &proofs); err != nil {
 				return err
-			}
-
-			claimType, ok := types.ClaimType_value[claimTypeStr]
-			if !ok {
-				return fmt.Errorf("invalid claim type: %s", claimTypeStr)
 			}
 
 			msg := types.NewMsgSubmitClaim(clientCtx.GetFromAddress(), zone, srcZone, types.ClaimType(claimType), proofs)
