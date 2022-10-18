@@ -171,6 +171,9 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 
 	// ordinalize
 	balance := k.BankKeeper.GetBalance(ctx, sender, zone.BaseDenom)
+	if balance.Amount.IsNil() {
+		balance.Amount = math.NewInt(0)
+	}
 
 	// grab offchain asset value, and raise the users' base value by this amount.
 	k.ParticipationRewardsKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, sender.String(), func(index int64, data prtypes.Claim) (stop bool) {
