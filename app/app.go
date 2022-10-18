@@ -524,6 +524,8 @@ func NewQuicksilver(
 
 	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
 
+	app.InterchainstakingKeeper = app.InterchainstakingKeeper.SetParticipationRewardsKeeper(app.ParticipationRewardsKeeper)
+
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	wasmDir := filepath.Join(homePath, "data")
 
