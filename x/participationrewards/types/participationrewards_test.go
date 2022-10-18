@@ -167,6 +167,7 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 }`
 	validLiquidData := `{
 	"chainid": "somechain",
+	"originchainid": "someotherchain",
 	"localdenom": "lstake",
 	"denom": "qstake"
 }`

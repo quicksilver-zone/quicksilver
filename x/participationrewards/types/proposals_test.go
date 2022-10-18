@@ -11,6 +11,7 @@ import (
 
 var validLiquidData string = `{
 	"chainid": "somechain",
+	"originchainid": "someotherchain",
 	"localdenom": "lstake",
 	"denom": "qstake"
 }`
@@ -140,6 +141,7 @@ Description:	A valid protocol that is valid
 Type:			liquidtoken
 Data:			{
 	"chainid": "somechain",
+	"originchainid": "someotherchain",
 	"localdenom": "lstake",
 	"denom": "qstake"
 }
