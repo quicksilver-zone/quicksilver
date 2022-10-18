@@ -175,8 +175,14 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 		balance.Amount = math.NewInt(0)
 	}
 
+	k.Logger(ctx).Error("DEBUG", "zone", zone.ChainId)
+	k.Logger(ctx).Error("DEBUG", "sender", sender.String())
+	k.Logger(ctx).Error("DEBUG", "balance", balance)
+	k.Logger(ctx).Error("DEBUG", "prkeeper", k.ParticipationRewardsKeeper)
+
 	// grab offchain asset value, and raise the users' base value by this amount.
 	k.ParticipationRewardsKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, sender.String(), func(index int64, data prtypes.Claim) (stop bool) {
+		k.Logger(ctx).Error("DEBUG", "claim", data)
 		balance.Amount = balance.Amount.Add(math.NewIntFromUint64(data.Amount))
 		return false
 	})

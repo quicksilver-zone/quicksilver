@@ -74,11 +74,12 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 	}
 }
 
-func (k *Keeper) SetParticipationRewardsKeeper(prk types.ParticipationRewardsKeeper) {
+func (k Keeper) SetParticipationRewardsKeeper(prk types.ParticipationRewardsKeeper) Keeper {
 	if k.ParticipationRewardsKeeper != nil {
 		panic("Participation Rewards Keeper is already set")
 	}
 	k.ParticipationRewardsKeeper = prk
+	return k
 }
 
 // Logger returns a module-specific logger.

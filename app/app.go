@@ -481,7 +481,6 @@ func NewQuicksilver(
 	}
 
 	participationrewardsModule := participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper)
-	app.InterchainstakingKeeper.SetParticipationRewardsKeeper(app.ParticipationRewardsKeeper)
 
 	if err := app.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, app.ParticipationRewardsKeeper.CallbackHandler()); err != nil {
 		panic(err)
@@ -507,6 +506,8 @@ func NewQuicksilver(
 	)
 
 	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
+
+	app.InterchainstakingKeeper = app.InterchainstakingKeeper.SetParticipationRewardsKeeper(app.ParticipationRewardsKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	wasmDir := filepath.Join(homePath, "data")
