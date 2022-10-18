@@ -116,6 +116,10 @@ import (
 
 	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
 
+	"github.com/ingenuity-build/quicksilver/x/claimsmanager"
+	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
+	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+
 	"github.com/ingenuity-build/quicksilver/x/epochs"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
@@ -190,6 +194,7 @@ var (
 		transfer.AppModuleBasic{},
 		ica.AppModuleBasic{},
 		vesting.AppModuleBasic{},
+		claimsmanager.AppModuleBasic{},
 		epochs.AppModuleBasic{},
 		interchainstaking.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
@@ -210,6 +215,7 @@ var (
 		govtypes.ModuleName:               {authtypes.Burner},
 		ibctransfertypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:               nil,
+		claimsmanagertypes.ModuleName:     nil,
 		interchainstakingtypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 		interchainquerytypes.ModuleName:   nil,
 		// TODO: Remove Burner from participationrewards - for dev/test only;
@@ -269,6 +275,7 @@ type Quicksilver struct {
 
 	// Quicksilver keepers
 	EpochsKeeper               epochskeeper.Keeper
+	ClaimsManagerKeeper        claimsmanagerkeeper.Keeper
 	InterchainstakingKeeper    interchainstakingkeeper.Keeper
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
 	ParticipationRewardsKeeper participationrewardskeeper.Keeper
@@ -339,6 +346,7 @@ func NewQuicksilver(
 		icacontrollertypes.StoreKey,
 		icahosttypes.StoreKey,
 		// quicksilver keys
+		claimsmanagertypes.StoreKey,
 		epochstypes.StoreKey,
 		interchainstakingtypes.StoreKey,
 		interchainquerytypes.StoreKey,
@@ -445,6 +453,14 @@ func NewQuicksilver(
 		app.AccountKeeper, scopedICAHostKeeper, app.MsgServiceRouter(),
 	)
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
+
+	app.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
+		appCodec,
+		keys[claimsmanagertypes.StoreKey],
+		app.GetSubspace(claimsmanagertypes.ModuleName),
+		app.AccountKeeper,
+	)
+	claimsmanagerModule := claimsmanager.NewAppModule(appCodec, app.ClaimsManagerKeeper)
 
 	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
 	interchainQueryModule := interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper)
@@ -636,6 +652,7 @@ func NewQuicksilver(
 		transferModule,
 		icaModule,
 		// Quicksilver app modules
+		claimsmanagerModule,
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		interchainstakingModule,
 		interchainQueryModule,
@@ -667,6 +684,7 @@ func NewQuicksilver(
 		// no-op modules
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		claimsmanagertypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
 		authtypes.ModuleName,
@@ -707,6 +725,7 @@ func NewQuicksilver(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
+		claimsmanagertypes.ModuleName,
 		interchainstakingtypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
@@ -742,6 +761,7 @@ func NewQuicksilver(
 		icatypes.ModuleName,
 		// Quicksilver modules
 		epochstypes.ModuleName,
+		claimsmanagertypes.ModuleName,
 		interchainstakingtypes.ModuleName,
 		interchainquerytypes.ModuleName,
 		participationrewardstypes.ModuleName,
@@ -1081,6 +1101,7 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	// quicksilver subspaces
+	paramsKeeper.Subspace(claimsmanagertypes.ModuleName)
 	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
