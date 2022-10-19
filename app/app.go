@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/gorilla/mux"
@@ -776,24 +775,8 @@ func NewQuicksilver(
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	// handle upgrades here
+	setUpgradeHandlers(app)
 
-	app.UpgradeKeeper.SetUpgradeHandler("v0.9.6", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		app.UpgradeKeeper.Logger(ctx).Info("Fixing epoch duration")
-		dayEpoch := app.EpochsKeeper.GetEpochInfo(ctx, "day")
-		dayEpoch.Duration = time.Hour * 2
-		app.EpochsKeeper.SetEpochInfo(ctx, dayEpoch)
-
-		weekEpoch := app.EpochsKeeper.GetEpochInfo(ctx, "week")
-		weekEpoch.Duration = time.Hour * 6
-		weekEpoch.Identifier = "epoch"
-		app.EpochsKeeper.SetEpochInfo(ctx, weekEpoch)
-
-		app.EpochsKeeper.DeleteEpochInfo(ctx, "week")
-
-		app.UpgradeKeeper.Logger(ctx).Info("Done")
-
-		return app.mm.RunMigrations(ctx, app.configurator, vm)
-	})
 	app.mm.RegisterServices(app.configurator)
 
 	// // add test gRPC service for testing gRPC queries in isolation
@@ -851,8 +834,6 @@ func NewQuicksilver(
 
 	app.SetAnteHandler(NewAnteHandler(options))
 	app.SetEndBlocker(app.EndBlocker)
-
-	setUpgradeHandlers(app)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
