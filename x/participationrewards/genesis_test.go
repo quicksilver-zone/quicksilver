@@ -12,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -72,9 +71,6 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 		},
 	}
 
-	userAddress := utils.GenerateAccAddressForTest()
-	claim := &types.Claim{UserAddress: userAddress.String(), ChainId: "cosmoshub-4", Amount: 100, Module: types.ClaimTypeLiquidToken, SourceChainId: "osmosis-1"}
-
 	// test genesisState validation
 	genesisState := types.GenesisState{
 		Params: types.Params{
@@ -84,7 +80,6 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 				LockupAllocation:             sdk.ZeroDec(),
 			},
 		},
-		Claims:       []*types.Claim{claim},
 		ProtocolData: []*types.KeyedProtocolData{kpd},
 	}
 	require.NoError(t, genesisState.Validate(), "genesis validation failed")
@@ -99,7 +94,4 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)], pd.Type)
 
-	clm, found := app.ParticipationRewardsKeeper.GetClaim(ctx, "cosmoshub-4", userAddress.String(), types.ClaimTypeLiquidToken, "osmosis-1")
-	require.True(t, found)
-	require.Equal(t, uint64(100), clm.Amount)
 }

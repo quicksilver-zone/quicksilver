@@ -7,8 +7,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	prtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func (k Keeper) getStoreKey(zone types.Zone, snapshot bool) []byte {
@@ -124,7 +124,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 
 		// grab offchain asset value, and raise the users' base value by this amount.
-		k.ParticipationRewardsKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, intent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
+		k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, intent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
 			balance.Amount = balance.Amount.Add(math.NewIntFromUint64(data.Amount))
 			return false
 		})
@@ -178,10 +178,10 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 	k.Logger(ctx).Error("DEBUG", "zone", zone.ChainId)
 	k.Logger(ctx).Error("DEBUG", "sender", sender.String())
 	k.Logger(ctx).Error("DEBUG", "balance", balance)
-	k.Logger(ctx).Error("DEBUG", "prkeeper", k.ParticipationRewardsKeeper)
+	k.Logger(ctx).Error("DEBUG", "prkeeper", k.ClaimsManagerKeeper)
 
 	// grab offchain asset value, and raise the users' base value by this amount.
-	k.ParticipationRewardsKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, sender.String(), func(index int64, data prtypes.Claim) (stop bool) {
+	k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, sender.String(), func(index int64, data prtypes.Claim) (stop bool) {
 		k.Logger(ctx).Error("DEBUG", "claim", data)
 		balance.Amount = balance.Amount.Add(math.NewIntFromUint64(data.Amount))
 		return false

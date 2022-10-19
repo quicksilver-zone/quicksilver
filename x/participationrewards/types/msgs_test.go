@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/utils"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
@@ -18,7 +19,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 		UserAddress string
 		Zone        string
 		SrcZone     string
-		ClaimType   ClaimType
+		ClaimType   cmtypes.ClaimType
 		Proofs      []*Proof
 	}
 	tests := []struct {
@@ -68,7 +69,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 				UserAddress: userAddress,
 				Zone:        "test-01",
 				SrcZone:     "test-02",
-				ClaimType:   ClaimTypeOsmosisPool,
+				ClaimType:   cmtypes.ClaimTypeOsmosisPool,
 				Proofs: []*Proof{
 					{
 						Key:       []byte{1, 2, 3, 4, 5},
@@ -109,7 +110,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 	type fields struct {
 		UserAddress string
 		Zone        string
-		ClaimType   ClaimType
+		ClaimType   cmtypes.ClaimType
 		Proofs      []*Proof
 	}
 	tests := []struct {
@@ -152,7 +153,7 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 		userAddress sdk.Address
 		srcZone     string
 		zone        string
-		claimType   ClaimType
+		claimType   cmtypes.ClaimType
 		proofs      []*Proof
 	}
 	tests := []struct {
@@ -166,7 +167,7 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 				userAddress,
 				"osmosis-1",
 				"juno",
-				ClaimTypeOsmosisPool,
+				cmtypes.ClaimTypeOsmosisPool,
 				[]*Proof{
 					{
 						Key:       []byte{1, 2, 3, 4, 5},
@@ -181,7 +182,7 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 				userAddress.String(),
 				"juno",
 				"osmosis-1",
-				ClaimTypeOsmosisPool,
+				cmtypes.ClaimTypeOsmosisPool,
 				[]*Proof{
 					{
 						Key:       []byte{1, 2, 3, 4, 5},

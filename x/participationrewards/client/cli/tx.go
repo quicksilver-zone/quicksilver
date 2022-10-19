@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -61,12 +62,12 @@ func GetSubmitClaimTxCmd() *cobra.Command {
 				return err
 			}
 
-			claimType, ok := types.ClaimType_value[claimTypeStr]
+			claimType, ok := cmtypes.ClaimType_value[claimTypeStr]
 			if !ok {
 				return fmt.Errorf("invalid claim type: %s", claimTypeStr)
 			}
 
-			msg := types.NewMsgSubmitClaim(clientCtx.GetFromAddress(), zone, srcZone, types.ClaimType(claimType), proofs)
+			msg := types.NewMsgSubmitClaim(clientCtx.GetFromAddress(), zone, srcZone, cmtypes.ClaimType(claimType), proofs)
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

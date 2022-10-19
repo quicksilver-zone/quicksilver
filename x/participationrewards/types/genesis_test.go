@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,7 +17,6 @@ func TestGenesisState(t *testing.T) {
 				LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
 			},
 		},
-		nil,
 		nil,
 	}
 	defaultGenesisState := DefaultGenesisState()
@@ -42,7 +40,6 @@ func TestGenesisState(t *testing.T) {
 			},
 		},
 		nil,
-		nil,
 	}
 	require.Equal(t, *newGenesisState, testGenesisState)
 }
@@ -50,7 +47,6 @@ func TestGenesisState(t *testing.T) {
 func TestGenesisState_Validate(t *testing.T) {
 	type fields struct {
 		Params       Params
-		Claims       []*Claim
 		ProtocolData []*KeyedProtocolData
 	}
 	tests := []struct {
@@ -64,40 +60,9 @@ func TestGenesisState_Validate(t *testing.T) {
 			true,
 		},
 		{
-			"invalid_claim",
-			fields{
-				Params: DefaultParams(),
-				Claims: []*Claim{
-					{
-						UserAddress: utils.GenerateAccAddressForTest().String(),
-						ChainId:     "testzone-1",
-						Amount:      0,
-					},
-				},
-				ProtocolData: nil,
-			},
-			true,
-		},
-		{
-			"valid_claim",
-			fields{
-				Params: DefaultParams(),
-				Claims: []*Claim{
-					{
-						UserAddress: utils.GenerateAccAddressForTest().String(),
-						ChainId:     "testzone-1",
-						Amount:      1000000,
-					},
-				},
-				ProtocolData: nil,
-			},
-			false,
-		},
-		{
 			"invalid_protocolData",
 			fields{
 				Params: DefaultParams(),
-				Claims: nil,
 				ProtocolData: []*KeyedProtocolData{
 					{
 						"liquid",
@@ -114,7 +79,6 @@ func TestGenesisState_Validate(t *testing.T) {
 			"valid_protocolData",
 			fields{
 				Params: DefaultParams(),
-				Claims: nil,
 				ProtocolData: []*KeyedProtocolData{
 					{
 						"liquid",
@@ -127,27 +91,11 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			false,
 		},
-		{
-			"valid_claim",
-			fields{
-				Params: DefaultParams(),
-				Claims: []*Claim{
-					{
-						UserAddress: utils.GenerateAccAddressForTest().String(),
-						ChainId:     "testzone-1",
-						Amount:      1000000,
-					},
-				},
-				ProtocolData: nil,
-			},
-			false,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gs := GenesisState{
 				Params:       tt.fields.Params,
-				Claims:       tt.fields.Claims,
 				ProtocolData: tt.fields.ProtocolData,
 			}
 

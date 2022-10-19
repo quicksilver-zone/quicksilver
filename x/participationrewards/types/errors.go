@@ -1,8 +1,6 @@
 package types
 
 import (
-	fmt "fmt"
-
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -15,6 +13,5 @@ var (
 	ErrNotPositive                   = sdkerrors.Register(ModuleName, 5, "expected attribute must be positive")
 	ErrUnknownProtocolDataType       = sdkerrors.Register(ModuleName, 6, "unknown protocol data type")
 	ErrUnimplementedProtocolDataType = sdkerrors.Register(ModuleName, 7, "protocol data type not implemented")
-	ErrClaimTypeOutOfBounds          = sdkerrors.Register(ModuleName, 8, fmt.Sprintf("invalid claim type, expects range [1-%d]", len(ClaimType_value)-1))
 	ErrNothingToAllocate             = sdkerrors.Register(ModuleName, 9, "balance is zero, nothing to allocate")
 )

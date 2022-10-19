@@ -6,6 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
 import "tendermint/crypto/proof.proto";
 import "quicksilver/participationrewards/v1/participationrewards.proto";
+import "quicksilver/claimsmanager/v1/claimsmanager.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
 
@@ -28,7 +29,7 @@ message MsgSubmitClaim {
   string user_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string zone = 2;
   string src_zone = 3;
-  ClaimType claim_type = 4;
+  quicksilver.claimsmanager.v1.ClaimType claim_type = 4;
   repeated Proof proofs = 5
     [ (gogoproto.moretags) = "yaml:\"proofs\"" ];
 }

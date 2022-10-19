@@ -6,17 +6,6 @@ import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
 
-enum ClaimType {
-  option (gogoproto.goproto_enum_prefix) = false;
-
-  // Undefined action (per protobuf spec)
-  ClaimTypeUndefined = 0;
-  ClaimTypeLiquidToken = 1;
-	ClaimTypeOsmosisPool = 2;
-	ClaimTypeCrescentPool = 3;
-	ClaimTypeSifchainPool = 4;
-}
-
 // DistributionProportions defines the proportions of minted QCK that is to be
 // allocated as participation rewards.
 message DistributionProportions {
@@ -48,17 +37,6 @@ message Params {
   // participation rewards;
   DistributionProportions distribution_proportions = 1
       [ (gogoproto.nullable) = false ];
-}
-
-// Claim define the users claim for holdings rewards for the last epoch.
-message Claim {
-  option (gogoproto.goproto_getters) = false;
-  
-  string user_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  string chain_id = 2;
-  ClaimType module = 3;
-  string source_chain_id = 4;
-  uint64 amount = 5;
 }
 
 message KeyedProtocolData {

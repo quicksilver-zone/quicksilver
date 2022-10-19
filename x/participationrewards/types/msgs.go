@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
@@ -15,7 +16,7 @@ func NewMsgSubmitClaim(
 	userAddress sdk.Address,
 	srcZone string,
 	zone string,
-	claimType ClaimType,
+	claimType cmtypes.ClaimType,
 	proofs []*Proof,
 ) *MsgSubmitClaim {
 	return &MsgSubmitClaim{
@@ -49,8 +50,8 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 	}
 
 	ct := int(msg.ClaimType)
-	if ct < 1 || ct >= len(ClaimType_value) {
-		errors["Action"] = fmt.Errorf("%w, got %d", ErrClaimTypeOutOfBounds, msg.ClaimType)
+	if ct < 1 || ct >= len(cmtypes.ClaimType_value) {
+		errors["Action"] = fmt.Errorf("%w, got %d", cmtypes.ErrClaimTypeOutOfBounds, msg.ClaimType)
 	}
 
 	if len(msg.Proofs) == 0 {

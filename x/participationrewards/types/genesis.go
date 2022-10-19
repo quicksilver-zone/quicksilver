@@ -26,13 +26,6 @@ func (gs GenesisState) Validate() error {
 		errors["Params"] = err
 	}
 
-	for i, claim := range gs.Claims {
-		if err := claim.ValidateBasic(); err != nil {
-			el := fmt.Sprintf("Claim[%d]", i)
-			errors[el] = err
-		}
-	}
-
 	for i, kpd := range gs.ProtocolData {
 		if err := kpd.ValidateBasic(); err != nil {
 			el := fmt.Sprintf("ProtocolData[%d]", i)

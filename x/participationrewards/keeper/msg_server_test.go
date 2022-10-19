@@ -5,6 +5,7 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -31,7 +32,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: utils.GenerateAccAddressForTest().String(),
 					Zone:        suite.chainB.ChainID,
-					ClaimType:   types.ClaimTypeOsmosisPool,
+					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
 					Proofs: []*types.Proof{
 						{
 							Key:       []byte{1, 2, 3, 4, 5},
@@ -52,7 +53,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: utils.GenerateAccAddressForTest().String(),
 					Zone:        suite.chainB.ChainID,
-					ClaimType:   types.ClaimTypeOsmosisPool,
+					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
 					Proofs: []*types.Proof{
 						{
 							Key:       []byte{1, 2, 3, 4, 5},

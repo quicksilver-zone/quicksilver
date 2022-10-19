@@ -27,7 +27,7 @@ func (k Keeper) allocateHoldingsRewards(ctx sdk.Context) error {
 			return err
 		}
 
-		k.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
+		k.icsKeeper.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
 	}
 
 	return nil
@@ -44,7 +44,7 @@ func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone)
 	}
 
 	// get zone claims
-	claims := k.AllZoneClaims(ctx, zone.ChainId)
+	claims := k.icsKeeper.ClaimsManagerKeeper.AllZoneClaims(ctx, zone.ChainId)
 
 	// calculate user totals and zone total (held assets)
 	zoneAmount := sdk.ZeroInt()
