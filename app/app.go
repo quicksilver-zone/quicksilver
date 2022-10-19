@@ -852,10 +852,7 @@ func NewQuicksilver(
 	app.SetAnteHandler(NewAnteHandler(options))
 	app.SetEndBlocker(app.EndBlocker)
 
-	app.UpgradeKeeper.SetUpgradeHandler(
-		"v0.6.6",
-		Getv0_6_6Upgrade(app),
-	)
+	setUpgradeHandlers(app)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
