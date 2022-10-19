@@ -47,10 +47,10 @@ func (k Keeper) allocateValidatorSelectionRewards(ctx sdk.Context) {
 	k.Logger(ctx).Info("allocateValidatorChoiceRewards")
 
 	for i, zone := range k.icsKeeper.AllZones(ctx) {
-		k.Logger(ctx).Info("zones", "i", i, "zone", zone.ChainId, "performance address", zone.PerformanceAddress.GetAddress())
+		k.Logger(ctx).Info("zones", "i", i, "zone", zone.ChainId, "performance address", zone.PerformanceAddress.Address)
 
 		// obtain zone performance account rewards
-		rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.PerformanceAddress.GetAddress()}
+		rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.PerformanceAddress.Address}
 		bz := k.cdc.MustMarshal(&rewardsQuery)
 
 		k.IcqKeeper.MakeRequest(

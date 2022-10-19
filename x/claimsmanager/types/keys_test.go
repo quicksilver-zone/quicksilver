@@ -13,9 +13,9 @@ func TestKeys(t *testing.T) {
 	prefixClaim := GetPrefixClaim("testzone-1")
 	prefixClaimForUser := GetPrefixUserClaim("testzone-1", address.String())
 
-	require.Equal(t, append([]byte{0x01}, []byte("testzone-1")...), prefixClaim)
-	require.Equal(t, append([]byte{0x01}, []byte("testzone-1"+address.String())...), prefixClaimForUser)
-	require.Equal(t, append([]byte{0x01}, append(append([]byte("testzone-1"+address.String()), []byte{0x00, 0x00, 0x00, 0x02}...), []byte("testzone-2")...)...), keyClaim)
+	require.Equal(t, append([]byte{0x00}, []byte("testzone-1")...), prefixClaim)
+	require.Equal(t, append([]byte{0x00}, []byte("testzone-1"+address.String())...), prefixClaimForUser)
+	require.Equal(t, append([]byte{0x00}, append(append([]byte("testzone-1"+address.String()), []byte{0x00, 0x00, 0x00, 0x02}...), []byte("testzone-2")...)...), keyClaim)
 }
 
 func TestLastEpochKeys(t *testing.T) {
@@ -24,7 +24,7 @@ func TestLastEpochKeys(t *testing.T) {
 	prefixClaim := GetPrefixLastEpochClaim("testzone-1")
 	prefixClaimForUser := GetPrefixLastEpochUserClaim("testzone-1", address.String())
 
-	require.Equal(t, append([]byte{0x02}, []byte("testzone-1")...), prefixClaim)
-	require.Equal(t, append([]byte{0x02}, []byte("testzone-1"+address.String())...), prefixClaimForUser)
-	require.Equal(t, append([]byte{0x02}, append(append([]byte("testzone-1"+address.String()), []byte{0x00, 0x00, 0x00, 0x02}...), []byte("testzone-2")...)...), keyClaim)
+	require.Equal(t, append([]byte{0x01}, []byte("testzone-1")...), prefixClaim)
+	require.Equal(t, append([]byte{0x01}, []byte("testzone-1"+address.String())...), prefixClaimForUser)
+	require.Equal(t, append([]byte{0x01}, append(append([]byte("testzone-1"+address.String()), []byte{0x00, 0x00, 0x00, 0x02}...), []byte("testzone-2")...)...), keyClaim)
 }

@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
-	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -72,9 +71,9 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 
 	// capture errors from iterator
 	errors := make(map[string]error)
-	k.IteratePrefixedProtocolDatas(ctx, osmosistypes.PoolsPrefix, func(idx int64, data types.ProtocolData) bool {
+	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, data types.ProtocolData) bool {
 		idxLabel := fmt.Sprintf("index[%d]", idx)
-		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
+		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, data.Data)
 		if err != nil {
 			errors[idxLabel] = err
 			return true
@@ -112,7 +111,16 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 		}
 
 		if isCosmosPair {
-			value, err := pool.PoolData.SpotPrice(ctx, baseIBCDenom, queryIBCDenom)
+			if pool.PoolData == nil {
+				errors[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
+				return true
+			}
+			pool, err := pool.GetPool()
+			if err != nil {
+				errors[idxLabel] = err
+				return true
+			}
+			value, err := pool.SpotPrice(ctx, baseIBCDenom, queryIBCDenom)
 			if err != nil {
 				errors[idxLabel] = err
 				return true

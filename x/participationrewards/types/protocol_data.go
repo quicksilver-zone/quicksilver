@@ -3,6 +3,7 @@ package types
 import (
 	"encoding/json"
 	"errors"
+	fmt "fmt"
 	"reflect"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
@@ -10,33 +11,7 @@ import (
 
 func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (ProtocolDataI, error) {
 	switch datatype {
-	case ProtocolDataOsmosisPool:
-		{
-			pd := OsmosisPoolProtocolData{}
-			err := json.Unmarshal(data, &pd)
-			if err != nil {
-				return nil, err
-			}
-			var blank OsmosisPoolProtocolData
-			if reflect.DeepEqual(pd, blank) {
-				return nil, errors.New("unable to unmarshal osmosispool protocol data from empty JSON object")
-			}
-			return pd, nil
-		}
-	case ProtocolDataOsmosisParams:
-		{
-			pd := OsmosisParamsProtocolData{}
-			err := json.Unmarshal(data, &pd)
-			if err != nil {
-				return nil, err
-			}
-			var blank OsmosisParamsProtocolData
-			if reflect.DeepEqual(pd, blank) {
-				return nil, errors.New("unable to unmarshal osmosisparams protocol data from empty JSON object")
-			}
-			return pd, nil
-		}
-	case ProtocolDataConnection:
+	case ProtocolDataTypeConnection:
 		{
 			pd := ConnectionProtocolData{}
 			err := json.Unmarshal(data, &pd)
@@ -49,7 +24,20 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 			}
 			return pd, nil
 		}
-	case ProtocolDataLiquidToken:
+	case ProtocolDataTypeOsmosisParams:
+		{
+			pd := OsmosisParamsProtocolData{}
+			err := json.Unmarshal(data, &pd)
+			if err != nil {
+				return nil, err
+			}
+			var blank OsmosisParamsProtocolData
+			if reflect.DeepEqual(pd, blank) {
+				return nil, fmt.Errorf("unable to unmarshal osmosisparams protocol data from empty JSON object")
+			}
+			return pd, nil
+		}
+	case ProtocolDataTypeLiquidToken:
 		{
 			pd := LiquidAllowedDenomProtocolData{}
 			err := json.Unmarshal(data, &pd)
@@ -61,6 +49,20 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 				return nil, errors.New("unable to unmarshal liquid protocol data from empty JSON object")
 			}
 			return pd, nil
+		}
+	case ProtocolDataTypeOsmosisPool:
+		{
+			oppd := OsmosisPoolProtocolData{}
+			err := json.Unmarshal(data, &oppd)
+			if err != nil {
+				return nil, fmt.Errorf("unable to unmarshal intermediary osmosisPoolProtocolData: %w", err)
+			}
+			var blank OsmosisPoolProtocolData
+			if reflect.DeepEqual(oppd, blank) {
+				return nil, fmt.Errorf("unable to unmarshal osmosispool protocol data from empty JSON object")
+			}
+
+			return oppd, nil
 		}
 	default:
 		return nil, ErrUnknownProtocolDataType
@@ -75,6 +77,7 @@ type ConnectionProtocolData struct {
 	ConnectionID string
 	ChainID      string
 	LastEpoch    int64
+	Prefix       string
 }
 
 // ValidateBasic satisfies ProtocolDataI and validates basic stateless data.
@@ -87,6 +90,10 @@ func (cpd ConnectionProtocolData) ValidateBasic() error {
 
 	if len(cpd.ChainID) == 0 {
 		errors["ChainID"] = ErrUndefinedAttribute
+	}
+
+	if len(cpd.Prefix) == 0 {
+		errors["Prefix"] = ErrUndefinedAttribute
 	}
 
 	if len(errors) > 0 {

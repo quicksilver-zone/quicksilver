@@ -10,9 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
-	osmosisgammtypes "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-
+	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -101,11 +99,11 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 }
 
 func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
-	var acc osmosisgammtypes.PoolI
-	err := k.cdc.UnmarshalInterface(response, &acc)
-	if err != nil {
+	var pd gamm.PoolI
+	if err := k.cdc.UnmarshalInterface(response, &pd); err != nil {
 		return err
 	}
+
 	// check query.Request is at least 9 bytes in length. (0x02 + 8 bytes for uint64)
 	if len(query.Request) < 9 {
 		return errors.New("query request not sufficient length")
@@ -116,11 +114,11 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	}
 
 	poolID := sdk.BigEndianToUint64(query.Request[1:])
-	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("%s/%d", osmosistypes.PoolsPrefix, poolID))
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, fmt.Sprintf("%d", poolID))
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for osmosispools/%d", poolID)
 	}
-	ipool, err := types.UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
+	ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, data.Data)
 	if err != nil {
 		return err
 	}
@@ -128,24 +126,28 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	if !ok {
 		return fmt.Errorf("unable to unmarshal protocol data for osmosispools/%d", poolID)
 	}
-	pool.PoolData = acc
+	pool.PoolData, err = json.Marshal(pd)
+	if err != nil {
+		return err
+	}
+	pool.LastUpdated = ctx.BlockTime()
 	data.Data, err = json.Marshal(pool)
 	if err != nil {
 		return err
 	}
-	k.SetProtocolData(ctx, fmt.Sprintf("osmosispools/%d", poolID), &data)
+	k.SetProtocolData(ctx, fmt.Sprintf("%d", poolID), &data)
 
 	return nil
 }
 
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
 func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("connection/%s", query.ChainId))
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainId)
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
 	}
 
-	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataConnection, data.Data)
+	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
 	connectionData := iConnectionData.(types.ConnectionProtocolData)
 
 	if err != nil {
@@ -174,6 +176,6 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	if err != nil {
 		return err
 	}
-	k.SetProtocolData(ctx, fmt.Sprintf("connection/%s", query.ChainId), &data)
+	k.SetProtocolData(ctx, query.ChainId, &data)
 	return nil
 }

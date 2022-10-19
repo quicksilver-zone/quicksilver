@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/ingenuity-build/quicksilver/utils"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 var (
@@ -155,7 +155,7 @@ func (s *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 		name     string
 		intents  func(zone icstypes.Zone) []icstypes.DelegatorIntent
 		balances func(denom string) map[string]sdk.Coins
-		claims   func(zone icstypes.Zone) map[string]prtypes.Claim
+		claims   func(zone icstypes.Zone) map[string]cmtypes.Claim
 		expected func(zone icstypes.Zone) icstypes.ValidatorIntents
 	}{
 		{
@@ -165,9 +165,9 @@ func (s *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
 				return out
 			},
-			claims: func(zone icstypes.Zone) map[string]prtypes.Claim {
-				return map[string]prtypes.Claim{
-					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: prtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
+				return map[string]cmtypes.Claim{
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
 				}
 			},
 			balances: func(denom string) map[string]sdk.Coins { return map[string]sdk.Coins{} },
@@ -185,9 +185,9 @@ func (s *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
 				return out
 			},
-			claims: func(zone icstypes.Zone) map[string]prtypes.Claim {
-				return map[string]prtypes.Claim{
-					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: prtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
+				return map[string]cmtypes.Claim{
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
 				}
 			},
 			balances: func(denom string) map[string]sdk.Coins {
@@ -207,9 +207,9 @@ func (s *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 				out = append(out, icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}})
 				return out
 			},
-			claims: func(zone icstypes.Zone) map[string]prtypes.Claim {
-				return map[string]prtypes.Claim{
-					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: prtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
+				return map[string]cmtypes.Claim{
+					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
 				}
 			},
 			balances: func(denom string) map[string]sdk.Coins {
@@ -248,7 +248,7 @@ func (s *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 			}
 
 			for _, claim := range tt.claims(zone) {
-				qapp.ParticipationRewardsKeeper.SetLastEpochClaim(ctx, &claim)
+				qapp.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
 			}
 
 			icsKeeper.AggregateIntents(ctx, zone)

@@ -19,19 +19,19 @@ var _ Submodule = &OsmosisModule{}
 
 func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 	// osmosis params
-	params, found := k.GetProtocolData(ctx, "osmosis/params")
+	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, "")
 	if !found {
-		k.Logger(ctx).Error("unable to query osmosis/params in OsmosisModule hook")
+		k.Logger(ctx).Error("unable to query osmosisparams in OsmosisModule hook")
 		return
 	}
 
 	paramsData := types.OsmosisParamsProtocolData{}
 	if err := json.Unmarshal(params.Data, &paramsData); err != nil {
-		k.Logger(ctx).Error("unable to unmarshal osmosis/params in OsmosisModule hook", "error", err)
+		k.Logger(ctx).Error("unable to unmarshal osmosisparams in OsmosisModule hook", "error", err)
 		return
 	}
 
-	data, found := k.GetProtocolData(ctx, fmt.Sprintf("connection/%s", paramsData.ChainID))
+	data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, paramsData.ChainID)
 	if !found {
 		k.Logger(ctx).Error(fmt.Sprintf("unable to query connection/%s in OsmosisModule hook", paramsData.ChainID))
 		return
@@ -43,15 +43,25 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 		return
 	}
 
-	k.IteratePrefixedProtocolDatas(ctx, osmosistypes.PoolsPrefix, func(idx int64, data types.ProtocolData) bool {
-		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataOsmosisPool, data.Data)
+	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, data types.ProtocolData) bool {
+		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, data.Data)
 		if err != nil {
 			return false
 		}
 		pool, _ := ipool.(types.OsmosisPoolProtocolData)
 
 		// update pool datas
-		k.IcqKeeper.MakeRequest(ctx, connectionData.ConnectionID, connectionData.ChainID, "store/gamm/key", m.GetKeyPrefixPools(pool.PoolID), sdk.NewInt(-1), types.ModuleName, "osmosispoolupdate", 0) // query pool data
+		k.IcqKeeper.MakeRequest(
+			ctx,
+			connectionData.ConnectionID,
+			connectionData.ChainID,
+			"store/gamm/key",
+			m.GetKeyPrefixPools(pool.PoolID),
+			sdk.NewInt(-1),
+			types.ModuleName,
+			"osmosispoolupdate",
+			0,
+		) // query pool data
 		return false
 	})
 }

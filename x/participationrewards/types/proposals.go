@@ -2,10 +2,10 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
 const (
@@ -15,7 +15,7 @@ const (
 var _ govv1beta1.Content = &AddProtocolDataProposal{}
 
 func NewAddProtocolDataProposal(title string, description string, datatype string, protocol string, key string, data json.RawMessage) *AddProtocolDataProposal {
-	return &AddProtocolDataProposal{Title: title, Description: description, Type: datatype, Protocol: protocol, Key: key, Data: data}
+	return &AddProtocolDataProposal{Title: title, Description: description, Type: datatype, Data: data, Key: key}
 }
 
 func (m AddProtocolDataProposal) GetDescription() string { return m.Description }
@@ -29,20 +29,22 @@ func (m AddProtocolDataProposal) ValidateBasic() error {
 		return err
 	}
 
-	if len(m.Protocol) == 0 {
-		return errors.New("proposal must specify Protocol")
-	}
+	errors := make(map[string]error)
 
 	if len(m.Type) == 0 {
-		return errors.New("proposal must specify Type")
+		errors["Type"] = ErrUndefinedAttribute
 	}
 
 	if len(m.Key) == 0 {
-		return errors.New("proposal must specify Key")
+		errors["Key"] = ErrUndefinedAttribute
 	}
 
-	if m.Data == nil {
-		return errors.New("proposal must specify Data")
+	if len(m.Data) == 0 {
+		errors["Data"] = ErrUndefinedAttribute
+	}
+
+	if len(errors) > 0 {
+		return multierror.New(errors)
 	}
 
 	return nil
@@ -53,9 +55,8 @@ func (m AddProtocolDataProposal) String() string {
 	return fmt.Sprintf(`Add Protocol Data Proposal:
 Title:			%s
 Description:	%s
-Protocol:		%s
 Type:			%s
-Key:			%s
 Data:			%s
-`, m.Title, m.Description, m.Protocol, m.Type, m.Key, m.Data)
+Key:			%s
+`, m.Title, m.Description, m.Type, m.Data, m.Key)
 }

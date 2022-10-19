@@ -66,13 +66,13 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 		module := k.callbacks[key]
 		if module.Has(q.CallbackId) {
 			err := module.Call(ctx, q.CallbackId, msg.Result, q)
+			callbackExecuted = true
 			if err != nil {
 				// not edge case: proceed with regular error handling!
 				if err != types.ErrSucceededNoDelete {
 					k.Logger(ctx).Error("error in callback", "error", err, "msg", msg.QueryId, "result", msg.Result, "type", q.QueryType, "params", q.Request)
 					return nil, err
 				}
-				callbackExecuted = true
 				// edge case: the callback has resent the same query (re-query)!
 				// action:    set noDelete to true and continue (short circuit error handling)!
 				noDelete = true

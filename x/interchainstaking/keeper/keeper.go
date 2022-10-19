@@ -26,6 +26,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -35,22 +36,22 @@ import (
 
 // Keeper of this module maintains collections of registered zones.
 type Keeper struct {
-	cdc                        codec.Codec
-	storeKey                   storetypes.StoreKey
-	scopedKeeper               *capabilitykeeper.ScopedKeeper
-	ICAControllerKeeper        icacontrollerkeeper.Keeper
-	ICQKeeper                  interchainquerykeeper.Keeper
-	AccountKeeper              authKeeper.AccountKeeper
-	BankKeeper                 bankkeeper.Keeper
-	IBCKeeper                  ibckeeper.Keeper
-	TransferKeeper             ibctransferkeeper.Keeper
-	ParticipationRewardsKeeper types.ParticipationRewardsKeeper
-	paramStore                 paramtypes.Subspace
+	cdc                 codec.Codec
+	storeKey            storetypes.StoreKey
+	scopedKeeper        *capabilitykeeper.ScopedKeeper
+	ICAControllerKeeper icacontrollerkeeper.Keeper
+	ICQKeeper           interchainquerykeeper.Keeper
+	AccountKeeper       authKeeper.AccountKeeper
+	BankKeeper          bankkeeper.Keeper
+	IBCKeeper           ibckeeper.Keeper
+	TransferKeeper      ibctransferkeeper.Keeper
+	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
+	paramStore          paramtypes.Subspace
 }
 
 // NewKeeper returns a new instance of zones Keeper.
 // This function will panic on failure.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, ps paramtypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, claimsManagerKeeper claimsmanagerkeeper.Keeper, ps paramtypes.Subspace) Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -69,16 +70,10 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 		AccountKeeper:       accountKeeper,
 		IBCKeeper:           ibcKeeper,
 		TransferKeeper:      transferKeeper,
+		ClaimsManagerKeeper: claimsManagerKeeper,
 
 		paramStore: ps,
 	}
-}
-
-func (k *Keeper) SetParticipationRewardsKeeper(prk types.ParticipationRewardsKeeper) {
-	if k.ParticipationRewardsKeeper != nil {
-		panic("Participation Rewards Keeper is already set")
-	}
-	k.ParticipationRewardsKeeper = prk
 }
 
 // Logger returns a module-specific logger.

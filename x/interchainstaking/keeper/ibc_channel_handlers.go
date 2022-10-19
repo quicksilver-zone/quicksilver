@@ -84,6 +84,7 @@ func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connectionI
 
 	// performance address
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixPerformance:
+		ctx.Logger().Info("create performance account")
 		zone.PerformanceAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
 		if err != nil {
 			return err

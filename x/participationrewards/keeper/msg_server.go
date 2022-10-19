@@ -29,17 +29,24 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 
 	// fetch zone
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
-	// this is fine for launch, but we cannot always guarantee the zone we are querying is a registered zone.
-	// add last_epoch_height to connection protocol, so we can fetch this epochly.
-
 	if !ok {
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
+	pd, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, zone.ChainId)
+	if !ok {
+		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", zone.ChainId)
+	}
+
+	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, pd.Data)
+	if err != nil {
+		k.Logger(ctx).Error("SubmitClaim: error unmarshalling protocol data")
+	}
+	connectionData := iConnectionData.(types.ConnectionProtocolData)
 
 	for i, proof := range msg.Proofs {
 		pl := fmt.Sprintf("Proof [%d]", i)
 
-		if proof.Height != zone.LastEpochHeight {
+		if proof.Height != connectionData.LastEpoch {
 			return nil, fmt.Errorf(
 				"invalid claim for last epoch, %s expected height %d, got %d",
 				pl,
@@ -70,8 +77,8 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 		if err != nil {
 			return nil, fmt.Errorf("claim validation failed: %v", err)
 		}
-		claim := k.NewClaim(ctx, msg.UserAddress, zone.ChainId, msg.ClaimType, msg.SrcZone, amount)
-		k.SetClaim(ctx, &claim)
+		claim := k.icsKeeper.ClaimsManagerKeeper.NewClaim(ctx, msg.UserAddress, zone.ChainId, msg.ClaimType, msg.SrcZone, amount)
+		k.icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &claim)
 	}
 
 	return &types.MsgSubmitClaimResponse{}, nil
