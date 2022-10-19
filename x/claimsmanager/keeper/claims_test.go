@@ -5,51 +5,48 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
-var (
-	testAddress = utils.GenerateAccAddressForTest().String()
-	setClaims   = []types.Claim{
-		// test user claim on chainB (using osmosis pool)
-		{
-			UserAddress: testAddress,
-			// ChainId:       suite.chainB.ChainID,
-			Module:        types.ClaimTypeOsmosisPool,
-			SourceChainId: "osmosis-1",
-			Amount:        5000000,
-		},
-		// test user claim on chainB (liquid)
-		{
-			UserAddress: testAddress,
-			// ChainId:       suite.chainB.ChainID,
-			Module:        types.ClaimTypeLiquidToken,
-			SourceChainId: "",
-			Amount:        5000000,
-		},
-		// random user claim on chainB (using osmosis pool)
-		{
-			UserAddress: utils.GenerateAccAddressForTest().String(),
-			// ChainId:       suite.chainB.ChainID,
-			Module:        types.ClaimTypeOsmosisPool,
-			SourceChainId: "osmosis-1",
-			Amount:        15000000,
-		},
-		// test user claim on "cosmoshub-4" (liquid)
-		{
-			UserAddress:   testAddress,
-			ChainId:       "cosmoshub-4",
-			Module:        types.ClaimTypeLiquidToken,
-			SourceChainId: "",
-			Amount:        10000000,
-		},
-		// random user claim on "cosmoshub-4" (liquid)
-		{
-			UserAddress:   utils.GenerateAccAddressForTest().String(),
-			ChainId:       "cosmoshub-4",
-			Module:        types.ClaimTypeLiquidToken,
-			SourceChainId: "",
-			Amount:        15000000,
-		},
-	}
-)
+var testClaims = []types.Claim{
+	// test user claim on chainB (using osmosis pool)
+	{
+		UserAddress: testAddress,
+		// ChainId:       suite.chainB.ChainID,
+		Module:        types.ClaimTypeOsmosisPool,
+		SourceChainId: "osmosis-1",
+		Amount:        5000000,
+	},
+	// test user claim on chainB (liquid)
+	{
+		UserAddress: testAddress,
+		// ChainId:       suite.chainB.ChainID,
+		Module:        types.ClaimTypeLiquidToken,
+		SourceChainId: "",
+		Amount:        5000000,
+	},
+	// random user claim on chainB (using osmosis pool)
+	{
+		UserAddress: utils.GenerateAccAddressForTest().String(),
+		// ChainId:       suite.chainB.ChainID,
+		Module:        types.ClaimTypeOsmosisPool,
+		SourceChainId: "osmosis-1",
+		Amount:        15000000,
+	},
+	// test user claim on "cosmoshub-4" (liquid)
+	{
+		UserAddress:   testAddress,
+		ChainId:       "cosmoshub-4",
+		Module:        types.ClaimTypeLiquidToken,
+		SourceChainId: "",
+		Amount:        10000000,
+	},
+	// random user claim on "cosmoshub-4" (liquid)
+	{
+		UserAddress:   utils.GenerateAccAddressForTest().String(),
+		ChainId:       "cosmoshub-4",
+		Module:        types.ClaimTypeLiquidToken,
+		SourceChainId: "",
+		Amount:        15000000,
+	},
+}
 
 func (suite *KeeperTestSuite) TestKeeper_NewClaim() {
 	type args struct {
@@ -100,9 +97,9 @@ func (suite *KeeperTestSuite) TestKeeper_NewClaim() {
 func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
 
-	setClaims[0].ChainId = suite.chainB.ChainID
-	setClaims[1].ChainId = suite.chainB.ChainID
-	setClaims[2].ChainId = suite.chainB.ChainID
+	testClaims[0].ChainId = suite.chainB.ChainID
+	testClaims[1].ChainId = suite.chainB.ChainID
+	testClaims[2].ChainId = suite.chainB.ChainID
 
 	// no claim set
 	var getClaim types.Claim
@@ -112,11 +109,11 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 	suite.Require().False(found)
 
 	// set claim
-	k.SetClaim(suite.chainA.GetContext(), &setClaims[0])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[0])
 
 	getClaim, found = k.GetClaim(suite.chainA.GetContext(), suite.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
 	suite.Require().True(found)
-	suite.Require().Equal(setClaims[0], getClaim)
+	suite.Require().Equal(testClaims[0], getClaim)
 
 	// delete claim
 	k.DeleteClaim(suite.chainA.GetContext(), &getClaim)
@@ -126,11 +123,11 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 	// iterators
 	var claims []*types.Claim
 
-	k.SetClaim(suite.chainA.GetContext(), &setClaims[0])
-	k.SetClaim(suite.chainA.GetContext(), &setClaims[1])
-	k.SetClaim(suite.chainA.GetContext(), &setClaims[2])
-	k.SetClaim(suite.chainA.GetContext(), &setClaims[3])
-	k.SetClaim(suite.chainA.GetContext(), &setClaims[4])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[0])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[1])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[2])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[3])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[4])
 
 	claims = k.AllClaims(suite.chainA.GetContext())
 	suite.Require().Equal(5, len(claims))
@@ -146,18 +143,18 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 
 	getClaim, found = k.GetLastEpochClaim(suite.chainA.GetContext(), suite.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
 	suite.Require().True(found)
-	suite.Require().Equal(setClaims[0], getClaim)
+	suite.Require().Equal(testClaims[0], getClaim)
 
 	// "cosmoshub-4 was not archived so this should not be found"
 	getClaim, found = k.GetLastEpochClaim(suite.chainA.GetContext(), "cosmoshub-4", testAddress, types.ClaimTypeLiquidToken, "")
 	suite.Require().False(found)
 
 	// set archive claim
-	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[3])
+	k.SetLastEpochClaim(suite.chainA.GetContext(), &testClaims[3])
 
 	getClaim, found = k.GetLastEpochClaim(suite.chainA.GetContext(), "cosmoshub-4", testAddress, types.ClaimTypeLiquidToken, "")
 	suite.Require().True(found)
-	suite.Require().Equal(setClaims[3], getClaim)
+	suite.Require().Equal(testClaims[3], getClaim)
 
 	// delete archive claim
 	k.DeleteLastEpochClaim(suite.chainA.GetContext(), &getClaim)
