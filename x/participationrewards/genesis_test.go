@@ -93,5 +93,4 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	pd, found := app.ParticipationRewardsKeeper.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, "6")
 	require.True(t, found)
 	require.Equal(t, types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)], pd.Type)
-
 }
