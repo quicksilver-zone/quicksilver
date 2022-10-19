@@ -42,7 +42,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 	}
 
 	if storeUpgrades != nil {
-		app.UpgradeKeeper.Logger(sdk.Context{}).Info("UPGRADE: handler store loader upgrades")
+		fmt.Println("UPGRADE: handler store loader upgrades")
 		// configure store loader that checks if version == upgradeHeight and applies store upgrades
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
 	}
