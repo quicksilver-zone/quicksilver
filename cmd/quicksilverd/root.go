@@ -95,6 +95,7 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	}
 
 	rootCmd.AddCommand(
+		forceprune(),
 		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
