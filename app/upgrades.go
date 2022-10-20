@@ -48,7 +48,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 
 func getv001000Upgrade(app *Quicksilver) types.UpgradeHandler {
 	return func(ctx sdk.Context, _ types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		app.UpgradeKeeper.Logger(ctx).Info("UPGRADE: to v0.10.0; no state transitions to apply.")
+		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.0; no state transitions to apply.")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }
