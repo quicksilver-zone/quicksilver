@@ -26,11 +26,11 @@ message MsgSubmitClaim {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string user_address = 1 [ json_name = "user_address", (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  string zone = 2 [ json_name = "zone" ];
-  string src_zone = 3 [ json_name = "src_zone" ];
-  quicksilver.claimsmanager.v1.ClaimType claim_type = 4 [ json_name = "claim_type" ];
-  repeated Proof proofs = 5 [ json_name = "proofs" ];
+  string user_address = 1 [ (gogoproto.jsontag) = "user_address", (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string zone = 2 [ (gogoproto.jsontag) = "zone" ];
+  string src_zone = 3 [ (gogoproto.jsontag) = "src_zone"];
+  quicksilver.claimsmanager.v1.ClaimType claim_type = 4 [ (gogoproto.jsontag) = "claim_type" ];
+  repeated Proof proofs = 5 [ (gogoproto.jsontag) = "proofs" ];
 }
 
 // MsgSubmitClaimResponse defines the MsgSubmitClaim response type.
@@ -41,10 +41,10 @@ message Proof {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  bytes key = 1 [ json_name = "key" ];
-  bytes data = 2 [ json_name = "data" ];
+  bytes key = 1 [ (gogoproto.jsontag) = "key" ];
+  bytes data = 2 [ (gogoproto.jsontag) = "data" ];
   tendermint.crypto.ProofOps proof_ops = 3
-      [ json_name = "proof_ops" ];
-  int64 height = 4 [ json_name = "height" ];
-  string proof_type = 5 [ json_name = "proof_type" ];
+      [ (gogoproto.jsontag) = "proof_ops" ];
+  int64 height = 4 [ (gogoproto.jsontag) = "height" ];
+  string proof_type = 5 [ (gogoproto.jsontag) = "proof_type" ];
 }
