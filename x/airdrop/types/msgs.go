@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
@@ -13,7 +14,10 @@ const (
 	TypeMsgClaim = "claim"
 )
 
-var _ sdk.Msg = &MsgClaim{}
+var (
+	_ sdk.Msg            = &MsgClaim{}
+	_ legacytx.LegacyMsg = &MsgClaim{}
+)
 
 // NewMsgClaim constructs a msg to claim from a zone airdrop.
 func NewMsgClaim(chainID string, action int64, fromAddress sdk.Address) *MsgClaim {

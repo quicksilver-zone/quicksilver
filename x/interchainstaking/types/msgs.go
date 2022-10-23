@@ -8,6 +8,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
@@ -19,8 +20,10 @@ const (
 )
 
 var (
-	_ sdk.Msg = &MsgRequestRedemption{}
-	_ sdk.Msg = &MsgSignalIntent{}
+	_ sdk.Msg            = &MsgRequestRedemption{}
+	_ sdk.Msg            = &MsgSignalIntent{}
+	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
+	_ legacytx.LegacyMsg = &MsgSignalIntent{}
 )
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
