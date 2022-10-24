@@ -20,14 +20,14 @@ import (
 )
 
 const (
-	batchMaxSize      = 1000
-	kValidators       = "validatorsKey:"
-	kConsensusParams  = "consensusParamsKey:"
-	kABCIResponses    = "abciResponsesKey:"
-	fullHeight        = "full_height"
-	minHeight         = "min_height"
-	defaultFullHeight = "188000"
-	defaultMinHeight  = "1000"
+	batchMaxSize       = 1000
+	keyValidators      = "validatorsKey:"
+	keyConsensusParams = "consensusParamsKey:"
+	keyABCIResponses   = "abciResponsesKey:"
+	fullHeight         = "full_height"
+	minHeight          = "min_height"
+	defaultFullHeight  = "188000"
+	defaultMinHeight   = "1000"
 )
 
 // forceprune gets cmd to convert any bech32 address to an osmo prefix.
@@ -102,15 +102,14 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 		DisableSeeksCompaction: true,
 	}
 
-	db_bs, err := tmdb.NewGoLevelDBWithOpts("blockstore", dbPath, &opts)
+	dbbs, err := tmdb.NewGoLevelDBWithOpts("blockstore", dbPath, &opts)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	// nolint: staticcheck
-	defer db_bs.Close()
+	defer dbbs.Close()
 
-	bs := tmstore.NewBlockStore(db_bs)
+	bs := tmstore.NewBlockStore(dbbs)
 	startHeight = bs.Base()
 	currentHeight = bs.Height()
 
@@ -125,7 +124,7 @@ func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
 	// the call in defer statement above to make sure that the resources
 	// are properly released and any potential error from Close()
 	// is handled. Close() should be idempotent so this is acceptable.
-	if err := db_bs.Close(); err != nil {
+	if err := dbbs.Close(); err != nil {
 		return 0, 0, err
 	}
 
@@ -165,24 +164,24 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	}
 	defer db.Close()
 
-	stateDBKeys := []string{kValidators, kConsensusParams, kABCIResponses}
+	stateDBKeys := []string{keyValidators, keyConsensusParams, keyABCIResponses}
 	fmt.Println("Pruning State Store ...")
 	for i, s := range stateDBKeys {
 		fmt.Println(i, s)
 
-		retain_height := int64(0)
-		if s == kABCIResponses {
-			retain_height = currentHeight - minHeight
+		retainHeight := int64(0)
+		if s == keyABCIResponses {
+			retainHeight = currentHeight - minHeight
 		} else {
-			retain_height = currentHeight - fullHeight
+			retainHeight = currentHeight - fullHeight
 		}
 
 		batch := new(leveldb.Batch)
 		curBatchSize := uint64(0)
 
-		fmt.Println(startHeight, currentHeight, retain_height)
+		fmt.Println(startHeight, currentHeight, retainHeight)
 
-		for c := startHeight; c < retain_height; c++ {
+		for c := startHeight; c < retainHeight; c++ {
 			batch.Delete([]byte(s + strconv.FormatInt(c, 10)))
 			curBatchSize++
 

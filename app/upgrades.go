@@ -6,7 +6,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
@@ -46,8 +45,8 @@ func setUpgradeHandlers(app *Quicksilver) {
 	}
 }
 
-func getv001000Upgrade(app *Quicksilver) types.UpgradeHandler {
-	return func(ctx sdk.Context, _ types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+func getv001000Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.0; no state transitions to apply.")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
