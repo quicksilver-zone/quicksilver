@@ -172,6 +172,8 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 		connectionData.LastEpoch = blockResponse.SdkBlock.Header.Height
 	}
 
+	// trigger a client update at the epoch boundary...
+
 	data.Data, err = json.Marshal(connectionData)
 	if err != nil {
 		return err
