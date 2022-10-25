@@ -32,9 +32,9 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	if !ok {
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
-	pd, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, zone.ChainId)
+	pd, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, msg.SrcZone)
 	if !ok {
-		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", zone.ChainId)
+		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", msg.SrcZone)
 	}
 
 	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, pd.Data)
