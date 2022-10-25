@@ -50,7 +50,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 			return nil, fmt.Errorf(
 				"invalid claim for last epoch, %s expected height %d, got %d",
 				pl,
-				zone.LastEpochHeight,
+				connectionData.LastEpoch,
 				proof.Height,
 			)
 		}
