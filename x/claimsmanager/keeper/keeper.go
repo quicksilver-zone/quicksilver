@@ -18,11 +18,6 @@ type Keeper struct {
 	storeKey      storetypes.StoreKey
 	paramSpace    paramtypes.Subspace
 	accountKeeper authkeeper.AccountKeeper
-	// bankKeeper       bankkeeper.Keeper
-	// stakingKeeper    stakingkeeper.Keeper
-	// IcqKeeper        icqkeeper.Keeper
-	// icsKeeper        icskeeper.Keeper
-	// feeCollectorName string
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -32,11 +27,6 @@ func NewKeeper(
 	key storetypes.StoreKey,
 	ps paramtypes.Subspace,
 	ak authkeeper.AccountKeeper,
-	// bk bankkeeper.Keeper,
-	// sk stakingkeeper.Keeper,
-	// icqk icqkeeper.Keeper,
-	// icsk icskeeper.Keeper,
-	// feeCollectorName string,
 ) Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -52,11 +42,6 @@ func NewKeeper(
 		storeKey:      key,
 		paramSpace:    ps,
 		accountKeeper: ak,
-		// bankKeeper:       bk,
-		// stakingKeeper:    sk,
-		// IcqKeeper:        icqk,
-		// icsKeeper:        icsk,
-		// feeCollectorName: feeCollectorName,
 	}
 }
 

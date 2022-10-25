@@ -21,11 +21,14 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 func (k Keeper) Claims(c context.Context, q *types.QueryClaimsRequest) (*types.QueryClaimsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	out := []types.Claim{}
-
+	k.Logger(ctx).Error("Claims query")
 	k.IterateClaims(ctx, q.ChainId, func(_ int64, claim types.Claim) (stop bool) {
+		k.Logger(ctx).Error("Claim", claim)
+
 		out = append(out, claim)
 		return false
 	})
+	k.Logger(ctx).Error("Romeo done.")
 
 	return &types.QueryClaimsResponse{Claims: out}, nil
 }

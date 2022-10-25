@@ -255,7 +255,7 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 			osmoZone.ConnectionId,
 			osmoZone.ChainId,
 			proof.Height,
-			"lockup",
+			proof.ProofType,
 			proof.Key,
 			proof.Data,
 			proof.ProofOps,
