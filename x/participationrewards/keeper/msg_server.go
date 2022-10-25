@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -37,6 +36,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", msg.SrcZone)
 	}
 
+	// protocol data
 	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, pd.Data)
 	if err != nil {
 		k.Logger(ctx).Error("SubmitClaim: error unmarshalling protocol data")
@@ -55,7 +55,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 			)
 		}
 
-		if err := utils.ValidateProofOps(
+		if err := k.ValidateProofOps(
 			ctx,
 			&k.icsKeeper.IBCKeeper,
 			connectionData.ConnectionID,

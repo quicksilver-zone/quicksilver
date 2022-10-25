@@ -5,13 +5,19 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	"github.com/stretchr/testify/suite"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/app"
+	"github.com/ingenuity-build/quicksilver/utils"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
+
+var testAddress = utils.GenerateAccAddressForTest().String()
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
@@ -63,10 +69,10 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.coordinator.CurrentTime = time.Now().UTC()
 	suite.coordinator.UpdateTime()
 
-	suite.initTestZone()
+	suite.coreTest()
 }
 
-func (suite *KeeperTestSuite) initTestZone() {
+func (suite *KeeperTestSuite) coreTest() {
 	// test zone
 	zone := icstypes.Zone{
 		ConnectionId:    suite.path.EndpointA.ConnectionID,
@@ -76,11 +82,16 @@ func (suite *KeeperTestSuite) initTestZone() {
 		BaseDenom:       "uatom",
 		MultiSend:       true,
 		LiquidityModule: true,
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           utils.GenerateAccAddressForTestWithPrefix("bcosmos"),
+			PortName:          fmt.Sprintf("%s.performance", suite.chainB.ChainID),
+			WithdrawalAddress: utils.GenerateAccAddressForTestWithPrefix("bcosmos"),
+		},
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
 	// cosmos zone
-	zone = icstypes.Zone{
+	zoneCosmos := icstypes.Zone{
 		ConnectionId:    "connection-77001",
 		ChainId:         "cosmoshub-4",
 		AccountPrefix:   "cosmos",
@@ -88,11 +99,16 @@ func (suite *KeeperTestSuite) initTestZone() {
 		BaseDenom:       "uatom",
 		MultiSend:       true,
 		LiquidityModule: true,
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           utils.GenerateAccAddressForTestWithPrefix("cosmos"),
+			PortName:          "cosmoshub-4.performance",
+			WithdrawalAddress: utils.GenerateAccAddressForTestWithPrefix("cosmos"),
+		},
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneCosmos)
 
 	// osmosis zone
-	zone = icstypes.Zone{
+	zoneOsmosis := icstypes.Zone{
 		ConnectionId:    "connection-77002",
 		ChainId:         "osmosis-1",
 		AccountPrefix:   "osmo",
@@ -100,8 +116,13 @@ func (suite *KeeperTestSuite) initTestZone() {
 		BaseDenom:       "uosmo",
 		MultiSend:       true,
 		LiquidityModule: true,
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address:           utils.GenerateAccAddressForTestWithPrefix("osmo"),
+			PortName:          "cosmoshub-4.performance",
+			WithdrawalAddress: utils.GenerateAccAddressForTestWithPrefix("osmo"),
+		},
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneOsmosis)
 
 	// connection type
 	suite.addProtocolData(
@@ -144,6 +165,21 @@ func (suite *KeeperTestSuite) initTestZone() {
 	suite.executeOsmosisPoolUpdateCallback()
 
 	// add some deposits
+	suite.addReceipt(
+		&zoneCosmos,
+		testAddress,
+		"testTxHash",
+		sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(120000000))),
+	)
+
+	// add some claims
+	suite.addClaim(
+		testAddress,
+		"cosmoshub-4",
+		cmtypes.ClaimTypeLiquidToken,
+		"osmosis-1",
+		40000000,
+	)
 
 	// Epoch boundary
 	suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 3)
@@ -156,4 +192,37 @@ func (suite *KeeperTestSuite) addProtocolData(Type types.ProtocolDataType, Data 
 	}
 
 	suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper.SetProtocolData(suite.chainA.GetContext(), Key, &pd)
+}
+
+func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender string, hash string, coins sdk.Coins) {
+	receipt := icstypes.Receipt{
+		ChainId: zone.ChainId,
+		Sender:  sender,
+		Txhash:  hash,
+		Amount:  coins,
+	}
+
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), receipt)
+
+	delegationAddress := utils.GenerateAccAddressForTestWithPrefix("cosmos")
+	validatorAddress := utils.GenerateValAddressForTestWithPrefix("cosmos")
+	delegation := icstypes.Delegation{
+		DelegationAddress: delegationAddress,
+		ValidatorAddress:  validatorAddress,
+		Amount:            coins[0],
+		Height:            1,
+		RedelegationEnd:   101,
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(suite.chainA.GetContext(), zone, delegation)
+}
+
+func (suite *KeeperTestSuite) addClaim(address string, chainID string, claimType cmtypes.ClaimType, sourceChainID string, amount uint64) {
+	claim := cmtypes.Claim{
+		UserAddress:   address,
+		ChainId:       chainID,
+		Module:        claimType,
+		SourceChainId: sourceChainID,
+		Amount:        amount,
+	}
+	suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper.SetClaim(suite.chainA.GetContext(), &claim)
 }

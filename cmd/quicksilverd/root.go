@@ -261,6 +261,7 @@ func (ac appCreator) newApp(
 		wasm.EnableAllProposals,
 		appOpts,
 		wasmOpts,
+		false,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -313,6 +314,7 @@ func (ac appCreator) appExport(
 		wasm.EnableAllProposals,
 		appOpts,
 		emptyWasmOpts,
+		false,
 	)
 
 	if height != -1 {
