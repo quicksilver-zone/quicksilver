@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					UserAddress: utils.GenerateAccAddressForTest().String(),
 					Zone:        suite.chainB.ChainID,
 					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
-					Proofs: []*types.Proof{
+					Proofs: []*cmtypes.Proof{
 						{
 							Key:       []byte{1, 2, 3, 4, 5},
 							Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},
@@ -54,7 +54,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					UserAddress: utils.GenerateAccAddressForTest().String(),
 					Zone:        suite.chainB.ChainID,
 					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
-					Proofs: []*types.Proof{
+					Proofs: []*cmtypes.Proof{
 						{
 							Key:       []byte{1, 2, 3, 4, 5},
 							Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},

@@ -20,7 +20,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 		Zone        string
 		SrcZone     string
 		ClaimType   cmtypes.ClaimType
-		Proofs      []*Proof
+		Proofs      []*cmtypes.Proof
 	}
 	tests := []struct {
 		name    string
@@ -39,7 +39,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 				Zone:        "",
 				SrcZone:     "",
 				ClaimType:   -1,
-				Proofs:      []*Proof{},
+				Proofs:      []*cmtypes.Proof{},
 			},
 			true,
 		},
@@ -50,7 +50,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 				Zone:        "",
 				SrcZone:     "",
 				ClaimType:   -1,
-				Proofs: []*Proof{
+				Proofs: []*cmtypes.Proof{
 					{}, // blank
 					{
 						Key:       []byte{1, 2, 3, 4, 5},
@@ -70,7 +70,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 				Zone:        "test-01",
 				SrcZone:     "test-02",
 				ClaimType:   cmtypes.ClaimTypeOsmosisPool,
-				Proofs: []*Proof{
+				Proofs: []*cmtypes.Proof{
 					{
 						Key:       []byte{1, 2, 3, 4, 5},
 						Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},
@@ -111,7 +111,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 		UserAddress string
 		Zone        string
 		ClaimType   cmtypes.ClaimType
-		Proofs      []*Proof
+		Proofs      []*cmtypes.Proof
 	}
 	tests := []struct {
 		name   string
@@ -154,7 +154,7 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 		srcZone     string
 		zone        string
 		claimType   cmtypes.ClaimType
-		proofs      []*Proof
+		proofs      []*cmtypes.Proof
 	}
 	tests := []struct {
 		name string
@@ -168,7 +168,7 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 				"osmosis-1",
 				"juno",
 				cmtypes.ClaimTypeOsmosisPool,
-				[]*Proof{
+				[]*cmtypes.Proof{
 					{
 						Key:       []byte{1, 2, 3, 4, 5},
 						Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},
@@ -183,7 +183,7 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 				"juno",
 				"osmosis-1",
 				cmtypes.ClaimTypeOsmosisPool,
-				[]*Proof{
+				[]*cmtypes.Proof{
 					{
 						Key:       []byte{1, 2, 3, 4, 5},
 						Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},

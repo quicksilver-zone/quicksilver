@@ -13,6 +13,7 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -24,7 +25,7 @@ var (
 	tier5 = "0.30"
 )
 
-func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proofs []*types.Proof) (uint64, error) {
+func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proofs []*cmtypes.Proof) (uint64, error) {
 	// action already completed, nothing to claim
 	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
 		return 0, fmt.Errorf("%s already completed", types.Action_name[int32(action)])
@@ -106,7 +107,7 @@ func (k Keeper) handleGovernanceParticipation(ctx sdk.Context, cr *types.ClaimRe
 }
 
 // handleOsmosisLP
-func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proofs []*types.Proof) (uint64, error) {
+func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proofs []*cmtypes.Proof) (uint64, error) {
 	if len(proofs) == 0 {
 		return 0, errors.New("expects at least one LP proof")
 	}
@@ -223,7 +224,7 @@ func (k Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) e
 // It utilizes Osmosis query:
 //
 //	rpc LockedByID(LockedRequest) returns (LockedResponse);
-func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types.ClaimRecord) error {
+func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr types.ClaimRecord) error {
 	// get Osmosis zone
 	var osmoZone *icstypes.Zone
 	k.icsKeeper.IterateZones(ctx, func(_ int64, zone icstypes.Zone) (stop bool) {

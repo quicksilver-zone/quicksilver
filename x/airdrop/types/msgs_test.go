@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
@@ -12,7 +13,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		ChainId string
 		Action  int64
 		Address string
-		Proofs  []*Proof
+		Proofs  []*cmtypes.Proof
 	}
 	tests := []struct {
 		name    string
@@ -30,7 +31,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "",
 				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-				Proofs:  []*Proof{},
+				Proofs:  []*cmtypes.Proof{},
 			},
 			true,
 		},
@@ -40,7 +41,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-				Proofs:  []*Proof{},
+				Proofs:  []*cmtypes.Proof{},
 			},
 			true,
 		},
@@ -50,7 +51,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  999,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-				Proofs:  []*Proof{},
+				Proofs:  []*cmtypes.Proof{},
 			},
 			true,
 		},
@@ -60,7 +61,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  0,
 				Address: "",
-				Proofs:  []*Proof{},
+				Proofs:  []*cmtypes.Proof{},
 			},
 			true,
 		},
@@ -70,7 +71,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lkq437x2w",
-				Proofs:  []*Proof{},
+				Proofs:  []*cmtypes.Proof{},
 			},
 			true,
 		},
@@ -82,12 +83,13 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  int64(ActionUndefined),
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-				Proofs: []*Proof{
+				Proofs: []*cmtypes.Proof{
 					{
-						Key:      []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-						Data:     []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-						ProofOps: &crypto.ProofOps{},
-						Height:   10,
+						Key:       []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						Data:      []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						ProofOps:  &crypto.ProofOps{},
+						Height:    10,
+						ProofType: "lockup",
 					},
 				},
 			},
@@ -99,12 +101,13 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				ChainId: "cosmoshub-4",
 				Action:  int64(ActionInitialClaim),
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
-				Proofs: []*Proof{
+				Proofs: []*cmtypes.Proof{
 					{
-						Key:      []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-						Data:     []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
-						ProofOps: &crypto.ProofOps{},
-						Height:   10,
+						Key:       []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						Data:      []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						ProofOps:  &crypto.ProofOps{},
+						Height:    10,
+						ProofType: "lockup",
 					},
 				},
 			},

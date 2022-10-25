@@ -30,21 +30,10 @@ message MsgSubmitClaim {
   string zone = 2 [ json_name = "zone" ];
   string src_zone = 3 [ json_name = "src_zone" ];
   quicksilver.claimsmanager.v1.ClaimType claim_type = 4 [ json_name = "claim_type" ];
-  repeated Proof proofs = 5 [ json_name = "proofs" ];
+  repeated quicksilver.claimsmanager.v1.Proof proofs = 5 [ json_name = "proofs" ];
 }
 
 // MsgSubmitClaimResponse defines the MsgSubmitClaim response type.
 message MsgSubmitClaimResponse {}
 
-// Proof defines a type used to cryptographically prove a claim.
-message Proof {
-  option (gogoproto.equal) = false;
-  option (gogoproto.goproto_getters) = false;
 
-  bytes key = 1 [ json_name = "key" ];
-  bytes data = 2 [ json_name = "data" ];
-  tendermint.crypto.ProofOps proof_ops = 3
-      [ json_name = "proof_ops" ];
-  int64 height = 4 [ json_name = "height" ];
-  string proof_type = 5 [ json_name = "proof_type" ];
-}
