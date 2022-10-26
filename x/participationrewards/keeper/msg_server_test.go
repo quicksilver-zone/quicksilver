@@ -75,8 +75,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
-					Zone:        "osmosis-1",
-					SrcZone:     "cosmoshub-4",
+					Zone:        "cosmoshub-4",
+					SrcZone:     "osmosis-1",
 					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -115,10 +115,10 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
-					Zone:        "osmosis-1",
-					SrcZone:     "cosmoshub-4",
+					Zone:        "cosmoshub-4",
+					SrcZone:     "osmosis-1",
 					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
-					Proofs: []*types.Proof{
+					Proofs: []*cmtypes.Proof{
 						{
 							Key:       []byte{2, 1},
 							Data:      bz,
@@ -155,10 +155,10 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
-					Zone:        "osmosis-1",
-					SrcZone:     "cosmoshub-4",
+					Zone:        "cosmoshub-4",
+					SrcZone:     "osmosis-1",
 					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
-					Proofs: []*types.Proof{
+					Proofs: []*cmtypes.Proof{
 						{
 							Key:       []byte{2, 1},
 							Data:      bz,
@@ -182,7 +182,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		// 			Zone:        suite.chainB.ChainID,
 		// 			SrcZone:     "osmosis-1",
 		// 			ClaimType:   cmtypes.ClaimTypeLiquidToken,
-		// 			Proofs: []*types.Proof{
+		// 			Proofs: []*cmtypes.Proof{
 		// 				{
 		// 					Key:       key,
 		// 					Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},

@@ -23,7 +23,7 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 	poolID := gammtoken.Denom[strings.LastIndex(gammtoken.Denom, "/")+1:]
 	pd, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeOsmosisPool, poolID)
 	if !ok {
-		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for %s", poolID)
+		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for poolID=%s", poolID)
 	}
 
 	ipool, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeOsmosisPool, pd.Data)
