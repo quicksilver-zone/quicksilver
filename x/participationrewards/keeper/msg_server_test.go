@@ -172,30 +172,38 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			&types.MsgSubmitClaimResponse{},
 			false,
 		},
-		// {
-		// 	"valid_liquid",
-		// 	func() {
-		// 		address := utils.GenerateAccAddressForTest()
-		// 		key := append(address, []byte("uqatom")...)
-		// 		msg = types.MsgSubmitClaim{
-		// 			UserAddress: address.String(),
-		// 			Zone:        suite.chainB.ChainID,
-		// 			SrcZone:     "osmosis-1",
-		// 			ClaimType:   cmtypes.ClaimTypeLiquidToken,
-		// 			Proofs: []*cmtypes.Proof{
-		// 				{
-		// 					Key:       key,
-		// 					Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},
-		// 					ProofOps:  &crypto.ProofOps{},
-		// 					Height:    0,
-		// 					ProofType: "lockup",
-		// 				},
-		// 			},
-		// 		}
-		// 	},
-		// 	&types.MsgSubmitClaimResponse{},
-		// 	false,
-		// },
+		{
+			"valid_liquid",
+			func() {
+				address := utils.GenerateAccAddressForTest()
+				key := append(address, []byte("uqatom")...)
+
+				cd := sdk.Coin{
+					Denom:  "",
+					Amount: math.NewInt(0),
+				}
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: address.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "osmosis-1",
+					ClaimType:   cmtypes.ClaimTypeLiquidToken,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       key,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    0,
+							ProofType: "lockup",
+						},
+					},
+				}
+			},
+			&types.MsgSubmitClaimResponse{},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		tt := tt

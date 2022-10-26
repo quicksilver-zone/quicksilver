@@ -5,14 +5,25 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	"github.com/stretchr/testify/suite"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	ics "github.com/ingenuity-build/quicksilver/x/interchainstaking"
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -73,36 +84,76 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (suite *KeeperTestSuite) coreTest() {
+	qApp := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
 	// test zone
+	performanceAddressTest := utils.GenerateAccAddressForTestWithPrefix("bcosmos")
+	performanceAccountTest, err := icstypes.NewICAAccount(performanceAddressTest, fmt.Sprintf("%s.performance", suite.chainB.ChainID), "uatom")
+	suite.Require().NoError(err)
+	performanceAccountTest.WithdrawalAddress = utils.GenerateAccAddressForTestWithPrefix("bcosmos")
+
 	zone := icstypes.Zone{
-		ConnectionId:    suite.path.EndpointA.ConnectionID,
-		ChainId:         suite.chainB.ChainID,
-		AccountPrefix:   "bcosmos",
-		LocalDenom:      "uqatom",
-		BaseDenom:       "uatom",
-		MultiSend:       true,
-		LiquidityModule: true,
-		PerformanceAddress: &icstypes.ICAAccount{
-			Address:           utils.GenerateAccAddressForTestWithPrefix("bcosmos"),
-			PortName:          fmt.Sprintf("%s.performance", suite.chainB.ChainID),
-			WithdrawalAddress: utils.GenerateAccAddressForTestWithPrefix("bcosmos"),
-		},
+		ConnectionId:       suite.path.EndpointA.ConnectionID,
+		ChainId:            suite.chainB.ChainID,
+		AccountPrefix:      "bcosmos",
+		LocalDenom:         "uqatom",
+		BaseDenom:          "uatom",
+		MultiSend:          true,
+		LiquidityModule:    true,
+		PerformanceAddress: performanceAccountTest,
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
+	qApp.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
+	qApp.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: ctx.BlockTime()})
+	qApp.IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0"})
+	suite.Require().NoError(setupChannelForICA(ctx, qApp, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
+
+	for _, val := range suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()) {
+		// refetch the zone for each validator, else we end up with an empty valset each time!
+		zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+		suite.Require().True(found)
+		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
+	}
+
 	// cosmos zone
+	performanceAddressCosmos := utils.GenerateAccAddressForTestWithPrefix("cosmos")
+	performanceAccountCosmos, err := icstypes.NewICAAccount(performanceAddressCosmos, "cosmoshub-4.performance", "uatom")
+	suite.Require().NoError(err)
+	performanceAccountCosmos.WithdrawalAddress = utils.GenerateAccAddressForTestWithPrefix("cosmos")
+
 	zoneCosmos := icstypes.Zone{
-		ConnectionId:    "connection-77001",
-		ChainId:         "cosmoshub-4",
-		AccountPrefix:   "cosmos",
-		LocalDenom:      "uqatom",
-		BaseDenom:       "uatom",
-		MultiSend:       true,
-		LiquidityModule: true,
-		PerformanceAddress: &icstypes.ICAAccount{
-			Address:           utils.GenerateAccAddressForTestWithPrefix("cosmos"),
-			PortName:          "cosmoshub-4.performance",
-			WithdrawalAddress: utils.GenerateAccAddressForTestWithPrefix("cosmos"),
+		ConnectionId:       "connection-77001",
+		ChainId:            "cosmoshub-4",
+		AccountPrefix:      "cosmos",
+		LocalDenom:         "uqatom",
+		BaseDenom:          "uatom",
+		MultiSend:          true,
+		LiquidityModule:    true,
+		PerformanceAddress: performanceAccountCosmos,
+		Validators: []*icstypes.Validator{
+			{
+				ValoperAddress:  "cosmosvaloper1759teakrsvnx7rnur8ezc4qaq8669nhtgukm0x",
+				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+				DelegatorShares: sdk.NewDec(200032604739),
+				VotingPower:     math.NewInt(200032604739),
+				Score:           sdk.ZeroDec(),
+			},
+			{
+				ValoperAddress:  "cosmosvaloper1jtjjyxtqk0fj85ud9cxk368gr8cjdsftvdt5jl",
+				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+				DelegatorShares: sdk.NewDec(200032604734),
+				VotingPower:     math.NewInt(200032604734),
+				Score:           sdk.ZeroDec(),
+			},
+			{
+				ValoperAddress:  "cosmosvaloper1q86m0zq0p52h4puw5pg5xgc3c5e2mq52y6mth0",
+				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+				DelegatorShares: sdk.NewDec(200032604738),
+				VotingPower:     math.NewInt(200032604738),
+				Score:           sdk.ZeroDec(),
+			},
 		},
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneCosmos)
@@ -157,6 +208,18 @@ func (suite *KeeperTestSuite) coreTest() {
 		"1",
 	)
 
+	suite.addProtocolData(
+		types.ProtocolDataTypeLiquidToken,
+		fmt.Sprintf(
+			"{\"chainid\":%q,\"originchainid\":%q,\"denom\":%q,\"localdenom\":%q}",
+			"osmosis-1",
+			"cosmoshub-4",
+			"uatom",
+			"uqatom",
+		),
+		"osmosis-1/uqatom",
+	)
+
 	// advance the chains
 	suite.coordinator.CommitNBlocks(suite.chainA, 1)
 	suite.coordinator.CommitNBlocks(suite.chainB, 1)
@@ -183,6 +246,8 @@ func (suite *KeeperTestSuite) coreTest() {
 
 	// Epoch boundary
 	suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 3)
+
+	suite.executeValidatorSelectionRewardsCallback(performanceAddressTest)
 }
 
 func (suite *KeeperTestSuite) addProtocolData(Type types.ProtocolDataType, Data string, Key string) {
@@ -225,4 +290,31 @@ func (suite *KeeperTestSuite) addClaim(address string, chainID string, claimType
 		Amount:        amount,
 	}
 	suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper.SetClaim(suite.chainA.GetContext(), &claim)
+}
+
+func setupChannelForICA(ctx sdk.Context, qApp *app.Quicksilver, chainID string, connectionID string, accountSuffix string, remotePrefix string) error {
+	ibcModule := ics.NewIBCModule(qApp.InterchainstakingKeeper)
+	portID, err := icatypes.NewControllerPortID(chainID + "." + accountSuffix)
+	if err != nil {
+		return err
+	}
+	channelID := qApp.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctx)
+	qApp.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{ConnectionHops: []string{connectionID}, State: channeltypes.OPEN, Counterparty: channeltypes.Counterparty{PortId: "icahost", ChannelId: channelID}})
+	qApp.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, portID, channelID, 1)
+	qApp.ICAControllerKeeper.SetActiveChannelID(ctx, connectionID, portID, channelID)
+	key, err := qApp.InterchainstakingKeeper.ScopedKeeper().NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
+	if err != nil {
+		return err
+	}
+
+	err = qApp.GetScopedIBCKeeper().ClaimCapability(ctx, key, host.ChannelCapabilityPath(portID, channelID))
+	if err != nil {
+		return err
+	}
+	addr, err := bech32.ConvertAndEncode(remotePrefix, utils.GenerateAccAddressForTest())
+	if err != nil {
+		return err
+	}
+	qApp.ICAControllerKeeper.SetInterchainAccountAddress(ctx, connectionID, portID, addr)
+	return ibcModule.OnChanOpenAck(ctx, portID, channelID, "", "")
 }

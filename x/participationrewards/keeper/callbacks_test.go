@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/json"
 
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
@@ -16,7 +17,7 @@ func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 	osm := &keeper.OsmosisModule{}
 	qid := icqkeeper.GenerateQueryHash("connection-77002", "osmosis-1", "store/gamm/key", osm.GetKeyPrefixPools(1), types.ModuleName)
 
-	query, found := prk.IcqKeeper.GetQuery(suite.chainA.GetContext(), qid)
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.Require().True(found, "qid: %s", qid)
 
 	var err error
@@ -59,4 +60,37 @@ func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 	suite.Require().NoError(err)
 	oppd := ioppd.(types.OsmosisPoolProtocolData)
 	suite.Require().Equal(want, oppd)
+}
+
+func (suite *KeeperTestSuite) executeValidatorSelectionRewardsCallback(performanceAddress string) {
+	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+	ctx := suite.chainA.GetContext()
+
+	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: performanceAddress}
+	bz := prk.GetCodec().MustMarshal(&rewardsQuery)
+
+	qid := icqkeeper.GenerateQueryHash(
+		suite.path.EndpointB.ConnectionID,
+		suite.chainB.ChainID,
+		"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
+		bz,
+		types.ModuleName,
+	)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.Require().True(found, "qid: %s", qid)
+
+	respJSON := `{"rewards":[{"validator_address":"cosmosvaloper1q86m0zq0p52h4puw5pg5xgc3c5e2mq52y6mth0","reward":[{"denom":"uatom","amount":"519569.212352312102820680"}]},{"validator_address":"cosmosvaloper1jtjjyxtqk0fj85ud9cxk368gr8cjdsftvdt5jl","reward":[{"denom":"uatom","amount":"519569.719818287718073104"}]},{"validator_address":"cosmosvaloper1759teakrsvnx7rnur8ezc4qaq8669nhtgukm0x","reward":[{"denom":"uatom","amount":"519569.180489558573776457"}]}],"total":[{"denom":"uatom","amount":"1558708.112660158394670241"}]}`
+	qdtrResp := distrtypes.QueryDelegationTotalRewardsResponse{}
+	err := json.Unmarshal([]byte(respJSON), &qdtrResp)
+	suite.Require().NoError(err)
+	resp, err := qdtrResp.Marshal()
+
+	err = keeper.ValidatorSelectionRewardsCallback(
+		prk,
+		ctx,
+		resp,
+		query,
+	)
+	suite.Require().NoError(err)
 }
