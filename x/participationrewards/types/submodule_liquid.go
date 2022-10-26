@@ -1,12 +1,16 @@
 package types
 
-import "github.com/ingenuity-build/quicksilver/internal/multierror"
+import (
+	"strings"
+
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
+)
 
 type LiquidAllowedDenomProtocolData struct {
-	ChainID       string
-	OriginChainID string
-	Denom         string
-	LocalDenom    string
+	ChainID               string
+	RegisteredZoneChainID string
+	IbcDenom              string
+	QAssetDenom           string
 }
 
 func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
@@ -16,16 +20,24 @@ func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
 		errors["ChainID"] = ErrUndefinedAttribute
 	}
 
-	if len(lpd.OriginChainID) == 0 {
-		errors["OriginChainID"] = ErrUndefinedAttribute
+	if len(strings.Split(lpd.ChainID, "-")) < 2 {
+		errors["ChainID"] = ErrInvalidChainID
 	}
 
-	if len(lpd.Denom) == 0 {
-		errors["Denom"] = ErrUndefinedAttribute
+	if len(lpd.RegisteredZoneChainID) == 0 {
+		errors["RegisteredZoneChainID"] = ErrUndefinedAttribute
 	}
 
-	if len(lpd.LocalDenom) == 0 {
-		errors["LocalDenom"] = ErrUndefinedAttribute
+	if len(strings.Split(lpd.RegisteredZoneChainID, "-")) < 2 {
+		errors["RegisteredZoneChainID"] = ErrInvalidChainID
+	}
+
+	if len(lpd.IbcDenom) < 5 || lpd.IbcDenom[:4] != "ibc/" {
+		errors["IbcDenom"] = ErrInvalidAssetName
+	}
+
+	if len(lpd.QAssetDenom) == 0 {
+		errors["QAssetDenom"] = ErrUndefinedAttribute
 	}
 
 	if len(errors) > 0 {
