@@ -49,21 +49,26 @@ func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone)
 	// calculate user totals and zone total (held assets)
 	zoneAmount := sdk.ZeroInt()
 	userAmounts := make([]userAmount, len(claims))
+	// claims are for the previous epoch (up to the last epoch boundary)
 	for i, claim := range claims {
 		// we can suppress the error here as the address is from claim
 		// state that is verified.
-		userAccount, _ := sdk.AccAddressFromBech32(claim.UserAddress)
+		// userAccount, _ := sdk.AccAddressFromBech32(claim.UserAddress)
 		// calculate user held amount
 		// total = local + remote
-		local := k.bankKeeper.GetBalance(ctx, userAccount, zone.LocalDenom).Amount
+		// local amount here uses the current epoch balance which is not aligned
+		// with claims that are against the previous epoch
+		// local := k.bankKeeper.GetBalance(ctx, userAccount, zone.LocalDenom).Amount
 		remote := sdk.NewIntFromUint64(claim.Amount)
-		total := local.Add(remote)
+		// total := local.Add(remote)
+		total := remote
 		k.Logger(ctx).Info("user amount for zone", "user", claim.UserAddress, "zone", claim.ChainId, "held", total)
 		userAmounts[i] = userAmount{
 			Address: claim.UserAddress,
 			Amount:  total,
 		}
 
+		// total zone assets held remotely
 		zoneAmount = zoneAmount.Add(total)
 	}
 

@@ -54,7 +54,8 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 			},
 		},
 		{
-			name: "single intent; with balance, returns single weighting",
+			// name: "single intent; with balance, returns single weighting",
+			name: "single intent; with balance, returns default equal weighting",
 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
@@ -63,15 +64,24 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 			balances: func(denom string) map[string]sdk.Coins {
 				return map[string]sdk.Coins{user1.String(): sdk.NewCoins(sdk.NewCoin(denom, sdk.OneInt()))}
 			},
-			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
-				out := icstypes.ValidatorIntents{}
-				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()})
+			// expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+			// 	out := icstypes.ValidatorIntents{}
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()})
 
+			// 	return out.Sort()
+			// },
+			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+				// four delegators each at 25%
+				out := icstypes.ValidatorIntents{}
+				for _, val := range zone.GetValidatorsAddressesAsSlice() {
+					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
+				}
 				return out.Sort()
 			},
 		},
 		{
-			name: "two intents; with equal balances, same val, single weighting",
+			// name: "two intents; with equal balances, same val, single weighting",
+			name: "two intents; with equal balances, same val, returns default equal weighting",
 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
@@ -84,15 +94,24 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 					user2.String(): sdk.NewCoins(sdk.NewCoin(denom, sdk.OneInt())),
 				}
 			},
-			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
-				out := icstypes.ValidatorIntents{}
-				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()})
+			// expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+			// 	out := icstypes.ValidatorIntents{}
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()})
 
+			// 	return out.Sort()
+			// },
+			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+				// four delegators each at 25%
+				out := icstypes.ValidatorIntents{}
+				for _, val := range zone.GetValidatorsAddressesAsSlice() {
+					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
+				}
 				return out.Sort()
 			},
 		},
 		{
-			name: "two intents; with equal balances, diff val, equal weighting",
+			// name: "two intents; with equal balances, diff val, equal weighting",
+			name: "two intents; with equal balances, diff val, returns default equal weighting",
 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
@@ -105,11 +124,19 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 					user2.String(): sdk.NewCoins(sdk.NewCoin(denom, sdk.OneInt())),
 				}
 			},
-			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
-				out := icstypes.ValidatorIntents{}
-				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
-				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
+			// expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+			// 	out := icstypes.ValidatorIntents{}
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
 
+			// 	return out.Sort()
+			// },
+			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+				// four delegators each at 25%
+				out := icstypes.ValidatorIntents{}
+				for _, val := range zone.GetValidatorsAddressesAsSlice() {
+					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
+				}
 				return out.Sort()
 			},
 		},
@@ -204,7 +231,8 @@ func (s *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
-				out = append(out, icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}})
+				// next intent cannot be set, as local asset balance does not qualify
+				// out = append(out, icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}})
 				return out
 			},
 			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
@@ -217,8 +245,9 @@ func (s *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 			},
 			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
 				out := icstypes.ValidatorIntents{}
-				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
-				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
+				out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()})
+				// only remote assets are considered, thus user2 balance is ignored...
+				// out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
 				return out.Sort()
 			},
 		},
