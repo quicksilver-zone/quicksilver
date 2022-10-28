@@ -175,7 +175,8 @@ require (
 replace (
 	// https://github.com/CosmWasm/wasmd/pull/938
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221028092249-b385d2d70969
-	// Dragonberry advisoryreplace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
+	// Dragonberry advisory
+	replace github.com/confio/ics23/go => github.com/cosmos/cosmos-sdk/ics23/go v0.8.0
 	// ledger
 	github.com/cosmos/ledger-go => github.com/cosmos/ledger-go v0.9.3
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
