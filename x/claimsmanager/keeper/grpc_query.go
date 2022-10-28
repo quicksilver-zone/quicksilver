@@ -37,7 +37,6 @@ func (k Keeper) Claims(c context.Context, req *types.QueryClaimsRequest) (*types
 
 		return false, nil
 	})
-
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
