@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -43,14 +44,11 @@ func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone)
 		return userAllocations
 	}
 
-	// get zone claims
-	claims := k.icsKeeper.ClaimsManagerKeeper.AllZoneClaims(ctx, zone.ChainId)
-
 	// calculate user totals and zone total (held assets)
 	zoneAmount := sdk.ZeroInt()
-	userAmounts := make([]userAmount, len(claims))
-	// claims are for the previous epoch (up to the last epoch boundary)
-	for i, claim := range claims {
+	userAmounts := make([]userAmount, 0)
+
+	k.icsKeeper.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
 		// we can suppress the error here as the address is from claim
 		// state that is verified.
 		// userAccount, _ := sdk.AccAddressFromBech32(claim.UserAddress)
@@ -63,14 +61,13 @@ func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone)
 		// total := local.Add(remote)
 		total := remote
 		k.Logger(ctx).Info("user amount for zone", "user", claim.UserAddress, "zone", claim.ChainId, "held", total)
-		userAmounts[i] = userAmount{
-			Address: claim.UserAddress,
-			Amount:  total,
-		}
+		userAmounts = append(userAmounts, userAmount{Address: claim.UserAddress, Amount: total})
 
 		// total zone assets held remotely
 		zoneAmount = zoneAmount.Add(total)
-	}
+
+		return false
+	})
 
 	if zoneAmount.IsZero() {
 		k.Logger(ctx).Info("zero claims for zone", "zone", zone.ChainId)
