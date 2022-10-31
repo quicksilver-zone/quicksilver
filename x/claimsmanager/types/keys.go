@@ -25,6 +25,7 @@ func GetGenericKeyClaim(key []byte, chainID string, address string, module Claim
 	typeBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(typeBytes, uint32(module))
 	key = append(key, []byte(chainID)...)
+	key = append(key, byte(0x00))
 	key = append(key, []byte(address)...)
 	key = append(key, typeBytes...)
 	return append(key, []byte(srcChainID)...)

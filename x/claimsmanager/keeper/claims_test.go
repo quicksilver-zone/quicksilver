@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
@@ -143,12 +141,6 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 	claims = k.AllZoneClaims(suite.chainA.GetContext(), "cosmoshub-4")
 	suite.Require().Equal(2, len(claims))
 
-	claims = k.AllZoneUserClaims(suite.chainA.GetContext(), suite.chainB.ChainID, testAddress)
-	suite.Require().Equal(2, len(claims))
-
-	claims = k.AllZoneUserClaims(suite.chainA.GetContext(), "cosmoshub-4", testAddress)
-	suite.Require().Equal(1, len(claims))
-
 	// archive (last epoch)
 	k.ArchiveAndGarbageCollectClaims(suite.chainA.GetContext(), suite.chainB.ChainID)
 
@@ -179,9 +171,6 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 	claims = k.AllZoneLastEpochClaims(suite.chainA.GetContext(), suite.chainB.ChainID)
 	suite.Require().Equal(3, len(claims))
 
-	claims = k.AllZoneLastEpochUserClaims(suite.chainA.GetContext(), suite.chainB.ChainID, testAddress)
-	suite.Require().Equal(2, len(claims))
-
 	// clear
 	k.ClearClaims(suite.chainA.GetContext(), "cosmoshub-4")
 	claims = k.AllZoneClaims(suite.chainA.GetContext(), "cosmoshub-4")
@@ -196,69 +185,69 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 	suite.Require().Equal(0, len(claims))
 }
 
-func (suite *KeeperTestSuite) TestKeeper_IterateLastEpochUserClaims() {
-	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
+// func (suite *KeeperTestSuite) TestKeeper_IterateLastEpochUserClaims() {
+// 	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
 
-	setClaims[0].ChainId = suite.chainB.ChainID
-	setClaims[1].ChainId = suite.chainB.ChainID
-	setClaims[2].ChainId = suite.chainB.ChainID
+// 	setClaims[0].ChainId = suite.chainB.ChainID
+// 	setClaims[1].ChainId = suite.chainB.ChainID
+// 	setClaims[2].ChainId = suite.chainB.ChainID
 
-	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[0])
-	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[1])
-	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[2])
-	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[3])
-	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[4])
+// 	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[0])
+// 	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[1])
+// 	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[2])
+// 	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[3])
+// 	k.SetLastEpochClaim(suite.chainA.GetContext(), &setClaims[4])
 
-	type args struct {
-		chainID string
-		address string
-		fn      func(index int64, data types.Claim) (stop bool)
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		{
-			"blank",
-			args{},
-		},
-		{
-			"bad_chain_id",
-			args{
-				chainID: "badchain",
-				address: testAddress,
-				fn: func(idx int64, data types.Claim) (stop bool) {
-					fmt.Printf("iterator [%d]: %v\n", idx, data)
-					return false
-				},
-			},
-		},
-		{
-			"suite.chainB.ChainID",
-			args{
-				chainID: suite.chainB.ChainID,
-				address: testAddress,
-				fn: func(idx int64, data types.Claim) (stop bool) {
-					fmt.Printf("iterator [%d]: %v\n", idx, data)
-					return false
-				},
-			},
-		},
-		{
-			"chainId_cosmoshub-4",
-			args{
-				chainID: "cosmoshub-4",
-				address: testAddress,
-				fn: func(idx int64, data types.Claim) (stop bool) {
-					fmt.Printf("iterator [%d]: %v\n", idx, data)
-					return false
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		suite.Run(tt.name, func() {
-			k.IterateLastEpochUserClaims(suite.chainA.GetContext(), tt.args.chainID, tt.args.address, tt.args.fn)
-		})
-	}
-}
+// 	type args struct {
+// 		chainID string
+// 		address string
+// 		fn      func(index int64, data types.Claim) (stop bool)
+// 	}
+// 	tests := []struct {
+// 		name string
+// 		args args
+// 	}{
+// 		{
+// 			"blank",
+// 			args{},
+// 		},
+// 		{
+// 			"bad_chain_id",
+// 			args{
+// 				chainID: "badchain",
+// 				address: testAddress,
+// 				fn: func(idx int64, data types.Claim) (stop bool) {
+// 					fmt.Printf("iterator [%d]: %v\n", idx, data)
+// 					return false
+// 				},
+// 			},
+// 		},
+// 		{
+// 			"suite.chainB.ChainID",
+// 			args{
+// 				chainID: suite.chainB.ChainID,
+// 				address: testAddress,
+// 				fn: func(idx int64, data types.Claim) (stop bool) {
+// 					fmt.Printf("iterator [%d]: %v\n", idx, data)
+// 					return false
+// 				},
+// 			},
+// 		},
+// 		{
+// 			"chainId_cosmoshub-4",
+// 			args{
+// 				chainID: "cosmoshub-4",
+// 				address: testAddress,
+// 				fn: func(idx int64, data types.Claim) (stop bool) {
+// 					fmt.Printf("iterator [%d]: %v\n", idx, data)
+// 					return false
+// 				},
+// 			},
+// 		},
+// 	}
+// 	for _, tt := range tests {
+// 		suite.Run(tt.name, func() {
+// 			k.IterateLastEpochUserClaims(suite.chainA.GetContext(), tt.args.chainID, tt.args.address, tt.args.fn)
+// 		})
+// 	}
+// }

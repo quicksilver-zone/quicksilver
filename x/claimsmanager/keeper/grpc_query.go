@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -63,11 +64,16 @@ func (k Keeper) UserClaims(c context.Context, q *types.QueryClaimsRequest) (*typ
 	ctx := sdk.UnwrapSDKContext(c)
 	out := []types.Claim{}
 
-	k.IterateUserClaims(ctx, q.ChainId, q.Address, func(_ int64, claim types.Claim) (stop bool) {
-		out = append(out, claim)
+	addrBytes := []byte(q.Address)
+
+	k.IterateAllClaims(ctx, func(_ int64, key []byte, claim types.Claim) (stop bool) {
+		// first prefix byte is 0x00; so cater for that!
+		idx := bytes.Index(key[1:], []byte{0x00}) + 1
+		if bytes.Equal(key[idx:idx+len(addrBytes)], addrBytes) {
+			out = append(out, claim)
+		}
 		return false
 	})
-
 	return &types.QueryClaimsResponse{Claims: out}, nil
 }
 
@@ -75,8 +81,12 @@ func (k Keeper) UserLastEpochClaims(c context.Context, q *types.QueryClaimsReque
 	ctx := sdk.UnwrapSDKContext(c)
 	out := []types.Claim{}
 
-	k.IterateLastEpochUserClaims(ctx, q.ChainId, q.Address, func(_ int64, claim types.Claim) (stop bool) {
-		out = append(out, claim)
+	addrBytes := []byte(q.Address)
+	k.IterateAllLastEpochClaims(ctx, func(_ int64, key []byte, claim types.Claim) (stop bool) {
+		idx := bytes.Index(key, []byte{0x00})
+		if bytes.Equal(key[idx:idx+len(addrBytes)], addrBytes) {
+			out = append(out, claim)
+		}
 		return false
 	})
 

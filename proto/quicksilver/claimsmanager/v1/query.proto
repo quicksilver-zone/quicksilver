@@ -22,11 +22,11 @@ service Query {
   }
 
   rpc UserClaims(QueryClaimsRequest) returns (QueryClaimsResponse) {
-    option (google.api.http).get = "/quicksilver/claimsmanager/v1/user/{address}/claims/{chain_id}";
+    option (google.api.http).get = "/quicksilver/claimsmanager/v1/user/{address}/claims";
   }
 
   rpc UserLastEpochClaims(QueryClaimsRequest) returns (QueryClaimsResponse) {
-    option (google.api.http).get = "/quicksilver/claimsmanager/v1/user/{address}/previous_epoch_claims/{chain_id}";
+    option (google.api.http).get = "/quicksilver/claimsmanager/v1/user/{address}/previous_epoch_claims";
   }
 }
 
