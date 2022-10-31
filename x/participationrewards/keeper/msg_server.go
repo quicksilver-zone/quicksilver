@@ -66,7 +66,6 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 			proof.Data,
 			proof.ProofOps,
 		); err != nil {
-
 			return nil, fmt.Errorf("%s: %w", pl, err)
 		}
 	}

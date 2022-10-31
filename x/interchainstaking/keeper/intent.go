@@ -87,26 +87,26 @@ func (k Keeper) AllIntentsAsPointer(ctx sdk.Context, zone types.Zone, snapshot b
 }
 
 // AllOrdinalizedIntents returns every intent in the store for the specified zone.
-func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot bool) ([]types.DelegatorIntent, error) {
-	intents := []types.DelegatorIntent{}
-	var err error
-	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
-		addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
-		if localErr != nil {
-			err = localErr
-			return true
-		}
-		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
+// func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot bool) ([]types.DelegatorIntent, error) {
+// 	intents := []types.DelegatorIntent{}
+// 	var err error
+// 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
+// 		addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
+// 		if localErr != nil {
+// 			err = localErr
+// 			return true
+// 		}
+// 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 
-		intents = append(intents, intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)))
-		return false
-	})
-	if err != nil {
-		// check on nil here to ensure we don't return half a slice of intents
-		return []types.DelegatorIntent{}, err
-	}
-	return intents, nil
-}
+// 		intents = append(intents, intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)))
+// 		return false
+// 	})
+// 	if err != nil {
+// 		// check on nil here to ensure we don't return half a slice of intents
+// 		return []types.DelegatorIntent{}, err
+// 	}
+// 	return intents, nil
+// }
 
 func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 	var err error
@@ -116,14 +116,16 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 	// reduce intents
 
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
-		addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
-		if localErr != nil {
-			err = localErr
-			return true
-		}
-		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
+		// addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
+		// if localErr != nil {
+		// 	err = localErr
+		// 	return true
+		// }
+		// balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
+		balance := sdk.NewCoin(zone.LocalDenom, math.ZeroInt())
 
 		// grab offchain asset value, and raise the users' base value by this amount.
+		// currently ignoring base value (locally held assets)
 		k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, intent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
 			balance.Amount = balance.Amount.Add(math.NewIntFromUint64(data.Amount))
 			return false
@@ -170,10 +172,13 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 	intent, _ := k.GetIntent(ctx, zone, sender.String(), snapshot)
 
 	// ordinalize
-	balance := k.BankKeeper.GetBalance(ctx, sender, zone.BaseDenom)
-	if balance.Amount.IsNil() {
-		balance.Amount = math.NewInt(0)
-	}
+	// this is the currently held amount
+	// not aligned with last epoch claims
+	// balance := k.BankKeeper.GetBalance(ctx, sender, zone.BaseDenom)
+	// if balance.Amount.IsNil() {
+	// 	balance.Amount = math.ZeroInt()
+	// }
+	balance := sdk.NewCoin(zone.BaseDenom, math.ZeroInt())
 
 	k.Logger(ctx).Error("DEBUG", "zone", zone.ChainId)
 	k.Logger(ctx).Error("DEBUG", "sender", sender.String())
