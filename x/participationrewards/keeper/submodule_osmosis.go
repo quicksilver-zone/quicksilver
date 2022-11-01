@@ -19,7 +19,7 @@ var _ Submodule = &OsmosisModule{}
 
 func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 	// osmosis params
-	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, "")
+	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, types.OsmosisParamsKey)
 	if !found {
 		k.Logger(ctx).Error("unable to query osmosisparams in OsmosisModule hook")
 		return
