@@ -64,7 +64,7 @@ func (m *LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *type
 		if err != nil {
 			return 0, err
 		}
-		if denomData.QAssetDenom == zone.BaseDenom && denomData.IbcDenom == denom {
+		if denomData.QAssetDenom == zone.LocalDenom && denomData.IbcDenom == denom {
 			coin := sdk.Coin{}
 			err = k.cdc.Unmarshal(proof.Data, &coin)
 			if err != nil {
