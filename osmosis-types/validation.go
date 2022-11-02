@@ -14,9 +14,13 @@ type ParticipationRewardsKeeper interface {
 	GetProtocolData(ctx sdk.Context, pdType participationrewardstypes.ProtocolDataType, key string) (participationrewardstypes.ProtocolData, bool)
 }
 
-func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, lockedResponse osmosislockuptypes.LockedResponse, chainID string) (math.Int, error) {
-	gammdenom := lockedResponse.Lock.Coins.GetDenomByIndex(0)
-	poolID := gammdenom[strings.LastIndex(gammdenom, "/")+1:]
+func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, lock osmosislockuptypes.PeriodLock, chainID string) (math.Int, error) {
+	gammtoken, err := lock.SingleCoin()
+	if err != nil {
+		return sdk.ZeroInt(), err
+	}
+
+	poolID := gammtoken.Denom[strings.LastIndex(gammtoken.Denom, "/")+1:]
 	pd, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeOsmosisPool, poolID)
 	if !ok {
 		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for %s", poolID)
@@ -45,8 +49,8 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 		return sdk.ZeroInt(), err
 	}
 	// calculate user gamm ratio and LP asset amount
-	ugamm := lockedResponse.Lock.Coins.AmountOf(gammdenom) // user's gamm amount
-	pgamm := poolData.GetTotalShares()                     // total pool gamm amount
+	ugamm := gammtoken.Amount          // user's gamm amount
+	pgamm := poolData.GetTotalShares() // total pool gamm amount
 	if pgamm.IsZero() {
 		return sdk.ZeroInt(), fmt.Errorf("empty pool, %s", poolID)
 	}

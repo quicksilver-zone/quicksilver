@@ -264,20 +264,20 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr typ
 			return fmt.Errorf("proofs [%d]: %w", i, err)
 		}
 
-		var lockedResp osmosislockuptypes.LockedResponse
-		err := k.cdc.Unmarshal(proof.Data, &lockedResp)
+		var lock osmosislockuptypes.PeriodLock
+		err := k.cdc.Unmarshal(proof.Data, &lock)
 		if err != nil {
 			return fmt.Errorf("unable to unmarshal locked response: %s", err.Error())
 		}
 
 		// verify proof lock owner address is claim record address
-		if lockedResp.Lock.Owner != cr.Address {
-			return fmt.Errorf("invalid lock owner, expected %s got %s", cr.Address, lockedResp.Lock.Owner)
+		if lock.Owner != cr.Address {
+			return fmt.Errorf("invalid lock owner, expected %s got %s", cr.Address, lock.Owner)
 		}
 
 		// verify pool is for the relevant zone
 		// and sum user amounts
-		amount, err := k.verifyPoolAndGetAmount(ctx, lockedResp, cr)
+		amount, err := k.verifyPoolAndGetAmount(ctx, lock, cr)
 		if err != nil {
 			return err
 		}
@@ -299,8 +299,8 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr typ
 	return nil
 }
 
-func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, cr types.ClaimRecord) (math.Int, error) {
-	return osmosistypes.DetermineApplicableTokensInPool(ctx, k.prKeeper, lockedResp, cr.ChainId)
+func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lock osmosislockuptypes.PeriodLock, cr types.ClaimRecord) (math.Int, error) {
+	return osmosistypes.DetermineApplicableTokensInPool(ctx, k.prKeeper, lock, cr.ChainId)
 }
 
 // -----------
