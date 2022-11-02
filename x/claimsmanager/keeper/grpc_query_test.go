@@ -13,6 +13,7 @@ func (suite *KeeperTestSuite) TestKeeper_Queries() {
 	testClaims[0].ChainId = suite.chainB.ChainID
 	testClaims[1].ChainId = suite.chainB.ChainID
 	testClaims[2].ChainId = suite.chainB.ChainID
+	testClaims[3].ChainId = suite.chainB.ChainID
 
 	tests := []struct {
 		name         string
@@ -28,7 +29,7 @@ func (suite *KeeperTestSuite) TestKeeper_Queries() {
 				ChainId: suite.chainB.ChainID,
 			},
 			k.Claims,
-			3,
+			4,
 		},
 		{
 			"Claims_cosmoshub",
@@ -57,7 +58,7 @@ func (suite *KeeperTestSuite) TestKeeper_Queries() {
 				ChainId: suite.chainB.ChainID,
 			},
 			k.LastEpochClaims,
-			3,
+			4,
 		},
 		{
 			"LastEpochClaims_cosmoshub",
@@ -86,6 +87,7 @@ func (suite *KeeperTestSuite) TestKeeper_Queries() {
 	k.SetClaim(suite.chainA.GetContext(), &testClaims[2])
 	k.SetClaim(suite.chainA.GetContext(), &testClaims[3])
 	k.SetClaim(suite.chainA.GetContext(), &testClaims[4])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[5])
 
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {

@@ -248,7 +248,8 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 	zone icstypes.Zone,
 	zs zoneScore,
 ) []userAllocation {
-	k.Logger(ctx).Info("calcUserValidatorSelectionAllocations", "zone", zone.ChainId, "scores", zs, "allocations", zone.ValidatorSelectionAllocation)
+	k.Logger(ctx).Info("calcUserValidatorSelectionAllocations", "zone", zone.ChainId, "scores", zs, "allocation", zone.ValidatorSelectionAllocation)
+	// fmt.Printf("calcUserValidatorSelectionAllocations\n\tzone: %v\n\tscores: %v\n\tallocation: %v\n", zone.ChainId, zs, zone.ValidatorSelectionAllocation)
 
 	userAllocations := make([]userAllocation, 0)
 
@@ -270,7 +271,8 @@ func (k Keeper) calcUserValidatorSelectionAllocations(
 					score = intent.Weight.Mul(vs.Score)
 				}
 			}
-			k.Logger(ctx).Info("user score for validator", "user", di.GetDelegator(), "validator", intent.ValoperAddress, "score", score)
+			// fmt.Printf("user score for validator\n\tuser: %v\n\tvalidator: %v\n\tscore: %v\n", di.GetDelegator(), intent.ValoperAddress, score)
+			k.Logger(ctx).Info("user score for validator", "user", di.GetDelegator(), "validator", intent.GetValoperAddress(), "score", score)
 			uSum = uSum.Add(score)
 		}
 		u := userScore{
