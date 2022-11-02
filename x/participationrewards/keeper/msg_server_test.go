@@ -137,20 +137,18 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			func() {
 				userAddress := utils.GenerateAccAddressForTest()
 				osmoAddress := utils.ConvertAccAddressForTestUsingPrefix(userAddress, "osmo")
-				lockedResp := osmolockup.LockedResponse{
-					Lock: &osmolockup.PeriodLock{
-						ID:       1,
-						Owner:    osmoAddress,
-						Duration: time.Hour * 72,
-						Coins: sdk.NewCoins(
-							sdk.NewCoin(
-								"gamm/1",
-								math.NewInt(10000000),
-							),
+				locked := &osmolockup.PeriodLock{
+					ID:       1,
+					Owner:    osmoAddress,
+					Duration: time.Hour * 72,
+					Coins: sdk.NewCoins(
+						sdk.NewCoin(
+							"gamm/1",
+							math.NewInt(10000000),
 						),
-					},
+					),
 				}
-				bz, err := lockedResp.Marshal()
+				bz, err := locked.Marshal()
 				suite.Require().NoError(err)
 
 				msg = types.MsgSubmitClaim{

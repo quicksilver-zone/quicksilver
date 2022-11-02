@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.addProtocolData(
 		types.ProtocolDataTypeOsmosisParams,
 		fmt.Sprintf("{\"ChainID\": %q}", "osmosis-1"),
-		"",
+		types.OsmosisParamsKey,
 	)
 
 	suite.addProtocolData(
