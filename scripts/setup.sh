@@ -23,6 +23,7 @@ rm -rf ./${CHAIN_DIR}/${CHAINID_2}c &> /dev/null
 
 rm -rf ./${CHAIN_DIR}/hermes &> /dev/null
 rm -rf ./${CHAIN_DIR}/icq &> /dev/null
+rm -rf ./${CHAIN_DIR}/icq2 &> /dev/null
 
 # Add directories for both chains, exit if an error occurs
 #chain_0
@@ -91,12 +92,27 @@ if ! mkdir -p ./${CHAIN_DIR}/hermes 2>/dev/null; then
     exit 1
 fi
 
+if [ "$IS_MULTI_ZONE_TEST" = true ]; then
+    cp ./scripts/config/hermes-2.toml ./${CHAIN_DIR}/hermes/config.toml
+else
+    cp ./scripts/config/hermes.toml ./${CHAIN_DIR}/hermes/config.toml
+fi
+
 if ! mkdir -p ./${CHAIN_DIR}/icq 2>/dev/null; then
     echo "Failed to create icq folder. Aborting..."
     exit 1
 fi
 
 cp ./scripts/config/icq.yaml ./${CHAIN_DIR}/icq/config.yaml
+
+if [ "$IS_MULTI_ZONE_TEST" = true ]; then
+    if ! mkdir -p ./${CHAIN_DIR}/icq2 2>/dev/null; then
+        echo "Failed to create icq2 folder. Aborting..."
+        exit 1
+    fi
+
+    cp ./scripts/config/icq2.yaml ./${CHAIN_DIR}/icq2/config.yaml
+fi
 
 echo "Initializing $CHAINID_0..."
 $QS1_RUN init test --chain-id $CHAINID_0

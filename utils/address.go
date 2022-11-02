@@ -97,3 +97,11 @@ func GenerateAccAddressForTestWithPrefix(hrp string) string {
 	}
 	return addr
 }
+
+func ConvertAccAddressForTestUsingPrefix(address sdk.AccAddress, prefix string) string {
+	addr, err := bech32.ConvertAndEncode(prefix, address)
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}

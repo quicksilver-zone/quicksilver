@@ -52,6 +52,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/wasmbinding"
 
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -315,6 +316,7 @@ func NewQuicksilver(
 	enabledProposals []wasm.ProposalType,
 	appOpts servertypes.AppOptions,
 	wasmOpts []wasm.Option,
+	mock bool,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *Quicksilver {
 	appCodec := encodingConfig.Marshaler
@@ -388,6 +390,11 @@ func NewQuicksilver(
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
 	app.CapabilityKeeper.Seal()
+
+	proofOpsFn := utils.ValidateProofOps
+	if mock {
+		proofOpsFn = utils.MockProofOps
+	}
 
 	// use custom account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
@@ -492,6 +499,7 @@ func NewQuicksilver(
 		app.InterchainQueryKeeper,
 		app.InterchainstakingKeeper,
 		authtypes.FeeCollectorName,
+		proofOpsFn,
 	)
 	if err := app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler()); err != nil {
 		panic(err)
@@ -614,6 +622,7 @@ func NewQuicksilver(
 		app.InterchainstakingKeeper,
 		app.InterchainQueryKeeper,
 		app.ParticipationRewardsKeeper,
+		proofOpsFn,
 	)
 	airdropModule := airdrop.NewAppModule(appCodec, app.AirdropKeeper)
 

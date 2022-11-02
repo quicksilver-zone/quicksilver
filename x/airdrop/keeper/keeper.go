@@ -13,6 +13,7 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -30,6 +31,8 @@ type Keeper struct {
 	icsKeeper     icskeeper.Keeper
 	icqKeeper     icqkeeper.Keeper
 	prKeeper      prkeeper.Keeper
+
+	ValidateProofOps utils.ProofOpsFn
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -45,6 +48,7 @@ func NewKeeper(
 	icsk icskeeper.Keeper,
 	icqk icqkeeper.Keeper,
 	prk prkeeper.Keeper,
+	pofn utils.ProofOpsFn,
 ) Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -56,16 +60,17 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:           cdc,
-		storeKey:      key,
-		paramSpace:    ps,
-		accountKeeper: ak,
-		bankKeeper:    bk,
-		stakingKeeper: sk,
-		govKeeper:     gk,
-		icsKeeper:     icsk,
-		icqKeeper:     icqk,
-		prKeeper:      prk,
+		cdc:              cdc,
+		storeKey:         key,
+		paramSpace:       ps,
+		accountKeeper:    ak,
+		bankKeeper:       bk,
+		stakingKeeper:    sk,
+		govKeeper:        gk,
+		icsKeeper:        icsk,
+		icqKeeper:        icqk,
+		prKeeper:         prk,
+		ValidateProofOps: pofn,
 	}
 }
 

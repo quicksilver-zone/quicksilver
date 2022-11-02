@@ -13,6 +13,8 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 )
 
+type ProofOpsFn func(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error
+
 func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
 	if proofOps == nil {
 		return errors.New("unable to validate proof. No proof submitted")
@@ -55,5 +57,9 @@ func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID
 	if err := merkleProof.VerifyNonMembership(tmClientState.ProofSpecs, consensusState.GetRoot(), path); err != nil {
 		return fmt.Errorf("unable to verify non-inclusion proof: %w", err)
 	}
+	return nil
+}
+
+func MockProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
 	return nil
 }

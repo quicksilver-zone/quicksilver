@@ -57,6 +57,7 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			wasm.EnableAllProposals,
 			simapp.EmptyAppOptions{},
 			GetWasmOpts(simapp.EmptyAppOptions{}),
+			false,
 			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

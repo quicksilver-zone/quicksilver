@@ -217,12 +217,17 @@ func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocat
 	hasError := false
 
 	for _, ua := range userAllocations {
+		if ua.Amount.IsZero() {
+			continue
+		}
+
 		coins := sdk.NewCoins(
 			sdk.NewCoin(
 				k.stakingKeeper.BondDenom(ctx),
 				ua.Amount,
 			),
 		)
+
 		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(ua.Address), coins)
 		if err != nil {
 			k.Logger(ctx).Error("distribute to user", "address", ua.Address, "coins", coins)

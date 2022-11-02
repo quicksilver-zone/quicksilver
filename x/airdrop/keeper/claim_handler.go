@@ -11,7 +11,6 @@ import (
 	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	osmosislockuptypes "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -250,7 +249,7 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr typ
 		dupCheck[string(proof.Key)] = struct{}{}
 
 		// validate proof tx
-		if err := utils.ValidateProofOps(
+		if err := k.ValidateProofOps(
 			ctx,
 			&k.icsKeeper.IBCKeeper,
 			osmoZone.ConnectionId,

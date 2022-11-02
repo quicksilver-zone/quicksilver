@@ -43,7 +43,20 @@ func TestQuicksilverExport(t *testing.T) {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 	db := dbm.NewMemDB()
-	app := NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), wasm.EnableAllProposals, simapp.EmptyAppOptions{}, GetWasmOpts(simapp.EmptyAppOptions{}))
+	app := NewQuicksilver(
+		log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		db,
+		nil,
+		true,
+		map[int64]bool{},
+		DefaultNodeHome,
+		0,
+		MakeEncodingConfig(),
+		wasm.EnableAllProposals,
+		simapp.EmptyAppOptions{},
+		GetWasmOpts(simapp.EmptyAppOptions{}),
+		false,
+	)
 
 	genesisState := NewDefaultGenesisState()
 	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
@@ -62,7 +75,19 @@ func TestQuicksilverExport(t *testing.T) {
 	app.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), wasm.EnableAllProposals, simapp.EmptyAppOptions{}, GetWasmOpts(simapp.EmptyAppOptions{}))
+	app2 := NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+		db,
+		nil,
+		true,
+		map[int64]bool{},
+		DefaultNodeHome,
+		0,
+		MakeEncodingConfig(),
+		wasm.EnableAllProposals,
+		simapp.EmptyAppOptions{},
+		GetWasmOpts(simapp.EmptyAppOptions{}),
+		false,
+	)
 	_, err = app2.ExportAppStateAndValidators(false, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 }
