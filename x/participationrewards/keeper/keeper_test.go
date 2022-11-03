@@ -204,13 +204,13 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.addProtocolData(
 		types.ProtocolDataTypeLiquidToken,
 		fmt.Sprintf(
-			"{\"chainid\":%q,\"originchainid\":%q,\"denom\":%q,\"localdenom\":%q}",
+			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
 			"osmosis-1",
 			"cosmoshub-4",
-			"uatom",
+			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 			"uqatom",
 		),
-		"osmosis-1/uqatom",
+		"osmosis-1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 	)
 
 	// advance the chains
