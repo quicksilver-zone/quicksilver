@@ -128,10 +128,14 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 		// currently ignoring base value (locally held assets)
 		k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, intent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
 			balance.Amount = balance.Amount.Add(math.NewIntFromUint64(data.Amount))
+			// claim amounts are in zone.baseDenom - but given weights are all relative to one another this okay.
+			k.Logger(ctx).Error("Intents - found claim for user", "user", intent.Delegator, "claim amount", data.Amount, "new balance", balance.Amount)
 			return false
 		})
 
 		intents := intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
+		k.Logger(ctx).Error("Intents - ordinalized", "user", intent.Delegator, "new balance", balance.Amount, "normal intents", intent.Intents, "intents", intents)
+
 		for vIntent := range intents.Sort() {
 			thisIntent, ok := aggregate.GetForValoper(intents[vIntent].ValoperAddress)
 			ordinalizedIntentSum = ordinalizedIntentSum.Add(intents[vIntent].Weight)
