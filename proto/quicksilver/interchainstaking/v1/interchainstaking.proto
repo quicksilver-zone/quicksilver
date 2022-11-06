@@ -6,7 +6,6 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "google/protobuf/timestamp.proto";
 
-
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
 message Zone {
@@ -30,7 +29,8 @@ message Zone {
     (gogoproto.nullable) = false
   ];
   repeated Validator validators = 12;
-  repeated ValidatorIntent aggregate_intent = 13 [ (gogoproto.castrepeated) = "ValidatorIntents" ];
+  repeated ValidatorIntent aggregate_intent = 13
+      [ (gogoproto.castrepeated) = "ValidatorIntents" ];
   bool multi_send = 14;
   bool liquidity_module = 15;
   uint32 withdrawal_waitgroup = 16;
@@ -79,7 +79,8 @@ message WithdrawalRecord {
   ];
   string txhash = 7;
   int32 status = 8;
-  google.protobuf.Timestamp completion_time = 9 [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+  google.protobuf.Timestamp completion_time = 9
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
 }
 
 message UnbondingRecord {
@@ -95,8 +96,8 @@ message RedelegationRecord {
   string delegator = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string validator = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   int64 amount = 5;
-  google.protobuf.Timestamp completion_time = 6 [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
-
+  google.protobuf.Timestamp completion_time = 6
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
 }
 
 message TransferRecord {
@@ -135,13 +136,14 @@ message Validator {
 
 message DelegatorIntent {
   string delegator = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  repeated ValidatorIntent intents = 2 [ (gogoproto.castrepeated) = "ValidatorIntents" ];
+  repeated ValidatorIntent intents = 2
+      [ (gogoproto.castrepeated) = "ValidatorIntents" ];
 }
 
 message ValidatorIntent {
   string valoper_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string weight = 2 [
-    (gogoproto.moretags) = "yaml:\"relative_weight\"",
+    (gogoproto.moretags) = "yaml:\"weight\"",
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
@@ -176,5 +178,3 @@ message Receipt {
     (gogoproto.nullable) = false
   ];
 }
-
-
