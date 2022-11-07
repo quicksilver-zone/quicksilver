@@ -85,6 +85,57 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) coreTest() {
 	qApp := suite.GetQuicksilverApp(suite.chainA)
 
+	suite.setupTestZones()
+
+	// test ProtocolData
+	akpd := qApp.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
+	// initially we expect none
+	suite.Require().Equal(0, len(akpd))
+
+	suite.setupTestProtocolData()
+
+	akpd = qApp.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
+	// added 5 in setupTestProtocolData
+	suite.Require().Equal(5, len(akpd))
+
+	// advance the chains
+	suite.coordinator.CommitNBlocks(suite.chainA, 1)
+	suite.coordinator.CommitNBlocks(suite.chainB, 1)
+
+	// callback test
+	// suite.executeSetEpochBlockCallback()
+	suite.executeOsmosisPoolUpdateCallback()
+
+	suite.setupTestDeposits()
+	suite.setupTestIntents()
+
+	qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 1)
+
+	suite.setupTestClaims()
+
+	qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 2)
+
+	// Epoch boundary
+	qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 3)
+
+	_, found := qApp.ClaimsManagerKeeper.GetLastEpochClaim(suite.chainA.GetContext(), "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
+	suite.Require().True(found)
+
+	// zone for remote chain
+	zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+	suite.Require().True(found)
+
+	valRewards := make(map[string]sdk.Dec)
+	for _, val := range zone.Validators {
+		valRewards[val.ValoperAddress] = sdk.NewDec(100000000)
+	}
+
+	suite.executeValidatorSelectionRewardsCallback(zone.PerformanceAddress.Address, valRewards)
+}
+
+func (suite *KeeperTestSuite) setupTestZones() {
+	qApp := suite.GetQuicksilverApp(suite.chainA)
+
 	// test zone
 	testzone := icstypes.Zone{
 		ConnectionId:    suite.path.EndpointA.ConnectionID,
@@ -101,13 +152,11 @@ func (suite *KeeperTestSuite) coreTest() {
 	qApp.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: suite.chainA.GetContext().BlockTime()})
 	suite.Require().NoError(suite.setupChannelForICA(suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
 
-	valRewards := make(map[string]sdk.Dec)
 	for _, val := range suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()) {
 		// refetch the zone for each validator, else we end up with an empty valset each time!
 		zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 		suite.Require().True(found)
 		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
-		valRewards[val.OperatorAddress] = sdk.NewDec(100000000)
 	}
 
 	// cosmos zone
@@ -167,187 +216,6 @@ func (suite *KeeperTestSuite) coreTest() {
 		},
 	}
 	qApp.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneOsmosis)
-
-	// connection type
-	suite.addProtocolData(
-		types.ProtocolDataTypeConnection,
-		fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0),
-		suite.chainB.ChainID,
-	)
-	// osmosis
-	suite.addProtocolData(
-		types.ProtocolDataTypeOsmosisParams,
-		fmt.Sprintf("{\"ChainID\": %q}", "osmosis-1"),
-		types.OsmosisParamsKey,
-	)
-
-	suite.addProtocolData(
-		types.ProtocolDataTypeConnection,
-		fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", "connection-77002", "osmosis-1", 0),
-		"osmosis-1",
-	)
-
-	suite.addProtocolData(
-		types.ProtocolDataTypeOsmosisPool,
-		fmt.Sprintf(
-			"{\"poolid\":%d,\"poolname\":%q,\"pooltype\":\"balancer\",\"zones\":{%q:%q,%q:%q}}",
-			1,
-			"atom/osmo",
-			"cosmoshub-4",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
-			"osmosis-1",
-			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159",
-		),
-		"1",
-	)
-
-	suite.addProtocolData(
-		types.ProtocolDataTypeLiquidToken,
-		fmt.Sprintf(
-			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
-			"osmosis-1",
-			"cosmoshub-4",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
-			"uqatom",
-		),
-		"osmosis-1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
-	)
-
-	// advance the chains
-	suite.coordinator.CommitNBlocks(suite.chainA, 1)
-	suite.coordinator.CommitNBlocks(suite.chainB, 1)
-
-	// callback test
-	// suite.executeSetEpochBlockCallback()
-	suite.executeOsmosisPoolUpdateCallback()
-
-	// add some deposits
-	suite.addReceipt(
-		&zoneCosmos,
-		testAddress,
-		"testTxHash01",
-		sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(120000000))),
-	)
-
-	suite.addReceipt(
-		&zoneOsmosis,
-		testAddress,
-		"testTxHash02",
-		sdk.NewCoins(sdk.NewCoin("uosmo", math.NewInt(100000000))),
-	)
-
-	suite.addReceipt(
-		&testzone,
-		testAddress,
-		"testTxHash03",
-		sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(150000000))),
-	)
-
-	// add some intents
-	zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
-
-	suite.addIntent(
-		testAddress,
-		testzone,
-		icstypes.ValidatorIntents{
-			{
-				ValoperAddress: zone.Validators[0].ValoperAddress,
-				Weight:         sdk.MustNewDecFromStr("0.3"),
-			},
-			{
-				ValoperAddress: zone.Validators[1].ValoperAddress,
-				Weight:         sdk.MustNewDecFromStr("0.4"),
-			},
-			{
-				ValoperAddress: zone.Validators[2].ValoperAddress,
-				Weight:         sdk.MustNewDecFromStr("0.3"),
-			},
-		},
-	)
-
-	qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 1)
-
-	// add some claims
-	suite.addClaim(
-		testAddress,
-		"cosmoshub-4",
-		cmtypes.ClaimTypeLiquidToken,
-		"osmosis-1",
-		40000000,
-	)
-
-	suite.addClaim(
-		"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
-		"cosmoshub-4",
-		cmtypes.ClaimTypeLiquidToken,
-		"osmosis-1",
-		0,
-	)
-
-	qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 2)
-
-	// Epoch boundary
-	qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 3)
-
-	_, found = qApp.ClaimsManagerKeeper.GetLastEpochClaim(suite.chainA.GetContext(), "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
-	suite.Require().True(found)
-
-	// zone for remote chain
-	zone, found = qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
-
-	suite.executeValidatorSelectionRewardsCallback(zone.PerformanceAddress.Address, valRewards)
-}
-
-func (suite *KeeperTestSuite) addProtocolData(Type types.ProtocolDataType, Data string, Key string) {
-	pd := types.ProtocolData{
-		Type: types.ProtocolDataType_name[int32(Type)],
-		Data: []byte(Data),
-	}
-
-	suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper.SetProtocolData(suite.chainA.GetContext(), Key, &pd)
-}
-
-func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender string, hash string, coins sdk.Coins) {
-	receipt := icstypes.Receipt{
-		ChainId: zone.ChainId,
-		Sender:  sender,
-		Txhash:  hash,
-		Amount:  coins,
-	}
-
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), receipt)
-
-	delegationAddress := utils.GenerateAccAddressForTestWithPrefix("cosmos")
-	validatorAddress := utils.GenerateValAddressForTestWithPrefix("cosmos")
-	delegation := icstypes.Delegation{
-		DelegationAddress: delegationAddress,
-		ValidatorAddress:  validatorAddress,
-		Amount:            coins[0],
-		Height:            1,
-		RedelegationEnd:   101,
-	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(suite.chainA.GetContext(), zone, delegation)
-}
-
-func (suite *KeeperTestSuite) addClaim(address string, chainID string, claimType cmtypes.ClaimType, sourceChainID string, amount uint64) {
-	claim := cmtypes.Claim{
-		UserAddress:   address,
-		ChainId:       chainID,
-		Module:        claimType,
-		SourceChainId: sourceChainID,
-		Amount:        amount,
-	}
-	suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper.SetClaim(suite.chainA.GetContext(), &claim)
-}
-
-func (suite *KeeperTestSuite) addIntent(address string, zone icstypes.Zone, intents icstypes.ValidatorIntents) {
-	intent := icstypes.DelegatorIntent{
-		Delegator: address,
-		Intents:   intents,
-	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetIntent(suite.chainA.GetContext(), zone, intent, false)
 }
 
 func (suite *KeeperTestSuite) setupChannelForICA(chainID string, connectionID string, accountSuffix string, remotePrefix string) error {
@@ -408,6 +276,186 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID string, connectionID st
 	}
 	qApp.ICAControllerKeeper.SetInterchainAccountAddress(suite.chainA.GetContext(), connectionID, portID, addr)
 	return ibcModule.OnChanOpenAck(suite.chainA.GetContext(), portID, channelID, "", "")
+}
+
+func (suite *KeeperTestSuite) setupTestProtocolData() {
+	// connection type for ibc testsuite chainB
+	suite.addProtocolData(
+		types.ProtocolDataTypeConnection,
+		fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0),
+		suite.chainB.ChainID,
+	)
+	// osmosis params
+	suite.addProtocolData(
+		types.ProtocolDataTypeOsmosisParams,
+		fmt.Sprintf("{\"ChainID\": %q}", "osmosis-1"),
+		types.OsmosisParamsKey,
+	)
+	// osmosis test chain
+	suite.addProtocolData(
+		types.ProtocolDataTypeConnection,
+		fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", "connection-77002", "osmosis-1", 0),
+		"osmosis-1",
+	)
+	// osmosis test pool
+	suite.addProtocolData(
+		types.ProtocolDataTypeOsmosisPool,
+		fmt.Sprintf(
+			"{\"poolid\":%d,\"poolname\":%q,\"pooltype\":\"balancer\",\"zones\":{%q:%q,%q:%q}}",
+			1,
+			"atom/osmo",
+			"cosmoshub-4",
+			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			"osmosis-1",
+			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159",
+		),
+		"1",
+	)
+	// atom (cosmoshub) on osmosis
+	suite.addProtocolData(
+		types.ProtocolDataTypeLiquidToken,
+		fmt.Sprintf(
+			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
+			"osmosis-1",
+			"cosmoshub-4",
+			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			"uqatom",
+		),
+		"osmosis-1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+	)
+}
+
+func (suite *KeeperTestSuite) addProtocolData(Type types.ProtocolDataType, Data string, Key string) {
+	pd := types.ProtocolData{
+		Type: types.ProtocolDataType_name[int32(Type)],
+		Data: []byte(Data),
+	}
+
+	suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper.SetProtocolData(suite.chainA.GetContext(), Key, &pd)
+}
+
+func (suite *KeeperTestSuite) setupTestDeposits() {
+	qApp := suite.GetQuicksilverApp(suite.chainA)
+
+	// add deposit to chainB zone
+	zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+	suite.Require().True(found)
+
+	suite.addReceipt(
+		&zone,
+		testAddress,
+		"testTxHash03",
+		sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(150000000))),
+	)
+
+	// add deposit to cosmos zone
+	zone, found = qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), "cosmoshub-4")
+	suite.Require().True(found)
+
+	suite.addReceipt(
+		&zone,
+		testAddress,
+		"testTxHash01",
+		sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(120000000))),
+	)
+
+	// add deposit to osmosis zone
+	zone, found = qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), "osmosis-1")
+	suite.Require().True(found)
+
+	suite.addReceipt(
+		&zone,
+		testAddress,
+		"testTxHash02",
+		sdk.NewCoins(sdk.NewCoin("uosmo", math.NewInt(100000000))),
+	)
+}
+
+func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender string, hash string, coins sdk.Coins) {
+	receipt := icstypes.Receipt{
+		ChainId: zone.ChainId,
+		Sender:  sender,
+		Txhash:  hash,
+		Amount:  coins,
+	}
+
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), receipt)
+
+	delegationAddress := utils.GenerateAccAddressForTestWithPrefix("cosmos")
+	validatorAddress := utils.GenerateValAddressForTestWithPrefix("cosmos")
+	delegation := icstypes.Delegation{
+		DelegationAddress: delegationAddress,
+		ValidatorAddress:  validatorAddress,
+		Amount:            coins[0],
+		Height:            1,
+		RedelegationEnd:   101,
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(suite.chainA.GetContext(), zone, delegation)
+}
+
+func (suite *KeeperTestSuite) setupTestIntents() {
+	qApp := suite.GetQuicksilverApp(suite.chainA)
+
+	// chainB
+	zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+	suite.Require().True(found)
+
+	suite.addIntent(
+		testAddress,
+		zone,
+		icstypes.ValidatorIntents{
+			{
+				ValoperAddress: zone.Validators[0].ValoperAddress,
+				Weight:         sdk.MustNewDecFromStr("0.3"),
+			},
+			{
+				ValoperAddress: zone.Validators[1].ValoperAddress,
+				Weight:         sdk.MustNewDecFromStr("0.4"),
+			},
+			{
+				ValoperAddress: zone.Validators[2].ValoperAddress,
+				Weight:         sdk.MustNewDecFromStr("0.3"),
+			},
+		},
+	)
+}
+
+func (suite *KeeperTestSuite) addIntent(address string, zone icstypes.Zone, intents icstypes.ValidatorIntents) {
+	intent := icstypes.DelegatorIntent{
+		Delegator: address,
+		Intents:   intents,
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetIntent(suite.chainA.GetContext(), zone, intent, false)
+}
+
+func (suite *KeeperTestSuite) setupTestClaims() {
+	// add some claims
+	suite.addClaim(
+		testAddress,
+		"cosmoshub-4",
+		cmtypes.ClaimTypeLiquidToken,
+		"osmosis-1",
+		40000000,
+	)
+
+	suite.addClaim(
+		"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+		"cosmoshub-4",
+		cmtypes.ClaimTypeLiquidToken,
+		"osmosis-1",
+		0,
+	)
+}
+
+func (suite *KeeperTestSuite) addClaim(address string, chainID string, claimType cmtypes.ClaimType, sourceChainID string, amount uint64) {
+	claim := cmtypes.Claim{
+		UserAddress:   address,
+		ChainId:       chainID,
+		Module:        claimType,
+		SourceChainId: sourceChainID,
+		Amount:        amount,
+	}
+	suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper.SetClaim(suite.chainA.GetContext(), &claim)
 }
 
 /*func (suite *KeeperTestSuite) testReopenChannel(zone ) {

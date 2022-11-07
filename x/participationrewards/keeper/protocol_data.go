@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -95,6 +94,6 @@ func (k Keeper) AllKeyedProtocolDatas(ctx sdk.Context) []*types.KeyedProtocolDat
 	return out
 }
 
-func GetProtocolDataKey(protocol string, key string) string {
+/*func GetProtocolDataKey(protocol string, key string) string {
 	return fmt.Sprintf("%s/%s", protocol, key)
-}
+}*/
