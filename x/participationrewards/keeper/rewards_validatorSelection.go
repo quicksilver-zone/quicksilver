@@ -190,6 +190,12 @@ func (k Keeper) calcOverallScores(
 	}
 
 	total := delegatorRewards.GetTotal().AmountOf(zone.BaseDenom)
+
+	if total.IsZero() {
+		k.Logger(ctx).Error("No delegator rewards (2)")
+		return nil
+	}
+
 	expected := total.Quo(sdk.NewDec(int64(len(rewards))))
 
 	k.Logger(ctx).Info(
