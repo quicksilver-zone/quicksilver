@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 // GetClaimRecord returns the ClaimRecord of the given address for the given zone.
@@ -203,7 +204,7 @@ func (k Keeper) Claim(
 	chainID string,
 	action types.Action,
 	address string,
-	proofs []*types.Proof,
+	proofs []*cmtypes.Proof,
 ) (uint64, error) {
 	// check action in bounds
 	if !action.InBounds() {

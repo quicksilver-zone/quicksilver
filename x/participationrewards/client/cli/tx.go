@@ -61,7 +61,7 @@ func GetSubmitClaimTxCmd() *cobra.Command {
 				return err
 			}
 
-			var proofs []*types.Proof
+			var proofs []*cmtypes.Proof
 
 			if err = json.Unmarshal(contents, &proofs); err != nil {
 				return err

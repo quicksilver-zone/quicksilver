@@ -13,6 +13,8 @@ const (
 	QuerierRoute = StoreKey
 	// RouterKey is the message route for participationrewards
 	RouterKey = ModuleName
+
+	OsmosisParamsKey = "osmosisparams"
 )
 
 var KeyPrefixProtocolData = []byte{0x00}

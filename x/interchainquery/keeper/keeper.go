@@ -128,7 +128,7 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, connectionID string, chainID strin
 	key := GenerateQueryHash(connectionID, chainID, queryType, request, module)
 	existingQuery, found := k.GetQuery(ctx, key)
 	if !found {
-		if module != "" {
+		if module != "" && callbackID != "" {
 			if _, exists := k.callbacks[module]; !exists {
 				err := fmt.Errorf("no callback handler registered for module %s", module)
 				k.Logger(ctx).Error(err.Error())

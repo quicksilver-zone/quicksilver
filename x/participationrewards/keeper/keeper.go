@@ -14,6 +14,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
+	"github.com/ingenuity-build/quicksilver/utils"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -44,6 +45,7 @@ type Keeper struct {
 	epochsKeeper     epochskeeper.Keeper
 	feeCollectorName string
 	prSubmodules     map[cmtypes.ClaimType]Submodule
+	ValidateProofOps utils.ProofOpsFn
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -58,6 +60,7 @@ func NewKeeper(
 	icqk icqkeeper.Keeper,
 	icsk icskeeper.Keeper,
 	feeCollectorName string,
+	pofn utils.ProofOpsFn,
 ) Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -79,6 +82,7 @@ func NewKeeper(
 		icsKeeper:        icsk,
 		feeCollectorName: feeCollectorName,
 		prSubmodules:     LoadSubmodules(),
+		ValidateProofOps: pofn,
 	}
 }
 

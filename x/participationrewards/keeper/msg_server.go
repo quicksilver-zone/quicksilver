@@ -6,7 +6,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -32,11 +31,12 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	if !ok {
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
-	pd, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, zone.ChainId)
+	pd, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, msg.SrcZone)
 	if !ok {
-		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", zone.ChainId)
+		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", msg.SrcZone)
 	}
 
+	// protocol data
 	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, pd.Data)
 	if err != nil {
 		k.Logger(ctx).Error("SubmitClaim: error unmarshalling protocol data")
@@ -50,16 +50,16 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 			return nil, fmt.Errorf(
 				"invalid claim for last epoch, %s expected height %d, got %d",
 				pl,
-				zone.LastEpochHeight,
+				connectionData.LastEpoch,
 				proof.Height,
 			)
 		}
 
-		if err := utils.ValidateProofOps(
+		if err := k.ValidateProofOps(
 			ctx,
 			&k.icsKeeper.IBCKeeper,
-			zone.ConnectionId,
-			zone.ChainId,
+			connectionData.ConnectionID,
+			connectionData.ChainID,
 			proof.Height,
 			proof.ProofType,
 			proof.Key,

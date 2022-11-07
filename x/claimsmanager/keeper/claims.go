@@ -157,6 +157,52 @@ func (k Keeper) IterateLastEpochUserClaims(ctx sdk.Context, chainID string, addr
 	}
 }
 
+// IterateLastEpochUserClaims iterates through zone claims from last epoch for a given user.
+func (k Keeper) IterateAllLastEpochClaims(ctx sdk.Context, fn func(index int64, key []byte, data types.Claim) (stop bool)) {
+	// noop
+	if fn == nil {
+		return
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixLastEpochClaim)
+	defer iterator.Close()
+
+	i := int64(0)
+	for ; iterator.Valid(); iterator.Next() {
+		data := types.Claim{}
+		k.cdc.MustUnmarshal(iterator.Value(), &data)
+		stop := fn(i, iterator.Key(), data)
+		if stop {
+			break
+		}
+		i++
+	}
+}
+
+// IterateUserClaims iterates through zone claims for a given address.
+func (k Keeper) IterateAllClaims(ctx sdk.Context, fn func(index int64, key []byte, data types.Claim) (stop bool)) {
+	// noop
+	if fn == nil {
+		return
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixClaim)
+	defer iterator.Close()
+
+	i := int64(0)
+	for ; iterator.Valid(); iterator.Next() {
+		data := types.Claim{}
+		k.cdc.MustUnmarshal(iterator.Value(), &data)
+		stop := fn(i, iterator.Key(), data)
+		if stop {
+			break
+		}
+		i++
+	}
+}
+
 // AllClaims returns a slice containing all claims from the store.
 func (k Keeper) AllClaims(ctx sdk.Context) []*types.Claim {
 	claims := []*types.Claim{}

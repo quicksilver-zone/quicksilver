@@ -14,4 +14,6 @@ var (
 	ErrUnknownProtocolDataType       = sdkerrors.Register(ModuleName, 6, "unknown protocol data type")
 	ErrUnimplementedProtocolDataType = sdkerrors.Register(ModuleName, 7, "protocol data type not implemented")
 	ErrNothingToAllocate             = sdkerrors.Register(ModuleName, 9, "balance is zero, nothing to allocate")
+	ErrInvalidAssetName              = sdkerrors.Register(ModuleName, 10, "invalid ibc asset name")
+	ErrInvalidChainID                = sdkerrors.Register(ModuleName, 11, "invalid chain id")
 )

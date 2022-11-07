@@ -7,6 +7,7 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
@@ -422,7 +423,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionOsmosis),
 					Address: userAddress,
-					Proofs: []*types.Proof{
+					Proofs: []*cmtypes.Proof{
 						{},
 					},
 				}
@@ -442,7 +443,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 					ChainId: suite.chainB.ChainID,
 					Action:  int64(types.ActionOsmosis),
 					Address: userAddress,
-					Proofs: []*types.Proof{
+					Proofs: []*cmtypes.Proof{
 						{
 							Key:  []byte(string("123")),
 							Data: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 0},
@@ -455,7 +456,8 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 									},
 								},
 							},
-							Height: 0,
+							ProofType: "lockup",
+							Height:    0,
 						},
 					},
 				}

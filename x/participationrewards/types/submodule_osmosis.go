@@ -47,7 +47,6 @@ func (opd *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
 		// at some future point...
 		var poolData balancer.Pool
 		if len(opd.PoolData) > 0 {
-			fmt.Println(opd.PoolData)
 			err := json.Unmarshal(opd.PoolData, &poolData)
 			if err != nil {
 				return nil, fmt.Errorf("3: unable to unmarshal concrete PoolData: %w", err)

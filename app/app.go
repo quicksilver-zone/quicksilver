@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/gorilla/mux"
@@ -53,6 +52,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/wasmbinding"
 
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -316,6 +316,7 @@ func NewQuicksilver(
 	enabledProposals []wasm.ProposalType,
 	appOpts servertypes.AppOptions,
 	wasmOpts []wasm.Option,
+	mock bool,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *Quicksilver {
 	appCodec := encodingConfig.Marshaler
@@ -390,6 +391,11 @@ func NewQuicksilver(
 	// their scoped modules in `NewApp` with `ScopeToModule`
 	app.CapabilityKeeper.Seal()
 
+	proofOpsFn := utils.ValidateProofOps
+	if mock {
+		proofOpsFn = utils.MockProofOps
+	}
+
 	// use custom account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
@@ -446,20 +452,21 @@ func NewQuicksilver(
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		scopedICAControllerKeeper, app.MsgServiceRouter(),
 	)
+
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
 		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
 		app.IBCKeeper.ChannelKeeper, &app.IBCKeeper.PortKeeper,
 		app.AccountKeeper, scopedICAHostKeeper, app.MsgServiceRouter(),
 	)
+
 	icaModule := ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)
 
 	app.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
 		appCodec,
 		keys[claimsmanagertypes.StoreKey],
-		app.GetSubspace(claimsmanagertypes.ModuleName),
-		app.AccountKeeper,
 	)
+
 	claimsmanagerModule := claimsmanager.NewAppModule(appCodec, app.ClaimsManagerKeeper)
 
 	app.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, keys[interchainquerytypes.StoreKey], app.IBCKeeper)
@@ -492,6 +499,7 @@ func NewQuicksilver(
 		app.InterchainQueryKeeper,
 		app.InterchainstakingKeeper,
 		authtypes.FeeCollectorName,
+		proofOpsFn,
 	)
 	if err := app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler()); err != nil {
 		panic(err)
@@ -614,6 +622,7 @@ func NewQuicksilver(
 		app.InterchainstakingKeeper,
 		app.InterchainQueryKeeper,
 		app.ParticipationRewardsKeeper,
+		proofOpsFn,
 	)
 	airdropModule := airdrop.NewAppModule(appCodec, app.AirdropKeeper)
 
@@ -776,24 +785,8 @@ func NewQuicksilver(
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	// handle upgrades here
+	setUpgradeHandlers(app)
 
-	app.UpgradeKeeper.SetUpgradeHandler("v0.9.6", func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		app.UpgradeKeeper.Logger(ctx).Info("Fixing epoch duration")
-		dayEpoch := app.EpochsKeeper.GetEpochInfo(ctx, "day")
-		dayEpoch.Duration = time.Hour * 2
-		app.EpochsKeeper.SetEpochInfo(ctx, dayEpoch)
-
-		weekEpoch := app.EpochsKeeper.GetEpochInfo(ctx, "week")
-		weekEpoch.Duration = time.Hour * 6
-		weekEpoch.Identifier = "epoch"
-		app.EpochsKeeper.SetEpochInfo(ctx, weekEpoch)
-
-		app.EpochsKeeper.DeleteEpochInfo(ctx, "week")
-
-		app.UpgradeKeeper.Logger(ctx).Info("Done")
-
-		return app.mm.RunMigrations(ctx, app.configurator, vm)
-	})
 	app.mm.RegisterServices(app.configurator)
 
 	// // add test gRPC service for testing gRPC queries in isolation
@@ -851,11 +844,6 @@ func NewQuicksilver(
 
 	app.SetAnteHandler(NewAnteHandler(options))
 	app.SetEndBlocker(app.EndBlocker)
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		"v0.6.6",
-		Getv0_6_6Upgrade(app),
-	)
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {

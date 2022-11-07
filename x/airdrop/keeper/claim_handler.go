@@ -11,8 +11,8 @@ import (
 	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	osmosislockuptypes "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -24,7 +24,7 @@ var (
 	tier5 = "0.30"
 )
 
-func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proofs []*types.Proof) (uint64, error) {
+func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proofs []*cmtypes.Proof) (uint64, error) {
 	// action already completed, nothing to claim
 	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
 		return 0, fmt.Errorf("%s already completed", types.Action_name[int32(action)])
@@ -106,7 +106,7 @@ func (k Keeper) handleGovernanceParticipation(ctx sdk.Context, cr *types.ClaimRe
 }
 
 // handleOsmosisLP
-func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proofs []*types.Proof) (uint64, error) {
+func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proofs []*cmtypes.Proof) (uint64, error) {
 	if len(proofs) == 0 {
 		return 0, errors.New("expects at least one LP proof")
 	}
@@ -223,7 +223,7 @@ func (k Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) e
 // It utilizes Osmosis query:
 //
 //	rpc LockedByID(LockedRequest) returns (LockedResponse);
-func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types.ClaimRecord) error {
+func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr types.ClaimRecord) error {
 	// get Osmosis zone
 	var osmoZone *icstypes.Zone
 	k.icsKeeper.IterateZones(ctx, func(_ int64, zone icstypes.Zone) (stop bool) {
@@ -249,13 +249,13 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 		dupCheck[string(proof.Key)] = struct{}{}
 
 		// validate proof tx
-		if err := utils.ValidateProofOps(
+		if err := k.ValidateProofOps(
 			ctx,
 			&k.icsKeeper.IBCKeeper,
 			osmoZone.ConnectionId,
 			osmoZone.ChainId,
 			proof.Height,
-			"lockup",
+			proof.ProofType,
 			proof.Key,
 			proof.Data,
 			proof.ProofOps,
@@ -263,20 +263,20 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 			return fmt.Errorf("proofs [%d]: %w", i, err)
 		}
 
-		var lockedResp osmosislockuptypes.LockedResponse
-		err := k.cdc.Unmarshal(proof.Data, &lockedResp)
+		var lock osmosislockuptypes.PeriodLock
+		err := k.cdc.Unmarshal(proof.Data, &lock)
 		if err != nil {
 			return fmt.Errorf("unable to unmarshal locked response: %s", err.Error())
 		}
 
 		// verify proof lock owner address is claim record address
-		if lockedResp.Lock.Owner != cr.Address {
-			return fmt.Errorf("invalid lock owner, expected %s got %s", cr.Address, lockedResp.Lock.Owner)
+		if lock.Owner != cr.Address {
+			return fmt.Errorf("invalid lock owner, expected %s got %s", cr.Address, lock.Owner)
 		}
 
 		// verify pool is for the relevant zone
 		// and sum user amounts
-		amount, err := k.verifyPoolAndGetAmount(ctx, lockedResp, cr)
+		amount, err := k.verifyPoolAndGetAmount(ctx, lock, cr)
 		if err != nil {
 			return err
 		}
@@ -298,8 +298,8 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 	return nil
 }
 
-func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, cr types.ClaimRecord) (math.Int, error) {
-	return osmosistypes.DetermineApplicableTokensInPool(ctx, k.prKeeper, lockedResp, cr.ChainId)
+func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lock osmosislockuptypes.PeriodLock, cr types.ClaimRecord) (math.Int, error) {
+	return osmosistypes.DetermineApplicableTokensInPool(ctx, k.prKeeper, lock, cr.ChainId)
 }
 
 // -----------

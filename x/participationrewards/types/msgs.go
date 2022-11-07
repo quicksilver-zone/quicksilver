@@ -4,12 +4,21 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
-var _ sdk.Msg = &MsgSubmitClaim{}
+// participationrewars message types
+const (
+	TypeMsgSubmitClaim = "submitclaim"
+)
+
+var (
+	_ sdk.Msg            = &MsgSubmitClaim{}
+	_ legacytx.LegacyMsg = &MsgSubmitClaim{}
+)
 
 // NewMsgSubmitClaim - construct a msg to submit a claim.
 func NewMsgSubmitClaim(
@@ -17,7 +26,7 @@ func NewMsgSubmitClaim(
 	srcZone string,
 	zone string,
 	claimType cmtypes.ClaimType,
-	proofs []*Proof,
+	proofs []*cmtypes.Proof,
 ) *MsgSubmitClaim {
 	return &MsgSubmitClaim{
 		UserAddress: userAddress.String(),
@@ -27,6 +36,17 @@ func NewMsgSubmitClaim(
 		Proofs:      proofs,
 	}
 }
+
+// GetSignBytes implements LegacyMsg.
+func (msg MsgSubmitClaim) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// Route implements LegacyMsg.
+func (msg MsgSubmitClaim) Route() string { return RouterKey }
+
+// Type Implements Msg.
+func (msg MsgSubmitClaim) Type() string { return TypeMsgSubmitClaim }
 
 // GetSigners implements Msg.
 func (msg MsgSubmitClaim) GetSigners() []sdk.AccAddress {
@@ -65,37 +85,6 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 				errors[pLabel] = err
 			}
 		}
-	}
-
-	// check for errors and return
-	if len(errors) > 0 {
-		return multierror.New(errors)
-	}
-
-	return nil
-}
-
-func (p Proof) ValidateBasic() error {
-	errors := make(map[string]error)
-
-	if len(p.Key) == 0 {
-		errors["Key"] = ErrUndefinedAttribute
-	}
-
-	if len(p.Data) == 0 {
-		errors["Data"] = ErrUndefinedAttribute
-	}
-
-	if p.ProofOps == nil {
-		errors["ProofOps"] = ErrUndefinedAttribute
-	}
-
-	if p.Height < 0 {
-		errors["Height"] = ErrNegativeAttribute
-	}
-
-	if len(p.ProofType) == 0 {
-		errors["ProofType"] = ErrUndefinedAttribute
 	}
 
 	// check for errors and return

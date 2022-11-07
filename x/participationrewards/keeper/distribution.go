@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/quicksilver/utils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -68,6 +69,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 
 	// add base value
 	tvs[cosmosZone.BaseDenom] = sdk.OneDec()
+	// tvs[uatom] = 1.0
 
 	// capture errors from iterator
 	errors := make(map[string]error)
@@ -217,13 +219,24 @@ func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocat
 	hasError := false
 
 	for _, ua := range userAllocations {
+		if ua.Amount.IsZero() {
+			continue
+		}
+
 		coins := sdk.NewCoins(
 			sdk.NewCoin(
 				k.stakingKeeper.BondDenom(ctx),
 				ua.Amount,
 			),
 		)
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sdk.AccAddress(ua.Address), coins)
+
+		addrBytes, err := utils.AccAddressFromBech32(ua.Address, "")
+		if err != nil {
+			k.Logger(ctx).Error("unmarshalling address", "address", ua.Address)
+			hasError = true
+		}
+
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addrBytes, coins)
 		if err != nil {
 			k.Logger(ctx).Error("distribute to user", "address", ua.Address, "coins", coins)
 			hasError = true

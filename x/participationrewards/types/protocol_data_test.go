@@ -59,6 +59,68 @@ func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
+
+}
+
+func TestLiquidProtocolData_ValidateBasic(t *testing.T) {
+	tests := []struct {
+		name    string
+		pd      LiquidAllowedDenomProtocolData
+		wantErr bool
+	}{
+		{
+			"liquid_data",
+			LiquidAllowedDenomProtocolData{
+				ChainID:               "somechain-1",
+				IbcDenom:              "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+				QAssetDenom:           "uqstake",
+				RegisteredZoneChainID: "testzone-1",
+			},
+			false,
+		},
+		{
+			"liquid_invalid_ibc_denom",
+			LiquidAllowedDenomProtocolData{
+				ChainID:               "somechain-1",
+				IbcDenom:              "stake",
+				QAssetDenom:           "uqstake",
+				RegisteredZoneChainID: "testzone-1",
+			},
+			true,
+		},
+		{
+			"liquid_invalid_chainid",
+			LiquidAllowedDenomProtocolData{
+				ChainID:               "badzone",
+				IbcDenom:              "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+				QAssetDenom:           "uqstake",
+				RegisteredZoneChainID: "testzone-1",
+			},
+			true,
+		},
+		{
+			"liquid_invalid_rzchainid",
+			LiquidAllowedDenomProtocolData{
+				ChainID:               "somechain-1",
+				IbcDenom:              "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+				QAssetDenom:           "uqstake",
+				RegisteredZoneChainID: "badzone",
+			},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.pd.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+
 }
 
 func TestUnmarshalProtocolData(t *testing.T) {
@@ -122,12 +184,13 @@ func TestUnmarshalProtocolData(t *testing.T) {
 			"liquid_data",
 			args{
 				datatype: ProtocolDataTypeLiquidToken,
-				data:     []byte(`{"chainid": "somechain","localdenom": "lstake","denom": "qstake"}`),
+				data:     []byte(`{"chainid": "somechain-1","ibcdenom": "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3","qassetdenom": "uqstake", "registeredzonechainid": "registeredzone-1"}`),
 			},
 			LiquidAllowedDenomProtocolData{
-				ChainID:    "somechain",
-				Denom:      "qstake",
-				LocalDenom: "lstake",
+				ChainID:               "somechain-1",
+				IbcDenom:              "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+				QAssetDenom:           "uqstake",
+				RegisteredZoneChainID: "registeredzone-1",
 			},
 			false,
 		},

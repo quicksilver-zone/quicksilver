@@ -44,5 +44,4 @@ func init() {
 	cryptocodec.RegisterCrypto(amino)
 	govv1beta1.RegisterProposalType(ProposalTypeAddProtocolData)
 	sdk.RegisterLegacyAminoCodec(amino)
-	amino.Seal()
 }

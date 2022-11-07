@@ -95,6 +95,7 @@ func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
 	}
 
 	rootCmd.AddCommand(
+		forceprune(),
 		genutilcli.InitCmd(app.ModuleBasics, app.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
 		genutilcli.GenTxCmd(app.ModuleBasics, encodingConfig.TxConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome),
@@ -260,6 +261,7 @@ func (ac appCreator) newApp(
 		wasm.EnableAllProposals,
 		appOpts,
 		wasmOpts,
+		false,
 		baseapp.SetPruning(pruningOpts),
 		baseapp.SetMinGasPrices(cast.ToString(appOpts.Get(server.FlagMinGasPrices))),
 		baseapp.SetHaltHeight(cast.ToUint64(appOpts.Get(server.FlagHaltHeight))),
@@ -312,6 +314,7 @@ func (ac appCreator) appExport(
 		wasm.EnableAllProposals,
 		appOpts,
 		emptyWasmOpts,
+		false,
 	)
 
 	if height != -1 {

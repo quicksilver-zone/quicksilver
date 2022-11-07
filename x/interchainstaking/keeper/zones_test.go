@@ -32,6 +32,7 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		wasm.EnableAllProposals,
 		simapp.EmptyAppOptions{},
 		app.GetWasmOpts(simapp.EmptyAppOptions{}),
+		true,
 	)
 }
 

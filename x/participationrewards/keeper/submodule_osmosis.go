@@ -19,7 +19,7 @@ var _ Submodule = &OsmosisModule{}
 
 func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 	// osmosis params
-	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, "")
+	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, types.OsmosisParamsKey)
 	if !found {
 		k.Logger(ctx).Error("unable to query osmosisparams in OsmosisModule hook")
 		return
@@ -77,13 +77,13 @@ func (m *OsmosisModule) IsReady() bool {
 func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	var amount uint64
 	for _, proof := range msg.Proofs {
-		lockupResponse := osmolockup.LockedResponse{}
-		err := k.cdc.Unmarshal(proof.Data, &lockupResponse)
+		lock := osmolockup.PeriodLock{}
+		err := k.cdc.Unmarshal(proof.Data, &lock)
 		if err != nil {
 			return 0, err
 		}
 
-		_, lockupOwner, err := bech32.DecodeAndConvert(lockupResponse.Lock.Owner)
+		_, lockupOwner, err := bech32.DecodeAndConvert(lock.Owner)
 		if err != nil {
 			return 0, err
 		}
@@ -92,7 +92,7 @@ func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 			return 0, errors.New("not a valid proof for submitting user")
 		}
 
-		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lockupResponse, msg.Zone)
+		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lock, msg.Zone)
 		if err != nil {
 			return 0, err
 		}

@@ -76,9 +76,9 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 				// edge case: the callback has resent the same query (re-query)!
 				// action:    set noDelete to true and continue (short circuit error handling)!
 				noDelete = true
-				// we have executed a callback; only a single callback is expected per request, so break here.
-				break
 			}
+			// we have executed a callback; only a single callback is expected per request, so break here.
+			break
 		}
 	}
 

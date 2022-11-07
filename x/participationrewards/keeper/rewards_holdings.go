@@ -4,15 +4,10 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/ingenuity-build/quicksilver/utils"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
-
-// userAmount is an internal struct to track transient state for rewards
-// distribution. It contains the user address and held amount.
-type userAmount struct {
-	Address string
-	Amount  math.Int
-}
 
 func (k Keeper) allocateHoldingsRewards(ctx sdk.Context) error {
 	k.Logger(ctx).Info("allocateHoldingsRewards")
@@ -43,29 +38,42 @@ func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone)
 		return userAllocations
 	}
 
-	// get zone claims
-	claims := k.icsKeeper.ClaimsManagerKeeper.AllZoneClaims(ctx, zone.ChainId)
-
 	// calculate user totals and zone total (held assets)
-	zoneAmount := sdk.ZeroInt()
-	userAmounts := make([]userAmount, len(claims))
-	for i, claim := range claims {
+	zoneAmount := math.ZeroInt()
+	userAmountsMap := make(map[string]math.Int)
+
+	k.icsKeeper.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
 		// we can suppress the error here as the address is from claim
 		// state that is verified.
-		userAccount, _ := sdk.AccAddressFromBech32(claim.UserAddress)
+		// userAccount, _ := sdk.AccAddressFromBech32(claim.UserAddress)
 		// calculate user held amount
 		// total = local + remote
-		local := k.bankKeeper.GetBalance(ctx, userAccount, zone.LocalDenom).Amount
-		remote := sdk.NewIntFromUint64(claim.Amount)
-		total := local.Add(remote)
-		k.Logger(ctx).Info("user amount for zone", "user", claim.UserAddress, "zone", claim.ChainId, "held", total)
-		userAmounts[i] = userAmount{
-			Address: claim.UserAddress,
-			Amount:  total,
+		// local amount here uses the current epoch balance which is not aligned
+		// with claims that are against the previous epoch
+		// local := k.bankKeeper.GetBalance(ctx, userAccount, zone.LocalDenom).Amount
+		// remote := math.NewIntFromUint64(claim.Amount)
+		// total := local.Add(remote)
+
+		amount := math.NewIntFromUint64(claim.Amount)
+		k.Logger(ctx).Info(
+			"claim",
+			"type", cmtypes.ClaimType_name[int32(claim.Module)],
+			"user", claim.UserAddress,
+			"zone", claim.ChainId,
+			"amount", amount,
+		)
+
+		if _, exists := userAmountsMap[claim.UserAddress]; !exists {
+			userAmountsMap[claim.UserAddress] = math.ZeroInt()
 		}
 
-		zoneAmount = zoneAmount.Add(total)
-	}
+		userAmountsMap[claim.UserAddress] = userAmountsMap[claim.UserAddress].Add(amount)
+
+		// total zone assets held remotely
+		zoneAmount = zoneAmount.Add(amount)
+
+		return false
+	})
 
 	if zoneAmount.IsZero() {
 		k.Logger(ctx).Info("zero claims for zone", "zone", zone.ChainId)
@@ -74,26 +82,28 @@ func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone)
 
 	// calculate user held proportions and apply limit
 	limit := sdk.MustNewDecFromStr("0.02")
-	adjustedZoneAmount := sdk.ZeroInt()
-	for i, userAmount := range userAmounts {
-		userPortion := sdk.NewDecFromInt(userAmount.Amount).Quo(sdk.NewDecFromInt(zoneAmount))
+	adjustedZoneAmount := math.ZeroInt()
+	for _, address := range utils.Keys(userAmountsMap) {
+		userAmount := userAmountsMap[address]
+		userPortion := sdk.NewDecFromInt(userAmount).Quo(sdk.NewDecFromInt(zoneAmount))
 		// check for and apply limit
 		if userPortion.GT(limit) {
-			userAmount.Amount = sdk.NewDecFromInt(zoneAmount).Mul(limit).TruncateInt()
-			userAmounts[i] = userAmount
+			userAmount = sdk.NewDecFromInt(zoneAmount).Mul(limit).TruncateInt()
+			userAmountsMap[address] = userAmount
 		}
-		adjustedZoneAmount = adjustedZoneAmount.Add(userAmount.Amount)
+		adjustedZoneAmount = adjustedZoneAmount.Add(userAmount)
 	}
 	k.Logger(ctx).Info("rewards limit adjustment", "zoneAmount", zoneAmount, "adjustedZoneAmount", adjustedZoneAmount)
 
-	allocation := sdk.NewDecFromInt(sdk.NewIntFromUint64(zone.HoldingsAllocation))
+	allocation := sdk.NewDecFromInt(math.NewIntFromUint64(zone.HoldingsAllocation))
 	tokensPerAsset := allocation.Quo(sdk.NewDecFromInt(adjustedZoneAmount))
 	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset)
 
-	for _, ua := range userAmounts {
+	for _, address := range utils.Keys(userAmountsMap) {
+		amount := userAmountsMap[address]
 		allocation := userAllocation{
-			Address: ua.Address,
-			Amount:  sdk.NewDecFromInt(ua.Amount).Mul(tokensPerAsset).TruncateInt(),
+			Address: address,
+			Amount:  sdk.NewDecFromInt(amount).Mul(tokensPerAsset).TruncateInt(),
 		}
 		userAllocations = append(userAllocations, allocation)
 	}
