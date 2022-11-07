@@ -125,6 +125,7 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, connectionID string, chainID strin
 		"callback", callbackID,
 		"ttl", ttl,
 	)
+	fmt.Printf("DEBUG: CallbackID: %s\n", callbackID)
 	key := GenerateQueryHash(connectionID, chainID, queryType, request, module)
 	existingQuery, found := k.GetQuery(ctx, key)
 	if !found {
