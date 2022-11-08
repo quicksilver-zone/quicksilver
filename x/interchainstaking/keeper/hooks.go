@@ -19,7 +19,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 		k.IterateZones(ctx, func(index int64, zoneInfo types.Zone) (stop bool) {
 			k.Logger(ctx).Info("taking a snapshot of intents")
-			err := k.AggregateIntents(ctx, zoneInfo)
+			err := k.AggregateIntents(ctx, &zoneInfo)
 			if err != nil {
 				// we can and need not panic here; logging the error is sufficient.
 				// an error here is not expected, but also not terminal.

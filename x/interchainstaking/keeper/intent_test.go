@@ -164,7 +164,7 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 				icsKeeper.SetIntent(ctx, zone, intent, false)
 			}
 
-			icsKeeper.AggregateIntents(ctx, zone)
+			icsKeeper.AggregateIntents(ctx, &zone)
 
 			// refresh zone to pull new aggregate
 			zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
