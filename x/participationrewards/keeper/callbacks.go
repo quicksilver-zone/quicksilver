@@ -172,7 +172,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 		connectionData.LastEpoch = blockResponse.SdkBlock.Header.Height
 	}
 
-	heightInBytes := sdk.Uint64ToBigEndian(uint64(connectionData.LastEpoch + 1))
+	heightInBytes := sdk.Uint64ToBigEndian(uint64(connectionData.LastEpoch))
 	// trigger a client update at the epoch boundary
 	k.IcqKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "ibc.ClientUpdate", heightInBytes, sdk.NewInt(-1), types.ModuleName, "", 0)
 
