@@ -103,7 +103,7 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.coordinator.CommitNBlocks(suite.chainB, 1)
 
 	// callback test
-	// suite.executeSetEpochBlockCallback()
+	suite.executeSetEpochBlockCallback()
 	suite.executeOsmosisPoolUpdateCallback()
 
 	suite.setupTestDeposits()
