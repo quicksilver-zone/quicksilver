@@ -835,8 +835,8 @@ github.com/notional-labs/liquidity-staking-module v0.0.3-0.20220914043211-d4675d
 github.com/notional-labs/liquidity-staking-module v0.0.3-0.20220914043211-d4675d9af6ae/go.mod h1:56yrn9/cmuDbUn8BJ9XNXyuYw0ZbqUN11I3bl0Tb/7Y=
 github.com/notional-labs/tm-db v0.6.7-0.20220731185452-136c7b65fb62 h1:e2cOwTEwwkRvvmjO1uBNQCDnl1HUL/Uc4ifhsogGiDw=
 github.com/notional-labs/tm-db v0.6.7-0.20220731185452-136c7b65fb62/go.mod h1:rz+FLZR5PszFXaSH0O3jlwDfNXwOd5U7HJP5X6f+05A=
-github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221028092249-b385d2d70969 h1:BMHOAT3bIgWz8svbV4taui6OL2xjBhhYEKEO1M+RQEU=
-github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221028092249-b385d2d70969/go.mod h1:g6GbIycw/5OxZs3hfaZqG5x4ZqA2YEjSRFRMQybal48=
+github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221114145317-d6e67fd50956 h1:gT+v1UFkZAL9GK5paedZPxL8Venc7SqbrAuKBh1q5Jk=
+github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221114145317-d6e67fd50956/go.mod h1:n0HuoJR2cMpg9jKqR+x+KGO/rQsrzsDPEsgwHHs70dM=
 github.com/nxadm/tail v1.4.4 h1:DQuhQpB1tVlglWS2hLQ5OV6B5r8aGxSrPc5Qo6uTN78=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/oklog/oklog v0.3.2/go.mod h1:FCV+B7mhrz4o+ueLpx+KqkyXRGMWOYEvfiXtdGtbWGs=
