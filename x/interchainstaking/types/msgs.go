@@ -174,7 +174,6 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 	}
 
 	return nil
-
 }
 
 // GetSignBytes Implements Msg.
