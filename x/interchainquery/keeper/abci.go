@@ -21,11 +21,11 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	events := sdk.Events{}
 	// emit events for periodic queries
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
-		if queryInfo.QueryType == "ibc.ClientUpdate" && queryInfo.LastEmission.AddRaw(1000).LTE(sdk.NewInt(ctx.BlockHeight())) {
-			k.DeleteQuery(ctx, queryInfo.Id)
-			k.Logger(ctx).Error("Deleting stale query")
-			return false
-		}
+		// if queryInfo.QueryType == "ibc.ClientUpdate" && queryInfo.LastEmission.AddRaw(1000).LTE(sdk.NewInt(ctx.BlockHeight())) {
+		// 	k.DeleteQuery(ctx, queryInfo.Id)
+		// 	k.Logger(ctx).Error("Deleting stale query")
+		// 	return false
+		// }
 		if queryInfo.LastEmission.IsNil() || queryInfo.LastEmission.IsZero() || queryInfo.LastEmission.Add(queryInfo.Period).Equal(sdk.NewInt(ctx.BlockHeight())) {
 			k.Logger(ctx).Info("Interchainquery event emitted", "id", queryInfo.Id)
 			event := sdk.NewEvent(

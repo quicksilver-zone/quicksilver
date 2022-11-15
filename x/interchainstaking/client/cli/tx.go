@@ -54,12 +54,8 @@ e.g. "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzz
 			}
 
 			chainID := args[0]
-			intents, err := types.IntentsFromString(args[1])
-			if err != nil {
-				return fmt.Errorf("%v, see example: %v", err, cmd.Example)
-			}
 
-			msg := types.NewMsgSignalIntent(chainID, intents, clientCtx.GetFromAddress())
+			msg := types.NewMsgSignalIntent(chainID, args[1], clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

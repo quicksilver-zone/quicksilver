@@ -11,10 +11,14 @@ import (
 )
 
 // upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch)
-const v001000UpgradeName = "v0.10.0"
+const (
+	v001000UpgradeName = "v0.10.0"
+	v001001UpgradeName = "v0.10.1"
+)
 
 func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v001000UpgradeName, getv001000Upgrade(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v001001UpgradeName, getv001001Upgrade(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -48,6 +52,13 @@ func setUpgradeHandlers(app *Quicksilver) {
 func getv001000Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.0; no state transitions to apply.")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func getv001001Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.1; no state transitions to apply.")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }

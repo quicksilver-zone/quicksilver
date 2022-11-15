@@ -124,8 +124,8 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 	return out, nil
 }
 
-// NewMsgRequestRedemption - construct a msg to request redemption.
-func NewMsgSignalIntent(chainID string, intents []*ValidatorIntent, fromAddress sdk.Address) *MsgSignalIntent {
+// NewMsgSignalIntent - construct a msg to update signalled intent.
+func NewMsgSignalIntent(chainID string, intents string, fromAddress sdk.Address) *MsgSignalIntent {
 	return &MsgSignalIntent{ChainId: chainID, Intents: intents, FromAddress: fromAddress.String()}
 }
 
@@ -148,23 +148,27 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 
 	wantSum := sdk.OneDec()
 	weightSum := sdk.NewDec(0)
-	for i, intent := range msg.Intents {
-		if _, _, err := bech32.DecodeAndConvert(intent.ValoperAddress); err != nil {
-			istr := fmt.Sprintf("Intent_%02d_ValoperAddress", i)
-			errm[istr] = err
+	intents, err := IntentsFromString(msg.Intents)
+	if err != nil {
+		errm["Intents"] = err
+	} else {
+		for i, intent := range intents {
+			if _, _, err := bech32.DecodeAndConvert(intent.ValoperAddress); err != nil {
+				istr := fmt.Sprintf("Intent_%02d_ValoperAddress", i)
+				errm[istr] = err
+			}
+
+			if intent.Weight.GT(wantSum) {
+				istr := fmt.Sprintf("Intent_%02d_Weight", i)
+				errm[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, wantSum)
+			}
+			weightSum = weightSum.Add(intent.Weight)
 		}
 
-		if intent.Weight.GT(wantSum) {
-			istr := fmt.Sprintf("Intent_%02d_Weight", i)
-			errm[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, wantSum)
+		if !weightSum.Equal(wantSum) {
+			errm["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weightSum, wantSum)
 		}
-		weightSum = weightSum.Add(intent.Weight)
 	}
-
-	if !weightSum.Equal(wantSum) {
-		errm["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weightSum, wantSum)
-	}
-
 	if len(errm) > 0 {
 		return multierror.New(errm)
 	}

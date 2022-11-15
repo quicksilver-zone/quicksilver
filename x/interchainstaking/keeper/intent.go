@@ -108,14 +108,14 @@ func (k Keeper) AllIntentsAsPointer(ctx sdk.Context, zone types.Zone, snapshot b
 // 	return intents, nil
 // }
 
-func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
+func (k *Keeper) AggregateIntents(ctx sdk.Context, zone *types.Zone) error {
 	var err error
 	snapshot := false
 	aggregate := make(types.ValidatorIntents, 0)
 	ordinalizedIntentSum := sdk.ZeroDec()
 	// reduce intents
 
-	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
+	k.IterateIntents(ctx, *zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		// addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
 		// if localErr != nil {
 		// 	err = localErr
@@ -166,7 +166,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone types.Zone) error {
 	k.Logger(ctx).Info("aggregates", "agg", aggregate, "chain", zone.ChainId)
 
 	zone.AggregateIntent = aggregate
-	k.SetZone(ctx, &zone)
+	k.SetZone(ctx, zone)
 	return nil
 }
 

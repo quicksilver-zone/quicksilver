@@ -59,7 +59,6 @@ func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
-
 }
 
 func TestLiquidProtocolData_ValidateBasic(t *testing.T) {
@@ -120,7 +119,6 @@ func TestLiquidProtocolData_ValidateBasic(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
-
 }
 
 func TestUnmarshalProtocolData(t *testing.T) {

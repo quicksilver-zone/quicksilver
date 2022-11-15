@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -210,13 +212,8 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				s.Require().NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId: s.chainB.ChainID,
-					Intents: []*icstypes.ValidatorIntent{
-						{
-							ValoperAddress: val1.String(),
-							Weight:         sdk.MustNewDecFromStr("0.3"),
-						},
-					},
+					ChainId:     s.chainB.ChainID,
+					Intents:     fmt.Sprintf("0.3%s", val1.String()),
 					FromAddress: TestOwnerAddress,
 				}
 			},
@@ -231,13 +228,8 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				s.Require().NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId: s.chainB.ChainID,
-					Intents: []*icstypes.ValidatorIntent{
-						{
-							ValoperAddress: val1.String(),
-							Weight:         sdk.MustNewDecFromStr("3.0"),
-						},
-					},
+					ChainId:     s.chainB.ChainID,
+					Intents:     fmt.Sprintf("3.0%s", val1.String()),
 					FromAddress: TestOwnerAddress,
 				}
 			},
@@ -252,13 +244,8 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				s.Require().NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId: s.chainA.ChainID,
-					Intents: []*icstypes.ValidatorIntent{
-						{
-							ValoperAddress: val1.String(),
-							Weight:         sdk.MustNewDecFromStr("1.0"),
-						},
-					},
+					ChainId:     s.chainA.ChainID,
+					Intents:     fmt.Sprintf("1.0%s", val1.String()),
 					FromAddress: TestOwnerAddress,
 				}
 			},
@@ -273,13 +260,8 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				s.Require().NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId: s.chainB.ChainID,
-					Intents: []*icstypes.ValidatorIntent{
-						{
-							ValoperAddress: val1.String(),
-							Weight:         sdk.MustNewDecFromStr("1.0"),
-						},
-					},
+					ChainId:     s.chainB.ChainID,
+					Intents:     fmt.Sprintf("1.0%s", val1.String()),
 					FromAddress: TestOwnerAddress,
 				}
 			},
@@ -298,21 +280,8 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				s.Require().NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId: s.chainB.ChainID,
-					Intents: []*icstypes.ValidatorIntent{
-						{
-							ValoperAddress: val1.String(),
-							Weight:         sdk.MustNewDecFromStr("0.5"),
-						},
-						{
-							ValoperAddress: val2.String(),
-							Weight:         sdk.MustNewDecFromStr("0.2"),
-						},
-						{
-							ValoperAddress: val3.String(),
-							Weight:         sdk.MustNewDecFromStr("0.3"),
-						},
-					},
+					ChainId:     s.chainB.ChainID,
+					Intents:     fmt.Sprintf("0.5%s,0.2%s,0.3%s", val1.String(), val2.String(), val3.String()),
 					FromAddress: TestOwnerAddress,
 				}
 			},
