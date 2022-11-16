@@ -134,6 +134,7 @@ func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *t
 }
 
 func (k Keeper) EnsureICAsActive(ctx sdk.Context, zone *types.Zone) error {
+	k.Logger(ctx).Info("Ensuring ICAs for zone", "zone", zone.ChainId)
 	if err := k.EnsureICAActive(ctx, zone, zone.DepositAddress); err != nil {
 		return err
 	}
@@ -151,11 +152,13 @@ func (k Keeper) EnsureICAsActive(ctx sdk.Context, zone *types.Zone) error {
 
 func (k Keeper) EnsureICAActive(ctx sdk.Context, zone *types.Zone, account *types.ICAAccount) error {
 	if account == nil {
+		k.Logger(ctx).Info("Account does not exist")
 		// address has not been set yet. nothing to check.
 		return nil
 	}
 
-	if found := k.ICAControllerKeeper.IsActiveChannel(ctx, zone.ConnectionId, account.GetPortName()); found {
+	if _, found := k.ICAControllerKeeper.GetOpenActiveChannel(ctx, zone.ConnectionId, account.GetPortName()); found {
+		k.Logger(ctx).Info("Account is active", "account", account.Address)
 		// channel is active. all is well :)
 		return nil
 	}
