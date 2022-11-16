@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +13,8 @@ import (
 
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 )
 
 // GetZone returns zone info by chainID
@@ -128,6 +131,38 @@ func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *t
 		return false
 	})
 	return zone
+}
+
+func (k Keeper) EnsureICAsActive(ctx sdk.Context, zone *types.Zone) error {
+	if err := k.EnsureICAActive(ctx, zone, zone.DepositAddress); err != nil {
+		return err
+	}
+	if err := k.EnsureICAActive(ctx, zone, zone.DelegationAddress); err != nil {
+		return err
+	}
+	if err := k.EnsureICAActive(ctx, zone, zone.PerformanceAddress); err != nil {
+		return err
+	}
+	if err := k.EnsureICAActive(ctx, zone, zone.WithdrawalAddress); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) EnsureICAActive(ctx sdk.Context, zone *types.Zone, account *types.ICAAccount) error {
+	if account == nil {
+		// address has not been set yet. nothing to check.
+		return nil
+	}
+
+	if found := k.ICAControllerKeeper.IsActiveChannel(ctx, zone.ConnectionId, account.GetPortName()); found {
+		// channel is active. all is well :)
+		return nil
+	}
+
+	// channel is not active; attempt reopen.
+	k.Logger(ctx).Error("channel is inactive. attempting to reopen.", "connection", zone.ConnectionId, "port", account.GetPortName())
+	return k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, strings.TrimPrefix(account.GetPortName(), icatypes.PortPrefix), "")
 }
 
 func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {
