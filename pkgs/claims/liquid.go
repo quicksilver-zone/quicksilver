@@ -13,6 +13,7 @@ import (
 	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
@@ -23,6 +24,7 @@ type TokenTuple struct {
 }
 
 func LiquidClaim(
+	ctx context.Context,
 	cfg types.Config,
 	// poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
@@ -30,28 +32,50 @@ func LiquidClaim(
 	connection prewards.ConnectionProtocolData,
 	height int64,
 ) (map[string]prewards.MsgSubmitClaim, map[string]sdk.Coins, error) {
+	// simFailure hooks: 0-8
+	simFailures := failsim.FailuresFromContext(ctx)
+	failures := make(map[uint8]struct{})
+	if LiquidClaimFailures, ok := simFailures[2]; ok {
+		fmt.Println("liquid sim failures")
+		failures = LiquidClaimFailures
+	}
+	fmt.Println("simulate failures:", failures)
+
 	chain := connection.ChainID
 	prefix := connection.Prefix
 
 	_, addrBytes, err := bech32.Decode(address, 51)
+	// 0:
+	err = failsim.FailureHook(failures, 0, err, "failure decosing bech32 address")
 	if err != nil {
 		return nil, nil, err
 	}
 	sdkAddr, err := bech32.ConvertBits(addrBytes, 5, 8, true)
+	// 1:
+	err = failsim.FailureHook(failures, 1, err, "failure converting sdk address")
 	if err != nil {
 		return nil, nil, err
 	}
 
 	chainAddress, err := bech32.Encode(prefix, addrBytes)
+	// 2:
+	err = failsim.FailureHook(failures, 2, err, "failure encoding chain address")
 	if err != nil {
 		return nil, nil, err
 	}
 
 	host, ok := cfg.Chains[chain]
 	if !ok {
-		return nil, nil, fmt.Errorf("unable to find endpoint for %s", chain)
+		err = fmt.Errorf("unable to find endpoint for %s", chain)
+	}
+	// 3:
+	err = failsim.FailureHook(failures, 3, err, fmt.Sprintf("no endpoint in config for %s", chain))
+	if err != nil {
+		return nil, nil, err
 	}
 	client, err := types.NewRPCClient(host, 30*time.Second)
+	// 4:
+	err = failsim.FailureHook(failures, 4, err, fmt.Sprintf("failure connecting to host %q", host))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -66,12 +90,21 @@ func LiquidClaim(
 	bytes := marshaler.MustMarshal(&query)
 
 	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
-	abciquery, err := client.ABCIQueryWithOptions(context.Background(), "/cosmos.bank.v1beta1.Query/AllBalances", bytes, rpcclient.ABCIQueryOptions{Height: height})
+	abciquery, err := client.ABCIQueryWithOptions(
+		context.Background(),
+		"/cosmos.bank.v1beta1.Query/AllBalances",
+		bytes,
+		rpcclient.ABCIQueryOptions{Height: height},
+	)
+	// 5:
+	err = failsim.FailureHook(failures, 5, err, "ABCIQuery: AllBalances")
 	if err != nil {
 		return nil, nil, err
 	}
 	queryResponse := banktypes.QueryAllBalancesResponse{}
 	err = marshaler.Unmarshal(abciquery.Response.Value, &queryResponse)
+	// 6:
+	err = failsim.FailureHook(failures, 6, err, "ABCIQuery: QueryAllBalancesResponse")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -112,18 +145,21 @@ func LiquidClaim(
 		accountPrefix := banktypes.CreateAccountBalancesPrefix(sdkAddr)
 		lookupKey := append(accountPrefix, []byte(coin.Denom)...)
 		abciquery, err := client.ABCIQueryWithOptions(
-
 			context.Background(), "/store/bank/key",
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 		)
 		fmt.Println("Querying for value", "prefix", accountPrefix, "denom", tuple.denom) // debug?
+		// 7:
+		err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", tuple.denom, chain))
 		if err != nil {
 			return nil, nil, err
 		}
 
 		amount := sdk.Coin{}
 		err = marshaler.Unmarshal(abciquery.Response.Value, &amount)
+		// 8:
+		err = failsim.FailureHook(failures, 8, err, fmt.Sprintf("ABCIQuery: value of denom %q on chain %q", tuple.denom, chain))
 		if err != nil {
 			return nil, nil, err
 		}

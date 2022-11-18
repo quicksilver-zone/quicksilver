@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -19,7 +20,6 @@ func GetCurrentHandler(
 	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
 ) func(http.ResponseWriter, *http.Request) {
-
 	return func(w http.ResponseWriter, req *http.Request) {
 		vars := mux.Vars(req)
 		var err error
@@ -34,7 +34,7 @@ func GetCurrentHandler(
 			return
 		}
 
-		_, assets, err := claims.OsmosisClaim(cfg, poolsManager, tokensManager, vars["address"], chain, 0)
+		_, assets, err := claims.OsmosisClaim(context.TODO(), cfg, poolsManager, tokensManager, vars["address"], chain, 0)
 		if err != nil {
 			fmt.Fprintf(w, "Error: %s", err)
 			return
@@ -44,9 +44,9 @@ func GetCurrentHandler(
 			response.Assets[chainID] = []types.Asset{{Type: "osmosispool", Amount: asset}}
 		}
 
-		//liquid for all zones; config should hold osmosis chainid.
+		// liquid for all zones; config should hold osmosis chainid.
 		for _, con := range connections {
-			_, assets, err := claims.LiquidClaim(cfg, tokensManager, vars["address"], con, 0)
+			_, assets, err := claims.LiquidClaim(context.TODO(), cfg, tokensManager, vars["address"], con, 0)
 			if err != nil {
 				fmt.Fprintf(w, "Error: %s", err)
 				return
