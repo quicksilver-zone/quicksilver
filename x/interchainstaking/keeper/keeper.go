@@ -14,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -157,27 +157,28 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 	for _, validator := range validatorsRes.Validators {
 		_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
 		val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
+		toQuery := false
 		if !found {
 			k.Logger(ctx).Info("Unable to find validator - fetching proof...", "valoper", validator.OperatorAddress)
+			toQuery = true
+		} else {
+			if !val.CommissionRate.Equal(validator.GetCommission()) {
+				k.Logger(ctx).Info("Validator commission change; fetching proof", "valoper", validator.OperatorAddress)
+				toQuery = true
+			}
 
-			data := stakingTypes.GetValidatorKey(addr)
-			k.ICQKeeper.MakeRequest(
-				ctx,
-				zoneInfo.ConnectionId,
-				zoneInfo.ChainId,
-				"store/staking/key",
-				data,
-				sdk.NewInt(-1),
-				types.ModuleName,
-				"validator",
-				0,
-			)
-			continue
+			if !val.VotingPower.Equal(validator.Tokens) {
+				k.Logger(ctx).Info("Validator voting power change; fetching proof", "valoper", validator.OperatorAddress)
+				toQuery = true
+			}
+
+			if !val.DelegatorShares.Equal(validator.DelegatorShares) {
+				k.Logger(ctx).Info("Validator shares amount change; fetching proof", "valoper", validator.OperatorAddress)
+				toQuery = true
+			}
 		}
 
-		if !val.CommissionRate.Equal(validator.GetCommission()) || !val.VotingPower.Equal(validator.Tokens) || !val.DelegatorShares.Equal(validator.DelegatorShares) {
-			k.Logger(ctx).Info("Validator state change; fetching proof", "valoper", validator.OperatorAddress)
-
+		if toQuery {
 			data := stakingTypes.GetValidatorKey(addr)
 			k.ICQKeeper.MakeRequest(
 				ctx,
@@ -222,21 +223,27 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		})
 		zoneInfo.Validators = zoneInfo.GetValidatorsSorted()
 
+		k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress)
+
 	} else {
 
-		if validator.GetCommission().IsNil() || !val.CommissionRate.Equal(validator.GetCommission()) {
+		if val.CommissionRate.IsNil() || !val.CommissionRate.Equal(validator.GetCommission()) {
 			val.CommissionRate = validator.GetCommission()
 			k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
 		}
 
-		if validator.Tokens.IsNil() || !val.VotingPower.Equal(validator.Tokens) {
+		if val.VotingPower.IsNil() || !val.VotingPower.Equal(validator.Tokens) {
 			val.VotingPower = validator.Tokens
 			k.Logger(ctx).Info("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens)
 		}
 
-		if validator.DelegatorShares.IsNil() || !val.DelegatorShares.Equal(validator.DelegatorShares) {
+		if val.DelegatorShares.IsNil() || !val.DelegatorShares.Equal(validator.DelegatorShares) {
 			val.DelegatorShares = validator.DelegatorShares
 			k.Logger(ctx).Info("Validator delegator shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.DelegatorShares, "newShares", validator.DelegatorShares)
+		}
+
+		if _, found := k.GetPerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); !found {
+			k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress)
 		}
 	}
 
@@ -310,22 +317,24 @@ func (k Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
 }
 
 func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
-	balanceQuery := bankTypes.QueryAllBalancesRequest{Address: zone.PerformanceAddress.Address}
-	bz, err := k.GetCodec().Marshal(&balanceQuery)
+	_, addr, err := bech32.DecodeAndConvert(zone.PerformanceAddress.Address)
 	if err != nil {
 		return err
 	}
+	data := banktypes.CreateAccountBalancesPrefix(addr)
 
+	// query performance account for baseDenom balance every 100 blocks.
+	key := "store/bank/key"
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
 		zone.ChainId,
-		"cosmos.bank.v1beta1.Query/AllBalances",
-		bz,
-		sdk.NewInt(int64(-1)),
+		key,
+		append(data, []byte(zone.BaseDenom)...),
+		sdk.NewInt(-1),
 		types.ModuleName,
 		"perfbalance",
-		0,
+		100,
 	)
 
 	return nil
@@ -462,7 +471,7 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 		deltas[srcIdx].Weight = src.Weight.Add(sdk.NewDecFromInt(amount))
 		deltas[tgtIdx].Weight = tgt.Weight.Sub(sdk.NewDecFromInt(amount))
 		toRebalance = toRebalance.Sub(amount)
-		fmt.Printf("source: %s [%d], target : %s [%d], amount: %d, toRebalance: %d\n", src.ValoperAddress, src.Weight.TruncateInt().Int64(), tgt.ValoperAddress, tgt.Weight.TruncateInt().Int64(), amount.Int64(), toRebalance.Int64())
+		//fmt.Printf("source: %s [%d], target : %s [%d], amount: %d, toRebalance: %d\n", src.ValoperAddress, src.Weight.TruncateInt().Int64(), tgt.ValoperAddress, tgt.Weight.TruncateInt().Int64(), amount.Int64(), toRebalance.Int64())
 
 	}
 

@@ -45,51 +45,60 @@ func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connectionI
 	// deposit address
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixDeposit:
 
-		zone.DepositAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
-		if err != nil {
-			return err
-		}
+		if zone.DepositAddress == nil {
+			zone.DepositAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
+			if err != nil {
+				return err
+			}
 
-		balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
-		bz, err := k.GetCodec().Marshal(&balanceQuery)
-		if err != nil {
-			return err
-		}
+			balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
+			bz, err := k.GetCodec().Marshal(&balanceQuery)
+			if err != nil {
+				return err
+			}
 
-		k.ICQKeeper.MakeRequest(
-			ctx,
-			connectionID,
-			chainID,
-			"cosmos.bank.v1beta1.Query/AllBalances",
-			bz,
-			sdk.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),
-			types.ModuleName,
-			"allbalances",
-			0,
-		)
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				connectionID,
+				chainID,
+				"cosmos.bank.v1beta1.Query/AllBalances",
+				bz,
+				sdk.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),
+				types.ModuleName,
+				"allbalances",
+				0,
+			)
+		}
 
 	// withdrawal address
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixWithdrawal:
-		zone.WithdrawalAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
-		if err != nil {
-			return err
+		if zone.WithdrawalAddress == nil {
+			zone.WithdrawalAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
+			if err != nil {
+				return err
+			}
 		}
 
 	// delegation addresses
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixDelegate:
-		zone.DelegationAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
-		if err != nil {
-			return err
+		if zone.DelegationAddress == nil {
+			zone.DelegationAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
+			if err != nil {
+				return err
+			}
 		}
 
 	// performance address
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixPerformance:
-		ctx.Logger().Info("create performance account")
-		zone.PerformanceAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
-		if err != nil {
-			return err
+		if zone.PerformanceAddress == nil {
+			ctx.Logger().Info("create performance account")
+			zone.PerformanceAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
+			if err != nil {
+				return err
+			}
 		}
 
+		// emit this periodic query the first time, but not subsequently.
 		if err := k.EmitPerformanceBalanceQuery(ctx, &zone); err != nil {
 			k.Logger(ctx).Error("error emitting performance balance query", "error", err)
 			return err
