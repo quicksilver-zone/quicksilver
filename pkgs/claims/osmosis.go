@@ -212,7 +212,7 @@ OUTER:
 					// perhaps counter intuitively, we want to group messages by chainID - the chain we are claiming for
 					// and assets by chain - the chain on which they are located.
 					fmt.Printf("found assets for zone %q...\n", chainID)
-					if _, ok := msg[chain]; !ok {
+					if _, ok := msg[chainID]; !ok {
 						msg[chainID] = prewards.MsgSubmitClaim{
 							UserAddress: address,
 							Zone:        chainID,
