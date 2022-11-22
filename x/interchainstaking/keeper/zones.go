@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,8 +11,9 @@ import (
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 )
 
 // GetZone returns zone info by chainID
@@ -130,6 +132,41 @@ func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *t
 	return zone
 }
 
+func (k Keeper) EnsureICAsActive(ctx sdk.Context, zone *types.Zone) error {
+	k.Logger(ctx).Info("Ensuring ICAs for zone", "zone", zone.ChainId)
+	if err := k.EnsureICAActive(ctx, zone, zone.DepositAddress); err != nil {
+		return err
+	}
+	if err := k.EnsureICAActive(ctx, zone, zone.DelegationAddress); err != nil {
+		return err
+	}
+	if err := k.EnsureICAActive(ctx, zone, zone.PerformanceAddress); err != nil {
+		return err
+	}
+	if err := k.EnsureICAActive(ctx, zone, zone.WithdrawalAddress); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (k Keeper) EnsureICAActive(ctx sdk.Context, zone *types.Zone, account *types.ICAAccount) error {
+	if account == nil {
+		k.Logger(ctx).Info("Account does not exist")
+		// address has not been set yet. nothing to check.
+		return nil
+	}
+
+	if _, found := k.ICAControllerKeeper.GetOpenActiveChannel(ctx, zone.ConnectionId, account.GetPortName()); found {
+		k.Logger(ctx).Info("Account is active", "account", account.Address)
+		// channel is active. all is well :)
+		return nil
+	}
+
+	// channel is not active; attempt reopen.
+	k.Logger(ctx).Error("channel is inactive. attempting to reopen.", "connection", zone.ConnectionId, "port", account.GetPortName())
+	return k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, strings.TrimPrefix(account.GetPortName(), icatypes.PortPrefix), "")
+}
+
 func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {
 	if zone.WithdrawalAddress == nil {
 		k.Logger(ctx).Info("Withdrawal address not set")
@@ -234,13 +271,12 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 	for _, coin := range zone.DepositAddress.Balance {
 		if queryRes.Balances.AmountOf(coin.Denom).Equal(sdk.ZeroInt()) {
 			// coin we used to have is now zero - also validate this.
-			key := "store/bank/key"
-			k.Logger(ctx).Info("Querying for value", "key", key, "denom", coin.Denom) // debug?
+			k.Logger(ctx).Info("Querying for value", "key", types.BankStoreKey, "denom", coin.Denom) // debug?
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				zone.ConnectionId,
 				zone.ChainId,
-				key,
+				types.BankStoreKey,
 				append(data, []byte(coin.Denom)...),
 				sdk.NewInt(-1),
 				types.ModuleName,
@@ -253,13 +289,12 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 	}
 
 	for _, coin := range queryRes.Balances {
-		key := "store/bank/key"
-		k.Logger(ctx).Info("Querying for value", "key", key, "denom", coin.Denom) // debug?
+		k.Logger(ctx).Info("Querying for value", "key", types.BankStoreKey, "denom", coin.Denom) // debug?
 		k.ICQKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
 			zone.ChainId,
-			key,
+			types.BankStoreKey,
 			append(data, []byte(coin.Denom)...),
 			sdk.NewInt(-1),
 			types.ModuleName,
@@ -273,53 +308,54 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 	return nil
 }
 
-func (k Keeper) InitPerformanceDelegations(ctx sdk.Context, zone types.Zone, response []byte) error {
+func (k Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone, response []byte) error {
 	k.Logger(ctx).Info("Initialize performance delegations")
 
-	resp := banktypes.QueryAllBalancesResponse{}
-	// balance response can be nil, so don't guard against this.
-	err := k.cdc.Unmarshal(response, &resp)
-	if err != nil {
-		return err
-	}
-	k.Logger(ctx).Info("Performance Balance", "Account", zone.PerformanceAddress, "Balances", resp.Balances)
-
-	if resp.Balances.IsZero() {
-		k.Logger(ctx).Info("performance account has a zero balance; requerying")
-		// if zero balance, retrigger the query.
-		if err := k.EmitPerformanceBalanceQuery(ctx, &zone); err != nil {
-			return err
+	delegations := k.GetAllPerformanceDelegations(ctx, &zone)
+	validatorsToDelegate := []string{}
+OUTER:
+	for _, v := range zone.GetValidatorsAddressesAsSlice() {
+		for _, d := range delegations {
+			if d.ValidatorAddress == v {
+				continue OUTER
+			}
 		}
-		return icqtypes.ErrSucceededNoDelete
+		validatorsToDelegate = append(validatorsToDelegate, v)
 	}
 
 	amount := sdk.NewCoin(zone.BaseDenom, sdk.NewInt(10000))
-	minBalance := sdk.NewInt(int64(len(zone.Validators)) * amount.Amount.Int64())
-	balance := resp.Balances.AmountOfNoDenomValidation(zone.BaseDenom)
+	minBalance := sdk.NewInt(int64(len(validatorsToDelegate)) * amount.Amount.Int64())
+	balance := zone.PerformanceAddress.Balance.AmountOfNoDenomValidation(zone.BaseDenom)
 	if balance.LT(minBalance) {
-		return fmt.Errorf(
-			"performance account has an insufficient balance, got %v, expected at least %v",
-			balance,
-			minBalance,
+		k.Logger(ctx).Error(
+			fmt.Sprintf(
+				"performance account has an insufficient balance, got %v, expected at least %v",
+				balance,
+				minBalance,
+			),
 		)
+		return nil // don't error here, as we don't want the underlying tx to fail.
 	}
 
 	// send delegations to validators
 	k.Logger(ctx).Info("send performance delegations", "zone", zone.ChainId)
 	var msgs []sdk.Msg
-	for _, val := range zone.Validators {
+	for _, val := range validatorsToDelegate {
 		k.Logger(ctx).Info(
 			"performance delegation",
 			"zone", zone.ChainId,
-			"validator", val.ValoperAddress,
+			"validator", val,
 			"amount", amount,
 		)
 		msgs = append(msgs, &stakingtypes.MsgDelegate{
 			DelegatorAddress: zone.PerformanceAddress.GetAddress(),
-			ValidatorAddress: val.GetValoperAddress(),
+			ValidatorAddress: val,
 			Amount:           amount,
 		})
 	}
 
-	return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "")
+	if len(msgs) > 0 {
+		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "")
+	}
+	return nil
 }

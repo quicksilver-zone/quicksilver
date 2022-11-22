@@ -187,13 +187,18 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 }
 
 func PerfBalanceCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+	// update account balance first.
+	if err := AccountBalanceCallback(k, ctx, response, query); err != nil {
+		return err
+	}
+
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
 	// initialize performance delegations
-	if err := k.InitPerformanceDelegations(ctx, zone, response); err != nil {
+	if err := k.UpdatePerformanceDelegations(ctx, zone, response); err != nil {
 		k.Logger(ctx).Info(err.Error())
 		return err
 	}

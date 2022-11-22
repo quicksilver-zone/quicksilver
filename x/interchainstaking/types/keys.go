@@ -41,19 +41,21 @@ const (
 	ICASuffixDelegate    = "delegate"
 	ICASuffixWithdrawal  = "withdrawal"
 	ICASuffixPerformance = "performance"
+
+	BankStoreKey = "store/bank/key"
 )
 
 var (
-	KeyPrefixZone               = []byte{0x01}
-	KeyPrefixIntent             = []byte{0x02}
-	KeyPrefixPortMapping        = []byte{0x03}
-	KeyPrefixReceipt            = []byte{0x04}
-	KeyPrefixWithdrawalRecord   = []byte{0x05}
-	KeyPrefixUnbondingRecord    = []byte{0x06}
-	KeyPrefixDelegation         = []byte{0x07}
-	KeyPrefixDelegationPlan     = []byte{0x08}
-	KeyPrefixSnapshotIntent     = []byte{0x09}
-	KeyPrefixRedelegationRecord = []byte{0x10}
+	KeyPrefixZone                  = []byte{0x01}
+	KeyPrefixIntent                = []byte{0x02}
+	KeyPrefixPortMapping           = []byte{0x03}
+	KeyPrefixReceipt               = []byte{0x04}
+	KeyPrefixWithdrawalRecord      = []byte{0x05}
+	KeyPrefixUnbondingRecord       = []byte{0x06}
+	KeyPrefixDelegation            = []byte{0x07}
+	KeyPrefixPerformanceDelegation = []byte{0x08}
+	KeyPrefixSnapshotIntent        = []byte{0x09}
+	KeyPrefixRedelegationRecord    = []byte{0x10}
 )
 
 func KeyPrefix(p string) []byte {

@@ -27,6 +27,17 @@ func GetDelegationsKey(zone *types.Zone, delAddr sdk.AccAddress) []byte {
 	return append(append(types.KeyPrefixDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
 }
 
+// gets the key for delegator bond with validator
+// VALUE: staking/Delegation
+func GetPerformanceDelegationKey(zone *types.Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(GetPerformanceDelegationsKey(zone, delAddr), valAddr.Bytes()...)
+}
+
+// gets the prefix for a delegator for all validators
+func GetPerformanceDelegationsKey(zone *types.Zone, delAddr sdk.AccAddress) []byte {
+	return append(append(types.KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
+}
+
 // GetDelegation returns a specific delegation.
 func (k Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddress string, validatorAddress string) (delegation types.Delegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
@@ -35,6 +46,25 @@ func (k Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddres
 	_, valAddr, _ := bech32.DecodeAndConvert(validatorAddress)
 
 	key := GetDelegationKey(zone, delAddr, valAddr)
+
+	value := store.Get(key)
+	if value == nil {
+		return delegation, false
+	}
+
+	delegation = types.MustUnmarshalDelegation(k.cdc, value)
+
+	return delegation, true
+}
+
+// GetDelegation returns a specific delegation.
+func (k Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, validatorAddress string) (delegation types.Delegation, found bool) {
+	store := ctx.KVStore(k.storeKey)
+
+	_, delAddr, _ := bech32.DecodeAndConvert(zone.PerformanceAddress.Address)
+	_, valAddr, _ := bech32.DecodeAndConvert(validatorAddress)
+
+	key := GetPerformanceDelegationKey(zone, delAddr, valAddr)
 
 	value := store.Get(key)
 	if value == nil {
@@ -71,9 +101,44 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context, zone *types.Zone) (delegation
 	return delegations
 }
 
+// IterateAllPerformanceDelegations iterates through all of the delegations.
+func (k Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
+	store := ctx.KVStore(k.storeKey)
+
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...))
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		delegation := types.MustUnmarshalDelegation(k.cdc, iterator.Value())
+		if cb(delegation) {
+			break
+		}
+	}
+}
+
+// GetAllDelegations returns all delegations used during genesis dump.
+func (k Keeper) GetAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone) (delegations []types.Delegation) {
+	k.IterateAllPerformanceDelegations(ctx, zone, func(delegation types.Delegation) bool {
+		delegations = append(delegations, delegation)
+		return false
+	})
+
+	return delegations
+}
+
 // GetAllDelegations returns all delegations used during genesis dump.
 func (k Keeper) GetAllDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (delegations []*types.Delegation) {
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
+		delegations = append(delegations, &delegation)
+		return false
+	})
+
+	return delegations
+}
+
+// GetAllDelegations returns all delegations used during genesis dump.
+func (k Keeper) GetAllPerformanceDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (delegations []*types.Delegation) {
+	k.IterateAllPerformanceDelegations(ctx, zone, func(delegation types.Delegation) bool {
 		delegations = append(delegations, &delegation)
 		return false
 	})
@@ -112,6 +177,15 @@ func (k Keeper) SetDelegation(ctx sdk.Context, zone *types.Zone, delegation type
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
 	store.Set(GetDelegationKey(zone, delegatorAddress, delegation.GetValidatorAddr()), b)
+}
+
+// SetPerformanceDelegation sets a delegation.
+func (k Keeper) SetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) {
+	delegatorAddress := delegation.GetDelegatorAddr()
+
+	store := ctx.KVStore(k.storeKey)
+	b := types.MustMarshalDelegation(k.cdc, delegation)
+	store.Set(GetPerformanceDelegationKey(zone, delegatorAddress, delegation.GetValidatorAddr()), b)
 }
 
 // RemoveDelegation removes a delegation
@@ -321,4 +395,11 @@ func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string
 	})
 
 	return out, sum
+}
+
+func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, validator string) error {
+	// create delegation record in MsgDelegate acknowledgement callback
+	k.SetPerformanceDelegation(ctx, zone, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
+	msg := stakingTypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
+	return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "perf/"+validator)
 }
