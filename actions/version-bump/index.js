@@ -9717,6 +9717,10 @@ try {
   var minor = parseInt(strs[1]);
   var patch = parseInt(strs[2]);
 
+  if(msg.match(/Merge pull request #\d+.+/)) {
+    msg = msg.replace(/Merge pull request #\d+.+\n\n/, "")
+  }
+
   // Update version number according to commit header
   switch(true) {
     case msg.startsWith("major:"):
