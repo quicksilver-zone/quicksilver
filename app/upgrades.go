@@ -129,7 +129,10 @@ func getv001002Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 		app.InterchainQueryKeeper.Logger(ctx).Info("emitting v2 periodic perfbalance queries.")
 
 		for _, zone := range app.InterchainstakingKeeper.AllZones(ctx) {
-			app.InterchainstakingKeeper.EmitPerformanceBalanceQuery(ctx, &zone)
+			zone := zone
+			if err := app.InterchainstakingKeeper.EmitPerformanceBalanceQuery(ctx, &zone); err != nil {
+				panic(err)
+			}
 		}
 
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)

@@ -41,6 +41,8 @@ const (
 	ICASuffixDelegate    = "delegate"
 	ICASuffixWithdrawal  = "withdrawal"
 	ICASuffixPerformance = "performance"
+
+	BankStoreKey = "store/bank/key"
 )
 
 var (

@@ -223,7 +223,9 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		})
 		zoneInfo.Validators = zoneInfo.GetValidatorsSorted()
 
-		k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress)
+		if err := k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); err != nil {
+			return err
+		}
 
 	} else {
 
@@ -243,7 +245,9 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		}
 
 		if _, found := k.GetPerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); !found {
-			k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress)
+			if err := k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -324,12 +328,11 @@ func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) e
 	data := banktypes.CreateAccountBalancesPrefix(addr)
 
 	// query performance account for baseDenom balance every 100 blocks.
-	key := "store/bank/key"
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
 		zone.ChainId,
-		key,
+		types.BankStoreKey,
 		append(data, []byte(zone.BaseDenom)...),
 		sdk.NewInt(-1),
 		types.ModuleName,
@@ -471,7 +474,6 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 		deltas[srcIdx].Weight = src.Weight.Add(sdk.NewDecFromInt(amount))
 		deltas[tgtIdx].Weight = tgt.Weight.Sub(sdk.NewDecFromInt(amount))
 		toRebalance = toRebalance.Sub(amount)
-		//fmt.Printf("source: %s [%d], target : %s [%d], amount: %d, toRebalance: %d\n", src.ValoperAddress, src.Weight.TruncateInt().Int64(), tgt.ValoperAddress, tgt.Weight.TruncateInt().Int64(), amount.Int64(), toRebalance.Int64())
 
 	}
 

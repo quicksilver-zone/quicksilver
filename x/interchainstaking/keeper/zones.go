@@ -271,13 +271,12 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 	for _, coin := range zone.DepositAddress.Balance {
 		if queryRes.Balances.AmountOf(coin.Denom).Equal(sdk.ZeroInt()) {
 			// coin we used to have is now zero - also validate this.
-			key := "store/bank/key"
-			k.Logger(ctx).Info("Querying for value", "key", key, "denom", coin.Denom) // debug?
+			k.Logger(ctx).Info("Querying for value", "key", types.BankStoreKey, "denom", coin.Denom) // debug?
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				zone.ConnectionId,
 				zone.ChainId,
-				key,
+				types.BankStoreKey,
 				append(data, []byte(coin.Denom)...),
 				sdk.NewInt(-1),
 				types.ModuleName,
@@ -290,13 +289,12 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 	}
 
 	for _, coin := range queryRes.Balances {
-		key := "store/bank/key"
-		k.Logger(ctx).Info("Querying for value", "key", key, "denom", coin.Denom) // debug?
+		k.Logger(ctx).Info("Querying for value", "key", types.BankStoreKey, "denom", coin.Denom) // debug?
 		k.ICQKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
 			zone.ChainId,
-			key,
+			types.BankStoreKey,
 			append(data, []byte(coin.Denom)...),
 			sdk.NewInt(-1),
 			types.ModuleName,
