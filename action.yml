@@ -1,0 +1,8 @@
+name: 'Version Bump'
+description: 'Automatically bump the version number'
+outputs:
+  version: # bumped version
+    description: 'bumped version'
+runs:
+  using: 'node16'
+  main: 'actions/version-bump/index.js'

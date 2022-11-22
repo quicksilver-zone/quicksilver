@@ -1,0 +1,24 @@
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  version-bump-job:
+    runs-on: ubuntu-latest
+    name: Version Bump Job
+    steps:
+      # To use this repository's private action,
+      # you must check out the repository
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Version Bump
+        id: bump
+        uses: ./
+      - name: git
+        run: |
+          git add VERSION
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git commit -m "Version bumped ${{ steps.bump.outputs.version }}"
+          git push
