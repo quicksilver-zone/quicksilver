@@ -9700,7 +9700,7 @@ const {spawnSync} = __nccwpck_require__(2081);
 try {
   // Get commit message
   console.log("Get commit message...");
-  const msg = String(github.context.payload.head_commit.message);
+  var msg = String(github.context.payload.head_commit.message);
 
   // Get version numbers
   console.log("Get version numbers...");
