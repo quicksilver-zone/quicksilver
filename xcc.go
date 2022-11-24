@@ -34,6 +34,42 @@ const (
 )
 
 var (
+	GitCommit string
+	Version   string = "development"
+	Logo             = `
+                               .........                                        
+                       ..::-----------------::..                                
+                   ..::---------------------------.                             
+                ..:---------:::::::::::::::-----=-==:.                          
+             ..::-------:::::::::::::::::::::::---====-:                        
+           ..::------:::::::::::::::::::::::::::::--=-==-:                      
+         ..::-----::::::::::::::::::::::::::::::::::---===-.                    
+        ..:------:::::::::::::::::::::::::::::::::::::-====-                    
+       .::------:::::::::::::::::::::::::::::::::::::::--===                    
+     ..::------:::::::::::::::-----:::::::::::::::::::::----                    
+     .::-:----::::::::-=++**###%%%%%%#*=:::::::::::::::::--:                    
+    .::-::---::::::=+******#%%%%%%#*+=+##+-::::::::::::::::                     
+   ..:--:::::::::=+++****#%@%%%%*:     -%=-=++++++===-::::.                     
+   .::--:::::::-=++++**#%@@@@%%#.     .*%....+***++++==:..                      
+   .:--:::::::-=+++++*%@@@@@@@%%-..:-+#%%:...-***+++=-:.                        
+  ..:--::::::-==++++*%@@@@@@@@%%%%%%%%%%%*:.:+**+=-:..                          
+  ..:--:::::-===++++%@@@@@@@@@@%%%%%%%%%%%%#*+-::..                             
+  ..:---:::::===+++*@@@@@@@@@@@@%%%%%%%#*+-::...              ....              
+   .::--:::::-==+++*@@@@@@@@@@@@@%%%*+=--:...             ..::------.           
+   ..:-=-:::::-=++++@@@@@@@@@@@%#*===----.              ..::----=-:-=-          
+    .:--=::::::-++++*@@@@@@@@#+====-----:              ..:----=--:::-=-         
+    ..:--=::::::-++++%@@@@%*====--------.              .:--=+=+-:::::-=:        
+     ..:---::::::-+++*%@%+====---------:             ..:+#%*.:*::+++=-==        
+      ..:--=-:::::-=+*++====----------:.           .:=#@@@%%%%#*+*++++==        
+       ..:--=-::::::-====-----------::.          ..:+**@@@@%%%%###***==:        
+         .::--=--::::-=----------::::.          ..:==+*#@@@@%%%%####+=-         
+          ..::--=--::----------:::::.           .:--===+#%@@@%%%%#+==-.         
+            ..::---=--------::::::..            .::-======+****+===-:.          
+              ...::----------::::..              ..:----======---:..            
+                 ...::::::::::..                  ...:::::::::::..              
+                     ........                         .........
+`
+
 	connectionManager    types.CacheManager[prewards.ConnectionProtocolData]
 	poolsManager         types.CacheManager[prewards.OsmosisPoolProtocolData]
 	osmosisParamsManager types.CacheManager[prewards.OsmosisParamsProtocolData]
@@ -41,6 +77,9 @@ var (
 )
 
 func main() {
+	fmt.Println(Logo)
+	fmt.Printf("Quicksilver - Cross Chain Claims %s (%s)\n", Version, GitCommit)
+
 	var fileName, action string
 	flag.StringVar(&fileName, "f", "", "YAML file to parse.")
 	flag.StringVar(&action, "a", "serve", "Action - either 'serve' or 'backend'.")
@@ -79,6 +118,7 @@ func main() {
 		r.HandleFunc("/{address}/epoch", handlers.GetEpochHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &tokenManager))
 		r.HandleFunc("/{address}/current", handlers.GetCurrentHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &tokenManager))
 		// r.HandleFunc("/{address}/airdrop/{claimId}", handlers.AirdropHandler)
+		r.HandleFunc("/version", handlers.GetVersionHandler(Version))
 		http.Handle("/", r)
 
 		if err := http.ListenAndServe(":8090", nil); err != nil {
