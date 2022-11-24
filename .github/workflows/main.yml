@@ -15,9 +15,9 @@ jobs:
       - name: Version Bump
         id: bump
         uses: ./
-      - name: Build
-        run: |
-          make build-local
+      # - name: Build
+      #   run: |
+      #     make build-local
       - name: git
         run: |
           git add VERSION
