@@ -9723,18 +9723,18 @@ try {
 
   // Update version number according to commit header
   switch(true) {
-    case msg.startsWith("major:"):
+    case msg.startsWith("major:") || msg.startsWith("breaking:"):
       console.log(`Bump major...`);
       major++;
       minor = 0;
       patch = 0;
       break;
-    case msg.startsWith("minor:"):
+    case msg.startsWith("minor:") || msg.startsWith("feature:"):
       console.log(`Bump minor...`);
       minor++;
       patch = 0;
       break;
-    case msg.startsWith("patch:"):
+    case msg.startsWith("patch:") || msg.startsWith("fix:"):
       console.log(`Bump patch...`);
       patch++;
       break;
