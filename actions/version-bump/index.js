@@ -9705,7 +9705,7 @@ try {
   // Get version numbers
   console.log("Get version numbers...");
   const rawVersion = fs.readFileSync('VERSION');
-  var versionStr = String(rawVersion);
+  var versionStr = String(rawVersion).trim();
   console.log(`Current version is v${versionStr}`);
   var strs = versionStr.split('.');
   if(!versionStr.match(/^\d+\.\d+\.\d+$/)) {
