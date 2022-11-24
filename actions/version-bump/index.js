@@ -9745,7 +9745,7 @@ try {
   }
 
   // Update VERSION file
-  versionStr = `${major}.${minor}.${patch}`;
+  versionStr = `${major}.${minor}.${patch}\n`;
   core.setOutput("version", versionStr);
   console.log(`Bumped version to v${versionStr}`);
   fs.writeFileSync('VERSION', versionStr);
