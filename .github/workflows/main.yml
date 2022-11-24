@@ -15,9 +15,13 @@ jobs:
       - name: Version Bump
         id: bump
         uses: ./
+      - name: Build
+        run: |
+          make build-local
       - name: git
         run: |
           git add VERSION
+          git add xcc
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
           git commit -m "Version bumped ${{ steps.bump.outputs.version }}"

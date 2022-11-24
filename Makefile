@@ -6,6 +6,9 @@ linker_flags = "-s -X main.GitCommit=${git_commit} -X main.Version=${build_versi
 
 build-local:
 	go build -ldflags=${linker_flags} -a xcc.go
+
+build-docker:
+	go build -ldflags=${linker_flags} -a xcc.go
 	docker build -f Dockerfile.local . -t quicksilverzone/xcclookup:$(version)
 
 docker-release: build-local
