@@ -124,21 +124,16 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 	}
 
 	if returnToSender { // do we set this on the zone?
-		var localChannelResp *channeltypes.QueryConnectionChannelsResponse
-		channelReq := channeltypes.QueryConnectionChannelsRequest{Connection: zone.ConnectionId}
-		localChannelResp, err = k.IBCKeeper.ChannelKeeper.ConnectionChannels(sdk.WrapSDKContext(ctx), &channelReq)
-		if err != nil {
-			return err
-		}
 		var srcPort string
 		var srcChannel string
-		for _, localChannel := range localChannelResp.Channels {
-			if localChannel.PortId == transferPort {
-				srcChannel = localChannel.ChannelId
-				srcPort = localChannel.PortId
-				break
+		k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
+			if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == transferPort && channel.State == channeltypes.OPEN {
+				srcChannel = channel.Counterparty.ChannelId
+				srcPort = channel.Counterparty.PortId
+				return true
 			}
-		}
+			return false
+		})
 		if srcPort == "" {
 			return errors.New("unable to find remote transfer connection")
 		}

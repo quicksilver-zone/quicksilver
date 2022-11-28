@@ -867,22 +867,17 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	// multiDenomFee is the balance of withdrawal account minus the redelegated rewards.
 	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards}...)
 
-	channelReq := channeltypes.QueryConnectionChannelsRequest{Connection: zone.ConnectionId}
-	localChannelResp, err := k.IBCKeeper.ChannelKeeper.ConnectionChannels(sdk.WrapSDKContext(ctx), &channelReq)
-	if err != nil {
-		return err
-	}
 	var remotePort string
 	var remoteChannel string
-	for _, localChannel := range localChannelResp.Channels {
-		if localChannel.PortId == transferPort {
-			if localChannel.State == channeltypes.OPEN {
-				remoteChannel = localChannel.Counterparty.ChannelId
-				remotePort = localChannel.Counterparty.PortId
-				break
-			}
+	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
+		if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == transferPort && channel.State == channeltypes.OPEN {
+			remoteChannel = channel.Counterparty.ChannelId
+			remotePort = channel.Counterparty.PortId
+			return true
 		}
-	}
+		return false
+	})
+
 	if remotePort == "" {
 		return errors.New("unable to find remote transfer connection")
 	}

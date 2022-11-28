@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -39,6 +41,10 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 	tmClientState, ok := clientState.(*tmclienttypes.ClientState)
 	if !ok {
 		return errors.New("error unmarshaling client state")
+	}
+
+	if tmClientState.Status(ctx, k.IBCKeeper.ClientKeeper.ClientStore(ctx, connection.ClientId), k.IBCKeeper.Codec()) != ibcexported.Active {
+		return errors.New("client state is not active")
 	}
 
 	zone := types.Zone{
@@ -123,18 +129,21 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 			if err := sdk.ValidateDenom(change.Value); err != nil {
 				return err
 			}
+			if k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.IsPositive() {
+				return errors.New("zone has assets minted, cannot update base_denom without potentially losing assets")
+			}
 			zone.BaseDenom = change.Value
 
 		case "local_denom":
 			if err := sdk.ValidateDenom(change.Value); err != nil {
 				return err
 			}
+			if k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.IsPositive() {
+				return errors.New("zone has assets minted, cannot update local_denom without potentially losing assets")
+			}
 			zone.LocalDenom = change.Value
 
 		case "liquidity_module":
-			if err := sdk.ValidateDenom(change.Value); err != nil {
-				return err
-			}
 			boolValue, err := strconv.ParseBool(change.Value)
 			if err != nil {
 				return err
@@ -142,14 +151,74 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 			zone.LiquidityModule = boolValue
 
 		case "multi_send":
-			if err := sdk.ValidateDenom(change.Value); err != nil {
-				return err
-			}
 			boolValue, err := strconv.ParseBool(change.Value)
 			if err != nil {
 				return err
 			}
 			zone.LiquidityModule = boolValue
+
+		case "connection_id":
+			if !strings.HasPrefix(change.Value, "connection-") {
+				return errors.New("unexpected connection format")
+			}
+			if zone.DepositAddress != nil || zone.DelegationAddress != nil || zone.PerformanceAddress != nil || zone.WithdrawalAddress != nil {
+				return errors.New("zone already intialised, cannot update connection_id")
+			}
+			if k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.IsPositive() {
+				return errors.New("zone has assets minted, cannot update connection_id without potentially losing assets")
+			}
+
+			connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, change.Value)
+			if !found {
+				return errors.New("unable to fetch connection")
+			}
+
+			clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
+			if !found {
+				return errors.New("unable to fetch client state")
+			}
+
+			tmClientState, ok := clientState.(*tmclienttypes.ClientState)
+			if !ok {
+				return errors.New("error unmarshaling client state")
+			}
+
+			if tmClientState.Status(ctx, k.IBCKeeper.ClientKeeper.ClientStore(ctx, connection.ClientId), k.IBCKeeper.Codec()) != ibcexported.Active {
+				return errors.New("new connection client state is not active")
+			}
+
+			zone.ConnectionId = change.Value
+
+			k.SetZone(ctx, &zone)
+
+			// generate deposit account
+			portOwner := zone.ChainId + ".deposit"
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+				return err
+			}
+
+			// generate withdrawal account
+			portOwner = zone.ChainId + ".withdrawal"
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+				return err
+			}
+
+			// generate perf account
+			portOwner = zone.ChainId + ".performance"
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+				return err
+			}
+
+			// generate delegate accounts
+			portOwner = zone.ChainId + ".delegate"
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+				return err
+			}
+
+			err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+			if err != nil {
+				return err
+			}
 
 		default:
 			return errors.New("unexpected key")

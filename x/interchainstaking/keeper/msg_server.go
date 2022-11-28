@@ -106,10 +106,10 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		if err = k.processRedemptionForLsm(ctx, *zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
 			return nil, err
 		}
-	}
-
-	if err = k.queueRedemption(ctx, *zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
-		return nil, err
+	} else {
+		if err = k.queueRedemption(ctx, *zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+			return nil, err
+		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
