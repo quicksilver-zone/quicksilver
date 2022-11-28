@@ -17,14 +17,14 @@ const (
 	v001000UpgradeName = "v0.10.0"
 	v001001UpgradeName = "v0.10.1"
 	v001002UpgradeName = "v0.10.2"
-	v001004UpgradeName = "v0.10.4"
+	v001003UpgradeName = "v0.10.3"
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v001000UpgradeName, getv001000Upgrade(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v001001UpgradeName, getv001001Upgrade(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v001002UpgradeName, getv001002Upgrade(app))
-	app.UpgradeKeeper.SetUpgradeHandler(v001004UpgradeName, getv001001Upgrade(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v001003UpgradeName, getv001003Upgrade(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -133,6 +133,31 @@ func getv001002Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 			if err := app.InterchainstakingKeeper.EmitPerformanceBalanceQuery(ctx, &zone); err != nil {
 				panic(err)
 			}
+		}
+
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func getv001003Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		switch ctx.ChainID() {
+		case "innuendo-3":
+			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.3; removing defunct zones.")
+			app.InterchainstakingKeeper.DeleteZone(ctx, "bitcanna-dev-5")
+			app.InterchainstakingKeeper.DeleteZone(ctx, "fauxgaia-1")
+			app.InterchainstakingKeeper.DeleteZone(ctx, "uni-5")
+			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.3; removing queries for defunct zones.")
+			for _, query := range app.InterchainQueryKeeper.AllQueries(ctx) {
+				if query.ChainId == "bitcanna-dev-5" || query.ChainId == "fauxgaia-1" || query.ChainId == "uni-5" {
+					app.InterchainQueryKeeper.DeleteQuery(ctx, query.Id)
+					app.InterchainQueryKeeper.Logger(ctx).Info("removed query", "id", query.Id, "chain", query.ChainId)
+				}
+			}
+
+		default:
+			// also do nothing
+			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.3; nothing to do.")
 		}
 
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
