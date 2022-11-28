@@ -158,7 +158,7 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 			zone.LiquidityModule = boolValue
 
 		case "connection_id":
-			if !strings.HasPrefix("connection-", change.Value) {
+			if !strings.HasPrefix(change.Value, "connection-") {
 				return errors.New("unexpected connection format")
 			}
 			if zone.DepositAddress != nil || zone.DelegationAddress != nil || zone.PerformanceAddress != nil || zone.WithdrawalAddress != nil {
