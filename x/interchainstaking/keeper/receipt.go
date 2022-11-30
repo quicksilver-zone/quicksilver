@@ -20,14 +20,17 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-const UNSET = "unset"
+const (
+	Unset           = "unset"
+	ICAMsgChunkSize = 10
+)
 
 func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.Zone) error {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
 	hash := txr.TxHash
 	memo := txn.Body.Memo
 
-	senderAddress := UNSET
+	senderAddress := Unset
 	coins := sdk.Coins{}
 
 	for _, event := range txr.Events {
@@ -36,7 +39,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 			sender := attrs["sender"]
 			amount := attrs["amount"]
 			if attrs["recipient"] == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
-				if senderAddress == UNSET {
+				if senderAddress == Unset {
 					senderAddress = sender
 				}
 
@@ -55,7 +58,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 		}
 	}
 
-	if senderAddress == UNSET {
+	if senderAddress == Unset {
 		k.Logger(ctx).Error("no sender found. Ignoring.")
 		return fmt.Errorf("no sender found. Ignoring")
 	}
@@ -172,22 +175,41 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	data, err := icatypes.SerializeCosmosTx(k.cdc, msgs)
-	if err != nil {
-		return err
-	}
-
-	// validate memo < 256 bytes
-	packetData := icatypes.InterchainAccountPacketData{
-		Type: icatypes.EXECUTE_TX,
-		Data: data,
-		Memo: memo,
-	}
-
+	chunkSize := ICAMsgChunkSize
 	timeoutTimestamp := uint64(ctx.BlockTime().Add(24 * time.Hour).UnixNano())
-	_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
-	if err != nil {
-		return err
+
+	for {
+		// if no messages, no chunks!
+		if len(msgs) == 0 {
+			break
+		}
+
+		// if the last chunk, make chunksize the number of messages
+		if len(msgs) < chunkSize {
+			chunkSize = len(msgs)
+		}
+
+		// remove chunk from original msg slice
+		msgsChunk := msgs[0:chunkSize]
+		msgs = msgs[chunkSize:]
+
+		// build and submit message for this chunk
+		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk)
+		if err != nil {
+			return err
+		}
+
+		// validate memo < 256 bytes
+		packetData := icatypes.InterchainAccountPacketData{
+			Type: icatypes.EXECUTE_TX,
+			Data: data,
+			Memo: memo,
+		}
+
+		_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
