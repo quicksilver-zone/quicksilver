@@ -33,7 +33,6 @@ func TestGetDelegationAccount(t *testing.T) {
 	acc2, err2 := zone2.GetDelegationAccount()
 	require.Error(t, err2)
 	require.Nil(t, acc2)
-
 }
 
 func TestGetValidatorByValoper(t *testing.T) {

@@ -4,6 +4,4 @@ import (
 	"errors"
 )
 
-var (
-	ErrCoinAmountNil = errors.New("coin amount is nil")
-)
+var ErrCoinAmountNil = errors.New("coin amount is nil")
