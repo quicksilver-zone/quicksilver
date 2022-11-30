@@ -11,7 +11,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/require"
 )
@@ -85,7 +84,7 @@ func TestHandleMsgTransferBadRecipient(t *testing.T) {
 // 		s.Run(test.name, func() {
 
 // 			s.SetupTest()
-// 			s.SetupZones()
+// 			s.setupTestZones()
 
 // 			recipient := utils.GenerateAccAddressForTest()
 // 			app := s.GetQuicksilverApp(s.chainA)
@@ -182,7 +181,7 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
-			s.SetupZones()
+			s.setupTestZones()
 
 			app := s.GetQuicksilverApp(s.chainA)
 			ctx := s.chainA.GetContext()
@@ -328,7 +327,7 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
-			s.SetupZones()
+			s.setupTestZones()
 
 			app := s.GetQuicksilverApp(s.chainA)
 			ctx := s.chainA.GetContext()
@@ -354,14 +353,14 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 				s.Require().NoError(err)
 			}
 
-			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusSend, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash == test.memo {
 					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
-			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash != test.memo {
 					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
@@ -438,7 +437,7 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
-			s.SetupZones()
+			s.setupTestZones()
 
 			app := s.GetQuicksilverApp(s.chainA)
 			ctx := s.chainA.GetContext()
@@ -467,14 +466,14 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 				}
 			}
 
-			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusSend, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash == test.memo {
 					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
-			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash != test.memo {
 					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
