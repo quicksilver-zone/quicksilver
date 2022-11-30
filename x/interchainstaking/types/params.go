@@ -13,13 +13,10 @@ import (
 
 // Default ics params
 var (
-	DefaultDelegateAccountCount uint64  = 100
 	DefaultDepositInterval      uint64  = 20
 	DefaultValidatorSetInterval uint64  = 200
 	DefaultCommissionRate       sdk.Dec = sdk.MustNewDecFromStr("0.025")
 
-	// KeyDelegateAccountCount is store's key for DelegateAccountCount option
-	KeyDelegateAccountCount = []byte("DelegateAccountCount")
 	// KeyDepositInterval is store's key for the DepositInterval option
 	KeyDepositInterval = []byte("DepositInterval")
 	// KeyValidatorSetInterval is store's key for the ValidatorSetInterval option
@@ -79,7 +76,6 @@ func validateParams(i interface{}) error {
 
 // NewParams creates a new ics Params instance
 func NewParams(
-	delegateAccountCount uint64,
 	depositInterval uint64,
 	valsetInterval uint64,
 	commissionRate sdk.Dec,
@@ -94,7 +90,6 @@ func NewParams(
 // DefaultParams default ics params
 func DefaultParams() Params {
 	return NewParams(
-		DefaultDelegateAccountCount,
 		DefaultDepositInterval,
 		DefaultValidatorSetInterval,
 		DefaultCommissionRate,

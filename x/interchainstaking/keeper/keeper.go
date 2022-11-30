@@ -155,7 +155,6 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 	}
 
 	for _, validator := range validatorsRes.Validators {
-		_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
 		val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
 		toQuery := false
 		if !found {
@@ -179,6 +178,7 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 		}
 
 		if toQuery {
+			_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
 			data := stakingTypes.GetValidatorKey(addr)
 			k.ICQKeeper.MakeRequest(
 				ctx,
