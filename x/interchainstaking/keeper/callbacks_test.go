@@ -230,7 +230,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
-			s.SetupZones()
+			s.setupTestZones()
 
 			app := s.GetQuicksilverApp(s.chainA)
 			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -253,7 +253,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 func (s *KeeperTestSuite) TestHandleValsetCallbackBadChain() {
 	s.Run("bad chain", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -272,7 +272,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackBadChain() {
 func (s *KeeperTestSuite) TestHandleValsetCallbackNilValset() {
 	s.Run("nil valset", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -291,7 +291,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackNilValset() {
 func (s *KeeperTestSuite) TestHandleValsetCallbackInvalidResponse() {
 	s.Run("bad payload type", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -331,7 +331,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackInvalidResponse() {
 func (s *KeeperTestSuite) TestHandleValidatorCallbackBadChain() {
 	s.Run("bad chain", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -350,7 +350,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackBadChain() {
 func (s *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 	s.Run("empty value", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -539,7 +539,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 func (s *KeeperTestSuite) TestHandleRewardsCallbackBadChain() {
 	s.Run("bad chain", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -558,7 +558,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackBadChain() {
 func (s *KeeperTestSuite) TestHandleRewardsEmptyRequestCallback() {
 	s.Run("empty request", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -577,7 +577,7 @@ func (s *KeeperTestSuite) TestHandleRewardsEmptyRequestCallback() {
 func (s *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 	s.Run("valid response, bad delegator", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -613,7 +613,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 func (s *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 	s.Run("empty response", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -642,7 +642,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 func (s *KeeperTestSuite) TestHandleValideRewardsCallback() {
 	s.Run("valid response, negative waitgroup", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -676,7 +676,7 @@ func (s *KeeperTestSuite) TestHandleValideRewardsCallback() {
 func (s *KeeperTestSuite) TestAllBalancesCallback() {
 	s.Run("all balances", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -702,7 +702,7 @@ func (s *KeeperTestSuite) TestAllBalancesCallback() {
 func (s *KeeperTestSuite) TestAccountBalanceCallback() {
 	s.Run("account balance", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()

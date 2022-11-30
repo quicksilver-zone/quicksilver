@@ -15,7 +15,7 @@ import (
 func (s *KeeperTestSuite) TestRequestRedemption() {
 	var msg icstypes.MsgRequestRedemption
 
-	testAccount, err := utils.AccAddressFromBech32(TestOwnerAddress, "")
+	testAccount, err := utils.AccAddressFromBech32(testAddress, "")
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
 					DestinationAddress: addr,
-					FromAddress:        TestOwnerAddress,
+					FromAddress:        testAddress,
 				}
 			},
 			false,
@@ -44,7 +44,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uatom", sdk.NewInt(10000000)),
 					DestinationAddress: addr,
-					FromAddress:        TestOwnerAddress,
+					FromAddress:        testAddress,
 				}
 			},
 			true,
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(1000000000)),
 					DestinationAddress: addr,
-					FromAddress:        TestOwnerAddress,
+					FromAddress:        testAddress,
 				}
 			},
 			true,
@@ -70,7 +70,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.ZeroInt()),
 					DestinationAddress: addr,
-					FromAddress:        TestOwnerAddress,
+					FromAddress:        testAddress,
 				}
 			},
 			true,
@@ -83,7 +83,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.Coin{Denom: "uqatom", Amount: sdk.NewInt(-1)},
 					DestinationAddress: addr,
-					FromAddress:        TestOwnerAddress,
+					FromAddress:        testAddress,
 				}
 			},
 			true,
@@ -96,7 +96,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
 					DestinationAddress: addr,
-					FromAddress:        TestOwnerAddress,
+					FromAddress:        testAddress,
 				}
 			},
 			true,
@@ -120,7 +120,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
 					DestinationAddress: "",
-					FromAddress:        TestOwnerAddress,
+					FromAddress:        testAddress,
 				}
 			},
 			true,
@@ -146,7 +146,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 		// run tests with LSM enabled.
 		s.Run(tt.name, func() {
 			s.SetupTest()
-			s.SetupZones()
+			s.setupTestZones()
 
 			ctx := s.chainA.GetContext()
 
@@ -170,7 +170,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 		// run tests with LSM disabled.
 		s.Run(tt.name, func() {
 			s.SetupTest()
-			s.SetupZones()
+			s.setupTestZones()
 
 			ctx := s.chainA.GetContext()
 
@@ -214,7 +214,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				return &icstypes.MsgSignalIntent{
 					ChainId:     s.chainB.ChainID,
 					Intents:     fmt.Sprintf("0.3%s", val1.String()),
-					FromAddress: TestOwnerAddress,
+					FromAddress: testAddress,
 				}
 			},
 			[]sdk.Dec{},
@@ -230,7 +230,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				return &icstypes.MsgSignalIntent{
 					ChainId:     s.chainB.ChainID,
 					Intents:     fmt.Sprintf("3.0%s", val1.String()),
-					FromAddress: TestOwnerAddress,
+					FromAddress: testAddress,
 				}
 			},
 			[]sdk.Dec{},
@@ -246,7 +246,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				return &icstypes.MsgSignalIntent{
 					ChainId:     s.chainA.ChainID,
 					Intents:     fmt.Sprintf("1.0%s", val1.String()),
-					FromAddress: TestOwnerAddress,
+					FromAddress: testAddress,
 				}
 			},
 			[]sdk.Dec{},
@@ -262,7 +262,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				return &icstypes.MsgSignalIntent{
 					ChainId:     s.chainB.ChainID,
 					Intents:     fmt.Sprintf("1.0%s", val1.String()),
-					FromAddress: TestOwnerAddress,
+					FromAddress: testAddress,
 				}
 			},
 			[]sdk.Dec{sdk.NewDecWithPrec(1, 0)},
@@ -282,7 +282,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				return &icstypes.MsgSignalIntent{
 					ChainId:     s.chainB.ChainID,
 					Intents:     fmt.Sprintf("0.5%s,0.2%s,0.3%s", val1.String(), val2.String(), val3.String()),
-					FromAddress: TestOwnerAddress,
+					FromAddress: testAddress,
 				}
 			},
 			[]sdk.Dec{
@@ -300,7 +300,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 
 		s.Run(tt.name, func() {
 			s.SetupTest()
-			s.SetupZones()
+			s.setupTestZones()
 
 			msg := tt.malleate(s)
 			// validateBasic not explicitly tested here - but we don't call it inside msgSrv.SignalIntent
@@ -328,7 +328,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 			zone, found := icsKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
 			s.Require().True(found)
 
-			intent, found := icsKeeper.GetIntent(s.chainA.GetContext(), zone, TestOwnerAddress, false)
+			intent, found := icsKeeper.GetIntent(s.chainA.GetContext(), zone, testAddress, false)
 			s.Require().True(found)
 			intents := intent.GetIntents()
 

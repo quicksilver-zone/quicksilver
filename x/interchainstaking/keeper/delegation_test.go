@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestUpdateDelegation() {
 
 		s.Run(tt.name, func() {
 			s.SetupTest()
-			s.SetupZones()
+			s.setupTestZones()
 
 			app := s.GetQuicksilverApp(s.chainA)
 			ctx := s.chainA.GetContext()
@@ -360,7 +360,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 func (s *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 	s.Run("delegation - store / get / delete", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		ctx := s.chainA.GetContext()
