@@ -42,7 +42,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 
 				if sender != senderAddress {
 					k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
-					// Is there a reason we continue with error state from this point?
+					return fmt.Errorf("sender mismatch: expected %q, got %q", senderAddress, sender)
 				}
 
 				k.Logger(ctx).Error("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)

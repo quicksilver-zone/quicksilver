@@ -421,15 +421,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return fmt.Errorf("unable to validate proof: %w", err)
 	}
 
-	// HandleReceiptTransaction has multiple error states.
-	// The function should be updated to return these errors on failure.
-	// This will ensure DepositTx fails with appropriate error state, instead
-	// of succeeding with errors resulting in tainted state.
-	if err := k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone); err != nil {
-		return err
-	}
-
-	return nil
+	return k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.
