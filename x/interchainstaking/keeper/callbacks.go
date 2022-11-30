@@ -421,8 +421,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return fmt.Errorf("unable to validate proof: %w", err)
 	}
 
-	k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone)
-	return nil
+	return k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.
