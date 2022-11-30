@@ -71,38 +71,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 	suite.path = newQuicksilverPath(suite.chainA, suite.chainB)
 	suite.coordinator.SetupConnections(suite.path)
-
-	suite.coordinator.CurrentTime = time.Now().UTC()
-	suite.coordinator.UpdateTime()
 }
-
-// WIP: compare to participationrewards version...
-// func setupChannelForICA(ctx sdk.Context, qApp *app.Quicksilver, chainID string, connectionID string, accountSuffix string, remotePrefix string) error {
-// 	ibcModule := ics.NewIBCModule(qApp.InterchainstakingKeeper)
-// 	portID, err := icatypes.NewControllerPortID(chainID + "." + accountSuffix)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	channelID := qApp.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctx)
-// 	qApp.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{ConnectionHops: []string{connectionID}, State: channeltypes.OPEN, Counterparty: channeltypes.Counterparty{PortId: "icahost", ChannelId: channelID}})
-// 	qApp.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, portID, channelID, 1)
-// 	qApp.ICAControllerKeeper.SetActiveChannelID(ctx, connectionID, portID, channelID)
-// 	key, err := qApp.InterchainstakingKeeper.ScopedKeeper().NewCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	err = qApp.GetScopedIBCKeeper().ClaimCapability(ctx, key, host.ChannelCapabilityPath(portID, channelID))
-// 	if err != nil {
-// 		return err
-// 	}
-// 	addr, err := bech32.ConvertAndEncode(remotePrefix, utils.GenerateAccAddressForTest())
-// 	if err != nil {
-// 		return err
-// 	}
-// 	qApp.ICAControllerKeeper.SetInterchainAccountAddress(ctx, connectionID, portID, addr)
-// 	return ibcModule.OnChanOpenAck(ctx, portID, channelID, "", "")
-// }
 
 func (suite *KeeperTestSuite) setupTestZones() {
 	proposal := &icstypes.RegisterZoneProposal{
