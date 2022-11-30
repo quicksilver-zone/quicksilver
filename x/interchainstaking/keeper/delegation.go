@@ -59,6 +59,10 @@ func (k Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddres
 
 // GetDelegation returns a specific delegation.
 func (k Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, validatorAddress string) (delegation types.Delegation, found bool) {
+	if zone.PerformanceAddress == nil {
+		return types.Delegation{}, false
+	}
+
 	store := ctx.KVStore(k.storeKey)
 
 	_, delAddr, _ := bech32.DecodeAndConvert(zone.PerformanceAddress.Address)
@@ -399,7 +403,10 @@ func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string
 
 func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, validator string) error {
 	// create delegation record in MsgDelegate acknowledgement callback
-	k.SetPerformanceDelegation(ctx, zone, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
-	msg := stakingTypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
-	return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "perf/"+validator)
+	if zone.PerformanceAddress != nil {
+		k.SetPerformanceDelegation(ctx, zone, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
+		msg := stakingTypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
+		return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "perf/"+validator)
+	}
+	return nil
 }

@@ -13,6 +13,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -364,117 +365,70 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 	})
 }
 
-// func (s *KeeperTestSuite) TestHandleValidatorCallback() {
-// 	newVal := utils.GenerateValAddressForTest()
+func (s *KeeperTestSuite) TestHandleValidatorCallback() {
+	newVal := utils.GenerateAccAddressForTestWithPrefix("cosmosvaloper")
 
-// 	tests := []struct {
-// 		name      string
-// 		validator func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse
-// 		expected  icstypes.Validator
-// 	}{
-// 		{
-// 			name: "valid - no-op",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - shares +1000 val[0]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[0].DelegatorShares = in[0].DelegatorShares.Add(sdk.NewDec(1000))
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - shares +1000 val[1], +2000 val[2]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[1].DelegatorShares = in[1].DelegatorShares.Add(sdk.NewDec(1000))
-// 				in[2].DelegatorShares = in[2].DelegatorShares.Add(sdk.NewDec(2000))
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - tokens +1000 val[0]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[0].Tokens = in[0].Tokens.Add(sdk.NewInt(1000))
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - tokens +1000 val[1], +2000 val[2]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[1].Tokens = in[1].Tokens.Add(sdk.NewInt(1000))
-// 				in[2].Tokens = in[2].Tokens.Add(sdk.NewInt(2000))
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - tokens -10 val[1], -20 val[2]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[1].Tokens = in[1].Tokens.Sub(sdk.NewInt(10))
-// 				in[2].Tokens = in[2].Tokens.Sub(sdk.NewInt(20))
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - commission 0.5 val[0], 0.05 val[2]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[0].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 1)
-// 				in[2].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 2)
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - new validator",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				new := in[0]
-// 				new.OperatorAddress = newVal.String()
-// 				in = append(in, new)
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 	}
+	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
 
-// 	for _, test := range tests {
-// 		s.Run(test.name, func() {
-// 			s.SetupTest()
-// 			s.SetupZones()
+	tests := []struct {
+		name      string
+		validator stakingtypes.Validator
+		expected  *icstypes.Validator
+	}{
+		{
+			name:      "valid - no-op",
+			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
+			expected:  &icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+		},
+		{
+			name:      "valid - +2000 tokens/shares",
+			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(4000), DelegatorShares: sdk.NewDec(4000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
+			expected:  &icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(4000), DelegatorShares: sdk.NewDec(4000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+		},
+		{
+			name:      "valid - inc. commission",
+			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
+			expected:  &icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.5"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+		},
+		{
+			name:      "valid - new validator",
+			validator: stakingtypes.Validator{OperatorAddress: newVal, Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(3000), DelegatorShares: sdk.NewDec(3050), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.25"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
+			expected:  &icstypes.Validator{ValoperAddress: newVal, CommissionRate: sdk.MustNewDecFromStr("0.25"), VotingPower: sdk.NewInt(3000), DelegatorShares: sdk.NewDec(3050), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+		},
+	}
 
-// 			app := s.GetQuicksilverApp(s.chainA)
-// 			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-// 			ctx := s.chainA.GetContext()
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			s.SetupZones()
 
-// 			chainBVals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetValidators(s.chainB.GetContext(), 300)
+			app := s.GetQuicksilverApp(s.chainA)
+			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := s.chainA.GetContext()
 
-// 			query := test.validator(chainBVals)
-// 			bz, err := app.AppCodec().Marshal(&query)
-// 			s.Require().NoError(err)
+			app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-// 			err = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
-// 			s.Require().NoError(err)
+			bz, err := app.AppCodec().Marshal(&test.validator)
+			s.Require().NoError(err)
 
-// 			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-// 			s.Require().True(found)
-// 			// valset callback doesn't actually update validators, but does emit icq callbacks.
-// 			expected := false
-// 			for _, val := range zone.Validators {
-// 				if val.IsEqual(test.expected) {
-// 					expected = true
-// 					break
-// 				}
-// 			}
-// 			s.Require().True(expected)
-// 		})
-// 	}
-// }
+			err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
+			s.Require().NoError(err)
+
+			zone, found := app.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
+			s.True(found)
+
+			// valset callback doesn't actually update validators, but does emit icq callbacks.
+			valFromZone, found := zone.GetValidatorByValoper(test.expected.ValoperAddress)
+			s.True(found)
+			s.Equal(test.expected, valFromZone)
+		})
+	}
+}
 
 // func (s *KeeperTestSuite) TestHandleDelegationCallback() {
 // 	type TestCase struct {

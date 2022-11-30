@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -214,12 +215,19 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 	if !found {
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
+		jailTime := time.Time{}
+		if validator.IsJailed() {
+			jailTime = ctx.BlockTime()
+		}
 		zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
 			DelegatorShares: validator.DelegatorShares,
 			Score:           sdk.ZeroDec(),
+			Status:          validator.Status.String(),
+			Jailed:          validator.IsJailed(),
+			JailedSince:     jailTime,
 		})
 		zoneInfo.Validators = zoneInfo.GetValidatorsSorted()
 
@@ -242,6 +250,18 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		if val.DelegatorShares.IsNil() || !val.DelegatorShares.Equal(validator.DelegatorShares) {
 			val.DelegatorShares = validator.DelegatorShares
 			k.Logger(ctx).Info("Validator delegator shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.DelegatorShares, "newShares", validator.DelegatorShares)
+		}
+
+		if !val.Jailed && validator.IsJailed() {
+			val.Jailed = true
+			val.JailedSince = ctx.BlockTime()
+		} else if val.Jailed && !validator.IsJailed() {
+			val.Jailed = false
+			val.JailedSince = time.Time{}
+		}
+
+		if val.Status != validator.Status.String() {
+			val.Status = validator.Status.String()
 		}
 
 		if _, found := k.GetPerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); !found {

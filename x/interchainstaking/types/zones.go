@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (z Zone) SupportMultiSend() bool { return z.MultiSend }
@@ -157,10 +159,43 @@ func (z Zone) GetValidatorsAddressesAsSlice() []string {
 }
 
 func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
+	var intents ValidatorIntents
+	var filteredIntents ValidatorIntents
+
 	if len(z.AggregateIntent) == 0 {
-		return z.DefaultAggregateIntents()
+		intents = z.DefaultAggregateIntents()
+	} else {
+		intents = z.AggregateIntent
 	}
-	return z.AggregateIntent
+	// filter intents here...
+	// check validators for tombstoned
+	for _, v := range intents {
+		val, found := z.GetValidatorByValoper(v.ValoperAddress)
+		if !found {
+			continue
+		}
+		if val.Tombstoned {
+			continue
+		}
+		if val.Status == stakingtypes.BondStatusUnbonded {
+			continue
+			// not in valset - change this in future to make educated guess about whether if we bond, the validator makes it into the set.
+		}
+
+		if val.Status == stakingtypes.BondStatusUnbonding {
+			if val.JailedSince.Add(72 * time.Hour).After(time.Now()) {
+				continue
+			}
+		}
+
+		// if in deny list {
+		//continue
+		//}
+		filteredIntents = append(filteredIntents, v)
+	}
+
+	return filteredIntents
+
 }
 
 // defaultAggregateIntents determines the default aggregate intent (for epoch 0)

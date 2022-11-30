@@ -132,6 +132,11 @@ message Validator {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+  string status = 6;
+  bool jailed = 7;
+  bool tombstoned = 8;
+  google.protobuf.Timestamp jailed_since = 9
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
 }
 
 message DelegatorIntent {
@@ -141,7 +146,10 @@ message DelegatorIntent {
 }
 
 message ValidatorIntent {
-  string valoper_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString", json_name = "valoper_address" ];
+  string valoper_address = 1 [
+    (cosmos_proto.scalar) = "cosmos.AddressString",
+    json_name = "valoper_address"
+  ];
   string weight = 2 [
     (gogoproto.moretags) = "yaml:\"weight\"",
     (cosmos_proto.scalar) = "cosmos.Dec",
