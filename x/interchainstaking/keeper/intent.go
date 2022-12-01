@@ -86,28 +86,6 @@ func (k Keeper) AllIntentsAsPointer(ctx sdk.Context, zone types.Zone, snapshot b
 	return intents
 }
 
-// AllOrdinalizedIntents returns every intent in the store for the specified zone.
-// func (k Keeper) AllOrdinalizedIntents(ctx sdk.Context, zone types.Zone, snapshot bool) ([]types.DelegatorIntent, error) {
-// 	intents := []types.DelegatorIntent{}
-// 	var err error
-// 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
-// 		addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
-// 		if localErr != nil {
-// 			err = localErr
-// 			return true
-// 		}
-// 		balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
-
-// 		intents = append(intents, intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)))
-// 		return false
-// 	})
-// 	if err != nil {
-// 		// check on nil here to ensure we don't return half a slice of intents
-// 		return []types.DelegatorIntent{}, err
-// 	}
-// 	return intents, nil
-// }
-
 func (k *Keeper) AggregateIntents(ctx sdk.Context, zone *types.Zone) error {
 	var err error
 	snapshot := false
