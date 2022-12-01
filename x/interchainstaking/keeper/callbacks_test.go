@@ -405,7 +405,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallback() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
-			s.SetupZones()
+			s.setupTestZones()
 
 			app := s.GetQuicksilverApp(s.chainA)
 			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
