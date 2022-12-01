@@ -132,7 +132,7 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone *types.Zone) error {
 	}
 
 	if len(aggregate) > 0 && ordinalizedIntentSum.IsZero() {
-		return errors.New("ordinalized intent sum is zero, this should never happen")
+		return errors.New("ordinalized intent sum is zero, this may happen if no claims are recorded")
 	}
 
 	// normalise aggregated intents again.
