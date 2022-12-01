@@ -6,6 +6,7 @@ import (
 
 	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -241,17 +242,17 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 	val4 := utils.GenerateValAddressForTest()
 
 	zone := icstypes.Zone{Validators: []*icstypes.Validator{
-		{ValoperAddress: val1.String(), CommissionRate: sdk.NewDecWithPrec(30, 2)},
-		{ValoperAddress: val2.String(), CommissionRate: sdk.NewDecWithPrec(25, 2)},
-		{ValoperAddress: val3.String(), CommissionRate: sdk.NewDecWithPrec(10, 2)},
-		{ValoperAddress: val4.String(), CommissionRate: sdk.NewDecWithPrec(12, 2)},
+		{ValoperAddress: val1.String(), CommissionRate: sdk.NewDecWithPrec(30, 2), Status: stakingtypes.BondStatusBonded},
+		{ValoperAddress: val2.String(), CommissionRate: sdk.NewDecWithPrec(25, 2), Status: stakingtypes.BondStatusBonded},
+		{ValoperAddress: val3.String(), CommissionRate: sdk.NewDecWithPrec(10, 2), Status: stakingtypes.BondStatusBonded},
+		{ValoperAddress: val4.String(), CommissionRate: sdk.NewDecWithPrec(12, 2), Status: stakingtypes.BondStatusBonded},
 	}}
 
 	zone2 := icstypes.Zone{Validators: []*icstypes.Validator{
-		{ValoperAddress: val1.String(), CommissionRate: sdk.NewDecWithPrec(30, 2)},
-		{ValoperAddress: val2.String(), CommissionRate: sdk.NewDecWithPrec(25, 2)},
-		{ValoperAddress: val3.String(), CommissionRate: sdk.NewDecWithPrec(10, 2)},
-		{ValoperAddress: val4.String(), CommissionRate: sdk.NewDecWithPrec(75, 2)},
+		{ValoperAddress: val1.String(), CommissionRate: sdk.NewDecWithPrec(30, 2), Status: stakingtypes.BondStatusBonded},
+		{ValoperAddress: val2.String(), CommissionRate: sdk.NewDecWithPrec(25, 2), Status: stakingtypes.BondStatusBonded},
+		{ValoperAddress: val3.String(), CommissionRate: sdk.NewDecWithPrec(10, 2), Status: stakingtypes.BondStatusBonded},
+		{ValoperAddress: val4.String(), CommissionRate: sdk.NewDecWithPrec(75, 2), Status: stakingtypes.BondStatusBonded},
 	}}
 
 	tc := []struct {
