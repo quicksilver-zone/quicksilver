@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -171,31 +170,23 @@ func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
 	// check validators for tombstoned
 	for _, v := range intents {
 		val, found := z.GetValidatorByValoper(v.ValoperAddress)
+		// this case should not happen as we check the validity of a validator entry when intent is set.
 		if !found {
 			continue
 		}
+		// we should never let tombstoned validators into the list, even if they are explicitly selected
 		if val.Tombstoned {
 			continue
 		}
-		if val.Status == stakingtypes.BondStatusUnbonded {
-			continue
-			// not in valset - change this in future to make educated guess about whether if we bond, the validator makes it into the set.
-		}
 
-		if val.Status == stakingtypes.BondStatusUnbonding {
-			if val.JailedSince.Add(72 * time.Hour).After(time.Now()) {
-				continue
-			}
-		}
-
+		// we should never let denylist validators into the list, even if they are explicitly selected
 		// if in deny list {
-		//continue
-		//}
+		// continue
+		// }
 		filteredIntents = append(filteredIntents, v)
 	}
 
 	return filteredIntents
-
 }
 
 // defaultAggregateIntents determines the default aggregate intent (for epoch 0)
@@ -203,7 +194,9 @@ func (z *Zone) DefaultAggregateIntents() ValidatorIntents {
 	out := make(ValidatorIntents, 0)
 	for _, val := range z.GetValidatorsSorted() {
 		if val.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
-			out = append(out, &ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()})
+			if !val.Jailed && !val.Tombstoned && val.Status == stakingtypes.BondStatusBonded {
+				out = append(out, &ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()})
+			}
 		}
 	}
 
