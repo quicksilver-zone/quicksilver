@@ -244,7 +244,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, am
 }
 
 // CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
-func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents) types.ValidatorIntents {
+func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents) types.ValidatorIntents {
 	deltas := make(types.ValidatorIntents, 0)
 
 	targetValopers := func(in types.ValidatorIntents) []string {
@@ -275,6 +275,16 @@ func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkma
 		deltas = append(deltas, &types.ValidatorIntent{Weight: sdk.NewDecFromInt(delta), ValoperAddress: valoper})
 	}
 
+	// sort keys by relative value of delta
+	sort.SliceStable(deltas, func(i, j int) bool {
+		return deltas[i].ValoperAddress > deltas[j].ValoperAddress
+	})
+
+	// sort keys by relative value of delta
+	sort.SliceStable(deltas, func(i, j int) bool {
+		return deltas[i].Weight.GT(deltas[j].Weight)
+	})
+
 	return deltas
 }
 
@@ -292,19 +302,19 @@ func minDeltas(deltas types.ValidatorIntents) sdkmath.Int {
 
 func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents, amount sdk.Coins) map[string]sdkmath.Int {
 	input := amount[0].Amount
-	deltas := calculateDeltas(currentAllocations, currentSum, targetAllocations)
+	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
 	minValue := minDeltas(deltas)
 	sum := sdk.ZeroInt()
 
-	// sort keys by relative value of delta
-	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].ValoperAddress > deltas[j].ValoperAddress
-	})
+	// // sort keys by relative value of delta
+	// sort.SliceStable(deltas, func(i, j int) bool {
+	// 	return deltas[i].ValoperAddress > deltas[j].ValoperAddress
+	// })
 
-	// sort keys by relative value of delta
-	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].Weight.GT(deltas[j].Weight)
-	})
+	// // sort keys by relative value of delta
+	// sort.SliceStable(deltas, func(i, j int) bool {
+	// 	return deltas[i].Weight.GT(deltas[j].Weight)
+	// })
 
 	// raise all deltas such that the minimum value is zero.
 	for idx := range deltas {

@@ -735,8 +735,8 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 					types.RedelegationRecord{
 						ChainId:     zone.ChainId,
 						EpochNumber: 1,
-						Delegator:   zone.DelegationAddress.Address,
-						Validator:   zone.GetValidatorsAddressesAsSlice()[0],
+						Source:      zone.GetValidatorsAddressesAsSlice()[1],
+						Destination: zone.GetValidatorsAddressesAsSlice()[0],
 						Amount:      10000000,
 					})
 			},

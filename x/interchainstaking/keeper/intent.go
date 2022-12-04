@@ -162,11 +162,6 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 	// }
 	balance := sdk.NewCoin(zone.BaseDenom, math.ZeroInt())
 
-	k.Logger(ctx).Error("DEBUG", "zone", zone.ChainId)
-	k.Logger(ctx).Error("DEBUG", "sender", sender.String())
-	k.Logger(ctx).Error("DEBUG", "balance", balance)
-	k.Logger(ctx).Error("DEBUG", "prkeeper", k.ClaimsManagerKeeper)
-
 	// grab offchain asset value, and raise the users' base value by this amount.
 	k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, sender.String(), func(index int64, data prtypes.Claim) (stop bool) {
 		k.Logger(ctx).Error("Update intents - found claim for user", "user", intent.Delegator, "claim amount", data.Amount, "new balance", balance.Amount)

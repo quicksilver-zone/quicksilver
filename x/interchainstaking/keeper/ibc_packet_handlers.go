@@ -126,7 +126,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				k.Logger(ctx).Error("unable to unmarshal MsgBeginRedelegate response", "error", err)
 				return err
 			}
-			k.Logger(ctx).Debug("Redelegation initiated", "response", response)
+			k.Logger(ctx).Error("Redelegation initiated", "response", response)
 			if err := k.HandleBeginRedelegate(ctx, src, response.CompletionTime, packetData.Memo); err != nil {
 				return err
 			}
@@ -432,9 +432,8 @@ func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error 
 	var err error
 
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
-		k.Logger(ctx).Info("garbage collecting completed unbondings")
-
 		if ctx.BlockTime().After(withdrawal.CompletionTime.Add(24 * time.Hour)) {
+			k.Logger(ctx).Info("garbage collecting completed unbondings")
 			k.DeleteWithdrawalRecord(ctx, zone.ChainId, withdrawal.Txhash, WithdrawStatusCompleted)
 		}
 		return false
@@ -447,10 +446,9 @@ func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 	var err error
 
 	k.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation types.RedelegationRecord) bool {
-		k.Logger(ctx).Info("garbage collecting completed redelegations")
-
 		if ctx.BlockTime().After(redelegation.CompletionTime) {
-			k.DeleteRedelegationRecordByKey(ctx, key)
+			k.Logger(ctx).Info("garbage collecting completed redelegations", "key", key, "completion", redelegation.CompletionTime)
+			k.DeleteRedelegationRecordByKey(ctx, append(types.KeyPrefixRedelegationRecord, key...))
 		}
 		return false
 	})
@@ -462,8 +460,8 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 	var err error
 
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
-		k.Logger(ctx).Info("iterating unbondings")
 		if ctx.BlockTime().After(withdrawal.CompletionTime) && !withdrawal.CompletionTime.IsZero() { // completion date has passed.
+			k.Logger(ctx).Info("found completed unbonding")
 			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
 			err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, withdrawal.Txhash)
 			if err != nil {
@@ -540,9 +538,10 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
 	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.DelegatorAddress, epochNumber)
 	if !found {
+		k.Logger(ctx).Error("unable to find redelegation record")
 		return errors.New("unable to find redelegation record")
 	}
-
+	k.Logger(ctx).Error("updating redelegation record with completion time")
 	record.CompletionTime = completion
 	k.SetRedelegationRecord(ctx, record)
 	return nil

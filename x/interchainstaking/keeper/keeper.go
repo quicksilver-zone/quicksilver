@@ -144,7 +144,7 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
+func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte, request []byte) error {
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
 	if bytes.Equal(data, []byte("")) {
 		return errors.New("attempted to unmarshal zero length byte slice (8)")
@@ -155,6 +155,33 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 		return err
 	}
 
+	if validatorsRes.Pagination != nil && !bytes.Equal(validatorsRes.Pagination.NextKey, []byte{}) {
+		validatorsReq := stakingTypes.QueryValidatorsRequest{}
+		err = k.cdc.Unmarshal(request, &validatorsReq)
+		if err != nil {
+			k.Logger(ctx).Error("unable to unmarshal request", "zone", zoneInfo.ChainId, "err", err)
+			return err
+		}
+		validatorsReq.Pagination.Key = validatorsRes.Pagination.NextKey
+		bz, err := k.cdc.Marshal(&validatorsReq)
+		if err != nil {
+			return errors.New("failed to marshal valset pagination request")
+		}
+		k.Logger(ctx).Info("Found pagination nextKey in valset; resubmitting...")
+
+		k.ICQKeeper.MakeRequest(
+			ctx,
+			zoneInfo.ConnectionId,
+			zoneInfo.ChainId,
+			"cosmos.staking.v1beta1.Query/Validators",
+			bz,
+			sdk.NewInt(-1),
+			types.ModuleName,
+			"valset",
+			0,
+		)
+	}
+
 	for _, validator := range validatorsRes.Validators {
 		val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
 		toQuery := false
@@ -163,17 +190,13 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 			toQuery = true
 		} else {
 			if !val.CommissionRate.Equal(validator.GetCommission()) {
-				k.Logger(ctx).Info("Validator commission change; fetching proof", "valoper", validator.OperatorAddress)
+				k.Logger(ctx).Info("Validator commission change; fetching proof", "valoper", validator.OperatorAddress, "from", val.CommissionRate, "to", validator.GetCommission())
 				toQuery = true
-			}
-
-			if !val.VotingPower.Equal(validator.Tokens) {
-				k.Logger(ctx).Info("Validator voting power change; fetching proof", "valoper", validator.OperatorAddress)
+			} else if !val.VotingPower.Equal(validator.Tokens) {
+				k.Logger(ctx).Info("Validator voting power change; fetching proof", "valoper", validator.OperatorAddress, "from", val.VotingPower, "to", validator.Tokens)
 				toQuery = true
-			}
-
-			if !val.DelegatorShares.Equal(validator.DelegatorShares) {
-				k.Logger(ctx).Info("Validator shares amount change; fetching proof", "valoper", validator.OperatorAddress)
+			} else if !val.DelegatorShares.Equal(validator.DelegatorShares) {
+				k.Logger(ctx).Info("Validator shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.DelegatorShares, "to", validator.DelegatorShares)
 				toQuery = true
 			}
 		}
@@ -237,30 +260,36 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 
 	} else {
 
-		if val.CommissionRate.IsNil() || !val.CommissionRate.Equal(validator.GetCommission()) {
-			val.CommissionRate = validator.GetCommission()
+		if !val.CommissionRate.Equal(validator.GetCommission()) {
 			k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
+			val.CommissionRate = validator.GetCommission()
 		}
 
-		if val.VotingPower.IsNil() || !val.VotingPower.Equal(validator.Tokens) {
-			val.VotingPower = validator.Tokens
+		if !val.VotingPower.Equal(validator.Tokens) {
 			k.Logger(ctx).Info("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens)
+			val.VotingPower = validator.Tokens
 		}
 
-		if val.DelegatorShares.IsNil() || !val.DelegatorShares.Equal(validator.DelegatorShares) {
-			val.DelegatorShares = validator.DelegatorShares
+		if !val.DelegatorShares.Equal(validator.DelegatorShares) {
 			k.Logger(ctx).Info("Validator delegator shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.DelegatorShares, "newShares", validator.DelegatorShares)
+			val.DelegatorShares = validator.DelegatorShares
 		}
 
 		if !val.Jailed && validator.IsJailed() {
+			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress)
+
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
 		} else if val.Jailed && !validator.IsJailed() {
+			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
+
 			val.Jailed = false
 			val.JailedSince = time.Time{}
 		}
 
 		if val.Status != validator.Status.String() {
+			k.Logger(ctx).Info("Transitioning validator status", "valoper", validator.OperatorAddress, "previous", val.Status, "current", validator.Status.String())
+
 			val.Status = validator.Status.String()
 		}
 
@@ -409,15 +438,15 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
 	currentAllocations, currentSum := k.GetDelegationMap(ctx, &zone)
 	targetAllocations := zone.GetAggregateIntentOrDefault()
-	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations)
+	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId))
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingTypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
 		k.SetRedelegationRecord(ctx, types.RedelegationRecord{
 			ChainId:     zone.ChainId,
 			EpochNumber: epochNumber,
-			Delegator:   zone.DelegationAddress.Address,
-			Validator:   rebalance.Source,
+			Source:      rebalance.Source,
+			Destination: rebalance.Target,
 			Amount:      rebalance.Amount.Int64(),
 		})
 	}
@@ -435,12 +464,31 @@ type RebalanceTarget struct {
 	Target string
 }
 
-func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents) []RebalanceTarget {
+func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents, existingRedelegations []types.RedelegationRecord) []RebalanceTarget {
 	out := make([]RebalanceTarget, 0)
-	deltas := calculateDeltas(currentAllocations, currentSum, targetAllocations)
+	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
 
 	wantToRebalance := sdk.ZeroInt()
-	maxCanRebalance := currentSum.Quo(sdk.NewInt(2))
+	canRebalanceFrom := sdk.ZeroInt()
+
+	totalLocked := int64(0)
+	lockedPerValidator := map[string]int64{}
+	for _, redelegation := range existingRedelegations {
+		totalLocked = totalLocked + redelegation.Amount
+		thisLocked, found := lockedPerValidator[redelegation.Destination]
+		if !found {
+			thisLocked = 0
+		}
+		lockedPerValidator[redelegation.Destination] = thisLocked + redelegation.Amount
+	}
+
+	fmt.Println("Total locked (per-validator)", totalLocked, lockedPerValidator)
+
+	maxCanRebalance := currentSum.Sub(math.NewInt(totalLocked)).Quo(sdk.NewInt(2))
+	fmt.Println("Can rebalance with current locking", maxCanRebalance)
+
+	maxCanRebalance = math.MinInt(maxCanRebalance, currentSum.Quo(sdk.NewInt(7)))
+	fmt.Println("Can rebalance with locking this epoch", maxCanRebalance)
 
 	// sort keys by relative value of delta
 	sort.SliceStable(deltas, func(i, j int) bool {
@@ -452,13 +500,37 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 		return deltas[i].Weight.GT(deltas[j].Weight)
 	})
 
+	fmt.Println("deltas before", deltas)
+
 	for _, delta := range deltas {
-		if delta.Weight.IsPositive() {
+		if delta.Weight.IsZero() {
+			// do nothing
+		} else if delta.Weight.IsPositive() {
+			// if delta > current value - locked value, truncate, as we cannot rebalance locked tokens.
 			wantToRebalance = wantToRebalance.Add(delta.Weight.TruncateInt())
+		} else { // negative
+
+			if delta.Weight.Abs().GT(sdk.NewDecFromInt(currentAllocations[delta.ValoperAddress].Sub(math.NewInt(lockedPerValidator[delta.ValoperAddress])))) {
+				delta.Weight = sdk.NewDecFromInt(currentAllocations[delta.ValoperAddress].Sub(math.NewInt(lockedPerValidator[delta.ValoperAddress]))).Neg()
+				fmt.Printf("Truncated delta for %s to %d due to locked tokens\n", delta.ValoperAddress, delta.Weight.Abs())
+			}
+			canRebalanceFrom = canRebalanceFrom.Add(delta.Weight.Abs().TruncateInt())
 		}
 	}
 
-	toRebalance := sdk.MinInt(wantToRebalance, maxCanRebalance)
+	fmt.Println("deltas after", deltas)
+
+	fmt.Println("want to", wantToRebalance)
+	fmt.Println("can", canRebalanceFrom)
+	fmt.Println("max can", maxCanRebalance)
+
+	toRebalance := sdk.MinInt(sdk.MinInt(wantToRebalance, canRebalanceFrom), maxCanRebalance)
+
+	if toRebalance.Equal(math.ZeroInt()) {
+		fmt.Println("No rebalancing this epoch")
+		return []RebalanceTarget{}
+	}
+	fmt.Println("Will rebalance this epoch", toRebalance)
 
 	tgtIdx := 0
 	srcIdx := len(deltas) - 1
