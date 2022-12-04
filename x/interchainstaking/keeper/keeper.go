@@ -185,20 +185,19 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 	for _, validator := range validatorsRes.Validators {
 		val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
 		toQuery := false
-		if !found {
+		switch {
+		case !found:
 			k.Logger(ctx).Info("Unable to find validator - fetching proof...", "valoper", validator.OperatorAddress)
 			toQuery = true
-		} else {
-			if !val.CommissionRate.Equal(validator.GetCommission()) {
-				k.Logger(ctx).Info("Validator commission change; fetching proof", "valoper", validator.OperatorAddress, "from", val.CommissionRate, "to", validator.GetCommission())
-				toQuery = true
-			} else if !val.VotingPower.Equal(validator.Tokens) {
-				k.Logger(ctx).Info("Validator voting power change; fetching proof", "valoper", validator.OperatorAddress, "from", val.VotingPower, "to", validator.Tokens)
-				toQuery = true
-			} else if !val.DelegatorShares.Equal(validator.DelegatorShares) {
-				k.Logger(ctx).Info("Validator shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.DelegatorShares, "to", validator.DelegatorShares)
-				toQuery = true
-			}
+		case !val.CommissionRate.Equal(validator.GetCommission()):
+			k.Logger(ctx).Info("Validator commission change; fetching proof", "valoper", validator.OperatorAddress, "from", val.CommissionRate, "to", validator.GetCommission())
+			toQuery = true
+		case !val.VotingPower.Equal(validator.Tokens):
+			k.Logger(ctx).Info("Validator voting power change; fetching proof", "valoper", validator.OperatorAddress, "from", val.VotingPower, "to", validator.Tokens)
+			toQuery = true
+		case !val.DelegatorShares.Equal(validator.DelegatorShares):
+			k.Logger(ctx).Info("Validator shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.DelegatorShares, "to", validator.DelegatorShares)
+			toQuery = true
 		}
 
 		if toQuery {
@@ -474,7 +473,7 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 	totalLocked := int64(0)
 	lockedPerValidator := map[string]int64{}
 	for _, redelegation := range existingRedelegations {
-		totalLocked = totalLocked + redelegation.Amount
+		totalLocked += redelegation.Amount
 		thisLocked, found := lockedPerValidator[redelegation.Destination]
 		if !found {
 			thisLocked = 0
@@ -484,9 +483,11 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 
 	fmt.Println("Total locked (per-validator)", totalLocked, lockedPerValidator)
 
+	// TODO: make this a param
 	maxCanRebalance := currentSum.Sub(math.NewInt(totalLocked)).Quo(sdk.NewInt(2))
 	fmt.Println("Can rebalance with current locking", maxCanRebalance)
 
+	// TODO: make this a param
 	maxCanRebalance = math.MinInt(maxCanRebalance, currentSum.Quo(sdk.NewInt(7)))
 	fmt.Println("Can rebalance with locking this epoch", maxCanRebalance)
 
@@ -500,15 +501,14 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 		return deltas[i].Weight.GT(deltas[j].Weight)
 	})
 
-	fmt.Println("deltas before", deltas)
-
 	for _, delta := range deltas {
-		if delta.Weight.IsZero() {
+		switch {
+		case delta.Weight.IsZero():
 			// do nothing
-		} else if delta.Weight.IsPositive() {
+		case delta.Weight.IsPositive():
 			// if delta > current value - locked value, truncate, as we cannot rebalance locked tokens.
 			wantToRebalance = wantToRebalance.Add(delta.Weight.TruncateInt())
-		} else { // negative
+		case delta.Weight.IsNegative():
 
 			if delta.Weight.Abs().GT(sdk.NewDecFromInt(currentAllocations[delta.ValoperAddress].Sub(math.NewInt(lockedPerValidator[delta.ValoperAddress])))) {
 				delta.Weight = sdk.NewDecFromInt(currentAllocations[delta.ValoperAddress].Sub(math.NewInt(lockedPerValidator[delta.ValoperAddress]))).Neg()
@@ -517,12 +517,6 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 			canRebalanceFrom = canRebalanceFrom.Add(delta.Weight.Abs().TruncateInt())
 		}
 	}
-
-	fmt.Println("deltas after", deltas)
-
-	fmt.Println("want to", wantToRebalance)
-	fmt.Println("can", canRebalanceFrom)
-	fmt.Println("max can", maxCanRebalance)
 
 	toRebalance := sdk.MinInt(sdk.MinInt(wantToRebalance, canRebalanceFrom), maxCanRebalance)
 
