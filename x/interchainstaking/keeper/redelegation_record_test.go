@@ -8,7 +8,6 @@ import (
 )
 
 func (s *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
-
 	qapp := s.GetQuicksilverApp(s.chainA)
 	ctx := s.chainA.GetContext()
 
@@ -51,5 +50,4 @@ func (s *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
 
 	allCosmosRecords = qapp.InterchainstakingKeeper.AllRedelegationRecords(ctx)
 	s.Require().Equal(0, len(allCosmosRecords))
-
 }
