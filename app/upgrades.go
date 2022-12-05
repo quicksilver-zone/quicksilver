@@ -20,7 +20,7 @@ const (
 	v001003UpgradeName = "v0.10.3"
 	v001004UpgradeName = "v0.10.4"
 
-	InnuendoChainId = "innuendo-3"
+	InnuendoChainID = "innuendo-3"
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
@@ -98,7 +98,7 @@ func getv001002Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 
 			app.UpgradeKeeper.Logger(ctx).Info("state transitions complete.")
 
-		case InnuendoChainId:
+		case InnuendoChainID:
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.2; removing osmo-test-4 zone.")
 			app.InterchainstakingKeeper.DeleteZone(ctx, "osmo-test-4")
 		default:
@@ -131,7 +131,7 @@ func getv001002Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 func getv001003Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		switch ctx.ChainID() {
-		case InnuendoChainId:
+		case InnuendoChainID:
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.3; removing defunct zones.")
 			app.InterchainstakingKeeper.DeleteZone(ctx, "bitcanna-dev-5")
 			app.InterchainstakingKeeper.DeleteZone(ctx, "fauxgaia-1")
@@ -156,7 +156,7 @@ func getv001003Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 func getv001004Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		switch ctx.ChainID() {
-		case InnuendoChainId:
+		case InnuendoChainID:
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.4; removing withdrawal records for previously removed zones.")
 			app.InterchainstakingKeeper.IteratePrefixedWithdrawalRecords(ctx, []byte("fauxgaia-1"), func(_ int64, record icstypes.WithdrawalRecord) bool {
 				app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, "fauxgaia-1", record.Txhash, record.Status)
