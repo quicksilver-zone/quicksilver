@@ -416,6 +416,17 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRew
 	k.SetZone(ctx, &zone)
 }
 
+func (k *Keeper) UpdateRedemptionRateNoBounds(ctx sdk.Context, zone types.Zone) {
+	ratio := k.GetRatio(ctx, zone, math.ZeroInt())
+	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
+	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount)
+
+	zone.LastRedemptionRate = zone.RedemptionRate
+	zone.RedemptionRate = ratio
+	k.SetZone(ctx, &zone)
+}
+
 func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.Int) sdk.Dec {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, &zone).Amount
