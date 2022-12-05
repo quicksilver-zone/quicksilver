@@ -19,6 +19,8 @@ const (
 	v001002UpgradeName = "v0.10.2"
 	v001003UpgradeName = "v0.10.3"
 	v001004UpgradeName = "v0.10.4"
+
+	InnuendoChainId = "innuendo-3"
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
@@ -96,7 +98,7 @@ func getv001002Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 
 			app.UpgradeKeeper.Logger(ctx).Info("state transitions complete.")
 
-		case "innuendo-3":
+		case InnuendoChainId:
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.2; removing osmo-test-4 zone.")
 			app.InterchainstakingKeeper.DeleteZone(ctx, "osmo-test-4")
 		default:
@@ -129,7 +131,7 @@ func getv001002Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 func getv001003Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		switch ctx.ChainID() {
-		case "innuendo-3":
+		case InnuendoChainId:
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.3; removing defunct zones.")
 			app.InterchainstakingKeeper.DeleteZone(ctx, "bitcanna-dev-5")
 			app.InterchainstakingKeeper.DeleteZone(ctx, "fauxgaia-1")
@@ -154,7 +156,7 @@ func getv001003Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 func getv001004Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		switch ctx.ChainID() {
-		case "innuendo-3":
+		case InnuendoChainId:
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.4; removing withdrawal records for previously removed zones.")
 			app.InterchainstakingKeeper.IteratePrefixedWithdrawalRecords(ctx, []byte("fauxgaia-1"), func(_ int64, record icstypes.WithdrawalRecord) bool {
 				app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, "fauxgaia-1", record.Txhash, record.Status)
@@ -180,13 +182,17 @@ func getv001004Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.4; removing delegation records for previously removed zones.")
 			fgZone, _ := app.InterchainstakingKeeper.GetZone(ctx, "fauxgaia-1")
 			app.InterchainstakingKeeper.IterateAllDelegations(ctx, &fgZone, func(record icstypes.Delegation) (stop bool) {
-				app.InterchainstakingKeeper.RemoveDelegation(ctx, &fgZone, record)
+				if err := app.InterchainstakingKeeper.RemoveDelegation(ctx, &fgZone, record); err != nil {
+					panic(err)
+				}
 				return false
 			})
 
 			bcZone, _ := app.InterchainstakingKeeper.GetZone(ctx, "bitcanna-dev-5")
 			app.InterchainstakingKeeper.IterateAllDelegations(ctx, &bcZone, func(record icstypes.Delegation) (stop bool) {
-				app.InterchainstakingKeeper.RemoveDelegation(ctx, &bcZone, record)
+				if err := app.InterchainstakingKeeper.RemoveDelegation(ctx, &bcZone, record); err != nil {
+					panic(err)
+				}
 				return false
 			})
 
