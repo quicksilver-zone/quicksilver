@@ -3,7 +3,7 @@ module github.com/ingenuity-build/quicksilver
 go 1.18
 
 require (
-	cosmossdk.io/math v1.0.0-beta.3
+	cosmossdk.io/math v1.0.0-beta.4
 	github.com/CosmWasm/wasmd v0.29.2
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/cosmos/cosmos-sdk v0.46.4
@@ -18,8 +18,8 @@ require (
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0
-	github.com/stretchr/testify v1.8.0
-	github.com/tendermint/tendermint v0.34.23
+	github.com/stretchr/testify v1.8.1
+	github.com/tendermint/tendermint v0.34.24
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
 	go.opencensus.io v0.23.0
 	golang.org/x/exp v0.0.0-20220914170420-dc92f8653013

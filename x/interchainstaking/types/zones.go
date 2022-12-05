@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (z Zone) SupportMultiSend() bool { return z.MultiSend }
@@ -157,10 +158,35 @@ func (z Zone) GetValidatorsAddressesAsSlice() []string {
 }
 
 func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
+	var intents ValidatorIntents
+	var filteredIntents ValidatorIntents
+
 	if len(z.AggregateIntent) == 0 {
-		return z.DefaultAggregateIntents()
+		intents = z.DefaultAggregateIntents()
+	} else {
+		intents = z.AggregateIntent
 	}
-	return z.AggregateIntent
+	// filter intents here...
+	// check validators for tombstoned
+	for _, v := range intents {
+		val, found := z.GetValidatorByValoper(v.ValoperAddress)
+		// this case should not happen as we check the validity of a validator entry when intent is set.
+		if !found {
+			continue
+		}
+		// we should never let tombstoned validators into the list, even if they are explicitly selected
+		if val.Tombstoned {
+			continue
+		}
+
+		// we should never let denylist validators into the list, even if they are explicitly selected
+		// if in deny list {
+		// continue
+		// }
+		filteredIntents = append(filteredIntents, v)
+	}
+
+	return filteredIntents
 }
 
 // defaultAggregateIntents determines the default aggregate intent (for epoch 0)
@@ -168,7 +194,9 @@ func (z *Zone) DefaultAggregateIntents() ValidatorIntents {
 	out := make(ValidatorIntents, 0)
 	for _, val := range z.GetValidatorsSorted() {
 		if val.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
-			out = append(out, &ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()})
+			if !val.Jailed && !val.Tombstoned && val.Status == stakingtypes.BondStatusBonded {
+				out = append(out, &ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()})
+			}
 		}
 	}
 

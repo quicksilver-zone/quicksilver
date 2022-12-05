@@ -165,7 +165,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	}
 	if blockResponse.SdkBlock == nil {
 		// v0.45 and below
-		//nolint:staticcheck
+		//nolint:staticcheck // SA1019 ignore this!
 		connectionData.LastEpoch = blockResponse.Block.Header.Height
 	} else {
 		// v0.46 and above
