@@ -156,7 +156,7 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 	}
 
 	if validatorsRes.Pagination != nil && !bytes.Equal(validatorsRes.Pagination.NextKey, []byte{}) {
-		validatorsReq := stakingTypes.QueryValidatorsRequest{}
+		validatorsReq := stakingTypes.QueryValidatorsRequest{Pagination: &query.PageRequest{}}
 		err = k.cdc.Unmarshal(request, &validatorsReq)
 		if err != nil {
 			k.Logger(ctx).Error("unable to unmarshal request", "zone", zoneInfo.ChainId, "err", err)
