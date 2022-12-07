@@ -15,6 +15,89 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	// get test zone
+	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.Require().True(found)
+	zoneValidatorAddresses := zone.GetValidatorsAddressesAsSlice()
+
+	performanceDelegations := icsKeeper.GetAllPerformanceDelegations(ctx, &zone)
+	suite.Require().Len(performanceDelegations, 4)
+
+	performanceDelegationPointers := icsKeeper.GetAllPerformanceDelegationsAsPointer(ctx, &zone)
+	for i, pdp := range performanceDelegationPointers {
+		suite.Require().Equal(performanceDelegations[i], *pdp)
+	}
+
+	// update performance delegation
+	updateDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
+	suite.Require().True(found)
+	suite.Require().Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
+
+	updateDelegation.Amount.Amount = cosmosmath.NewInt(10000)
+	icsKeeper.SetPerformanceDelegation(ctx, &zone, updateDelegation)
+
+	updatedDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
+	suite.Require().True(found)
+	suite.Require().Equal(updateDelegation, updatedDelegation)
+
+	// check that there are no delegations
+	delegations := icsKeeper.GetAllDelegations(ctx, &zone)
+	suite.Require().Len(delegations, 0)
+
+	// set delegations
+	icsKeeper.SetDelegation(
+		ctx,
+		&zone,
+		icstypes.NewDelegation(
+			zone.DelegationAddress.Address,
+			zoneValidatorAddresses[0],
+			sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000)),
+		),
+	)
+	icsKeeper.SetDelegation(
+		ctx,
+		&zone,
+		icstypes.NewDelegation(
+			zone.DelegationAddress.Address,
+			zoneValidatorAddresses[1],
+			sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000000)),
+		),
+	)
+	icsKeeper.SetDelegation(
+		ctx,
+		&zone,
+		icstypes.NewDelegation(
+			zone.DelegationAddress.Address,
+			zoneValidatorAddresses[2],
+			sdk.NewCoin(zone.BaseDenom, sdk.NewInt(20000000)),
+		),
+	)
+
+	// check for delegations set above
+	delegations = icsKeeper.GetAllDelegations(ctx, &zone)
+	suite.Require().Len(delegations, 3)
+
+	// load and match pointers
+	delegationPointers := icsKeeper.GetAllDelegationsAsPointer(ctx, &zone)
+	for i, dp := range delegationPointers {
+		suite.Require().Equal(delegations[i], *dp)
+	}
+
+	// get delegations for delegation address and match
+	addr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.GetAddress())
+	suite.Require().NoError(err)
+	dds := icsKeeper.GetDelegatorDelegations(ctx, &zone, addr)
+	suite.Require().Len(dds, 3)
+	suite.Require().Equal(delegations, dds)
+}
+
 func TestDetermineAllocationsForDelegation(t *testing.T) {
 	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
 	// once sorted alphabetically on valoper.

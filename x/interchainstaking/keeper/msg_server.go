@@ -185,8 +185,7 @@ func (k *Keeper) queueRedemption(
 	outstanding := nativeTokens
 
 	aggregateIntent := zone.GetAggregateIntentOrDefault()
-	for idx, intent := range aggregateIntent {
-		fmt.Printf("[%d] key %v: %v\n", idx, intent.ValoperAddress, intent)
+	for _, intent := range aggregateIntent {
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
 		outstanding = outstanding.Sub(thisAmount)
 		dist := types.Distribution{
@@ -198,13 +197,14 @@ func (k *Keeper) queueRedemption(
 	// handle dust ? ok to do uint64 calc here or do we use math.Int (just more verbose) ?
 	distribution[0].Amount += outstanding.Uint64()
 
+	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens))
 	k.AddWithdrawalRecord(
 		ctx,
 		zone.ChainId,
 		sender.String(),
 		distribution,
 		destination,
-		sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens)),
+		amount,
 		burnAmount,
 		hash,
 		WithdrawStatusQueued,
@@ -214,6 +214,7 @@ func (k *Keeper) queueRedemption(
 	return nil
 }
 
+// this can be removed: unused
 func IntentSliceToMap(in []*types.ValidatorIntent) (out map[string]*types.ValidatorIntent) {
 	out = make(map[string]*types.ValidatorIntent, 0)
 
