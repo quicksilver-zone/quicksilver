@@ -434,7 +434,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 			// if the validator has been historically slashed, and delegatorShares does not match tokens, then we end up with 'clipping'.
 			// clipping is the truncation of the expected unbonding amount because of the need to have whole integer tokens.
 			// the amount unbonded is emitted as an event, but not in the response, so we never _know_ this has happened.
-			// as such, if we know the validator has hisotrical slashing, we remove 1 utoken from the distribtuion for this validator, with
+			// as such, if we know the validator has hisotrical slashing, we remove 1 utoken from the distribution for this validator, with
 			// the expectation that clipping will occur. We do not reduce the amount requested to unbond.
 			val, found := zone.GetValidatorByValoper(dist.Valoper)
 			if !found {
@@ -443,7 +443,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 				return true
 			}
 			if val.DelegatorShares.Equal(sdk.NewDecFromInt(val.VotingPower)) {
-				dist.Amount -= 1
+				dist.Amount--
 			}
 		}
 

@@ -16,7 +16,7 @@ var (
 	DefaultDepositInterval      uint64  = 20
 	DefaultValidatorSetInterval uint64  = 200
 	DefaultCommissionRate       sdk.Dec = sdk.MustNewDecFromStr("0.025")
-	DefaultUnbondingEnabled     bool    = false
+	DefaultUnbondingEnabled             = false
 
 	// KeyDepositInterval is store's key for the DepositInterval option
 	KeyDepositInterval = []byte("DepositInterval")
