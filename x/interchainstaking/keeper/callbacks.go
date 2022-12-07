@@ -460,6 +460,21 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		}
 	}
 
+	// By this point we've tried all means to retrieve the balance, so coin should not be nil.
+	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/79#issuecomment-1340293800
+	if coin.IsNil() || coin.Amount.IsNil() {
+		err = fmt.Errorf("failed to retrieve Coin.Amount even after trying to look up from RequestKey: %q", query.Request)
+		k.Logger(ctx).Error("unable to retrieve balance info for zone", "zone", zone.ChainId, "err", err)
+		return err
+	}
+
+	// Ensure that the coin is valid.
+	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/80
+	if err := coin.Validate(); err != nil {
+		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainId, "err", err)
+		return err
+	}
+
 	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
 	if err != nil {
 		return err
