@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -41,7 +40,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	suite.Require().True(found)
 	suite.Require().Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
 
-	updateDelegation.Amount.Amount = math.NewInt(10000)
+	updateDelegation.Amount.Amount = cosmosmath.NewInt(10000)
 	icsKeeper.SetPerformanceDelegation(ctx, &zone, updateDelegation)
 
 	updatedDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])

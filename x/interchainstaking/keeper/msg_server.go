@@ -90,7 +90,6 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
 
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
-	fmt.Printf("distribution amount: %q\n", outTokens)
 	k.Logger(ctx).Info("tokens to distribute", "amount", outTokens)
 
 	heightBytes := make([]byte, 8)
@@ -211,8 +210,6 @@ func (k *Keeper) queueRedemption(
 		WithdrawStatusQueued,
 		time.Time{},
 	)
-
-	fmt.Printf("WithdrawalRecord:\n\tdistribution: %q\n\tamount: %q\n\tburn: %q\n", distribution, amount, burnAmount)
 
 	return nil
 }
