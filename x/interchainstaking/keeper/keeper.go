@@ -326,6 +326,12 @@ func (k *Keeper) GetParam(ctx sdk.Context, key []byte) uint64 {
 	return out
 }
 
+func (k *Keeper) GetUnbondingEnabled(ctx sdk.Context) bool {
+	var out bool
+	k.paramStore.Get(ctx, types.KeyUnbondingEnabled, &out)
+	return out
+}
+
 func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdk.Dec {
 	var out sdk.Dec
 	k.paramStore.Get(ctx, types.KeyCommissionRate, &out)

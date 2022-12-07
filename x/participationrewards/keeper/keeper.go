@@ -101,6 +101,12 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
+func (k *Keeper) GetClaimsEnabled(ctx sdk.Context) bool {
+	var out bool
+	k.paramSpace.Get(ctx, types.KeyClaimsEnabled, &out)
+	return out
+}
+
 // Logger returns a module-specific logger.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
