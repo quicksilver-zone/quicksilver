@@ -13,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	querypb "github.com/cosmos/cosmos-sdk/types/query"
 	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -165,7 +164,7 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 		}
 		if validatorsReq.Pagination == nil {
 			k.Logger(ctx).Info("unmarshalled a QueryValidatorsRequest with a nil Pagination", "zone", zoneInfo.ChainId)
-			validatorsReq.Pagination = new(querypb.PageRequest)
+			validatorsReq.Pagination = new(query.PageRequest)
 		}
 		validatorsReq.Pagination.Key = validatorsRes.Pagination.NextKey
 		bz, err := k.cdc.Marshal(&validatorsReq)
