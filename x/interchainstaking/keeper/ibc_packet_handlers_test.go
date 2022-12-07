@@ -388,6 +388,10 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 			if !found {
 				s.Fail("unable to retrieve zone for test")
 			}
+			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val1, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
+			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val2, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
+			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val3, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
+			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val4, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
 
 			records := test.records(s.chainB.ChainID, zone.AccountPrefix)
 			delegations := test.delegations(s.chainB.ChainID, zone.DelegationAddress.Address, zone.AccountPrefix)
@@ -400,11 +404,16 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			for _, delegation := range delegations {
 				app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+				val, _ := zone.GetValidatorByValoper(delegation.ValidatorAddress)
+				val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
+				val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
 			}
 
 			for _, redelegation := range redelegations {
 				app.InterchainstakingKeeper.SetRedelegationRecord(ctx, redelegation)
 			}
+
+			app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 			// trigger handler
 			err := app.InterchainstakingKeeper.HandleQueuedUnbondings(ctx, &zone, 1)
