@@ -90,6 +90,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
 
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
+	fmt.Printf("distribution amount: %q\n", outTokens)
 	k.Logger(ctx).Info("tokens to distribute", "amount", outTokens)
 
 	heightBytes := make([]byte, 8)
@@ -185,8 +186,7 @@ func (k *Keeper) queueRedemption(
 	outstanding := nativeTokens
 
 	aggregateIntent := zone.GetAggregateIntentOrDefault()
-	for idx, intent := range aggregateIntent {
-		fmt.Printf("[%d] key %v: %v\n", idx, intent.ValoperAddress, intent)
+	for _, intent := range aggregateIntent {
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
 		outstanding = outstanding.Sub(thisAmount)
 		dist := types.Distribution{
@@ -198,22 +198,26 @@ func (k *Keeper) queueRedemption(
 	// handle dust ? ok to do uint64 calc here or do we use math.Int (just more verbose) ?
 	distribution[0].Amount += outstanding.Uint64()
 
+	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens))
 	k.AddWithdrawalRecord(
 		ctx,
 		zone.ChainId,
 		sender.String(),
 		distribution,
 		destination,
-		sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens)),
+		amount,
 		burnAmount,
 		hash,
 		WithdrawStatusQueued,
 		time.Time{},
 	)
 
+	fmt.Printf("WithdrawalRecord:\n\tdistribution: %q\n\tamount: %q\n\tburn: %q\n", distribution, amount, burnAmount)
+
 	return nil
 }
 
+// this can be removed: unused
 func IntentSliceToMap(in []*types.ValidatorIntent) (out map[string]*types.ValidatorIntent) {
 	out = make(map[string]*types.ValidatorIntent, 0)
 

@@ -150,19 +150,6 @@ func (k Keeper) GetAllPerformanceDelegationsAsPointer(ctx sdk.Context, zone *typ
 	return delegations
 }
 
-// GetValidatorDelegations returns all delegations to a specific validator.
-// Useful for querier.
-func (k Keeper) GetValidatorDelegations(ctx sdk.Context, zone *types.Zone, valAddr sdk.ValAddress) (delegations []types.Delegation) { //nolint:interfacer
-	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
-		if delegation.GetValidatorAddr().Equals(valAddr) {
-			delegations = append(delegations, delegation)
-		}
-		return false
-	})
-
-	return delegations
-}
-
 // GetDelegatorDelegations returns a given amount of all the delegations from a
 // delegator.
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, zone *types.Zone, delegator sdk.AccAddress) (delegations []types.Delegation) {
