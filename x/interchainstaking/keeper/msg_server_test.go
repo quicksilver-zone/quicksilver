@@ -150,6 +150,10 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 
 			ctx := s.chainA.GetContext()
 
+			params := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetParams(ctx)
+			params.UnbondingEnabled = true
+			s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetParams(ctx, params)
+
 			s.GetQuicksilverApp(s.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
 			s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
 
@@ -173,6 +177,10 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			s.setupTestZones()
 
 			ctx := s.chainA.GetContext()
+
+			params := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetParams(ctx)
+			params.UnbondingEnabled = true
+			s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetParams(ctx, params)
 
 			s.GetQuicksilverApp(s.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
 			s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
