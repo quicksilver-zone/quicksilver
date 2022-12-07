@@ -37,6 +37,7 @@ message Params {
   // participation rewards;
   DistributionProportions distribution_proportions = 1
       [ (gogoproto.nullable) = false ];
+  bool claims_enabled = 2;
 }
 
 message KeyedProtocolData {
@@ -59,6 +60,6 @@ enum ProtocolDataType {
   ProtocolDataTypeOsmosisParams = 2;
   ProtocolDataTypeLiquidToken = 3;
   ProtocolDataTypeOsmosisPool = 4;
-	ProtocolDataTypeCrescentPool = 5;
-	ProtocolDataTypeSifchainPool = 6;
+  ProtocolDataTypeCrescentPool = 5;
+  ProtocolDataTypeSifchainPool = 6;
 }

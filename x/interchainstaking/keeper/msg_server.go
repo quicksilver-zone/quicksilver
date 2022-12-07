@@ -35,6 +35,10 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if !k.Keeper.GetUnbondingEnabled(ctx) {
+		return nil, fmt.Errorf("unbonding is currently disabled")
+	}
+
 	// validate coins are positive
 	err := msg.Value.Validate()
 	if err != nil {
