@@ -10,6 +10,7 @@ import (
 func TestParams_Validate(t *testing.T) {
 	type fields struct {
 		DistributionProportions DistributionProportions
+		ClaimsEnabled           bool
 	}
 	tests := []struct {
 		name    string
@@ -31,6 +32,7 @@ func TestParams_Validate(t *testing.T) {
 					HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
 					LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
 				},
+				ClaimsEnabled: false,
 			},
 			false,
 		},
@@ -39,6 +41,7 @@ func TestParams_Validate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := Params{
 				DistributionProportions: tt.fields.DistributionProportions,
+				ClaimsEnabled:           tt.fields.ClaimsEnabled,
 			}
 			err := p.Validate()
 			if tt.wantErr {
@@ -59,6 +62,7 @@ func TestParams(t *testing.T) {
 			HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
 			LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
 		},
+		ClaimsEnabled: false,
 	}
 	defaultParams := DefaultParams()
 	require.Equal(t, defaultParams, testParams)
@@ -67,6 +71,7 @@ func TestParams(t *testing.T) {
   validatorselectionallocation: "0.340000000000000000"
   holdingsallocation: "0.330000000000000000"
   lockupallocation: "0.330000000000000000"
+claimsenabled: false
 `
 	require.Equal(t, str, testParams.String())
 }

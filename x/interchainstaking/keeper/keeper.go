@@ -156,7 +156,7 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 	}
 
 	if validatorsRes.Pagination != nil && !bytes.Equal(validatorsRes.Pagination.NextKey, []byte{}) {
-		validatorsReq := stakingTypes.QueryValidatorsRequest{}
+		validatorsReq := stakingTypes.QueryValidatorsRequest{Pagination: &query.PageRequest{}}
 		err = k.cdc.Unmarshal(request, &validatorsReq)
 		if err != nil {
 			k.Logger(ctx).Error("unable to unmarshal request", "zone", zoneInfo.ChainId, "err", err)
@@ -327,6 +327,12 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 func (k *Keeper) GetParam(ctx sdk.Context, key []byte) uint64 {
 	var out uint64
 	k.paramStore.Get(ctx, key, &out)
+	return out
+}
+
+func (k *Keeper) GetUnbondingEnabled(ctx sdk.Context) bool {
+	var out bool
+	k.paramStore.Get(ctx, types.KeyUnbondingEnabled, &out)
 	return out
 }
 
