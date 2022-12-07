@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	querypb "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -234,6 +235,9 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		err := k.cdc.Unmarshal(query.Request, &req)
 		if err != nil {
 			return err
+		}
+		if req.Pagination == nil {
+			req.Pagination = new(querypb.PageRequest)
 		}
 		req.Pagination.Key = txs.Pagination.NextKey
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
