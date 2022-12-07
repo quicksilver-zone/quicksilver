@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,9 +20,10 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 	s.Require().NoError(err)
 
 	tests := []struct {
-		name      string
-		malleate  func()
-		expectErr bool
+		name         string
+		malleate     func()
+		expectErr    string
+		expectErrLsm string
 	}{
 		{
 			"valid - full claim",
@@ -34,7 +36,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 			},
-			false,
+			"",
+			"",
 		},
 		{
 			"valid - full claim (discounted)",
@@ -52,7 +55,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				zone.RedemptionRate = sdk.MustNewDecFromStr("0.95")
 				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 			},
-			false,
+			"",
+			"",
 		},
 		{
 			"valid - full claim (interest)",
@@ -71,7 +75,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				zone.RedemptionRate = sdk.MustNewDecFromStr("1.1")
 				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 			},
-			false,
+			"",
+			"",
 		},
 		{
 			"valid - full claim (interest)",
@@ -90,7 +95,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				zone.RedemptionRate = sdk.MustNewDecFromStr("1.05")
 				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 			},
-			false,
+			"",
+			"",
 		},
 		{
 			"valid - partial claim",
@@ -103,7 +109,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 			},
-			false,
+			"",
+			"",
 		},
 		{
 			"valid - partial claim (discounted)",
@@ -121,7 +128,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				zone.RedemptionRate = sdk.MustNewDecFromStr("0.99999")
 				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 			},
-			false,
+			"",
+			"",
 		},
 		{
 			"valid - partial claim (interest)",
@@ -140,7 +148,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 				zone.RedemptionRate = sdk.MustNewDecFromStr("1.099999")
 				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 			},
-			false,
+			"",
+			"",
 		},
 		{
 			"invalid - wrong denom",
@@ -153,7 +162,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 			},
-			true,
+			"unable to find matching zone for denom uatom",
+			"unable to find matching zone for denom uatom",
 		},
 		{
 			"invalid - insufficient funds",
@@ -166,7 +176,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 			},
-			true,
+			"account has insufficient balance of qasset to burn",
+			"account has insufficient balance of qasset to burn",
 		},
 		{
 			"invalid - zero coins",
@@ -179,7 +190,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 			},
-			true,
+			"cannot redeem zero-value coins",
+			"cannot redeem zero-value coins",
 		},
 		{
 			"invalid - negative coins",
@@ -192,7 +204,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 			},
-			true,
+			"negative coin amount: -1",
+			"negative coin amount: -1",
 		},
 		{
 			"invalid - bad prefix",
@@ -205,7 +218,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 			},
-			true,
+			"destination address bob",
+			"destination address bob",
 		},
 		{
 			"invalid - bad from address",
@@ -218,7 +232,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        addr,
 				}
 			},
-			true,
+			"account has insufficient balance of qasset to burn",
+			"account has insufficient balance of qasset to burn",
 		},
 		{
 			"invalid - nil recipient address",
@@ -229,7 +244,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 			},
-			true,
+			"recipient address not provided",
+			"recipient address not provided",
 		},
 		{
 			"invalid - nil from address",
@@ -242,7 +258,33 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        "",
 				}
 			},
-			true,
+			"empty address string is not allowed",
+			"empty address string is not allowed",
+		},
+		{
+			"invalid - too many locked tokens",
+			func() {
+				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				s.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					DestinationAddress: addr,
+					FromAddress:        testAddress,
+				}
+
+				zone, _ := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), icstypes.RedelegationRecord{
+					ChainId:        s.chainB.ChainID,
+					EpochNumber:    1,
+					Source:         zone.GetValidatorsAddressesAsSlice()[0],
+					Destination:    zone.GetValidatorsAddressesAsSlice()[1],
+					Amount:         3000000,
+					CompletionTime: time.Time(s.chainA.GetContext().BlockTime().Add(time.Hour)),
+				})
+
+			},
+			"",
+			"unable to satisfy unbond request; delegations may be locked",
 		},
 	}
 
@@ -274,14 +316,14 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(s.chainA.GetContext()), &msg)
 
-			if tt.expectErr {
-				s.Require().Error(err)
+			if tt.expectErr != "" {
+				s.Require().ErrorContains(err, tt.expectErr)
 				s.Require().Nil(res)
 				s.T().Logf("Error: %v", err)
-				return
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotNil(res)
 			}
-			s.Require().NoError(err)
-			s.Require().NotNil(res)
 		})
 
 		// run tests with LSM enabled.
@@ -305,19 +347,30 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			zone.LiquidityModule = true
 			s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
 
+			for _, delegation := range func(zone icstypes.Zone) []icstypes.Delegation {
+				validators := zone.GetValidatorsAddressesAsSlice()
+				out := make([]icstypes.Delegation, 0)
+				for _, valoper := range validators {
+					out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, valoper, sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				}
+				return out
+			}(zone) {
+				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+			}
+
 			tt.malleate()
 
 			msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(s.chainA.GetContext()), &msg)
 
-			if tt.expectErr {
-				s.Require().Error(err)
+			if tt.expectErrLsm != "" {
+				s.Require().Errorf(err, tt.expectErrLsm)
 				s.Require().Nil(res)
 				s.T().Logf("Error: %v", err)
-				return
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotNil(res)
 			}
-			s.Require().NoError(err)
-			s.Require().NotNil(res)
 		})
 
 	}

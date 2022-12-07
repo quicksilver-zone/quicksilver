@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -113,9 +114,17 @@ func mustGetTestBech32Address(hrp string) string {
 }
 
 func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
+	val1 := utils.GenerateValAddressForTest().String()
+	val2 := utils.GenerateValAddressForTest().String()
+	val3 := utils.GenerateValAddressForTest().String()
+	val4 := utils.GenerateValAddressForTest().String()
+
 	tests := []struct {
-		name    string
-		records func(chainID string, hrp string) []icstypes.WithdrawalRecord
+		name             string
+		records          func(chainID string, hrp string) []icstypes.WithdrawalRecord
+		delegations      func(chainID string, delegateAddress string, hrp string) []icstypes.Delegation
+		redelegations    func(chainID string, delegateAddress string, hrp string) []icstypes.RedelegationRecord
+		expectTransition []bool
 	}{
 		{
 			name: "valid",
@@ -125,10 +134,10 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						ChainId:   chainID,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: val1, Amount: 1000000},
+							{Valoper: val2, Amount: 1000000},
+							{Valoper: val3, Amount: 1000000},
+							{Valoper: val4, Amount: 1000000},
 						},
 						Recipient:  mustGetTestBech32Address(hrp),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
@@ -138,6 +147,34 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					},
 				}
 			},
+			delegations: func(chainID string, delegateAddress string, hrp string) []icstypes.Delegation {
+				return []icstypes.Delegation{
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val1,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val2,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val3,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val4,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
+					},
+				}
+			},
+			redelegations: func(chainID string, delegateAddress string, hrp string) []icstypes.RedelegationRecord {
+				return []icstypes.RedelegationRecord{}
+			},
+			expectTransition: []bool{true},
 		},
 		{
 			name: "valid - two",
@@ -147,10 +184,10 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						ChainId:   chainID,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: val1, Amount: 1000000},
+							{Valoper: val2, Amount: 1000000},
+							{Valoper: val3, Amount: 1000000},
+							{Valoper: val4, Amount: 1000000},
 						},
 						Recipient:  mustGetTestBech32Address(hrp),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
@@ -162,10 +199,10 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						ChainId:   chainID,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 5000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1250000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 5000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1250000},
+							{Valoper: val1, Amount: 5000000},
+							{Valoper: val2, Amount: 2500000},
+							{Valoper: val3, Amount: 5000000},
+							{Valoper: val4, Amount: 2500000},
 						},
 						Recipient:  mustGetTestBech32Address(hrp),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
@@ -175,6 +212,167 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					},
 				}
 			},
+			delegations: func(chainID string, delegateAddress string, hrp string) []icstypes.Delegation {
+				return []icstypes.Delegation{
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val1,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(10000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val2,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(10000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val3,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(10000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val4,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(10000000)),
+					},
+				}
+			},
+			redelegations: func(chainID string, delegateAddress string, hrp string) []icstypes.RedelegationRecord {
+				return []icstypes.RedelegationRecord{}
+			},
+			expectTransition: []bool{true, true},
+		},
+		{
+			name: "invalid - locked tokens",
+			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   chainID,
+						Delegator: utils.GenerateAccAddressForTest().String(),
+						Distribution: []*icstypes.Distribution{
+							{Valoper: val1, Amount: 1000000},
+							{Valoper: val2, Amount: 1000000},
+							{Valoper: val3, Amount: 1000000},
+							{Valoper: val4, Amount: 1000000},
+						},
+						Recipient:  mustGetTestBech32Address(hrp),
+						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
+						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:     icskeeper.WithdrawStatusQueued,
+					},
+				}
+			},
+			delegations: func(chainID string, delegateAddress string, hrp string) []icstypes.Delegation {
+				return []icstypes.Delegation{
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val1,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val2,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val3,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val4,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
+					},
+				}
+			},
+			redelegations: func(chainID string, delegateAddress string, hrp string) []icstypes.RedelegationRecord {
+				return []icstypes.RedelegationRecord{
+					{
+						ChainId:        chainID,
+						EpochNumber:    1,
+						Source:         val4,
+						Destination:    val1,
+						Amount:         50000,
+						CompletionTime: time.Now().Add(time.Hour),
+					},
+				}
+			},
+			expectTransition: []bool{false},
+		},
+		{
+			name: "mixed - locked tokens prohibit first unbond, but second permitted",
+			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   chainID,
+						Delegator: utils.GenerateAccAddressForTest().String(),
+						Distribution: []*icstypes.Distribution{
+							{Valoper: val1, Amount: 5000000},
+							{Valoper: val2, Amount: 2500000},
+							{Valoper: val3, Amount: 5000000},
+							{Valoper: val4, Amount: 2500000},
+						},
+						Recipient:  mustGetTestBech32Address(hrp),
+						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
+						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
+						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
+						Status:     icskeeper.WithdrawStatusQueued,
+					},
+					{
+						ChainId:   chainID,
+						Delegator: utils.GenerateAccAddressForTest().String(),
+						Distribution: []*icstypes.Distribution{
+							{Valoper: val1, Amount: 1000000},
+							{Valoper: val2, Amount: 1000000},
+							{Valoper: val3, Amount: 1000000},
+							{Valoper: val4, Amount: 1000000},
+						},
+						Recipient:  mustGetTestBech32Address(hrp),
+						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
+						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+						Status:     icskeeper.WithdrawStatusQueued,
+					},
+				}
+			},
+			delegations: func(chainID string, delegateAddress string, hrp string) []icstypes.Delegation {
+				return []icstypes.Delegation{
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val1,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(6000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val2,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(6000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val3,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(6000000)),
+					},
+					{
+						DelegationAddress: delegateAddress,
+						ValidatorAddress:  val4,
+						Amount:            sdk.NewCoin("uatom", sdk.NewInt(6000000)),
+					},
+				}
+			},
+			redelegations: func(chainID string, delegateAddress string, hrp string) []icstypes.RedelegationRecord {
+				return []icstypes.RedelegationRecord{
+					{
+						ChainId:        chainID,
+						EpochNumber:    1,
+						Source:         val4,
+						Destination:    val1,
+						Amount:         1000001,
+						CompletionTime: time.Now().Add(time.Hour),
+					},
+				}
+			},
+			expectTransition: []bool{false, true},
 		},
 	}
 
@@ -192,28 +390,40 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 			}
 
 			records := test.records(s.chainB.ChainID, zone.AccountPrefix)
+			delegations := test.delegations(s.chainB.ChainID, zone.DelegationAddress.Address, zone.AccountPrefix)
+			redelegations := test.redelegations(s.chainB.ChainID, zone.DelegationAddress.Address, zone.AccountPrefix)
 
 			// set up zones
 			for _, record := range records {
 				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
 			}
 
+			for _, delegation := range delegations {
+				app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+			}
+
+			for _, redelegation := range redelegations {
+				app.InterchainstakingKeeper.SetRedelegationRecord(ctx, redelegation)
+			}
+
 			// trigger handler
 			err := app.InterchainstakingKeeper.HandleQueuedUnbondings(ctx, &zone, 1)
 			s.Require().NoError(err)
 
-			for _, record := range records {
-				// check record with old status cannot be found
+			for idx, record := range records {
+				// check record with old status is opposite to expectedTransition (if false, this record should exist in status 3)
 				_, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusQueued)
-				s.Require().False(found)
-				// check record with new status can be found
+				s.Require().Equal(!test.expectTransition[idx], found)
+				// check record with new status is as per expectedTransition (if false, this record should not exist in status 4)
 				_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusUnbond)
-				s.Require().True(found)
+				s.Require().Equal(test.expectTransition[idx], found)
 
-				for _, unbonding := range record.Distribution {
-					r, found := app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, unbonding.Valoper, 1)
-					s.Require().True(found)
-					s.Require().Equal(r.RelatedTxhash[0], record.Txhash)
+				if test.expectTransition[idx] {
+					for _, unbonding := range record.Distribution {
+						r, found := app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, unbonding.Valoper, 1)
+						s.Require().True(found)
+						s.Require().Contains(r.RelatedTxhash, record.Txhash)
+					}
 				}
 			}
 		})
