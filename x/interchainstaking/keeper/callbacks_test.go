@@ -681,3 +681,19 @@ func (s *KeeperTestSuite) TestAccountBalanceCallback() {
 		}
 	})
 }
+
+// Ensures that a fuzz vector which resulted in a crash of ValidatorReq.Pagination crashing
+// doesn't creep back up. Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/82
+func TestValsetCallbackNilValidatorReqPagination(t *testing.T) {
+	s := new(KeeperTestSuite)
+	s.SetT(t)
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+	ctx := s.chainA.GetContext()
+
+	data := []byte("\x12\"\n 00000000000000000000000000000000")
+	_ = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID})
+}
