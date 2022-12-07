@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	querypb "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -235,6 +236,9 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		if err != nil {
 			return err
 		}
+		if req.Pagination == nil {
+			req.Pagination = new(querypb.PageRequest)
+		}
 		req.Pagination.Key = txs.Pagination.NextKey
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
 	}
@@ -458,6 +462,21 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		if err != nil {
 			return err
 		}
+	}
+
+	// By this point we've tried all means to retrieve the balance, so coin should not be nil.
+	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/79#issuecomment-1340293800
+	if coin.IsNil() || coin.Amount.IsNil() {
+		err = fmt.Errorf("failed to retrieve Coin.Amount even after trying to look up from RequestKey: %q", query.Request)
+		k.Logger(ctx).Error("unable to retrieve balance info for zone", "zone", zone.ChainId, "err", err)
+		return err
+	}
+
+	// Ensure that the coin is valid.
+	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/80
+	if err := coin.Validate(); err != nil {
+		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainId, "err", err)
+		return err
 	}
 
 	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)

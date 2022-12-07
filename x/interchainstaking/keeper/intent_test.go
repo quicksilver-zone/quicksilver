@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -10,6 +11,137 @@ var (
 	user1 = utils.GenerateAccAddressForTest()
 	user2 = utils.GenerateAccAddressForTest()
 )
+
+func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	// get test zone
+	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.Require().True(found)
+	zoneValidatorAddresses := zone.GetValidatorsAddressesAsSlice()
+
+	// check that there are no intents
+	intents := icsKeeper.AllIntents(ctx, zone, false)
+	suite.Require().Len(intents, 0)
+
+	// set intents for testAddress
+	icsKeeper.SetIntent(
+		ctx,
+		zone,
+		icstypes.DelegatorIntent{
+			Delegator: testAddress,
+			Intents: icstypes.ValidatorIntents{
+				{
+					ValoperAddress: zoneValidatorAddresses[0],
+					Weight:         sdk.MustNewDecFromStr("0.25"),
+				},
+				{
+					ValoperAddress: zoneValidatorAddresses[1],
+					Weight:         sdk.MustNewDecFromStr("0.25"),
+				},
+				{
+					ValoperAddress: zoneValidatorAddresses[2],
+					Weight:         sdk.MustNewDecFromStr("0.25"),
+				},
+				{
+					ValoperAddress: zoneValidatorAddresses[3],
+					Weight:         sdk.MustNewDecFromStr("0.25"),
+				},
+			},
+		},
+		false,
+	)
+	// set intents for user1
+	icsKeeper.SetIntent(
+		ctx,
+		zone,
+		icstypes.DelegatorIntent{
+			Delegator: user1.String(),
+			Intents: icstypes.ValidatorIntents{
+				{
+					ValoperAddress: zoneValidatorAddresses[0],
+					Weight:         sdk.MustNewDecFromStr("0.25"),
+				},
+				{
+					ValoperAddress: zoneValidatorAddresses[1],
+					Weight:         sdk.MustNewDecFromStr("0.25"),
+				},
+				{
+					ValoperAddress: zoneValidatorAddresses[2],
+					Weight:         sdk.MustNewDecFromStr("0.25"),
+				},
+				{
+					ValoperAddress: zoneValidatorAddresses[3],
+					Weight:         sdk.MustNewDecFromStr("0.25"),
+				},
+			},
+		},
+		false,
+	)
+	// set intents for user2
+	icsKeeper.SetIntent(
+		ctx,
+		zone,
+		icstypes.DelegatorIntent{
+			Delegator: user2.String(),
+			Intents: icstypes.ValidatorIntents{
+				{
+					ValoperAddress: zoneValidatorAddresses[0],
+					Weight:         sdk.MustNewDecFromStr("0.5"),
+				},
+				{
+					ValoperAddress: zoneValidatorAddresses[1],
+					Weight:         sdk.MustNewDecFromStr("0.3"),
+				},
+				{
+					ValoperAddress: zoneValidatorAddresses[2],
+					Weight:         sdk.MustNewDecFromStr("0.2"),
+				},
+			},
+		},
+		false,
+	)
+
+	// check for intents set above
+	intents = icsKeeper.AllIntents(ctx, zone, false)
+	suite.Require().Len(intents, 3)
+
+	// delete intent for testAddress
+	icsKeeper.DeleteIntent(ctx, zone, testAddress, false)
+
+	// check intents
+	intents = icsKeeper.AllIntents(ctx, zone, false)
+	suite.Require().Len(intents, 2)
+
+	suite.T().Logf("intents:\n%+v\n", intents)
+
+	// update intent for user1
+	err := icsKeeper.UpdateIntent(
+		ctx,
+		user2,
+		zone,
+		sdk.NewCoins(
+			sdk.NewCoin(
+				zone.BaseDenom,
+				math.NewInt(7313913),
+			),
+		),
+		"",
+	)
+	suite.Require().NoError(err)
+
+	// load and match pointers
+	intentsPointers := icsKeeper.AllIntentsAsPointer(ctx, zone, false)
+	for i, ip := range intentsPointers {
+		suite.Require().Equal(intents[i], *ip)
+	}
+
+	suite.T().Logf("intents:\n%+v\n", intentsPointers)
+}
 
 func (suite *KeeperTestSuite) TestAggregateIntent() {
 	tc := []struct {

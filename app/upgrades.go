@@ -210,7 +210,7 @@ func getv001004Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 					app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
 					// unbonding completed, burn qAtoms to restore balance.
 				}
-				// this is hacky as shit, but we know the surplus balance is 1100000 uatom.
+				// this is hacky, but we know the surplus balance is 1100000 uatom.
 				if err := app.BankKeeper.BurnCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(1100000)))); err != nil {
 					panic(err)
 				}

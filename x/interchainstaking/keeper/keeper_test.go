@@ -208,7 +208,7 @@ func (s *KeeperTestSuite) TestGetDelegatedAmount() {
 			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
 				validators := zone.GetValidatorsAddressesAsSlice()
 				out := make([]icstypes.Delegation, 0)
-				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
 				return out
 			},
 			expected: math.NewInt(3000000),
@@ -218,9 +218,9 @@ func (s *KeeperTestSuite) TestGetDelegatedAmount() {
 			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
 				validators := zone.GetValidatorsAddressesAsSlice()
 				out := make([]icstypes.Delegation, 0)
-				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
-				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[1], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000000))))
-				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[2], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(20000000))))
+				out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
+				out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, validators[1], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000000))))
+				out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, validators[2], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(20000000))))
 				return out
 			},
 			expected: math.NewInt(40000000),
