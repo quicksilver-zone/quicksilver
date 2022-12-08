@@ -9,6 +9,19 @@ import "quicksilver/interchainstaking/v1/interchainstaking.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
+message Params_v1 {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 deposit_interval = 1;
+  uint64 validatorset_interval = 2;
+  string commission_rate = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
 message Params {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_stringer) = false;

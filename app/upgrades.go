@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,8 +20,10 @@ const (
 	v001002UpgradeName = "v0.10.2"
 	v001003UpgradeName = "v0.10.3"
 	v001004UpgradeName = "v0.10.4"
+	v001005UpgradeName = "v0.10.5"
 
 	InnuendoChainID = "innuendo-3"
+	DevnetChainID   = "quicktest-1"
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
@@ -29,6 +32,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v001002UpgradeName, getv001002Upgrade(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v001003UpgradeName, getv001003Upgrade(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v001004UpgradeName, getv001004Upgrade(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v001005UpgradeName, getv001005Upgrade(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -229,6 +233,59 @@ func getv001004Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.4; nothing to do.")
 		}
 
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func getv001005Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		switch ctx.ChainID() {
+		case DevnetChainID:
+			app.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(_ int64, record icstypes.WithdrawalRecord) bool {
+				if record.Status == 3 && record.CompletionTime.Equal(time.Time{}) {
+					app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
+					// unbonding never happened here. credit burn_amount back to delegator.
+					fmt.Println("something happened!")
+					if err := app.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, sdk.MustAccAddressFromBech32(record.Delegator), sdk.NewCoins(record.BurnAmount)); err != nil {
+						fmt.Println("error", err) // don't actually fail here.
+					}
+				}
+				return false
+			})
+			icsModule := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+			icsModuleBalances := app.BankKeeper.GetAllBalances(ctx, icsModule)
+			fmt.Println("icsmodule", icsModule.String(), icsModuleBalances)
+			app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo icstypes.Zone) (stop bool) {
+				app.UpgradeKeeper.Logger(ctx).Info("re-asserting redemption rate after upgrade.")
+				app.InterchainstakingKeeper.UpdateRedemptionRateNoBounds(ctx, zoneInfo)
+				return false
+			})
+
+		case InnuendoChainID:
+			app.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(_ int64, record icstypes.WithdrawalRecord) bool {
+				if record.Status == 3 && record.CompletionTime.Equal(time.Time{}) {
+					app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
+					// unbonding never happened here. credit burn_amount back to delegator.
+					if err := app.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, sdk.MustAccAddressFromBech32(record.Delegator), sdk.NewCoins(record.BurnAmount)); err != nil {
+						fmt.Println("tried to return tokens but encountered an error", err) // don't actually fail here.
+					}
+				}
+				return false
+			})
+			icsModule := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+			icsModuleBalances := app.BankKeeper.GetAllBalances(ctx, icsModule)
+			fmt.Println("icsmodule", icsModule.String(), icsModuleBalances)
+			app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo icstypes.Zone) (stop bool) {
+				app.InterchainstakingKeeper.UpdateRedemptionRateNoBounds(ctx, zoneInfo)
+				return false
+			})
+		default:
+			// no-op
+		}
+		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.5; initialising new params.")
+		app.InterchainstakingKeeper.MigrateParams(ctx)
+		app.ParticipationRewardsKeeper.MigrateParams(ctx)
+		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.5; complete.")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }
