@@ -628,7 +628,7 @@ func (s *KeeperTestSuite) TestHandleValideRewardsCallback() {
 }
 
 func (s *KeeperTestSuite) TestAllBalancesCallback() {
-	s.Run("all balances", func() {
+	s.Run("all balances non-zero)", func() {
 		s.SetupTest()
 		s.setupTestZones()
 
@@ -644,12 +644,235 @@ func (s *KeeperTestSuite) TestAllBalancesCallback() {
 		reqbz, err := app.AppCodec().Marshal(&query)
 		s.Require().NoError(err)
 
-		response := banktypes.QueryAllBalancesResponse{}
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))}
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
 
 		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		s.Require().NoError(err)
+
+		// refetch zone
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().Equal(uint32(1), zone.DepositAddress.BalanceWaitgroup)
+
+		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
+		s.Require().NoError(err)
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		// check a ICQ request was made
+		found := false
+		app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+			if queryInfo.ChainId == zone.ChainId &&
+				queryInfo.ConnectionId == zone.ConnectionId &&
+				queryInfo.QueryType == icstypes.BankStoreKey &&
+				bytes.Equal(queryInfo.Request, append(data, []byte(response.Balances[0].GetDenom())...)) {
+				found = true
+				return true
+			}
+			return false
+		})
+		s.Require().True(found)
+	})
+}
+
+func (s *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
+	s.Run("all balances non-zero)", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.DepositAddress.BalanceWaitgroup = 2
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		query := banktypes.QueryAllBalancesRequest{
+			Address: zone.DepositAddress.Address,
+		}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))}
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		s.Require().NoError(err)
+
+		// refetch zone
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().Equal(uint32(1), zone.DepositAddress.BalanceWaitgroup)
+
+		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
+		s.Require().NoError(err)
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		// check a ICQ request was made
+		found := false
+		app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+			if queryInfo.ChainId == zone.ChainId &&
+				queryInfo.ConnectionId == zone.ConnectionId &&
+				queryInfo.QueryType == icstypes.BankStoreKey &&
+				bytes.Equal(queryInfo.Request, append(data, []byte(response.Balances[0].GetDenom())...)) {
+				found = true
+				return true
+			}
+			return false
+		})
+		s.Require().True(found)
+	})
+}
+
+// tests where we have an existing balance and that balance is now reported as zero.
+// we expect that an icq query will be emitted to assert with proof that the balance
+// is now zero.
+func (s *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
+	s.Run("existing balance - now zero - deposit", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.DepositAddress.Balance = sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		query := banktypes.QueryAllBalancesRequest{
+			Address: zone.DepositAddress.Address,
+		}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.Coins{}}
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		s.Require().NoError(err)
+
+		// refetch zone
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().Equal(uint32(1), zone.DepositAddress.BalanceWaitgroup)
+
+		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
+		s.Require().NoError(err)
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		// check a ICQ request was made
+		found := false
+		app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+			if queryInfo.ChainId == zone.ChainId &&
+				queryInfo.ConnectionId == zone.ConnectionId &&
+				queryInfo.QueryType == icstypes.BankStoreKey &&
+				bytes.Equal(queryInfo.Request, append(data, []byte("uqck")...)) {
+				found = true
+				return true
+			}
+			return false
+		})
+		s.Require().True(found)
+	})
+
+	s.Run("existing balance - now zero - withdrawal", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.WithdrawalAddress.Balance = sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		query := banktypes.QueryAllBalancesRequest{
+			Address: zone.WithdrawalAddress.Address,
+		}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.Coins{}}
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		s.Require().NoError(err)
+
+		// refetch zone
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().Equal(uint32(1), zone.WithdrawalAddress.BalanceWaitgroup)
+
+		_, addr, err := bech32.DecodeAndConvert(zone.WithdrawalAddress.Address)
+		s.Require().NoError(err)
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		// check a ICQ request was made
+		found := false
+		app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+			if queryInfo.ChainId == zone.ChainId &&
+				queryInfo.ConnectionId == zone.ConnectionId &&
+				queryInfo.QueryType == icstypes.BankStoreKey &&
+				bytes.Equal(queryInfo.Request, append(data, []byte("uqck")...)) {
+				found = true
+				return true
+			}
+			return false
+		})
+		s.Require().True(found)
+	})
+}
+
+func (s *KeeperTestSuite) TestAllBalancesCallbackMulti() {
+	s.Run("all balances non-zero)", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+
+		query := banktypes.QueryAllBalancesRequest{
+			Address: zone.DepositAddress.Address,
+		}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()), sdk.NewCoin("stake", sdk.OneInt()))}
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		s.Require().NoError(err)
+
+		// refetch zone
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().Equal(uint32(2), zone.DepositAddress.BalanceWaitgroup)
+
+		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
+		s.Require().NoError(err)
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		// check a ICQ request was made for each denom
+		for _, coin := range response.Balances {
+			found := false
+			app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+				if queryInfo.ChainId == zone.ChainId &&
+					queryInfo.ConnectionId == zone.ConnectionId &&
+					queryInfo.QueryType == icstypes.BankStoreKey &&
+					bytes.Equal(queryInfo.Request, append(data, []byte(coin.GetDenom())...)) {
+					found = true
+					return true
+				}
+				return false
+			})
+			s.Require().True(found)
+		}
 	})
 }
 
@@ -668,6 +891,64 @@ func (s *KeeperTestSuite) TestAccountBalanceCallback() {
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		response := sdk.NewCoin("qck", sdk.NewInt(10))
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
+			accAddr, err := sdk.AccAddressFromBech32(addr)
+			s.Require().NoError(err)
+			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+
+			err = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+			s.Require().NoError(err)
+		}
+	})
+}
+
+func (s *KeeperTestSuite) TestAccountBalanceCallbackMismatch() {
+	s.Run("account balance", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.DepositAddress.BalanceWaitgroup++
+		zone.WithdrawalAddress.BalanceWaitgroup++
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewCoin("qck", sdk.NewInt(10))
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
+			accAddr, err := sdk.AccAddressFromBech32(addr)
+			s.Require().NoError(err)
+			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
+
+			err = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+			s.Require().ErrorContains(err, "received coin denom qck does not match requested denom stake")
+		}
+	})
+}
+
+func (s *KeeperTestSuite) TestAccountBalanceCallbackNil() {
+	s.Run("account balance", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.DepositAddress.BalanceWaitgroup++
+		zone.WithdrawalAddress.BalanceWaitgroup++
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.Coin{}
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
 

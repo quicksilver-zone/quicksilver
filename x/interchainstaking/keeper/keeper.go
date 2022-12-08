@@ -342,6 +342,17 @@ func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdk.Dec {
 	return out
 }
 
+// MigrateParams fetches params, adds ClaimsEnabled field and re-sets params.
+func (k Keeper) MigrateParams(ctx sdk.Context) {
+	params := types.Params{}
+	params.DepositInterval = k.GetParam(ctx, types.KeyDepositInterval)
+	params.CommissionRate = k.GetCommissionRate(ctx)
+	params.ValidatorsetInterval = k.GetParam(ctx, types.KeyValidatorSetInterval)
+	params.UnbondingEnabled = false
+
+	k.paramStore.SetParamSet(ctx, &params)
+}
+
 func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 	k.paramStore.GetParamSet(clientCtx, &params)
 	return params
