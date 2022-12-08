@@ -464,10 +464,8 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		// if the balance returned is zero for a given denom, we just get a nil response.
 		// use the denom from the request so we can set a zero value coin for the correct denom.
 		coin = checkCoin
-	} else {
-		if coin.Denom != checkCoin.Denom {
-			return fmt.Errorf("received coin denom %s does not match requested denom %s", coin.Denom, checkCoin.Denom)
-		}
+	} else if coin.Denom != checkCoin.Denom {
+		return fmt.Errorf("received coin denom %s does not match requested denom %s", coin.Denom, checkCoin.Denom)
 	}
 
 	// By this point we've tried all means to retrieve the balance, so coin should not be nil.
