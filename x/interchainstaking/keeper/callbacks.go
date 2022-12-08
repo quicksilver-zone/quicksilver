@@ -455,12 +455,18 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		return err
 	}
 
-	if coin.IsNil() {
+	checkCoin, err := utils.CoinFromRequestKey(query.Request, accAddr)
+	if err != nil {
+		return err
+	}
+
+	if coin.IsNil() || coin.Denom == "" {
 		// if the balance returned is zero for a given denom, we just get a nil response.
-		// lookup the denom from the request so we can set a zero value coin for the correct denom.
-		coin, err = utils.CoinFromRequestKey(query.Request, accAddr)
-		if err != nil {
-			return err
+		// use the denom from the request so we can set a zero value coin for the correct denom.
+		coin = checkCoin
+	} else {
+		if coin.Denom != checkCoin.Denom {
+			return fmt.Errorf("received coin denom %s does not match requested denom %s", coin.Denom, checkCoin.Denom)
 		}
 	}
 
@@ -489,6 +495,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 
 func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	balanceQuery := banktypes.QueryAllBalancesRequest{}
+	// this shouldn't happen because query.Request comes from Quicksilver
 	if bytes.Equal(query.Request, []byte("")) {
 		return errors.New("attempted to unmarshal zero length byte slice (7)")
 	}
@@ -504,12 +511,29 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 
 	k.Logger(ctx).Info("AllBalances callback", "chain", zone.ChainId)
 
-	//
-	if zone.DepositAddress.BalanceWaitgroup != 0 {
-		zone.DepositAddress.BalanceWaitgroup = 0
-		k.Logger(ctx).Error("Zeroing deposit balance waitgroup")
-		k.SetZone(ctx, &zone)
+	switch {
+	case zone.DepositAddress != nil && balanceQuery.Address == zone.DepositAddress.Address:
+		if zone.DepositAddress.BalanceWaitgroup != 0 {
+			zone.DepositAddress.BalanceWaitgroup = 0
+			k.Logger(ctx).Error("Zeroing deposit balance waitgroup")
+		}
+	case zone.WithdrawalAddress != nil && balanceQuery.Address == zone.WithdrawalAddress.Address:
+		if zone.WithdrawalAddress.BalanceWaitgroup != 0 {
+			zone.WithdrawalAddress.BalanceWaitgroup = 0
+			k.Logger(ctx).Error("Zeroing withdrawal balance waitgroup")
+		}
+	case zone.DelegationAddress != nil && balanceQuery.Address == zone.DelegationAddress.Address:
+		if zone.DelegationAddress.BalanceWaitgroup != 0 {
+			zone.DelegationAddress.BalanceWaitgroup = 0
+			k.Logger(ctx).Error("Zeroing delegation balance waitgroup")
+		}
+	case zone.PerformanceAddress != nil && balanceQuery.Address == zone.PerformanceAddress.Address:
+		if zone.PerformanceAddress.BalanceWaitgroup != 0 {
+			zone.PerformanceAddress.BalanceWaitgroup = 0
+			k.Logger(ctx).Error("Zeroing performance balance waitgroup")
+		}
 	}
+	k.SetZone(ctx, &zone)
 
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
 }
