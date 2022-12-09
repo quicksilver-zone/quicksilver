@@ -505,7 +505,8 @@ func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 	var err error
 
 	k.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation types.RedelegationRecord) bool {
-		if ctx.BlockTime().After(redelegation.CompletionTime) {
+		// if the redelegation completion time was in the past AND is not 0000-00-00T00:00:00Z, then delete it.
+		if ctx.BlockTime().After(redelegation.CompletionTime) && !redelegation.CompletionTime.Equal(time.Time{}) {
 			k.Logger(ctx).Info("garbage collecting completed redelegations", "key", key, "completion", redelegation.CompletionTime)
 			k.DeleteRedelegationRecordByKey(ctx, append(types.KeyPrefixRedelegationRecord, key...))
 		}
