@@ -596,9 +596,9 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		return errors.New("unable to unmarshal MsgBeginRedelegate")
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
-	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.DelegatorAddress, epochNumber)
+	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	if !found {
-		k.Logger(ctx).Error("unable to find redelegation record")
+		k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch", epochNumber)
 		return errors.New("unable to find redelegation record")
 	}
 	k.Logger(ctx).Error("updating redelegation record with completion time")
