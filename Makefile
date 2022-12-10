@@ -316,13 +316,13 @@ test-unit-cover: TEST_PACKAGES=$(PACKAGES_UNIT)
 
 run-tests:
 ifneq (,$(shell which tparse 2>/dev/null))
-	go test -mod=readonly -json $(ARGS) $(EXTRA_ARGS) $(TEST_PACKAGES) | tparse
+	go test -short -mod=readonly -json $(ARGS) $(EXTRA_ARGS) $(TEST_PACKAGES) | tparse
 else
-	go test -mod=readonly $(ARGS)  $(EXTRA_ARGS) $(TEST_PACKAGES)
+	go test -short -mod=readonly $(ARGS)  $(EXTRA_ARGS) $(TEST_PACKAGES)
 endif
 
 test-import:
-	@go test ./tests/importer -v --vet=off --run=TestImportBlocks --datadir tmp \
+	@go test -short ./tests/importer -v --vet=off --run=TestImportBlocks --datadir tmp \
 	--blockchain blockchain
 	rm -rf tests/importer/tmp
 
@@ -336,13 +336,13 @@ test-rpc-pending:
 
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
-	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
+	@go test -short -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
 		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.$(QS_DIR)/config/genesis.json will be used."
-	@go test -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.$(QS_DIR)/config/genesis.json \
+	@go test -short -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.$(QS_DIR)/config/genesis.json \
 		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
 
 test-sim-import-export: runsim
@@ -368,7 +368,7 @@ test-sim-multi-seed-short: runsim
 
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
-	@go test -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
+	@go test -short -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
 	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
 	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
 
@@ -383,7 +383,7 @@ test-sim-multi-seed-long \
 test-sim-benchmark-invariants
 
 benchmark:
-	@go test -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
+	@go test -short -mod=readonly -bench=. $(PACKAGES_NOSIMULATION)
 .PHONY: benchmark
 
 ###############################################################################
