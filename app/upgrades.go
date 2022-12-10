@@ -22,6 +22,7 @@ const (
 	v001004UpgradeName = "v0.10.4"
 	v001005UpgradeName = "v0.10.5"
 	v001006UpgradeName = "v0.10.6"
+	v001007UpgradeName = "v0.10.7"
 
 	InnuendoChainID  = "innuendo-3"
 	Innuendo2ChainID = "innuendo-4"
@@ -36,6 +37,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v001004UpgradeName, getv001004Upgrade(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v001005UpgradeName, getv001005Upgrade(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v001006UpgradeName, getv001006Upgrade(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v001007UpgradeName, getv001001Upgrade(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -316,6 +318,13 @@ func getv001006Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 			// no-op
 		}
 		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.6; complete.")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func getv001007Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.7; no state transitions to apply.")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }
