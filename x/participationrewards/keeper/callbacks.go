@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -156,7 +155,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 
 	blockResponse := tmservice.GetLatestBlockResponse{}
 	// block response is never expected to be nil
-	if bytes.Equal(args, []byte("")) {
+	if len(args) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (1)")
 	}
 	err = k.cdc.Unmarshal(args, &blockResponse)

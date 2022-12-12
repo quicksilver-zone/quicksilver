@@ -1,7 +1,6 @@
 package types
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 
@@ -42,7 +41,7 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 
 // unmarshal the current staking params value from store key
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
-	if bytes.Equal(value, []byte("")) {
+	if len(value) == 0 {
 		return params, errors.New("unable to unmarshal empty byte slice")
 	}
 	err = cdc.Unmarshal(value, &params)

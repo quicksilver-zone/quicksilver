@@ -102,7 +102,7 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 
 	// unmarshal request payload
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
-	if bytes.Equal(query.Request, []byte("")) {
+	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (2)")
 	}
 	err := k.cdc.Unmarshal(query.Request, &rewardsQuery)
@@ -126,7 +126,7 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	}
 
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
-	if bytes.Equal(query.Request, []byte("")) {
+	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (3)")
 	}
 	err := k.cdc.Unmarshal(query.Request, &delegationQuery)
@@ -217,7 +217,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 
 	txs := tx.GetTxsEventResponse{}
 
-	if bytes.Equal(args, []byte("")) {
+	if len(args) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (4)")
 	}
 	err := k.cdc.Unmarshal(args, &txs)
@@ -229,7 +229,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	// TODO: use pagination.GetTotal() to dispatch the correct number of requests now; rather than iteratively.
 	if len(txs.Pagination.NextKey) > 0 {
 		req := tx.GetTxsEventRequest{}
-		if bytes.Equal(query.Request, []byte("")) {
+		if len(query.Request) == 0 {
 			return errors.New("attempted to unmarshal zero length byte slice (5)")
 		}
 		err := k.cdc.Unmarshal(query.Request, &req)
@@ -370,7 +370,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 	k.Logger(ctx).Info("DepositTx callback", "zone", zone.ChainId)
 
 	res := icqtypes.GetTxWithProofResponse{}
-	if bytes.Equal(args, []byte("")) {
+	if len(args) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (6)")
 	}
 	err := k.cdc.Unmarshal(args, &res)
@@ -494,7 +494,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	// this shouldn't happen because query.Request comes from Quicksilver
-	if bytes.Equal(query.Request, []byte("")) {
+	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (7)")
 	}
 	err := k.cdc.Unmarshal(query.Request, &balanceQuery)
