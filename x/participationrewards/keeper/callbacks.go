@@ -165,7 +165,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	}
 	if blockResponse.SdkBlock == nil {
 		// v0.45 and below
-		//nolint:staticcheck
+		//nolint:staticcheck // SA1019 ignore this!
 		connectionData.LastEpoch = blockResponse.Block.Header.Height
 	} else {
 		// v0.46 and above
@@ -174,7 +174,17 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 
 	heightInBytes := sdk.Uint64ToBigEndian(uint64(connectionData.LastEpoch))
 	// trigger a client update at the epoch boundary
-	k.IcqKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "ibc.ClientUpdate", heightInBytes, sdk.NewInt(-1), types.ModuleName, "", 0)
+	k.IcqKeeper.MakeRequest(
+		ctx,
+		query.ConnectionId,
+		query.ChainId,
+		"ibc.ClientUpdate",
+		heightInBytes,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"",
+		0,
+	)
 
 	data.Data, err = json.Marshal(connectionData)
 	if err != nil {

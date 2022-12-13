@@ -35,6 +35,10 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if !k.Keeper.GetUnbondingEnabled(ctx) {
+		return nil, fmt.Errorf("unbonding is currently disabled")
+	}
+
 	// validate coins are positive
 	err := msg.Value.Validate()
 	if err != nil {
@@ -97,7 +101,6 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	hash := sha256.Sum256(append(msg.GetSignBytes(), heightBytes...))
 	hashString := hex.EncodeToString(hash[:])
 
-	// lock qAssets - how are we tracking this?
 	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(msg.Value)); err != nil {
 		return nil, err
 	}
@@ -144,8 +147,13 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sende
 	outstanding := nativeTokens
 	distribution := make(map[string]uint64, 0)
 
+	availablePerValidator := k.GetUnlockedTokensForZone(ctx, &zone)
+
 	for _, intent := range intents.Sort() {
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
+		if thisAmount.Int64() > availablePerValidator[intent.ValoperAddress] {
+			return errors.New("unable to satisfy unbond request; delegations may be locked")
+		}
 		distribution[intent.ValoperAddress] = thisAmount.Uint64()
 		outstanding = outstanding.Sub(thisAmount)
 	}
@@ -185,26 +193,27 @@ func (k *Keeper) queueRedemption(
 	outstanding := nativeTokens
 
 	aggregateIntent := zone.GetAggregateIntentOrDefault()
-	for idx, intent := range aggregateIntent {
-		fmt.Printf("[%d] key %v: %v\n", idx, intent.ValoperAddress, intent)
+	for _, intent := range aggregateIntent {
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
 		outstanding = outstanding.Sub(thisAmount)
 		dist := types.Distribution{
 			Valoper: intent.ValoperAddress,
 			Amount:  thisAmount.Uint64(),
 		}
+
 		distribution = append(distribution, &dist)
 	}
 	// handle dust ? ok to do uint64 calc here or do we use math.Int (just more verbose) ?
 	distribution[0].Amount += outstanding.Uint64()
 
+	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens))
 	k.AddWithdrawalRecord(
 		ctx,
 		zone.ChainId,
 		sender.String(),
 		distribution,
 		destination,
-		sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens)),
+		amount,
 		burnAmount,
 		hash,
 		WithdrawStatusQueued,
@@ -214,6 +223,7 @@ func (k *Keeper) queueRedemption(
 	return nil
 }
 
+// this can be removed: unused
 func IntentSliceToMap(in []*types.ValidatorIntent) (out map[string]*types.ValidatorIntent) {
 	out = make(map[string]*types.ValidatorIntent, 0)
 

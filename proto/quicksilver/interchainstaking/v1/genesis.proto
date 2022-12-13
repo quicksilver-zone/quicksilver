@@ -9,6 +9,19 @@ import "quicksilver/interchainstaking/v1/interchainstaking.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
+message Params_v1 {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 deposit_interval = 1;
+  uint64 validatorset_interval = 2;
+  string commission_rate = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
 message Params {
   option (gogoproto.equal) = true;
   option (gogoproto.goproto_stringer) = false;
@@ -20,6 +33,7 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
+  bool unbonding_enabled = 4;
 }
 
 message DelegationsForZone {
@@ -39,7 +53,8 @@ message GenesisState {
   repeated Zone zones = 2 [ (gogoproto.nullable) = false ];
   repeated Receipt receipts = 3 [ (gogoproto.nullable) = false ];
   repeated DelegationsForZone delegations = 4 [ (gogoproto.nullable) = false ];
-  repeated DelegationsForZone performance_delegations = 5 [ (gogoproto.nullable) = false ];
+  repeated DelegationsForZone performance_delegations = 5
+      [ (gogoproto.nullable) = false ];
   repeated DelegatorIntentsForZone delegator_intents = 6
       [ (gogoproto.nullable) = false ];
   repeated PortConnectionTuple port_connections = 7

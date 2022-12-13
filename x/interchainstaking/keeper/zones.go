@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -179,6 +180,14 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 	}
 	withdrawalAddress := zone.WithdrawalAddress.Address
 
+	if zone.DepositAddress.WithdrawalAddress != zone.DepositAddress.Address {
+		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
+		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "")
+		if err != nil {
+			return err
+		}
+	}
+
 	if zone.DelegationAddress.WithdrawalAddress != zone.WithdrawalAddress.Address {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
 		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "")
@@ -260,15 +269,19 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 		icaAccount = zone.DepositAddress
 	case zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address:
 		icaAccount = zone.WithdrawalAddress
-	default:
+	case zone.DelegationAddress != nil && address == zone.DelegationAddress.Address:
 		icaAccount = zone.DelegationAddress
+	case zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address:
+		icaAccount = zone.PerformanceAddress
+	default:
+		return errors.New("unexpected address")
 	}
 
 	if icaAccount == nil {
 		return fmt.Errorf("unable to determine account for address %s", address)
 	}
 
-	for _, coin := range zone.DepositAddress.Balance {
+	for _, coin := range icaAccount.Balance {
 		if queryRes.Balances.AmountOf(coin.Denom).Equal(sdk.ZeroInt()) {
 			// coin we used to have is now zero - also validate this.
 			k.Logger(ctx).Info("Querying for value", "key", types.BankStoreKey, "denom", coin.Denom) // debug?

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +26,10 @@ var _ types.MsgServer = msgServer{}
 // claim against the given asset type for the given zone.
 func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim) (*types.MsgSubmitClaimResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if !k.GetClaimsEnabled(ctx) {
+		return nil, errors.New("claims currently disabled")
+	}
 
 	// fetch zone
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)

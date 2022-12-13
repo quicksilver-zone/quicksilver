@@ -13,19 +13,19 @@ import (
 
 // Default ics params
 var (
-	DefaultDelegateAccountCount uint64  = 100
 	DefaultDepositInterval      uint64  = 20
 	DefaultValidatorSetInterval uint64  = 200
 	DefaultCommissionRate       sdk.Dec = sdk.MustNewDecFromStr("0.025")
+	DefaultUnbondingEnabled             = false
 
-	// KeyDelegateAccountCount is store's key for DelegateAccountCount option
-	KeyDelegateAccountCount = []byte("DelegateAccountCount")
 	// KeyDepositInterval is store's key for the DepositInterval option
 	KeyDepositInterval = []byte("DepositInterval")
 	// KeyValidatorSetInterval is store's key for the ValidatorSetInterval option
 	KeyValidatorSetInterval = []byte("ValidatorSetInterval")
 	// KeyCommissionRate is store's key for the CommissionRate option
 	KeyCommissionRate = []byte("CommissionRate")
+	// KeyUnbondingEnabled is a globla flag to indicated whether unbonding txs are permitted
+	KeyUnbondingEnabled = []byte("UnbondingEnabled")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -74,30 +74,32 @@ func validateParams(i interface{}) error {
 	if v.CommissionRate.IsNegative() {
 		return fmt.Errorf("commission rate must be non-negative: %s", v.CommissionRate.String())
 	}
+
 	return nil
 }
 
 // NewParams creates a new ics Params instance
 func NewParams(
-	delegateAccountCount uint64,
 	depositInterval uint64,
 	valsetInterval uint64,
 	commissionRate sdk.Dec,
+	unbondingEnabled bool,
 ) Params {
 	return Params{
 		DepositInterval:      depositInterval,
 		ValidatorsetInterval: valsetInterval,
 		CommissionRate:       commissionRate,
+		UnbondingEnabled:     unbondingEnabled,
 	}
 }
 
 // DefaultParams default ics params
 func DefaultParams() Params {
 	return NewParams(
-		DefaultDelegateAccountCount,
 		DefaultDepositInterval,
 		DefaultValidatorSetInterval,
 		DefaultCommissionRate,
+		DefaultUnbondingEnabled,
 	)
 }
 
@@ -112,12 +114,36 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyDepositInterval, &p.DepositInterval, validatePositiveInt),
 		paramtypes.NewParamSetPair(KeyValidatorSetInterval, &p.ValidatorsetInterval, validatePositiveInt),
 		paramtypes.NewParamSetPair(KeyCommissionRate, &p.CommissionRate, validateNonNegativeDec),
+		paramtypes.NewParamSetPair(KeyUnbondingEnabled, &p.UnbondingEnabled, validateBoolean),
+	}
+}
+
+func (p ParamsV1) ParamSetPairs() paramtypes.ParamSetPairs {
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(KeyDepositInterval, &p.DepositInterval, validatePositiveInt),
+		paramtypes.NewParamSetPair(KeyValidatorSetInterval, &p.ValidatorsetInterval, validatePositiveInt),
+		paramtypes.NewParamSetPair(KeyCommissionRate, &p.CommissionRate, validateNonNegativeDec),
 	}
 }
 
 func (p Params) String() string {
 	out, _ := yaml.Marshal(p)
 	return string(out)
+}
+
+// String implements the Stringer interface.
+func (p ParamsV1) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
+}
+
+func validateBoolean(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	return nil
 }
 
 func validatePositiveInt(i interface{}) error {

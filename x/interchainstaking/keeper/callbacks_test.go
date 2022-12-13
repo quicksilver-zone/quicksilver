@@ -13,6 +13,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -230,7 +231,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 	for _, test := range tests {
 		s.Run(test.name, func() {
 			s.SetupTest()
-			s.SetupZones()
+			s.setupTestZones()
 
 			app := s.GetQuicksilverApp(s.chainA)
 			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -253,7 +254,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 func (s *KeeperTestSuite) TestHandleValsetCallbackBadChain() {
 	s.Run("bad chain", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -272,7 +273,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackBadChain() {
 func (s *KeeperTestSuite) TestHandleValsetCallbackNilValset() {
 	s.Run("nil valset", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -291,7 +292,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackNilValset() {
 func (s *KeeperTestSuite) TestHandleValsetCallbackInvalidResponse() {
 	s.Run("bad payload type", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -331,7 +332,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackInvalidResponse() {
 func (s *KeeperTestSuite) TestHandleValidatorCallbackBadChain() {
 	s.Run("bad chain", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -350,7 +351,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackBadChain() {
 func (s *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 	s.Run("empty value", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -364,117 +365,70 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 	})
 }
 
-// func (s *KeeperTestSuite) TestHandleValidatorCallback() {
-// 	newVal := utils.GenerateValAddressForTest()
+func (s *KeeperTestSuite) TestHandleValidatorCallback() {
+	newVal := utils.GenerateAccAddressForTestWithPrefix("cosmosvaloper")
 
-// 	tests := []struct {
-// 		name      string
-// 		validator func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse
-// 		expected  icstypes.Validator
-// 	}{
-// 		{
-// 			name: "valid - no-op",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - shares +1000 val[0]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[0].DelegatorShares = in[0].DelegatorShares.Add(sdk.NewDec(1000))
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - shares +1000 val[1], +2000 val[2]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[1].DelegatorShares = in[1].DelegatorShares.Add(sdk.NewDec(1000))
-// 				in[2].DelegatorShares = in[2].DelegatorShares.Add(sdk.NewDec(2000))
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - tokens +1000 val[0]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[0].Tokens = in[0].Tokens.Add(sdk.NewInt(1000))
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - tokens +1000 val[1], +2000 val[2]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[1].Tokens = in[1].Tokens.Add(sdk.NewInt(1000))
-// 				in[2].Tokens = in[2].Tokens.Add(sdk.NewInt(2000))
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - tokens -10 val[1], -20 val[2]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[1].Tokens = in[1].Tokens.Sub(sdk.NewInt(10))
-// 				in[2].Tokens = in[2].Tokens.Sub(sdk.NewInt(20))
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - commission 0.5 val[0], 0.05 val[2]",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				in[0].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 1)
-// 				in[2].Commission.CommissionRates.Rate = sdk.NewDecWithPrec(5, 2)
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 		{
-// 			name: "valid - new validator",
-// 			validator: func(in stakingtypes.Validators) stakingtypes.QueryValidatorResponse {
-// 				new := in[0]
-// 				new.OperatorAddress = newVal.String()
-// 				in = append(in, new)
-// 				return stakingtypes.QueryValidatorResponse{Validator: in[0]}
-// 			},
-// 			expected: icstypes.Validator{},
-// 		},
-// 	}
+	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
 
-// 	for _, test := range tests {
-// 		s.Run(test.name, func() {
-// 			s.SetupTest()
-// 			s.SetupZones()
+	tests := []struct {
+		name      string
+		validator stakingtypes.Validator
+		expected  *icstypes.Validator
+	}{
+		{
+			name:      "valid - no-op",
+			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
+			expected:  &icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+		},
+		{
+			name:      "valid - +2000 tokens/shares",
+			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(4000), DelegatorShares: sdk.NewDec(4000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
+			expected:  &icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(4000), DelegatorShares: sdk.NewDec(4000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+		},
+		{
+			name:      "valid - inc. commission",
+			validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
+			expected:  &icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.5"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+		},
+		{
+			name:      "valid - new validator",
+			validator: stakingtypes.Validator{OperatorAddress: newVal, Jailed: false, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(3000), DelegatorShares: sdk.NewDec(3050), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.25"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
+			expected:  &icstypes.Validator{ValoperAddress: newVal, CommissionRate: sdk.MustNewDecFromStr("0.25"), VotingPower: sdk.NewInt(3000), DelegatorShares: sdk.NewDec(3050), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED"},
+		},
+	}
 
-// 			app := s.GetQuicksilverApp(s.chainA)
-// 			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-// 			ctx := s.chainA.GetContext()
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			s.setupTestZones()
 
-// 			chainBVals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetValidators(s.chainB.GetContext(), 300)
+			app := s.GetQuicksilverApp(s.chainA)
+			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := s.chainA.GetContext()
 
-// 			query := test.validator(chainBVals)
-// 			bz, err := app.AppCodec().Marshal(&query)
-// 			s.Require().NoError(err)
+			app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-// 			err = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
-// 			s.Require().NoError(err)
+			bz, err := app.AppCodec().Marshal(&test.validator)
+			s.Require().NoError(err)
 
-// 			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-// 			s.Require().True(found)
-// 			// valset callback doesn't actually update validators, but does emit icq callbacks.
-// 			expected := false
-// 			for _, val := range zone.Validators {
-// 				if val.IsEqual(test.expected) {
-// 					expected = true
-// 					break
-// 				}
-// 			}
-// 			s.Require().True(expected)
-// 		})
-// 	}
-// }
+			err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
+			s.Require().NoError(err)
+
+			zone, found := app.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
+			s.True(found)
+
+			// valset callback doesn't actually update validators, but does emit icq callbacks.
+			valFromZone, found := zone.GetValidatorByValoper(test.expected.ValoperAddress)
+			s.True(found)
+			s.Equal(test.expected, valFromZone)
+		})
+	}
+}
 
 // func (s *KeeperTestSuite) TestHandleDelegationCallback() {
 // 	type TestCase struct {
@@ -539,7 +493,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 func (s *KeeperTestSuite) TestHandleRewardsCallbackBadChain() {
 	s.Run("bad chain", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -558,7 +512,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackBadChain() {
 func (s *KeeperTestSuite) TestHandleRewardsEmptyRequestCallback() {
 	s.Run("empty request", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -577,7 +531,7 @@ func (s *KeeperTestSuite) TestHandleRewardsEmptyRequestCallback() {
 func (s *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 	s.Run("valid response, bad delegator", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -613,7 +567,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 func (s *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 	s.Run("empty response", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -642,7 +596,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 func (s *KeeperTestSuite) TestHandleValideRewardsCallback() {
 	s.Run("valid response, negative waitgroup", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -674,9 +628,9 @@ func (s *KeeperTestSuite) TestHandleValideRewardsCallback() {
 }
 
 func (s *KeeperTestSuite) TestAllBalancesCallback() {
-	s.Run("all balances", func() {
+	s.Run("all balances non-zero)", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -690,19 +644,271 @@ func (s *KeeperTestSuite) TestAllBalancesCallback() {
 		reqbz, err := app.AppCodec().Marshal(&query)
 		s.Require().NoError(err)
 
-		response := banktypes.QueryAllBalancesResponse{}
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))}
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
 
 		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		s.Require().NoError(err)
+
+		// refetch zone
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().Equal(uint32(1), zone.DepositAddress.BalanceWaitgroup)
+
+		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
+		s.Require().NoError(err)
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		// check a ICQ request was made
+		found := false
+		app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+			if queryInfo.ChainId == zone.ChainId &&
+				queryInfo.ConnectionId == zone.ConnectionId &&
+				queryInfo.QueryType == icstypes.BankStoreKey &&
+				bytes.Equal(queryInfo.Request, append(data, []byte(response.Balances[0].GetDenom())...)) {
+				found = true
+				return true
+			}
+			return false
+		})
+		s.Require().True(found)
+	})
+}
+
+func (s *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
+	s.Run("all balances non-zero)", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.DepositAddress.BalanceWaitgroup = 2
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		query := banktypes.QueryAllBalancesRequest{
+			Address: zone.DepositAddress.Address,
+		}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))}
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		s.Require().NoError(err)
+
+		// refetch zone
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().Equal(uint32(1), zone.DepositAddress.BalanceWaitgroup)
+
+		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
+		s.Require().NoError(err)
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		// check a ICQ request was made
+		found := false
+		app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+			if queryInfo.ChainId == zone.ChainId &&
+				queryInfo.ConnectionId == zone.ConnectionId &&
+				queryInfo.QueryType == icstypes.BankStoreKey &&
+				bytes.Equal(queryInfo.Request, append(data, []byte(response.Balances[0].GetDenom())...)) {
+				found = true
+				return true
+			}
+			return false
+		})
+		s.Require().True(found)
+	})
+}
+
+// tests where we have an existing balance and that balance is now reported as zero.
+// we expect that an icq query will be emitted to assert with proof that the balance
+// is now zero.
+func (s *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
+	s.Run("existing balance - now zero - deposit", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.DepositAddress.Balance = sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		query := banktypes.QueryAllBalancesRequest{
+			Address: zone.DepositAddress.Address,
+		}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.Coins{}}
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		s.Require().NoError(err)
+
+		// refetch zone
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().Equal(uint32(1), zone.DepositAddress.BalanceWaitgroup)
+
+		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
+		s.Require().NoError(err)
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		// check a ICQ request was made
+		found := false
+		app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+			if queryInfo.ChainId == zone.ChainId &&
+				queryInfo.ConnectionId == zone.ConnectionId &&
+				queryInfo.QueryType == icstypes.BankStoreKey &&
+				bytes.Equal(queryInfo.Request, append(data, []byte("uqck")...)) {
+				found = true
+				return true
+			}
+			return false
+		})
+		s.Require().True(found)
+	})
+
+	s.Run("existing balance - now zero - withdrawal", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.WithdrawalAddress.Balance = sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		query := banktypes.QueryAllBalancesRequest{
+			Address: zone.WithdrawalAddress.Address,
+		}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.Coins{}}
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		s.Require().NoError(err)
+
+		// refetch zone
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().Equal(uint32(1), zone.WithdrawalAddress.BalanceWaitgroup)
+
+		_, addr, err := bech32.DecodeAndConvert(zone.WithdrawalAddress.Address)
+		s.Require().NoError(err)
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		// check a ICQ request was made
+		found := false
+		app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+			if queryInfo.ChainId == zone.ChainId &&
+				queryInfo.ConnectionId == zone.ConnectionId &&
+				queryInfo.QueryType == icstypes.BankStoreKey &&
+				bytes.Equal(queryInfo.Request, append(data, []byte("uqck")...)) {
+				found = true
+				return true
+			}
+			return false
+		})
+		s.Require().True(found)
+	})
+}
+
+func (s *KeeperTestSuite) TestAllBalancesCallbackMulti() {
+	s.Run("all balances non-zero)", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+
+		query := banktypes.QueryAllBalancesRequest{
+			Address: zone.DepositAddress.Address,
+		}
+		reqbz, err := app.AppCodec().Marshal(&query)
+		s.Require().NoError(err)
+
+		response := banktypes.QueryAllBalancesResponse{Balances: sdk.NewCoins(sdk.NewCoin("uqck", sdk.OneInt()), sdk.NewCoin("stake", sdk.OneInt()))}
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		s.Require().NoError(err)
+
+		// refetch zone
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().Equal(uint32(2), zone.DepositAddress.BalanceWaitgroup)
+
+		_, addr, err := bech32.DecodeAndConvert(zone.DepositAddress.Address)
+		s.Require().NoError(err)
+		data := banktypes.CreateAccountBalancesPrefix(addr)
+
+		// check a ICQ request was made for each denom
+		for _, coin := range response.Balances {
+			found := false
+			app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+				if queryInfo.ChainId == zone.ChainId &&
+					queryInfo.ConnectionId == zone.ConnectionId &&
+					queryInfo.QueryType == icstypes.BankStoreKey &&
+					bytes.Equal(queryInfo.Request, append(data, []byte(coin.GetDenom())...)) {
+					found = true
+					return true
+				}
+				return false
+			})
+			s.Require().True(found)
+		}
 	})
 }
 
 func (s *KeeperTestSuite) TestAccountBalanceCallback() {
 	s.Run("account balance", func() {
 		s.SetupTest()
-		s.SetupZones()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.DepositAddress.BalanceWaitgroup++
+		zone.WithdrawalAddress.BalanceWaitgroup++
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewCoin("qck", sdk.NewInt(10))
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
+			accAddr, err := sdk.AccAddressFromBech32(addr)
+			s.Require().NoError(err)
+			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+
+			err = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+			s.Require().NoError(err)
+		}
+	})
+}
+
+func (s *KeeperTestSuite) TestAccountBalanceCallbackMismatch() {
+	s.Run("account balance", func() {
+		s.SetupTest()
+		s.setupTestZones()
 
 		app := s.GetQuicksilverApp(s.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
@@ -723,7 +929,52 @@ func (s *KeeperTestSuite) TestAccountBalanceCallback() {
 			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
 
 			err = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+			s.Require().ErrorContains(err, "received coin denom qck does not match requested denom stake")
+		}
+	})
+}
+
+func (s *KeeperTestSuite) TestAccountBalanceCallbackNil() {
+	s.Run("account balance", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.DepositAddress.BalanceWaitgroup++
+		zone.WithdrawalAddress.BalanceWaitgroup++
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.Coin{}
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
+			accAddr, err := sdk.AccAddressFromBech32(addr)
+			s.Require().NoError(err)
+			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
+
+			err = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
 			s.Require().NoError(err)
 		}
 	})
+}
+
+// Ensures that a fuzz vector which resulted in a crash of ValidatorReq.Pagination crashing
+// doesn't creep back up. Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/82
+func TestValsetCallbackNilValidatorReqPagination(t *testing.T) {
+	s := new(KeeperTestSuite)
+	s.SetT(t)
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+	ctx := s.chainA.GetContext()
+
+	data := []byte("\x12\"\n 00000000000000000000000000000000")
+	_ = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID})
 }

@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"time"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,7 +10,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 // upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch)
@@ -18,6 +19,11 @@ const (
 	v001001UpgradeName = "v0.10.1"
 	v001002UpgradeName = "v0.10.2"
 	v001003UpgradeName = "v0.10.3"
+	v001004UpgradeName = "v0.10.4"
+	v001005UpgradeName = "v0.10.5"
+
+	InnuendoChainID = "innuendo-3"
+	DevnetChainID   = "quicktest-1"
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
@@ -25,6 +31,8 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v001001UpgradeName, getv001001Upgrade(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v001002UpgradeName, getv001002Upgrade(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v001003UpgradeName, getv001003Upgrade(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v001004UpgradeName, getv001004Upgrade(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v001005UpgradeName, getv001005Upgrade(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -86,30 +94,15 @@ func getv001002Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 				zone.ChainId,
 				"cosmos.bank.v1beta1.Query/AllBalances",
 				bz,
-				sdk.NewInt(int64(app.InterchainstakingKeeper.GetParam(ctx, types.KeyDepositInterval))),
-				types.ModuleName,
+				sdk.NewInt(int64(app.InterchainstakingKeeper.GetParam(ctx, icstypes.KeyDepositInterval))),
+				icstypes.ModuleName,
 				"allbalances",
 				0,
 			)
 
-			// // quickgaia-1
-			// zone, _ := app.InterchainstakingKeeper.GetZone(ctx, "quickgaia-1")
-			// for _, addr := range []string{"cosmosvaloper1759teakrsvnx7rnur8ezc4qaq8669nhtgukm0x", "cosmosvaloper1jtjjyxtqk0fj85ud9cxk368gr8cjdsftvdt5jl", "cosmosvaloper1q86m0zq0p52h4puw5pg5xgc3c5e2mq52y6mth0"} {
-			// 	app.InterchainstakingKeeper.SetPerformanceDelegation(ctx, &zone, icstypes.NewDelegation(zone.PerformanceAddress.Address, addr, sdk.NewInt64Coin(zone.BaseDenom, 10000)))
-			// }
-			// // quickosmo-1
-			// zone, _ = app.InterchainstakingKeeper.GetZone(ctx, "quickosmo-1")
-			// for _, addr := range []string{"osmovaloper10843vrvy6jh3t4mxt2fnvkwm7mwewhkdwcqmuj"} {
-			// 	app.InterchainstakingKeeper.SetPerformanceDelegation(ctx, &zone, icstypes.NewDelegation(zone.PerformanceAddress.Address, addr, sdk.NewInt64Coin(zone.BaseDenom, 10000)))
-			// }
-			// // quickstar-1
-			// zone, _ = app.InterchainstakingKeeper.GetZone(ctx, "quickstar-1")
-			// for _, addr := range []string{"starsvaloper1d54z0yptatca3a05pqyvdv5jzpu8p5fmhkcw69", "starsvaloper13x85ct9jkmygqhyaf930c7x2564vqzq37kksc7", "starsvaloper1j0cjvx9u7kgs3gkqra8gmf7y396mv433d3zcut"} {
-			// 	app.InterchainstakingKeeper.SetPerformanceDelegation(ctx, &zone, icstypes.NewDelegation(zone.PerformanceAddress.Address, addr, sdk.NewInt64Coin(zone.BaseDenom, 10000)))
-			// }
 			app.UpgradeKeeper.Logger(ctx).Info("state transitions complete.")
 
-		case "innuendo-3":
+		case InnuendoChainID:
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.2; removing osmo-test-4 zone.")
 			app.InterchainstakingKeeper.DeleteZone(ctx, "osmo-test-4")
 		default:
@@ -142,7 +135,7 @@ func getv001002Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 func getv001003Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		switch ctx.ChainID() {
-		case "innuendo-3":
+		case InnuendoChainID:
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.3; removing defunct zones.")
 			app.InterchainstakingKeeper.DeleteZone(ctx, "bitcanna-dev-5")
 			app.InterchainstakingKeeper.DeleteZone(ctx, "fauxgaia-1")
@@ -160,6 +153,139 @@ func getv001003Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.3; nothing to do.")
 		}
 
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func getv001004Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		switch ctx.ChainID() {
+		case InnuendoChainID:
+			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.4; removing withdrawal records for previously removed zones.")
+			app.InterchainstakingKeeper.IteratePrefixedWithdrawalRecords(ctx, []byte("fauxgaia-1"), func(_ int64, record icstypes.WithdrawalRecord) bool {
+				app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, "fauxgaia-1", record.Txhash, record.Status)
+				return false
+			})
+
+			app.InterchainstakingKeeper.IteratePrefixedWithdrawalRecords(ctx, []byte("bitcanna-dev-5"), func(_ int64, record icstypes.WithdrawalRecord) bool {
+				app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, "bitcanna-dev-5", record.Txhash, record.Status)
+				return false
+			})
+
+			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.4; removing unbonding records for previously removed zones.")
+			app.InterchainstakingKeeper.IteratePrefixedUnbondingRecords(ctx, []byte("fauxgaia-1"), func(_ int64, record icstypes.UnbondingRecord) bool {
+				app.InterchainstakingKeeper.DeleteUnbondingRecord(ctx, "fauxgaia-1", record.Validator, record.EpochNumber)
+				return false
+			})
+
+			app.InterchainstakingKeeper.IteratePrefixedUnbondingRecords(ctx, []byte("bitcanna-dev-5"), func(_ int64, record icstypes.UnbondingRecord) bool {
+				app.InterchainstakingKeeper.DeleteUnbondingRecord(ctx, "bitcanna-dev-5", record.Validator, record.EpochNumber)
+				return false
+			})
+
+			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.4; removing delegation records for previously removed zones.")
+			fgZone, _ := app.InterchainstakingKeeper.GetZone(ctx, "fauxgaia-1")
+			app.InterchainstakingKeeper.IterateAllDelegations(ctx, &fgZone, func(record icstypes.Delegation) (stop bool) {
+				if err := app.InterchainstakingKeeper.RemoveDelegation(ctx, &fgZone, record); err != nil {
+					panic(err)
+				}
+				return false
+			})
+
+			bcZone, _ := app.InterchainstakingKeeper.GetZone(ctx, "bitcanna-dev-5")
+			app.InterchainstakingKeeper.IterateAllDelegations(ctx, &bcZone, func(record icstypes.Delegation) (stop bool) {
+				if err := app.InterchainstakingKeeper.RemoveDelegation(ctx, &bcZone, record); err != nil {
+					panic(err)
+				}
+				return false
+			})
+
+			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.4; tidy up withdrawal records pertaining to withdrawal for jailed validators bug.")
+			app.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(_ int64, record icstypes.WithdrawalRecord) bool {
+				if record.Status == 3 && record.CompletionTime.String() == "0001-01-01T00:00:00Z" {
+					app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
+					// unbonding never happened here. credit burn_amount back to delegator.
+					if err := app.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, sdk.MustAccAddressFromBech32(record.Delegator), sdk.NewCoins(record.BurnAmount)); err != nil {
+						panic(err)
+					}
+				}
+
+				if record.Status == 4 && record.CompletionTime.Before(ctx.BlockTime()) {
+					app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
+					// unbonding completed, burn qAtoms to restore balance.
+				}
+				return false
+			})
+
+			// this is hacky as shit, but we know the surplus balance is 1100000 uatom
+			if err := app.BankKeeper.BurnCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(1100000)))); err != nil {
+				panic(err)
+			}
+
+			app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo icstypes.Zone) (stop bool) {
+				app.UpgradeKeeper.Logger(ctx).Info("re-asserting redemption rate after upgrade.")
+				app.InterchainstakingKeeper.UpdateRedemptionRateNoBounds(ctx, zoneInfo)
+				return false
+			})
+
+		default:
+			// also do nothing
+			app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.4; nothing to do.")
+		}
+
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func getv001005Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		switch ctx.ChainID() {
+		case DevnetChainID:
+			app.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(_ int64, record icstypes.WithdrawalRecord) bool {
+				if record.Status == 3 && record.CompletionTime.Equal(time.Time{}) {
+					app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
+					// unbonding never happened here. credit burn_amount back to delegator.
+					fmt.Println("something happened!")
+					if err := app.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, sdk.MustAccAddressFromBech32(record.Delegator), sdk.NewCoins(record.BurnAmount)); err != nil {
+						fmt.Println("error", err) // don't actually fail here.
+					}
+				}
+				return false
+			})
+			icsModule := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+			icsModuleBalances := app.BankKeeper.GetAllBalances(ctx, icsModule)
+			fmt.Println("icsmodule", icsModule.String(), icsModuleBalances)
+			app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo icstypes.Zone) (stop bool) {
+				app.UpgradeKeeper.Logger(ctx).Info("re-asserting redemption rate after upgrade.")
+				app.InterchainstakingKeeper.UpdateRedemptionRateNoBounds(ctx, zoneInfo)
+				return false
+			})
+
+		case InnuendoChainID:
+			app.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(_ int64, record icstypes.WithdrawalRecord) bool {
+				if record.Status == 3 && record.CompletionTime.Equal(time.Time{}) {
+					app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
+					// unbonding never happened here. credit burn_amount back to delegator.
+					if err := app.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, sdk.MustAccAddressFromBech32(record.Delegator), sdk.NewCoins(record.BurnAmount)); err != nil {
+						fmt.Println("tried to return tokens but encountered an error", err) // don't actually fail here.
+					}
+				}
+				return false
+			})
+			icsModule := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+			icsModuleBalances := app.BankKeeper.GetAllBalances(ctx, icsModule)
+			fmt.Println("icsmodule", icsModule.String(), icsModuleBalances)
+			app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo icstypes.Zone) (stop bool) {
+				app.InterchainstakingKeeper.UpdateRedemptionRateNoBounds(ctx, zoneInfo)
+				return false
+			})
+		default:
+			// no-op
+		}
+		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.5; initialising new params.")
+		app.InterchainstakingKeeper.MigrateParams(ctx)
+		app.ParticipationRewardsKeeper.MigrateParams(ctx)
+		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.5; complete.")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }

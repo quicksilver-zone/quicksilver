@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	querypb "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -79,7 +80,7 @@ func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	return SetValidatorsForZone(&k, ctx, zone, args)
+	return SetValidatorsForZone(&k, ctx, zone, args, query.Request)
 }
 
 func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -234,6 +235,9 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		err := k.cdc.Unmarshal(query.Request, &req)
 		if err != nil {
 			return err
+		}
+		if req.Pagination == nil {
+			req.Pagination = new(querypb.PageRequest)
 		}
 		req.Pagination.Key = txs.Pagination.NextKey
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
@@ -421,8 +425,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return fmt.Errorf("unable to validate proof: %w", err)
 	}
 
-	k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone)
-	return nil
+	return k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.
@@ -452,13 +455,32 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		return err
 	}
 
-	if coin.IsNil() {
+	checkCoin, err := utils.CoinFromRequestKey(query.Request, accAddr)
+	if err != nil {
+		return err
+	}
+
+	if coin.IsNil() || coin.Denom == "" {
 		// if the balance returned is zero for a given denom, we just get a nil response.
-		// lookup the denom from the request so we can set a zero value coin for the correct denom.
-		coin, err = utils.CoinFromRequestKey(query.Request, accAddr)
-		if err != nil {
-			return err
-		}
+		// use the denom from the request so we can set a zero value coin for the correct denom.
+		coin = checkCoin
+	} else if coin.Denom != checkCoin.Denom {
+		return fmt.Errorf("received coin denom %s does not match requested denom %s", coin.Denom, checkCoin.Denom)
+	}
+
+	// By this point we've tried all means to retrieve the balance, so coin should not be nil.
+	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/79#issuecomment-1340293800
+	if coin.IsNil() || coin.Amount.IsNil() {
+		err = fmt.Errorf("failed to retrieve Coin.Amount even after trying to look up from RequestKey: %q", query.Request)
+		k.Logger(ctx).Error("unable to retrieve balance info for zone", "zone", zone.ChainId, "err", err)
+		return err
+	}
+
+	// Ensure that the coin is valid.
+	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/80
+	if err := coin.Validate(); err != nil {
+		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainId, "err", err)
+		return err
 	}
 
 	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
@@ -471,6 +493,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 
 func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	balanceQuery := banktypes.QueryAllBalancesRequest{}
+	// this shouldn't happen because query.Request comes from Quicksilver
 	if bytes.Equal(query.Request, []byte("")) {
 		return errors.New("attempted to unmarshal zero length byte slice (7)")
 	}
@@ -486,12 +509,29 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 
 	k.Logger(ctx).Info("AllBalances callback", "chain", zone.ChainId)
 
-	//
-	if zone.DepositAddress.BalanceWaitgroup != 0 {
-		zone.DepositAddress.BalanceWaitgroup = 0
-		k.Logger(ctx).Error("Zeroing deposit balance waitgroup")
-		k.SetZone(ctx, &zone)
+	switch {
+	case zone.DepositAddress != nil && balanceQuery.Address == zone.DepositAddress.Address:
+		if zone.DepositAddress.BalanceWaitgroup != 0 {
+			zone.DepositAddress.BalanceWaitgroup = 0
+			k.Logger(ctx).Error("Zeroing deposit balance waitgroup")
+		}
+	case zone.WithdrawalAddress != nil && balanceQuery.Address == zone.WithdrawalAddress.Address:
+		if zone.WithdrawalAddress.BalanceWaitgroup != 0 {
+			zone.WithdrawalAddress.BalanceWaitgroup = 0
+			k.Logger(ctx).Error("Zeroing withdrawal balance waitgroup")
+		}
+	case zone.DelegationAddress != nil && balanceQuery.Address == zone.DelegationAddress.Address:
+		if zone.DelegationAddress.BalanceWaitgroup != 0 {
+			zone.DelegationAddress.BalanceWaitgroup = 0
+			k.Logger(ctx).Error("Zeroing delegation balance waitgroup")
+		}
+	case zone.PerformanceAddress != nil && balanceQuery.Address == zone.PerformanceAddress.Address:
+		if zone.PerformanceAddress.BalanceWaitgroup != 0 {
+			zone.PerformanceAddress.BalanceWaitgroup = 0
+			k.Logger(ctx).Error("Zeroing performance balance waitgroup")
+		}
 	}
+	k.SetZone(ctx, &zone)
 
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
 }

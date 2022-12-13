@@ -15,6 +15,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
+	// TODO: these tests ought to validate the error received.
 	appA := suite.GetQuicksilverApp(suite.chainA)
 
 	msg := types.MsgSubmitClaim{}
@@ -22,13 +23,13 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		name     string
 		malleate func()
 		want     *types.MsgSubmitClaimResponse
-		wantErr  bool
+		wantErr  string
 	}{
 		{
 			"blank",
 			func() {},
 			nil,
-			true,
+			"a",
 		},
 		{
 			"invalid_height",
@@ -50,7 +51,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				}
 			},
 			nil,
-			true,
+			"a",
 		},
 		{
 			"invalid_osmosis_user",
@@ -90,7 +91,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				}
 			},
 			nil,
-			true,
+			"a",
 		},
 		{
 			"invalid_osmosis_pool",
@@ -130,7 +131,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				}
 			},
 			nil,
-			true,
+			"a",
 		},
 		{
 			"valid_osmosis",
@@ -168,13 +169,13 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				}
 			},
 			&types.MsgSubmitClaimResponse{},
-			false,
+			"",
 		},
 		{
 			"valid_liquid",
 			func() {
 				address := utils.GenerateAccAddressForTest()
-				key := append(address, []byte("uqatom")...)
+				key := append(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3")...)
 
 				cd := sdk.Coin{
 					Denom:  "",
@@ -200,7 +201,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				}
 			},
 			&types.MsgSubmitClaimResponse{},
-			false,
+			"",
 		},
 	}
 	for _, tt := range tests {
@@ -208,11 +209,15 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 		suite.Run(tt.name, func() {
 			tt.malleate()
+			ctx := suite.chainA.GetContext()
+			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
+			params.ClaimsEnabled = true
+			appA.ParticipationRewardsKeeper.SetParams(ctx, params)
 
 			k := keeper.NewMsgServerImpl(appA.ParticipationRewardsKeeper)
-			resp, err := k.SubmitClaim(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
-			if tt.wantErr {
-				suite.Require().Error(err)
+			resp, err := k.SubmitClaim(sdk.WrapSDKContext(ctx), &msg)
+			if tt.wantErr != "" {
+				suite.Require().Errorf(err, tt.wantErr)
 				suite.Require().Nil(resp)
 				suite.T().Logf("Error: %v", err)
 				return

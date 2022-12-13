@@ -59,6 +59,10 @@ func (k Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddres
 
 // GetDelegation returns a specific delegation.
 func (k Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, validatorAddress string) (delegation types.Delegation, found bool) {
+	if zone.PerformanceAddress == nil {
+		return types.Delegation{}, false
+	}
+
 	store := ctx.KVStore(k.storeKey)
 
 	_, delAddr, _ := bech32.DecodeAndConvert(zone.PerformanceAddress.Address)
@@ -146,19 +150,6 @@ func (k Keeper) GetAllPerformanceDelegationsAsPointer(ctx sdk.Context, zone *typ
 	return delegations
 }
 
-// GetValidatorDelegations returns all delegations to a specific validator.
-// Useful for querier.
-func (k Keeper) GetValidatorDelegations(ctx sdk.Context, zone *types.Zone, valAddr sdk.ValAddress) (delegations []types.Delegation) { //nolint:interfacer
-	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
-		if delegation.GetValidatorAddr().Equals(valAddr) {
-			delegations = append(delegations, delegation)
-		}
-		return false
-	})
-
-	return delegations
-}
-
 // GetDelegatorDelegations returns a given amount of all the delegations from a
 // delegator.
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, zone *types.Zone, delegator sdk.AccAddress) (delegations []types.Delegation) {
@@ -240,7 +231,7 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, am
 }
 
 // CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
-func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents) types.ValidatorIntents {
+func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents) types.ValidatorIntents {
 	deltas := make(types.ValidatorIntents, 0)
 
 	targetValopers := func(in types.ValidatorIntents) []string {
@@ -271,6 +262,16 @@ func calculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkma
 		deltas = append(deltas, &types.ValidatorIntent{Weight: sdk.NewDecFromInt(delta), ValoperAddress: valoper})
 	}
 
+	// sort keys by relative value of delta
+	sort.SliceStable(deltas, func(i, j int) bool {
+		return deltas[i].ValoperAddress > deltas[j].ValoperAddress
+	})
+
+	// sort keys by relative value of delta
+	sort.SliceStable(deltas, func(i, j int) bool {
+		return deltas[i].Weight.GT(deltas[j].Weight)
+	})
+
 	return deltas
 }
 
@@ -288,19 +289,19 @@ func minDeltas(deltas types.ValidatorIntents) sdkmath.Int {
 
 func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents, amount sdk.Coins) map[string]sdkmath.Int {
 	input := amount[0].Amount
-	deltas := calculateDeltas(currentAllocations, currentSum, targetAllocations)
+	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
 	minValue := minDeltas(deltas)
 	sum := sdk.ZeroInt()
 
-	// sort keys by relative value of delta
-	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].ValoperAddress > deltas[j].ValoperAddress
-	})
+	// // sort keys by relative value of delta
+	// sort.SliceStable(deltas, func(i, j int) bool {
+	// 	return deltas[i].ValoperAddress > deltas[j].ValoperAddress
+	// })
 
-	// sort keys by relative value of delta
-	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].Weight.GT(deltas[j].Weight)
-	})
+	// // sort keys by relative value of delta
+	// sort.SliceStable(deltas, func(i, j int) bool {
+	// 	return deltas[i].Weight.GT(deltas[j].Weight)
+	// })
 
 	// raise all deltas such that the minimum value is zero.
 	for idx := range deltas {
@@ -399,7 +400,10 @@ func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string
 
 func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, validator string) error {
 	// create delegation record in MsgDelegate acknowledgement callback
-	k.SetPerformanceDelegation(ctx, zone, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
-	msg := stakingTypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
-	return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "perf/"+validator)
+	if zone.PerformanceAddress != nil {
+		k.SetPerformanceDelegation(ctx, zone, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
+		msg := stakingTypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
+		return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "perf/"+validator)
+	}
+	return nil
 }

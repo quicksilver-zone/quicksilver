@@ -186,7 +186,7 @@ clean:
     artifacts/ \
     tmp-swagger-gen/
 
-all: build
+all: build vulncheck
 
 build-all: tools build lint test
 
@@ -464,6 +464,10 @@ CONFIO_TYPES        			= third_party/proto
 IBC_TM_TYPES 				= third_party/proto/ibc/lightclients/tendermint/v1
 IBC_CLIENT_TYPES 			= third_party/proto/ibc/core/client/v1
 IBC_COMMITMENT_TYPES			= third_party/proto/ibc/core/commitment/v1
+
+vulncheck: $(BUILDDIR)/
+	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
+	$(BUILDDIR)/govulncheck ./...
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)
