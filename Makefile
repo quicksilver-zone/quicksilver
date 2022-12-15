@@ -60,18 +60,12 @@ ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += gcc
 endif
 
-whitespace :=
-whitespace += $(whitespace)
-comma := ,
-build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
-
 # process linker flags
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=quicksilver \
           -X github.com/cosmos/cosmos-sdk/version.AppName=$(QS_BINARY) \
           -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
           -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-          -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)" \
           -X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
 
 # DB backend selection
@@ -84,17 +78,17 @@ endif
 # handle rocksdb
 ifeq (rocksdb,$(findstring rocksdb,$(COSMOS_BUILD_OPTIONS)))
   CGO_ENABLED=1
-  BUILD_TAGS += rocksdb
+  build_tags += rocksdb
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=rocksdb
 endif
 # handle boltdb
 ifeq (boltdb,$(findstring boltdb,$(COSMOS_BUILD_OPTIONS)))
-  BUILD_TAGS += boltdb
+  build_tags += boltdb
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=boltdb
 endif
 # handle pebbledb
 ifeq (pebbledb,$(findstring pebbledb,$(COSMOS_BUILD_OPTIONS)))
-  BUILD_TAGS += pebbledb
+  build_tags += pebbledb
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 endif
 
@@ -104,6 +98,12 @@ endif
 
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
+
+whitespace :=
+whitespace += $(whitespace)
+comma := ,
+build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
+ldflags += -X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags_comma_sep)"
 
 ifeq (,$(findstring nostrip,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -w -s
