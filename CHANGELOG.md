@@ -1,16 +1,12 @@
 # Changelog
 
-## Unreleased
-### v0.6.0
-- Minor fixes and improvements. No functional change.
-- Genesis import / export 
-- Don't store zone struct in deposit receipt #151
-- Fetch remote zone height at epoch boundary for PR calculations #161
- 
 ## Released
-### v0.5.1
-- Linting and formatting. No functional change.
+### v0.10.1
+- Fix signal intents pass-by-value bug
+- Refactor MsgSignalIntent to fix amino (un)marshal issue
+- Fix off-by-one error in epoch end client update
+- Bump Cosmos-SDK to v0.46.4
+- Bump Tendermint to v0.34.23
+- Bump ibc-go to v5.1.0
+- Bump Wasmd
 
-### v0.5.0
-- Add initial airdrop module
-- Make Tx Queries provable

@@ -2,24 +2,21 @@ package types
 
 import (
 	"encoding/base64"
-	fmt "fmt"
+	"errors"
+	"fmt"
 	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (z Zone) SupportMultiSend() bool { return z.MultiSend }
 func (z Zone) SupportLsm() bool       { return z.LiquidityModule }
 
 func (z Zone) IsDelegateAddress(addr string) bool {
-	for _, acc := range z.DelegationAddresses {
-		if acc.Address == addr {
-			return true
-		}
-	}
-	return false
+	return z.DelegationAddress.Address == addr
 }
 
 func (z *Zone) GetValidatorByValoper(valoper string) (*Validator, bool) {
@@ -31,23 +28,18 @@ func (z *Zone) GetValidatorByValoper(valoper string) (*Validator, bool) {
 	return nil, false
 }
 
-func (z *Zone) GetDelegationAccountByAddress(address string) (*ICAAccount, error) {
-	if z.DelegationAddresses == nil {
-		return nil, fmt.Errorf("no delegation accounts set: %v", z)
+func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
+	if z.DelegationAddress == nil {
+		return nil, fmt.Errorf("no delegation account set: %v", z)
 	}
-	for _, account := range z.DelegationAddresses {
-		if account.GetAddress() == address {
-			return account, nil
-		}
-	}
-	return nil, fmt.Errorf("unable to find delegation account: %s", address)
+	return z.DelegationAddress, nil
 }
 
 func (z *Zone) ValidateCoinsForZone(ctx sdk.Context, coins sdk.Coins) error {
 	zoneVals := z.GetValidatorsAddressesAsSlice()
 
 COINS:
-	for _, coin := range coins {
+	for _, coin := range coins.Sort() {
 		if coin.Denom == z.BaseDenom {
 			continue
 		}
@@ -67,9 +59,7 @@ COINS:
 // this method exist to make testing easier!
 func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins) DelegatorIntent {
 	// coinIntent is ordinal
-	fmt.Println("YO", intent, inAmount)
 	intent = intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount))
-	fmt.Println("YO", intent)
 	return intent
 }
 
@@ -80,27 +70,25 @@ func (z *Zone) UpdateIntentWithMemo(intent DelegatorIntent, memo string, multipl
 	if err != nil {
 		return DelegatorIntent{}, err
 	}
-
 	intent = intent.AddOrdinal(multiplier, memoIntent)
-
 	return intent, nil
 }
 
 func (z *Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins) ValidatorIntents {
 	// should we be return DelegatorIntent here?
-	out := make(ValidatorIntents)
+	out := make(ValidatorIntents, 0)
 	zoneVals := z.GetValidatorsAddressesAsSlice()
 COINS:
 	for _, coin := range coins {
 		for _, v := range zoneVals {
 			// if token share, add amount to
 			if strings.HasPrefix(coin.Denom, v) {
-				val, ok := out[v]
+				val, ok := out.GetForValoper(v)
 				if !ok {
 					val = &ValidatorIntent{ValoperAddress: v, Weight: sdk.ZeroDec()}
 				}
 				val.Weight = val.Weight.Add(sdk.NewDecFromInt(coin.Amount))
-				out[v] = val
+				out = out.SetForValoper(v, val)
 				continue COINS
 			}
 		}
@@ -111,10 +99,10 @@ COINS:
 
 func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (ValidatorIntents, error) {
 	// should we be return DelegatorIntent here?
-	out := make(ValidatorIntents)
+	out := make(ValidatorIntents, 0)
 
 	if len(memo) == 0 {
-		return out, fmt.Errorf("memo length unexpectedly zero")
+		return out, errors.New("memo length unexpectedly zero")
 	}
 
 	memoBytes, err := base64.StdEncoding.DecodeString(memo)
@@ -141,18 +129,18 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 		if err != nil {
 			return ValidatorIntents{}, err
 		}
-		val, ok := out[valAddr]
+		val, ok := out.GetForValoper(valAddr)
 		if !ok {
 			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
 		}
 		val.Weight = val.Weight.Add(coinWeight)
-		out[valAddr] = val
+		out = out.SetForValoper(valAddr, val)
 	}
 	return out, nil
 }
 
 func (z *Zone) GetValidatorsSorted() []*Validator {
-	sort.Slice(z.Validators, func(i, j int) bool {
+	sort.SliceStable(z.Validators, func(i, j int) bool {
 		return z.Validators[i].ValoperAddress < z.Validators[j].ValoperAddress
 	})
 	return z.Validators
@@ -169,38 +157,67 @@ func (z Zone) GetValidatorsAddressesAsSlice() []string {
 	return l
 }
 
-func (z *Zone) GetDelegationAccounts() []*ICAAccount {
-	delegationAccounts := z.DelegationAddresses
-	sort.Slice(delegationAccounts, func(i, j int) bool {
-		return delegationAccounts[i].Address < delegationAccounts[j].Address
-	})
-	return delegationAccounts
+func (z Zone) GetBondedValidatorAddressesAsSlice() []string {
+	l := make([]string, 0)
+	for _, v := range z.Validators {
+		if v.Status == "BOND_STATUS_BONDED" {
+			l = append(l, v.ValoperAddress)
+		}
+	}
+
+	sort.Strings(l)
+
+	return l
 }
 
 func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
+	var intents ValidatorIntents
+	var filteredIntents ValidatorIntents
+
 	if len(z.AggregateIntent) == 0 {
-		return z.DefaultAggregateIntents()
+		intents = z.DefaultAggregateIntents()
+	} else {
+		intents = z.AggregateIntent
 	}
-	return z.AggregateIntent
+	// filter intents here...
+	// check validators for tombstoned
+	for _, v := range intents {
+		val, found := z.GetValidatorByValoper(v.ValoperAddress)
+		// this case should not happen as we check the validity of a validator entry when intent is set.
+		if !found {
+			continue
+		}
+		// we should never let tombstoned validators into the list, even if they are explicitly selected
+		if val.Tombstoned {
+			continue
+		}
+
+		// we should never let denylist validators into the list, even if they are explicitly selected
+		// if in deny list {
+		// continue
+		// }
+		filteredIntents = append(filteredIntents, v)
+	}
+
+	return filteredIntents
 }
 
 // defaultAggregateIntents determines the default aggregate intent (for epoch 0)
 func (z *Zone) DefaultAggregateIntents() ValidatorIntents {
-	out := make(ValidatorIntents)
+	out := make(ValidatorIntents, 0)
 	for _, val := range z.GetValidatorsSorted() {
 		if val.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
-			out[val.GetValoperAddress()] = &ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()}
+			if !val.Jailed && !val.Tombstoned && val.Status == stakingtypes.BondStatusBonded {
+				out = append(out, &ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()})
+			}
 		}
 	}
 
 	valCount := sdk.NewInt(int64(len(out)))
 
 	// normalise the array (divide everything by length of intent list)
-	for _, key := range out.Keys() {
-		if val, ok := out[key]; ok {
-			val.Weight = val.Weight.Quo(sdk.NewDecFromInt(valCount))
-			out[key] = val
-		}
+	for idx, intent := range out.Sort() {
+		out[idx].Weight = intent.Weight.Quo(sdk.NewDecFromInt(valCount))
 	}
 
 	return out

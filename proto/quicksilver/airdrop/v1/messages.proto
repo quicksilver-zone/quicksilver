@@ -4,7 +4,7 @@ package quicksilver.airdrop.v1;
 import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
-import "tendermint/crypto/proof.proto";
+import "quicksilver/claimsmanager/v1/claimsmanager.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 
@@ -23,25 +23,14 @@ message MsgClaim {
   option (gogoproto.goproto_getters) = false;
 
   string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
-  int32 action = 2 [ (gogoproto.moretags) = "yaml:\"action\"" ];
+  int64 action = 2 [ (gogoproto.moretags) = "yaml:\"action\"" ];
   string address = 3 [ (gogoproto.moretags) = "yaml:\"address\"" ];
-  repeated Proof proofs = 4
+  repeated quicksilver.claimsmanager.v1.Proof proofs = 4
       [ (gogoproto.moretags) = "yaml:\"proofs\"" ];
 }
 
 message MsgClaimResponse {
   option (gogoproto.goproto_getters) = false;
-
   uint64 amount = 1 [ (gogoproto.moretags) = "yaml:\"amount\"" ];
 }
 
-message Proof {
-  option (gogoproto.equal) = false;
-  option (gogoproto.goproto_getters) = false;
-
-  bytes key = 1 [ (gogoproto.moretags) = "yaml:\"key\"" ];
-  bytes data = 2 [ (gogoproto.moretags) = "yaml:\"data\"" ];
-  tendermint.crypto.ProofOps proof_ops = 3
-      [ (gogoproto.moretags) = "yaml:\"proof_ops\"" ];
-  int64 height = 4 [ (gogoproto.moretags) = "yaml:\"height\"" ];
-}

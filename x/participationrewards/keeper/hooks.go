@@ -1,9 +1,11 @@
 package keeper
 
 import (
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 var epochsDeferred = int64(3)
@@ -12,62 +14,83 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 }
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	k.Logger(ctx).Info("distribute participation rewards...")
+	if epochIdentifier == "epoch" {
+		k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, data types.ProtocolData) (stop bool) {
+			blockQuery := tmservice.GetLatestBlockRequest{}
+			bz := k.cdc.MustMarshal(&blockQuery)
 
-	if epochNumber < epochsDeferred {
-		k.Logger(ctx).Info("defer...", "epoch", epochNumber)
+			iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
+			if err != nil {
+				k.Logger(ctx).Error("Error unmarshalling protocol data")
+			}
+			connectionData := iConnectionData.(types.ConnectionProtocolData)
 
-		// create snapshot of current intents for the next epoch boundary
-		// requires intents to be set, no intents no snapshot...
-		// further snapshots will be taken during
-		// ValidatorSelectionRewardsCallback;
-		for _, zone := range k.icsKeeper.AllZones(ctx) {
-			for _, di := range k.icsKeeper.AllIntents(ctx, zone, false) {
-				k.icsKeeper.SetIntent(ctx, zone, di, true)
+			k.icsKeeper.ICQKeeper.MakeRequest(
+				ctx,
+				connectionData.ConnectionID,
+				connectionData.ChainID,
+				"cosmos.base.tendermint.v1beta1.Service/GetLatestBlock",
+				bz,
+				sdk.NewInt(-1),
+				types.ModuleName,
+				"epochblock",
+				0,
+			)
+			return false
+		})
+
+		k.Logger(ctx).Info("distribute participation rewards...")
+
+		allocation, err := GetRewardsAllocations(
+			k.GetModuleBalance(ctx),
+			k.GetParams(ctx).DistributionProportions,
+		)
+		if err != nil {
+			if err == types.ErrNothingToAllocate {
+				k.Logger(ctx).Info(err.Error())
+			} else {
+				k.Logger(ctx).Error(err.Error())
 			}
 		}
 
-		return
-	}
+		k.Logger(ctx).Info("Triggering submodule hooks")
+		for _, sub := range k.prSubmodules {
+			sub.Hooks(ctx, k)
+		}
 
-	allocation := k.getRewardsAllocations(ctx)
+		if epochNumber < epochsDeferred {
+			k.Logger(ctx).Info("defer...", "epoch", epochNumber)
 
-	// this function is completed in a callback
-	// TODO: implement and use this
-	/*if err := k.allocateZoneRewards(ctx, allocation); err != nil {
-		k.Logger(ctx).Error(err.Error())
-	}*/
+			// create snapshot of current intents for the next epoch boundary
+			// requires intents to be set, no intents no snapshot...
+			// further snapshots will be taken during
+			// ValidatorSelectionRewardsCallback;
+			for _, zone := range k.icsKeeper.AllZones(ctx) {
+				zone := zone
+				for _, di := range k.icsKeeper.AllIntents(ctx, zone, false) {
+					k.icsKeeper.SetIntent(ctx, zone, di, true)
+				}
+			}
 
-	// TODO: remove this when the above is implemented
-	// >>>
-	tvs := tokenValues{
-		Tokens: map[string]tokenValue{
-			"uatom": {
-				Symbol:     "atom",
-				Multiplier: 1000000,
-				Value:      sdk.NewDec(10.0),
-			},
-			"uosmo": {
-				Symbol:     "osmo",
-				Multiplier: 1000000,
-				Value:      sdk.NewDec(2.0),
-			},
-		},
-	}
-	if err := k.allocateZoneRewards(ctx, tvs, allocation); err != nil {
-		k.Logger(ctx).Error(err.Error())
-	}
+			return
+		}
 
-	if !allocation.Lockup.IsZero() {
-		// at genesis lockup will be disable, and enabled when ICS is used.
-		if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
+		tvs, err := k.calcTokenValues(ctx)
+		if err != nil {
+			k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
+			return
+		}
+
+		if err := k.allocateZoneRewards(ctx, tvs, *allocation); err != nil {
 			k.Logger(ctx).Error(err.Error())
 		}
-	}
 
-	k.Logger(ctx).Info("Triggering submodule hooks")
-	for _, sub := range k.prSubmodules {
-		sub.Hooks(ctx, k)
+		if !allocation.Lockup.IsZero() {
+			// at genesis lockup will be disable, and enabled when ICS is used.
+			if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
+				k.Logger(ctx).Error(err.Error())
+			}
+		}
 	}
 }
 

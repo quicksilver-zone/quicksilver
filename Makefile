@@ -1,9 +1,10 @@
 #!/usr/bin/make -f
-
+DOCKER_BUILDKIT=1
 COSMOS_BUILD_OPTIONS=""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION=$(shell git describe --tags | head -n1)
+DOCKER_VERSION ?= $(VERSION)
 TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
@@ -16,11 +17,11 @@ HTTPS_GIT := https://github.com/ingenuity-build/quicksilver.git
 DOCKER := $(shell which docker)
 DOCKERCOMPOSE := $(shell which docker-compose)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
-NAMESPACE := tharsishq
-PROJECT := quicksilver
-DOCKER_IMAGE := $(NAMESPACE)/$(PROJECT)
 COMMIT_HASH := $(shell git rev-parse --short=7 HEAD)
 DOCKER_TAG := $(COMMIT_HASH)
+
+GO_MAJOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f1)
+GO_MINOR_VERSION = $(shell go version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 
 export GO111MODULE = on
 
@@ -97,6 +98,10 @@ ifeq (pebbledb,$(findstring pebbledb,$(COSMOS_BUILD_OPTIONS)))
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=pebbledb
 endif
 
+ifeq ($(LINK_STATICALLY),true)
+	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
+endif
+
 build_tags += $(BUILD_TAGS)
 build_tags := $(strip $(build_tags))
 
@@ -119,36 +124,34 @@ endif
 ###                                  Build                                  ###
 ###############################################################################
 
+check_version:
+ifneq ($(GO_MINOR_VERSION),19)
+	@echo "ERROR: Go version 1.19 is required for building Quicksilver. There are consensus breaking changes between binaries compiled with Go 1.18 and Go 1.19."
+	exit 1
+endif
+
 BUILD_TARGETS := build install
+
 
 build: BUILD_ARGS=-o $(BUILDDIR)/
 build-linux:
 	GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
 
-$(BUILD_TARGETS): go.sum $(BUILDDIR)/
+$(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
 	go $@ $(BUILD_FLAGS) $(BUILD_ARGS) ./cmd/quicksilverd
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
-build-reproducible: go.sum
-	$(DOCKER) rm latest-build || true
-	$(DOCKER) run --volume=$(CURDIR):/sources:ro \
-        --env TARGET_PLATFORMS='linux/amd64' \
-        --env APP=quicksilverd \
-        --env VERSION=$(VERSION) \
-        --env COMMIT=$(COMMIT) \
-        --env CGO_ENABLED=1 \
-        --env LEDGER_ENABLED=$(LEDGER_ENABLED) \
-        --name latest-build tendermintdev/rbuilder:latest
-	$(DOCKER) cp -a latest-build:/home/builder/artifacts/ $(CURDIR)/
-
-
 build-docker:
-	$(DOCKERCOMPOSE) build quicksilver
+	DOCKER_BUILDKIT=1 $(DOCKER) build . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION)
 
 build-docker-local: build
-	$(DOCKER) build -f Dockerfile.local . -t quicksilverzone/quicksilver:latest
+	DOCKER_BUILDKIT=1 $(DOCKER) build -f Dockerfile.local . -t quicksilverzone/quicksilver:$(DOCKER_VERSION)
+
+build-docker-release: build-docker
+	docker run -v /tmp:/tmp quicksilverzone/quicksilver:$(DOCKER_VERSION) cp /usr/local/bin/quicksilverd /tmp/quicksilverd
+	mv /tmp/quicksilverd build/quicksilverd-$(DOCKER_VERSION)-amd64
 
 push-docker: build-docker
 	$(DOCKERCOMPOSE) push quicksilver
@@ -181,7 +184,7 @@ clean:
     artifacts/ \
     tmp-swagger-gen/
 
-all: build
+all: build vulncheck
 
 build-all: tools build lint test
 
@@ -209,50 +212,6 @@ statik: $(STATIK)
 $(STATIK):
 	@echo "Installing statik..."
 	@(cd /tmp && go install github.com/rakyll/statik@v0.1.6)
-
-contract-tools:
-ifeq (, $(shell which stringer))
-	@echo "Installing stringer..."
-	@go get golang.org/x/tools/cmd/stringer
-else
-	@echo "stringer already installed; skipping..."
-endif
-
-ifeq (, $(shell which go-bindata))
-	@echo "Installing go-bindata..."
-	@go get github.com/kevinburke/go-bindata/go-bindata
-else
-	@echo "go-bindata already installed; skipping..."
-endif
-
-ifeq (, $(shell which gencodec))
-	@echo "Installing gencodec..."
-	@go get github.com/fjl/gencodec
-else
-	@echo "gencodec already installed; skipping..."
-endif
-
-ifeq (, $(shell which protoc-gen-go))
-	@echo "Installing protoc-gen-go..."
-	@go get github.com/fjl/gencodec github.com/golang/protobuf/protoc-gen-go
-else
-	@echo "protoc-gen-go already installed; skipping..."
-endif
-
-ifeq (, $(shell which protoc))
-	@echo "Please istalling protobuf according to your OS"
-	@echo "macOS: brew install protobuf"
-	@echo "linux: apt-get install -f -y protobuf-compiler"
-else
-	@echo "protoc already installed; skipping..."
-endif
-
-ifeq (, $(shell which solcjs))
-	@echo "Installing solcjs..."
-	@npm install -g solc@0.5.11
-else
-	@echo "solcjs already installed; skipping..."
-endif
 
 docs-tools:
 ifeq (, $(shell which yarn))
@@ -434,18 +393,8 @@ benchmark:
 lint:
 	golangci-lint run --out-format=tab
 
-lint-contracts:
-	@cd contracts && \
-	npm i && \
-	npm run lint
-
 lint-fix:
 	golangci-lint run --fix --out-format=tab --issues-exit-code=0
-
-lint-fix-contracts:
-	@cd contracts && \
-	npm i && \
-	npm run lint-fix
 
 .PHONY: lint lint-fix
 
@@ -489,29 +438,34 @@ proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 
-TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.19/proto/tendermint
+TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.21/proto/tendermint
 GOGO_PROTO_URL      	= https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.7.1
-SDK_PROTO_URL 			= https://raw.githubusercontent.com/ingenuity-build/cosmos-sdk/v0.45.6-ls.1/proto/cosmos
-IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v3.1.0/proto
+SDK_PROTO_URL 			= https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.46.1/proto/cosmos
+IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v5.0.0-rc2/proto
 
-TM_CRYPTO_TYPES     	= third_party/proto/tendermint/crypto
-TM_ABCI_TYPES       	= third_party/proto/tendermint/abci
-TM_TYPES            	= third_party/proto/tendermint/types
-TM_VERSION          	= third_party/proto/tendermint/version
-TM_LIBS             	= third_party/proto/tendermint/libs/bits
-TM_P2P              	= third_party/proto/tendermint/p2p
+TM_CRYPTO_TYPES     			= third_party/proto/tendermint/crypto
+TM_ABCI_TYPES       			= third_party/proto/tendermint/abci
+TM_TYPES            			= third_party/proto/tendermint/types
+TM_VERSION          			= third_party/proto/tendermint/version
+TM_LIBS             			= third_party/proto/tendermint/libs/bits
+TM_P2P              			= third_party/proto/tendermint/p2p
 
 SDK_QUERY 				= third_party/proto/cosmos/base/query/v1beta1
 SDK_BASE 				= third_party/proto/cosmos/base/v1beta1
 SDK_UPGRADE				= third_party/proto/cosmos/upgrade/v1beta1
+SDK_GOV					= third_party/proto/cosmos/gov/v1
 
-GOGO_PROTO_TYPES    	= third_party/proto/gogoproto
-CONFIO_TYPES        	= third_party/proto
+GOGO_PROTO_TYPES    			= third_party/proto/gogoproto
+CONFIO_TYPES        			= third_party/proto
 
-IBC_TM_TYPES 			= third_party/proto/ibc/lightclients/tendermint/v1
-IBC_CLIENT_TYPES 		= third_party/proto/ibc/core/client/v1
-IBC_COMMITMENT_TYPES	= third_party/proto/ibc/core/commitment/v1
+IBC_TM_TYPES 				= third_party/proto/ibc/lightclients/tendermint/v1
+IBC_CLIENT_TYPES 			= third_party/proto/ibc/core/client/v1
+IBC_COMMITMENT_TYPES			= third_party/proto/ibc/core/commitment/v1
+
+vulncheck: $(BUILDDIR)/
+	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
+	$(BUILDDIR)/govulncheck ./...
 
 proto-update-deps:
 	@mkdir -p $(GOGO_PROTO_TYPES)
@@ -525,6 +479,9 @@ proto-update-deps:
 
 	@mkdir -p $(SDK_UPGRADE)
 	@curl -sSL $(SDK_PROTO_URL)/upgrade/v1beta1/upgrade.proto > $(SDK_UPGRADE)/upgrade.proto
+
+	@mkdir -p $(SDK_GOV)
+	@curl -sSL $(SDK_PROTO_URL)/gov/v1/gov.proto > $(SDK_GOV)/gov.proto
 
 	@mkdir -p $(IBC_TM_TYPES)
 	@curl -sSL $(IBC_PROTO_URL)/ibc/lightclients/tendermint/v1/tendermint.proto > $(IBC_TM_TYPES)/tendermint.proto

@@ -22,6 +22,6 @@ func TestInitCmd(t *testing.T) {
 		fmt.Sprintf("--%s=%s", flags.FlagChainID, "quicksilver-1"),
 	})
 
-	err := svrcmd.Execute(rootCmd, app.DefaultNodeHome)
+	err := svrcmd.Execute(rootCmd, "QUICKSILVERD", app.DefaultNodeHome)
 	require.NoError(t, err)
 }

@@ -2,12 +2,12 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -15,9 +15,19 @@ import (
 )
 
 // NewDefaultGenesisState generates the default state for the application.
-func NewDefaultGenesisState() simapp.GenesisState {
+func NewDefaultGenesisState() GenesisState {
 	encCfg := MakeEncodingConfig()
-	return ModuleBasics.DefaultGenesis(encCfg.Marshaler)
+	gen := ModuleBasics.DefaultGenesis(encCfg.Marshaler)
+
+	// here we override wasm config to make it permissioned by default
+	wasmGen := wasm.GenesisState{
+		Params: wasmtypes.Params{
+			CodeUploadAccess:             wasmtypes.AllowNobody,
+			InstantiateDefaultPermission: wasmtypes.AccessTypeEverybody,
+		},
+	}
+	gen[wasm.ModuleName] = encCfg.Marshaler.MustMarshalJSON(&wasmGen)
+	return gen
 }
 
 // ExportAppStateAndValidators exports the state of the application for a genesis
@@ -85,11 +95,11 @@ func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAdd
 	/* Handle fee distribution state. */
 
 	// withdraw all validator commission
+	// withdraw all validator commission
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
 		return false
 	})
-
 	// withdraw all delegator rewards
 	dels := app.StakingKeeper.GetAllDelegations(ctx)
 	for _, delegation := range dels {
@@ -123,7 +133,9 @@ func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAdd
 		feePool.CommunityPool = feePool.CommunityPool.Add(scraps...)
 		app.DistrKeeper.SetFeePool(ctx, feePool)
 
-		app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+		if err := app.DistrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator()); err != nil {
+			panic(err)
+		}
 		return false
 	})
 
@@ -137,8 +149,14 @@ func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAdd
 		if err != nil {
 			return err
 		}
-		app.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr)
-		app.DistrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr)
+		err = app.DistrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr)
+		if err != nil {
+			return err
+		}
+		err = app.DistrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr)
+		if err != nil {
+			return err
+		}
 	}
 
 	// reset context height
@@ -171,10 +189,10 @@ func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAdd
 	counter := int16(0)
 
 	for ; iter.Valid(); iter.Next() {
-		addr := sdk.ValAddress(iter.Key()[1:])
+		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
 		validator, found := app.StakingKeeper.GetValidator(ctx, addr)
 		if !found {
-			return fmt.Errorf("expected validator %s not found", addr)
+			panic("expected validator, not found")
 		}
 
 		validator.UnbondingHeight = 0

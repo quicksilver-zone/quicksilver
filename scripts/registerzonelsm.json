@@ -1,0 +1,20 @@
+{
+"deposit": "100uqck",
+"proposer": "",
+"messages": [{
+  "@type": "/cosmos.gov.v1.MsgExecLegacyContent",
+  "content": {
+  "@type": "/quicksilver.interchainstaking.v1.RegisterZoneProposal",
+  "title": "register lstest-1 zone",
+  "description": "register lstest-1 zone with multisend and lsm enabled",
+  "connection_id": "connection-0",
+  "base_denom": "uatom",
+  "local_denom": "uqatom",
+  "account_prefix": "cosmos",
+  "multi_send": true,
+  "liquidity_module": true
+  },
+  "authority": "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p"
+}],
+"metadata": ""
+}

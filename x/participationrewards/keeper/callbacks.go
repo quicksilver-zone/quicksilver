@@ -2,13 +2,14 @@ package keeper
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	osmosisgammtypes "github.com/osmosis-labs/osmosis/v9/x/gamm/types"
-
+	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -45,7 +46,8 @@ func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallback
 func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 	a := c.
 		AddCallback("validatorselectionrewards", Callback(ValidatorSelectionRewardsCallback)).
-		AddCallback("osmosispoolupdate", Callback(OsmosisPoolUpdateCallback))
+		AddCallback("osmosispoolupdate", Callback(OsmosisPoolUpdateCallback)).
+		AddCallback("epochblock", Callback(SetEpochBlockCallback))
 
 	return a.(Callbacks)
 }
@@ -89,51 +91,104 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	}
 
 	// set zone ValidatorSelectionAllocation to zero
-	zone.ValidatorSelectionAllocation = sdk.NewCoins(
-		sdk.NewCoin(
-			k.stakingKeeper.BondDenom(ctx),
-			sdk.ZeroInt(),
-		),
-	)
+	zone.ValidatorSelectionAllocation = 0
 	k.icsKeeper.SetZone(ctx, &zone)
 
 	return nil
 }
 
 func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
-	var acc osmosisgammtypes.PoolI
-	err := k.cdc.UnmarshalInterface(response, &acc)
-	if err != nil {
+	var pd gamm.PoolI
+	if err := k.cdc.UnmarshalInterface(response, &pd); err != nil {
 		return err
 	}
+
 	// check query.Request is at least 9 bytes in length. (0x02 + 8 bytes for uint64)
 	if len(query.Request) < 9 {
-		return fmt.Errorf("query request not sufficient length")
+		return errors.New("query request not sufficient length")
 	}
 	// assert first character is 0x02 as expected.
 	if query.Request[0] != 0x02 {
-		return fmt.Errorf("query request has unexpected prefix")
+		return errors.New("query request has unexpected prefix")
 	}
 
 	poolID := sdk.BigEndianToUint64(query.Request[1:])
-	data, ok := k.GetProtocolData(ctx, fmt.Sprintf("pools/%d", poolID))
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisPool, fmt.Sprintf("%d", poolID))
 	if !ok {
-		return fmt.Errorf("unable to find protocol data for osmosis/pools/%d", poolID)
+		return fmt.Errorf("unable to find protocol data for osmosispools/%d", poolID)
 	}
-	ipool, err := UnmarshalProtocolData("osmosispool", data.Data)
+	ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, data.Data)
 	if err != nil {
 		return err
 	}
 	pool, ok := ipool.(types.OsmosisPoolProtocolData)
 	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for osmosis/pools/%d", poolID)
+		return fmt.Errorf("unable to unmarshal protocol data for osmosispools/%d", poolID)
 	}
-	pool.PoolData = acc
+	pool.PoolData, err = json.Marshal(pd)
+	if err != nil {
+		return err
+	}
+	pool.LastUpdated = ctx.BlockTime()
 	data.Data, err = json.Marshal(pool)
 	if err != nil {
 		return err
 	}
-	k.SetProtocolData(ctx, fmt.Sprintf("osmosis/pools/%d", poolID), &data)
+	k.SetProtocolData(ctx, fmt.Sprintf("%d", poolID), &data)
 
+	return nil
+}
+
+// SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
+func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainId)
+	if !ok {
+		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
+	}
+
+	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
+	connectionData := iConnectionData.(types.ConnectionProtocolData)
+
+	if err != nil {
+		return err
+	}
+
+	blockResponse := tmservice.GetLatestBlockResponse{}
+	// block response is never expected to be nil
+	if len(args) == 0 {
+		return errors.New("attempted to unmarshal zero length byte slice (1)")
+	}
+	err = k.cdc.Unmarshal(args, &blockResponse)
+	if err != nil {
+		return err
+	}
+	if blockResponse.SdkBlock == nil {
+		// v0.45 and below
+		//nolint:staticcheck // SA1019 ignore this!
+		connectionData.LastEpoch = blockResponse.Block.Header.Height
+	} else {
+		// v0.46 and above
+		connectionData.LastEpoch = blockResponse.SdkBlock.Header.Height
+	}
+
+	heightInBytes := sdk.Uint64ToBigEndian(uint64(connectionData.LastEpoch))
+	// trigger a client update at the epoch boundary
+	k.IcqKeeper.MakeRequest(
+		ctx,
+		query.ConnectionId,
+		query.ChainId,
+		"ibc.ClientUpdate",
+		heightInBytes,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"",
+		0,
+	)
+
+	data.Data, err = json.Marshal(connectionData)
+	if err != nil {
+		return err
+	}
+	k.SetProtocolData(ctx, query.ChainId, &data)
 	return nil
 }

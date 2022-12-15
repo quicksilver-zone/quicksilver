@@ -23,6 +23,7 @@ rm -rf ./${CHAIN_DIR}/${CHAINID_2}c &> /dev/null
 
 rm -rf ./${CHAIN_DIR}/hermes &> /dev/null
 rm -rf ./${CHAIN_DIR}/icq &> /dev/null
+rm -rf ./${CHAIN_DIR}/icq2 &> /dev/null
 
 # Add directories for both chains, exit if an error occurs
 #chain_0
@@ -91,12 +92,27 @@ if ! mkdir -p ./${CHAIN_DIR}/hermes 2>/dev/null; then
     exit 1
 fi
 
+if [ "$IS_MULTI_ZONE_TEST" = true ]; then
+    cp ./scripts/config/hermes-2.toml ./${CHAIN_DIR}/hermes/config.toml
+else
+    cp ./scripts/config/hermes.toml ./${CHAIN_DIR}/hermes/config.toml
+fi
+
 if ! mkdir -p ./${CHAIN_DIR}/icq 2>/dev/null; then
     echo "Failed to create icq folder. Aborting..."
     exit 1
 fi
 
 cp ./scripts/config/icq.yaml ./${CHAIN_DIR}/icq/config.yaml
+
+if [ "$IS_MULTI_ZONE_TEST" = true ]; then
+    if ! mkdir -p ./${CHAIN_DIR}/icq2 2>/dev/null; then
+        echo "Failed to create icq2 folder. Aborting..."
+        exit 1
+    fi
+
+    cp ./scripts/config/icq2.yaml ./${CHAIN_DIR}/icq2/config.yaml
+fi
 
 echo "Initializing $CHAINID_0..."
 $QS1_RUN init test --chain-id $CHAINID_0
@@ -178,6 +194,8 @@ ${SED} 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}b/config/genesis.json
 ${SED} 's/stake/uatom/g' $(pwd)/${CHAIN_DIR}/${CHAINID_1}c/config/genesis.json
 
 if [ "$IS_MULTI_ZONE_TEST" = true ]; then
+
+
     ${SED} 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}/config/genesis.json
     ${SED} 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}a/config/genesis.json
     ${SED} 's/stake/uosmo/g' $(pwd)/${CHAIN_DIR}/${CHAINID_2}b/config/genesis.json
@@ -388,11 +406,15 @@ ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node1,$node2,$node3\"
 ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_1}c/config/app.toml
 ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_1}c/config/app.toml
 
+jq '.consensus_params.block.time_iota_ms = "200"'  ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
+jq '.consensus_params.block.time_iota_ms = "200"'  ./${CHAIN_DIR}/${CHAINID_1}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_1}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_1}/config/genesis.json{.new,}
+
 if [ "$IS_MULTI_ZONE_TEST" = true ]; then
     ${SED} -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
     ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
     ${SED} -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
     ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
+    ${SED} -e "s/seeds = \".*\"/seeds = \"\"/g" ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
     ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node9,$node10,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}/config/config.toml
     ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/app.toml
     ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}/config/app.toml
@@ -401,6 +423,7 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
     ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
     ${SED} -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
     ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
+    ${SED} -e "s/seeds = \".*\"/seeds = \"\"/g" ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
     ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node10,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}a/config/config.toml
     ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/app.toml
     ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}a/config/app.toml
@@ -409,6 +432,7 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
     ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
     ${SED} -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
     ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
+    ${SED} -e "s/seeds = \".*\"/seeds = \"\"/g" ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
     ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node9,$node11\"/g" ${CHAIN_DIR}/${CHAINID_2}b/config/config.toml
     ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/app.toml
     ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}b/config/app.toml
@@ -417,9 +441,12 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
     ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
     ${SED} -e 's/timeout_propose = "3s"/timeout_propose = "1s"/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
     ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
+    ${SED} -e "s/seeds = \".*\"/seeds = \"\"/g" ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
     ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node8,$node9,$node10\"/g" ${CHAIN_DIR}/${CHAINID_2}c/config/config.toml
     ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/app.toml
     ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_2}c/config/app.toml
+
+    jq '.consensus_params.block.time_iota_ms = "200"'  ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json{.new,}
 fi
 
 ## add the message types ICA should allow
@@ -440,16 +467,20 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
     cp ./${CHAIN_DIR}/${CHAINID_2}{,a}/config/genesis.json
     cp ./${CHAIN_DIR}/${CHAINID_2}{,b}/config/genesis.json
     cp ./${CHAIN_DIR}/${CHAINID_2}{,c}/config/genesis.json
+
+    jq '.epochs.epochs[0].duration = "180s"'  ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json{.new,}
+    jq '.epochs.epochs[1].duration = "20s"'  ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json{.new,}
+    jq '.epochs.epochs[2].duration = "300s"'  ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_2}/config/genesis.json{.new,}
+
 fi
 
 ## set the 'epoch' epoch to 5m interval
-jq '.app_state.epochs.epochs = [{"identifier": "epoch","start_time": "0001-01-01T00:00:00Z","duration": "450s","current_epoch": "0","current_epoch_start_time": "0001-01-01T00:00:00Z","epoch_counting_started": false,"current_epoch_start_height": "0"}]' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
-jq '.app_state.interchainstaking.params.delegation_account_count = 12' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
+jq '.app_state.epochs.epochs = [{"identifier": "epoch","start_time": "0001-01-01T00:00:00Z","duration": "240s","current_epoch": "0","current_epoch_start_time": "0001-01-01T00:00:00Z","epoch_counting_started": false,"current_epoch_start_height": "0"}]' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
 jq '.app_state.interchainstaking.params.deposit_interval = 25' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
 jq '.app_state.mint.params.epoch_identifier = "epoch"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
 jq '.app_state.gov.deposit_params.min_deposit = [{"denom": "uqck", "amount": "100"}]' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
-jq '.app_state.gov.deposit_params.max_deposit_period = "30s"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
-jq '.app_state.gov.voting_params.voting_period = "20s"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
+jq '.app_state.gov.deposit_params.max_deposit_period = "10s"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
+jq '.app_state.gov.voting_params.voting_period = "10s"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
 
 cp ./${CHAIN_DIR}/${CHAINID_0}{,a}/config/genesis.json
 cp ./${CHAIN_DIR}/${CHAINID_0}{,b}/config/genesis.json

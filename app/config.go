@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	purningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	dbm "github.com/tendermint/tm-db"
 )
 
@@ -52,8 +54,11 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			DefaultNodeHome,
 			0,
 			MakeEncodingConfig(),
+			wasm.EnableAllProposals,
 			simapp.EmptyAppOptions{},
-			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			GetWasmOpts(simapp.EmptyAppOptions{}),
+			false,
+			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}

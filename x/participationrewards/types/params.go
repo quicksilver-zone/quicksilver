@@ -6,16 +6,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
-
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
 var (
 	KeyDistributionProportions = []byte("DistributionProportions")
+	KeyClaimsEnabled           = []byte("ClaimsEnabled")
 
 	DefaultValidatorSelectionAllocation = sdk.NewDecWithPrec(34, 2)
 	DefaultHoldingsAllocation           = sdk.NewDecWithPrec(33, 2)
 	DefaultLockupAllocation             = sdk.NewDecWithPrec(33, 2)
+	DefaultClaimsEnabled                = false
 )
 
 // ParamTable for participationrewards module.
@@ -28,6 +28,7 @@ func NewParams(
 	validatorSelectionAllocation sdk.Dec,
 	holdingsAllocation sdk.Dec,
 	lockupAllocation sdk.Dec,
+	claimsEnabled bool,
 ) Params {
 	return Params{
 		DistributionProportions: DistributionProportions{
@@ -35,6 +36,7 @@ func NewParams(
 			HoldingsAllocation:           holdingsAllocation,
 			LockupAllocation:             lockupAllocation,
 		},
+		ClaimsEnabled: claimsEnabled,
 	}
 }
 
@@ -44,6 +46,7 @@ func DefaultParams() Params {
 		DefaultValidatorSelectionAllocation,
 		DefaultHoldingsAllocation,
 		DefaultLockupAllocation,
+		DefaultClaimsEnabled,
 	)
 }
 
@@ -51,47 +54,30 @@ func DefaultParams() Params {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDistributionProportions, &p.DistributionProportions, validateDistributionProportions),
+		paramtypes.NewParamSetPair(KeyClaimsEnabled, &p.ClaimsEnabled, validateBoolean),
+	}
+}
+
+// ParamSetPairs implements params.ParamSet
+func (p *ParamsV1) ParamSetPairs() paramtypes.ParamSetPairs {
+	return paramtypes.ParamSetPairs{
+		paramtypes.NewParamSetPair(KeyDistributionProportions, &p.DistributionProportions, validateDistributionProportions),
 	}
 }
 
 func validateDistributionProportions(i interface{}) error {
-	v, ok := i.(DistributionProportions)
+	dp, ok := i.(DistributionProportions)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	errors := make(map[string]error)
+	return dp.ValidateBasic()
+}
 
-	if v.ValidatorSelectionAllocation.IsNil() {
-		errors["ValidatorSelectionAllocation"] = ErrUndefinedAttribute
-	} else if v.ValidatorSelectionAllocation.IsNegative() {
-		errors["ValidatorSelectionAllocation"] = ErrNegativeDistributionRatio
-	}
-
-	if v.HoldingsAllocation.IsNil() {
-		errors["HoldingsAllocation"] = ErrUndefinedAttribute
-	} else if v.HoldingsAllocation.IsNegative() {
-		errors["HoldingsAllocation"] = ErrNegativeDistributionRatio
-	}
-
-	if v.LockupAllocation.IsNil() {
-		errors["LockupAllocation"] = ErrUndefinedAttribute
-	} else if v.LockupAllocation.IsNegative() {
-		errors["LockupAllocation"] = ErrNegativeDistributionRatio
-	}
-
-	// no errors yet: check total proportions
-	if len(errors) == 0 {
-		totalProportions := v.ValidatorSelectionAllocation.Add(v.HoldingsAllocation).Add(v.LockupAllocation)
-
-		if !totalProportions.Equal(sdk.NewDec(1)) {
-			errors["TotalProportions"] = ErrInvalidTotalProportions
-		}
-	}
-
-	// all checks done, count errors
-	if len(errors) > 0 {
-		return multierror.New(errors)
+func validateBoolean(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	return nil
@@ -104,6 +90,12 @@ func (p Params) Validate() error {
 
 // String implements the Stringer interface.
 func (p Params) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
+}
+
+// String implements the Stringer interface.
+func (p ParamsV1) String() string {
 	out, _ := yaml.Marshal(p)
 	return string(out)
 }

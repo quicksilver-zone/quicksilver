@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
-import "quicksilver/interchainstaking/v1/genesis.proto";
+import "quicksilver/interchainstaking/v1/interchainstaking.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
@@ -36,37 +36,18 @@ service Query {
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/delegations";
   }
 
-  // DelegatorDelegations provides data on the delegations from a given
-  // delegator for the given zone.
-  rpc DelegatorDelegations(QueryDelegatorDelegationsRequest)
-      returns (QueryDelegatorDelegationsResponse) {
+   // Delegations provides data on the delegations for the given zone.
+   rpc Receipts(QueryReceiptsRequest) returns (QueryReceiptsResponse) {
     option (google.api.http).get =
-        "/quicksilver/interchainstaking/v1/zones/{chain_id}/"
-        "delegator_delegations/{delegator_address}";
+        "/quicksilver/interchainstaking/v1/zones/{chain_id}/receipts";
   }
 
-  // ValidatorDelegations provides data on the delegations to a given validator
-  // for the given zone.
-  rpc ValidatorDelegations(QueryValidatorDelegationsRequest)
-      returns (QueryValidatorDelegationsResponse) {
-    option (google.api.http).get =
-        "/quicksilver/interchainstaking/v1/zones/{chain_id}/"
-        "validator_delegations/{validator_address}";
-  }
-
-  // DelegationPlans provides data on the delegations to a given validator for
-  // the given zone.
-  rpc DelegationPlans(QueryDelegationPlansRequest)
-      returns (QueryDelegationPlansResponse) {
-    option (google.api.http).get =
-        "/quicksilver/interchainstaking/v1/zones/{chain_id}/delegation_plans";
-  }
-
+ 
   // WithdrawalRecords provides data on the active withdrawals.
   rpc ZoneWithdrawalRecords(QueryWithdrawalRecordsRequest)
       returns (QueryWithdrawalRecordsResponse) {
     option (google.api.http).get =
-        "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records";
+        "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records/{delegator_address}";
   }
 
   // WithdrawalRecords provides data on the active withdrawals.
@@ -74,6 +55,21 @@ service Query {
       returns (QueryWithdrawalRecordsResponse) {
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/withdrawal_records";
+  }
+
+
+  // UnbondingRecords provides data on the active unbondings.
+  rpc UnbondingRecords(QueryUnbondingRecordsRequest)
+      returns (QueryUnbondingRecordsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/interchainstaking/v1/unbonding_records";
+  }
+
+  // RedelegationRecords provides data on the active unbondings.
+  rpc RedelegationRecords(QueryRedelegationRecordsRequest)
+      returns (QueryRedelegationRecordsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/interchainstaking/v1/redelegation_records";
   }
 }
 
@@ -114,49 +110,48 @@ message QueryDelegationsRequest {
 
 message QueryDelegationsResponse {
   repeated Delegation delegations = 1 [ (gogoproto.nullable) = false ];
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  int64 tvl = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
-message QueryDelegatorDelegationsRequest {
-  string delegator_address = 1
-      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  string chain_id = 2 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
-}
-
-message QueryDelegatorDelegationsResponse {
-  repeated Delegation delegations = 1 [ (gogoproto.nullable) = false ];
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryValidatorDelegationsRequest {
-  string validator_address = 1
-      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  string chain_id = 2 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
-}
-
-message QueryValidatorDelegationsResponse {
-  repeated Delegation delegations = 1 [ (gogoproto.nullable) = false ];
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-message QueryDelegationPlansRequest {
+message QueryReceiptsRequest {
   string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-message QueryDelegationPlansResponse {
-  repeated DelegationPlan delegations = 1 [ (gogoproto.nullable) = false ];
+message QueryReceiptsResponse {
+  repeated Receipt receipts = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryWithdrawalRecordsRequest {
   string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
-  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  string delegator_address = 2
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
 message QueryWithdrawalRecordsResponse {
   repeated WithdrawalRecord withdrawals = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryUnbondingRecordsRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryUnbondingRecordsResponse {
+  repeated UnbondingRecord Unbondings = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryRedelegationRecordsRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryRedelegationRecordsResponse {
+  repeated RedelegationRecord Redelegations = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

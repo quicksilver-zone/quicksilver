@@ -12,19 +12,23 @@ done
 set -xe
 
 SED="sed -i"
-TIME="$(date --date '-2 minutes' +%Y-%m-%dT%H:%M:00Z -u)"
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     SED="sed -i ''"
     TIME="$(TZ=GMT0 date -v-2M +%Y-%m-%dT%H:%M:00Z)"
+else
+    TIME="$(date --date '-2 minutes' +%Y-%m-%dT%H:%M:00Z -u)"
 fi
+
+echo $SED
+echo $TIME
 
 QS_IMAGE=quicksilverzone/quicksilver
 QS_VERSION=latest
 TZ_IMAGE=quicksilverzone/testzone
 TZ_VERSION=latest
 RLY_IMAGE=quicksilverzone/relayer
-RLY_VERSION=latest
+RLY_VERSION=v2.1.1
 
 CHAIN_DIR=data
 CHAINID_0=qstest-1
@@ -42,7 +46,8 @@ TZ2_1_RUN="docker-compose --ansi never run --rm -T testzone2-1 osmosisd"
 TZ2_2_RUN="docker-compose --ansi never run --rm -T testzone2-2 osmosisd"
 TZ2_3_RUN="docker-compose --ansi never run --rm -T testzone2-3 osmosisd"
 TZ2_4_RUN="docker-compose --ansi never run --rm -T testzone2-4 osmosisd"
-RLY_RUN="docker-compose --ansi never run --rm -T relayer"
+RLY_RUN="docker-compose --ansi never run --rm -T relayer rly"
+HERMES_RUN="docker-compose --ansi never run --rm -T hermes hermes"
 
 QS1_EXEC="docker-compose --ansi never exec -T quicksilver quicksilverd"
 QS2_EXEC="docker-compose --ansi never exec -T quicksilver2 quicksilverd"

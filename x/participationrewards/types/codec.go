@@ -6,7 +6,10 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
+	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/balancer"
+	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/stableswap"
 )
 
 var (
@@ -20,6 +23,10 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 func RegisterInterfaces(registry types.InterfaceRegistry) {
+	gamm.RegisterInterfaces(registry)
+	balancer.RegisterInterfaces(registry)
+	stableswap.RegisterInterfaces(registry)
+
 	// cosmos.base.v1beta1.Msg
 	registry.RegisterImplementations(
 		(*sdk.Msg)(nil),
@@ -27,7 +34,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 	)
 
 	registry.RegisterImplementations(
-		(*govtypes.Content)(nil),
+		(*govv1beta1.Content)(nil),
 		&AddProtocolDataProposal{},
 	)
 
@@ -35,8 +42,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 }
 
 func init() {
+	RegisterLegacyAminoCodec(amino)
 	cryptocodec.RegisterCrypto(amino)
-	govtypes.RegisterProposalType(ProposalTypeAddProtocolData)
-	govtypes.RegisterProposalTypeCodec(&AddProtocolDataProposal{}, "quicksilver/AddProtocolDataProposal")
-	amino.Seal()
+	govv1beta1.RegisterProposalType(ProposalTypeAddProtocolData)
+	sdk.RegisterLegacyAminoCodec(amino)
 }

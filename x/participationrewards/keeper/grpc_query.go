@@ -22,7 +22,14 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 func (k Keeper) ProtocolData(c context.Context, q *types.QueryProtocolDataRequest) (*types.QueryProtocolDataResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	out := []json.RawMessage{}
-	k.IteratePrefixedProtocolDatas(ctx, q.Protocol, func(index int64, data types.ProtocolData) (stop bool) {
+
+	pdType, exists := types.ProtocolDataType_value[q.Type]
+	if !exists {
+		return nil, types.ErrUnknownProtocolDataType
+	}
+
+	prefix := append(types.GetPrefixProtocolDataKey(types.ProtocolDataType(pdType)), []byte(q.Key)...)
+	k.IteratePrefixedProtocolDatas(ctx, prefix, func(index int64, data types.ProtocolData) (stop bool) {
 		out = append(out, data.Data)
 		return false
 	})

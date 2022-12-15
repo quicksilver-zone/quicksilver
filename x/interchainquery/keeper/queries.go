@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/crypto"
@@ -16,7 +17,7 @@ func GenerateQueryHash(connectionID string, chainID string, queryType string, re
 
 // ----------------------------------------------------------------
 
-func (k Keeper) NewQuery(ctx sdk.Context, module string, connectionID string, chainID string, queryType string, request []byte, period sdk.Int, callbackID string, ttl uint64) *types.Query {
+func (k Keeper) NewQuery(ctx sdk.Context, module string, connectionID string, chainID string, queryType string, request []byte, period math.Int, callbackID string, ttl uint64) *types.Query {
 	return &types.Query{Id: GenerateQueryHash(connectionID, chainID, queryType, request, module), ConnectionId: connectionID, ChainId: chainID, QueryType: queryType, Request: request, Period: period, LastHeight: sdk.ZeroInt(), CallbackId: callbackID, Ttl: ttl}
 }
 

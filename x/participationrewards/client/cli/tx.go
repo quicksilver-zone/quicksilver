@@ -1,17 +1,21 @@
 package cli
 
 import (
+	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -20,39 +24,59 @@ func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "Participation rewards transaction subcommands",
+		Aliases:                    []string{"pr"},
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
 
-	// txCmd.AddCommand(GetSubmitClaimTxCmd())
+	txCmd.AddCommand(GetSubmitClaimTxCmd())
 
 	return txCmd
 }
 
-// func GetSubmitClaimTxCmd() *cobra.Command {
-// 	cmd := &cobra.Command{
-// 		Use:   "claim [zone]",
-// 		Short: `Submit proof of assets held in the given zone.`,
-// 		Args:  cobra.ExactArgs(2),
-// 		RunE: func(cmd *cobra.Command, args []string) error {
-// 			clientCtx, err := client.GetClientTxContext(cmd)
-// 			if err != nil {
-// 				return err
-// 			}
+func GetSubmitClaimTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "claim [zone] [src-zone] [claim-type] [payload-file].json",
+		Short: `Submit proof of assets held in the given zone.`,
+		Args:  cobra.ExactArgs(4),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
 
-// 			zone := args[0]
+			zone := args[0]
+			srcZone := args[1]
+			claimTypeStr := args[2]
+			fileName := args[3]
 
-// 			msg := types.NewMsgSubmitClaim(clientCtx.GetFromAddress(), zone)
+			claimType, ok := cmtypes.ClaimType_value[claimTypeStr]
+			if !ok {
+				return fmt.Errorf("invalid claim type: %s", claimTypeStr)
+			}
 
-// 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
-// 		},
-// 	}
+			contents, err := os.ReadFile(fileName)
+			if err != nil {
+				return err
+			}
 
-// 	flags.AddTxFlagsToCmd(cmd)
+			var proofs []*cmtypes.Proof
 
-// 	return cmd
-// }
+			if err = json.Unmarshal(contents, &proofs); err != nil {
+				return err
+			}
+
+			msg := types.NewMsgSubmitClaim(clientCtx.GetFromAddress(), zone, srcZone, cmtypes.ClaimType(claimType), proofs)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
 
 // GetCmdAddProtocolDataProposal implements the command to submit a add protocol data proposal
 func GetCmdAddProtocolDataProposal() *cobra.Command {
@@ -102,7 +126,7 @@ Where proposal.json contains:
 			content := types.NewAddProtocolDataProposal(proposal.Title, proposal.Description, proposal.Type, proposal.Protocol, proposal.Key,
 				proposal.Data)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}

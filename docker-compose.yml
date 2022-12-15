@@ -35,6 +35,9 @@ services:
     command:
       - icad
       - start
+    ports:
+    - 27657:26657
+    - 23137:1317
   testzone1-2:
     image: quicksilverzone/testzone:latest
     hostname: testzone1-2
@@ -60,7 +63,7 @@ services:
       - icad
       - start
   testzone2-1:
-    image: quicksilverzone/qsosmosis:v10.1.1
+    image: quicksilverzone/qsosmosis:v12.1.0
     hostname: testzone2-1
     build:
       context: .
@@ -71,7 +74,7 @@ services:
       - osmosisd
       - start
   testzone2-2:
-    image: quicksilverzone/qsosmosis:v10.1.1
+    image: quicksilverzone/qsosmosis:v12.1.0
     hostname: testzone2-2
     volumes:
       - ./data/lstest-2a:/osmosis/.osmosisd
@@ -79,7 +82,7 @@ services:
       - osmosisd
       - start
   testzone2-3:
-    image: quicksilverzone/qsosmosis:v10.1.1
+    image: quicksilverzone/qsosmosis:v12.1.0
     hostname: testzone2-3
     volumes:
       - ./data/lstest-2b:/osmosis/.osmosisd
@@ -87,7 +90,7 @@ services:
       - osmosisd
       - start
   testzone2-4:
-    image: quicksilverzone/qsosmosis:v10.1.1
+    image: quicksilverzone/qsosmosis:v12.1.0
     hostname: testzone2-4
     volumes:
       - ./data/lstest-2c:/osmosis/.osmosisd
@@ -95,37 +98,46 @@ services:
       - osmosisd
       - start
   hermes:
-    image: quicksilverzone/hermes:v0.15.0
+    image: quicksilverzone/hermes:v1.0.0
     hostname: hermes
     volumes:
-      - ./scripts/config/hermes.toml:/tmp/hermes.toml
       - ./data/hermes:/hermes/.hermes
     command:
       - hermes
-      - -c
-      - /tmp/hermes.toml
       - start
     restart: always
     build:
       context: .
       dockerfile: Dockerfile.hermes
   icq:
-    image: quicksilverzone/interchain-queries:v0.4.0
+    image: quicksilverzone/interchain-queries:v0.6.2
     volumes:
       - ./data/icq:/icq/.icq
     command:
       - interchain-queries
       - run
     restart: always
-  relayer:
-    image: quicksilverzone/relayer:v2.0.0
+  icq2:
+    image: quicksilverzone/interchain-queries:v0.6.2
     volumes:
-      - ./data/rly:/relayer/.relayer
+      - ./data/icq2:/icq/.icq
     command:
+      - interchain-queries
+      - run
+    restart: always
+  relayer:
+    image: quicksilverzone/relayer:v2.1.1
+    build:
+      context: .
+      dockerfile: Dockerfile.relayer
+    volumes:
+      - ./data/rly:/rly/.relayer
+    command:
+      - rly
       - start
       - demo
-      - -p
-      - events
-      - -b
-      - "100"
+      #- -p
+      #- events
+      #- -b
+      #- "100"
     restart: always

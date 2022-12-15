@@ -4,6 +4,7 @@ import (
 	fmt "fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
@@ -13,10 +14,13 @@ const (
 	TypeMsgClaim = "claim"
 )
 
-var _ sdk.Msg = &MsgClaim{}
+var (
+	_ sdk.Msg            = &MsgClaim{}
+	_ legacytx.LegacyMsg = &MsgClaim{}
+)
 
 // NewMsgClaim constructs a msg to claim from a zone airdrop.
-func NewMsgClaim(chainID string, action int32, fromAddress sdk.Address) *MsgClaim {
+func NewMsgClaim(chainID string, action int64, fromAddress sdk.Address) *MsgClaim {
 	return &MsgClaim{ChainId: chainID, Action: action, Address: fromAddress.String()}
 }
 
@@ -35,16 +39,12 @@ func (msg MsgClaim) ValidateBasic() error {
 	}
 
 	action := int(msg.Action)
-	if action < 0 || action >= len(Action_value) {
+	if action < 1 || action >= len(Action_value) {
 		errors["Action"] = fmt.Errorf("%w, got %d", ErrActionOutOfBounds, msg.Action)
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Address); err != nil {
 		errors["Address"] = err
-	}
-
-	if len(msg.Proofs) == 0 {
-		errors["Proofs"] = ErrUndefinedAttribute
 	}
 
 	for i, p := range msg.Proofs {

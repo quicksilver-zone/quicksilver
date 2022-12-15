@@ -11,7 +11,7 @@ import (
 )
 
 func AccAddressFromBech32(address string, checkHRP string) (addr sdk.AccAddress, err error) {
-	if len(strings.TrimSpace(address)) == 0 {
+	if strings.TrimSpace(address) == "" {
 		return sdk.AccAddress{}, errors.New("empty address string is not allowed")
 	}
 
@@ -35,7 +35,7 @@ func AccAddressFromBech32(address string, checkHRP string) (addr sdk.AccAddress,
 }
 
 func ValAddressFromBech32(address string, checkHRP string) (addr sdk.ValAddress, err error) {
-	if len(strings.TrimSpace(address)) == 0 {
+	if strings.TrimSpace(address) == "" {
 		return sdk.ValAddress{}, errors.New("empty address string is not allowed")
 	}
 
@@ -80,4 +80,28 @@ func GenerateValAddressForTest() sdk.ValAddress {
 	}
 
 	return sdk.ValAddress(rb)
+}
+
+func GenerateValAddressForTestWithPrefix(hrp string) string {
+	addr, err := bech32.ConvertAndEncode(hrp, GenerateValAddressForTest())
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+func GenerateAccAddressForTestWithPrefix(hrp string) string {
+	addr, err := bech32.ConvertAndEncode(hrp, GenerateAccAddressForTest())
+	if err != nil {
+		panic(err)
+	}
+	return addr
+}
+
+func ConvertAccAddressForTestUsingPrefix(address sdk.AccAddress, prefix string) string {
+	addr, err := bech32.ConvertAndEncode(prefix, address)
+	if err != nil {
+		panic(err)
+	}
+	return addr
 }

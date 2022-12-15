@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -27,31 +27,46 @@ var _ types.MsgServer = msgServer{}
 func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim) (*types.MsgSubmitClaimResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	if !k.GetClaimsEnabled(ctx) {
+		return nil, errors.New("claims currently disabled")
+	}
+
 	// fetch zone
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
+	pd, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, msg.SrcZone)
+	if !ok {
+		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", msg.SrcZone)
+	}
+
+	// protocol data
+	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, pd.Data)
+	if err != nil {
+		k.Logger(ctx).Error("SubmitClaim: error unmarshalling protocol data")
+	}
+	connectionData := iConnectionData.(types.ConnectionProtocolData)
 
 	for i, proof := range msg.Proofs {
 		pl := fmt.Sprintf("Proof [%d]", i)
 
-		if proof.Height != zone.LastEpochHeight {
+		if proof.Height != connectionData.LastEpoch {
 			return nil, fmt.Errorf(
 				"invalid claim for last epoch, %s expected height %d, got %d",
 				pl,
-				zone.LastEpochHeight,
+				connectionData.LastEpoch,
 				proof.Height,
 			)
 		}
 
-		if err := utils.ValidateProofOps(
+		if err := k.ValidateProofOps(
 			ctx,
 			&k.icsKeeper.IBCKeeper,
-			zone.ConnectionId,
-			zone.ChainId,
+			connectionData.ConnectionID,
+			connectionData.ChainID,
 			proof.Height,
-			"lockup",
+			proof.ProofType,
 			proof.Key,
 			proof.Data,
 			proof.ProofOps,
@@ -61,10 +76,14 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	}
 
 	// if we get here all data was validated; verifyClaim will write the claim to the correct store.
-	if mod, ok := k.prSubmodules[msg.ProofType]; ok {
-		if err := mod.VerifyClaim(ctx, k.Keeper, msg); err != nil {
-			return nil, fmt.Errorf("claim verification failed: %v", err)
+	if mod, ok := k.prSubmodules[msg.ClaimType]; ok {
+		// vertifyClaim needs to return the amount!
+		amount, err := mod.ValidateClaim(ctx, k.Keeper, msg)
+		if err != nil {
+			return nil, fmt.Errorf("claim validation failed: %v", err)
 		}
+		claim := k.icsKeeper.ClaimsManagerKeeper.NewClaim(ctx, msg.UserAddress, zone.ChainId, msg.ClaimType, msg.SrcZone, amount)
+		k.icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &claim)
 	}
 
 	return &types.MsgSubmitClaimResponse{}, nil

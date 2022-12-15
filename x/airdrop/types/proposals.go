@@ -1,17 +1,18 @@
 package types
 
 import (
-	fmt "fmt"
+	"errors"
+	"fmt"
 	"strings"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
 	ProposalTypeRegisterZoneDrop = "RegisterZoneDrop"
 )
 
-var _ govtypes.Content = &RegisterZoneDropProposal{}
+var _ govv1beta1.Content = &RegisterZoneDropProposal{}
 
 func (m RegisterZoneDropProposal) GetDescription() string { return m.Description }
 func (m RegisterZoneDropProposal) GetTitle() string       { return m.Title }
@@ -27,7 +28,24 @@ func (m RegisterZoneDropProposal) ProposalType() string   { return ProposalTypeR
 // to ClaimRecords. ClaimRecords are in compressed []byte slice format and
 // must be decompressed in order to be validated.
 func (m RegisterZoneDropProposal) ValidateBasic() error {
-	return govtypes.ValidateAbstract(m)
+	if err := govv1beta1.ValidateAbstract(m); err != nil {
+		return err
+	}
+
+	if m.ZoneDrop == nil {
+		return errors.New("proposal must contain a valid ZoneDrop")
+	}
+
+	if len(m.ClaimRecords) == 0 {
+		return errors.New("proposal must contain valid ClaimRecords")
+	}
+
+	// validate ZoneDrop
+	if err := m.ZoneDrop.ValidateBasic(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // String implements the Stringer interface.
@@ -35,10 +53,10 @@ func (m RegisterZoneDropProposal) String() string {
 	var b strings.Builder
 
 	b.WriteString("Airdrop - ZoneDrop Registration Proposal:\n")
-	b.WriteString(fmt.Sprintf("\tTitle:       %s\n", m.Title))
-	b.WriteString(fmt.Sprintf("\tDescription: %s\n", m.Description))
+	fmt.Fprintf(&b, "\tTitle:       %s\n", m.Title)
+	fmt.Fprintf(&b, "\tDescription: %s\n", m.Description)
 	b.WriteString("\tZoneDrop:\n")
-	b.WriteString(fmt.Sprintf("\n%v\n", m.ZoneDrop))
+	fmt.Fprintf(&b, "\n%v\n", m.ZoneDrop)
 	b.WriteString("\n----------\n")
 	return b.String()
 }

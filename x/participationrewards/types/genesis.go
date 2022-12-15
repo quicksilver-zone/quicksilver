@@ -3,7 +3,7 @@ package types
 import (
 	fmt "fmt"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
 func NewGenesisState(params Params) *GenesisState {
@@ -19,34 +19,23 @@ func DefaultGenesisState() *GenesisState {
 
 // ValidateGenesis validates the provided genesis state to ensure the
 // expected invariants holds.
-func ValidateGenesis(data GenesisState) error {
-	if err := data.Params.Validate(); err != nil {
-		return err
+func (gs GenesisState) Validate() error {
+	errors := make(map[string]error)
+
+	if err := gs.Params.Validate(); err != nil {
+		errors["Params"] = err
 	}
 
-	for _, claim := range data.Claims {
-		// check user address
-		_, err := utils.AccAddressFromBech32(claim.UserAddress, "")
-		if err != nil {
-			return err
+	for i, kpd := range gs.ProtocolData {
+		if err := kpd.ValidateBasic(); err != nil {
+			el := fmt.Sprintf("ProtocolData[%d]", i)
+			errors[el] = err
+			continue
 		}
-
-		// check value is valid
-		if claim.HeldAmount <= 0 {
-			return fmt.Errorf("claim contains a non-positive value")
-		}
-
 	}
 
-	// TODO: validate protocol data is valid
-OUTER:
-	for _, pd := range data.ProtocolData {
-		for _, claimType := range ClaimTypes {
-			if claimType == pd.ProtocolData.Type {
-				continue OUTER
-			}
-		}
-		return fmt.Errorf("invalid protocol data type: %s", pd.ProtocolData.Type)
+	if len(errors) > 0 {
+		return multierror.New(errors)
 	}
 
 	return nil

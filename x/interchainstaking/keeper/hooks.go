@@ -5,8 +5,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -16,28 +14,41 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	// every epoch
-	k.Logger(ctx).Info("handling epoch end")
 	if epochIdentifier == "epoch" {
+		k.Logger(ctx).Info("handling epoch end")
+
 		k.IterateZones(ctx, func(index int64, zoneInfo types.Zone) (stop bool) {
-			blockQuery := tmservice.GetLatestBlockRequest{}
-			bz := k.cdc.MustMarshal(&blockQuery)
-
-			k.ICQKeeper.MakeRequest(
-				ctx,
-				zoneInfo.ConnectionId,
-				zoneInfo.ChainId,
-				"cosmos.base.tendermint.v1beta1.Service/GetLatestBlock",
-				bz,
-				sdk.NewInt(-1),
-				types.ModuleName,
-				"epochblock",
-				0,
-			)
-
 			k.Logger(ctx).Info("taking a snapshot of intents")
-			err := k.AggregateIntents(ctx, zoneInfo)
+			err := k.AggregateIntents(ctx, &zoneInfo)
 			if err != nil {
-				k.Logger(ctx).Error("encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch", "error", err.Error())
+				// we can and need not panic here; logging the error is sufficient.
+				// an error here is not expected, but also not terminal.
+				// we don't return on failure here as we still want to attempt
+				// the unrelated tasks below.
+				k.Logger(ctx).Error("encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch", "error", err)
+			}
+
+			if zoneInfo.DelegationAddress == nil {
+				// we have reached the end of the epoch and the delegation address is nil.
+				// This shouldn't happen in normal operation, but can if the zone was registered right on the epoch boundary.
+				return false
+			}
+
+			if err := k.HandleQueuedUnbondings(ctx, &zoneInfo, epochNumber); err != nil {
+				k.Logger(ctx).Error(err.Error())
+				// we can and need not panic here; logging the error is sufficient.
+				// an error here is not expected, but also not terminal.
+				// we don't return on failure here as we still want to attempt
+				// the unrelated tasks below.
+			}
+
+			err = k.Rebalance(ctx, zoneInfo, epochNumber)
+			if err != nil {
+				// we can and need not panic here; logging the error is sufficient.
+				// an error here is not expected, but also not terminal.
+				// we don't return on failure here as we still want to attempt
+				// the unrelated tasks below.
+				k.Logger(ctx).Error("encountered a problem rebalancing", "error", err.Error())
 			}
 
 			if zoneInfo.WithdrawalWaitgroup > 0 {
@@ -46,46 +57,44 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			}
 
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
-			for _, da := range zoneInfo.GetDelegationAccounts() {
-				k.Logger(ctx).Info("Withdrawing rewards")
+			k.Logger(ctx).Info("Withdrawing rewards")
 
-				delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: da.Address}
-				bz := k.cdc.MustMarshal(&delegationQuery)
+			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zoneInfo.DelegationAddress.Address}
+			bz := k.cdc.MustMarshal(&delegationQuery)
 
-				k.ICQKeeper.MakeRequest(
-					ctx,
-					zoneInfo.ConnectionId,
-					zoneInfo.ChainId,
-					"cosmos.staking.v1beta1.Query/DelegatorDelegations",
-					bz,
-					sdk.NewInt(-1),
-					types.ModuleName,
-					"delegations",
-					0,
-				)
-				da.IncrementBalanceWaitgroup()
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zoneInfo.ConnectionId,
+				zoneInfo.ChainId,
+				"cosmos.staking.v1beta1.Query/DelegatorDelegations",
+				bz,
+				sdk.NewInt(-1),
+				types.ModuleName,
+				"delegations",
+				0,
+			)
+			// zoneInfo.DelegationAddress.IncrementBalanceWaitgroup()
 
-				rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: da.Address}
-				bz = k.cdc.MustMarshal(&rewardsQuery)
+			rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zoneInfo.DelegationAddress.Address}
+			bz = k.cdc.MustMarshal(&rewardsQuery)
 
-				k.ICQKeeper.MakeRequest(
-					ctx,
-					zoneInfo.ConnectionId,
-					zoneInfo.ChainId,
-					"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
-					bz,
-					sdk.NewInt(-1),
-					types.ModuleName,
-					"rewards",
-					0,
-				)
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zoneInfo.ConnectionId,
+				zoneInfo.ChainId,
+				"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
+				bz,
+				sdk.NewInt(-1),
+				types.ModuleName,
+				"rewards",
+				0,
+			)
 
-				// increment the WithdrawalWaitgroup
-				// this allows us to track the response for every protocol delegator
-				// WithdrawalWaitgroup is decremented in RewardsCallback
-				zoneInfo.WithdrawalWaitgroup++
-				k.Logger(ctx).Info("Incrementing waitgroup for delegation", "value", zoneInfo.WithdrawalWaitgroup)
-			}
+			// increment the WithdrawalWaitgroup
+			// this allows us to track the response for every protocol delegator
+			// WithdrawalWaitgroup is decremented in RewardsCallback
+			zoneInfo.WithdrawalWaitgroup++
+			k.Logger(ctx).Info("Incrementing waitgroup for delegation", "value", zoneInfo.WithdrawalWaitgroup)
 			k.SetZone(ctx, &zoneInfo)
 
 			return false

@@ -3,16 +3,16 @@ package types_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIntentsFromString(t *testing.T) {
 	// 1. Ensure we can properly parse intents with their weights.
-	intents, err := types.IntentsFromString("0.3cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0,0.3cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf,0.4cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll")
-	require.Nil(t, err, "expecting a nil error")
+	intents := "0.3cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0,0.3cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf,0.4cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll"
 
 	wantIntents := []*types.ValidatorIntent{
 		{
@@ -28,7 +28,9 @@ func TestIntentsFromString(t *testing.T) {
 			Weight:         sdk.MustNewDecFromStr("0.4"),
 		},
 	}
-	require.Equal(t, wantIntents, intents, "intents mismatch")
+	intentsSlice, err := types.IntentsFromString(intents)
+	require.NoError(t, err)
+	require.Equal(t, wantIntents, intentsSlice, "intents mismatch")
 
 	// 2. Ensure that if the weights don't add up to 1.0 that it fails.
 	// 2.1. Greater than 1.0
@@ -84,30 +86,118 @@ func TestIntentsFromStringInvalidValoperAddressesFailsOnValidate(t *testing.T) {
 	require.Contains(t, err.Error(), "must not be negative")
 
 	// The valoper addresses have invalid checksums, but they'll only be caught on invoking .ValidateBasic()
-	intents, err := types.IntentsFromString("0.5cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9u2lcnp0,0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuurfrrzf")
-	require.Nil(t, err, "expecting a nil error")
-
-	wantIntents := []*types.ValidatorIntent{
-		{
-			ValoperAddress: "cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9u2lcnp0",
-			Weight:         sdk.MustNewDecFromStr("0.5"),
-		},
-		{
-			ValoperAddress: "cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuurfrrzf",
-			Weight:         sdk.MustNewDecFromStr("0.5"),
-		},
-	}
-	require.Equal(t, wantIntents, intents, "intents mismatch")
-
-	// Mutate the weight to make it greater than 1.0
-	intents[0].Weight = sdk.MustNewDecFromStr("1.7")
-	intents[1].Weight = sdk.MustNewDecFromStr("-0.5")
+	intents := "1.7cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9u2lcnp0,-0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuurfrrzf"
 
 	sigIntent := types.NewMsgSignalIntent("", intents,
 		(sdk.AccAddress)([]byte{0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc}))
 	sigIntent.FromAddress = "abcdefghi"
 	err = sigIntent.ValidateBasic()
 	require.NotNil(t, err, "expecting a non-nil error")
-	require.Contains(t, err.Error(), "invalid checksum")
+	require.Contains(t, err.Error(), "invalid separator index")
 	require.Contains(t, err.Error(), "undefined")
+}
+
+func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
+	type fields struct {
+		ChainId     string
+		Intents     string
+		FromAddress string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			"blank",
+			fields{},
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgSignalIntent{
+				ChainId:     tt.fields.ChainId,
+				Intents:     tt.fields.Intents,
+				FromAddress: tt.fields.FromAddress,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
+	type fields struct {
+		Value              sdk.Coin
+		DestinationAddress string
+		FromAddress        string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			"nil",
+			fields{},
+			true,
+		},
+		{
+			"empty_coin",
+			fields{
+				Value: sdk.Coin{
+					Denom: "stake",
+				},
+				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				FromAddress:        utils.GenerateAccAddressForTest().String(),
+			},
+			true,
+		},
+		{
+			"valid_zero",
+			fields{
+				Value: sdk.Coin{
+					Denom:  "stake",
+					Amount: math.ZeroInt(),
+				},
+				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				FromAddress:        utils.GenerateAccAddressForTest().String(),
+			},
+			false,
+		},
+		{
+			"valid_value",
+			fields{
+				Value: sdk.Coin{
+					Denom:  "stake",
+					Amount: math.ZeroInt(),
+				},
+				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				FromAddress:        utils.GenerateAccAddressForTest().String(),
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgRequestRedemption{
+				Value:              tt.fields.Value,
+				DestinationAddress: tt.fields.DestinationAddress,
+				FromAddress:        tt.fields.FromAddress,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
 }

@@ -9,6 +9,8 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewar
 // DistributionProportions defines the proportions of minted QCK that is to be
 // allocated as participation rewards.
 message DistributionProportions {
+  option (gogoproto.goproto_getters) = false;
+
   string validator_selection_allocation = 1 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
@@ -27,7 +29,8 @@ message DistributionProportions {
 }
 
 // Params holds parameters for the participationrewards module.
-message Params {
+message Params_v1 {
+  option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
 
   // distribution_proportions defines the proportions of the minted
@@ -36,11 +39,16 @@ message Params {
       [ (gogoproto.nullable) = false ];
 }
 
-// Claim define the users claim for holdings rewards for the last epoch.
-message Claim {
-  string user_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  string zone = 2;
-  int64 held_amount = 3;
+// Params holds parameters for the participationrewards module.
+message Params {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+
+  // distribution_proportions defines the proportions of the minted
+  // participation rewards;
+  DistributionProportions distribution_proportions = 1
+      [ (gogoproto.nullable) = false ];
+  bool claims_enabled = 2;
 }
 
 message KeyedProtocolData {
@@ -50,7 +58,19 @@ message KeyedProtocolData {
 // Protocol Data is an arbitrary data type held against a given zone for the
 // determination of rewards.
 message ProtocolData {
-  string protocol = 1;
-  string type = 2;
-  bytes data = 3 [ (gogoproto.casttype) = "encoding/json.RawMessage" ];
+  string type = 1;
+  bytes data = 2 [ (gogoproto.casttype) = "encoding/json.RawMessage" ];
+}
+
+enum ProtocolDataType {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Undefined action (per protobuf spec)
+  ProtocolDataTypeUndefined = 0;
+  ProtocolDataTypeConnection = 1;
+  ProtocolDataTypeOsmosisParams = 2;
+  ProtocolDataTypeLiquidToken = 3;
+  ProtocolDataTypeOsmosisPool = 4;
+  ProtocolDataTypeCrescentPool = 5;
+  ProtocolDataTypeSifchainPool = 6;
 }

@@ -1,5 +1,9 @@
 package types
 
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
 const (
 	// ModuleName defines the module name
 	ModuleName = "participationrewards"
@@ -10,20 +14,15 @@ const (
 	// RouterKey is the message route for participationrewards
 	RouterKey = ModuleName
 
-	ClaimTypeLiquidToken  = 0
-	ClaimTypeOsmosisPool  = 1
-	ClaimTypeCrescentPool = 2
-	ClaimTypeSifchainPool = 3
+	OsmosisParamsKey = "osmosisparams"
 )
 
-var (
-	KeyPrefixProtocolData = []byte{0x00}
-	KeyPrefixClaim        = []byte{0x01}
+var KeyPrefixProtocolData = []byte{0x00}
 
-	ClaimTypes = map[int32]string{
-		ClaimTypeLiquidToken:  "liquidtoken",
-		ClaimTypeOsmosisPool:  "osmosispool",
-		ClaimTypeCrescentPool: "crescentpool",
-		ClaimTypeSifchainPool: "sifchainpool",
-	}
-)
+func GetProtocolDataKey(pdType ProtocolDataType, key string) []byte {
+	return append(sdk.Uint64ToBigEndian(uint64(pdType)), []byte(key)...)
+}
+
+func GetPrefixProtocolDataKey(pdType ProtocolDataType) []byte {
+	return sdk.Uint64ToBigEndian(uint64(pdType))
+}

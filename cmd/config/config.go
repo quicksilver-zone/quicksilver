@@ -1,6 +1,7 @@
 package types
 
 import (
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -51,4 +52,9 @@ func RegisterDenoms() {
 	if err := sdk.RegisterDenom(BaseDenom, sdk.NewDecWithPrec(1, 6)); err != nil {
 		panic(err)
 	}
+}
+
+// SetWasmConfig sets the wasm config .
+func SetWasmConfig(config *sdk.Config) {
+	config.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 }

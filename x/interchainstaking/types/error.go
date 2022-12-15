@@ -4,7 +4,4 @@ import (
 	"errors"
 )
 
-var (
-	ErrInvalidVersion = errors.New("invalid version")
-	ErrMaxChannels    = errors.New("max channels exceeded")
-)
+var ErrCoinAmountNil = errors.New("coin amount is nil")

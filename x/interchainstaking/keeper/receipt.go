@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -9,39 +11,44 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	icatypes "github.com/cosmos/ibc-go/v3/modules/apps/27-interchain-accounts/types"
-	channeltypes "github.com/cosmos/ibc-go/v3/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v3/modules/core/24-host"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-const UNSET = "unset"
+const (
+	Unset           = "unset"
+	ICAMsgChunkSize = 10
+)
 
-func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.Zone) {
+func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.Zone) error {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
 	hash := txr.TxHash
 	memo := txn.Body.Memo
 
-	senderAddress := UNSET
+	senderAddress := Unset
 	coins := sdk.Coins{}
 
 	for _, event := range txr.Events {
-		if event.Type == "transfer" {
+		if event.Type == transferPort {
 			attrs := attributesToMap(event.Attributes)
 			sender := attrs["sender"]
 			amount := attrs["amount"]
 			if attrs["recipient"] == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
-				if senderAddress == UNSET {
+				if senderAddress == Unset {
 					senderAddress = sender
 				}
 
 				if sender != senderAddress {
 					k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
+					return fmt.Errorf("sender mismatch: expected %q, got %q", senderAddress, sender)
 				}
 
-				k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
+				k.Logger(ctx).Error("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
 				thisCoins, err := sdk.ParseCoinsNormalized(amount)
 				if err != nil {
 					k.Logger(ctx).Error("unable to parse coin", "string", amount)
@@ -51,22 +58,22 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 		}
 	}
 
-	if senderAddress == UNSET {
+	if senderAddress == Unset {
 		k.Logger(ctx).Error("no sender found. Ignoring.")
-		return
+		return fmt.Errorf("no sender found. Ignoring")
 	}
 
 	// sdk.AccAddressFromBech32 doesn't work here as it expects the local HRP
 	_, addressBytes, err := bech32.DecodeAndConvert(senderAddress)
 	if err != nil {
-		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "sender", senderAddress)
-		return
+		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress)
+		return fmt.Errorf("unable to decode sender address. Ignoring. senderAddress=%q", senderAddress)
 	}
 
 	if err := zone.ValidateCoinsForZone(ctx, coins); err != nil {
 		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before. That is okay, we'll catch it next round!)
-		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "sender", senderAddress)
-		return
+		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
+		return fmt.Errorf("unable to validate coins. Ignoring. senderAddress=%q", senderAddress)
 	}
 
 	var accAddress sdk.AccAddress = addressBytes
@@ -75,27 +82,24 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 	// create receipt
 
 	if err := k.UpdateIntent(ctx, accAddress, zone, coins, memo); err != nil {
-		k.Logger(ctx).Error("unable to update intent. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
-		return
+		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
+		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-	if err := k.MintQAsset(ctx, accAddress, zone, coins); err != nil {
-		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
-		return
-	}
-
-	sendPlan, err := k.DeterminePlanForDelegation(ctx, zone, coins, accAddress.String(), hash)
-	if err != nil {
-		k.Logger(ctx).Error("unable to determine delegation plan. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
-		return
+	if err := k.MintQAsset(ctx, accAddress, senderAddress, zone, coins, false); err != nil {
+		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
+		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
 
-	if err := k.TransferToDelegate(ctx, zone, sendPlan, hash); err != nil {
-		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "sender", senderAddress, "zone", zone.ChainId, "err", err)
-		return
+	if err := k.TransferToDelegate(ctx, zone, coins, hash); err != nil {
+		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
+		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
+
 	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
 
 	k.SetReceipt(ctx, *receipt)
+
+	return nil
 }
 
 func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
@@ -106,84 +110,54 @@ func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
 	return out
 }
 
-func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, zone types.Zone, inCoins sdk.Coins) error {
+func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone types.Zone, inCoins sdk.Coins, returnToSender bool) error {
 	if zone.RedemptionRate.IsZero() {
-		return fmt.Errorf("zero redemption rate")
+		return errors.New("zero redemption rate")
 	}
 
+	var err error
+
 	outCoins := sdk.Coins{}
-	for _, inCoin := range inCoins {
-		outAmount := inCoin.Amount.ToDec().Quo(zone.RedemptionRate).TruncateInt()
+	for _, inCoin := range inCoins.Sort() {
+		outAmount := sdk.NewDecFromInt(inCoin.Amount).Quo(zone.RedemptionRate).TruncateInt()
 		outCoin := sdk.NewCoin(zone.LocalDenom, outAmount)
 		outCoins = outCoins.Add(outCoin)
 	}
 	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", outCoins)
-	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, outCoins)
+	err = k.BankKeeper.MintCoins(ctx, types.ModuleName, outCoins)
 	if err != nil {
 		return err
 	}
 
-	err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, outCoins)
-	if err != nil {
-		return err
-	}
-	k.Logger(ctx).Info("Transferred qAssets to sender", "assets", outCoins, "sender", sender)
-
-	return nil
-}
-
-func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.Zone, plan types.Allocations, memo string) error {
-	// if zone.SupportMultiSend() {
-	// 	return k.TransferToDelegateMulti(ctx, zone, plan, memo)
-	// } else {
-	var msgs []sdk.Msg
-	for _, allocation := range plan.Sorted() {
-		if !allocation.Amount.Empty() && !allocation.Amount.IsZero() {
-			msgs = append(msgs, &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: allocation.Address, Amount: allocation.Amount})
+	if returnToSender { // do we set this on the zone?
+		var srcPort string
+		var srcChannel string
+		k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
+			if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == transferPort && channel.State == channeltypes.OPEN {
+				srcChannel = channel.Counterparty.ChannelId
+				srcPort = channel.Counterparty.PortId
+				return true
+			}
+			return false
+		})
+		if srcPort == "" {
+			return errors.New("unable to find remote transfer connection")
 		}
-	}
 
-	return k.SubmitTx(ctx, msgs, zone.DepositAddress, memo)
+		err = k.TransferKeeper.SendTransfer(ctx, srcPort, srcChannel, outCoins[0], k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0}, uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()))
+	} else {
+
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, outCoins)
+		k.Logger(ctx).Info("Transferred qAssets to sender", "assets", outCoins, "sender", sender)
+
+	}
+	return err
 }
 
-//}
-
-// func (k *Keeper) TransferToDelegateMulti(ctx sdk.Context, zone types.Zone, plan types.SendPlan, memo string) error {
-// 	eachAmount := sdk.Coins{}
-// 	splits := utils.MinU64(append([]uint64{}, k.GetParam(ctx, types.KeyDelegateAccountCount), uint64(len(zone.GetDelegationAccounts()))))
-
-// 	for _, asset := range inAmount {
-// 		thisAsset := sdk.Coin{Denom: asset.Denom, Amount: asset.Amount.Quo(sdk.NewIntFromUint64(splits))}
-// 		// TODO: maybe set this to some param based threshold? 5000 is an arbitrary figure to avoid distributing dust continuously.
-// 		// 5000 * 100 accounts == 0.5 tokens
-// 		if thisAsset.Amount.GT(sdk.NewInt(5000)) {
-// 			eachAmount = eachAmount.Add(thisAsset)
-// 		}
-// 	}
-
-// 	if eachAmount.Empty() || eachAmount.IsZero() {
-// 		splits = 1
-// 	}
-
-// 	in := []bankTypes.Input{}
-// 	out := []bankTypes.Output{}
-
-// 	in = append(in, bankTypes.Input{Address: zone.DepositAddress.GetAddress(), Coins: inAmount})
-
-// 	accounts := zone.GetDelegationAccountsByLowestBalance(splits)
-// 	for _, account := range accounts {
-// 		out = append(out, bankTypes.Output{Address: account.GetAddress(), Coins: eachAmount})
-// 		inAmount = inAmount.Sub(eachAmount)
-// 	}
-
-// 	// ensure any remainder gets deposited in the first account (as it will have the lowest balance)
-// 	out[0].Coins = out[0].Coins.Add(inAmount...)
-
-// 	msg := bankTypes.NewMsgMultiSend(in, out)
-// 	// send from deposit to accounts
-
-// 	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo)
-// }
+func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.Zone, coins sdk.Coins, memo string) error {
+	msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
+	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo)
+}
 
 func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string) error {
 	portID := account.GetPortName()
@@ -201,24 +175,41 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	data, err := icatypes.SerializeCosmosTx(k.cdc, msgs)
-	if err != nil {
-		return err
-	}
+	chunkSize := ICAMsgChunkSize
+	timeoutTimestamp := uint64(ctx.BlockTime().Add(24 * time.Hour).UnixNano())
 
-	// validate memo < 256 bytes
-	packetData := icatypes.InterchainAccountPacketData{
-		Type: icatypes.EXECUTE_TX,
-		Data: data,
-		Memo: memo,
-	}
+	for {
+		// if no messages, no chunks!
+		if len(msgs) == 0 {
+			break
+		}
 
-	// timeoutTimestamp set to max value with the unsigned bit shifted to satisfy hermes timestamp conversion
-	// it is the responsibility of the auth module developer to ensure an appropriate timeout timestamp
-	timeoutTimestamp := ^uint64(0) >> 1
-	_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
-	if err != nil {
-		return err
+		// if the last chunk, make chunksize the number of messages
+		if len(msgs) < chunkSize {
+			chunkSize = len(msgs)
+		}
+
+		// remove chunk from original msg slice
+		msgsChunk := msgs[0:chunkSize]
+		msgs = msgs[chunkSize:]
+
+		// build and submit message for this chunk
+		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk)
+		if err != nil {
+			return err
+		}
+
+		// validate memo < 256 bytes
+		packetData := icatypes.InterchainAccountPacketData{
+			Type: icatypes.EXECUTE_TX,
+			Data: data,
+			Memo: memo,
+		}
+
+		_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -1,0 +1,13 @@
+syntax = "proto3";
+package quicksilver.claimsmanager.v1;
+
+import "gogoproto/gogo.proto";
+import "quicksilver/claimsmanager/v1/claimsmanager.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/claimsmanager/types";
+
+// GenesisState defines the claimsmanager module's genesis state.
+message GenesisState {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated Claim claims = 2;
+}

@@ -1,0 +1,11 @@
+{
+"title": "register lstest-2 zone",
+"description": "register lstest-2 zone with multisend and lsm enabled",
+"connection_id": "connection-1",
+"base_denom": "uosmo",
+"local_denom": "uqosmo",
+"account_prefix": "osmo",
+"multi_send": false,
+"liquidity_module": true,
+"deposit": "1000uqck"
+}

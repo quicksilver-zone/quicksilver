@@ -1,7 +1,48 @@
 package types
 
+import (
+	"strings"
+
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
+)
+
 type LiquidAllowedDenomProtocolData struct {
-	ChainID    string
-	Denom      string
-	LocalDenom string
+	ChainID               string
+	RegisteredZoneChainID string
+	IbcDenom              string
+	QAssetDenom           string
+}
+
+func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
+	errors := make(map[string]error)
+
+	if len(lpd.ChainID) == 0 {
+		errors["ChainID"] = ErrUndefinedAttribute
+	}
+
+	if len(strings.Split(lpd.ChainID, "-")) < 2 {
+		errors["ChainID"] = ErrInvalidChainID
+	}
+
+	if len(lpd.RegisteredZoneChainID) == 0 {
+		errors["RegisteredZoneChainID"] = ErrUndefinedAttribute
+	}
+
+	if len(strings.Split(lpd.RegisteredZoneChainID, "-")) < 2 {
+		errors["RegisteredZoneChainID"] = ErrInvalidChainID
+	}
+
+	if len(lpd.IbcDenom) < 5 || lpd.IbcDenom[:4] != "ibc/" {
+		errors["IbcDenom"] = ErrInvalidAssetName
+	}
+
+	if len(lpd.QAssetDenom) == 0 {
+		errors["QAssetDenom"] = ErrUndefinedAttribute
+	}
+
+	if len(errors) > 0 {
+		return multierror.New(errors)
+	}
+
+	return nil
 }

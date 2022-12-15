@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -13,7 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -53,12 +54,8 @@ e.g. "0.3cosmosvaloper1xxxxxxxxx,0.3cosmosvaloper1yyyyyyyyy,0.4cosmosvaloper1zzz
 			}
 
 			chainID := args[0]
-			intents, err := types.IntentsFromString(args[1])
-			if err != nil {
-				return fmt.Errorf("%v, see example: %v", err, cmd.Example)
-			}
 
-			msg := types.NewMsgSignalIntent(chainID, intents, clientCtx.GetFromAddress())
+			msg := types.NewMsgSignalIntent(chainID, args[1], clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -150,7 +147,7 @@ Where proposal.json contains:
 			content := types.NewRegisterZoneProposal(proposal.Title, proposal.Description, proposal.ConnectionId, proposal.BaseDenom,
 				proposal.LocalDenom, proposal.AccountPrefix, proposal.MultiSend, proposal.LiquidityModule)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -175,7 +172,7 @@ func ParseZoneRegistrationProposal(cdc codec.JSONCodec, proposalFile string) (ty
 	}
 
 	if reflect.DeepEqual(proposal, types.RegisterZoneProposalWithDeposit{}) {
-		return proposal, fmt.Errorf("cannot unmarshal empty JSON object")
+		return proposal, errors.New("cannot unmarshal empty JSON object")
 	}
 
 	return proposal, nil
@@ -223,7 +220,7 @@ Where proposal.json contains:
 
 			content := types.NewUpdateZoneProposal(proposal.Title, proposal.Description, proposal.ChainId, proposal.Changes)
 
-			msg, err := govtypes.NewMsgSubmitProposal(content, deposit, from)
+			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {
 				return err
 			}
@@ -248,7 +245,7 @@ func ParseZoneUpdateProposal(cdc codec.JSONCodec, proposalFile string) (types.Up
 	}
 
 	if reflect.DeepEqual(proposal, types.UpdateZoneProposalWithDeposit{}) {
-		return proposal, fmt.Errorf("cannot unmarshal empty JSON object")
+		return proposal, errors.New("cannot unmarshal empty JSON object")
 	}
 
 	return proposal, nil

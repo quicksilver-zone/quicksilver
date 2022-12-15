@@ -1,12 +1,14 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
@@ -18,8 +20,10 @@ const (
 )
 
 var (
-	_ sdk.Msg = &MsgRequestRedemption{}
-	_ sdk.Msg = &MsgSignalIntent{}
+	_ sdk.Msg            = &MsgRequestRedemption{}
+	_ sdk.Msg            = &MsgSignalIntent{}
+	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
+	_ legacytx.LegacyMsg = &MsgSignalIntent{}
 )
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
@@ -44,7 +48,9 @@ func (msg MsgRequestRedemption) ValidateBasic() error {
 	}
 
 	// check coin
-	if err = msg.Value.Validate(); err != nil {
+	if msg.Value.IsNil() || msg.Value.Amount.IsNil() {
+		errors["Value"] = ErrCoinAmountNil
+	} else if err = msg.Value.Validate(); err != nil {
 		errors["Value"] = err
 	}
 
@@ -84,7 +90,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 	// {intent}(,{intent})...
 	pexpr := regexp.MustCompile(fmt.Sprintf("^%s(,%s)*$", iexpr.String(), iexpr.String()))
 	if !pexpr.MatchString(input) {
-		return nil, fmt.Errorf("invalid intents string")
+		return nil, errors.New("invalid intents string")
 	}
 
 	out := []*ValidatorIntent{}
@@ -112,14 +118,14 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 	}
 
 	if !wsum.Equal(sdk.OneDec()) {
-		return nil, fmt.Errorf("combined weight must be 1.0")
+		return nil, errors.New("combined weight must be 1.0")
 	}
 
 	return out, nil
 }
 
-// NewMsgRequestRedemption - construct a msg to request redemption.
-func NewMsgSignalIntent(chainID string, intents []*ValidatorIntent, fromAddress sdk.Address) *MsgSignalIntent {
+// NewMsgSignalIntent - construct a msg to update signalled intent.
+func NewMsgSignalIntent(chainID string, intents string, fromAddress sdk.Address) *MsgSignalIntent {
 	return &MsgSignalIntent{ChainId: chainID, Intents: intents, FromAddress: fromAddress.String()}
 }
 
@@ -131,36 +137,40 @@ func (msg MsgSignalIntent) Type() string { return TypeMsgSignalIntent }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSignalIntent) ValidateBasic() error {
-	errors := make(map[string]error)
+	errm := make(map[string]error)
 	if _, err := sdk.AccAddressFromBech32(msg.FromAddress); err != nil {
-		errors["FromAddress"] = err
+		errm["FromAddress"] = err
 	}
 
 	if msg.ChainId == "" {
-		errors["ChainId"] = fmt.Errorf("undefined")
+		errm["ChainId"] = errors.New("undefined")
 	}
 
 	wantSum := sdk.OneDec()
 	weightSum := sdk.NewDec(0)
-	for i, intent := range msg.Intents {
-		if _, _, err := bech32.DecodeAndConvert(intent.ValoperAddress); err != nil {
-			istr := fmt.Sprintf("Intent_%02d_ValoperAddress", i)
-			errors[istr] = err
+	intents, err := IntentsFromString(msg.Intents)
+	if err != nil {
+		errm["Intents"] = err
+	} else {
+		for i, intent := range intents {
+			if _, _, err := bech32.DecodeAndConvert(intent.ValoperAddress); err != nil {
+				istr := fmt.Sprintf("Intent_%02d_ValoperAddress", i)
+				errm[istr] = err
+			}
+
+			if intent.Weight.GT(wantSum) {
+				istr := fmt.Sprintf("Intent_%02d_Weight", i)
+				errm[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, wantSum)
+			}
+			weightSum = weightSum.Add(intent.Weight)
 		}
 
-		if intent.Weight.GT(wantSum) {
-			istr := fmt.Sprintf("Intent_%02d_Weight", i)
-			errors[istr] = fmt.Errorf("weight %d overruns maximum of %v", intent.Weight, wantSum)
+		if !weightSum.Equal(wantSum) {
+			errm["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weightSum, wantSum)
 		}
-		weightSum = weightSum.Add(intent.Weight)
 	}
-
-	if !weightSum.Equal(wantSum) {
-		errors["IntentWeights"] = fmt.Errorf("sum of weights is %v, not %v", weightSum, wantSum)
-	}
-
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errm) > 0 {
+		return multierror.New(errm)
 	}
 
 	return nil

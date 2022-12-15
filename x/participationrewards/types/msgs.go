@@ -4,22 +4,49 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
-var _ sdk.Msg = &MsgSubmitClaim{}
+// participationrewars message types
+const (
+	TypeMsgSubmitClaim = "submitclaim"
+)
+
+var (
+	_ sdk.Msg            = &MsgSubmitClaim{}
+	_ legacytx.LegacyMsg = &MsgSubmitClaim{}
+)
 
 // NewMsgSubmitClaim - construct a msg to submit a claim.
 func NewMsgSubmitClaim(
 	userAddress sdk.Address,
+	srcZone string,
 	zone string,
+	claimType cmtypes.ClaimType,
+	proofs []*cmtypes.Proof,
 ) *MsgSubmitClaim {
 	return &MsgSubmitClaim{
 		UserAddress: userAddress.String(),
+		SrcZone:     srcZone,
 		Zone:        zone,
+		ClaimType:   claimType,
+		Proofs:      proofs,
 	}
 }
+
+// GetSignBytes implements LegacyMsg.
+func (msg MsgSubmitClaim) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// Route implements LegacyMsg.
+func (msg MsgSubmitClaim) Route() string { return RouterKey }
+
+// Type Implements Msg.
+func (msg MsgSubmitClaim) Type() string { return TypeMsgSubmitClaim }
 
 // GetSigners implements Msg.
 func (msg MsgSubmitClaim) GetSigners() []sdk.AccAddress {
@@ -38,6 +65,15 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 		errors["Zone"] = ErrUndefinedAttribute
 	}
 
+	if len(msg.SrcZone) == 0 {
+		errors["SrcZone"] = ErrUndefinedAttribute
+	}
+
+	ct := int(msg.ClaimType)
+	if ct < 1 || ct >= len(cmtypes.ClaimType_value) {
+		errors["Action"] = fmt.Errorf("%w, got %d", cmtypes.ErrClaimTypeOutOfBounds, msg.ClaimType)
+	}
+
 	if len(msg.Proofs) == 0 {
 		errors["Proofs"] = ErrUndefinedAttribute
 	}
@@ -45,20 +81,8 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 	if len(msg.Proofs) > 0 {
 		for i, p := range msg.Proofs {
 			pLabel := fmt.Sprintf("Proof [%d]:", i)
-			if len(p.Key) == 0 {
-				errors[pLabel+" Key"] = ErrUndefinedAttribute
-			}
-
-			if len(p.Data) == 0 {
-				errors[pLabel+" Data"] = ErrUndefinedAttribute
-			}
-
-			if p.ProofOps == nil {
-				errors[pLabel+" ProofOps"] = ErrUndefinedAttribute
-			}
-
-			if p.Height < 0 {
-				errors[pLabel+" Height"] = ErrNegativeAttribute
+			if err := p.ValidateBasic(); err != nil {
+				errors[pLabel] = err
 			}
 		}
 	}

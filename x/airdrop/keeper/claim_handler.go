@@ -1,20 +1,19 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
-	"strings"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	osmosislockuptypes "github.com/osmosis-labs/osmosis/v9/x/lockup/types"
+	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
+	osmosislockuptypes "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-
-	participationrewardskeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
-	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 var (
@@ -25,7 +24,7 @@ var (
 	tier5 = "0.30"
 )
 
-func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proofs []*types.Proof) (uint64, error) {
+func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.Action, proofs []*cmtypes.Proof) (uint64, error) {
 	// action already completed, nothing to claim
 	if _, exists := cr.ActionsCompleted[int32(action)]; exists {
 		return 0, fmt.Errorf("%s already completed", types.Action_name[int32(action)])
@@ -107,9 +106,9 @@ func (k Keeper) handleGovernanceParticipation(ctx sdk.Context, cr *types.ClaimRe
 }
 
 // handleOsmosisLP
-func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proofs []*types.Proof) (uint64, error) {
+func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proofs []*cmtypes.Proof) (uint64, error) {
 	if len(proofs) == 0 {
-		return 0, fmt.Errorf("expects at least one LP proof")
+		return 0, errors.New("expects at least one LP proof")
 	}
 	if err := k.verifyOsmosisLP(ctx, proofs, *cr); err != nil {
 		return 0, err
@@ -150,7 +149,7 @@ func (k Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold s
 	tAmount := threshold.MulInt64(int64(cr.BaseValue)).TruncateInt()
 
 	if gdAmount.LT(tAmount) {
-		return fmt.Errorf("insufficient deposit amount")
+		return fmt.Errorf("insufficient deposit amount, expects %v got %v", tAmount, gdAmount)
 	}
 
 	return nil
@@ -166,7 +165,7 @@ func (k Keeper) verifyBondedDelegation(ctx sdk.Context, address string) error {
 
 	amount := k.stakingKeeper.GetDelegatorBonded(ctx, addr)
 	if !amount.IsPositive() {
-		return fmt.Errorf("ActionStakeQCK: no bonded delegation")
+		return fmt.Errorf("no bonded delegation for %s", addr)
 	}
 	return nil
 }
@@ -201,8 +200,8 @@ func (k Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) e
 	}
 
 	voted := false
-	k.govKeeper.IterateProposals(ctx, func(proposal gov.Proposal) (stop bool) {
-		_, found := k.govKeeper.GetVote(ctx, proposal.ProposalId, addr)
+	k.govKeeper.IterateProposals(ctx, func(proposal govv1.Proposal) (stop bool) {
+		_, found := k.govKeeper.GetVote(ctx, proposal.Id, addr)
 		if found {
 			voted = true
 			return true
@@ -224,7 +223,7 @@ func (k Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) e
 // It utilizes Osmosis query:
 //
 //	rpc LockedByID(LockedRequest) returns (LockedResponse);
-func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types.ClaimRecord) error {
+func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr types.ClaimRecord) error {
 	// get Osmosis zone
 	var osmoZone *icstypes.Zone
 	k.icsKeeper.IterateZones(ctx, func(_ int64, zone icstypes.Zone) (stop bool) {
@@ -235,7 +234,7 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 		return false
 	})
 	if osmoZone == nil {
-		return fmt.Errorf("unable to find Osmosis zone")
+		return errors.New("unable to find Osmosis zone")
 	}
 
 	uAmount := sdk.ZeroInt()
@@ -250,13 +249,13 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 		dupCheck[string(proof.Key)] = struct{}{}
 
 		// validate proof tx
-		if err := utils.ValidateProofOps(
+		if err := k.ValidateProofOps(
 			ctx,
 			&k.icsKeeper.IBCKeeper,
 			osmoZone.ConnectionId,
 			osmoZone.ChainId,
 			proof.Height,
-			"lockup",
+			proof.ProofType,
 			proof.Key,
 			proof.Data,
 			proof.ProofOps,
@@ -264,20 +263,20 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 			return fmt.Errorf("proofs [%d]: %w", i, err)
 		}
 
-		var lockedResp osmosislockuptypes.LockedResponse
-		err := k.cdc.Unmarshal(proof.Data, &lockedResp)
+		var lock osmosislockuptypes.PeriodLock
+		err := k.cdc.Unmarshal(proof.Data, &lock)
 		if err != nil {
 			return fmt.Errorf("unable to unmarshal locked response: %s", err.Error())
 		}
 
 		// verify proof lock owner address is claim record address
-		if lockedResp.Lock.Owner != cr.Address {
-			return fmt.Errorf("invalid lock owner, expected %s got %s", cr.Address, lockedResp.Lock.Owner)
+		if lock.Owner != cr.Address {
+			return fmt.Errorf("invalid lock owner, expected %s got %s", cr.Address, lock.Owner)
 		}
 
 		// verify pool is for the relevant zone
 		// and sum user amounts
-		amount, err := k.verifyPoolAndGetAmount(ctx, lockedResp, cr)
+		amount, err := k.verifyPoolAndGetAmount(ctx, lock, cr)
 		if err != nil {
 			return err
 		}
@@ -299,44 +298,8 @@ func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*types.Proof, cr types
 	return nil
 }
 
-func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lockedResp osmosislockuptypes.LockedResponse, cr types.ClaimRecord) (sdk.Int, error) {
-	gammdenom := lockedResp.Lock.Coins.GetDenomByIndex(0)
-	poolID := "osmosis/pool" + gammdenom[strings.LastIndex(gammdenom, "/"):]
-	pd, ok := k.prKeeper.GetProtocolData(ctx, poolID)
-	if !ok {
-		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for %s", poolID)
-	}
-
-	ipool, err := participationrewardskeeper.UnmarshalProtocolData("osmosispool", pd.Data)
-	if err != nil {
-		return sdk.ZeroInt(), err
-	}
-	pool, _ := ipool.(participationrewardstypes.OsmosisPoolProtocolData)
-
-	poolDenom := ""
-	for zk, zd := range pool.Zones {
-		if zk == cr.ChainId {
-			poolDenom = zd
-			break
-		}
-	}
-
-	if poolDenom == "" {
-		return sdk.ZeroInt(), fmt.Errorf("invalid zone, pool zone must match %s", cr.ChainId)
-	}
-
-	// calculate user gamm ratio and LP asset amount
-	ugamm := lockedResp.Lock.Coins.AmountOf(gammdenom) // user's gamm amount
-	pgamm := pool.PoolData.GetTotalShares()            // total pool gamm amount
-	if pgamm.IsZero() {
-		return sdk.ZeroInt(), fmt.Errorf("empty pool, %s", poolID)
-	}
-	uratio := sdk.NewDecFromInt(ugamm).QuoInt(pgamm)
-
-	zasset := pool.PoolData.GetTotalPoolLiquidity(ctx).AmountOf(poolDenom) // pool zone asset amount
-	uAmount := uratio.MulInt(zasset).TruncateInt()
-
-	return uAmount, nil
+func (k Keeper) verifyPoolAndGetAmount(ctx sdk.Context, lock osmosislockuptypes.PeriodLock, cr types.ClaimRecord) (math.Int, error) {
+	return osmosistypes.DetermineApplicableTokensInPool(ctx, k.prKeeper, lock, cr.ChainId)
 }
 
 // -----------
@@ -443,7 +406,7 @@ func (k Keeper) getClaimAmountAndUpdateRecord(ctx sdk.Context, cr *types.ClaimRe
 
 func (k Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64) (sdk.Coins, error) {
 	coins := sdk.NewCoins(
-		sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(amount)),
+		sdk.NewCoin(k.BondDenom(ctx), sdk.NewIntFromUint64(amount)),
 	)
 
 	addr, err := sdk.AccAddressFromBech32(cr.Address)
@@ -451,8 +414,7 @@ func (k Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64) 
 		return sdk.NewCoins(), err
 	}
 
-	zoneDropAccount := types.ModuleName + "." + cr.ChainId
-	if err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, zoneDropAccount, addr, coins); err != nil {
+	if err = k.bankKeeper.SendCoins(ctx, k.GetZoneDropAccountAddress(cr.ChainId), addr, coins); err != nil {
 		return sdk.NewCoins(), err
 	}
 

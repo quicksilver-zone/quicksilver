@@ -4,8 +4,10 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 // GetClaimRecord returns the ClaimRecord of the given address for the given zone.
@@ -29,7 +31,7 @@ func (k Keeper) GetClaimRecord(ctx sdk.Context, chainID string, address string) 
 
 // SetClaimRecord creates/updates the given airdrop ClaimRecord.
 func (k Keeper) SetClaimRecord(ctx sdk.Context, cr types.ClaimRecord) error {
-	addr, err := sdk.AccAddressFromBech32(cr.Address)
+	_, addr, err := bech32.DecodeAndConvert(cr.Address)
 	if err != nil {
 		return err
 	}
@@ -147,7 +149,8 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID string, add
 
 	// calculate action allocation:
 	//   - zone drop action weight * claim record max allocation
-	amount := zd.Actions[int32(action)].MulInt64(int64(cr.MaxAllocation)).TruncateInt64()
+	// note: use int32(action)-1 as protobuf3 spec valid enum start at 1
+	amount := zd.Actions[int32(action)-1].MulInt64(int64(cr.MaxAllocation)).TruncateInt64()
 
 	// airdrop has not yet started to decay
 	if ctx.BlockTime().Before(zd.StartTime.Add(zd.Duration)) {
@@ -179,7 +182,10 @@ func (k Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID string, addre
 
 	total := uint64(0)
 	// we will only need the index as we will be calling GetClaimableAmountForAction
-	for action := range zd.Actions {
+	for i := range zd.Actions {
+		// protobuf3 spec: valid enum start at 1
+		action := i + 1
+
 		claimableForAction, err := k.GetClaimableAmountForAction(ctx, cr.ChainId, cr.Address, types.Action(action))
 		if err != nil {
 			return 0, err
@@ -198,7 +204,7 @@ func (k Keeper) Claim(
 	chainID string,
 	action types.Action,
 	address string,
-	proofs []*types.Proof,
+	proofs []*cmtypes.Proof,
 ) (uint64, error) {
 	// check action in bounds
 	if !action.InBounds() {
@@ -213,13 +219,13 @@ func (k Keeper) Claim(
 
 	// zone airdrop not active
 	if !k.IsActiveZoneDrop(ctx, zd) {
-		return 0, nil
+		return 0, fmt.Errorf("zone airdrop for %s is not active", chainID)
 	}
 
 	// obtain claim record
 	cr, err := k.GetClaimRecord(ctx, chainID, address)
 	if err != nil {
-		return 0, nil
+		return 0, fmt.Errorf("no zone airdrop found for %q on %q", address, chainID)
 	}
 
 	return k.HandleClaim(ctx, cr, action, proofs)

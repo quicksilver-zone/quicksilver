@@ -5,7 +5,7 @@ func NewGenesisState(queries []Query) *GenesisState {
 }
 
 // DefaultGenesis returns the default Capability genesis state
-func DefaultGenesis() *GenesisState {
+func DefaultGenesisState() *GenesisState {
 	queries := []Query{}
 	return NewGenesisState(queries)
 }

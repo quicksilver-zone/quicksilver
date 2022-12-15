@@ -2,7 +2,7 @@ package types
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -26,11 +26,6 @@ const (
 
 	GenericToken = "tokens"
 
-	// this value defines the number of delegation accounts per zone. This can only ever increase.
-	DelegationAccountCount = 10
-	// this value defines the number of delegation accounts a given deposit should be shared amongst
-	DelegationAccountSplit = 9
-
 	TxRetrieveCount = 100
 
 	QueryParameters         = "params"
@@ -41,17 +36,21 @@ const (
 	ICASuffixDelegate    = "delegate"
 	ICASuffixWithdrawal  = "withdrawal"
 	ICASuffixPerformance = "performance"
+
+	BankStoreKey = "store/bank/key"
 )
 
 var (
-	KeyPrefixZone             = []byte{0x01}
-	KeyPrefixIntent           = []byte{0x02}
-	KeyPrefixPortMapping      = []byte{0x03}
-	KeyPrefixReceipt          = []byte{0x04}
-	KeyPrefixWithdrawalRecord = []byte{0x05}
-	KeyPrefixDelegation       = []byte{0x06}
-	KeyPrefixDelegationPlan   = []byte{0x07}
-	KeyPrefixSnapshotIntent   = []byte{0x08}
+	KeyPrefixZone                  = []byte{0x01}
+	KeyPrefixIntent                = []byte{0x02}
+	KeyPrefixPortMapping           = []byte{0x03}
+	KeyPrefixReceipt               = []byte{0x04}
+	KeyPrefixWithdrawalRecord      = []byte{0x05}
+	KeyPrefixUnbondingRecord       = []byte{0x06}
+	KeyPrefixDelegation            = []byte{0x07}
+	KeyPrefixPerformanceDelegation = []byte{0x08}
+	KeyPrefixSnapshotIntent        = []byte{0x09}
+	KeyPrefixRedelegationRecord    = []byte{0x10}
 )
 
 func KeyPrefix(p string) []byte {
@@ -62,26 +61,26 @@ func KeyPrefix(p string) []byte {
 // as defined here: https://github.com/cosmos/cosmos-sdk/blob/v0.45.6/x/staking/types/keys.go#L180
 func ParseStakingDelegationKey(key []byte) (sdk.AccAddress, sdk.ValAddress, error) {
 	if len(key) < 1 {
-		return nil, nil, fmt.Errorf("out of bounds reading byte 0")
+		return nil, nil, errors.New("out of bounds reading byte 0")
 	}
 	if !bytes.Equal(key[0:1], []byte{0x31}) {
-		return []byte{}, []byte{}, fmt.Errorf("not a valid delegation key")
+		return []byte{}, []byte{}, errors.New("not a valid delegation key")
 	}
 	if len(key) < 2 {
-		return nil, nil, fmt.Errorf("out of bounds reading delegator address length")
+		return nil, nil, errors.New("out of bounds reading delegator address length")
 	}
 	delAddrLen := int(key[1])
 	if len(key) < 2+delAddrLen {
-		return nil, nil, fmt.Errorf("out of bounds reading delegator address")
+		return nil, nil, errors.New("out of bounds reading delegator address")
 	}
 	delAddr := key[2 : 2+delAddrLen]
 	// use valAddrLen to validate the val address has not been truncated.
 	if len(key) < 2+delAddrLen {
-		return nil, nil, fmt.Errorf("out of bounds reading delegator address length")
+		return nil, nil, errors.New("out of bounds reading delegator address length")
 	}
 	valAddrLen := int(key[2+delAddrLen])
 	if len(key) < 3+delAddrLen+valAddrLen {
-		return nil, nil, fmt.Errorf("out of bounds reading validator address")
+		return nil, nil, errors.New("out of bounds reading validator address")
 	}
 	valAddr := key[3+delAddrLen : 3+delAddrLen+valAddrLen]
 	return delAddr, valAddr, nil

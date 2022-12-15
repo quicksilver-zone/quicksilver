@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,15 +9,15 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func NewProtocolData(datatype string, protocol string, data json.RawMessage) *types.ProtocolData {
-	return &types.ProtocolData{Type: datatype, Protocol: protocol, Data: data}
+func NewProtocolData(datatype string, data json.RawMessage) *types.ProtocolData {
+	return &types.ProtocolData{Type: datatype, Data: data}
 }
 
 // GetProtocolData returns data
-func (k Keeper) GetProtocolData(ctx sdk.Context, key string) (types.ProtocolData, bool) {
+func (k Keeper) GetProtocolData(ctx sdk.Context, pdType types.ProtocolDataType, key string) (types.ProtocolData, bool) {
 	data := types.ProtocolData{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
-	bz := store.Get([]byte(key))
+	bz := store.Get(types.GetProtocolDataKey(pdType, key))
 	if len(bz) == 0 {
 		return data, false
 	}
@@ -29,9 +28,18 @@ func (k Keeper) GetProtocolData(ctx sdk.Context, key string) (types.ProtocolData
 
 // SetProtocolData set protocol data info
 func (k Keeper) SetProtocolData(ctx sdk.Context, key string, data *types.ProtocolData) {
+	if data == nil {
+		return
+	}
+
+	pdType, exists := types.ProtocolDataType_value[data.Type]
+	if !exists {
+		return
+	}
+
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
 	bz := k.cdc.MustMarshal(data)
-	store.Set([]byte(key), bz)
+	store.Set(types.GetProtocolDataKey(types.ProtocolDataType(pdType), key), bz)
 }
 
 // DeleteProtocolData delete protocol data info
@@ -41,9 +49,9 @@ func (k Keeper) DeleteProtocolData(ctx sdk.Context, key string, protocol string)
 }
 
 // IteratePrefixedProtocolDatas iterate through protocol datas with the given prefix and perform the provided function
-func (k Keeper) IteratePrefixedProtocolDatas(ctx sdk.Context, keyPrefix string, fn func(index int64, data types.ProtocolData) (stop bool)) {
+func (k Keeper) IteratePrefixedProtocolDatas(ctx sdk.Context, key []byte, fn func(index int64, data types.ProtocolData) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(keyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, key)
 	defer iterator.Close()
 
 	i := int64(0)
@@ -86,6 +94,6 @@ func (k Keeper) AllKeyedProtocolDatas(ctx sdk.Context) []*types.KeyedProtocolDat
 	return out
 }
 
-func GetProtocolDataKey(protocol string, key string) string {
+/*func GetProtocolDataKey(protocol string, key string) string {
 	return fmt.Sprintf("%s/%s", protocol, key)
-}
+}*/
