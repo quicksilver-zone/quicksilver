@@ -157,6 +157,19 @@ func (z Zone) GetValidatorsAddressesAsSlice() []string {
 	return l
 }
 
+func (z Zone) GetBondedValidatorAddressesAsSlice() []string {
+	l := make([]string, 0)
+	for _, v := range z.Validators {
+		if v.Status == "bonded" {
+			l = append(l, v.ValoperAddress)
+		}
+	}
+
+	sort.Strings(l)
+
+	return l
+}
+
 func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
 	var intents ValidatorIntents
 	var filteredIntents ValidatorIntents

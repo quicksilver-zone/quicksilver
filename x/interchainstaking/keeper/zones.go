@@ -327,7 +327,7 @@ func (k Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone, r
 	delegations := k.GetAllPerformanceDelegations(ctx, &zone)
 	validatorsToDelegate := []string{}
 OUTER:
-	for _, v := range zone.GetValidatorsAddressesAsSlice() {
+	for _, v := range zone.GetBondedValidatorAddressesAsSlice() {
 		for _, d := range delegations {
 			if d.ValidatorAddress == v {
 				continue OUTER
