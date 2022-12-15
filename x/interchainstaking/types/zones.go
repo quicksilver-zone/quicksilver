@@ -160,7 +160,7 @@ func (z Zone) GetValidatorsAddressesAsSlice() []string {
 func (z Zone) GetBondedValidatorAddressesAsSlice() []string {
 	l := make([]string, 0)
 	for _, v := range z.Validators {
-		if v.Status == "bonded" {
+		if v.Status == "BOND_STATUS_BONDED" {
 			l = append(l, v.ValoperAddress)
 		}
 	}
