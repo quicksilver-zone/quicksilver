@@ -505,7 +505,8 @@ func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 	var err error
 
 	k.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation types.RedelegationRecord) bool {
-		if ctx.BlockTime().After(redelegation.CompletionTime) {
+		// if the redelegation completion time was in the past AND is not 0000-00-00T00:00:00Z, then delete it.
+		if ctx.BlockTime().After(redelegation.CompletionTime) && !redelegation.CompletionTime.Equal(time.Time{}) {
 			k.Logger(ctx).Info("garbage collecting completed redelegations", "key", key, "completion", redelegation.CompletionTime)
 			k.DeleteRedelegationRecordByKey(ctx, append(types.KeyPrefixRedelegationRecord, key...))
 		}
@@ -595,9 +596,9 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		return errors.New("unable to unmarshal MsgBeginRedelegate")
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
-	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.DelegatorAddress, epochNumber)
+	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	if !found {
-		k.Logger(ctx).Error("unable to find redelegation record")
+		k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch", epochNumber)
 		return errors.New("unable to find redelegation record")
 	}
 	k.Logger(ctx).Error("updating redelegation record with completion time")

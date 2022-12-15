@@ -21,9 +21,13 @@ const (
 	v001003UpgradeName = "v0.10.3"
 	v001004UpgradeName = "v0.10.4"
 	v001005UpgradeName = "v0.10.5"
+	v001006UpgradeName = "v0.10.6"
+	v001007UpgradeName = "v0.10.7"
+	v001008UpgradeName = "v0.10.8"
 
-	InnuendoChainID = "innuendo-3"
-	DevnetChainID   = "quicktest-1"
+	InnuendoChainID  = "innuendo-3"
+	Innuendo2ChainID = "innuendo-4"
+	DevnetChainID    = "quicktest-1"
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
@@ -33,6 +37,9 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v001003UpgradeName, getv001003Upgrade(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v001004UpgradeName, getv001004Upgrade(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v001005UpgradeName, getv001005Upgrade(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v001006UpgradeName, getv001006Upgrade(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v001007UpgradeName, getv001007Upgrade(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v001008UpgradeName, getv001008Upgrade(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -286,6 +293,86 @@ func getv001005Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
 		app.InterchainstakingKeeper.MigrateParams(ctx)
 		app.ParticipationRewardsKeeper.MigrateParams(ctx)
 		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.5; complete.")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func getv001006Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		switch ctx.ChainID() {
+		case Innuendo2ChainID:
+			for _, record := range []icstypes.RedelegationRecord{
+				{ChainId: "theta-testnet-001", EpochNumber: 4, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper10v6wvdenee8r9l6wlsphcgur2ltl8ztkfrvj9a", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 4, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper10w45kv74rqsz6sjr0u9mqp7wvhjd3gg53xc22c", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 4, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper13n6wqhq8la352je00nwq847ktp47pgknseu6kk", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 4, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper15aptdqmm7ddgtcrjvc5hs988rlrkze406p56m2", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 4, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper15h3wjtzzjw9ua8yfvytke3u9pgt8hz6wh7hys5", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 4, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper15tye9nj3cj9va0jfvm5sk6dv8h5zfqegg9eukc", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 4, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper178h4s6at5v9cd8m9n7ew3hg7k9eh0s6wptxpcn", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 4, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper17hskshytlrepzhas628uk00jvvppg7yfj3wpqz", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 4, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper183aycgtstp67r6s4vd7ts2npp2ckk4xah7rxj6", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 4, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper19j9apwhdqvjhvjuptpa7llmny77skx0k0y0whk", Amount: 1},
+			} {
+				app.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+				app.InterchainstakingKeeper.Logger(ctx).Info("Readding redelegation", "src", record.Source, "dst", record.Destination, "amount", record.Amount)
+			}
+		default:
+			// no-op
+		}
+		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.6; complete.")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func getv001007Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.7; no state transitions to apply.")
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func getv001008Upgrade(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		switch ctx.ChainID() {
+		case Innuendo2ChainID:
+			for _, record := range []icstypes.RedelegationRecord{
+				{ChainId: "theta-testnet-001", EpochNumber: 5, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper10v6wvdenee8r9l6wlsphcgur2ltl8ztkfrvj9a", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 5, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper10w45kv74rqsz6sjr0u9mqp7wvhjd3gg53xc22c", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 5, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper13n6wqhq8la352je00nwq847ktp47pgknseu6kk", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 5, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper15aptdqmm7ddgtcrjvc5hs988rlrkze406p56m2", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 5, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper15h3wjtzzjw9ua8yfvytke3u9pgt8hz6wh7hys5", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 5, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper15tye9nj3cj9va0jfvm5sk6dv8h5zfqegg9eukc", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 5, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper178h4s6at5v9cd8m9n7ew3hg7k9eh0s6wptxpcn", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 5, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper17hskshytlrepzhas628uk00jvvppg7yfj3wpqz", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 5, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper183aycgtstp67r6s4vd7ts2npp2ckk4xah7rxj6", Amount: 1},
+				{ChainId: "theta-testnet-001", EpochNumber: 5, Source: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Destination: "cosmosvaloper19j9apwhdqvjhvjuptpa7llmny77skx0k0y0whk", Amount: 1},
+
+				{ChainId: "theta-testnet-001", EpochNumber: 6, Source: "cosmosvaloper1zcjcj7una47tpjyl7gtmxr4x0z3q0wtt9e2mmx", Destination: "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3", Amount: 3},
+				{ChainId: "theta-testnet-001", EpochNumber: 6, Source: "cosmosvaloper1zcjcj7una47tpjyl7gtmxr4x0z3q0wtt9e2mmx", Destination: "cosmosvaloper1s3y5zjppw6ymh0h6snmnj52730weqjqph4c8n9", Amount: 1},
+
+				{ChainId: "uni-5", EpochNumber: 5, Source: "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l", Destination: "junovaloper192p0qmgz6rsda5fdnrvd63cgyzk6y93xcn8vzu", Amount: 2},
+				{ChainId: "uni-5", EpochNumber: 5, Source: "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l", Destination: "junovaloper1dma7pr7fmn9fsn6n0700qxwjcm52y8rwnqh6pm", Amount: 2},
+				{ChainId: "uni-5", EpochNumber: 5, Source: "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l", Destination: "junovaloper1gfaavqqg79tgcmgws6ys7yvchtc3fl42zjw43l", Amount: 2},
+				{ChainId: "uni-5", EpochNumber: 5, Source: "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l", Destination: "junovaloper1h686kh9ajxcdcd8ss4lgenh3awyms7sl2630qu", Amount: 2},
+				{ChainId: "uni-5", EpochNumber: 5, Source: "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l", Destination: "junovaloper1v99tqhh55tdslznud58jkuk4sdg9m9y9xalg7v", Amount: 2},
+				{ChainId: "uni-5", EpochNumber: 5, Source: "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l", Destination: "junovaloper123aw4ml9e3r9yjswl3ul73gj58h77ul4nuvlek", Amount: 1},
+				{ChainId: "uni-5", EpochNumber: 5, Source: "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l", Destination: "junovaloper12e37vdgl2uc7kk3wu0d2qpkuwgyy7w874cyvnt", Amount: 1},
+				{ChainId: "uni-5", EpochNumber: 5, Source: "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l", Destination: "junovaloper12ze55c8sngsf460pa7qykfgrzpv44n3ay3w3cd", Amount: 1},
+				{ChainId: "uni-5", EpochNumber: 5, Source: "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l", Destination: "junovaloper13ewczawhaxdyr0x8ua3j45f9lej0ahdh5cegfj", Amount: 1},
+				{ChainId: "uni-5", EpochNumber: 5, Source: "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l", Destination: "junovaloper14ven7wknwm74wnsx0jquw8wmc0m9wrlkf8shjn", Amount: 1},
+
+				{ChainId: "uni-5", EpochNumber: 6, Source: "junovaloper1v99tqhh55tdslznud58jkuk4sdg9m9y9xalg7v", Destination: "junovaloper192p0qmgz6rsda5fdnrvd63cgyzk6y93xcn8vzu", Amount: 1},
+				{ChainId: "uni-5", EpochNumber: 6, Source: "junovaloper1v99tqhh55tdslznud58jkuk4sdg9m9y9xalg7v", Destination: "junovaloper1dma7pr7fmn9fsn6n0700qxwjcm52y8rwnqh6pm", Amount: 1},
+				{ChainId: "uni-5", EpochNumber: 6, Source: "junovaloper1v99tqhh55tdslznud58jkuk4sdg9m9y9xalg7v", Destination: "junovaloper1gfaavqqg79tgcmgws6ys7yvchtc3fl42zjw43l", Amount: 1},
+				{ChainId: "uni-5", EpochNumber: 6, Source: "junovaloper1v99tqhh55tdslznud58jkuk4sdg9m9y9xalg7v", Destination: "junovaloper1h686kh9ajxcdcd8ss4lgenh3awyms7sl2630qu", Amount: 1},
+			} {
+				app.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+				app.InterchainstakingKeeper.Logger(ctx).Info("Readding redelegation", "src", record.Source, "dst", record.Destination, "amount", record.Amount)
+			}
+		default:
+			// no-op
+		}
+		app.UpgradeKeeper.Logger(ctx).Info("upgrade to v0.10.8; complete.")
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }
