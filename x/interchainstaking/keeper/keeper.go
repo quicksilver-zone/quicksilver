@@ -57,6 +57,10 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
+	if addr := accountKeeper.GetModuleAddress(types.EscrowModuleAccount); addr == nil {
+		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+	}
+
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
