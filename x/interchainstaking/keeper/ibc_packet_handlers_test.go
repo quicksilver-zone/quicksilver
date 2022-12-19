@@ -561,7 +561,7 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 			// set up zones
 			for _, record := range records {
 				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
+				app.BankKeeper.MintCoins(ctx, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
 			}
 
 			// trigger handler
@@ -668,11 +668,11 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 
 			records := test.records(s.chainB.ChainID, zone.AccountPrefix)
 
-			startBalance := app.BankKeeper.GetAllBalances(ctx, app.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
+			startBalance := app.BankKeeper.GetAllBalances(ctx, app.AccountKeeper.GetModuleAddress(icstypes.EscrowModuleAccount))
 			// set up zones
 			for _, record := range records {
 				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
+				app.BankKeeper.MintCoins(ctx, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
 			}
 
 			// trigger handler
@@ -699,7 +699,7 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 				return false
 			})
 
-			postBurnBalance := app.BankKeeper.GetAllBalances(ctx, app.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
+			postBurnBalance := app.BankKeeper.GetAllBalances(ctx, app.AccountKeeper.GetModuleAddress(icstypes.EscrowModuleAccount))
 			s.Require().Equal(startBalance, postBurnBalance)
 		})
 	}

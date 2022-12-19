@@ -217,7 +217,7 @@ var (
 		icatypes.ModuleName:                        nil,
 		claimsmanagertypes.ModuleName:              nil,
 		interchainstakingtypes.ModuleName:          {authtypes.Minter},
-		interchainstakingtypes.EscrowModuleAccount: {authtypes.Burner},
+		interchainstakingtypes.EscrowModuleAccount: {authtypes.Minter, authtypes.Burner},
 		interchainquerytypes.ModuleName:            nil,
 		// TODO: Remove Burner from participationrewards - for dev/test only;
 		participationrewardstypes.ModuleName: {authtypes.Burner},
