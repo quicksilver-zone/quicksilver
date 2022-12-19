@@ -338,7 +338,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 	if len(withdrawalRecord.Amount) == 1 && len(msg.Amount) == 1 && msg.Amount[0].Denom == withdrawalRecord.Amount[0].Denom && withdrawalRecord.Amount.IsEqual(msg.Amount) {
 		k.Logger(ctx).Info("found matching withdrawal; marking as completed")
 		k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, WithdrawStatusCompleted)
-		if err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
+		if err = k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
 			// if we can't burn the coins, fail.
 			return err
 		}
@@ -357,7 +357,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 					// we just removed the last element
 					k.Logger(ctx).Info("found matching withdrawal; marking as completed")
 					k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, WithdrawStatusCompleted)
-					if err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
+					if err = k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
 						// if we can't burn the coins, fail.
 						return err
 					}

@@ -561,7 +561,10 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 			// set up zones
 			for _, record := range records {
 				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
+				err := app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
+				s.Require().NoError(err)
+				err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
+				s.Require().NoError(err)
 			}
 
 			// trigger handler
@@ -672,7 +675,10 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 			// set up zones
 			for _, record := range records {
 				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
+				err := app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
+				s.Require().NoError(err)
+				err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
+				s.Require().NoError(err)
 			}
 
 			// trigger handler
