@@ -271,6 +271,35 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				}
 				return out.Sort()
 			},
+		}, {
+			name: "two intents; with zer0 balances, diff val, returns default equal weights ",
+			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
+				out := make([]icstypes.DelegatorIntent, 0)
+				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.ZeroDec()}}})
+				out = append(out, icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}})
+				return out
+			},
+			balances: func() map[string]int64 {
+				return map[string]int64{
+					user1.String(): 0,
+					user2.String(): 0,
+				}
+			},
+			// expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+			// 	out := icstypes.ValidatorIntents{}
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
+			// 	out = append(out, &icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec().Quo(sdk.NewDec(2))})
+
+			// 	return out.Sort()
+			// },
+			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+				// four delegators each at 25%
+				out := icstypes.ValidatorIntents{}
+				for _, val := range zone.GetValidatorsAddressesAsSlice() {
+					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
+				}
+				return out.Sort()
+			},
 		},
 	}
 
