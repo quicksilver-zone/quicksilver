@@ -11,11 +11,9 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 # Cosmwasm - download correct libwasmvm version
 RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
-    wget https://github.com/CosmWasm/wasmvm/releases/download/$(WASMVM_VERSION)/libwasmvm_muslc.$(uname -m).a \
-      -O /lib/libwasmvm_muslc.a
-
-# Cosmwasm - verify checksum
-RUN wget https://github.com/CosmWasm/wasmvm/releases/download/$(WASMVM_VERSION)/checksums.txt -O /tmp/checksums.txt && \
+    wget https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm_muslc.$(uname -m).a \
+      -O /lib/libwasmvm_muslc.a && \
+     wget https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/checksums.txt -O /tmp/checksums.txt && \
     sha256sum /lib/libwasmvm_muslc.a | grep $(cat /tmp/checksums.txt | grep $(uname -m) | cut -d ' ' -f 1)
 
 COPY . .
