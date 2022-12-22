@@ -442,7 +442,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 				err = fmt.Errorf("unable to find a validator we expected to exist [%s]", dist.Valoper)
 				return true
 			}
-			if val.DelegatorShares.Equal(sdk.NewDecFromInt(val.VotingPower)) {
+			if val.DelegatorShares.Equal(sdk.NewDecFromInt(val.VotingPower)) && dist.Amount > 0 {
 				dist.Amount--
 			}
 		}
@@ -477,9 +477,11 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(out) {
-		sort.Strings(txhashes[valoper])
-		k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txhashes[valoper]})
-		msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: out[valoper]})
+		if !out[valoper].Amount.IsZero() {
+			sort.Strings(txhashes[valoper])
+			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txhashes[valoper]})
+			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: out[valoper]})
+		}
 	}
 
 	k.Logger(ctx).Error("unbonding messages", "msg", msgs)
