@@ -37,6 +37,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	ack := channeltypes.Acknowledgement_Result{}
 	err := json.Unmarshal(acknowledgement, &ack)
 	if err != nil {
+		k.Logger(ctx).Error("unable to unmarshal acknowledgement", "error", err, "data", acknowledgement)
+		return err
+	}
+	if reflect.DeepEqual(ack, channeltypes.Acknowledgement_Result{}) {
 		ackErr := channeltypes.Acknowledgement_Error{}
 		err := json.Unmarshal(acknowledgement, &ackErr)
 		if err != nil {
@@ -44,8 +48,8 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			return err
 		}
 
-		k.Logger(ctx).Error("unable to unmarshal acknowledgement result", "error", err, "remote_err", ackErr, "data", acknowledgement)
-		return err
+		k.Logger(ctx).Error("received an acknowledgement error", "error", err, "remote_err", ackErr, "data", acknowledgement)
+		return errors.New("received an acknowledgement error; unable to process")
 	}
 
 	txMsgData := &sdk.TxMsgData{}
@@ -72,6 +76,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	}
 
 	for msgIndex, msgData := range txMsgData.Data {
+
 		src := msgs[msgIndex]
 		switch msgData.MsgType {
 		case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
