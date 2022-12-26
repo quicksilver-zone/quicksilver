@@ -19,7 +19,7 @@ func BenchmarkEpochProvision(b *testing.B) {
 	params := DefaultParams()
 
 	s1 := rand.NewSource(100)
-	r1 := rand.New(s1)
+	r1 := rand.New(s1) //nolint:gosec // this is a test
 	minter.EpochProvisions = sdk.NewDec(r1.Int63n(1000000))
 
 	// run the EpochProvision function b.N times

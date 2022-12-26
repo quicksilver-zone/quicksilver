@@ -10,7 +10,7 @@ import (
 func TestClaim_ValidateBasic(t *testing.T) {
 	type fields struct {
 		UserAddress string
-		ChainId     string
+		ChainID     string
 		Amount      uint64
 	}
 	tests := []struct {
@@ -27,7 +27,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 			"invalid_address",
 			fields{
 				UserAddress: "cosmos1234567890",
-				ChainId:     "testzone-1",
+				ChainID:     "testzone-1",
 				Amount:      10000,
 			},
 			true,
@@ -36,7 +36,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 			"invalid_chain_id",
 			fields{
 				UserAddress: utils.GenerateAccAddressForTest().String(),
-				ChainId:     "",
+				ChainID:     "",
 				Amount:      10000,
 			},
 			true,
@@ -45,7 +45,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 			"invalid_chain_id",
 			fields{
 				UserAddress: utils.GenerateAccAddressForTest().String(),
-				ChainId:     "",
+				ChainID:     "",
 				Amount:      10000,
 			},
 			true,
@@ -54,7 +54,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 			"invalid_amount",
 			fields{
 				UserAddress: utils.GenerateAccAddressForTest().String(),
-				ChainId:     "testzone-1",
+				ChainID:     "testzone-1",
 				Amount:      0,
 			},
 			true,
@@ -63,7 +63,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 			"valid",
 			fields{
 				UserAddress: utils.GenerateAccAddressForTest().String(),
-				ChainId:     "testzone-1",
+				ChainID:     "testzone-1",
 				Amount:      1000000,
 			},
 			false,
@@ -73,7 +73,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Claim{
 				UserAddress: tt.fields.UserAddress,
-				ChainId:     tt.fields.ChainId,
+				ChainId:     tt.fields.ChainID,
 				Amount:      tt.fields.Amount,
 			}
 			err := c.ValidateBasic()

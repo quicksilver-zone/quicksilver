@@ -11,10 +11,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -159,7 +159,7 @@ func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.Zone, coins sdk.
 	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo)
 }
 
-func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string) error {
+func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Msg, account *types.ICAAccount, memo string) error {
 	portID := account.GetPortName()
 	connectionID, err := k.GetConnectionForPort(ctx, portID)
 	if err != nil {

@@ -11,7 +11,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 	type fields struct {
 		Title           string
 		Description     string
-		ConnectionId    string
+		ConnectionID    string
 		BaseDenom       string
 		LocalDenom      string
 		AccountPrefix   string
@@ -30,7 +30,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 			m := RegisterZoneProposal{
 				Title:           tt.fields.Title,
 				Description:     tt.fields.Description,
-				ConnectionId:    tt.fields.ConnectionId,
+				ConnectionId:    tt.fields.ConnectionID,
 				BaseDenom:       tt.fields.BaseDenom,
 				LocalDenom:      tt.fields.LocalDenom,
 				AccountPrefix:   tt.fields.AccountPrefix,

@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"

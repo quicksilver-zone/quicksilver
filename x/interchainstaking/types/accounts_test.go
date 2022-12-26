@@ -38,13 +38,13 @@ func TestAccountSetBalanceGood(t *testing.T) {
 // test that the balance panics when set to an invalid denomination.
 func TestAccountSetBalanceBadDenom(t *testing.T) {
 	ica := NewICA()
-	require.PanicsWithError(t, "invalid denom: _fail", func() { ica.SetBalance(sdk.NewCoins(sdk.NewCoin("_fail", sdk.NewInt(300)))) })
+	require.PanicsWithError(t, "invalid denom: _fail", func() { ica.SetBalance(sdk.NewCoins(sdk.NewCoin("_fail", sdk.NewInt(300)))) }) //nolint:errcheck
 }
 
 // test that the balance panics when set to a negative number.
 func TestAccountSetBalanceNegativeAmount(t *testing.T) {
 	ica := NewICA()
-	require.PanicsWithError(t, "negative coin amount: -300", func() { ica.SetBalance(sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(-300)))) })
+	require.PanicsWithError(t, "negative coin amount: -300", func() { ica.SetBalance(sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(-300)))) }) //nolint:errcheck
 }
 
 // test that the balance panics when set to a negative number.
