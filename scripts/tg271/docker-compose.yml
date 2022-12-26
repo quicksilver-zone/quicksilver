@@ -1,0 +1,87 @@
+version: '3.8'
+services:
+  quicksilver:
+    image: quicksilverzone/quicksilver:v1.0.0-10-gddbec29
+    hostname: quicksilver
+    volumes:
+      - ./data/qstest-1:/quicksilver/.quicksilverd
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 26657:26657
+      - 1317:1317
+  quicksilver2:
+    image: quicksilverzone/quicksilver:v1.0.0-10-gddbec29
+    hostname: quicksilver2
+    volumes:
+      - ./data/qstest-1a:/quicksilver/.quicksilverd
+    build:
+      context: .
+      dockerfile: Dockerfile
+  quicksilver3:
+    image: quicksilverzone/quicksilver:v1.0.0-10-gddbec29
+    hostname: quicksilver3
+    volumes:
+      - ./data/qstest-1b:/quicksilver/.quicksilverd
+    build:
+      context: .
+      dockerfile: Dockerfile
+  gaia:
+    image: quicksilverzone/gaia:v7.1.0-alpine
+    hostname: gaia
+    volumes:
+      - ./data/gaia-1:/gaia/.gaia
+    command:
+      - gaiad
+      - start
+    ports:
+    - 27657:26657
+    - 23137:1317
+  gaia2:
+    image: quicksilverzone/gaia:v7.1.0-alpine
+    hostname: gaia
+    volumes:
+      - ./data/gaia-1a:/gaia/.gaia
+    command:
+      - gaiad
+      - start
+  gaia3:
+    image: quicksilverzone/gaia:v7.1.0-alpine
+    hostname: gaia
+    volumes:
+      - ./data/gaia-1b:/gaia/.gaia
+    command:
+      - gaiad
+      - start
+  
+  hermes:
+    image: quicksilverzone/hermes:v1.2.0
+    hostname: hermes
+    volumes:
+      - ./data/hermes:/hermes/.hermes
+    command:
+      - hermes
+      - start
+    restart: always
+  icq:
+    image: quicksilverzone/interchain-queries:v0.7.7
+    volumes:
+      - ./data/icq:/icq/.icq
+    command:
+      - interchain-queries
+      - run
+    restart: always
+  relayer:
+    image: quicksilverzone/relayer:v2.1.1
+    volumes:
+      - ./data/rly:/rly/.relayer
+    command:
+      - rly
+      - start
+      - demo
+      #- -p
+      #- events
+      #- -b
+      #- "100"
+    restart: always

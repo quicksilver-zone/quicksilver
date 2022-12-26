@@ -20,9 +20,6 @@ else
     TIME="$(date --date '-2 minutes' +%Y-%m-%dT%H:%M:00Z -u)"
 fi
 
-echo $SED
-echo $TIME
-
 QS_IMAGE=quicksilverzone/quicksilver
 QS_VERSION=latest
 TZ_IMAGE=quicksilverzone/testzone
@@ -35,35 +32,41 @@ CHAINID_0=qstest-1
 CHAINID_1=lstest-1
 CHAINID_2=lstest-2
 
-QS1_RUN="docker-compose --ansi never run --rm -T quicksilver quicksilverd"
-QS2_RUN="docker-compose --ansi never run --rm -T quicksilver2 quicksilverd"
-QS3_RUN="docker-compose --ansi never run --rm -T quicksilver3 quicksilverd"
-TZ1_1_RUN="docker-compose --ansi never run --rm -T testzone1-1 icad"
-TZ1_2_RUN="docker-compose --ansi never run --rm -T testzone1-2 icad"
-TZ1_3_RUN="docker-compose --ansi never run --rm -T testzone1-3 icad"
-TZ1_4_RUN="docker-compose --ansi never run --rm -T testzone1-4 icad"
-TZ2_1_RUN="docker-compose --ansi never run --rm -T testzone2-1 osmosisd"
-TZ2_2_RUN="docker-compose --ansi never run --rm -T testzone2-2 osmosisd"
-TZ2_3_RUN="docker-compose --ansi never run --rm -T testzone2-3 osmosisd"
-TZ2_4_RUN="docker-compose --ansi never run --rm -T testzone2-4 osmosisd"
-RLY_RUN="docker-compose --ansi never run --rm -T relayer rly"
-HERMES_RUN="docker-compose --ansi never run --rm -T hermes hermes"
+QS1_RUN="docker-compose $DC --ansi never run --rm -T quicksilver quicksilverd"
+QS2_RUN="docker-compose $DC --ansi never run --rm -T quicksilver2 quicksilverd"
+QS3_RUN="docker-compose $DC --ansi never run --rm -T quicksilver3 quicksilverd"
+GAIA1_RUN="docker-compose $DC --ansi never run --rm -T gaia gaiad"
+GAIA2_RUN="docker-compose $DC --ansi never run --rm -T gaia2 gaiad"
+GAIA3_RUN="docker-compose $DC --ansi never run --rm -T gaia3 gaiad"
+TZ1_1_RUN="docker-compose $DC --ansi never run --rm -T testzone1-1 icad"
+TZ1_2_RUN="docker-compose $DC --ansi never run --rm -T testzone1-2 icad"
+TZ1_3_RUN="docker-compose $DC --ansi never run --rm -T testzone1-3 icad"
+TZ1_4_RUN="docker-compose $DC --ansi never run --rm -T testzone1-4 icad"
+TZ2_1_RUN="docker-compose $DC --ansi never run --rm -T testzone2-1 osmosisd"
+TZ2_2_RUN="docker-compose $DC --ansi never run --rm -T testzone2-2 osmosisd"
+TZ2_3_RUN="docker-compose $DC --ansi never run --rm -T testzone2-3 osmosisd"
+TZ2_4_RUN="docker-compose $DC --ansi never run --rm -T testzone2-4 osmosisd"
+RLY_RUN="docker-compose $DC --ansi never run --rm -T relayer rly"
+HERMES_RUN="docker-compose $DC --ansi never run --rm -T hermes hermes"
 
-QS1_EXEC="docker-compose --ansi never exec -T quicksilver quicksilverd"
-QS2_EXEC="docker-compose --ansi never exec -T quicksilver2 quicksilverd"
-QS3_EXEC="docker-compose --ansi never exec -T quicksilver3 quicksilverd"
-TZ1_1_EXEC="docker-compose --ansi never exec -T testzone1-1 icad"
-TZ1_2_EXEC="docker-compose --ansi never exec -T testzone1-2 icad"
-TZ1_3_EXEC="docker-compose --ansi never exec -T testzone1-3 icad"
-TZ1_4_EXEC="docker-compose --ansi never exec -T testzone1-4 icad"
-TZ2_1_EXEC="docker-compose --ansi never exec -T testzone2-1 osmosisd"
-TZ2_2_EXEC="docker-compose --ansi never exec -T testzone2-2 osmosisd"
-TZ2_3_EXEC="docker-compose --ansi never exec -T testzone2-3 osmosisd"
-TZ2_4_EXEC="docker-compose --ansi never exec -T testzone2-4 osmosisd"
-RLY_EXEC="docker-compose --ansi never exec -T relayer"
+QS1_EXEC="docker-compose $DC --ansi never exec -T quicksilver quicksilverd"
+QS2_EXEC="docker-compose $DC --ansi never exec -T quicksilver2 quicksilverd"
+QS3_EXEC="docker-compose $DC --ansi never exec -T quicksilver3 quicksilverd"
+GAIA1_EXEC="docker-compose $DC --ansi never exec -T gaia gaiad"
+GAIA2_EXEC="docker-compose $DC --ansi never exec -T gaia2 gaiad"
+GAIA3_EXEC="docker-compose $DC --ansi never exec -T gaia3 gaiad"
+TZ1_1_EXEC="docker-compose $DC --ansi never exec -T testzone1-1 icad"
+TZ1_2_EXEC="docker-compose $DC --ansi never exec -T testzone1-2 icad"
+TZ1_3_EXEC="docker-compose $DC --ansi never exec -T testzone1-3 icad"
+TZ1_4_EXEC="docker-compose $DC --ansi never exec -T testzone1-4 icad"
+TZ2_1_EXEC="docker-compose $DC --ansi never exec -T testzone2-1 osmosisd"
+TZ2_2_EXEC="docker-compose $DC --ansi never exec -T testzone2-2 osmosisd"
+TZ2_3_EXEC="docker-compose $DC --ansi never exec -T testzone2-3 osmosisd"
+TZ2_4_EXEC="docker-compose $DC --ansi never exec -T testzone2-4 osmosisd"
+RLY_EXEC="docker-compose $DC --ansi never exec -T relayer"
 
-ICQ_RUN="docker-compose --ansi never run --rm -T icq interchain-queries"
-ICQ2_RUN="docker-compose --ansi never run --rm -T icq2 interchain-queries"
+ICQ_RUN="docker-compose $DC --ansi never run --rm -T icq interchain-queries"
+ICQ2_RUN="docker-compose $DC --ansi never run --rm -T icq2 interchain-queries"
 
 VAL_MNEMONIC_1="clock post desk civil pottery foster expand merit dash seminar song memory figure uniform spice circle try happy obvious trash crime hybrid hood cushion"
 VAL_MNEMONIC_2="angry twist harsh drastic left brass behave host shove marriage fall update business leg direct reward object ugly security warm tuna model broccoli choice"
