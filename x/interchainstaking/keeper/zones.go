@@ -296,7 +296,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 				"accountbalance",
 				0,
 			)
-			icaAccount.BalanceWaitgroup++
+			icaAccount.IncrementBalanceWaitgroup()
 
 		}
 	}
@@ -314,7 +314,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 			"accountbalance",
 			0,
 		)
-		icaAccount.BalanceWaitgroup++
+		icaAccount.IncrementBalanceWaitgroup()
 	}
 
 	k.SetZone(ctx, &zone)
