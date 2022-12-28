@@ -3,7 +3,10 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
@@ -144,7 +148,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 			return errors.New("unable to find remote transfer connection")
 		}
 
-		err = k.TransferKeeper.SendTransfer(ctx, srcPort, srcChannel, outCoins[0], k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0}, uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()))
+		err = k.TransferIBC(ctx, srcPort, srcChannel, outCoins[0], k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress)
 	} else {
 
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, outCoins)
@@ -154,12 +158,42 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 	return err
 }
 
+func (k *Keeper) TransferIBC(ctx sdk.Context, sourcePort, sourceChannel string, token sdk.Coin, sender sdk.AccAddress, receiver string) error {
+	var (
+		err           error
+		fullDenomPath string
+	)
+
+	// begin createOutgoingPacket logic
+	// See spec for this logic: https://github.com/cosmos/ibc/tree/master/spec/app/ics-020-fungible-token-transfer#packet-relay
+	channelCap, ok := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(sourcePort, sourceChannel))
+	if !ok {
+		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
+	}
+
+	// deconstruct the token denomination into the denomination trace info
+	// to determine if the sender is the source chain
+	if strings.HasPrefix(token.Denom, "ibc/") {
+		fullDenomPath, err = k.TransferKeeper.DenomPathFromHash(ctx, token.Denom)
+		if err != nil {
+			return err
+		}
+	} else {
+		fullDenomPath = token.Denom
+	}
+
+	packetData := transfertypes.NewFungibleTokenPacketData(fullDenomPath, token.Amount.String(), sender.String(), receiver, "")
+
+	_, err = k.ics4Wrapper.SendPacket(ctx, channelCap, sourcePort, sourceChannel, clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0}, uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()), packetData.GetBytes())
+	return err
+}
+
 func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.Zone, coins sdk.Coins, memo string) error {
 	msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
 	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo)
 }
 
-func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Msg, account *types.ICAAccount, memo string) error {
+func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string) error {
 	portID := account.GetPortName()
 	connectionID, err := k.GetConnectionForPort(ctx, portID)
 	if err != nil {
@@ -193,8 +227,13 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Msg, account *types.ICAA
 		msgsChunk := msgs[0:chunkSize]
 		msgs = msgs[chunkSize:]
 
+		protoMsgChunk := []proto.Message{}
+		for _, msg := range msgsChunk {
+			protoMsgChunk = append(protoMsgChunk, []proto.Message{msg}...)
+		}
+
 		// build and submit message for this chunk
-		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk)
+		data, err := icatypes.SerializeCosmosTx(k.cdc, protoMsgChunk)
 		if err != nil {
 			return err
 		}

@@ -22,14 +22,14 @@ import (
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/controller/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v6/modules/apps/transfer/keeper"
+	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
 	ibckeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/ingenuity-build/quicksilver/utils"
 	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/tendermint/tendermint/libs/log"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -46,13 +46,14 @@ type Keeper struct {
 	BankKeeper          bankkeeper.Keeper
 	IBCKeeper           ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
+	ics4Wrapper         porttypes.ICS4Wrapper
 	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
 	paramStore          paramtypes.Subspace
 }
 
 // NewKeeper returns a new instance of zones Keeper.
 // This function will panic on failure.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, claimsManagerKeeper claimsmanagerkeeper.Keeper, ps paramtypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, claimsManagerKeeper claimsmanagerkeeper.Keeper, ics4Wrapper porttypes.ICS4Wrapper, ps paramtypes.Subspace) Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -72,6 +73,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 		IBCKeeper:           ibcKeeper,
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
+		ics4Wrapper:         ics4Wrapper,
 
 		paramStore: ps,
 	}

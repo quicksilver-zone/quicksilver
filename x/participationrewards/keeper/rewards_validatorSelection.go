@@ -205,7 +205,7 @@ func (k Keeper) calcOverallScores(
 		"expected", expected,
 	)
 
-	var msgs []*distrtypes.MsgWithdrawDelegatorReward
+	var msgs []sdk.Msg
 	limit := sdk.NewDec(1.0)
 	for _, reward := range rewards {
 		vs, exists := zs.ValidatorScores[reward.ValidatorAddress]
