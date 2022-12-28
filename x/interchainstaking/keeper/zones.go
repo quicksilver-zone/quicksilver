@@ -11,6 +11,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
@@ -182,7 +183,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DepositAddress.WithdrawalAddress != zone.DepositAddress.Address {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "")
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DepositAddress, "")
 		if err != nil {
 			return err
 		}
@@ -190,7 +191,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DelegationAddress.WithdrawalAddress != zone.WithdrawalAddress.Address {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "")
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DelegationAddress, "")
 		if err != nil {
 			return err
 		}
@@ -199,7 +200,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 	// set withdrawal address for performance address, if it exists
 	if zone.PerformanceAddress != nil && zone.PerformanceAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.PerformanceAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "")
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "")
 		if err != nil {
 			return err
 		}
@@ -352,7 +353,7 @@ OUTER:
 
 	// send delegations to validators
 	k.Logger(ctx).Info("send performance delegations", "zone", zone.ChainId)
-	var msgs []sdk.Msg
+	var msgs []proto.Message
 	for _, val := range validatorsToDelegate {
 		k.Logger(ctx).Info(
 			"performance delegation",

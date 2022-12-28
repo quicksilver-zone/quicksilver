@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
+	golangproto "github.com/golang/protobuf/proto" //nolint:staticcheck
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -24,6 +24,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/proto"
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -49,7 +50,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	}
 
 	txMsgData := &sdk.TxMsgData{}
-	err = proto.Unmarshal(ack.Result, txMsgData)
+	err = golangproto.Unmarshal(ack.Result, txMsgData)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal acknowledgement", "error", err, "ack", ack.Result)
 		return err
@@ -82,7 +83,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
 			response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			err := golangproto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
 				return err
@@ -95,7 +96,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
 			response := lsmstakingtypes.MsgTokenizeSharesResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			err := golangproto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgTokenizeShares response", "error", err)
 				return err
@@ -108,7 +109,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgDelegate":
 			response := stakingtypes.MsgDelegateResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			err := golangproto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgDelegate response", "error", err)
 				return err
@@ -121,7 +122,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
 			response := stakingtypes.MsgBeginRedelegateResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			err := golangproto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgBeginRedelegate response", "error", err)
 				return err
@@ -133,7 +134,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.staking.v1beta1.MsgUndelegate":
 			response := stakingtypes.MsgUndelegateResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			err := golangproto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgDelegate response", "error", err)
 				return err
@@ -145,7 +146,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.bank.v1beta1.MsgSend":
 			response := banktypes.MsgSendResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			err := golangproto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgSend response", "error", err)
 				return err
@@ -158,7 +159,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.bank.v1beta1.MsgMultiSend":
 			response := banktypes.MsgMultiSendResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			err := golangproto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
 				return err
@@ -170,7 +171,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":
 			response := distrtypes.MsgSetWithdrawAddressResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			err := golangproto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
 				return err
@@ -182,7 +183,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			continue
 		case "/ibc.applications.transfer.v1.MsgTransfer":
 			response := ibctransfertypes.MsgTransferResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
+			err := golangproto.Unmarshal(msgData.Data, &response)
 			if err != nil {
 				k.Logger(ctx).Error("unable to unmarshal MsgTransfer response", "error", err)
 				return err
@@ -304,7 +305,7 @@ func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.Zone, msg *
 }
 
 func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
-	var msgs []sdk.Msg
+	var msgs []proto.Message
 	for _, coin := range msg.Amount {
 		if coin.Denom == zone.BaseDenom {
 			allocations := k.DeterminePlanForDelegation(ctx, zone, msg.Amount)
@@ -475,7 +476,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return nil
 	}
 
-	var msgs []sdk.Msg
+	var msgs []proto.Message
 	for _, valoper := range utils.Keys(out) {
 		sort.Strings(txhashes[valoper])
 		k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txhashes[valoper]})
@@ -523,7 +524,7 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 		if ctx.BlockTime().After(withdrawal.CompletionTime) && !withdrawal.CompletionTime.IsZero() { // completion date has passed.
 			k.Logger(ctx).Info("found completed unbonding")
 			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
-			err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, withdrawal.Txhash)
+			err = k.SubmitTx(ctx, []proto.Message{sendMsg}, zone.DelegationAddress, withdrawal.Txhash)
 			if err != nil {
 				k.Logger(ctx).Error("error", err)
 				return true
@@ -564,7 +565,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 				k.DeleteWithdrawalRecord(ctx, zone.ChainId, memo, WithdrawStatusTokenize)
 				withdrawalRecord.Status = WithdrawStatusSend
 				sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.Address, ToAddress: withdrawalRecord.Recipient, Amount: withdrawalRecord.Amount}
-				err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, memo)
+				err = k.SubmitTx(ctx, []proto.Message{sendMsg}, zone.DelegationAddress, memo)
 				if err != nil {
 					return err
 				}
@@ -920,7 +921,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	// prepare rewards distribution
 	rewards := sdk.NewCoin(zone.BaseDenom, baseDenomAmount.Sub(baseDenomFee))
 
-	var msgs []sdk.Msg
+	var msgs []proto.Message
 	msgs = append(msgs, k.prepareRewardsDistributionMsgs(zone, rewards.Amount))
 
 	// multiDenomFee is the balance of withdrawal account minus the redelegated rewards.

@@ -10,6 +10,8 @@ import (
 
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+
+	"github.com/gogo/protobuf/proto"
 )
 
 // zoneScore is an internal struct to track transient state for the calculation
@@ -205,7 +207,7 @@ func (k Keeper) calcOverallScores(
 		"expected", expected,
 	)
 
-	var msgs []sdk.Msg
+	var msgs []proto.Message
 	limit := sdk.NewDec(1.0)
 	for _, reward := range rewards {
 		vs, exists := zs.ValidatorScores[reward.ValidatorAddress]
