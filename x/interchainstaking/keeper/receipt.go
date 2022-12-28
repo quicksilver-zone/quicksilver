@@ -227,13 +227,8 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 		msgsChunk := msgs[0:chunkSize]
 		msgs = msgs[chunkSize:]
 
-		protoMsgChunk := []proto.Message{}
-		for _, msg := range msgsChunk {
-			protoMsgChunk = append(protoMsgChunk, []proto.Message{msg}...)
-		}
-
 		// build and submit message for this chunk
-		data, err := icatypes.SerializeCosmosTx(k.cdc, protoMsgChunk)
+		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk)
 		if err != nil {
 			return err
 		}
