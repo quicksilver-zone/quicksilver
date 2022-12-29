@@ -20,6 +20,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -49,9 +50,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		}
 
 		k.Logger(ctx).Error("received an acknowledgement error", "error", err, "remote_err", ackErr, "data", acknowledgement)
+		defer telemetry.IncrCounter(1, types.ModuleName, "ica_acknowledgement_errors")
 		return errors.New("received an acknowledgement error; unable to process")
 	}
-
+	defer telemetry.IncrCounter(1, types.ModuleName, "ica_acknowledgement_success")
 	txMsgData := &sdk.TxMsgData{}
 	err = proto.Unmarshal(ack.Result, txMsgData)
 	if err != nil {
@@ -606,7 +608,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	if !found {
 		k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch", epochNumber)
-		return errors.New("unable to find redelegation record")
+		return fmt.Errorf("unable to find redelegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
 	k.Logger(ctx).Error("updating redelegation record with completion time")
 	record.CompletionTime = completion
@@ -643,7 +645,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 
 		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, WithdrawStatusUnbond)
 		if !found {
-			return errors.New("unable to lookup withdrawal record")
+			return fmt.Errorf("unable to lookup withdrawal record; chain: %s, hash: %s", zone.ChainId, hash)
 		}
 		if completion.After(record.CompletionTime) {
 			record.CompletionTime = completion
