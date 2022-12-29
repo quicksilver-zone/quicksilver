@@ -485,7 +485,8 @@ func (s *KeeperTestSuite) TestGetRatio() {
 
 			qapp.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.supply)))
 
-			actual := icsKeeper.GetRatio(ctx, zone, sdk.ZeroInt())
+			actual, isZero := icsKeeper.GetRatio(ctx, zone, sdk.ZeroInt())
+			s.Require().Equal(tt.supply.IsZero(), isZero)
 			s.Require().Equal(tt.expected, actual)
 		})
 	}

@@ -418,41 +418,29 @@ func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) e
 
 // redemption rate
 
-func (k *Keeper) assertRedemptionRateWithinBounds(_ sdk.Context, previousRate sdk.Dec, newRate sdk.Dec) error {
-	ratio := newRate.Quo(previousRate)
-	if ratio.GT(sdk.NewDecWithPrec(120, 2)) || ratio.LT(sdk.NewDecWithPrec(95, 2)) {
-		return fmt.Errorf("redemption rate is outside of expected bounds; got %0.2f of previous rate", ratio.MustFloat64())
-	}
-	return nil
-}
-
 func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards math.Int) {
-	ratio := k.GetRatio(ctx, zone, epochRewards)
+	ratio, isZero := k.GetRatio(ctx, zone, epochRewards)
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
 	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards))
 
-	if err := k.assertRedemptionRateWithinBounds(ctx, zone.RedemptionRate, ratio); err != nil {
-		panic(err.Error())
+	// soft cap redemption rate, instead of panicking.
+	delta := ratio.Quo(zone.RedemptionRate)
+	if delta.GT(sdk.NewDecWithPrec(102, 2)) {
+		k.Logger(ctx).Error("ratio diverged by more than 2% upwards in the last epoch; capping at 1.02...")
+		ratio = zone.RedemptionRate.Mul(sdk.NewDecWithPrec(102, 2))
+	} else if delta.LT(sdk.NewDecWithPrec(95, 2)) && !isZero { // we allow a bigger downshift if all assets were withdrawn and we revert to zero.
+		k.Logger(ctx).Error("ratio diverged by more than 5% downwards in the last epoch; 5% is the theoretical max if _all_ controlled tokens were tombstoned. capping at 0.95...")
+		ratio = zone.RedemptionRate.Mul(sdk.NewDecWithPrec(95, 2))
 	}
-	zone.LastRedemptionRate = zone.RedemptionRate
-	zone.RedemptionRate = ratio
-	k.SetZone(ctx, &zone)
-}
-
-func (k *Keeper) UpdateRedemptionRateNoBounds(ctx sdk.Context, zone types.Zone) {
-	ratio := k.GetRatio(ctx, zone, math.ZeroInt())
-	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
-	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount)
 
 	zone.LastRedemptionRate = zone.RedemptionRate
 	zone.RedemptionRate = ratio
 	k.SetZone(ctx, &zone)
 }
 
-func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.Int) sdk.Dec {
+func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.Int) (sdk.Dec, bool) {
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, &zone).Amount
 	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, &zone).Amount
@@ -464,10 +452,10 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 	if qAssetAmount.IsZero() {
 		// ratio 1.0 (default 1:1 ratio between nativeAssets and qAssets)
 		// native assets should not reach zero before qAssets (discount rate asymptote)
-		return sdk.OneDec()
+		return sdk.OneDec(), true
 	}
 
-	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount))
+	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
