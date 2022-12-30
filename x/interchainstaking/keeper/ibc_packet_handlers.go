@@ -51,7 +51,8 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 		k.Logger(ctx).Error("received an acknowledgement error", "error", err, "remote_err", ackErr, "data", acknowledgement)
 		defer telemetry.IncrCounter(1, types.ModuleName, "ica_acknowledgement_errors")
-		return errors.New("received an acknowledgement error; unable to process")
+		return nil
+		//return errors.New("received an acknowledgement error; unable to process") // this just causes the same errAck to be submitted repeatedly.
 	}
 	defer telemetry.IncrCounter(1, types.ModuleName, "ica_acknowledgement_success")
 	txMsgData := &sdk.TxMsgData{}
@@ -108,7 +109,6 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			k.Logger(ctx).Info("Shares tokenized", "response", response)
-			// check tokenizedShareTransfers (inc. rebalance and unbond)
 			if err := k.HandleTokenizedShares(ctx, src, response.Amount, packetData.Memo); err != nil {
 				return err
 			}
