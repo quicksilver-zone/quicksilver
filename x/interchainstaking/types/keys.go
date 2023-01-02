@@ -37,7 +37,8 @@ const (
 	ICASuffixWithdrawal  = "withdrawal"
 	ICASuffixPerformance = "performance"
 
-	BankStoreKey = "store/bank/key"
+	BankStoreKey        = "store/bank/key"
+	EscrowModuleAccount = "ics-escrow-account"
 )
 
 var (

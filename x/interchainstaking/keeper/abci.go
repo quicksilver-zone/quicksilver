@@ -16,6 +16,12 @@ type zoneItrFn func(index int64, zoneInfo types.Zone) (stop bool)
 // BeginBlocker of interchainstaking module
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+
+	if ctx.ChainID() == "quicksilver-1" && ctx.BlockHeight() == 115001 {
+		// trigger one time function in lieu of upgrade handler that will trigger on chain resumption.
+		V010100UpgradeHandler(ctx, &k)
+	}
+
 	if ctx.BlockHeight()%30 == 0 {
 		if err := k.GCCompletedRedelegations(ctx); err != nil {
 			k.Logger(ctx).Error("error in GCCompletedRedelegations", "error", err)

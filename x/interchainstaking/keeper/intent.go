@@ -136,14 +136,17 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone *types.Zone) error {
 	}
 
 	// normalise aggregated intents again.
-	for idx, intent := range aggregate.Sort() {
-		intent.Weight = intent.Weight.Quo(ordinalizedIntentSum)
-		aggregate[idx] = intent
+	newAggregate := make(types.ValidatorIntents, 0)
+	for _, intent := range aggregate.Sort() {
+		if !intent.Weight.IsZero() && intent.Weight.IsPositive() {
+			intent.Weight = intent.Weight.Quo(ordinalizedIntentSum)
+			newAggregate = append(newAggregate, intent)
+		}
 	}
 
-	k.Logger(ctx).Info("aggregates", "agg", aggregate, "chain", zone.ChainId)
+	k.Logger(ctx).Info("aggregates", "agg", newAggregate, "chain", zone.ChainId)
 
-	zone.AggregateIntent = aggregate
+	zone.AggregateIntent = newAggregate
 	k.SetZone(ctx, zone)
 	return nil
 }
@@ -172,6 +175,9 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 
 	// inAmount is ordinal with respect to the redemption rate, so we must scale
 	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(balance.Amount))
+	if baseBalance.IsZero() {
+		return nil
+	}
 
 	if inAmount.IsValid() {
 		intent = zone.UpdateIntentWithCoins(intent, baseBalance, inAmount)

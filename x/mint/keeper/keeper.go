@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
+	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	participationrewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -159,15 +160,11 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	// allocate pool allocation ratio to pool-incentives module account account
 	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.PoolIncentives))
 	// temporary until we have incentives pool sorted :)
-	err = k.bankKeeper.BurnCoins(ctx, types.ModuleName, poolIncentivesCoins)
+
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, airdroptypes.ModuleName, poolIncentivesCoins)
 	if err != nil {
 		return err
 	}
-
-	// err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, poolincentivestypes.ModuleName, poolIncentivesCoins)
-	// if err != nil {
-	// 	return err
-	// }
 
 	participationRewardCoin := k.GetProportions(ctx, mintedCoin, proportions.ParticipationRewards)
 	participationRewardCoins := sdk.NewCoins(participationRewardCoin)

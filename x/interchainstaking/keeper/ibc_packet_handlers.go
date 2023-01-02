@@ -20,6 +20,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -37,6 +38,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	ack := channeltypes.Acknowledgement_Result{}
 	err := json.Unmarshal(acknowledgement, &ack)
 	if err != nil {
+		k.Logger(ctx).Error("unable to unmarshal acknowledgement", "error", err, "data", acknowledgement)
+		return err
+	}
+	if reflect.DeepEqual(ack, channeltypes.Acknowledgement_Result{}) {
 		ackErr := channeltypes.Acknowledgement_Error{}
 		err := json.Unmarshal(acknowledgement, &ackErr)
 		if err != nil {
@@ -44,10 +49,12 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			return err
 		}
 
-		k.Logger(ctx).Error("unable to unmarshal acknowledgement result", "error", err, "remote_err", ackErr, "data", acknowledgement)
-		return err
+		k.Logger(ctx).Error("received an acknowledgement error", "error", err, "remote_err", ackErr, "data", acknowledgement)
+		defer telemetry.IncrCounter(1, types.ModuleName, "ica_acknowledgement_errors")
+		return nil
+		// return errors.New("received an acknowledgement error; unable to process") // this just causes the same errAck to be submitted repeatedly.
 	}
-
+	defer telemetry.IncrCounter(1, types.ModuleName, "ica_acknowledgement_success")
 	txMsgData := &sdk.TxMsgData{}
 	err = proto.Unmarshal(ack.Result, txMsgData)
 	if err != nil {
@@ -72,6 +79,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	}
 
 	for msgIndex, msgData := range txMsgData.Data {
+
 		src := msgs[msgIndex]
 		switch msgData.MsgType {
 		case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
@@ -101,7 +109,6 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			k.Logger(ctx).Info("Shares tokenized", "response", response)
-			// check tokenizedShareTransfers (inc. rebalance and unbond)
 			if err := k.HandleTokenizedShares(ctx, src, response.Amount, packetData.Memo); err != nil {
 				return err
 			}
@@ -338,7 +345,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 	if len(withdrawalRecord.Amount) == 1 && len(msg.Amount) == 1 && msg.Amount[0].Denom == withdrawalRecord.Amount[0].Denom && withdrawalRecord.Amount.IsEqual(msg.Amount) {
 		k.Logger(ctx).Info("found matching withdrawal; marking as completed")
 		k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, WithdrawStatusCompleted)
-		if err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
+		if err = k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
 			// if we can't burn the coins, fail.
 			return err
 		}
@@ -357,7 +364,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 					// we just removed the last element
 					k.Logger(ctx).Info("found matching withdrawal; marking as completed")
 					k.UpdateWithdrawalRecordStatus(ctx, &withdrawalRecord, WithdrawStatusCompleted)
-					if err = k.BankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
+					if err = k.BankKeeper.BurnCoins(ctx, types.EscrowModuleAccount, sdk.NewCoins(withdrawalRecord.BurnAmount)); err != nil {
 						// if we can't burn the coins, fail.
 						return err
 					}
@@ -442,7 +449,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 				err = fmt.Errorf("unable to find a validator we expected to exist [%s]", dist.Valoper)
 				return true
 			}
-			if val.DelegatorShares.Equal(sdk.NewDecFromInt(val.VotingPower)) {
+			if val.DelegatorShares.Equal(sdk.NewDecFromInt(val.VotingPower)) && dist.Amount > 0 {
 				dist.Amount--
 			}
 		}
@@ -477,9 +484,11 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(out) {
-		sort.Strings(txhashes[valoper])
-		k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txhashes[valoper]})
-		msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: out[valoper]})
+		if !out[valoper].Amount.IsZero() {
+			sort.Strings(txhashes[valoper])
+			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txhashes[valoper]})
+			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: out[valoper]})
+		}
 	}
 
 	k.Logger(ctx).Error("unbonding messages", "msg", msgs)
@@ -599,7 +608,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	if !found {
 		k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch", epochNumber)
-		return errors.New("unable to find redelegation record")
+		return fmt.Errorf("unable to find redelegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
 	k.Logger(ctx).Error("updating redelegation record with completion time")
 	record.CompletionTime = completion
@@ -636,7 +645,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 
 		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, WithdrawStatusUnbond)
 		if !found {
-			return errors.New("unable to lookup withdrawal record")
+			return fmt.Errorf("unable to lookup withdrawal record; chain: %s, hash: %s", zone.ChainId, hash)
 		}
 		if completion.After(record.CompletionTime) {
 			record.CompletionTime = completion

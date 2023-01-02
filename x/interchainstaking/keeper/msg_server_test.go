@@ -281,7 +281,6 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					Amount:         3000000,
 					CompletionTime: time.Time(s.chainA.GetContext().BlockTime().Add(time.Hour)),
 				})
-
 			},
 			"",
 			"unable to satisfy unbond request; delegations may be locked",

@@ -101,7 +101,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	hash := sha256.Sum256(append(msg.GetSignBytes(), heightBytes...))
 	hashString := hex.EncodeToString(hash[:])
 
-	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.ModuleName, sdk.NewCoins(msg.Value)); err != nil {
+	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.EscrowModuleAccount, sdk.NewCoins(msg.Value)); err != nil {
 		return nil, err
 	}
 
