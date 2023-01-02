@@ -2,7 +2,7 @@
 
 ## Released
 
-### v1.1.1
+### v1.1.0
 
 - Add escrow account to fix unbonding bug
 - Filter zero intents
