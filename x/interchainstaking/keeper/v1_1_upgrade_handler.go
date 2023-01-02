@@ -63,13 +63,13 @@ func V010100UpgradeHandler(ctx sdk.Context, k *Keeper) {
 		"quick16x03wcp37kx5e8ehckjxvwcgk9j0cqnhcccnty": 2833000000,
 	}
 
-	for addressStr, balance := range balances {
+	for _, addressStr := range utils.Keys[int64](balances) {
 		addressBytes, err := utils.AccAddressFromBech32(addressStr, "quick")
 		if err != nil {
 			panic(err)
 		}
-		k.Logger(ctx).Info(fmt.Sprintf("Moving %d uqatom from %s to module account", balance, addressStr))
-		if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, addressBytes, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewInt64Coin("uqatom", balance))); err != nil {
+		k.Logger(ctx).Info(fmt.Sprintf("Moving %d uqatom from %s to module account", balances[addressStr], addressStr))
+		if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, addressBytes, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewInt64Coin("uqatom", balances[addressStr]))); err != nil {
 			panic(err)
 		}
 	}
