@@ -271,7 +271,8 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 				}
 				return out.Sort()
 			},
-		}, {
+		},
+		{
 			name: "two intents; with zer0 balances, diff val, returns default equal weights ",
 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)

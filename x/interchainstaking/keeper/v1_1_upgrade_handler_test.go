@@ -16,7 +16,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) Testv11UpgradeHandler() {
-
 	qApp := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 	qApp.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", &tmclienttypes.ClientState{ChainId: "cosmoshub-4", TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})

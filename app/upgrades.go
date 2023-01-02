@@ -16,7 +16,7 @@ const (
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
-	//app.UpgradeKeeper.SetUpgradeHandler(v001000UpgradeName, getv001000Upgrade(app))
+	// app.UpgradeKeeper.SetUpgradeHandler(v001000UpgradeName, getv001000Upgrade(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -32,7 +32,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 
 	var storeUpgrades *storetypes.StoreUpgrades
 
-	switch upgradeInfo.Name {
+	switch upgradeInfo.Name { //nolint:gocritic
 	// case v001000UpgradeName:
 
 	// 	storeUpgrades = &storetypes.StoreUpgrades{

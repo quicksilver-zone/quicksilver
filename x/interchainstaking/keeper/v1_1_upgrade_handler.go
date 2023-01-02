@@ -10,7 +10,7 @@ import (
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func closeChannel(ctx sdk.Context, k *Keeper, connectionID string, portID string) {
+func closeChannel(ctx sdk.Context, k *Keeper, connectionID string, portID string) { //nolint:unparam
 	channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, connectionID, portID)
 	if !found {
 		panic("unable to fetch channelID for closing")
@@ -26,7 +26,6 @@ func closeChannel(ctx sdk.Context, k *Keeper, connectionID string, portID string
 // this is not a conventional upgrade handler, as it needs to be run by the begin blocker of the ICS module immediately on restart.
 // it needs to be exported/public so can be called from the appropriate begin blocker.
 func V010100UpgradeHandler(ctx sdk.Context, k *Keeper) {
-
 	// do NOT remove receipts, as reregistering the chain with the same connection will re-open the same deposit account, and existing txs would be re-processed.
 	// no delegation records, withdrawal, unbonding or rebalancing records exist, because the delegations never happened.
 
