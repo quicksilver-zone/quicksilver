@@ -15,7 +15,7 @@ import (
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (suite *KeeperTestSuite) Testv11UpgradeHandler() {
+func (suite *KeeperTestSuite) Test_v11UpgradeHandler() {
 	qApp := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 	qApp.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", &tmclienttypes.ClientState{ChainId: "cosmoshub-4", TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
