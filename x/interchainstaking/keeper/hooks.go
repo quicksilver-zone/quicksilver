@@ -9,12 +9,21 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
+// we do not wish to process epoch boundaries that occurred during the chain halt.
+func skipProductionEpoch(ctx sdk.Context, epochNumber int64) bool {
+	if ctx.ChainID() != "quicksilver-1" {
+		return false
+	}
+
+	return epochNumber < 7 // epoch 7 will start on 4th Jan 2023.
+}
+
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 }
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	// every epoch
-	if epochIdentifier == "epoch" {
+	if epochIdentifier == "epoch" && !skipProductionEpoch(ctx, epochNumber) {
 		k.Logger(ctx).Info("handling epoch end")
 
 		k.IterateZones(ctx, func(index int64, zoneInfo types.Zone) (stop bool) {
