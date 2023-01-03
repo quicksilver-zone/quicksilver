@@ -95,7 +95,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
 				return err
 			}
-			k.Logger(ctx).Debug("Tokens redeemed for shares", "response", response)
+			k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
 			// we should update delegation records here.
 			if err := k.HandleRedeemTokens(ctx, src, response.Amount); err != nil {
 				return err
@@ -133,7 +133,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				k.Logger(ctx).Error("unable to unmarshal MsgBeginRedelegate response", "error", err)
 				return err
 			}
-			k.Logger(ctx).Error("Redelegation initiated", "response", response)
+			k.Logger(ctx).Info("Redelegation initiated", "response", response)
 			if err := k.HandleBeginRedelegate(ctx, src, response.CompletionTime, packetData.Memo); err != nil {
 				return err
 			}
@@ -157,7 +157,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				k.Logger(ctx).Error("unable to unmarshal MsgSend response", "error", err)
 				return err
 			}
-			k.Logger(ctx).Debug("Funds Transferred", "response", response)
+			k.Logger(ctx).Info("Funds Transferred", "response", response)
 			// check tokenTransfers - if end user unescrow and burn txs
 			if err := k.HandleCompleteSend(ctx, src, packetData.Memo); err != nil {
 				return err
@@ -170,7 +170,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
 				return err
 			}
-			k.Logger(ctx).Debug("Funds Transferred (Multi)", "response", response)
+			k.Logger(ctx).Info("Funds Transferred (Multi)", "response", response)
 			if err := k.HandleCompleteMultiSend(ctx, src, packetData.Memo); err != nil {
 				return err
 			}
@@ -182,7 +182,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
 				return err
 			}
-			k.Logger(ctx).Debug("Withdraw Address Updated", "response", response)
+			k.Logger(ctx).Info("Withdraw Address Updated", "response", response)
 			if err := k.HandleUpdatedWithdrawAddress(ctx, src); err != nil {
 				return err
 			}
@@ -194,7 +194,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				k.Logger(ctx).Error("unable to unmarshal MsgTransfer response", "error", err)
 				return err
 			}
-			k.Logger(ctx).Debug("MsgTranfer acknowledgement received")
+			k.Logger(ctx).Info("MsgTranfer acknowledgement received")
 			if err := k.HandleMsgTransfer(ctx, src); err != nil {
 				return err
 			}
@@ -321,7 +321,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 		}
 	}
 
-	k.Logger(ctx).Error("messages to send", "messages", msgs)
+	k.Logger(ctx).Info("messages to send", "messages", msgs)
 
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo)
 }
@@ -449,7 +449,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 				err = fmt.Errorf("unable to find a validator we expected to exist [%s]", dist.Valoper)
 				return true
 			}
-			if val.DelegatorShares.Equal(sdk.NewDecFromInt(val.VotingPower)) && dist.Amount > 0 {
+			if !val.DelegatorShares.Equal(sdk.NewDecFromInt(val.VotingPower)) && dist.Amount > 0 {
 				dist.Amount--
 			}
 		}
@@ -491,7 +491,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		}
 	}
 
-	k.Logger(ctx).Error("unbonding messages", "msg", msgs)
+	k.Logger(ctx).Info("unbonding messages to send", "msg", msgs)
 
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch))
 }
@@ -610,7 +610,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch", epochNumber)
 		return fmt.Errorf("unable to find redelegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
-	k.Logger(ctx).Error("updating redelegation record with completion time")
+	k.Logger(ctx).Info("updating redelegation record with completion time", "completion", completion)
 	record.CompletionTime = completion
 	k.SetRedelegationRecord(ctx, record)
 	return nil
@@ -650,7 +650,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		if completion.After(record.CompletionTime) {
 			record.CompletionTime = completion
 		}
-		k.Logger(ctx).Error("withdrawal record to save", "rcd", record)
+		k.Logger(ctx).Info("withdrawal record to save", "rcd", record)
 		k.UpdateWithdrawalRecordStatus(ctx, &record, WithdrawStatusUnbond)
 	}
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: undelegateMsg.DelegatorAddress}
@@ -760,7 +760,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 	if err != nil {
 		return err
 	}
-	k.Logger(ctx).Error("ERROR 1", "response", response)
+	k.Logger(ctx).Info("Delegation query response", "response", response)
 	_, delAddr, err := bech32.DecodeAndConvert(delegatorAddress)
 	if err != nil {
 		return err
@@ -845,7 +845,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 		} else {
 			delegation.Amount = amount
 		}
-		k.Logger(ctx).Error("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
+		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
 	}
 	k.SetDelegation(ctx, zone, delegation)
 	if err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId); err != nil {
@@ -875,7 +875,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	// performance only.
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
 		zone.WithdrawalWaitgroup--
-		k.Logger(ctx).Error("WAITGROUP DECREMENTED", "wg", zone.WithdrawalWaitgroup)
+		k.Logger(ctx).Info("Decremented waitgroup", "wg", zone.WithdrawalWaitgroup)
 		k.SetZone(ctx, zone)
 	}
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.WithdrawalWaitgroup, "delegator", withdrawalMsg.DelegatorAddress)
@@ -887,7 +887,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 		if err != nil {
 			return err
 		}
-		k.Logger(ctx).Error("TRIGGER DISTRIBUTE REWARDS")
+		k.Logger(ctx).Info("Distributing rewards")
 		// total rewards balance withdrawn
 		k.ICQKeeper.MakeRequest(
 			ctx,
@@ -959,7 +959,7 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 				Token:            coin,
 				Sender:           zone.WithdrawalAddress.Address,
 				Receiver:         k.AccountKeeper.GetModuleAddress(types.ModuleName).String(),
-				TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
+				TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 6*time.Hour.Nanoseconds()),
 				TimeoutHeight:    clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0},
 			},
 		)
