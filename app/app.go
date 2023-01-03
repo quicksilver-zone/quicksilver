@@ -228,6 +228,7 @@ var (
 	allowedReceivingModAcc = map[string]bool{
 		distrtypes.ModuleName:             true,
 		interchainstakingtypes.ModuleName: true,
+		airdroptypes.ModuleName:           true,
 	}
 )
 
