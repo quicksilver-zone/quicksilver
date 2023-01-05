@@ -98,7 +98,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		sdk.NewEvent(
 			types.EventTypeRegisterZone,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, p.ConnectionId),
-			sdk.NewAttribute(types.AttributeKeyConnectionID, chainID),
+			sdk.NewAttribute(types.AttributeKeyRecipientChain, chainID),
 		),
 	})
 

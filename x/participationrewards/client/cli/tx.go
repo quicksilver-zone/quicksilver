@@ -83,7 +83,7 @@ func GetCmdAddProtocolDataProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-protocol-data [proposal-file]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Submit a add protocol data proposal",
+		Short: "Submit an add protocol data proposal",
 		Long: strings.TrimSpace(
 			`Submit an add protocol data proposal along with an initial deposit.
 The proposal details must be supplied via a JSON file.

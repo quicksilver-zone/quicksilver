@@ -73,6 +73,7 @@ type ProtocolDataI interface {
 	ValidateBasic() error
 }
 
+// ConnectionProtocolData defines state for connection tracking.
 type ConnectionProtocolData struct {
 	ConnectionID string
 	ChainID      string

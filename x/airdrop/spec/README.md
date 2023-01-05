@@ -68,7 +68,7 @@ Any claims completed are recorded against the `ClaimRecord` and claimed amounts 
 
 ### Action
 
-```
+```go
 // Action is used as an enum to denote specific actions or tasks.
 type Action int32
 
@@ -128,7 +128,7 @@ var Action_value = map[string]int32{
 
 ### Status
 
-```
+```go
 // Status is used as an enum to denote zone status.
 type Status int32
 
@@ -153,7 +153,7 @@ var Status_value = map[string]int32{
 
 ### ZoneDrop
 
-```
+```go
 KeyPrefixZoneDrop    = []byte{0x01}
 
 func GetKeyZoneDrop(chainID string) []byte {
@@ -174,7 +174,7 @@ type ZoneDrop struct {
 
 ### ClaimRecord
 
-```
+```go
 KeyPrefixClaimRecord = []byte{0x02}
 
 func GetKeyClaimRecord(chainID string, addr sdk.AccAddress) []byte {
@@ -199,7 +199,7 @@ type ClaimRecord struct {
 
 ### CompletedAction
 
-```
+```go
 // CompletedAction represents a claim action completed by the user.
 type CompletedAction struct {
 	CompleteTime time.Time `protobuf:"bytes,1,opt,name=complete_time,json=completeTime,proto3,stdtime" json:"complete_time" yaml:"complete_time"`
@@ -211,7 +211,7 @@ type CompletedAction struct {
 
 Description of message types that trigger state transitions;
 
-```
+```protobuf
 // Msg defines the airdrop Msg service.
 service Msg {
   rpc Claim(MsgClaim) returns (MsgClaimResponse) {
@@ -227,14 +227,12 @@ service Msg {
 
 Claim the airdrop for the given action in the given zone.
 
-Use: `claim [chainID] [action]`
-
-```
+```go
 type MsgClaim struct {
-	ChainId string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
-	Action  int32  `protobuf:"varint,2,opt,name=action,proto3" json:"action,omitempty" yaml:"action"`
-	Address string `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
-	Proof   []byte `protobuf:"bytes,4,opt,name=proof,proto3" json:"proof,omitempty" yaml:"proof"`
+	ChainId string         `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
+	Action  int64          `protobuf:"varint,2,opt,name=action,proto3" json:"action,omitempty" yaml:"action"`
+	Address string         `protobuf:"bytes,3,opt,name=address,proto3" json:"address,omitempty" yaml:"address"`
+	Proofs  []*types.Proof `protobuf:"bytes,4,rep,name=proofs,proto3" json:"proofs,omitempty" yaml:"proofs"`
 }
 
 type MsgClaimResponse struct {
@@ -245,6 +243,16 @@ type MsgClaimResponse struct {
 ## Transactions
 
 Description of transactions that collect messages in specific contexts to trigger state transitions;
+
+### claim
+
+Claim airdrop for the given action in the given zone.
+
+`claim [chainID] [action]`
+
+Example:
+
+`$ quicksilverd tx airdrop claim cosmoshub-4 ActionDelegateStake`
 
 ## Events
 
@@ -274,7 +282,7 @@ Description of hook functions that may be used by other modules to execute opera
 
 Description of available information request queries;
 
-```
+```protobuf
 service Query {
   // Params returns the total set of airdrop parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
@@ -316,7 +324,7 @@ Query the current airdrop module parameters.
 
 Use: `params`
 
-```
+```go
 // QueryParamsRequest is the request type for the Query/Params RPC method.
 type QueryParamsRequest struct {
 }
@@ -334,7 +342,7 @@ Query the airdrop details of the specified zone.
 
 Use: `zone [chain_id]`
 
-```
+```go
 // QueryZoneDropRequest is the request type for Query/ZoneDrop RPC method.
 type QueryZoneDropRequest struct {
 	// chain_id identifies the zone.
@@ -353,7 +361,7 @@ Returns the airdrop module account balance of the specified zone.
 
 Use: `account-balance [chain_id]`
 
-```
+```go
 // QueryAccountBalanceRequest is the request type for Query/AccountBalance RPC
 // method.
 type QueryAccountBalanceRequest struct {
@@ -374,7 +382,7 @@ Query all airdrops of the specified status.
 
 Use: `zone-drops [status]`
 
-```
+```go
 // QueryZoneDropsRequest is the request type for Query/ZoneDrops RPC method.
 type QueryZoneDropsRequest struct {
 	// status enables to query zone airdrops matching a given status:
@@ -398,7 +406,7 @@ Query airdrop claim record details of the given address for the given zone.
 
 Use: `claim-record [chain_id] [address]`
 
-```
+```go
 // QueryClaimRecordRequest is the request type for Query/ClaimRecord RPC method.
 type QueryClaimRecordRequest struct {
 	ChainId string `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
@@ -431,7 +439,7 @@ Description of parameters:
 
 Register a zone airdrop proposal.
 
-```
+```go
 type RegisterZoneDropProposal struct {
 	Title        string    `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
 	Description  string    `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
