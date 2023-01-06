@@ -465,6 +465,7 @@ func NewQuicksilver(
 	app.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
 		appCodec,
 		keys[claimsmanagertypes.StoreKey],
+		*app.IBCKeeper,
 	)
 
 	claimsmanagerModule := claimsmanager.NewAppModule(appCodec, app.ClaimsManagerKeeper)
