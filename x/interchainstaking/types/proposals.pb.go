@@ -193,8 +193,8 @@ func (m *UpdateZoneProposalWithDeposit) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UpdateZoneProposalWithDeposit proto.InternalMessageInfo
 
-// ParamChange defines an individual parameter change, for use in
-// ParameterChangeProposal.
+// UpdateZoneValue defines an individual parameter change, for use in
+// UpdateZoneProposal.
 type UpdateZoneValue struct {
 	Key   string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty" yaml:"key"`
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty" yaml:"value"`
@@ -247,12 +247,172 @@ func (m *UpdateZoneValue) GetValue() string {
 	return ""
 }
 
+type MsgGovReopenChannel struct {
+	Title        string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description  string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	ConnectionId string `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	PortId       string `protobuf:"bytes,4,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	Authority    string `protobuf:"bytes,5,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgGovReopenChannel) Reset()         { *m = MsgGovReopenChannel{} }
+func (m *MsgGovReopenChannel) String() string { return proto.CompactTextString(m) }
+func (*MsgGovReopenChannel) ProtoMessage()    {}
+func (*MsgGovReopenChannel) Descriptor() ([]byte, []int) {
+	return fileDescriptor_04d034c830a7acfe, []int{5}
+}
+func (m *MsgGovReopenChannel) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgGovReopenChannel) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgGovReopenChannel.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgGovReopenChannel) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgGovReopenChannel.Merge(m, src)
+}
+func (m *MsgGovReopenChannel) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgGovReopenChannel) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgGovReopenChannel.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgGovReopenChannel proto.InternalMessageInfo
+
+// MsgGovReopenChannelResponse defines the MsgGovReopenChannel response type.
+type MsgGovReopenChannelResponse struct {
+}
+
+func (m *MsgGovReopenChannelResponse) Reset()         { *m = MsgGovReopenChannelResponse{} }
+func (m *MsgGovReopenChannelResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgGovReopenChannelResponse) ProtoMessage()    {}
+func (*MsgGovReopenChannelResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_04d034c830a7acfe, []int{6}
+}
+func (m *MsgGovReopenChannelResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgGovReopenChannelResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgGovReopenChannelResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgGovReopenChannelResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgGovReopenChannelResponse.Merge(m, src)
+}
+func (m *MsgGovReopenChannelResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgGovReopenChannelResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgGovReopenChannelResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgGovReopenChannelResponse proto.InternalMessageInfo
+
+type MsgGovCloseChannel struct {
+	Title       string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	ChannelId   string `protobuf:"bytes,3,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty" yaml:"channel_id"`
+	PortId      string `protobuf:"bytes,4,opt,name=port_id,json=portId,proto3" json:"port_id,omitempty" yaml:"port_id"`
+	Authority   string `protobuf:"bytes,5,opt,name=authority,proto3" json:"authority,omitempty"`
+}
+
+func (m *MsgGovCloseChannel) Reset()         { *m = MsgGovCloseChannel{} }
+func (m *MsgGovCloseChannel) String() string { return proto.CompactTextString(m) }
+func (*MsgGovCloseChannel) ProtoMessage()    {}
+func (*MsgGovCloseChannel) Descriptor() ([]byte, []int) {
+	return fileDescriptor_04d034c830a7acfe, []int{7}
+}
+func (m *MsgGovCloseChannel) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgGovCloseChannel) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgGovCloseChannel.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgGovCloseChannel) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgGovCloseChannel.Merge(m, src)
+}
+func (m *MsgGovCloseChannel) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgGovCloseChannel) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgGovCloseChannel.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgGovCloseChannel proto.InternalMessageInfo
+
+// MsgGovCloseChannelResponse defines the MsgGovCloseChannel response type.
+type MsgGovCloseChannelResponse struct {
+}
+
+func (m *MsgGovCloseChannelResponse) Reset()         { *m = MsgGovCloseChannelResponse{} }
+func (m *MsgGovCloseChannelResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgGovCloseChannelResponse) ProtoMessage()    {}
+func (*MsgGovCloseChannelResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_04d034c830a7acfe, []int{8}
+}
+func (m *MsgGovCloseChannelResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgGovCloseChannelResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgGovCloseChannelResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgGovCloseChannelResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgGovCloseChannelResponse.Merge(m, src)
+}
+func (m *MsgGovCloseChannelResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgGovCloseChannelResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgGovCloseChannelResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgGovCloseChannelResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*RegisterZoneProposal)(nil), "quicksilver.interchainstaking.v1.RegisterZoneProposal")
 	proto.RegisterType((*RegisterZoneProposalWithDeposit)(nil), "quicksilver.interchainstaking.v1.RegisterZoneProposalWithDeposit")
 	proto.RegisterType((*UpdateZoneProposal)(nil), "quicksilver.interchainstaking.v1.UpdateZoneProposal")
 	proto.RegisterType((*UpdateZoneProposalWithDeposit)(nil), "quicksilver.interchainstaking.v1.UpdateZoneProposalWithDeposit")
 	proto.RegisterType((*UpdateZoneValue)(nil), "quicksilver.interchainstaking.v1.UpdateZoneValue")
+	proto.RegisterType((*MsgGovReopenChannel)(nil), "quicksilver.interchainstaking.v1.MsgGovReopenChannel")
+	proto.RegisterType((*MsgGovReopenChannelResponse)(nil), "quicksilver.interchainstaking.v1.MsgGovReopenChannelResponse")
+	proto.RegisterType((*MsgGovCloseChannel)(nil), "quicksilver.interchainstaking.v1.MsgGovCloseChannel")
+	proto.RegisterType((*MsgGovCloseChannelResponse)(nil), "quicksilver.interchainstaking.v1.MsgGovCloseChannelResponse")
 }
 
 func init() {
@@ -260,51 +420,59 @@ func init() {
 }
 
 var fileDescriptor_04d034c830a7acfe = []byte{
-	// 691 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x55, 0xcd, 0x6e, 0xd3, 0x4c,
-	0x14, 0x4d, 0x9a, 0xfe, 0x24, 0xd3, 0xdf, 0x6f, 0xbe, 0x14, 0xdc, 0x42, 0xe3, 0x68, 0x16, 0xa8,
-	0x48, 0x60, 0x53, 0xa8, 0x04, 0xaa, 0x84, 0x54, 0x45, 0x15, 0x52, 0x17, 0x48, 0x95, 0x11, 0x20,
-	0x95, 0x85, 0xe5, 0xd8, 0x83, 0x3b, 0x8a, 0x33, 0xe3, 0x7a, 0xc6, 0x51, 0xf3, 0x06, 0x5d, 0xb2,
-	0x01, 0xb1, 0xec, 0x96, 0x37, 0x41, 0xac, 0xba, 0x64, 0x65, 0xa1, 0x76, 0xc3, 0xda, 0x4f, 0x80,
-	0x3c, 0xe3, 0x10, 0xa7, 0x09, 0x42, 0x2c, 0x40, 0x48, 0xec, 0xee, 0xbd, 0xe7, 0x9e, 0xc9, 0xcd,
-	0x39, 0x77, 0x3c, 0xe0, 0xde, 0x71, 0x4c, 0xdc, 0x0e, 0x27, 0x41, 0x0f, 0x47, 0x26, 0xa1, 0x02,
-	0x47, 0xee, 0x91, 0x43, 0x28, 0x17, 0x4e, 0x87, 0x50, 0xdf, 0xec, 0x6d, 0x99, 0x61, 0xc4, 0x42,
-	0xc6, 0x9d, 0x80, 0x1b, 0x61, 0xc4, 0x04, 0x83, 0xcd, 0x02, 0xc3, 0x18, 0x63, 0x18, 0xbd, 0xad,
-	0xf5, 0xba, 0xcf, 0x7c, 0x26, 0x9b, 0xcd, 0x2c, 0x52, 0xbc, 0xf5, 0x35, 0x97, 0xf1, 0x2e, 0xe3,
-	0xb6, 0x02, 0x54, 0x92, 0x43, 0x37, 0x7d, 0xc6, 0xfc, 0x00, 0x9b, 0x4e, 0x48, 0x4c, 0x87, 0x52,
-	0x26, 0x1c, 0x41, 0x18, 0xcd, 0x51, 0xf4, 0xae, 0x02, 0xea, 0x16, 0xf6, 0x09, 0x17, 0x38, 0x3a,
-	0x64, 0x14, 0x1f, 0xe4, 0x03, 0xc1, 0x3a, 0x98, 0x11, 0x44, 0x04, 0x58, 0x2b, 0x37, 0xcb, 0x9b,
-	0x35, 0x4b, 0x25, 0xb0, 0x09, 0xe6, 0x3d, 0xcc, 0xdd, 0x88, 0x84, 0xd9, 0x21, 0xda, 0x94, 0xc4,
-	0x8a, 0x25, 0xf8, 0x18, 0x2c, 0xba, 0x8c, 0x52, 0xec, 0x66, 0x99, 0x4d, 0x3c, 0xad, 0x92, 0xf5,
-	0xb4, 0xb4, 0x34, 0xd1, 0xeb, 0x7d, 0xa7, 0x1b, 0xec, 0xa0, 0x11, 0x18, 0x59, 0x0b, 0xc3, 0x7c,
-	0xdf, 0x83, 0xdb, 0x00, 0xb4, 0x1d, 0x8e, 0x6d, 0x0f, 0x53, 0xd6, 0xd5, 0xa6, 0x25, 0x77, 0x35,
-	0x4d, 0xf4, 0xff, 0x14, 0x77, 0x88, 0x21, 0xab, 0x96, 0x25, 0x7b, 0x59, 0x0c, 0x1f, 0x82, 0xf9,
-	0x80, 0xb9, 0x4e, 0x90, 0xd3, 0x66, 0x24, 0xed, 0x5a, 0x9a, 0xe8, 0x50, 0xd1, 0x0a, 0x20, 0xb2,
-	0x80, 0xcc, 0x14, 0x71, 0x17, 0x2c, 0x39, 0xae, 0xcb, 0x62, 0x2a, 0xec, 0x30, 0xc2, 0xaf, 0xc9,
-	0x89, 0x36, 0x2b, 0xb9, 0x6b, 0x69, 0xa2, 0xaf, 0x2a, 0xee, 0x28, 0x8e, 0xac, 0xc5, 0xbc, 0x70,
-	0x20, 0x73, 0xb8, 0x01, 0x40, 0x37, 0x0e, 0x04, 0xb1, 0x39, 0xa6, 0x9e, 0x36, 0xd7, 0x2c, 0x6f,
-	0x56, 0xad, 0x9a, 0xac, 0x3c, 0xc3, 0xd4, 0x83, 0xb7, 0xc1, 0x4a, 0x40, 0x8e, 0x63, 0xe2, 0x11,
-	0xd1, 0xb7, 0xbb, 0xcc, 0x8b, 0x03, 0xac, 0x55, 0x65, 0xd3, 0xf2, 0xf7, 0xfa, 0x53, 0x59, 0xde,
-	0x59, 0x38, 0x3d, 0xd3, 0x4b, 0xef, 0xcf, 0xf4, 0xd2, 0xd7, 0x33, 0xbd, 0x84, 0x3e, 0x4c, 0x03,
-	0x7d, 0x92, 0x31, 0x2f, 0x89, 0x38, 0xda, 0xc3, 0x21, 0xe3, 0x44, 0xc0, 0x5b, 0x23, 0x1e, 0xb5,
-	0x56, 0xd2, 0x44, 0x5f, 0x50, 0x43, 0xcb, 0x32, 0x1a, 0xb8, 0xf6, 0x68, 0x82, 0x6b, 0x45, 0x79,
-	0x0a, 0x20, 0xfa, 0xb7, 0xdd, 0xdc, 0x1e, 0x77, 0xb3, 0x38, 0xf0, 0x10, 0x43, 0x45, 0x93, 0x9f,
-	0xfc, 0xc8, 0xe4, 0xd6, 0x8d, 0x34, 0xd1, 0xaf, 0xe7, 0x53, 0x5f, 0xe9, 0x40, 0x63, 0x1b, 0x00,
-	0xef, 0x80, 0x39, 0x4f, 0x59, 0xab, 0xd5, 0xe4, 0xe0, 0x30, 0x4d, 0xf4, 0xa5, 0x81, 0x47, 0x12,
-	0x40, 0xd6, 0xa0, 0x65, 0xa7, 0x7a, 0x3a, 0xd8, 0x95, 0xb7, 0x53, 0x00, 0x3e, 0x0f, 0x3d, 0x47,
-	0xe0, 0x91, 0x2b, 0xfc, 0xfb, 0xd7, 0xc3, 0x00, 0x55, 0xf9, 0x7d, 0x1a, 0x6e, 0xc6, 0xff, 0x69,
-	0xa2, 0x2f, 0xe7, 0x9b, 0x91, 0x23, 0xc8, 0x9a, 0x93, 0xe1, 0xbe, 0x07, 0x6d, 0x90, 0x85, 0xd4,
-	0xc7, 0x5c, 0x9b, 0x6e, 0x56, 0x36, 0xe7, 0xef, 0x6f, 0x19, 0x3f, 0xfb, 0xe0, 0x19, 0xc3, 0x3f,
-	0xf6, 0xc2, 0x09, 0x62, 0x5c, 0xd4, 0x24, 0x3f, 0x4b, 0xfd, 0x40, 0x16, 0x5d, 0xb9, 0x43, 0x9f,
-	0xa6, 0xc0, 0xc6, 0xb8, 0x2e, 0x7f, 0xf6, 0x06, 0xfd, 0x6d, 0x12, 0x15, 0x97, 0x6c, 0xe6, 0x57,
-	0x96, 0xec, 0x15, 0x58, 0xbe, 0xf2, 0x3b, 0xb0, 0x09, 0x2a, 0x1d, 0xdc, 0xcf, 0xb5, 0x5b, 0x4a,
-	0x13, 0x1d, 0xa8, 0x63, 0x3a, 0xb8, 0x8f, 0xac, 0x0c, 0xca, 0xf4, 0xed, 0x65, 0xad, 0xb9, 0x62,
-	0x05, 0x7d, 0x65, 0x19, 0x59, 0x0a, 0x6e, 0x1d, 0x7e, 0xbc, 0x68, 0x94, 0xcf, 0x2f, 0x1a, 0xe5,
-	0x2f, 0x17, 0x8d, 0xf2, 0x9b, 0xcb, 0x46, 0xe9, 0xfc, 0xb2, 0x51, 0xfa, 0x7c, 0xd9, 0x28, 0x1d,
-	0xee, 0xfa, 0x44, 0x1c, 0xc5, 0x6d, 0xc3, 0x65, 0x5d, 0x93, 0x50, 0x1f, 0xd3, 0x98, 0x88, 0xfe,
-	0xdd, 0x76, 0x4c, 0x02, 0xcf, 0x2c, 0x3e, 0xaf, 0x27, 0x13, 0x1e, 0x58, 0xd1, 0x0f, 0x31, 0x6f,
-	0xcf, 0xca, 0x97, 0xee, 0xc1, 0xb7, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6c, 0xc6, 0x3c, 0xe1, 0x8e,
-	0x07, 0x00, 0x00,
+	// 819 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x56, 0xcf, 0x6f, 0xeb, 0x44,
+	0x10, 0x8e, 0x9b, 0xb4, 0x49, 0xb6, 0x7d, 0xed, 0x63, 0x5f, 0x1e, 0xf8, 0xf5, 0x47, 0x1c, 0xed,
+	0x01, 0x15, 0x41, 0x63, 0x0a, 0x15, 0xa0, 0x4a, 0x48, 0x25, 0xad, 0x40, 0x3d, 0x54, 0xaa, 0xb6,
+	0x02, 0xa4, 0x72, 0x88, 0x1c, 0x7b, 0x71, 0x56, 0x71, 0x76, 0x5d, 0xef, 0x3a, 0x6a, 0xfe, 0x83,
+	0x1e, 0xb9, 0x80, 0x38, 0xf6, 0xca, 0x9d, 0x3f, 0x02, 0x71, 0xaa, 0x38, 0x71, 0xb2, 0x50, 0x7b,
+	0xe1, 0x8a, 0xaf, 0x5c, 0x90, 0xd7, 0x0e, 0x76, 0x7e, 0x20, 0x84, 0x10, 0x05, 0x89, 0xdb, 0xcc,
+	0x7c, 0xf3, 0xad, 0x67, 0xbf, 0x99, 0x5d, 0x2f, 0x78, 0xf3, 0x2a, 0xa4, 0xf6, 0x40, 0x50, 0x6f,
+	0x44, 0x02, 0x93, 0x32, 0x49, 0x02, 0xbb, 0x6f, 0x51, 0x26, 0xa4, 0x35, 0xa0, 0xcc, 0x35, 0x47,
+	0xfb, 0xa6, 0x1f, 0x70, 0x9f, 0x0b, 0xcb, 0x13, 0x6d, 0x3f, 0xe0, 0x92, 0xc3, 0x56, 0x81, 0xd1,
+	0x9e, 0x63, 0xb4, 0x47, 0xfb, 0x9b, 0x0d, 0x97, 0xbb, 0x5c, 0x25, 0x9b, 0x89, 0x95, 0xf2, 0x36,
+	0x5f, 0xd8, 0x5c, 0x0c, 0xb9, 0xe8, 0xa6, 0x40, 0xea, 0x64, 0xd0, 0xb6, 0xcb, 0xb9, 0xeb, 0x11,
+	0xd3, 0xf2, 0xa9, 0x69, 0x31, 0xc6, 0xa5, 0x25, 0x29, 0x67, 0x19, 0x8a, 0xbe, 0x2a, 0x83, 0x06,
+	0x26, 0x2e, 0x15, 0x92, 0x04, 0x97, 0x9c, 0x91, 0xf3, 0xac, 0x20, 0xd8, 0x00, 0xcb, 0x92, 0x4a,
+	0x8f, 0xe8, 0x5a, 0x4b, 0xdb, 0xad, 0xe3, 0xd4, 0x81, 0x2d, 0xb0, 0xea, 0x10, 0x61, 0x07, 0xd4,
+	0x4f, 0x16, 0xd1, 0x97, 0x14, 0x56, 0x0c, 0xc1, 0xf7, 0xc1, 0x13, 0x9b, 0x33, 0x46, 0xec, 0xc4,
+	0xeb, 0x52, 0x47, 0x2f, 0x27, 0x39, 0x1d, 0x3d, 0x8e, 0x8c, 0xc6, 0xd8, 0x1a, 0x7a, 0x87, 0x68,
+	0x0a, 0x46, 0x78, 0x2d, 0xf7, 0x4f, 0x1d, 0x78, 0x00, 0x40, 0xcf, 0x12, 0xa4, 0xeb, 0x10, 0xc6,
+	0x87, 0x7a, 0x45, 0x71, 0x9f, 0xc7, 0x91, 0xf1, 0x52, 0xca, 0xcd, 0x31, 0x84, 0xeb, 0x89, 0x73,
+	0x92, 0xd8, 0xf0, 0x5d, 0xb0, 0xea, 0x71, 0xdb, 0xf2, 0x32, 0xda, 0xb2, 0xa2, 0xbd, 0x1c, 0x47,
+	0x06, 0x4c, 0x69, 0x05, 0x10, 0x61, 0xa0, 0xbc, 0x94, 0x78, 0x04, 0xd6, 0x2d, 0xdb, 0xe6, 0x21,
+	0x93, 0x5d, 0x3f, 0x20, 0x9f, 0xd3, 0x6b, 0x7d, 0x45, 0x71, 0x5f, 0xc4, 0x91, 0xf1, 0x3c, 0xe5,
+	0x4e, 0xe3, 0x08, 0x3f, 0xc9, 0x02, 0xe7, 0xca, 0x87, 0x3b, 0x00, 0x0c, 0x43, 0x4f, 0xd2, 0xae,
+	0x20, 0xcc, 0xd1, 0xab, 0x2d, 0x6d, 0xb7, 0x86, 0xeb, 0x2a, 0x72, 0x41, 0x98, 0x03, 0x5f, 0x03,
+	0x4f, 0x3d, 0x7a, 0x15, 0x52, 0x87, 0xca, 0x71, 0x77, 0xc8, 0x9d, 0xd0, 0x23, 0x7a, 0x4d, 0x25,
+	0x6d, 0xfc, 0x1e, 0x3f, 0x53, 0xe1, 0xc3, 0xb5, 0x9b, 0x5b, 0xa3, 0xf4, 0xf5, 0xad, 0x51, 0xfa,
+	0xf9, 0xd6, 0x28, 0xa1, 0x6f, 0x2a, 0xc0, 0x58, 0xd4, 0x98, 0x4f, 0xa9, 0xec, 0x9f, 0x10, 0x9f,
+	0x0b, 0x2a, 0xe1, 0xab, 0x53, 0x3d, 0xea, 0x3c, 0x8d, 0x23, 0x63, 0x2d, 0x2d, 0x5a, 0x85, 0xd1,
+	0xa4, 0x6b, 0xef, 0x2d, 0xe8, 0x5a, 0x51, 0x9e, 0x02, 0x88, 0xfe, 0xdf, 0xdd, 0x3c, 0x98, 0xef,
+	0x66, 0xb1, 0xe0, 0x1c, 0x43, 0xc5, 0x26, 0x7f, 0xf8, 0x47, 0x4d, 0xee, 0x6c, 0xc5, 0x91, 0xf1,
+	0x4a, 0x56, 0xf5, 0x4c, 0x06, 0x9a, 0x9b, 0x00, 0xf8, 0x06, 0xa8, 0x3a, 0x69, 0x6b, 0xf5, 0xba,
+	0x2a, 0x1c, 0xc6, 0x91, 0xb1, 0x3e, 0xe9, 0x91, 0x02, 0x10, 0x9e, 0xa4, 0x1c, 0xd6, 0x6e, 0x26,
+	0xb3, 0xf2, 0xe5, 0x12, 0x80, 0x1f, 0xfb, 0x8e, 0x25, 0xc9, 0xd4, 0x11, 0xfe, 0xe7, 0xc7, 0xa3,
+	0x0d, 0x6a, 0xea, 0x7e, 0xca, 0x27, 0xe3, 0x59, 0x1c, 0x19, 0x1b, 0xd9, 0x64, 0x64, 0x08, 0xc2,
+	0x55, 0x65, 0x9e, 0x3a, 0xb0, 0x0b, 0x12, 0x93, 0xb9, 0x44, 0xe8, 0x95, 0x56, 0x79, 0x77, 0xf5,
+	0xad, 0xfd, 0xf6, 0x9f, 0x5d, 0x78, 0xed, 0x7c, 0x63, 0x9f, 0x58, 0x5e, 0x48, 0x8a, 0x9a, 0x64,
+	0x6b, 0xa5, 0x1f, 0x48, 0xac, 0x99, 0x33, 0xf4, 0xfd, 0x12, 0xd8, 0x99, 0xd7, 0xe5, 0x71, 0x4f,
+	0xd0, 0x7f, 0x4d, 0xa2, 0xe2, 0x90, 0x2d, 0xff, 0x95, 0x21, 0xfb, 0x0c, 0x6c, 0xcc, 0x7c, 0x07,
+	0xb6, 0x40, 0x79, 0x40, 0xc6, 0x99, 0x76, 0xeb, 0x71, 0x64, 0x80, 0x74, 0x99, 0x01, 0x19, 0x23,
+	0x9c, 0x40, 0x89, 0xbe, 0xa3, 0x24, 0x35, 0x53, 0xac, 0xa0, 0xaf, 0x0a, 0x23, 0x9c, 0xc2, 0xe8,
+	0x57, 0x0d, 0x3c, 0x3b, 0x13, 0xee, 0x47, 0x7c, 0x84, 0x09, 0xf7, 0x09, 0x3b, 0xee, 0x5b, 0x8c,
+	0x91, 0x7f, 0xed, 0x2f, 0xf4, 0x3a, 0xa8, 0xfa, 0x3c, 0x90, 0x09, 0xb1, 0x32, 0xab, 0x51, 0x06,
+	0x20, 0xbc, 0x92, 0x58, 0xa7, 0x0e, 0x7c, 0x07, 0xd4, 0xad, 0x50, 0xf6, 0x79, 0x40, 0xe5, 0x38,
+	0x93, 0x54, 0xff, 0xe1, 0xdb, 0xbd, 0x46, 0xf6, 0x17, 0xfe, 0xc0, 0x71, 0x02, 0x22, 0xc4, 0x85,
+	0x0c, 0x28, 0x73, 0x71, 0x9e, 0x5a, 0x90, 0x76, 0x07, 0x6c, 0x2d, 0xd8, 0x3c, 0x26, 0xc2, 0xe7,
+	0x4c, 0x10, 0xf4, 0x8b, 0x06, 0x60, 0x8a, 0x1f, 0x7b, 0x5c, 0x90, 0xbf, 0xab, 0xcd, 0x01, 0x00,
+	0x76, 0xba, 0x44, 0x2e, 0x4c, 0xe1, 0x8e, 0xcb, 0x31, 0x84, 0xeb, 0x99, 0xf3, 0xf8, 0x92, 0x6c,
+	0x83, 0xcd, 0xf9, 0x2d, 0x4f, 0x14, 0xe9, 0x5c, 0x7e, 0x77, 0xdf, 0xd4, 0xee, 0xee, 0x9b, 0xda,
+	0x4f, 0xf7, 0x4d, 0xed, 0x8b, 0x87, 0x66, 0xe9, 0xee, 0xa1, 0x59, 0xfa, 0xf1, 0xa1, 0x59, 0xba,
+	0x3c, 0x72, 0xa9, 0xec, 0x87, 0xbd, 0xb6, 0xcd, 0x87, 0x26, 0x65, 0x2e, 0x61, 0x21, 0x95, 0xe3,
+	0xbd, 0x5e, 0x48, 0x3d, 0xc7, 0x2c, 0xbe, 0xc6, 0xae, 0x17, 0xbc, 0xc7, 0xe4, 0xd8, 0x27, 0xa2,
+	0xb7, 0xa2, 0x1e, 0x46, 0x6f, 0xff, 0x16, 0x00, 0x00, 0xff, 0xff, 0x97, 0x81, 0x7a, 0xe0, 0xbd,
+	0x09, 0x00, 0x00,
 }
 
 func (m *RegisterZoneProposal) Marshal() (dAtA []byte, err error) {
@@ -644,6 +812,168 @@ func (m *UpdateZoneValue) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgGovReopenChannel) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgGovReopenChannel) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgGovReopenChannel) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.PortId) > 0 {
+		i -= len(m.PortId)
+		copy(dAtA[i:], m.PortId)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.PortId)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ConnectionId) > 0 {
+		i -= len(m.ConnectionId)
+		copy(dAtA[i:], m.ConnectionId)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.ConnectionId)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgGovReopenChannelResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgGovReopenChannelResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgGovReopenChannelResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgGovCloseChannel) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgGovCloseChannel) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgGovCloseChannel) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.PortId) > 0 {
+		i -= len(m.PortId)
+		copy(dAtA[i:], m.PortId)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.PortId)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.ChannelId) > 0 {
+		i -= len(m.ChannelId)
+		copy(dAtA[i:], m.ChannelId)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.ChannelId)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Description) > 0 {
+		i -= len(m.Description)
+		copy(dAtA[i:], m.Description)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Description)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgGovCloseChannelResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgGovCloseChannelResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgGovCloseChannelResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintProposals(dAtA []byte, offset int, v uint64) int {
 	offset -= sovProposals(v)
 	base := offset
@@ -809,6 +1139,82 @@ func (m *UpdateZoneValue) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovProposals(uint64(l))
 	}
+	return n
+}
+
+func (m *MsgGovReopenChannel) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.ConnectionId)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.PortId)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgGovReopenChannelResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgGovCloseChannel) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.Description)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.ChannelId)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.PortId)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgGovCloseChannelResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -1899,6 +2305,526 @@ func (m *UpdateZoneValue) Unmarshal(dAtA []byte) error {
 			}
 			m.Value = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgGovReopenChannel) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgGovReopenChannel: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgGovReopenChannel: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConnectionId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PortId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgGovReopenChannelResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgGovReopenChannelResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgGovReopenChannelResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgGovCloseChannel) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgGovCloseChannel: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgGovCloseChannel: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Description", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Description = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ChannelId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ChannelId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PortId", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PortId = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgGovCloseChannelResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgGovCloseChannelResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgGovCloseChannelResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipProposals(dAtA[iNdEx:])
