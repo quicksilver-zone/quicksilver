@@ -18,6 +18,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
@@ -79,6 +80,10 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 
 		paramStore: ps,
 	}
+}
+
+func (k *Keeper) GetGovAuthority(ctx sdk.Context) string {
+	return sdk.MustBech32ifyAddressBytes("quick", k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
 }
 
 // Logger returns a module-specific logger.
@@ -602,4 +607,27 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 	})
 
 	return out
+}
+
+func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionID string, chainID string) error {
+	query := stakingTypes.QueryValidatorsRequest{}
+	bz1, err := k.cdc.Marshal(&query)
+	if err != nil {
+		return err
+	}
+
+	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		connectionID,
+		chainID,
+		"cosmos.staking.v1beta1.Query/Validators",
+		bz1,
+		sdk.NewInt(period),
+		types.ModuleName,
+		"valset",
+		0,
+	)
+	return nil
 }
