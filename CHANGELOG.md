@@ -2,6 +2,13 @@
 
 ## Released
 
+### v1.2.0
+
+- Remove v1.1.0 migration and epoch skipping logic
+- Tidy debug logging
+- Fix inverted comparison for unbonding clipping
+- Bump ibc-go to v5.2.0
+
 ### v1.1.0
 
 - Add escrow account to fix unbonding bug
