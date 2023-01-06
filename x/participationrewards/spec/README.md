@@ -276,13 +276,11 @@ Where proposal.json contains:
 
 ## Events
 
-Events emitted by module for tracking messages and index transactions;
+N/A
 
-[do we want to emit events on claim submission?]
+[? this should probably emit some events for monitoring and tracking purposes ?]
 
 ## Hooks
-
-Description of hook functions that may be used by other modules to execute operations at specific points within this module;
 
 N/A
 
@@ -343,7 +341,7 @@ type QueryProtocolDataResponse struct {
 
 ## Keepers
 
-Keepers exposed by module;
+https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/participationrewards/keeper
 
 ## Parameters
 
@@ -363,13 +361,9 @@ Description of parameters:
 
 ## Begin Block
 
-Description of logic executed with optional methods or external hooks;
-
 N/A
 
 ## End Block
-
-Description of logic executed with optional methods or external hooks;
 
 N/A
 

@@ -276,7 +276,7 @@ Events emitted by module for tracking messages and index transactions;
 
 ## Hooks
 
-Description of hook functions that may be used by other modules to execute operations at specific points within this module;
+N/A
 
 ## Queries
 
@@ -422,7 +422,7 @@ type QueryClaimRecordResponse struct {
 
 ## Keepers
 
-Keepers exposed by module;
+https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/airdrop/keeper
 
 ## Parameters
 
@@ -450,11 +450,9 @@ type RegisterZoneDropProposal struct {
 
 ## Begin Block
 
-Description of logic executed with optional methods or external hooks;
+N/A
 
 ## End Block
-
-Description of logic executed with optional methods or external hooks;
 
 At the end of every block the module iterates through all unconcluded airdrops (expired but not yet concluded) and calls `EndZoneDrop` for each instance, that deletes all associated `ClaimRecord`s.
 

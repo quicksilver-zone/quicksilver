@@ -3,7 +3,7 @@
 ## Abstract
 
 Module, `x/interchainstaking`, defines and implements the core Quicksilver
-protocol. _(wip)_
+protocol.
 
 ## Contents
 
@@ -217,8 +217,6 @@ type TransferRecord struct {
 	Amount    github_com_cosmos_cosmos_sdk_types.Coin `protobuf:"bytes,3,opt,name=amount,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Coin" json:"amount"`
 }
 ```
-
-
 
 ### Validator
 
@@ -481,8 +479,7 @@ Events emitted by module for tracking messages and index transactions;
 
 ## Hooks
 
-Description of hook functions that may be used by other modules to execute
-operations at specific points within this module;
+N/A
 
 ## Queries
 
@@ -674,31 +671,26 @@ Query deposit account address for a given chain.
 
 ## Keepers
 
-Keepers exposed by module;
+https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper
 
 ## Parameters
 
 Module parameters:
 
-| Key                      | Type    | Example |
+| Key                      | Type    | Default |
 |:-------------------------|:--------|:--------|
-| delegation_account_count | uint64  | 100     |
-| delegation_account_split | uint64  | 10      |
-| deposit_interval         | uint64  | 50      |
-| delegate_interval        | uint64  | 100     |
-| delegations_interval     | uint64  | 200     |
+| deposit_interval         | uint64  | 20      |
 | validatorset_interval    | uint64  | 200     |
-| commission_rate          | sdk.Dec | "0.02"  |
+| commission_rate          | sdk.Dec | "0.025" |
+| unbonding_enabled        | bool    | false   |
+
 
 Description of parameters:
 
-* `delegation_account_count` - the number of delegation accounts per zone;
-* `delegation_account_split` - ;
-* `deposit_interval` - ;
-* `delegate_interval` - ;
-* `delegations_interval` - ;
-* `validatorset_interval` - ;
-* `commission_rate` - ;
+* `deposit_interval` - monitoring and handling interval of registered zones' deposit accounts;
+* `validatorset_interval` - monitoring and updating interval of registered zones' validator sets;
+* `commission_rate` - default commission rate for Quicksilver validators;
+* `unbonding_enabled` - flag to indicate if unbondings are enabled for the Quicksilver protocol;
 
 ## Begin Block
 

@@ -21,7 +21,8 @@ based claims utilized in other modules.
 
 ## Concepts
 
-Key concepts, mechanisms and core logic for the module;
+`x/claimsmanager` is simply a data store for use by other modules to avoid
+unnecessary or circular dependencies.
 
 ## State
 
@@ -136,13 +137,13 @@ Description of message types that trigger state transitions;
 
 Description of transactions that collect messages in specific contexts to trigger state transitions;
 
+`x/claimsmanager` does not provide any transactions, it is the responsibility of calling modules to do so.
+
 ## Events
 
-Events emitted by module for tracking messages and index transactions;
+N/A
 
 ## Hooks
-
-Description of hook functions that may be used by other modules to execute operations at specific points within this module;
 
 N/A
 
@@ -194,16 +195,11 @@ type QueryClaimsResponse struct {
 
 ## Keepers
 
-Keepers exposed by module;
+https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper
 
 ## Parameters
 
-Module parameters:
-
-| Key   | Type  | Example |
-|:-- ---|:-- ---|:--   ---|
-
-None defined.
+N/A
 
 ## Begin Block
 
