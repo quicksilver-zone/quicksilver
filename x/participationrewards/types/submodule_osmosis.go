@@ -11,6 +11,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/stableswap"
 )
 
+// OsmosisPoolProtocolData defines protocol state to track qAssets locked in
+// Osmosis pools.
 type OsmosisPoolProtocolData struct {
 	PoolID      uint64
 	PoolName    string

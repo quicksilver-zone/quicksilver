@@ -180,7 +180,7 @@ func (k Keeper) IterateAllLastEpochClaims(ctx sdk.Context, fn func(index int64, 
 	}
 }
 
-// IterateUserClaims iterates through zone claims for a given address.
+// IterateAllClaims iterates through all claims.
 func (k Keeper) IterateAllClaims(ctx sdk.Context, fn func(index int64, key []byte, data types.Claim) (stop bool)) {
 	// noop
 	if fn == nil {
@@ -257,7 +257,7 @@ func (k Keeper) AllZoneLastEpochUserClaims(ctx sdk.Context, chainID string, addr
 	return claims
 }
 
-// ClearClaims deletes all the claims of the given zone.
+// ClearClaims deletes all the current epoch claims of the given zone.
 func (k Keeper) ClearClaims(ctx sdk.Context, chainID string) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaim(chainID))
@@ -269,7 +269,7 @@ func (k Keeper) ClearClaims(ctx sdk.Context, chainID string) {
 	}
 }
 
-// ClearClaims deletes all the claims of the given zone.
+// ClearLastEpochClaims deletes all the last epoch claims of the given zone.
 func (k Keeper) ClearLastEpochClaims(ctx sdk.Context, chainID string) {
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixLastEpochClaim(chainID))
@@ -281,7 +281,7 @@ func (k Keeper) ClearLastEpochClaims(ctx sdk.Context, chainID string) {
 	}
 }
 
-// ClearClaims deletes all the claims of the given zone.
+// ArchiveAndGarbageCollectClaims deletes all the last epoch claims and moves the current epoch claims to the last epoch store.
 func (k Keeper) ArchiveAndGarbageCollectClaims(ctx sdk.Context, chainID string) {
 	k.ClearLastEpochClaims(ctx, chainID)
 

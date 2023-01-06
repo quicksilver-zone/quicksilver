@@ -6,11 +6,17 @@ import (
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
+// LiquidAllowedDenomProtocolData defines protocol state to track off-chain
+// liquid qAssets.
 type LiquidAllowedDenomProtocolData struct {
-	ChainID               string
+	// The chain on which the qAssets reside currently.
+	ChainID string
+	// The chain for which the qAssets were issued.
 	RegisteredZoneChainID string
-	IbcDenom              string
-	QAssetDenom           string
+	// The IBC denom.
+	IbcDenom string
+	// The qAsset denom.
+	QAssetDenom string
 }
 
 func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {

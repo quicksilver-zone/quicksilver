@@ -6,6 +6,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
+// Submodule defines the interface for for tracking off-chain qAssets with
+// regards to participation rewards claims.
 type Submodule interface {
 	Hooks(ctx sdk.Context, keeper Keeper)
 	IsActive() bool
