@@ -120,7 +120,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Value.String()),
 			sdk.NewAttribute(types.AttributeKeyRedeemAmount, nativeTokens.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
-			sdk.NewAttribute(types.AttributeKeyChainId, zone.ChainId),
+			sdk.NewAttribute(types.AttributeKeyChainID, zone.ChainId),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, zone.ConnectionId),
 		),
 	})
@@ -162,7 +162,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 		sdk.NewEvent(
 			types.EventTypeSetIntent,
 			sdk.NewAttribute(types.AttributeKeyUser, msg.FromAddress),
-			sdk.NewAttribute(types.AttributeKeyChainId, msg.ChainId),
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
 		),
 	})
 
@@ -193,7 +193,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		),
 		sdk.NewEvent(
 			types.EventTypeReopenICA,
-			sdk.NewAttribute(types.AttributeKeyPortId, msg.PortId),
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
 		),
 	})
@@ -230,8 +230,8 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 		),
 		sdk.NewEvent(
 			types.EventTypeReopenICA,
-			sdk.NewAttribute(types.AttributeKeyPortId, msg.PortId),
-			sdk.NewAttribute(types.AttributeKeyChannelId, msg.ChannelId),
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
+			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
 		),
 	})
 

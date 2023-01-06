@@ -188,8 +188,8 @@ func (msg MsgSignalIntent) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgGovCloseChannel - construct a msg to update signalled intent.
-func NewMsgGovCloseChannel(channelId string, portName string, fromAddress sdk.Address) *MsgGovCloseChannel {
-	return &MsgGovCloseChannel{ChannelId: channelId, PortId: portName, Authority: fromAddress.String()}
+func NewMsgGovCloseChannel(channelID string, portName string, fromAddress sdk.Address) *MsgGovCloseChannel {
+	return &MsgGovCloseChannel{ChannelId: channelID, PortId: portName, Authority: fromAddress.String()}
 }
 
 // GetSignBytes Implements Msg.
@@ -207,8 +207,8 @@ func (msg MsgGovCloseChannel) GetSigners() []sdk.AccAddress {
 func (msg MsgGovCloseChannel) ValidateBasic() error { return nil }
 
 // NewMsgGovReopenChannel - construct a msg to update signalled intent.
-func NewMsgGovReopenChannel(connectionId string, portName string, fromAddress sdk.Address) *MsgGovReopenChannel {
-	return &MsgGovReopenChannel{ConnectionId: connectionId, PortId: portName, Authority: fromAddress.String()}
+func NewMsgGovReopenChannel(connectionID string, portName string, fromAddress sdk.Address) *MsgGovReopenChannel {
+	return &MsgGovReopenChannel{ConnectionId: connectionID, PortId: portName, Authority: fromAddress.String()}
 }
 
 // GetSignBytes Implements Msg.

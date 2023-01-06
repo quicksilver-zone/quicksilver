@@ -34,15 +34,15 @@ func FuzzZoneInfos(f *testing.F) {
 	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
 
 	seeds := []*icstypes.QueryZonesInfoRequest{
-		&icstypes.QueryZonesInfoRequest{},
+		{},
 		nil,
-		&icstypes.QueryZonesInfoRequest{
+		{
 			Pagination: &query.PageRequest{},
 		},
-		&icstypes.QueryZonesInfoRequest{
+		{
 			Pagination: &query.PageRequest{},
 		},
-		&icstypes.QueryZonesInfoRequest{
+		{
 			Pagination: &query.PageRequest{
 				Key:     []byte("key"),
 				Offset:  10,

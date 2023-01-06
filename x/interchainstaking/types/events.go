@@ -8,13 +8,13 @@ const (
 	EventTypeReopenICA         = "reopen_ica_channel"
 
 	AttributeKeyConnectionID     = "connection_id"
-	AttributeKeyChainId          = "chain_id"
+	AttributeKeyChainID          = "chain_id"
 	AttributeKeyRecipientAddress = "recipient"
 	AttributeKeyBurnAmount       = "burn_amount"
 	AttributeKeyRedeemAmount     = "redeem_amount"
 	AttributeKeySourceAddress    = "source"
-	AttributeKeyChannelId        = "channel_id"
-	AttributeKeyPortId           = "port_name"
+	AttributeKeyChannelID        = "channel_id"
+	AttributeKeyPortID           = "port_name"
 	AttributeKeyUser             = "user_address"
 
 	AttributeValueCategory = ModuleName
