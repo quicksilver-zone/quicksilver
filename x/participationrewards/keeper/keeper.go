@@ -60,7 +60,8 @@ func NewKeeper(
 	icqk icqkeeper.Keeper,
 	icsk icskeeper.Keeper,
 	feeCollectorName string,
-	pofn utils.ProofOpsFn,
+	proofValidationFn utils.ProofOpsFn,
+
 ) Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -82,23 +83,12 @@ func NewKeeper(
 		icsKeeper:        icsk,
 		feeCollectorName: feeCollectorName,
 		prSubmodules:     LoadSubmodules(),
-		ValidateProofOps: pofn,
+		ValidateProofOps: proofValidationFn,
 	}
 }
 
 func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
 	k.epochsKeeper = epochsKeeper
-}
-
-// MigrateParams fetchs params, adds ClaimsEnabled field and re-sets params.
-func (k Keeper) MigrateParams(ctx sdk.Context) {
-	oldParams := types.ParamsV1{}
-	params := types.Params{}
-	k.paramSpace.GetParamSet(ctx, &oldParams)
-	fmt.Println("previous pr paramset", oldParams.String())
-	params.DistributionProportions = oldParams.DistributionProportions
-	params.ClaimsEnabled = false
-	k.paramSpace.SetParamSet(ctx, &params)
 }
 
 // GetParams returns the total set of participationrewards parameters.

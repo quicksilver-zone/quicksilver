@@ -1,35 +1,14 @@
 package keeper
 
 import (
-	"strconv"
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibcclitypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
 	if epochIdentifier == "epoch" && epochNumber > 1 {
-		if strings.Contains(ctx.ChainID(), "-") {
-			revisionNum, err := strconv.ParseUint(strings.Split(ctx.ChainID(), "-")[1], 10, 64)
-			if err != nil {
-				k.Logger(ctx).Error("Error getting revision number for client ")
-			}
-
-			height := ibcclitypes.Height{
-				RevisionNumber: revisionNum,
-				RevisionHeight: uint64(ctx.BlockHeight() - 1),
-			}
-
-			selfConsState, err := k.IBCKeeper.ClientKeeper.GetSelfConsensusState(ctx, height)
-			if err != nil {
-				k.Logger(ctx).Error("Error getting self consensus state of previous height")
-			}
-
-			state := selfConsState.(*ibctmtypes.ConsensusState)
-			k.SetSelfConsensusState(ctx, *state)
+		if err := k.StoreSelfConsensusState(ctx, "epoch"); err != nil {
+			k.Logger(ctx).Error("unable to store consensus state", "error", err)
 		}
 	}
 }

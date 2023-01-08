@@ -60,18 +60,34 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 			)
 		}
 
-		if err := k.ValidateProofOps(
-			ctx,
-			&k.icsKeeper.IBCKeeper,
-			connectionData.ConnectionID,
-			connectionData.ChainID,
-			proof.Height,
-			proof.ProofType,
-			proof.Key,
-			proof.Data,
-			proof.ProofOps,
-		); err != nil {
-			return nil, fmt.Errorf("%s: %w", pl, err)
+		// if we are claiming against Quicksilver, use the SelfProofOpsFn.
+		if msg.SrcZone == ctx.ChainID() {
+			if err := k.icsKeeper.ClaimsManagerKeeper.ValidateSelfProofOps(
+				ctx,
+				"epoch",
+				connectionData.ChainID,
+				proof.Height,
+				proof.ProofType,
+				proof.Key,
+				proof.Data,
+				proof.ProofOps,
+			); err != nil {
+				return nil, fmt.Errorf("%s: %w", pl, err)
+			}
+		} else {
+			if err := k.ValidateProofOps(
+				ctx,
+				&k.icsKeeper.IBCKeeper,
+				connectionData.ConnectionID,
+				connectionData.ChainID,
+				proof.Height,
+				proof.ProofType,
+				proof.Key,
+				proof.Data,
+				proof.ProofOps,
+			); err != nil {
+				return nil, fmt.Errorf("%s: %w", pl, err)
+			}
 		}
 	}
 
