@@ -4,19 +4,22 @@ import (
 	"fmt"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 // upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch)
 const (
-	ProductionChainID = "quicksilver-1"
-	InnuendoChainID   = "innuendo-3"
-	Innuendo2ChainID  = "innuendo-4"
+	ProductionChainID = "quicksilver-2"
+	InnuendoChainID   = "innuendo-4"
 	DevnetChainID     = "quicktest-1"
+
+	v010300UpgradeName = "v1.3.0"
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
-	// app.UpgradeKeeper.SetUpgradeHandler(v001000UpgradeName, getv001000Upgrade(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v010300UpgradeName, noOpHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -44,5 +47,11 @@ func setUpgradeHandlers(app *Quicksilver) {
 
 	if storeUpgrades != nil {
 		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, storeUpgrades))
+	}
+}
+
+func noOpHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }
