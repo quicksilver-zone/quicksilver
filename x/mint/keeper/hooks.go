@@ -10,17 +10,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
 }
 
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	params := k.GetParams(ctx)
 	k.Logger(ctx).Info("Mint AfterEpochEnd", "Params", params)
 
 	if epochIdentifier == params.EpochIdentifier {
 		// not distribute rewards if it's not time yet for rewards distribution
 		if epochNumber < params.MintingRewardsDistributionStartEpoch {
-			return
+			return nil
 		} else if epochNumber == params.MintingRewardsDistributionStartEpoch {
 			k.SetLastReductionEpochNum(ctx, epochNumber)
 		}
@@ -45,13 +46,13 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		// We over-allocate by the developer vesting portion, and burn this later
 		err := k.MintCoins(ctx, mintedCoins)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		// send the minted coins to the fee collector account
 		err = k.DistributeMintedCoin(ctx, mintedCoin)
 		if err != nil {
-			panic(err)
+			return err
 		}
 
 		if mintedCoin.Amount.IsInt64() {
@@ -67,6 +68,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			),
 		)
 	}
+	return nil
 }
 
 // ___________________________________________________________________________________________________
@@ -84,10 +86,10 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // epochs hooks.
-func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }
 
-func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }

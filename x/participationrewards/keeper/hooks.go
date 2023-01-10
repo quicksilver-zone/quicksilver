@@ -10,10 +10,11 @@ import (
 
 var epochsDeferred = int64(3)
 
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
 }
 
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	if epochIdentifier == "epoch" {
 		k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, data types.ProtocolData) (stop bool) {
 			blockQuery := tmservice.GetLatestBlockRequest{}
@@ -72,26 +73,29 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				}
 			}
 
-			return
+			return nil
 		}
 
 		tvs, err := k.calcTokenValues(ctx)
 		if err != nil {
 			k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
-			return
+			return err
 		}
 
 		if err := k.allocateZoneRewards(ctx, tvs, *allocation); err != nil {
 			k.Logger(ctx).Error(err.Error())
+			return err
 		}
 
 		if !allocation.Lockup.IsZero() {
 			// at genesis lockup will be disable, and enabled when ICS is used.
 			if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
 				k.Logger(ctx).Error(err.Error())
+				return err
 			}
 		}
 	}
+	return nil
 }
 
 // ___________________________________________________________________________________________________
@@ -108,10 +112,10 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // epochs hooks
-func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }
 
-func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
