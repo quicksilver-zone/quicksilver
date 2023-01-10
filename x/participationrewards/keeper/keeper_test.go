@@ -109,14 +109,17 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.setupTestDeposits()
 	suite.setupTestIntents()
 
-	qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 1)
+	err := qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 1)
+	suite.Require().NoError(err)
 
 	suite.setupTestClaims()
 
-	qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 2)
+	err = qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 2)
+	suite.Require().NoError(err)
 
 	// Epoch boundary
-	qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 3)
+	err = qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 3)
+	suite.Require().NoError(err)
 
 	_, found := qApp.ClaimsManagerKeeper.GetLastEpochClaim(suite.chainA.GetContext(), "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
 	suite.Require().True(found)
