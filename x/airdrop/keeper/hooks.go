@@ -6,10 +6,12 @@ import (
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
 }
 
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return nil
 }
 
 // ___________________________________________________________________________________________________
@@ -26,10 +28,10 @@ func (k Keeper) Hooks() Hooks {
 }
 
 // epochs hooks
-func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }
 
-func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
