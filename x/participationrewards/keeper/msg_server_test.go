@@ -203,6 +203,36 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			&types.MsgSubmitClaimResponse{},
 			"",
 		},
+		{"valid_liquid",
+			func() {
+				address := utils.GenerateAccAddressForTest()
+				key := address
+
+				cd := sdk.Coin{
+					Denom:  "",
+					Amount: math.NewInt(0),
+				}
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: address.String(),
+					Zone:        "testchain1",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeLiquidToken,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       key,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    0,
+							ProofType: "lockup",
+						},
+					},
+				}
+			},
+			&types.MsgSubmitClaimResponse{},
+			""},
 	}
 	for _, tt := range tests {
 		tt := tt

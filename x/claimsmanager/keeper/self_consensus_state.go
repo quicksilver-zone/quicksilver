@@ -28,7 +28,7 @@ func (k Keeper) SetSelfConsensusState(ctx sdk.Context, key string, consState ibc
 	store.Set(store.Get(append(types.KeySelfConsensusState, []byte(key)...)), k.cdc.MustMarshal(&consState))
 }
 
-// Validate Proof Ops against a consensus state stored in the claimsmanager Keeper. ConsensusStateKey is the key to lookup the state.
+// ValidateSelfProofOps Validate Proof Ops against a consensus state stored in the claimsmanager Keeper. ConsensusStateKey is the key to lookup the state.
 func (k Keeper) ValidateSelfProofOps(ctx sdk.Context, consensusStateKey string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
 	if proofOps == nil {
 		return errors.New("unable to validate proof. No proof submitted")
