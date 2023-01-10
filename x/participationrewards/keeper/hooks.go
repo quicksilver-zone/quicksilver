@@ -79,7 +79,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		tvs, err := k.calcTokenValues(ctx)
 		if err != nil {
 			k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
-			return err
+			return nil
 		}
 
 		if err := k.allocateZoneRewards(ctx, tvs, *allocation); err != nil {
