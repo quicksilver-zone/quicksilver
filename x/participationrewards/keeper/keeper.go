@@ -59,7 +59,6 @@ func NewKeeper(
 	icsk icskeeper.Keeper,
 	feeCollectorName string,
 	proofValidationFn utils.ProofOpsFn,
-
 ) Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))

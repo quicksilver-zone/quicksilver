@@ -62,7 +62,7 @@ func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 		state := selfConsState.(*ibctmtypes.ConsensusState)
 		k.SetSelfConsensusState(ctx, key, *state)
 	} else {
-		//ONLY FOR TESTING - ibctesting module chains donot follow standard [chainname]-[num] structure
+		// ONLY FOR TESTING - ibctesting module chains donot follow standard [chainname]-[num] structure
 		height := ibcclienttypes.Height{
 			RevisionNumber: 1,
 			RevisionHeight: uint64(ctx.BlockHeight() - 1),

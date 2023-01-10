@@ -28,6 +28,11 @@ func (k Keeper) SetSelfConsensusState(ctx sdk.Context, key string, consState ibc
 	store.Set(store.Get(append(types.KeySelfConsensusState, []byte(key)...)), k.cdc.MustMarshal(&consState))
 }
 
+func (k Keeper) DeleteSelfConsensusState(ctx sdk.Context, key string, consState ibctmtypes.ConsensusState) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(store.Get(append(types.KeySelfConsensusState, []byte(key)...)))
+}
+
 // ValidateSelfProofOps Validate Proof Ops against a consensus state stored in the claimsmanager Keeper. ConsensusStateKey is the key to lookup the state.
 func (k Keeper) ValidateSelfProofOps(ctx sdk.Context, consensusStateKey string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
 	if proofOps == nil {
