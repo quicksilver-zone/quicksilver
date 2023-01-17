@@ -8,6 +8,11 @@ import (
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
+const (
+	SelfConnection = "local"
+	Prefix         = "quick"
+)
+
 func (dp DistributionProportions) ValidateBasic() error {
 	errors := make(map[string]error)
 

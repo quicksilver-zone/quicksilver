@@ -396,6 +396,11 @@ func NewQuicksilver(
 		proofOpsFn = utils.MockProofOps
 	}
 
+	selfProofOpsFn := utils.ValidateSelfProofOps
+	if mock {
+		selfProofOpsFn = utils.MockSelfProofOps
+	}
+
 	// use custom account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
@@ -501,6 +506,7 @@ func NewQuicksilver(
 		app.InterchainstakingKeeper,
 		authtypes.FeeCollectorName,
 		proofOpsFn,
+		selfProofOpsFn,
 	)
 	if err := app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler()); err != nil {
 		panic(err)

@@ -3,7 +3,6 @@ package types
 import (
 	"testing"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,7 +34,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_chain_id",
 			fields{
-				UserAddress: utils.GenerateAccAddressForTest().String(),
+				UserAddress: GenerateAccAddressForTest().String(),
 				ChainId:     "",
 				Amount:      10000,
 			},
@@ -44,7 +43,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_chain_id",
 			fields{
-				UserAddress: utils.GenerateAccAddressForTest().String(),
+				UserAddress: GenerateAccAddressForTest().String(),
 				ChainId:     "",
 				Amount:      10000,
 			},
@@ -53,7 +52,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_amount",
 			fields{
-				UserAddress: utils.GenerateAccAddressForTest().String(),
+				UserAddress: GenerateAccAddressForTest().String(),
 				ChainId:     "testzone-1",
 				Amount:      0,
 			},
@@ -62,7 +61,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		{
 			"valid",
 			fields{
-				UserAddress: utils.GenerateAccAddressForTest().String(),
+				UserAddress: GenerateAccAddressForTest().String(),
 				ChainId:     "testzone-1",
 				Amount:      1000000,
 			},

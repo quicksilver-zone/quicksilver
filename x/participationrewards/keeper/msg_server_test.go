@@ -206,7 +206,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		{"valid_liquid",
 			func() {
 				address := utils.GenerateAccAddressForTest()
-				key := address
+				key := append(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3")...)
 
 				cd := sdk.Coin{
 					Denom:  "",
@@ -217,7 +217,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
-					Zone:        "testchain1",
+					Zone:        "cosmoshub-4",
 					SrcZone:     "testchain1",
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
@@ -225,7 +225,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							Key:       key,
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
-							Height:    0,
+							Height:    11,
 							ProofType: "lockup",
 						},
 					},

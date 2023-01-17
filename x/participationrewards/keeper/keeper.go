@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -32,18 +33,19 @@ type userAllocation struct {
 var _ osmosistypes.ParticipationRewardsKeeper = Keeper{}
 
 type Keeper struct {
-	cdc              codec.BinaryCodec
-	storeKey         storetypes.StoreKey
-	paramSpace       paramtypes.Subspace
-	accountKeeper    authkeeper.AccountKeeper
-	bankKeeper       bankkeeper.Keeper
-	stakingKeeper    stakingkeeper.Keeper
-	IcqKeeper        icqkeeper.Keeper
-	icsKeeper        icskeeper.Keeper
-	epochsKeeper     epochskeeper.Keeper
-	feeCollectorName string
-	prSubmodules     map[cmtypes.ClaimType]Submodule
-	ValidateProofOps utils.ProofOpsFn
+	cdc                  codec.BinaryCodec
+	storeKey             storetypes.StoreKey
+	paramSpace           paramtypes.Subspace
+	accountKeeper        authkeeper.AccountKeeper
+	bankKeeper           bankkeeper.Keeper
+	stakingKeeper        stakingkeeper.Keeper
+	IcqKeeper            icqkeeper.Keeper
+	icsKeeper            icskeeper.Keeper
+	epochsKeeper         epochskeeper.Keeper
+	feeCollectorName     string
+	prSubmodules         map[cmtypes.ClaimType]Submodule
+	ValidateProofOps     utils.ProofOpsFn
+	ValidateSelfProofOps utils.SelfProofOpsFn
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -59,6 +61,7 @@ func NewKeeper(
 	icsk icskeeper.Keeper,
 	feeCollectorName string,
 	proofValidationFn utils.ProofOpsFn,
+	selfProofValidationFn utils.SelfProofOpsFn,
 ) Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -70,17 +73,18 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:              cdc,
-		storeKey:         key,
-		paramSpace:       ps,
-		accountKeeper:    ak,
-		bankKeeper:       bk,
-		stakingKeeper:    sk,
-		IcqKeeper:        icqk,
-		icsKeeper:        icsk,
-		feeCollectorName: feeCollectorName,
-		prSubmodules:     LoadSubmodules(),
-		ValidateProofOps: proofValidationFn,
+		cdc:                  cdc,
+		storeKey:             key,
+		paramSpace:           ps,
+		accountKeeper:        ak,
+		bankKeeper:           bk,
+		stakingKeeper:        sk,
+		IcqKeeper:            icqk,
+		icsKeeper:            icsk,
+		feeCollectorName:     feeCollectorName,
+		prSubmodules:         LoadSubmodules(),
+		ValidateProofOps:     proofValidationFn,
+		ValidateSelfProofOps: selfProofValidationFn,
 	}
 }
 
@@ -112,6 +116,27 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) GetCodec() codec.BinaryCodec {
 	return k.cdc
+}
+
+func (k Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
+	selfConnectionData, err := json.Marshal(types.ConnectionProtocolData{
+		ConnectionID: types.SelfConnection,
+		ChainID:      ctx.ChainID(),
+		LastEpoch:    ctx.BlockHeight() - 1,
+		Prefix:       types.Prefix,
+	})
+	if err != nil {
+		k.Logger(ctx).Info("Error Marshalling  self connection Data")
+		return err
+	}
+
+	data := types.ProtocolData{
+		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
+		Data: selfConnectionData,
+	}
+	k.SetSelfProtocolData(ctx, &data)
+
+	return nil
 }
 
 func (k Keeper) GetModuleBalance(ctx sdk.Context) math.Int {

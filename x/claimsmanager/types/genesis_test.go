@@ -3,7 +3,6 @@ package types
 import (
 	"testing"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,7 +46,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				Params: DefaultParams(),
 				Claims: []*Claim{
 					{
-						UserAddress: utils.GenerateAccAddressForTest().String(),
+						UserAddress: GenerateAccAddressForTest().String(),
 						ChainId:     "testzone-1",
 						Amount:      0,
 					},
@@ -61,7 +60,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				Params: DefaultParams(),
 				Claims: []*Claim{
 					{
-						UserAddress: utils.GenerateAccAddressForTest().String(),
+						UserAddress: GenerateAccAddressForTest().String(),
 						ChainId:     "testzone-1",
 						Amount:      1000000,
 					},

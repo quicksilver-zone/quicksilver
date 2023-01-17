@@ -385,12 +385,17 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		),
 		"osmosis-1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 	)
-	//self-protocol data
-	suite.addProtocolData(
-		types.ProtocolDataTypeConnection,
-		fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", "connection-77004", "testchain1", 0),
-		"testchain1",
-	)
+	// atom (cosmoshub) on local chain
+	suite.addProtocolData(types.ProtocolDataTypeLiquidToken,
+		fmt.Sprintf(
+			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
+			"testchain1",
+			"cosmoshub-4",
+			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			"uqatom",
+		),
+		"testchain1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3")
+
 }
 
 func (suite *KeeperTestSuite) addProtocolData(Type types.ProtocolDataType, Data string, Key string) {
