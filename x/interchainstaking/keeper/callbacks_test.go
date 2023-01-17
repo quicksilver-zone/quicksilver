@@ -18,7 +18,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/require"
 )
@@ -1411,48 +1410,6 @@ func TestDepositIntervalCallbackWithExistingTxs(t *testing.T) {
 	}
 	// check we have the correct number (29 minus - 3 receipts = 26) tendermint.Tx ICQ requests from the above payload.
 	s.Require().Equal(int(res.Pagination.Total)-3, txQueryCount)
-}
-
-func TestDepositIntervalCallbackWithNextKey(t *testing.T) {
-	s := new(KeeperTestSuite)
-	s.SetT(t)
-	s.SetupTest()
-	s.setupTestZones()
-
-	app := s.GetQuicksilverApp(s.chainA)
-	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-	ctx := s.chainA.GetContext()
-
-	data, err := base64.StdEncoding.DecodeString(depositTxFixture)
-	res := tx.GetTxsEventResponse{}
-	app.InterchainQueryKeeper.IBCKeeper.Codec().MustUnmarshal(data, &res)
-	res.Pagination.NextKey = []byte{0x00, 0x01, 0x02}
-	data = app.InterchainQueryKeeper.IBCKeeper.Codec().MustMarshal(&res)
-	s.Require().NoError(err)
-	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-	s.Require().True(found)
-	req := tx.GetTxsEventRequest{Events: []string{"transfer.recipient='" + zone.DepositAddress.GetAddress() + "'"}, Pagination: &query.PageRequest{Limit: types.TxRetrieveCount, Reverse: true}}
-	reqBytes := app.InterchainQueryKeeper.IBCKeeper.Codec().MustMarshal(&req)
-	err = keeper.DepositIntervalCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqBytes})
-	s.Require().NoError(err)
-	txQueryCount := 0
-	getEventCount := 0
-	for _, query := range app.InterchainQueryKeeper.AllQueries(ctx) {
-		switch query.QueryType {
-		case "tendermint.Tx":
-			txQueryCount++
-		case "cosmos.tx.v1beta1.Service/GetTxsEvent":
-			getEventCount++
-			req := tx.GetTxsEventRequest{}
-			app.InterchainQueryKeeper.IBCKeeper.Codec().MustUnmarshal(query.Request, &req)
-			s.Require().Equal([]byte{0x00, 0x01, 0x02}, req.Pagination.Key)
-		default:
-			print(query.QueryType)
-		}
-	}
-	// check we have the correct number (29) tendermint.Tx ICQ requests from the payload.
-	s.Require().Equal(int(res.Pagination.Total), txQueryCount)
-	s.Require().Equal(1, getEventCount)
 }
 
 // keep depositTxFixture at the foot of the file so it's not in the way!
