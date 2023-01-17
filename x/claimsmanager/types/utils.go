@@ -2,6 +2,7 @@ package types
 
 import (
 	"crypto/rand"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
