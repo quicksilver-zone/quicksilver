@@ -872,6 +872,14 @@ func (app *Quicksilver) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker updates every begin block
 func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
+	if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() == 235001 {
+		zone, found := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
+		if !found {
+			panic("ERROR: unable to find expected stargaze-1 zone")
+		}
+		app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zone)
+	}
+
 	return app.mm.BeginBlock(ctx, req)
 }
 

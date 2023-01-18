@@ -317,7 +317,7 @@ func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 			if !zoneInfo.DepositAddress.Balance.Empty() {
 				k.Logger(ctx).Info("balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
 
-				req := tx.GetTxsEventRequest{Events: []string{"transfer.recipient='" + zoneInfo.DepositAddress.GetAddress() + "'"}, Pagination: &query.PageRequest{Limit: types.TxRetrieveCount, Reverse: true}}
+				req := tx.GetTxsEventRequest{Events: []string{"transfer.recipient='" + zoneInfo.DepositAddress.GetAddress() + "'"}, OrderBy: tx.OrderBy_ORDER_BY_DESC, Pagination: &query.PageRequest{Limit: types.TxRetrieveCount}}
 				k.ICQKeeper.MakeRequest(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
 
 			}
@@ -436,6 +436,16 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRew
 	}
 
 	zone.LastRedemptionRate = zone.RedemptionRate
+	zone.RedemptionRate = ratio
+	k.SetZone(ctx, &zone)
+}
+
+func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone types.Zone) {
+	ratio, _ := k.GetRatio(ctx, zone, sdk.ZeroInt())
+	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
+	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount)
+
 	zone.RedemptionRate = ratio
 	k.SetZone(ctx, &zone)
 }

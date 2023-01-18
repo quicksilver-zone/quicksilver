@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
@@ -59,7 +60,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 			k.Logger(ctx).Info("Withdrawing rewards")
 
-			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zoneInfo.DelegationAddress.Address}
+			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zoneInfo.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zoneInfo.Validators))}}
 			bz := k.cdc.MustMarshal(&delegationQuery)
 
 			k.ICQKeeper.MakeRequest(
@@ -73,7 +74,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				"delegations",
 				0,
 			)
-			// zoneInfo.DelegationAddress.IncrementBalanceWaitgroup()
 
 			rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zoneInfo.DelegationAddress.Address}
 			bz = k.cdc.MustMarshal(&rewardsQuery)

@@ -9,7 +9,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	querypb "github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -226,23 +225,6 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		return err
 	}
 
-	// TODO: use pagination.GetTotal() to dispatch the correct number of requests now; rather than iteratively.
-	if len(txs.Pagination.NextKey) > 0 {
-		req := tx.GetTxsEventRequest{}
-		if len(query.Request) == 0 {
-			return errors.New("attempted to unmarshal zero length byte slice (5)")
-		}
-		err := k.cdc.Unmarshal(query.Request, &req)
-		if err != nil {
-			return err
-		}
-		if req.Pagination == nil {
-			req.Pagination = new(querypb.PageRequest)
-		}
-		req.Pagination.Key = txs.Pagination.NextKey
-		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
-	}
-
 	for _, txn := range txs.TxResponses {
 		req := tx.GetTxRequest{Hash: txn.TxHash}
 		hashBytes := k.cdc.MustMarshal(&req)
@@ -251,7 +233,6 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 			k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
 			continue
 		}
-		// k.HandleReceiptTransaction(ctx, txn, txs.Txs[idx], zone)
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}
 	return nil

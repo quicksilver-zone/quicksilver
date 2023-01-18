@@ -178,9 +178,14 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 		k.Logger(ctx).Info("Delegation address not set")
 		return nil
 	}
+
+	if zone.DepositAddress == nil {
+		k.Logger(ctx).Info("Deposit address not set")
+		return nil
+	}
 	withdrawalAddress := zone.WithdrawalAddress.Address
 
-	if zone.DepositAddress.WithdrawalAddress != zone.DepositAddress.Address {
+	if zone.DepositAddress.WithdrawalAddress != zone.WithdrawalAddress.Address {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
 		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "")
 		if err != nil {
