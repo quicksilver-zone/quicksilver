@@ -653,20 +653,31 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		k.Logger(ctx).Info("withdrawal record to save", "rcd", record)
 		k.UpdateWithdrawalRecordStatus(ctx, &record, WithdrawStatusUnbond)
 	}
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: undelegateMsg.DelegatorAddress}
-	bz := k.cdc.MustMarshal(&delegationQuery)
 
+	delAddr, err := utils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
+	if err != nil {
+		return err
+	}
+	valAddr, err := utils.ValAddressFromBech32(undelegateMsg.ValidatorAddress, "")
+	if err != nil {
+		return err
+	}
+
+	data := stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+	// send request to update delegation record for undelegated del/val tuple.
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
 		zone.ChainId,
-		"cosmos.staking.v1beta1.Query/DelegatorDelegations",
-		bz,
+		"store/staking/key",
+		data,
 		sdk.NewInt(-1),
 		types.ModuleName,
-		"delegations",
+		"delegation",
 		0,
 	)
+
 	return nil
 }
 
