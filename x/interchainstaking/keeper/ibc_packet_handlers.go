@@ -809,11 +809,8 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 		}
 		data := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-		if err := k.RemoveDelegation(ctx, &zone, existingDelegation); err != nil {
-			return err
-		}
-
-		// send request to prove delegation no longer exists.
+		// send request to prove delegation no longer exists. If the response is nil (i.e. no delegation), then
+		// the delegation record is removed by the callback.
 		k.ICQKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
@@ -826,8 +823,6 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 			0,
 		)
 	}
-
-	// k.SetZone(ctx, &zone)
 
 	return nil
 }
