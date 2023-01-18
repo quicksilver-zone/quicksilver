@@ -2,6 +2,15 @@
 
 ## Released
 
+### v1.2.1
+
+- Do not remove delegation records on absence from DelegatorDelegations response
+- Add tests for delegations callback changes
+- Fix deposit address onboarding race condition
+- Fix GetTxEvents pagination and sort issue
+- Ensure Undelegate receipt doesn't trigger entire valset refresh
+- Add uncapped OverrideRedemptionRate function; add tests; add upgrade handler for block 325001
+
 ### v1.2.0
 
 - Remove v1.1.0 migration and epoch skipping logic
