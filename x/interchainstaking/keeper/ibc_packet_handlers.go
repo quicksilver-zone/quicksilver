@@ -731,7 +731,18 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 	if zone == nil {
 		zone = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
 		if zone == nil {
-			return errors.New("unable to find zone")
+			if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() < 248000 {
+				return errors.New("unable to find zone") // mirror existing behaviour before 248000
+			} else {
+				// after 248000 correctly handle SetWithdrawalAddress callback.
+				zone = k.GetZoneForDepositAccount(ctx, original.DelegatorAddress)
+				if zone == nil {
+					return errors.New("unable to find zone")
+				}
+				if err := zone.DepositAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
+					return err
+				}
+			}
 		}
 		if err := zone.PerformanceAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
 			return err
