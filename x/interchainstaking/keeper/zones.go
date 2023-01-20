@@ -133,6 +133,18 @@ func (k Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *t
 	return zone
 }
 
+func (k Keeper) GetZoneForDepositAccount(ctx sdk.Context, address string) *types.Zone {
+	var zone *types.Zone
+	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
+		if zoneInfo.DepositAddress != nil && zoneInfo.DepositAddress.Address == address {
+			zone = &zoneInfo
+			return true
+		}
+		return false
+	})
+	return zone
+}
+
 func (k Keeper) EnsureICAsActive(ctx sdk.Context, zone *types.Zone) error {
 	k.Logger(ctx).Info("Ensuring ICAs for zone", "zone", zone.ChainId)
 	if err := k.EnsureICAActive(ctx, zone, zone.DepositAddress); err != nil {
