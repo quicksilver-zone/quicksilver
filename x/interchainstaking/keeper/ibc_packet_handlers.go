@@ -653,6 +653,20 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		k.Logger(ctx).Info("withdrawal record to save", "rcd", record)
 		k.UpdateWithdrawalRecordStatus(ctx, &record, WithdrawStatusUnbond)
 	}
+<<<<<<< HEAD
+=======
+
+	delAddr, err := utils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
+	if err != nil {
+		return err
+	}
+	valAddr, err := utils.ValAddressFromBech32(undelegateMsg.ValidatorAddress, "")
+	if err != nil {
+		return err
+	}
+
+	data := stakingtypes.GetDelegationKey(delAddr, valAddr)
+>>>>>>> 289acbf (Release/v1.3.2 (#285))
 
 	delAddr, err := utils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
 	if err != nil {
@@ -731,10 +745,6 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 	if zone == nil {
 		zone = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
 		if zone == nil {
-			if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() < 248000 {
-				return errors.New("unable to find zone") // mirror existing behaviour before 248000
-			}
-			// after 248000 correctly handle SetWithdrawalAddress callback.
 			zone = k.GetZoneForDepositAccount(ctx, original.DelegatorAddress)
 			if zone == nil {
 				return errors.New("unable to find zone")

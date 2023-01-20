@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
