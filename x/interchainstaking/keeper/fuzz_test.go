@@ -202,8 +202,8 @@ func FuzzDelegationsCallback(f *testing.F) {
 		})
 	}
 
-	for _, query := range queries {
-		bz, err := app.AppCodec().Marshal(query)
+	for _, qry := range queries {
+		bz, err := app.AppCodec().Marshal(qry)
 		suite.Require().NoError(err)
 		f.Add(bz)
 	}
@@ -331,10 +331,9 @@ func (s *FuzzingTestSuite) FuzzAllBalancesCallback(t *testing.T, respbz []byte) 
 
 	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 
-	query := banktypes.QueryAllBalancesRequest{
-		Address: zone.DepositAddress.Address,
-	}
-	reqbz, err := app.AppCodec().Marshal(&query)
+	deposit_address, err := sdk.AccAddressFromBech32(zone.DepositAddress.Address)
+	queryAllBalancesRequest := banktypes.NewQueryAllBalancesRequest(deposit_address, nil)
+	reqbz, err := app.AppCodec().Marshal(queryAllBalancesRequest)
 	s.Require().NoError(err)
 
 	err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})

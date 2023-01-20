@@ -491,3 +491,81 @@ func (s *KeeperTestSuite) TestGetRatio() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestUpdateRedemptionRate() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+	icsKeeper := app.InterchainstakingKeeper
+	zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+
+	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetAllValidators(s.chainB.GetContext())
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+
+	icsKeeper.SetDelegation(ctx, &zone, delegationA)
+	icsKeeper.SetDelegation(ctx, &zone, delegationB)
+	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	app.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
+
+	// no change!
+	s.Require().Equal(sdk.OneDec(), zone.RedemptionRate)
+	icsKeeper.UpdateRedemptionRate(ctx, zone, sdk.ZeroInt())
+
+	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+	s.Require().Equal(sdk.OneDec(), zone.RedemptionRate)
+
+	// add 1%
+	s.Require().Equal(sdk.OneDec(), zone.RedemptionRate)
+	icsKeeper.UpdateRedemptionRate(ctx, zone, sdk.NewInt(30))
+	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(10)
+	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(10)
+	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(10)
+	icsKeeper.SetDelegation(ctx, &zone, delegationA)
+	icsKeeper.SetDelegation(ctx, &zone, delegationB)
+	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+	s.Require().Equal(sdk.NewDecWithPrec(101, 2), zone.RedemptionRate)
+
+	// add >2%; cap at 2%
+	icsKeeper.UpdateRedemptionRate(ctx, zone, sdk.NewInt(500))
+	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(166)
+	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(167)
+	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(167)
+	icsKeeper.SetDelegation(ctx, &zone, delegationA)
+	icsKeeper.SetDelegation(ctx, &zone, delegationB)
+	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+	// should be capped at 2% increase. (1.01*1.02 == 1.0302)
+	s.Require().Equal(sdk.NewDecWithPrec(10302, 4), zone.RedemptionRate)
+
+	// add nothing, still cap at 2%
+	icsKeeper.UpdateRedemptionRate(ctx, zone, sdk.ZeroInt())
+	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+	// should be capped at 2% increase. (1.01*1.02*1.02 == 1.050804)
+	s.Require().Equal(sdk.NewDecWithPrec(1050804, 6), zone.RedemptionRate)
+
+	delegationA.Amount.Amount = delegationA.Amount.Amount.SubRaw(500)
+	delegationB.Amount.Amount = delegationB.Amount.Amount.SubRaw(500)
+	delegationC.Amount.Amount = delegationC.Amount.Amount.SubRaw(500)
+	icsKeeper.SetDelegation(ctx, &zone, delegationA)
+	icsKeeper.SetDelegation(ctx, &zone, delegationB)
+	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	// remove > 5%, cap at -5%
+	icsKeeper.UpdateRedemptionRate(ctx, zone, sdk.ZeroInt())
+	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+
+	s.Require().Equal(sdk.NewDecWithPrec(9982638, 7), zone.RedemptionRate)
+}

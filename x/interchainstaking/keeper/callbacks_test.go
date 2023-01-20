@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -977,4 +978,363 @@ func TestValsetCallbackNilValidatorReqPagination(t *testing.T) {
 
 	data := []byte("\x12\"\n 00000000000000000000000000000000")
 	_ = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID})
+}
+
+func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
+	s := new(KeeperTestSuite)
+	s.SetT(t)
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+	ctx := s.chainA.GetContext()
+	cdc := app.IBCKeeper.Codec()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+
+	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetAllValidators(s.chainB.GetContext())
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+	}}
+
+	data := cdc.MustMarshal(&response)
+
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	bz := cdc.MustMarshal(&delegationQuery)
+
+	err := keeper.DelegationsCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+
+	s.Require().NoError(err)
+
+	delegationRequests := 0
+	for _, query := range app.InterchainQueryKeeper.AllQueries(ctx) {
+		if query.CallbackId == "delegation" {
+			delegationRequests++
+		}
+	}
+
+	s.Require().Equal(0, delegationRequests)
+	s.Require().Equal(3, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+}
+
+func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
+	s := new(KeeperTestSuite)
+	s.SetT(t)
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+	ctx := s.chainA.GetContext()
+	cdc := app.IBCKeeper.Codec()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+
+	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetAllValidators(s.chainB.GetContext())
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Shares: sdk.NewDec(2000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(2000))},
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+	}}
+
+	data := cdc.MustMarshal(&response)
+
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	bz := cdc.MustMarshal(&delegationQuery)
+
+	err := keeper.DelegationsCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+
+	s.Require().NoError(err)
+
+	delegationRequests := 0
+	for _, query := range app.InterchainQueryKeeper.AllQueries(ctx) {
+		if query.CallbackId == "delegation" {
+			delegationRequests++
+		}
+	}
+
+	s.Require().Equal(1, delegationRequests)
+	s.Require().Equal(3, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+}
+
+func TestDelegationsCallbackOneMissing(t *testing.T) {
+	s := new(KeeperTestSuite)
+	s.SetT(t)
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+	ctx := s.chainA.GetContext()
+	cdc := app.IBCKeeper.Codec()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+
+	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetAllValidators(s.chainB.GetContext())
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+	}}
+
+	data := cdc.MustMarshal(&response)
+
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	bz := cdc.MustMarshal(&delegationQuery)
+
+	err := keeper.DelegationsCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+
+	s.Require().NoError(err)
+
+	delegationRequests := 0
+	for _, query := range app.InterchainQueryKeeper.AllQueries(ctx) {
+		if query.CallbackId == "delegation" {
+			delegationRequests++
+		}
+	}
+
+	s.Require().Equal(1, delegationRequests)                                             // callback for 'missing' delegation.
+	s.Require().Equal(3, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))) // new delegation doesn't get removed until the callback.
+}
+
+func TestDelegationsCallbackOneAdditional(t *testing.T) {
+	s := new(KeeperTestSuite)
+	s.SetT(t)
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+	ctx := s.chainA.GetContext()
+	cdc := app.IBCKeeper.Codec()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+
+	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetAllValidators(s.chainB.GetContext())
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[3].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
+	}}
+
+	data := cdc.MustMarshal(&response)
+
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
+	bz := cdc.MustMarshal(&delegationQuery)
+
+	err := keeper.DelegationsCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+
+	s.Require().NoError(err)
+
+	delegationRequests := 0
+	for _, query := range app.InterchainQueryKeeper.AllQueries(ctx) {
+		if query.CallbackId == "delegation" {
+			delegationRequests++
+		}
+	}
+
+	s.Require().Equal(1, delegationRequests)
+	s.Require().Equal(3, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))) // new delegation doesn't get added until the end
+}
+
+func TestDelegationCallbackNew(t *testing.T) {
+	s := new(KeeperTestSuite)
+	s.SetT(t)
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+	ctx := s.chainA.GetContext()
+	cdc := app.IBCKeeper.Codec()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+
+	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetAllValidators(s.chainB.GetContext())
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	response := stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[3].OperatorAddress, Shares: sdk.NewDec(1000)}
+
+	data := cdc.MustMarshal(&response)
+
+	delAddr, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
+	s.Require().NoError(err)
+	valAddr, err := utils.ValAddressFromBech32(vals[3].OperatorAddress, "")
+	s.Require().NoError(err)
+	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+	err = keeper.DelegationCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	s.Require().NoError(err)
+
+	s.Require().Equal(4, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+}
+
+func TestDelegationCallbackUpdate(t *testing.T) {
+	s := new(KeeperTestSuite)
+	s.SetT(t)
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+	ctx := s.chainA.GetContext()
+	cdc := app.IBCKeeper.Codec()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+
+	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetAllValidators(s.chainB.GetContext())
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	response := stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Shares: sdk.NewDec(2000)}
+
+	data := cdc.MustMarshal(&response)
+
+	delAddr, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
+	s.Require().NoError(err)
+	valAddr, err := utils.ValAddressFromBech32(vals[3].OperatorAddress, "")
+	s.Require().NoError(err)
+	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+	err = keeper.DelegationCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	s.Require().NoError(err)
+
+	s.Require().Equal(3, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+}
+
+func TestDelegationCallbackNoOp(t *testing.T) {
+	s := new(KeeperTestSuite)
+	s.SetT(t)
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+	ctx := s.chainA.GetContext()
+	cdc := app.IBCKeeper.Codec()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+
+	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetAllValidators(s.chainB.GetContext())
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	response := stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Shares: sdk.NewDec(1000)}
+
+	data := cdc.MustMarshal(&response)
+
+	delAddr, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
+	s.Require().NoError(err)
+	valAddr, err := utils.ValAddressFromBech32(vals[3].OperatorAddress, "")
+	s.Require().NoError(err)
+	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+	err = keeper.DelegationCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	s.Require().NoError(err)
+
+	s.Require().Equal(3, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+}
+
+func TestDelegationCallbackRemove(t *testing.T) {
+	s := new(KeeperTestSuite)
+	s.SetT(t)
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+	ctx := s.chainA.GetContext()
+	cdc := app.IBCKeeper.Codec()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
+
+	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetAllValidators(s.chainB.GetContext())
+	delegationA := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
+	app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+
+	response := stakingtypes.Delegation{}
+
+	data := cdc.MustMarshal(&response)
+
+	delAddr, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
+	s.Require().NoError(err)
+	valAddr, err := utils.ValAddressFromBech32(vals[3].OperatorAddress, "")
+	s.Require().NoError(err)
+	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+	err = keeper.DelegationCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	s.Require().NoError(err)
+
+	delegationRequests := 0
+	for _, query := range app.InterchainQueryKeeper.AllQueries(ctx) {
+		if query.CallbackId == "delegation" {
+			delegationRequests++
+		}
+	}
+
+	s.Require().Equal(3, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
 }
