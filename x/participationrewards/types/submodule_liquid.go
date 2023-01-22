@@ -38,9 +38,9 @@ func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
 		errors["RegisteredZoneChainID"] = ErrInvalidChainID
 	}
 
-	if len(lpd.IbcDenom) < 5 || lpd.IbcDenom[:4] != "ibc/" {
-		errors["IbcDenom"] = ErrInvalidAssetName
-	}
+	// if len(lpd.IbcDenom) < 5 || lpd.IbcDenom[:4] != "ibc/" {
+	// 	errors["IbcDenom"] = ErrInvalidAssetName
+	// }
 
 	if len(lpd.QAssetDenom) == 0 {
 		errors["QAssetDenom"] = ErrUndefinedAttribute
