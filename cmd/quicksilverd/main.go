@@ -41,4 +41,5 @@ func setupConfig() {
 	cmdcfg.SetBech32Prefixes(config)
 	cmdcfg.SetBip44CoinType(config)
 	cmdcfg.SetWasmConfig(config)
+	config.Seal()
 }
