@@ -146,6 +146,8 @@ import (
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+
+	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 )
 
 func Init() {
@@ -398,7 +400,7 @@ func NewQuicksilver(
 
 	// use custom account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
+		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, appconfig.Bech32PrefixAccAddr,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
