@@ -37,16 +37,16 @@ type KeeperTestSuite struct {
 }
 
 // Setup sets up basic environment for suite (App, Ctx, and test accounts)
-func (s *KeeperTestSuite) Setup() {
+func (suite *KeeperTestSuite) Setup() {
 	cmdcfg.SetBech32Prefixes(sdk.GetConfig())
-	s.App = app.Setup(s.T(), false)
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "quick-1", Time: time.Now().UTC()})
-	s.QueryHelper = &baseapp.QueryServiceTestHelper{
-		GRPCQueryRouter: s.App.GRPCQueryRouter(),
-		Ctx:             s.Ctx,
+	suite.App = app.Setup(suite.T(), false)
+	suite.Ctx = suite.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "quick-1", Time: time.Now().UTC()})
+	suite.QueryHelper = &baseapp.QueryServiceTestHelper{
+		GRPCQueryRouter: suite.App.GRPCQueryRouter(),
+		Ctx:             suite.Ctx,
 	}
 
-	s.TestAccs = CreateRandomAccounts(3)
+	suite.TestAccs = CreateRandomAccounts(3)
 }
 
 // CreateRandomAccounts is a function return a list of randomly generated AccAddresses
@@ -61,22 +61,22 @@ func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 }
 
 // FundAcc funds target address with specified amount.
-func (s *KeeperTestSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
-	err := s.App.BankKeeper.MintCoins(s.Ctx, minttypes.ModuleName, amounts)
-	s.NoError(err)
-	err = s.App.BankKeeper.SendCoinsFromModuleToAccount(s.Ctx, minttypes.ModuleName, acc, amounts)
-	s.NoError(err)
+func (suite *KeeperTestSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
+	err := suite.App.BankKeeper.MintCoins(suite.Ctx, minttypes.ModuleName, amounts)
+	suite.NoError(err)
+	err = suite.App.BankKeeper.SendCoinsFromModuleToAccount(suite.Ctx, minttypes.ModuleName, acc, amounts)
+	suite.NoError(err)
 }
 
-func (s *KeeperTestSuite) SetupTestForInitGenesis() {
+func (suite *KeeperTestSuite) SetupTestForInitGenesis() {
 	// Setting to True, leads to init genesis not running
-	s.App = app.Setup(s.T(), true)
-	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{})
+	suite.App = app.Setup(suite.T(), true)
+	suite.Ctx = suite.App.BaseApp.NewContext(true, tmtypes.Header{})
 }
 
 // AssertEventEmitted asserts that ctx's event manager has emitted the given number of events
 // of the given type.
-func (s *KeeperTestSuite) AssertEventEmitted(ctx sdk.Context, eventTypeExpected string, numEventsExpected int) {
+func (suite *KeeperTestSuite) AssertEventEmitted(ctx sdk.Context, eventTypeExpected string, numEventsExpected int) {
 	allEvents := ctx.EventManager().Events()
 	// filter out other events
 	actualEvents := make([]sdk.Event, 0)
@@ -85,7 +85,7 @@ func (s *KeeperTestSuite) AssertEventEmitted(ctx sdk.Context, eventTypeExpected 
 			actualEvents = append(actualEvents, event)
 		}
 	}
-	s.Equal(numEventsExpected, len(actualEvents))
+	suite.Equal(numEventsExpected, len(actualEvents))
 }
 
 func TestKeeperTestSuite(t *testing.T) {
