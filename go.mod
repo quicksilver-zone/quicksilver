@@ -6,7 +6,7 @@ require (
 	github.com/cosmos/btcutil v1.0.5
 	github.com/cosmos/cosmos-sdk v0.46.7
 	github.com/gorilla/mux v1.8.0
-	github.com/ingenuity-build/quicksilver v0.9.6
+	github.com/ingenuity-build/quicksilver v1.2.0
 	github.com/tendermint/tendermint v0.34.24
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -155,8 +155,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-
-//replace github.com/strangelove-ventures/lens => github.com/ingenuity-build/lens v0.3.1-0.20220526135002-550e98fd7332
-
-replace github.com/ingenuity-build/quicksilver => ../quicksilver
+replace (
+	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.24
+)
