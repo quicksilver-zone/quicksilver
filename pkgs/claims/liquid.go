@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
@@ -156,8 +157,10 @@ func LiquidClaim(
 			return nil, nil, err
 		}
 
-		amount := sdk.Coin{}
-		err = marshaler.Unmarshal(abciquery.Response.Value, &amount)
+		amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, abciquery.Response.Value, tuple.denom)
+		if err != nil {
+			return nil, nil, err
+		}
 		// 8:
 		err = failsim.FailureHook(failures, 8, err, fmt.Sprintf("ABCIQuery: value of denom %q on chain %q", tuple.denom, chain))
 		if err != nil {
