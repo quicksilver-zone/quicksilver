@@ -4,3 +4,4 @@ chains:
   quickgaia-1: http://dev01.quicksilver.zone:21401
   quickstar-1: http://dev01.quicksilver.zone:22401
   quickosmo-1: http://dev01.quicksilver.zone:23101
+  quicktest-1: https://rpc.dev.quicksilver.zone:443
