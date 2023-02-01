@@ -12,6 +12,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
@@ -123,7 +124,7 @@ func (k Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 		ConnectionID: types.SelfConnection,
 		ChainID:      ctx.ChainID(),
 		LastEpoch:    ctx.BlockHeight() - 1,
-		Prefix:       types.Prefix,
+		Prefix:       config.Bech32Prefix,
 	})
 	if err != nil {
 		k.Logger(ctx).Info("Error Marshalling  self connection Data")

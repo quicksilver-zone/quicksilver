@@ -10,7 +10,6 @@ import (
 
 const (
 	SelfConnection = "local"
-	Prefix         = "quick"
 )
 
 func (dp DistributionProportions) ValidateBasic() error {
