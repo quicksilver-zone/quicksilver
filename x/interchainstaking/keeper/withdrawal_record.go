@@ -131,9 +131,9 @@ func (k Keeper) AllWithdrawalRecords(ctx sdk.Context) []types.WithdrawalRecord {
 }
 
 // AllZoneWithdrawalRecords returns every record in the store for the specified zone
-func (k Keeper) AllZoneWithdrawalRecords(ctx sdk.Context, chainId string) []types.WithdrawalRecord {
+func (k Keeper) AllZoneWithdrawalRecords(ctx sdk.Context, chainID string) []types.WithdrawalRecord {
 	records := []types.WithdrawalRecord{}
-	k.IterateZoneWithdrawalRecords(ctx, chainId, func(_ int64, record types.WithdrawalRecord) (stop bool) {
+	k.IterateZoneWithdrawalRecords(ctx, chainID, func(_ int64, record types.WithdrawalRecord) (stop bool) {
 		records = append(records, record)
 		return false
 	})
@@ -200,7 +200,7 @@ func (k Keeper) IterateUnbondingRecords(ctx sdk.Context, fn func(index int64, re
 	k.IteratePrefixedUnbondingRecords(ctx, nil, fn)
 }
 
-// AllUnbondingRecords returns every record in the store for the specified zone
+// AllUnbondingRecords returns every record in the store
 func (k Keeper) AllUnbondingRecords(ctx sdk.Context) []types.UnbondingRecord {
 	records := []types.UnbondingRecord{}
 	k.IterateUnbondingRecords(ctx, func(_ int64, record types.UnbondingRecord) (stop bool) {
@@ -211,9 +211,9 @@ func (k Keeper) AllUnbondingRecords(ctx sdk.Context) []types.UnbondingRecord {
 }
 
 // AllZoneUnbondingRecords returns every record in the store for the specified zone
-func (k Keeper) AllZoneUnbondingRecords(ctx sdk.Context, chainId string) []types.UnbondingRecord {
+func (k Keeper) AllZoneUnbondingRecords(ctx sdk.Context, chainID string) []types.UnbondingRecord {
 	records := []types.UnbondingRecord{}
-	k.IteratePrefixedUnbondingRecords(ctx, []byte(chainId), func(_ int64, record types.UnbondingRecord) (stop bool) {
+	k.IteratePrefixedUnbondingRecords(ctx, []byte(chainID), func(_ int64, record types.UnbondingRecord) (stop bool) {
 		records = append(records, record)
 		return false
 	})

@@ -73,7 +73,7 @@ func (k Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo type
 }
 
 // IterateZones iterate through zones
-func (k Keeper) V1_2_IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo types.V1_2_Zone) (stop bool)) {
+func (k Keeper) V1_2IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo types.V1_2_Zone) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -421,8 +421,7 @@ OUTER:
 }
 
 func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) *types.Statistics {
-
-	var out = &types.Statistics{}
+	out := &types.Statistics{}
 	out.ChainId = zone.ChainId
 	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
 	userMap := map[string]bool{}
