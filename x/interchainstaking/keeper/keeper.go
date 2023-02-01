@@ -424,11 +424,20 @@ func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) e
 // redemption rate
 
 func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards math.Int) {
-	ratio, isZero := k.GetRatio(ctx, zone, epochRewards)
+	delegationsInProcess := sdk.ZeroInt()
+	k.IterateZoneReceipts(ctx, &zone, func(_ int64, receipt types.Receipt) (stop bool) {
+		if receipt.Completed == nil {
+			for _, coin := range receipt.Amount {
+				delegationsInProcess = delegationsInProcess.Add(coin.Amount) // we cannot simply choose
+			}
+		}
+		return false
+	})
+	ratio, isZero := k.GetRatio(ctx, zone, epochRewards.Add(delegationsInProcess))
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards))
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards).Add(delegationsInProcess))
 
 	// soft cap redemption rate, instead of panicking.
 	delta := ratio.Quo(zone.RedemptionRate)
@@ -476,7 +485,7 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
 	currentAllocations, currentSum := k.GetDelegationMap(ctx, &zone)
 	targetAllocations := zone.GetAggregateIntentOrDefault()
-	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId))
+	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId), k.Logger(ctx))
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingTypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
@@ -502,7 +511,7 @@ type RebalanceTarget struct {
 	Target string
 }
 
-func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents, existingRedelegations []types.RedelegationRecord) []RebalanceTarget {
+func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents, existingRedelegations []types.RedelegationRecord, log log.Logger) []RebalanceTarget {
 	out := make([]RebalanceTarget, 0)
 	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
 
@@ -520,15 +529,12 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 		lockedPerValidator[redelegation.Destination] = thisLocked + redelegation.Amount
 	}
 
-	fmt.Println("Total locked (per-validator)", totalLocked, lockedPerValidator)
-
-	// TODO: make this a param
-	maxCanRebalance := currentSum.Sub(math.NewInt(totalLocked)).Quo(sdk.NewInt(2))
-	fmt.Println("Can rebalance with current locking", maxCanRebalance)
-
-	// TODO: make this a param
-	maxCanRebalance = math.MinInt(maxCanRebalance, currentSum.Quo(sdk.NewInt(7)))
-	fmt.Println("Can rebalance with locking this epoch", maxCanRebalance)
+	// TODO: make these params
+	maxCanRebalanceTotal := currentSum.Sub(math.NewInt(totalLocked)).Quo(sdk.NewInt(2))
+	maxCanRebalance := math.MinInt(maxCanRebalanceTotal, currentSum.Quo(sdk.NewInt(7)))
+	if log != nil {
+		log.Debug("Rebalancing", "totalLocked", totalLocked, "lockedPerValidator", lockedPerValidator, "canRebalanceTotal", maxCanRebalanceTotal, "canRebalanceEpoch", maxCanRebalance)
+	}
 
 	// sort keys by relative value of delta
 	sort.SliceStable(deltas, func(i, j int) bool {
@@ -548,10 +554,11 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 			// if delta > current value - locked value, truncate, as we cannot rebalance locked tokens.
 			wantToRebalance = wantToRebalance.Add(delta.Weight.TruncateInt())
 		case delta.Weight.IsNegative():
-
 			if delta.Weight.Abs().GT(sdk.NewDecFromInt(currentAllocations[delta.ValoperAddress].Sub(math.NewInt(lockedPerValidator[delta.ValoperAddress])))) {
 				delta.Weight = sdk.NewDecFromInt(currentAllocations[delta.ValoperAddress].Sub(math.NewInt(lockedPerValidator[delta.ValoperAddress]))).Neg()
-				fmt.Printf("Truncated delta for %s to %d due to locked tokens\n", delta.ValoperAddress, delta.Weight.Abs())
+				if log != nil {
+					log.Debug("Truncated delta due to locked tokens", "valoper", delta.ValoperAddress, "delta", delta.Weight.Abs())
+				}
 			}
 			canRebalanceFrom = canRebalanceFrom.Add(delta.Weight.Abs().TruncateInt())
 		}
@@ -560,10 +567,14 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 	toRebalance := sdk.MinInt(sdk.MinInt(wantToRebalance, canRebalanceFrom), maxCanRebalance)
 
 	if toRebalance.Equal(math.ZeroInt()) {
-		fmt.Println("No rebalancing this epoch")
+		if log != nil {
+			log.Debug("No rebalancing this epoch")
+		}
 		return []RebalanceTarget{}
 	}
-	fmt.Println("Will rebalance this epoch", toRebalance)
+	if log != nil {
+		log.Debug("Will rebalance this epoch", "amount", toRebalance)
+	}
 
 	tgtIdx := 0
 	srcIdx := len(deltas) - 1

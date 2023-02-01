@@ -145,7 +145,7 @@ Where proposal.json contains:
 			from := clientCtx.GetFromAddress()
 
 			content := types.NewRegisterZoneProposal(proposal.Title, proposal.Description, proposal.ConnectionId, proposal.BaseDenom,
-				proposal.LocalDenom, proposal.AccountPrefix, proposal.MultiSend, proposal.LiquidityModule)
+				proposal.LocalDenom, proposal.AccountPrefix, proposal.ReturnToSender, proposal.UnbondingEnabled, proposal.DepositsEnabled, proposal.LiquidityModule, proposal.Decimals)
 
 			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {

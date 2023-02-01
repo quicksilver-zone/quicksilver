@@ -129,7 +129,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 		return err
 	}
 
-	if returnToSender { // do we set this on the zone?
+	if zone.ReturnToSender {
 		var srcPort string
 		var srcChannel string
 		k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
@@ -218,7 +218,8 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 // ---------------------------------------------------------------
 
 func (k Keeper) NewReceipt(ctx sdk.Context, zone types.Zone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
-	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount}
+	t := ctx.BlockTime()
+	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t}
 }
 
 // GetReceipt returns receipt

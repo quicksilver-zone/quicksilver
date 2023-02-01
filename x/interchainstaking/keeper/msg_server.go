@@ -64,6 +64,10 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unable to find matching zone for denom %s", msg.Value.GetDenom())
 	}
 
+	if !zone.UnbondingEnabled {
+		return nil, fmt.Errorf("unbonding currently disabled for zone %s", zone.ChainId)
+	}
+
 	// does destination address match the prefix registered against the zone?
 	if _, err := utils.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
 		return nil, fmt.Errorf("destination address %s does not match expected prefix %s", msg.DestinationAddress, zone.AccountPrefix)

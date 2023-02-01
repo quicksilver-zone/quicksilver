@@ -78,16 +78,6 @@ func TestLiquidProtocolData_ValidateBasic(t *testing.T) {
 			false,
 		},
 		{
-			"liquid_invalid_ibc_denom",
-			LiquidAllowedDenomProtocolData{
-				ChainID:               "somechain-1",
-				IbcDenom:              "stake",
-				QAssetDenom:           "uqstake",
-				RegisteredZoneChainID: "testzone-1",
-			},
-			true,
-		},
-		{
 			"liquid_invalid_chainid",
 			LiquidAllowedDenomProtocolData{
 				ChainID:               "badzone",

@@ -212,6 +212,10 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
+	if !zone.DepositsEnabled {
+		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
+	}
+
 	k.Logger(ctx).Info("Deposit interval callback", "zone", zone.ChainId)
 
 	txs := tx.GetTxsEventResponse{}
@@ -346,6 +350,10 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+
+	if !zone.DepositsEnabled {
+		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
 	}
 
 	k.Logger(ctx).Info("DepositTx callback", "zone", zone.ChainId)

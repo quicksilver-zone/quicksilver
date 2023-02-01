@@ -144,7 +144,7 @@ $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
 
 build-docker:
-	DOCKER_BUILDKIT=1 $(DOCKER) build . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION)
+	DOCKER_BUILDKIT=1 $(DOCKER) build . -f Dockerfile -t quicksilverzone/quicksilver:$(DOCKER_VERSION) -t quicksilverzone/quicksilver:latest
 
 build-docker-local: build
 	DOCKER_BUILDKIT=1 $(DOCKER) build -f Dockerfile.local . -t quicksilverzone/quicksilver:$(DOCKER_VERSION)

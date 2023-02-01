@@ -122,7 +122,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			k.Logger(ctx).Info("Delegated", "response", response)
 			// we should update delegation records here.
-			if err := k.HandleDelegate(ctx, src); err != nil {
+			if err := k.HandleDelegate(ctx, src, packetData.Memo); err != nil {
 				return err
 			}
 			continue
@@ -712,7 +712,7 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
 }
 
-func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
+func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
 	k.Logger(ctx).Info("Received MsgDelegate acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgDelegate
 	delegateMsg, ok := msg.(*stakingtypes.MsgDelegate)
@@ -727,9 +727,17 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
 			return nil
 		}
 		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
-
 	}
 
+	if memo != "rewards" {
+		receipt, found := k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, memo))
+		if !found {
+			return fmt.Errorf("unable to find receipt for hash %s", memo)
+		}
+		t := ctx.BlockTime()
+		receipt.Completed = &t
+		k.SetReceipt(ctx, receipt)
+	}
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
 }
 

@@ -31,19 +31,21 @@ message Zone {
   repeated Validator validators = 12;
   repeated ValidatorIntent aggregate_intent = 13
       [ (gogoproto.castrepeated) = "ValidatorIntents" ];
-  bool multi_send = 14;
+  bool return_to_sender = 14;
   bool liquidity_module = 15;
   uint32 withdrawal_waitgroup = 16;
   bytes ibc_next_validators_hash = 17;
   uint64 validator_selection_allocation = 18;
   uint64 holdings_allocation = 19;
-  int64 last_epoch_height = 20; // deprecated remove me.
-  string tvl = 21 [
+  string tvl = 20 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  int64 unbonding_period = 22;
+  int64 unbonding_period = 21;
+  int64 decimals = 22;
+  bool unbonding_enabled = 23;
+  bool deposits_enabled = 24;
 }
 
 message ICAAccount {
@@ -185,4 +187,8 @@ message Receipt {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
+  google.protobuf.Timestamp first_seen = 5
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
+  google.protobuf.Timestamp completed = 6
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
 }

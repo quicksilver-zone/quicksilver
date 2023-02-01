@@ -1,0 +1,48 @@
+syntax = "proto3";
+package quicksilver.interchainstaking.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "quicksilver/interchainstaking/v1/interchainstaking.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
+
+message v1_2_Zone {
+  string connection_id = 1;
+  string chain_id = 2;
+  ICAAccount deposit_address = 3;
+  ICAAccount withdrawal_address = 4;
+  ICAAccount performance_address = 5;
+  ICAAccount delegation_address = 6;
+  string account_prefix = 7;
+  string local_denom = 8;
+  string base_denom = 9;
+  string redemption_rate = 10 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string last_redemption_rate = 11 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  repeated Validator validators = 12;
+  repeated ValidatorIntent aggregate_intent = 13
+      [ (gogoproto.castrepeated) = "ValidatorIntents" ];
+  bool multi_send = 14;
+  bool liquidity_module = 15;
+  uint32 withdrawal_waitgroup = 16;
+  bytes ibc_next_validators_hash = 17;
+  uint64 validator_selection_allocation = 18;
+  uint64 holdings_allocation = 19;
+  int64 last_epoch_height = 20; // deprecated remove me.
+  string tvl = 21 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  int64 unbonding_period = 22;
+}

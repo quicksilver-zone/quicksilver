@@ -152,6 +152,25 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			"",
 		},
 		{
+			"invalid - unbonding not enabled for zone",
+			func() {
+				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				s.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					DestinationAddress: addr,
+					FromAddress:        testAddress,
+				}
+
+				zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+				s.Require().True(found)
+				zone.UnbondingEnabled = false
+				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+			},
+			"unbonding currently disabled for zone testchain2",
+			"unbonding currently disabled for zone testchain2",
+		},
+		{
 			"invalid - wrong denom",
 			func() {
 				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
@@ -308,6 +327,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 			s.Require().True(found)
 			zone.LiquidityModule = false
+			zone.UnbondingEnabled = true
 			s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
 
 			tt.malleate()
@@ -344,6 +364,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 			s.Require().True(found)
 			zone.LiquidityModule = true
+			zone.UnbondingEnabled = true
 			s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
 
 			for _, delegation := range func(zone icstypes.Zone) []icstypes.Delegation {

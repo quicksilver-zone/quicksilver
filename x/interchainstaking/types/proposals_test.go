@@ -9,33 +9,100 @@ import (
 
 func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 	type fields struct {
-		Title           string
-		Description     string
-		ConnectionId    string
-		BaseDenom       string
-		LocalDenom      string
-		AccountPrefix   string
-		MultiSend       bool
-		LiquidityModule bool
+		Title            string
+		Description      string
+		ConnectionId     string
+		BaseDenom        string
+		LocalDenom       string
+		AccountPrefix    string
+		ReturnToSender   bool
+		UnbondingEnabled bool
+		LiquidityModule  bool
+		Decimals         int64
 	}
 	tests := []struct {
 		name    string
 		fields  fields
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "test valid",
+			fields: fields{
+				Title:            "Enable testzone-1",
+				Description:      "onboard testzone-1",
+				ConnectionId:     "connection-0",
+				BaseDenom:        "uatom",
+				LocalDenom:       "uqatom",
+				AccountPrefix:    "cosmos",
+				ReturnToSender:   false,
+				UnbondingEnabled: false,
+				LiquidityModule:  false,
+				Decimals:         6,
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid connection field",
+			fields: fields{
+				Title:            "Enable testzone-1",
+				Description:      "onboard testzone-1",
+				ConnectionId:     "test",
+				BaseDenom:        "uatom",
+				LocalDenom:       "uqatom",
+				AccountPrefix:    "cosmos",
+				ReturnToSender:   false,
+				UnbondingEnabled: false,
+				LiquidityModule:  false,
+				Decimals:         6,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid basdenom field",
+			fields: fields{
+				Title:            "Enable testzone-1",
+				Description:      "onboard testzone-1",
+				ConnectionId:     "test",
+				BaseDenom:        "0",
+				LocalDenom:       "uqatom",
+				AccountPrefix:    "cosmos",
+				ReturnToSender:   false,
+				UnbondingEnabled: false,
+				LiquidityModule:  false,
+				Decimals:         6,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid localdenom field",
+			fields: fields{
+				Title:            "Enable testzone-1",
+				Description:      "onboard testzone-1",
+				ConnectionId:     "test",
+				BaseDenom:        "uatom",
+				LocalDenom:       "0",
+				AccountPrefix:    "cosmos",
+				ReturnToSender:   false,
+				UnbondingEnabled: false,
+				LiquidityModule:  false,
+				Decimals:         6,
+			},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := RegisterZoneProposal{
-				Title:           tt.fields.Title,
-				Description:     tt.fields.Description,
-				ConnectionId:    tt.fields.ConnectionId,
-				BaseDenom:       tt.fields.BaseDenom,
-				LocalDenom:      tt.fields.LocalDenom,
-				AccountPrefix:   tt.fields.AccountPrefix,
-				MultiSend:       tt.fields.MultiSend,
-				LiquidityModule: tt.fields.LiquidityModule,
+				Title:            tt.fields.Title,
+				Description:      tt.fields.Description,
+				ConnectionId:     tt.fields.ConnectionId,
+				BaseDenom:        tt.fields.BaseDenom,
+				LocalDenom:       tt.fields.LocalDenom,
+				AccountPrefix:    tt.fields.AccountPrefix,
+				ReturnToSender:   tt.fields.ReturnToSender,
+				UnbondingEnabled: tt.fields.UnbondingEnabled,
+				LiquidityModule:  tt.fields.LiquidityModule,
+				Decimals:         tt.fields.Decimals,
 			}
 
 			err := m.ValidateBasic()

@@ -29,9 +29,6 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 			// as an error. we don't return on failure here as we still want to attempt the unrelated
 			// tasks below.
 			// commenting this out until we can revisit. in it's current state it causes more issues than it fixes.
-			// if err := k.EnsureICAsActive(ctx, &zone); err != nil {
-			// 	k.Logger(ctx).Error("error in EnsureICAsActive", "error", err)
-			// }
 
 			if err := k.EnsureWithdrawalAddresses(ctx, &zone); err != nil {
 				k.Logger(ctx).Error("error in EnsureWithdrawalAddresses", "error", err)

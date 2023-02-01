@@ -70,37 +70,43 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) initTestZone() {
 	// test zone
 	zone := icstypes.Zone{
-		ConnectionId:    suite.path.EndpointA.ConnectionID,
-		ChainId:         suite.chainB.ChainID,
-		AccountPrefix:   "bcosmos",
-		LocalDenom:      "uqatom",
-		BaseDenom:       "uatom",
-		MultiSend:       true,
-		LiquidityModule: true,
+		ConnectionId:     suite.path.EndpointA.ConnectionID,
+		ChainId:          suite.chainB.ChainID,
+		AccountPrefix:    "bcosmos",
+		LocalDenom:       "uqatom",
+		BaseDenom:        "uatom",
+		ReturnToSender:   false,
+		UnbondingEnabled: false,
+		LiquidityModule:  true,
+		Decimals:         6,
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
 	// cosmos zone
 	zone = icstypes.Zone{
-		ConnectionId:    "connection-77001",
-		ChainId:         "cosmoshub-4",
-		AccountPrefix:   "cosmos",
-		LocalDenom:      "uqatom",
-		BaseDenom:       "uatom",
-		MultiSend:       true,
-		LiquidityModule: true,
+		ConnectionId:     "connection-77001",
+		ChainId:          "cosmoshub-4",
+		AccountPrefix:    "cosmos",
+		LocalDenom:       "uqatom",
+		BaseDenom:        "uatom",
+		ReturnToSender:   false,
+		UnbondingEnabled: false,
+		LiquidityModule:  true,
+		Decimals:         6,
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
 	// osmosis zone
 	zone = icstypes.Zone{
-		ConnectionId:    "connection-77002",
-		ChainId:         "osmosis-1",
-		AccountPrefix:   "osmo",
-		LocalDenom:      "uqosmo",
-		BaseDenom:       "uosmo",
-		MultiSend:       true,
-		LiquidityModule: true,
+		ConnectionId:     "connection-77002",
+		ChainId:          "osmosis-1",
+		AccountPrefix:    "osmo",
+		LocalDenom:       "uqosmo",
+		BaseDenom:        "uosmo",
+		ReturnToSender:   false,
+		UnbondingEnabled: false,
+		LiquidityModule:  true,
+		Decimals:         6,
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 }

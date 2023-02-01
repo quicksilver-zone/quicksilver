@@ -146,7 +146,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		AccountPrefix:   "bcosmos",
 		LocalDenom:      "uqatom",
 		BaseDenom:       "uatom",
-		MultiSend:       true,
+		ReturnToSender:  false,
 		LiquidityModule: true,
 	}
 	qApp.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &testzone)
@@ -174,7 +174,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		AccountPrefix:      "cosmos",
 		LocalDenom:         "uqatom",
 		BaseDenom:          "uatom",
-		MultiSend:          true,
+		ReturnToSender:     false,
 		LiquidityModule:    true,
 		PerformanceAddress: performanceAccountCosmos,
 		Validators: []*icstypes.Validator{
@@ -210,7 +210,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		AccountPrefix:   "osmo",
 		LocalDenom:      "uqosmo",
 		BaseDenom:       "uosmo",
-		MultiSend:       true,
+		ReturnToSender:  false,
 		LiquidityModule: true,
 		PerformanceAddress: &icstypes.ICAAccount{
 			Address:           utils.GenerateAccAddressForTestWithPrefix("osmo"),
