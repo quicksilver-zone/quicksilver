@@ -653,20 +653,6 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		k.Logger(ctx).Info("withdrawal record to save", "rcd", record)
 		k.UpdateWithdrawalRecordStatus(ctx, &record, WithdrawStatusUnbond)
 	}
-<<<<<<< HEAD
-=======
-
-	delAddr, err := utils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
-	if err != nil {
-		return err
-	}
-	valAddr, err := utils.ValAddressFromBech32(undelegateMsg.ValidatorAddress, "")
-	if err != nil {
-		return err
-	}
-
-	data := stakingtypes.GetDelegationKey(delAddr, valAddr)
->>>>>>> 289acbf (Release/v1.3.2 (#285))
 
 	delAddr, err := utils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
 	if err != nil {
