@@ -62,7 +62,7 @@ func noOpHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// upgrade zones
-		app.InterchainstakingKeeper.V1_2_IterateZones(ctx, func(index int64, legacyZone types.V1_2_Zone) (stop bool) {
+		app.InterchainstakingKeeper.V1_2IterateZones(ctx, func(index int64, legacyZone types.V1_2_Zone) (stop bool) {
 			newZone := types.Zone{
 				ConnectionId:                 legacyZone.ConnectionId,
 				ChainId:                      legacyZone.ChainId,
