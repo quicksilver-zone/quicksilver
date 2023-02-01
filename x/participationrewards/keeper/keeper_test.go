@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) coreTest() {
 
 	akpd = qApp.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
 	// added 5 in setupTestProtocolData
-	suite.Require().Equal(5, len(akpd))
+	suite.Require().Equal(6, len(akpd))
 
 	// advance the chains
 	suite.coordinator.CommitNBlocks(suite.chainA, 1)
@@ -141,17 +141,33 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	// test zone
 	testzone := icstypes.Zone{
-		ConnectionId:    suite.path.EndpointA.ConnectionID,
-		ChainId:         suite.chainB.ChainID,
-		AccountPrefix:   "bcosmos",
-		LocalDenom:      "uqatom",
-		BaseDenom:       "uatom",
-		ReturnToSender:  false,
-		LiquidityModule: true,
+		ConnectionId:     suite.path.EndpointA.ConnectionID,
+		ChainId:          suite.chainB.ChainID,
+		AccountPrefix:    "bcosmos",
+		LocalDenom:       "uqatom",
+		BaseDenom:        "uatom",
+		ReturnToSender:   false,
+		LiquidityModule:  true,
+		DepositsEnabled:  true,
+		UnbondingEnabled: false,
 	}
+	selftestzone := icstypes.Zone{
+		ConnectionId:     suite.path.EndpointB.ConnectionID,
+		ChainId:          suite.chainA.ChainID,
+		AccountPrefix:    "osmo",
+		LocalDenom:       "uqosmo",
+		BaseDenom:        "uosmo",
+		ReturnToSender:   false,
+		LiquidityModule:  true,
+		DepositsEnabled:  true,
+		UnbondingEnabled: false,
+	}
+
+	qApp.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &selftestzone)
 	qApp.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &testzone)
 
 	qApp.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), "07-tendermint-0", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
+
 	qApp.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: suite.chainA.GetContext().BlockTime()})
 	suite.Require().NoError(suite.setupChannelForICA(suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
 
@@ -161,6 +177,56 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		suite.Require().True(found)
 		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
 	}
+
+	for _, val := range suite.GetQuicksilverApp(suite.chainA).StakingKeeper.GetBondedValidatorsByPower(suite.chainA.GetContext()) {
+		zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainA.ChainID)
+		suite.Require().True(found)
+		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
+	}
+
+	// self zone
+	performanceAddressOsmo := utils.GenerateAccAddressForTestWithPrefix("osmo")
+	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "self", "uosmo")
+	suite.Require().NoError(err)
+	performanceAccountOsmo.WithdrawalAddress = utils.GenerateAccAddressForTestWithPrefix("osmo")
+
+	zoneSelf := icstypes.Zone{
+		ConnectionId:       "connection-77004",
+		ChainId:            "testchain1",
+		AccountPrefix:      "osmo",
+		LocalDenom:         "uqosmo",
+		BaseDenom:          "uosmo",
+		ReturnToSender:     false,
+		UnbondingEnabled:   false,
+		LiquidityModule:    true,
+		DepositsEnabled:    true,
+		Decimals:           6,
+		PerformanceAddress: performanceAccountOsmo,
+		Validators: []*icstypes.Validator{
+			{
+				ValoperAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
+				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+				DelegatorShares: sdk.NewDec(200032604739),
+				VotingPower:     math.NewInt(200032604739),
+				Score:           sdk.ZeroDec(),
+			},
+			{
+				ValoperAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
+				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+				DelegatorShares: sdk.NewDec(200032604734),
+				VotingPower:     math.NewInt(200032604734),
+				Score:           sdk.ZeroDec(),
+			},
+			{
+				ValoperAddress:  "osmovaloper15urq2dtp9qce4fyc85m6upwm9xul3049wh9czc",
+				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+				DelegatorShares: sdk.NewDec(200032604738),
+				VotingPower:     math.NewInt(200032604738),
+				Score:           sdk.ZeroDec(),
+			},
+		},
+	}
+	qApp.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneSelf)
 
 	// cosmos zone
 	performanceAddressCosmos := utils.GenerateAccAddressForTestWithPrefix("cosmos")
@@ -326,6 +392,16 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		),
 		"osmosis-1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 	)
+	// atom (cosmoshub) on local chain
+	suite.addProtocolData(types.ProtocolDataTypeLiquidToken,
+		fmt.Sprintf(
+			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
+			"testchain1",
+			"cosmoshub-4",
+			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			"uqatom",
+		),
+		"testchain1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3")
 }
 
 func (suite *KeeperTestSuite) addProtocolData(Type types.ProtocolDataType, Data string, Key string) {

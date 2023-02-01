@@ -40,6 +40,12 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			return false
 		})
 
+		k.Logger(ctx).Info("setting self connection data...")
+		err := k.UpdateSelfConnectionData(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 		k.Logger(ctx).Info("distribute participation rewards...")
 
 		allocation, err := GetRewardsAllocations(

@@ -17,7 +17,10 @@ const (
 	OsmosisParamsKey = "osmosisparams"
 )
 
-var KeyPrefixProtocolData = []byte{0x00}
+var (
+	KeyPrefixProtocolData = []byte{0x00}
+	KeySelfProtocolData   = []byte{0x01}
+)
 
 func GetProtocolDataKey(pdType ProtocolDataType, key string) []byte {
 	return append(sdk.Uint64ToBigEndian(uint64(pdType)), []byte(key)...)

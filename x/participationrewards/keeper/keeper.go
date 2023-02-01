@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"cosmossdk.io/math"
@@ -11,16 +12,15 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/tendermint/tendermint/libs/log"
-
+	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	"github.com/ingenuity-build/quicksilver/utils"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	"github.com/tendermint/tendermint/libs/log"
 )
 
 // userAllocation is an internal keeper struct to track transient state for
@@ -34,18 +34,19 @@ type userAllocation struct {
 var _ osmosistypes.ParticipationRewardsKeeper = Keeper{}
 
 type Keeper struct {
-	cdc              codec.BinaryCodec
-	storeKey         storetypes.StoreKey
-	paramSpace       paramtypes.Subspace
-	accountKeeper    authkeeper.AccountKeeper
-	bankKeeper       bankkeeper.Keeper
-	stakingKeeper    stakingkeeper.Keeper
-	IcqKeeper        icqkeeper.Keeper
-	icsKeeper        icskeeper.Keeper
-	epochsKeeper     epochskeeper.Keeper
-	feeCollectorName string
-	prSubmodules     map[cmtypes.ClaimType]Submodule
-	ValidateProofOps utils.ProofOpsFn
+	cdc                  codec.BinaryCodec
+	storeKey             storetypes.StoreKey
+	paramSpace           paramtypes.Subspace
+	accountKeeper        authkeeper.AccountKeeper
+	bankKeeper           bankkeeper.Keeper
+	stakingKeeper        stakingkeeper.Keeper
+	IcqKeeper            icqkeeper.Keeper
+	icsKeeper            icskeeper.Keeper
+	epochsKeeper         epochskeeper.Keeper
+	feeCollectorName     string
+	prSubmodules         map[cmtypes.ClaimType]Submodule
+	ValidateProofOps     utils.ProofOpsFn
+	ValidateSelfProofOps utils.SelfProofOpsFn
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -60,7 +61,8 @@ func NewKeeper(
 	icqk icqkeeper.Keeper,
 	icsk icskeeper.Keeper,
 	feeCollectorName string,
-	pofn utils.ProofOpsFn,
+	proofValidationFn utils.ProofOpsFn,
+	selfProofValidationFn utils.SelfProofOpsFn,
 ) Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -72,33 +74,23 @@ func NewKeeper(
 	}
 
 	return Keeper{
-		cdc:              cdc,
-		storeKey:         key,
-		paramSpace:       ps,
-		accountKeeper:    ak,
-		bankKeeper:       bk,
-		stakingKeeper:    sk,
-		IcqKeeper:        icqk,
-		icsKeeper:        icsk,
-		feeCollectorName: feeCollectorName,
-		prSubmodules:     LoadSubmodules(),
-		ValidateProofOps: pofn,
+		cdc:                  cdc,
+		storeKey:             key,
+		paramSpace:           ps,
+		accountKeeper:        ak,
+		bankKeeper:           bk,
+		stakingKeeper:        sk,
+		IcqKeeper:            icqk,
+		icsKeeper:            icsk,
+		feeCollectorName:     feeCollectorName,
+		prSubmodules:         LoadSubmodules(),
+		ValidateProofOps:     proofValidationFn,
+		ValidateSelfProofOps: selfProofValidationFn,
 	}
 }
 
 func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
 	k.epochsKeeper = epochsKeeper
-}
-
-// MigrateParams fetchs params, adds ClaimsEnabled field and re-sets params.
-func (k Keeper) MigrateParams(ctx sdk.Context) {
-	oldParams := types.ParamsV1{}
-	params := types.Params{}
-	k.paramSpace.GetParamSet(ctx, &oldParams)
-	fmt.Println("previous pr paramset", oldParams.String())
-	params.DistributionProportions = oldParams.DistributionProportions
-	params.ClaimsEnabled = false
-	k.paramSpace.SetParamSet(ctx, &params)
 }
 
 // GetParams returns the total set of participationrewards parameters.
@@ -125,6 +117,27 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k Keeper) GetCodec() codec.BinaryCodec {
 	return k.cdc
+}
+
+func (k Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
+	selfConnectionData, err := json.Marshal(types.ConnectionProtocolData{
+		ConnectionID: types.SelfConnection,
+		ChainID:      ctx.ChainID(),
+		LastEpoch:    ctx.BlockHeight() - 1,
+		Prefix:       config.Bech32Prefix,
+	})
+	if err != nil {
+		k.Logger(ctx).Info("Error Marshalling  self connection Data")
+		return err
+	}
+
+	data := types.ProtocolData{
+		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
+		Data: selfConnectionData,
+	}
+	k.SetSelfProtocolData(ctx, &data)
+
+	return nil
 }
 
 func (k Keeper) GetModuleBalance(ctx sdk.Context) math.Int {
