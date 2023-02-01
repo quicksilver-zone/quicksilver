@@ -890,12 +890,42 @@ func (s *KeeperTestSuite) TestAccountBalanceCallback() {
 		ctx := s.chainA.GetContext()
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-		zone.DepositAddress.BalanceWaitgroup++
-		zone.WithdrawalAddress.BalanceWaitgroup++
+		zone.DepositAddress.IncrementBalanceWaitgroup()
+		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		response := sdk.NewCoin("qck", sdk.NewInt(10))
 		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
+			accAddr, err := sdk.AccAddressFromBech32(addr)
+			s.Require().NoError(err)
+			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+
+			err = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+			s.Require().NoError(err)
+		}
+	})
+}
+
+func (s *KeeperTestSuite) TestAccountBalance046Callback() {
+	s.Run("account balance", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.DepositAddress.IncrementBalanceWaitgroup()
+		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewInt(10)
+
+		respbz, err := response.Marshal()
 		s.Require().NoError(err)
 
 		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
@@ -919,8 +949,8 @@ func (s *KeeperTestSuite) TestAccountBalanceCallbackMismatch() {
 		ctx := s.chainA.GetContext()
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-		zone.DepositAddress.BalanceWaitgroup++
-		zone.WithdrawalAddress.BalanceWaitgroup++
+		zone.DepositAddress.IncrementBalanceWaitgroup()
+		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 		response := sdk.NewCoin("qck", sdk.NewInt(10))
@@ -948,12 +978,12 @@ func (s *KeeperTestSuite) TestAccountBalanceCallbackNil() {
 		ctx := s.chainA.GetContext()
 
 		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-		zone.DepositAddress.BalanceWaitgroup++
-		zone.WithdrawalAddress.BalanceWaitgroup++
+		zone.DepositAddress.IncrementBalanceWaitgroup()
+		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		response := sdk.Coin{}
-		respbz, err := app.AppCodec().Marshal(&response)
+		var response *sdk.Coin = nil
+		respbz, err := app.AppCodec().Marshal(response)
 		s.Require().NoError(err)
 
 		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {

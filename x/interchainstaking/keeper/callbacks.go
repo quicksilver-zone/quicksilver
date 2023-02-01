@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -431,38 +432,18 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
-	accAddr, _, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	accAddr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
 
-	coin := sdk.Coin{}
-	// this can legitimately be nil, so do not guard against nil byte slice here.
-	err = k.cdc.Unmarshal(args, &coin)
-	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal balance info for zone", "zone", zone.ChainId, "err", err)
-		return err
-	}
-
-	checkCoin, err := utils.CoinFromRequestKey(query.Request, accAddr)
+	coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, args, denom)
 	if err != nil {
 		return err
 	}
 
-	if coin.IsNil() || coin.Denom == "" {
-		// if the balance returned is zero for a given denom, we just get a nil response.
-		// use the denom from the request so we can set a zero value coin for the correct denom.
-		coin = checkCoin
-	} else if coin.Denom != checkCoin.Denom {
-		return fmt.Errorf("received coin denom %s does not match requested denom %s", coin.Denom, checkCoin.Denom)
-	}
-
-	// By this point we've tried all means to retrieve the balance, so coin should not be nil.
-	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/79#issuecomment-1340293800
-	if coin.IsNil() || coin.Amount.IsNil() {
-		err = fmt.Errorf("failed to retrieve Coin.Amount even after trying to look up from RequestKey: %q", query.Request)
-		k.Logger(ctx).Error("unable to retrieve balance info for zone", "zone", zone.ChainId, "err", err)
-		return err
+	if coin.Denom != denom {
+		return fmt.Errorf("received coin denom %s does not match requested denom %s", coin.Denom, denom)
 	}
 
 	// Ensure that the coin is valid.
