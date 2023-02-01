@@ -203,7 +203,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			&types.MsgSubmitClaimResponse{},
 			"",
 		},
-		{"valid_liquid",
+		{
+			"valid_liquid",
 			func() {
 				address := utils.GenerateAccAddressForTest()
 				key := append(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3")...)
@@ -232,7 +233,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				}
 			},
 			&types.MsgSubmitClaimResponse{},
-			""},
+			"",
+		},
 	}
 	for _, tt := range tests {
 		tt := tt

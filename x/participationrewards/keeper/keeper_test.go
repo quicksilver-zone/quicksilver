@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
 	}
 
-	//self zone
+	// self zone
 	performanceAddressOsmo := utils.GenerateAccAddressForTestWithPrefix("osmo")
 	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "self", "uosmo")
 	suite.Require().NoError(err)
@@ -402,7 +402,6 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"uqatom",
 		),
 		"testchain1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3")
-
 }
 
 func (suite *KeeperTestSuite) addProtocolData(Type types.ProtocolDataType, Data string, Key string) {
