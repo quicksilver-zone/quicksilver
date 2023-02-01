@@ -10,15 +10,6 @@ import (
 	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rakyll/statik/fs"
-	"github.com/spf13/cast"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -52,8 +43,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/gorilla/mux"
+	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/wasmbinding"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
@@ -403,7 +403,7 @@ func NewQuicksilver(
 
 	// use custom account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
+		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, appconfig.Bech32PrefixAccAddr,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
