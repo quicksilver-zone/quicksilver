@@ -419,3 +419,24 @@ OUTER:
 	}
 	return nil
 }
+
+func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) *types.Statistics {
+
+	var out = &types.Statistics{}
+	out.ChainId = zone.ChainId
+	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
+	userMap := map[string]bool{}
+	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) bool {
+		for _, coin := range receipt.Amount {
+			out.Deposited += coin.Amount.Int64()
+			if _, found := userMap[receipt.Sender]; !found {
+				userMap[receipt.Sender] = true
+				out.Depositors++
+			}
+			out.Deposits++
+		}
+		return false
+	})
+	out.Supply = k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.Int64()
+	return out
+}

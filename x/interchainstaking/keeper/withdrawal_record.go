@@ -130,6 +130,16 @@ func (k Keeper) AllWithdrawalRecords(ctx sdk.Context) []types.WithdrawalRecord {
 	return records
 }
 
+// AllZoneWithdrawalRecords returns every record in the store for the specified zone
+func (k Keeper) AllZoneWithdrawalRecords(ctx sdk.Context, chainId string) []types.WithdrawalRecord {
+	records := []types.WithdrawalRecord{}
+	k.IterateZoneWithdrawalRecords(ctx, chainId, func(_ int64, record types.WithdrawalRecord) (stop bool) {
+		records = append(records, record)
+		return false
+	})
+	return records
+}
+
 // unbondigng records are keyed by chainId, validator and epoch, as they must be unique with regard to this triple.
 func GetUnbondingKey(chainID string, validator string, epochNumber int64) []byte {
 	epochBytes := make([]byte, 8)
@@ -194,6 +204,16 @@ func (k Keeper) IterateUnbondingRecords(ctx sdk.Context, fn func(index int64, re
 func (k Keeper) AllUnbondingRecords(ctx sdk.Context) []types.UnbondingRecord {
 	records := []types.UnbondingRecord{}
 	k.IterateUnbondingRecords(ctx, func(_ int64, record types.UnbondingRecord) (stop bool) {
+		records = append(records, record)
+		return false
+	})
+	return records
+}
+
+// AllZoneUnbondingRecords returns every record in the store for the specified zone
+func (k Keeper) AllZoneUnbondingRecords(ctx sdk.Context, chainId string) []types.UnbondingRecord {
+	records := []types.UnbondingRecord{}
+	k.IteratePrefixedUnbondingRecords(ctx, []byte(chainId), func(_ int64, record types.UnbondingRecord) (stop bool) {
 		records = append(records, record)
 		return false
 	})

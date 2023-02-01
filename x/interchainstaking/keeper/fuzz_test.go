@@ -88,7 +88,7 @@ func FuzzZoneInfos(f *testing.F) {
 			// A case already seen.
 			return
 		}
-		_, _ = icsKeeper.ZoneInfos(ctx, req)
+		_, _ = icsKeeper.Zones(ctx, req)
 	})
 }
 
@@ -111,7 +111,7 @@ func TestInvalidPaginationForQueryZones(t *testing.T) {
 		return
 	}
 
-	_, _ = icsKeeper.ZoneInfos(ctx, req)
+	_, _ = icsKeeper.Zones(ctx, req)
 }
 
 func FuzzValsetCallback(f *testing.F) {

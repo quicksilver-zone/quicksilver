@@ -11,10 +11,17 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/
 
 // Query defines the gRPC querier service.
 service Query {
-  // ZoneInfos provides meta data on connected zones.
-  rpc ZoneInfos(QueryZonesInfoRequest) returns (QueryZonesInfoResponse) {
+  // Zones provides meta data on connected zones.
+  rpc Zones(QueryZonesInfoRequest) returns (QueryZonesInfoResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones";
   }
+
+  // Zone provides meta data on a specific zone.
+  rpc Zone(QueryZoneInfoRequest) returns (QueryZoneInfoResponse) {
+    option (google.api.http).get =
+        "/quicksilver/interchainstaking/v1/zone/{chain_id}";
+  }
+
   // DepositAccount provides data on the deposit address for a connected zone.
   rpc DepositAccount(QueryDepositAccountForChainRequest)
       returns (QueryDepositAccountForChainResponse) {
@@ -36,41 +43,49 @@ service Query {
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/delegations";
   }
 
-   // Delegations provides data on the delegations for the given zone.
-   rpc Receipts(QueryReceiptsRequest) returns (QueryReceiptsResponse) {
+  // Delegations provides data on the delegations for the given zone.
+  rpc Receipts(QueryReceiptsRequest) returns (QueryReceiptsResponse) {
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/receipts";
   }
 
- 
   // WithdrawalRecords provides data on the active withdrawals.
   rpc ZoneWithdrawalRecords(QueryWithdrawalRecordsRequest)
       returns (QueryWithdrawalRecordsResponse) {
     option (google.api.http).get =
-        "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records/{delegator_address}";
+        "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records/"
+        "{delegator_address}";
   }
 
   // WithdrawalRecords provides data on the active withdrawals.
   rpc WithdrawalRecords(QueryWithdrawalRecordsRequest)
       returns (QueryWithdrawalRecordsResponse) {
     option (google.api.http).get =
-        "/quicksilver/interchainstaking/v1/withdrawal_records";
+        "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records";
   }
-
 
   // UnbondingRecords provides data on the active unbondings.
   rpc UnbondingRecords(QueryUnbondingRecordsRequest)
       returns (QueryUnbondingRecordsResponse) {
     option (google.api.http).get =
-        "/quicksilver/interchainstaking/v1/unbonding_records";
+        "/quicksilver/interchainstaking/v1/zones/{chain_id}/unbonding_records";
   }
 
   // RedelegationRecords provides data on the active unbondings.
   rpc RedelegationRecords(QueryRedelegationRecordsRequest)
       returns (QueryRedelegationRecordsResponse) {
-    option (google.api.http).get =
-        "/quicksilver/interchainstaking/v1/redelegation_records";
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/"
+                                   "{chain_id}/redelegation_records";
   }
+}
+
+message Statistics {
+  string chain_id = 1;
+  int64 deposited = 2;
+  int64 deposits = 3;
+  int64 depositors = 4;
+  int64 delegated = 5;
+  int64 supply = 6;
 }
 
 message QueryZonesInfoRequest {
@@ -79,7 +94,17 @@ message QueryZonesInfoRequest {
 
 message QueryZonesInfoResponse {
   repeated Zone zones = 1 [ (gogoproto.nullable) = false ];
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  repeated Statistics stats = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 3;
+}
+
+message QueryZoneInfoRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+}
+
+message QueryZoneInfoResponse {
+  Zone zone = 1 [ (gogoproto.nullable) = false ];
+  Statistics stats = 2;
 }
 
 // QueryDepositAccountForChainRequest is the request type for the
@@ -142,16 +167,17 @@ message QueryUnbondingRecordsRequest {
 }
 
 message QueryUnbondingRecordsResponse {
-  repeated UnbondingRecord Unbondings = 1 [ (gogoproto.nullable) = false ];
+  repeated UnbondingRecord unbondings = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 message QueryRedelegationRecordsRequest {
   string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryRedelegationRecordsResponse {
-  repeated RedelegationRecord Redelegations = 1 [ (gogoproto.nullable) = false ];
+  repeated RedelegationRecord redelegations = 1
+      [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
