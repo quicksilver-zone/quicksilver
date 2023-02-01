@@ -34,6 +34,10 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unbonding is currently disabled")
 	}
 
+	if msg.Value.IsNil() {
+		return nil, errors.New("cannot redeem nil-value coins")
+	}
+
 	// validate coins are positive
 	err := msg.Value.Validate()
 	if err != nil {
