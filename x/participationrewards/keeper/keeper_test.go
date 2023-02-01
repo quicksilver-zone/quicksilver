@@ -141,22 +141,26 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	// test zone
 	testzone := icstypes.Zone{
-		ConnectionId:    suite.path.EndpointA.ConnectionID,
-		ChainId:         suite.chainB.ChainID,
-		AccountPrefix:   "bcosmos",
-		LocalDenom:      "uqatom",
-		BaseDenom:       "uatom",
-		ReturnToSender:  false,
-		LiquidityModule: true,
+		ConnectionId:     suite.path.EndpointA.ConnectionID,
+		ChainId:          suite.chainB.ChainID,
+		AccountPrefix:    "bcosmos",
+		LocalDenom:       "uqatom",
+		BaseDenom:        "uatom",
+		ReturnToSender:   false,
+		LiquidityModule:  true,
+		DepositsEnabled:  true,
+		UnbondingEnabled: false,
 	}
 	selftestzone := icstypes.Zone{
-		ConnectionId:    suite.path.EndpointB.ConnectionID,
-		ChainId:         suite.chainA.ChainID,
-		AccountPrefix:   "osmo",
-		LocalDenom:      "uqosmo",
-		BaseDenom:       "uosmo",
-		MultiSend:       true,
-		LiquidityModule: true,
+		ConnectionId:     suite.path.EndpointB.ConnectionID,
+		ChainId:          suite.chainA.ChainID,
+		AccountPrefix:    "osmo",
+		LocalDenom:       "uqosmo",
+		BaseDenom:        "uosmo",
+		ReturnToSender:   false,
+		LiquidityModule:  true,
+		DepositsEnabled:  true,
+		UnbondingEnabled: false,
 	}
 
 	qApp.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &selftestzone)
@@ -192,8 +196,11 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		AccountPrefix:      "osmo",
 		LocalDenom:         "uqosmo",
 		BaseDenom:          "uosmo",
-		MultiSend:          true,
+		ReturnToSender:     false,
+		UnbondingEnabled:   false,
 		LiquidityModule:    true,
+		DepositsEnabled:    true,
+		Decimals:           6,
 		PerformanceAddress: performanceAccountOsmo,
 		Validators: []*icstypes.Validator{
 			{
