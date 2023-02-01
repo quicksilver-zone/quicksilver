@@ -70,7 +70,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	// does destination address match the prefix registered against the zone?
 	if _, err := utils.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
-		return nil, fmt.Errorf("destination address %s does not match expected prefix %s", msg.DestinationAddress, zone.AccountPrefix)
+		return nil, fmt.Errorf("destination address %s does not match expected prefix %s [%w]", msg.DestinationAddress, zone.AccountPrefix, err)
 	}
 
 	sender, err := sdk.AccAddressFromBech32(msg.FromAddress)
