@@ -234,18 +234,18 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 	return nil
 }
 
-func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
+func SetValidatorForZone(k *Keeper, ctx sdk.Context, zone types.Zone, data []byte) error {
 	validator := stakingTypes.Validator{}
 	if len(data) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (9)")
 	}
 	err := k.cdc.Unmarshal(data, &validator)
 	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zoneInfo.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zone.ChainId, "err", err)
 		return err
 	}
 
-	val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
+	val, found := zone.GetValidatorByValoper(validator.OperatorAddress)
 	if !found {
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
@@ -253,7 +253,7 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		if validator.IsJailed() {
 			jailTime = ctx.BlockTime()
 		}
-		zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
+		zone.Validators = append(zone.Validators, &types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
@@ -263,13 +263,31 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 			Jailed:          validator.IsJailed(),
 			JailedSince:     jailTime,
 		})
-		zoneInfo.Validators = zoneInfo.GetValidatorsSorted()
+		zone.Validators = zone.GetValidatorsSorted()
 
-		if err := k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); err != nil {
+		if err := k.MakePerformanceDelegation(ctx, &zone, validator.OperatorAddress); err != nil {
 			return err
 		}
 
 	} else {
+
+		if !val.Jailed && validator.IsJailed() {
+			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress)
+
+			val.Jailed = true
+			val.JailedSince = ctx.BlockTime()
+			// how much was the validator slashed?
+			// previous ratio
+			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
+			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+			delta := newRatio.Quo(prevRatio)
+			k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
+		} else if val.Jailed && !validator.IsJailed() {
+			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
+
+			val.Jailed = false
+			val.JailedSince = time.Time{}
+		}
 
 		if !val.CommissionRate.Equal(validator.GetCommission()) {
 			k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
@@ -286,33 +304,42 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 			val.DelegatorShares = validator.DelegatorShares
 		}
 
-		if !val.Jailed && validator.IsJailed() {
-			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress)
-
-			val.Jailed = true
-			val.JailedSince = ctx.BlockTime()
-		} else if val.Jailed && !validator.IsJailed() {
-			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
-
-			val.Jailed = false
-			val.JailedSince = time.Time{}
-		}
-
 		if val.Status != validator.Status.String() {
 			k.Logger(ctx).Info("Transitioning validator status", "valoper", validator.OperatorAddress, "previous", val.Status, "current", validator.Status.String())
 
 			val.Status = validator.Status.String()
 		}
 
-		if _, found := k.GetPerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); !found {
-			if err := k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); err != nil {
+		if _, found := k.GetPerformanceDelegation(ctx, &zone, validator.OperatorAddress); !found {
+			if err := k.MakePerformanceDelegation(ctx, &zone, validator.OperatorAddress); err != nil {
 				return err
 			}
 		}
 	}
 
-	k.SetZone(ctx, &zoneInfo)
+	k.SetZone(ctx, &zone)
 	return nil
+}
+
+func (k Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone types.Zone, valoper string, delta sdk.Dec) error {
+	var err error
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
+		recordSubAmount := math.ZeroInt()
+		distr := record.Distribution
+		for _, d := range distr {
+			if d.Valoper == valoper {
+				newAmount := sdk.NewDec(int64(d.Amount)).Mul(delta).TruncateInt()
+				thisSubAmount := math.NewInt(int64(d.Amount)).Sub(newAmount)
+				recordSubAmount = recordSubAmount.Add(thisSubAmount)
+				d.Amount = newAmount.Uint64()
+				k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
+			}
+		}
+		record.Distribution = distr
+		record.Amount = record.Amount.Sub(sdk.NewCoin(zone.BaseDenom, recordSubAmount))
+		return false
+	})
+	return err
 }
 
 func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {

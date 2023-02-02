@@ -62,34 +62,12 @@ func noOpHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// upgrade zones
-		app.InterchainstakingKeeper.V1_2IterateZones(ctx, func(index int64, legacyZone types.V1_2_Zone) (stop bool) {
-			newZone := types.Zone{
-				ConnectionId:                 legacyZone.ConnectionId,
-				ChainId:                      legacyZone.ChainId,
-				DepositAddress:               legacyZone.DepositAddress,
-				WithdrawalAddress:            legacyZone.WithdrawalAddress,
-				PerformanceAddress:           legacyZone.PerformanceAddress,
-				DelegationAddress:            legacyZone.DelegationAddress,
-				AccountPrefix:                legacyZone.AccountPrefix,
-				LocalDenom:                   legacyZone.LocalDenom,
-				BaseDenom:                    legacyZone.BaseDenom,
-				RedemptionRate:               legacyZone.RedemptionRate,
-				LastRedemptionRate:           legacyZone.LastRedemptionRate,
-				Validators:                   legacyZone.Validators,
-				AggregateIntent:              legacyZone.AggregateIntent,
-				ReturnToSender:               false,
-				LiquidityModule:              legacyZone.LiquidityModule,
-				WithdrawalWaitgroup:          legacyZone.WithdrawalWaitgroup,
-				IbcNextValidatorsHash:        legacyZone.IbcNextValidatorsHash,
-				ValidatorSelectionAllocation: legacyZone.ValidatorSelectionAllocation,
-				HoldingsAllocation:           legacyZone.HoldingsAllocation,
-				Tvl:                          legacyZone.Tvl,
-				UnbondingPeriod:              legacyZone.UnbondingPeriod,
-				UnbondingEnabled:             false,
-				Decimals:                     6,
-				DepositsEnabled:              true,
-			}
-			app.InterchainstakingKeeper.SetZone(ctx, &newZone)
+		app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
+			zone.DepositsEnabled = true
+			zone.ReturnToSender = false
+			zone.UnbondingEnabled = false
+			zone.Decimals = 6
+			app.InterchainstakingKeeper.SetZone(ctx, &zone)
 			return false
 		})
 

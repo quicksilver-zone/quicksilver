@@ -426,12 +426,58 @@ func (s *KeeperTestSuite) TestHandleValidatorCallback() {
 			zone, found := app.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
 			s.True(found)
 
-			// valset callback doesn't actually update validators, but does emit icq callbacks.
 			valFromZone, found := zone.GetValidatorByValoper(test.expected.ValoperAddress)
 			s.True(found)
 			s.Equal(test.expected, valFromZone)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
+
+	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+
+	test := struct {
+		name      string
+		validator stakingtypes.Validator
+		expected  *icstypes.Validator
+	}{
+
+		name:      "valid - jailed",
+		validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", Jailed: true, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(1990), DelegatorShares: sdk.NewDec(2000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
+		expected:  &icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(1990), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", Jailed: true},
+	}
+
+	s.Run(test.name, func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		bz, err := app.AppCodec().Marshal(&test.validator)
+		s.Require().NoError(err)
+
+		err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
+		s.Require().NoError(err)
+
+		zone, found := app.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
+		s.True(found)
+
+		app.InterchainstakingKeeper.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+
+			return false
+		})
+
+	})
 }
 
 // func (s *KeeperTestSuite) TestHandleDelegationCallback() {

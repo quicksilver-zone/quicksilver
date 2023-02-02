@@ -37,13 +37,6 @@ func (k Keeper) SetZone(ctx sdk.Context, zone *types.Zone) {
 	store.Set([]byte(zone.ChainId), bz)
 }
 
-// SetLegacyZone to support upgrade handler testing
-func (k Keeper) SetLegacyZone(ctx sdk.Context, zone *types.V1_2_Zone) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-	bz := k.cdc.MustMarshal(zone)
-	store.Set([]byte(zone.ChainId), bz)
-}
-
 // DeleteZone delete zone info
 func (k Keeper) DeleteZone(ctx sdk.Context, chainID string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
@@ -61,28 +54,6 @@ func (k Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo type
 
 	for ; iterator.Valid(); iterator.Next() {
 		zone := types.Zone{}
-		k.cdc.MustUnmarshal(iterator.Value(), &zone)
-
-		stop := fn(i, zone)
-
-		if stop {
-			break
-		}
-		i++
-	}
-}
-
-// IterateZones iterate through zones
-func (k Keeper) V1_2IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo types.V1_2_Zone) (stop bool)) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-
-	iterator := sdk.KVStorePrefixIterator(store, nil)
-	defer iterator.Close()
-
-	i := int64(0)
-
-	for ; iterator.Valid(); iterator.Next() {
-		zone := types.V1_2_Zone{}
 		k.cdc.MustUnmarshal(iterator.Value(), &zone)
 
 		stop := fn(i, zone)

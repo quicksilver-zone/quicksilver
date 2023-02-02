@@ -66,7 +66,7 @@ func (suite *AppTestSuite) SetupTest() {
 
 func (suite *AppTestSuite) initTestZone() {
 	// test zone
-	zone := icstypes.V1_2_Zone{
+	zone := icstypes.Zone{
 		ConnectionId:    suite.path.EndpointA.ConnectionID,
 		ChainId:         suite.chainB.ChainID,
 		AccountPrefix:   "bcosmos",
@@ -75,10 +75,10 @@ func (suite *AppTestSuite) initTestZone() {
 		MultiSend:       false,
 		LiquidityModule: true,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetLegacyZone(suite.chainA.GetContext(), &zone)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
 	// cosmos zone
-	zone = icstypes.V1_2_Zone{
+	zone = icstypes.Zone{
 		ConnectionId:    "connection-77001",
 		ChainId:         "cosmoshub-4",
 		AccountPrefix:   "cosmos",
@@ -87,10 +87,10 @@ func (suite *AppTestSuite) initTestZone() {
 		MultiSend:       false,
 		LiquidityModule: false,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetLegacyZone(suite.chainA.GetContext(), &zone)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
 	// osmosis zone
-	zone = icstypes.V1_2_Zone{
+	zone = icstypes.Zone{
 		ConnectionId:    "connection-77002",
 		ChainId:         "osmosis-1",
 		AccountPrefix:   "osmo",
@@ -99,7 +99,7 @@ func (suite *AppTestSuite) initTestZone() {
 		MultiSend:       false,
 		LiquidityModule: true,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetLegacyZone(suite.chainA.GetContext(), &zone)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 }
 
 func (s *AppTestSuite) TestV010400UpgradeHandler() {
