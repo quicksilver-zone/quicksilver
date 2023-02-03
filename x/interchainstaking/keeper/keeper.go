@@ -281,7 +281,10 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zone types.Zone, data []byt
 			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
 			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
 			delta := newRatio.Quo(prevRatio)
-			k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
+			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
+			if err != nil {
+				return err
+			}
 		} else if val.Jailed && !validator.IsJailed() {
 			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
 
