@@ -276,8 +276,13 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zone types.Zone, data []byt
 
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
-			// how much was the validator slashed?
-			// previous ratio
+			if !val.VotingPower.IsPositive() {
+				return errors.New("existing voting power must be greater than zero")
+			}
+			if !validator.Tokens.IsPositive() {
+				return errors.New("incoming voting power must be greater than zero")
+			}
+			// determine difference between previous vp/shares ratio and new ratio.
 			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
 			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
 			delta := newRatio.Quo(prevRatio)
@@ -331,15 +336,17 @@ func (k Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone types.Zone
 		distr := record.Distribution
 		for _, d := range distr {
 			if d.Valoper == valoper {
-				newAmount := sdk.NewDec(int64(d.Amount)).Mul(delta).TruncateInt()
+				newAmount := sdk.NewDec(int64(d.Amount)).Quo(delta).TruncateInt()
 				thisSubAmount := math.NewInt(int64(d.Amount)).Sub(newAmount)
 				recordSubAmount = recordSubAmount.Add(thisSubAmount)
 				d.Amount = newAmount.Uint64()
+				fmt.Println("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
 				k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
 			}
 		}
 		record.Distribution = distr
 		record.Amount = record.Amount.Sub(sdk.NewCoin(zone.BaseDenom, recordSubAmount))
+		k.SetWithdrawalRecord(ctx, record)
 		return false
 	})
 	return err

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/types/tx"
 
@@ -435,49 +436,197 @@ func (s *KeeperTestSuite) TestHandleValidatorCallback() {
 
 func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 
-	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
-	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
-	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
-	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
-	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
-	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
+	completion := time.Now().UTC().Add(time.Hour)
 
-	test := struct {
-		name      string
-		validator stakingtypes.Validator
-		expected  *icstypes.Validator
+	tests := []struct {
+		name               string
+		validator          func(zone icstypes.Zone) *stakingtypes.Validator
+		expected           func(zone icstypes.Zone) *icstypes.Validator
+		withdrawal         func(zone icstypes.Zone) icstypes.WithdrawalRecord
+		expectedWithdrawal func(zone icstypes.Zone) icstypes.WithdrawalRecord
 	}{
+		{
+			name: "jailed; single distribution",
+			validator: func(zone icstypes.Zone) *stakingtypes.Validator {
+				return &stakingtypes.Validator{OperatorAddress: zone.Validators[0].ValoperAddress, Jailed: true, Status: stakingtypes.Bonded, Tokens: zone.Validators[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: zone.Validators[0].DelegatorShares, Commission: stakingtypes.NewCommission(zone.Validators[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
+			},
+			expected: func(zone icstypes.Zone) *icstypes.Validator {
+				return &icstypes.Validator{ValoperAddress: zone.Validators[0].ValoperAddress, CommissionRate: zone.Validators[0].CommissionRate, VotingPower: zone.Validators[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: zone.Validators[0].DelegatorShares, Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", Jailed: true}
+			},
 
-		name:      "valid - jailed",
-		validator: stakingtypes.Validator{OperatorAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", Jailed: true, Status: stakingtypes.Bonded, Tokens: sdk.NewInt(1990), DelegatorShares: sdk.NewDec(2000), Commission: stakingtypes.NewCommission(sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"), sdk.MustNewDecFromStr("0.2"))},
-		expected:  &icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(1990), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", Jailed: true},
+			withdrawal: func(zone icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   s.chainB.ChainID,
+					Delegator: zone.DelegationAddress.Address,
+					Distribution: []*icstypes.Distribution{
+						{
+							Valoper: zone.Validators[0].ValoperAddress,
+							Amount:  1000,
+						},
+					},
+					Recipient:      user1.String(),
+					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
+					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
+					Status:         keeper.WithdrawStatusUnbond,
+					CompletionTime: completion,
+				}
+			},
+			expectedWithdrawal: func(zone icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   s.chainB.ChainID,
+					Delegator: zone.DelegationAddress.Address,
+					Distribution: []*icstypes.Distribution{
+						{
+							Valoper: zone.Validators[0].ValoperAddress,
+							Amount:  950,
+						},
+					},
+					Recipient:      user1.String(),
+					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(950))),
+					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
+					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
+					Status:         keeper.WithdrawStatusUnbond,
+					CompletionTime: completion,
+				}
+			},
+		},
+		{
+			name: "jailed; multi distribution",
+			validator: func(zone icstypes.Zone) *stakingtypes.Validator {
+				return &stakingtypes.Validator{OperatorAddress: zone.Validators[0].ValoperAddress, Jailed: true, Status: stakingtypes.Bonded, Tokens: zone.Validators[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: zone.Validators[0].DelegatorShares, Commission: stakingtypes.NewCommission(zone.Validators[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
+			},
+			expected: func(zone icstypes.Zone) *icstypes.Validator {
+				return &icstypes.Validator{ValoperAddress: zone.Validators[0].ValoperAddress, CommissionRate: zone.Validators[0].CommissionRate, VotingPower: zone.Validators[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: zone.Validators[0].DelegatorShares, Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", Jailed: true}
+			},
+
+			withdrawal: func(zone icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   s.chainB.ChainID,
+					Delegator: zone.DelegationAddress.Address,
+					Distribution: []*icstypes.Distribution{
+						{
+							Valoper: zone.Validators[0].ValoperAddress,
+							Amount:  500,
+						},
+						{
+							Valoper: zone.Validators[1].ValoperAddress,
+							Amount:  500,
+						},
+					},
+					Recipient:      user1.String(),
+					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
+					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
+					Status:         keeper.WithdrawStatusUnbond,
+					CompletionTime: completion,
+				}
+			},
+			expectedWithdrawal: func(zone icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   s.chainB.ChainID,
+					Delegator: zone.DelegationAddress.Address,
+					Distribution: []*icstypes.Distribution{
+						{
+							Valoper: zone.Validators[0].ValoperAddress,
+							Amount:  475,
+						},
+						{
+							Valoper: zone.Validators[1].ValoperAddress,
+							Amount:  500,
+						},
+					},
+					Recipient:      user1.String(),
+					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(975))),
+					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
+					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
+					Status:         keeper.WithdrawStatusUnbond,
+					CompletionTime: completion,
+				}
+			},
+		},
+		{
+			name: "jailed; multi distribution, unrelated validators - no-op",
+			validator: func(zone icstypes.Zone) *stakingtypes.Validator {
+				return &stakingtypes.Validator{OperatorAddress: zone.Validators[0].ValoperAddress, Jailed: true, Status: stakingtypes.Bonded, Tokens: zone.Validators[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: zone.Validators[0].DelegatorShares, Commission: stakingtypes.NewCommission(zone.Validators[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
+			},
+			expected: func(zone icstypes.Zone) *icstypes.Validator {
+				return &icstypes.Validator{ValoperAddress: zone.Validators[0].ValoperAddress, CommissionRate: zone.Validators[0].CommissionRate, VotingPower: zone.Validators[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: zone.Validators[0].DelegatorShares, Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", Jailed: true}
+			},
+
+			withdrawal: func(zone icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   s.chainB.ChainID,
+					Delegator: zone.DelegationAddress.Address,
+					Distribution: []*icstypes.Distribution{
+						{
+							Valoper: zone.Validators[1].ValoperAddress,
+							Amount:  500,
+						},
+						{
+							Valoper: zone.Validators[2].ValoperAddress,
+							Amount:  500,
+						},
+					},
+					Recipient:      user1.String(),
+					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
+					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
+					Status:         keeper.WithdrawStatusUnbond,
+					CompletionTime: completion,
+				}
+			},
+			expectedWithdrawal: func(zone icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   s.chainB.ChainID,
+					Delegator: zone.DelegationAddress.Address,
+					Distribution: []*icstypes.Distribution{
+						{
+							Valoper: zone.Validators[1].ValoperAddress,
+							Amount:  500,
+						},
+						{
+							Valoper: zone.Validators[2].ValoperAddress,
+							Amount:  500,
+						},
+					},
+					Recipient:      user1.String(),
+					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
+					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
+					Status:         keeper.WithdrawStatusUnbond,
+					CompletionTime: completion,
+				}
+			},
+		},
 	}
 
-	s.Run(test.name, func() {
-		s.SetupTest()
-		s.setupTestZones()
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			s.setupTestZones()
 
-		app := s.GetQuicksilverApp(s.chainA)
-		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-		ctx := s.chainA.GetContext()
+			app := s.GetQuicksilverApp(s.chainA)
+			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := s.chainA.GetContext()
 
-		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			s.Require().True(found)
 
-		bz, err := app.AppCodec().Marshal(&test.validator)
-		s.Require().NoError(err)
+			app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, test.withdrawal(zone))
 
-		err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
-		s.Require().NoError(err)
+			bz, err := app.AppCodec().Marshal(test.validator(zone))
+			s.Require().NoError(err)
 
-		zone, found := app.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
-		s.True(found)
+			err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
+			s.Require().NoError(err)
 
-		app.InterchainstakingKeeper.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+			wr, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, s.chainB.ChainID, test.withdrawal(zone).Txhash, test.withdrawal(zone).Status)
+			s.True(found)
+			s.Require().Equal(test.expectedWithdrawal(zone), wr)
 
-			return false
 		})
-
-	})
+	}
 }
 
 // func (s *KeeperTestSuite) TestHandleDelegationCallback() {
