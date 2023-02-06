@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
@@ -172,7 +171,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	if !found {
-		return sdkerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
+		return sdkioerrors.Wrapf(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
 	chunkSize := ICAMsgChunkSize

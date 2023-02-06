@@ -38,14 +38,14 @@ func ValidateFutureGovernor(governor string) error {
 	lockTimeStr := ""
 	splits := strings.Split(governor, ",")
 	if len(splits) > 2 {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
 	}
 
 	// token,100h
 	if len(splits) == 2 {
 		lpTokenStr := splits[0]
 		if sdk.ValidateDenom(lpTokenStr) != nil {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
+			return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
 		}
 		lockTimeStr = splits[1]
 	}
@@ -58,7 +58,7 @@ func ValidateFutureGovernor(governor string) error {
 	// Note that a duration of 0 is allowed
 	_, err = time.ParseDuration(lockTimeStr)
 	if err != nil {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, fmt.Sprintf("invalid future governor: %s", governor))
 	}
 	return nil
 }
@@ -79,7 +79,7 @@ func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	}
 
 	if !msg.TokenIn.IsValid() || !msg.TokenIn.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
 	}
 
 	if !msg.TokenOutMinAmount.IsPositive() {
@@ -117,7 +117,7 @@ func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	}
 
 	if !msg.TokenOut.IsValid() || !msg.TokenOut.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String())
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidCoins, msg.TokenOut.String())
 	}
 
 	if !msg.TokenInMaxAmount.IsPositive() {
@@ -150,12 +150,12 @@ func (msg MsgJoinPool) ValidateBasic() error {
 	}
 
 	if !msg.ShareOutAmount.IsPositive() {
-		return sdkerrors.Wrap(ErrNotPositiveRequireAmount, msg.ShareOutAmount.String())
+		return sdkioerrors.Wrapf(ErrNotPositiveRequireAmount, msg.ShareOutAmount.String())
 	}
 
 	tokenInMaxs := sdk.Coins(msg.TokenInMaxs)
 	if !tokenInMaxs.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, tokenInMaxs.String())
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidCoins, tokenInMaxs.String())
 	}
 
 	return nil
@@ -184,12 +184,12 @@ func (msg MsgExitPool) ValidateBasic() error {
 	}
 
 	if !msg.ShareInAmount.IsPositive() {
-		return sdkerrors.Wrap(ErrNotPositiveRequireAmount, msg.ShareInAmount.String())
+		return sdkioerrors.Wrapf(ErrNotPositiveRequireAmount, msg.ShareInAmount.String())
 	}
 
 	tokenOutMins := sdk.Coins(msg.TokenOutMins)
 	if !tokenOutMins.IsValid() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, tokenOutMins.String())
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidCoins, tokenOutMins.String())
 	}
 
 	return nil
@@ -218,11 +218,11 @@ func (msg MsgJoinSwapExternAmountIn) ValidateBasic() error {
 	}
 
 	if !msg.TokenIn.IsValid() || !msg.TokenIn.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidCoins, msg.TokenIn.String())
 	}
 
 	if !msg.ShareOutMinAmount.IsPositive() {
-		return sdkerrors.Wrap(ErrNotPositiveCriteria, msg.ShareOutMinAmount.String())
+		return sdkioerrors.Wrapf(ErrNotPositiveCriteria, msg.ShareOutMinAmount.String())
 	}
 
 	return nil
@@ -256,11 +256,11 @@ func (msg MsgJoinSwapShareAmountOut) ValidateBasic() error {
 	}
 
 	if !msg.ShareOutAmount.IsPositive() {
-		return sdkerrors.Wrap(ErrNotPositiveRequireAmount, msg.ShareOutAmount.String())
+		return sdkioerrors.Wrapf(ErrNotPositiveRequireAmount, msg.ShareOutAmount.String())
 	}
 
 	if !msg.TokenInMaxAmount.IsPositive() {
-		return sdkerrors.Wrap(ErrNotPositiveCriteria, msg.TokenInMaxAmount.String())
+		return sdkioerrors.Wrapf(ErrNotPositiveCriteria, msg.TokenInMaxAmount.String())
 	}
 
 	return nil
@@ -289,11 +289,11 @@ func (msg MsgExitSwapExternAmountOut) ValidateBasic() error {
 	}
 
 	if !msg.TokenOut.IsValid() || !msg.TokenOut.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.TokenOut.String())
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidCoins, msg.TokenOut.String())
 	}
 
 	if !msg.ShareInMaxAmount.IsPositive() {
-		return sdkerrors.Wrap(ErrNotPositiveCriteria, msg.ShareInMaxAmount.String())
+		return sdkioerrors.Wrapf(ErrNotPositiveCriteria, msg.ShareInMaxAmount.String())
 	}
 
 	return nil
@@ -327,11 +327,11 @@ func (msg MsgExitSwapShareAmountIn) ValidateBasic() error {
 	}
 
 	if !msg.ShareInAmount.IsPositive() {
-		return sdkerrors.Wrap(ErrNotPositiveRequireAmount, msg.ShareInAmount.String())
+		return sdkioerrors.Wrapf(ErrNotPositiveRequireAmount, msg.ShareInAmount.String())
 	}
 
 	if !msg.TokenOutMinAmount.IsPositive() {
-		return sdkerrors.Wrap(ErrNotPositiveCriteria, msg.TokenOutMinAmount.String())
+		return sdkioerrors.Wrapf(ErrNotPositiveCriteria, msg.TokenOutMinAmount.String())
 	}
 
 	return nil

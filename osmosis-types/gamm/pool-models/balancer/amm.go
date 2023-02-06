@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/osmomath"
@@ -73,11 +72,11 @@ func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
 // Namely, that the weight is in the range [1, MaxUserSpecifiedWeight)
 func ValidateUserSpecifiedWeight(weight sdk.Int) error {
 	if !weight.IsPositive() {
-		return sdkerrors.Wrap(gamm.ErrNotPositiveWeight, weight.String())
+		return sdkioerrors.Wrapf(gamm.ErrNotPositiveWeight, weight.String())
 	}
 
 	if weight.GTE(MaxUserSpecifiedWeight) {
-		return sdkerrors.Wrap(gamm.ErrWeightTooLarge, weight.String())
+		return sdkioerrors.Wrapf(gamm.ErrWeightTooLarge, weight.String())
 	}
 	return nil
 }

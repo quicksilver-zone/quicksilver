@@ -9,7 +9,6 @@ import (
 	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -247,7 +246,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 func checkTrustedHeader(header *tmclienttypes.Header, consState *tmclienttypes.ConsensusState) error {
 	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
 	if err != nil {
-		return sdkerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
+		return sdkioerrors.Wrapf(err, "trusted validator set in not tendermint validator set type")
 	}
 
 	// assert that trustedVals is NextValidators of last trusted header
@@ -286,17 +285,17 @@ func checkValidity(
 
 	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
 	if err != nil {
-		return sdkerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
+		return sdkioerrors.Wrapf(err, "trusted validator set in not tendermint validator set type")
 	}
 
 	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(header.SignedHeader)
 	if err != nil {
-		return sdkerrors.Wrap(err, "signed header in not tendermint signed header type")
+		return sdkioerrors.Wrapf(err, "signed header in not tendermint signed header type")
 	}
 
 	tmValidatorSet, err := tmtypes.ValidatorSetFromProto(header.ValidatorSet)
 	if err != nil {
-		return sdkerrors.Wrap(err, "validator set in not tendermint validator set type")
+		return sdkioerrors.Wrapf(err, "validator set in not tendermint validator set type")
 	}
 
 	// assert header height is newer than consensus state
@@ -341,7 +340,7 @@ func checkValidity(
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {
-		return sdkerrors.Wrap(err, "failed to verify header")
+		return sdkioerrors.Wrapf(err, "failed to verify header")
 	}
 	return nil
 }

@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdkioerrors "cosmossdk.io/errors"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/ingenuity-build/quicksilver/wasmbinding/bindings"
+	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries
@@ -49,7 +48,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 		var contractQuery bindings.QuickSilverQuery
 		if err := json.Unmarshal(request, &contractQuery); err != nil {
-			return nil, sdkerrors.Wrap(err, "quicksilver query")
+			return nil, sdkioerrors.Wrapf(err, "quicksilver query")
 		}
 
 		switch {
@@ -59,7 +58,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			fullDenom, err := GetFullDenom(creator, subdenom)
 			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo full denom query")
+				return nil, sdkioerrors.Wrapf(err, "osmo full denom query")
 			}
 
 			res := bindings.FullDenomResponse{
@@ -68,7 +67,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			bz, err := json.Marshal(res)
 			if err != nil {
-				return nil, sdkerrors.Wrap(err, "osmo full denom query response")
+				return nil, sdkioerrors.Wrapf(err, "osmo full denom query response")
 			}
 
 			return bz, nil

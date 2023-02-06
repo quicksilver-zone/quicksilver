@@ -37,7 +37,7 @@ func (m MsgCreateDenom) ValidateBasic() error {
 
 	_, err = GetTokenDenom(m.Sender, m.Subdenom)
 	if err != nil {
-		return sdkerrors.Wrap(ErrInvalidDenom, err.Error())
+		return sdkioerrors.Wrapf(ErrInvalidDenom, err.Error())
 	}
 
 	return nil
@@ -71,7 +71,7 @@ func (m MsgMint) ValidateBasic() error {
 	}
 
 	if !m.Amount.IsValid() || m.Amount.Amount.Equal(sdk.ZeroInt()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 
 	return nil
@@ -105,7 +105,7 @@ func (m MsgBurn) ValidateBasic() error {
 	}
 
 	if !m.Amount.IsValid() || m.Amount.Amount.Equal(sdk.ZeroInt()) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidCoins, m.Amount.String())
 	}
 
 	return nil
@@ -150,7 +150,7 @@ func (m MsgBurn) GetSigners() []sdk.AccAddress {
 // 	}
 
 // 	if !m.Amount.IsValid() {
-// 		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, m.Amount.String())
+// 		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidCoins, m.Amount.String())
 // 	}
 
 // 	return nil
