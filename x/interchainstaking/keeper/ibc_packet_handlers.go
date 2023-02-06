@@ -432,7 +432,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		for _, dist := range withdrawal.Distribution {
 			if thisAvail[dist.Valoper] < int64(dist.Amount) {
 				// we cannot satisfy this unbond this epoch.
-				k.Logger(ctx).Error("unable to satisfy unbonding for this epoch, due to locked tokens.", "txhash", withdrawal.Txhash, "user", withdrawal.Delegator, "chain", zone.ChainId)
+				k.Logger(ctx).Error("unable to satisfy unbonding for this epoch, due to locked tokens.", "txhash", withdrawal.Txhash, "user", withdrawal.Delegator, "chain", zone.ChainId, "validator", dist.Valoper, "avail", thisAvail[dist.Valoper], "wanted", int64(dist.Amount))
 				return false
 			}
 			thisOut[dist.Valoper] = sdk.NewCoin(zone.BaseDenom, math.NewIntFromUint64(dist.Amount))
