@@ -99,6 +99,17 @@ func (suite *AppTestSuite) initTestZone() {
 		MultiSend:       false,
 		LiquidityModule: true,
 	}
+
+	// uni-5 zone
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-77003",
+		ChainId:         "uni-5",
+		AccountPrefix:   "juno",
+		LocalDenom:      "uqjunox",
+		BaseDenom:       "ujunox",
+		MultiSend:       false,
+		LiquidityModule: true,
+	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 }
 

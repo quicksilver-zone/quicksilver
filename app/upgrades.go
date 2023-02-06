@@ -2,11 +2,13 @@ package app
 
 import (
 	"fmt"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -78,6 +80,50 @@ func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 			r.Completed = &time
 			app.InterchainstakingKeeper.SetReceipt(ctx, r)
 		}
+
+		//clear uni-5 unbondings
+		app.InterchainstakingKeeper.IteratePrefixedUnbondingRecords(ctx, []byte("uni-5"), func(_ int64, record types.UnbondingRecord) (stop bool) {
+			app.InterchainstakingKeeper.DeleteUnbondingRecord(ctx, record.ChainId, record.Validator, record.EpochNumber)
+			return false
+		})
+
+		//clear uni-5 redelegations
+		app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte("uni-5"), func(_ int64, _ []byte, record types.RedelegationRecord) (stop bool) {
+			app.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
+			return false
+		})
+
+		//remove uni-5 zone and related records
+		app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
+			if zone.ChainId == "uni-5" {
+				//remove uni-5 delegation records
+				app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation types.Delegation) (stop bool) {
+					err := app.InterchainstakingKeeper.RemoveDelegation(ctx, &zone, delegation)
+					if err != nil {
+						panic(err)
+						return false
+					}
+					return false
+				})
+				//remove uni-5 receipts
+				app.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+					app.InterchainstakingKeeper.DeleteReceipt(ctx, icskeeper.GetReceiptKey(receiptInfo.ChainId, receiptInfo.Txhash))
+					return false
+				})
+
+				app.InterchainstakingKeeper.DeleteZone(ctx, zone.ChainId)
+			}
+			return false
+		})
+
+		//remove uni-5 quereis in state
+		app.InterchainQueryKeeper.IterateQueries(ctx, func(_ int64, queryInfo icqtypes.Query) (stop bool) {
+			if queryInfo.ChainId == "uni-5" {
+				app.InterchainQueryKeeper.DeleteQuery(ctx, queryInfo.Id)
+			}
+			return false
+		})
+
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }
