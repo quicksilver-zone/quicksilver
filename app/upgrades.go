@@ -1,8 +1,12 @@
 package app
 
 import (
+	sdkmath "cosmossdk.io/math"
+	"errors"
 	"fmt"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	"strings"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -105,6 +109,16 @@ func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 					}
 					return false
 				})
+
+				//remove uni-5 performance delegation records
+				app.InterchainstakingKeeper.IterateAllPerformanceDelegations(ctx, &zone, func(delegation types.Delegation) (stop bool) {
+					err := app.InterchainstakingKeeper.RemoveDelegation(ctx, &zone, delegation)
+					if err != nil {
+						panic(err)
+						return false
+					}
+					return false
+				})
 				//remove uni-5 receipts
 				app.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					app.InterchainstakingKeeper.DeleteReceipt(ctx, icskeeper.GetReceiptKey(receiptInfo.ChainId, receiptInfo.Txhash))
@@ -124,6 +138,55 @@ func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 			return false
 		})
 
+		//burn uqjunox
+		addr1, err := AccAddressFromBech32("quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq", "quick")
+		if err != nil {
+			return nil, err
+		}
+		addr2, err := AccAddressFromBech32("quick16x03wcp37kx5e8ehckjxvwcgk9j0cqnhcccnty", "quick")
+		if err != nil {
+			return nil, err
+		}
+
+		err = app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr1, banktypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
+		if err != nil {
+			return nil, err
+		}
+
+		err = app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr2, banktypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
+		if err != nil {
+			return nil, err
+		}
+
+		err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, types.EscrowModuleAccount, banktypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(4000000))))
+		if err != nil {
+			return nil, err
+		}
+
+		err = app.BankKeeper.BurnCoins(ctx, banktypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
+		if err != nil {
+			return nil, err
+		}
+
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
+}
+
+// AccAddressFromBech32 creates an AccAddress from a Bech32 string.
+func AccAddressFromBech32(address, prefix string) (addr sdk.AccAddress, err error) {
+	if len(strings.TrimSpace(address)) == 0 {
+		return sdk.AccAddress{}, errors.New("empty address string is not allowed")
+	}
+
+	bz, err := sdk.GetFromBech32(address, prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	err = sdk.VerifyAddressFormat(bz)
+	if err != nil {
+		return nil, err
+	}
+
+	return bz, nil
 }
