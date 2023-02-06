@@ -105,10 +105,10 @@ func GetReopenChannelTxCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			connectionId := args[0]
+			connectionID := args[0]
 			port := args[1]
 
-			msg := types.NewMsgGovReopenChannel(connectionId, port, clientCtx.GetFromAddress())
+			msg := types.NewMsgGovReopenChannel(connectionID, port, clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

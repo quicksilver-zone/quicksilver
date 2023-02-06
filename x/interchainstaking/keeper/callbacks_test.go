@@ -435,7 +435,6 @@ func (s *KeeperTestSuite) TestHandleValidatorCallback() {
 }
 
 func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
-
 	completion := time.Now().UTC().Add(time.Hour)
 
 	tests := []struct {
@@ -624,7 +623,6 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			wr, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, s.chainB.ChainID, test.withdrawal(zone).Txhash, test.withdrawal(zone).Status)
 			s.True(found)
 			s.Require().Equal(test.expectedWithdrawal(zone), wr)
-
 		})
 	}
 }
