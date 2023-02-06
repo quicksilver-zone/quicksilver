@@ -1,6 +1,11 @@
 package app
 
 import (
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/quicksilver/utils"
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 	"testing"
 	"time"
 
@@ -100,6 +105,100 @@ func (suite *AppTestSuite) initTestZone() {
 		LiquidityModule: true,
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+	// uni-5 zone
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-77003",
+		ChainId:         "uni-5",
+		AccountPrefix:   "juno",
+		LocalDenom:      "uqjunox",
+		BaseDenom:       "ujunox",
+		MultiSend:       false,
+		LiquidityModule: true,
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+
+	reciept := icstypes.Receipt{
+		ChainId: "uni-5",
+		Sender:  utils.GenerateAccAddressForTest().String(),
+		Txhash:  "TestDeposit01",
+		Amount: sdk.NewCoins(
+			sdk.NewCoin(
+				"ujunox",
+				sdk.NewIntFromUint64(2000000), // 20% deposit
+			),
+		),
+	}
+
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), reciept)
+
+	ubRecord := icstypes.UnbondingRecord{
+		ChainId:       "uni-5",
+		EpochNumber:   1,
+		Validator:     "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn",
+		RelatedTxhash: []string{"ABC012"},
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetUnbondingRecord(suite.chainA.GetContext(), ubRecord)
+
+	rdRecord := icstypes.RedelegationRecord{
+		ChainId:        "uni-5",
+		EpochNumber:    1,
+		Source:         "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn",
+		Destination:    "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed",
+		Amount:         3000000,
+		CompletionTime: time.Time(suite.chainA.GetContext().BlockTime().Add(time.Hour)),
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetRedelegationRecord(suite.chainA.GetContext(), rdRecord)
+
+	delRecord := icstypes.Delegation{
+		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
+		DelegationAddress: "juno1z89utvygweg5l56fsk8ak7t6hh88fd0azcjpz5",
+		Height:            10,
+		ValidatorAddress:  "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn",
+	}
+
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(suite.chainA.GetContext(), &zone, delRecord)
+
+	wRecord := icstypes.WithdrawalRecord{
+		ChainId:   "uni-5",
+		Delegator: utils.GenerateAccAddressForTest().String(),
+		Distribution: []*icstypes.Distribution{
+			{Valoper: "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn", Amount: 1000000},
+			{Valoper: "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed", Amount: 1000000},
+		},
+		Recipient:  "juno1z89utvygweg5l56fsk8ak7t6hh88fd0azcjpz5",
+		Amount:     sdk.NewCoins(sdk.NewCoin("ujunox", sdk.NewInt(4000000))),
+		BurnAmount: sdk.NewCoin("ujunox", sdk.NewInt(4000000)),
+		Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+		Status:     icskeeper.WithdrawStatusQueued,
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetWithdrawalRecord(suite.chainA.GetContext(), wRecord)
+
+	err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
+	if err != nil {
+		return
+	}
+	addr1, err := AccAddressFromBech32("quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq", "quick")
+	if err != nil {
+		return
+	}
+	addr2, err := AccAddressFromBech32("quick16x03wcp37kx5e8ehckjxvwcgk9j0cqnhcccnty", "quick")
+	if err != nil {
+		return
+	}
+
+	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
+	if err != nil {
+		return
+	}
+	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, addr2, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
+	if err != nil {
+		return
+	}
+	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToModule(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(400000))))
+	if err != nil {
+		return
+	}
+
 }
 
 func (s *AppTestSuite) TestV010400UpgradeHandler() {
@@ -133,4 +232,26 @@ func (s *AppTestSuite) TestV010400UpgradeHandler() {
 	s.Require().False(chainb.UnbondingEnabled)
 	s.Require().False(chainb.ReturnToSender)
 	s.Require().True(chainb.LiquidityModule)
+
+	juno, found := app.InterchainstakingKeeper.GetZone(ctx, "uni-5")
+	s.Require().False(found)
+
+	reciepts := app.InterchainstakingKeeper.AllReceipts(ctx)
+	s.Require().Equal(0, len(reciepts))
+
+	unbondings := app.InterchainstakingKeeper.AllZoneUnbondingRecords(ctx, "uni-5")
+	s.Require().Equal(0, len(unbondings))
+
+	redelegations := app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "uni-5")
+	s.Require().Equal(0, len(redelegations))
+
+	delegations := app.InterchainstakingKeeper.GetAllDelegations(ctx, &juno)
+	s.Require().Equal(0, len(delegations))
+
+	perfDelegations := app.InterchainstakingKeeper.GetAllPerformanceDelegations(ctx, &juno)
+	s.Require().Equal(0, len(perfDelegations))
+
+	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "uni-5", "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D", icskeeper.WithdrawStatusQueued)
+	s.Require().False(found)
+
 }
