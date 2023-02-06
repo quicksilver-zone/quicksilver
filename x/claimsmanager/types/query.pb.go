@@ -31,6 +31,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryClaimsRequest is the request type for the Query/Claims RPC method.
 type QueryClaimsRequest struct {
 	ChainId    string             `protobuf:"bytes,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty" yaml:"chain_id"`
 	Address    string             `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
@@ -91,6 +92,7 @@ func (m *QueryClaimsRequest) GetPagination() *query.PageRequest {
 	return nil
 }
 
+// QueryClaimsResponse is the response type for the Query/Claims RPC method.
 type QueryClaimsResponse struct {
 	Claims     []Claim             `protobuf:"bytes,1,rep,name=claims,proto3" json:"claims"`
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
@@ -203,9 +205,13 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// Claims returns all zone claims from the current epoch.
 	Claims(ctx context.Context, in *QueryClaimsRequest, opts ...grpc.CallOption) (*QueryClaimsResponse, error)
+	// LastEpochClaims returns all zone claims from the last epoch.
 	LastEpochClaims(ctx context.Context, in *QueryClaimsRequest, opts ...grpc.CallOption) (*QueryClaimsResponse, error)
+	// UserClaims returns all zone claims for a given address from the current epoch.
 	UserClaims(ctx context.Context, in *QueryClaimsRequest, opts ...grpc.CallOption) (*QueryClaimsResponse, error)
+	// UserLastEpochClaims returns all zone claims for a given address from the last epoch.
 	UserLastEpochClaims(ctx context.Context, in *QueryClaimsRequest, opts ...grpc.CallOption) (*QueryClaimsResponse, error)
 }
 
@@ -255,9 +261,13 @@ func (c *queryClient) UserLastEpochClaims(ctx context.Context, in *QueryClaimsRe
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// Claims returns all zone claims from the current epoch.
 	Claims(context.Context, *QueryClaimsRequest) (*QueryClaimsResponse, error)
+	// LastEpochClaims returns all zone claims from the last epoch.
 	LastEpochClaims(context.Context, *QueryClaimsRequest) (*QueryClaimsResponse, error)
+	// UserClaims returns all zone claims for a given address from the current epoch.
 	UserClaims(context.Context, *QueryClaimsRequest) (*QueryClaimsResponse, error)
+	// UserLastEpochClaims returns all zone claims for a given address from the last epoch.
 	UserLastEpochClaims(context.Context, *QueryClaimsRequest) (*QueryClaimsResponse, error)
 }
 

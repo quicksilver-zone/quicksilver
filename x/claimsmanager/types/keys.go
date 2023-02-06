@@ -18,6 +18,7 @@ const (
 var (
 	KeyPrefixClaim          = []byte{0x00}
 	KeyPrefixLastEpochClaim = []byte{0x01}
+	KeySelfConsensusState   = []byte{0x02}
 )
 
 // ClaimKey returns the key for storing a given claim.

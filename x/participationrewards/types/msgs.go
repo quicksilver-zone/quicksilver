@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,10 +81,16 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 
 	if len(msg.Proofs) > 0 {
 		for i, p := range msg.Proofs {
-			pLabel := fmt.Sprintf("Proof [%d]:", i)
-			if err := p.ValidateBasic(); err != nil {
-				errors[pLabel] = err
+			err := p.ValidateBasic()
+			if err == nil {
+				return nil
 			}
+
+			pLabel := fmt.Sprintf("Proof [%s]", hex.EncodeToString(p.Key))
+			if _, ok := errors[pLabel]; ok {
+				pLabel += fmt.Sprintf("-%d", i)
+			}
+			errors[pLabel+":"] = err
 		}
 	}
 

@@ -5,7 +5,10 @@
 "base_denom": "uosmo",
 "local_denom": "uqosmo",
 "account_prefix": "osmo",
-"multi_send": false,
+"deposits_enabled": true,
+"unbonding_enabled": true,
 "liquidity_module": false,
+"return_to_sender": true,
+"decimals": 6
 "deposit": "1000uqck"
 }

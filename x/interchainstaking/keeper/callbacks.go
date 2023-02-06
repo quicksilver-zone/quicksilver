@@ -6,20 +6,20 @@ import (
 	"fmt"
 	"time"
 
+	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-
 	"github.com/ingenuity-build/quicksilver/utils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // ___________________________________________________________________________________________________
@@ -83,7 +83,6 @@ func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query
 }
 
 func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	k.Logger(ctx).Info("Received provable payload", "data", args)
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -212,6 +211,10 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
+	if !zone.DepositsEnabled {
+		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
+	}
+
 	k.Logger(ctx).Info("Deposit interval callback", "zone", zone.ChainId)
 
 	txs := tx.GetTxsEventResponse{}
@@ -243,14 +246,14 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 func checkTrustedHeader(header *tmclienttypes.Header, consState *tmclienttypes.ConsensusState) error {
 	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
 	if err != nil {
-		return sdkerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
+		return sdkioerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
 	}
 
 	// assert that trustedVals is NextValidators of last trusted header
 	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
 	tvalHash := tmTrustedValidators.Hash()
 	if !bytes.Equal(consState.NextValidatorsHash, tvalHash) {
-		return sdkerrors.Wrapf(
+		return sdkioerrors.Wrapf(
 			tmclienttypes.ErrInvalidValidatorSet,
 			"trusted validators %s, does not hash to latest trusted validators. Expected: %X, got: %X",
 			header.TrustedValidators, consState.NextValidatorsHash, tvalHash,
@@ -273,7 +276,7 @@ func checkValidity(
 	// UpdateClient only accepts updates with a header at the same revision
 	// as the trusted consensus state
 	if header.GetHeight().GetRevisionNumber() != header.TrustedHeight.RevisionNumber {
-		return sdkerrors.Wrapf(
+		return sdkioerrors.Wrapf(
 			tmclienttypes.ErrInvalidHeaderHeight,
 			"header height revision %d does not match trusted header revision %d",
 			header.GetHeight().GetRevisionNumber(), header.TrustedHeight.RevisionNumber,
@@ -282,22 +285,22 @@ func checkValidity(
 
 	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
 	if err != nil {
-		return sdkerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
+		return sdkioerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
 	}
 
 	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(header.SignedHeader)
 	if err != nil {
-		return sdkerrors.Wrap(err, "signed header in not tendermint signed header type")
+		return sdkioerrors.Wrap(err, "signed header in not tendermint signed header type")
 	}
 
 	tmValidatorSet, err := tmtypes.ValidatorSetFromProto(header.ValidatorSet)
 	if err != nil {
-		return sdkerrors.Wrap(err, "validator set in not tendermint validator set type")
+		return sdkioerrors.Wrap(err, "validator set in not tendermint validator set type")
 	}
 
 	// assert header height is newer than consensus state
 	// if header.GetHeight().LTE(header.TrustedHeight) {
-	// 	return sdkerrors.Wrapf(
+	// 	return sdkioerrors.Wrapf(
 	// 		tmclienttypes.ErrInvalidHeader,
 	// 		"header height ≤ consensus state height (%s ≤ %s)", header.GetHeight(), header.TrustedHeight,
 	// 	)
@@ -331,13 +334,13 @@ func checkValidity(
 	// - assert header timestamp is not past the trusting period
 	// - assert header timestamp is past latest stored consensus state timestamp
 	// - assert that a TrustLevel proportion of TrustedValidators signed new Commit
-	err = utils.VerifyNonAdjacent(
+	err = utils.Verify(
 		&signedHeader,
 		tmTrustedValidators, tmSignedHeader, tmValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {
-		return sdkerrors.Wrap(err, "failed to verify header")
+		return sdkioerrors.Wrap(err, "failed to verify header")
 	}
 	return nil
 }
@@ -346,6 +349,10 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+
+	if !zone.DepositsEnabled {
+		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
 	}
 
 	k.Logger(ctx).Info("DepositTx callback", "zone", zone.ChainId)
@@ -423,38 +430,18 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
-	accAddr, _, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	accAddr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
 
-	coin := sdk.Coin{}
-	// this can legitimately be nil, so do not guard against nil byte slice here.
-	err = k.cdc.Unmarshal(args, &coin)
-	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal balance info for zone", "zone", zone.ChainId, "err", err)
-		return err
-	}
-
-	checkCoin, err := utils.CoinFromRequestKey(query.Request, accAddr)
+	coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, args, denom)
 	if err != nil {
 		return err
 	}
 
-	if coin.IsNil() || coin.Denom == "" {
-		// if the balance returned is zero for a given denom, we just get a nil response.
-		// use the denom from the request so we can set a zero value coin for the correct denom.
-		coin = checkCoin
-	} else if coin.Denom != checkCoin.Denom {
-		return fmt.Errorf("received coin denom %s does not match requested denom %s", coin.Denom, checkCoin.Denom)
-	}
-
-	// By this point we've tried all means to retrieve the balance, so coin should not be nil.
-	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/79#issuecomment-1340293800
-	if coin.IsNil() || coin.Amount.IsNil() {
-		err = fmt.Errorf("failed to retrieve Coin.Amount even after trying to look up from RequestKey: %q", query.Request)
-		k.Logger(ctx).Error("unable to retrieve balance info for zone", "zone", zone.ChainId, "err", err)
-		return err
+	if coin.Denom != denom {
+		return fmt.Errorf("received coin denom %s does not match requested denom %s", coin.Denom, denom)
 	}
 
 	// Ensure that the coin is valid.

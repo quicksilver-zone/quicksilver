@@ -302,7 +302,7 @@ func (ac appCreator) appExport(
 	}
 	var emptyWasmOpts []wasm.Option
 
-	gaiaApp := app.NewQuicksilver(
+	qsApp := app.NewQuicksilver(
 		logger,
 		db,
 		traceStore,
@@ -318,10 +318,10 @@ func (ac appCreator) appExport(
 	)
 
 	if height != -1 {
-		if err := gaiaApp.LoadHeight(height); err != nil {
+		if err := qsApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	}
 
-	return gaiaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return qsApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }
