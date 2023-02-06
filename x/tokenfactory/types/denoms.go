@@ -1,10 +1,10 @@
 package types
 
 import (
-	sdkioerrors "cosmossdk.io/errors"
 	fmt "fmt"
 	"strings"
 
+	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
