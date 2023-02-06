@@ -127,7 +127,7 @@ func (k Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 		Prefix:       config.Bech32Prefix,
 	})
 	if err != nil {
-		k.Logger(ctx).Info("Error Marshalling  self connection Data")
+		k.Logger(ctx).Info("Error Marshalling self connection Data")
 		return err
 	}
 
@@ -135,6 +135,7 @@ func (k Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 		Data: selfConnectionData,
 	}
+	k.Logger(ctx).Info("Setting self protocol data", "data", data)
 	k.SetProtocolData(ctx, ctx.ChainID(), &data)
 
 	return nil
