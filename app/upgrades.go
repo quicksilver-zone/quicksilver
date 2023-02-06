@@ -1,19 +1,19 @@
 package app
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 // upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch)
@@ -85,47 +85,45 @@ func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 			app.InterchainstakingKeeper.SetReceipt(ctx, r)
 		}
 
-		//clear uni-5 unbondings
+		// clear uni-5 unbondings
 		app.InterchainstakingKeeper.IteratePrefixedUnbondingRecords(ctx, []byte("uni-5"), func(_ int64, record types.UnbondingRecord) (stop bool) {
 			app.InterchainstakingKeeper.DeleteUnbondingRecord(ctx, record.ChainId, record.Validator, record.EpochNumber)
 			return false
 		})
 
-		//clear uni-5 redelegations
+		// clear uni-5 redelegations
 		app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte("uni-5"), func(_ int64, _ []byte, record types.RedelegationRecord) (stop bool) {
 			app.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
 			return false
 		})
 
-		//remove uni-5 zone and related records
+		// remove uni-5 zone and related records
 		app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
 			if zone.ChainId == "uni-5" {
-				//remove uni-5 delegation records
+				// remove uni-5 delegation records
 				app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation types.Delegation) (stop bool) {
 					err := app.InterchainstakingKeeper.RemoveDelegation(ctx, &zone, delegation)
 					if err != nil {
 						panic(err)
-						return false
 					}
 					return false
 				})
 
-				//remove uni-5 performance delegation records
+				// remove uni-5 performance delegation records
 				app.InterchainstakingKeeper.IterateAllPerformanceDelegations(ctx, &zone, func(delegation types.Delegation) (stop bool) {
 					err := app.InterchainstakingKeeper.RemoveDelegation(ctx, &zone, delegation)
 					if err != nil {
 						panic(err)
-						return false
 					}
 					return false
 				})
-				//remove uni-5 receipts
+				// remove uni-5 receipts
 				app.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					app.InterchainstakingKeeper.DeleteReceipt(ctx, icskeeper.GetReceiptKey(receiptInfo.ChainId, receiptInfo.Txhash))
 					return false
 				})
 
-				//remove zone withdrawl records
+				// remove zone withdrawal records
 				app.InterchainstakingKeeper.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
 					app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, zone.ChainId, record.Txhash, record.Status)
 					return false
@@ -137,7 +135,7 @@ func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 			return false
 		})
 
-		//remove uni-5 quereis in state
+		// remove uni-5 queries in state
 		app.InterchainQueryKeeper.IterateQueries(ctx, func(_ int64, queryInfo icqtypes.Query) (stop bool) {
 			if queryInfo.ChainId == "uni-5" {
 				app.InterchainQueryKeeper.DeleteQuery(ctx, queryInfo.Id)
@@ -145,7 +143,7 @@ func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 			return false
 		})
 
-		//burn uqjunox
+		// burn uqjunox
 		addr1, err := AccAddressFromBech32("quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq", "quick")
 		if err != nil {
 			return nil, err
