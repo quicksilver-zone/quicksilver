@@ -32,6 +32,7 @@ func GetTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(GetSignalIntentTxCmd())
 	txCmd.AddCommand(GetRequestRedemptionTxCmd())
+	txCmd.AddCommand(GetReopenChannelTxCmd())
 
 	return txCmd
 }
@@ -83,6 +84,31 @@ func GetRequestRedemptionTxCmd() *cobra.Command {
 			}
 
 			msg := types.NewMsgRequestRedemption(coin, destinationAddress, clientCtx.GetFromAddress())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetReopenChannelTxCmd returns a CLI command handler for creating a Reopen ICA port transaction.
+func GetReopenChannelTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "reopen [connection] [port]",
+		Short: `Reopen closed ICA port.`,
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			connectionId := args[0]
+			port := args[1]
+
+			msg := types.NewMsgGovReopenChannel(connectionId, port, clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

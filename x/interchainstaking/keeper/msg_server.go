@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -182,12 +183,26 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// checking msg authority is the gov module address
-	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
-		return &types.MsgGovReopenChannelResponse{},
-			govtypes.ErrInvalidSigner.Wrapf(
-				"invalid authority: expected %s, got %s",
-				k.Keeper.GetGovAuthority(ctx), msg.Authority,
-			)
+	// if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+	// 	return &types.MsgGovReopenChannelResponse{},
+	// 		govtypes.ErrInvalidSigner.Wrapf(
+	// 			"invalid authority: expected %s, got %s",
+	// 			k.Keeper.GetGovAuthority(ctx), msg.Authority,
+	// 		)
+	// }
+
+	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
+	parts := strings.Split(msg.PortId, ".")
+	if len(parts) != 2 {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format")
+	}
+
+	if _, found := k.GetZone(ctx, parts[0]); !found {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
+	}
+
+	if parts[1] != "delegate" && parts[1] != "deposit" && parts[1] != "performance" && parts[1] != "withdrawal" {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; unexpected account")
 	}
 
 	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, msg.PortId); err != nil {
