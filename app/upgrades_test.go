@@ -3,8 +3,9 @@ package app
 import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/ingenuity-build/quicksilver/utils"
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 	"testing"
 	"time"
 
@@ -157,7 +158,22 @@ func (suite *AppTestSuite) initTestZone() {
 
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(suite.chainA.GetContext(), &zone, delRecord)
 
-	err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(suite.chainA.GetContext(), banktypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
+	wRecord := icstypes.WithdrawalRecord{
+		ChainId:   "uni-5",
+		Delegator: utils.GenerateAccAddressForTest().String(),
+		Distribution: []*icstypes.Distribution{
+			{Valoper: "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn", Amount: 1000000},
+			{Valoper: "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed", Amount: 1000000},
+		},
+		Recipient:  "juno1z89utvygweg5l56fsk8ak7t6hh88fd0azcjpz5",
+		Amount:     sdk.NewCoins(sdk.NewCoin("ujunox", sdk.NewInt(4000000))),
+		BurnAmount: sdk.NewCoin("ujunox", sdk.NewInt(4000000)),
+		Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+		Status:     icskeeper.WithdrawStatusQueued,
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetWithdrawalRecord(suite.chainA.GetContext(), wRecord)
+
+	err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
 	if err != nil {
 		return
 	}
@@ -170,15 +186,15 @@ func (suite *AppTestSuite) initTestZone() {
 		return
 	}
 
-	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), banktypes.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
+	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
 	if err != nil {
 		return
 	}
-	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), banktypes.ModuleName, addr2, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
+	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, addr2, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
 	if err != nil {
 		return
 	}
-	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToModule(suite.chainA.GetContext(), banktypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(4000000))))
+	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToModule(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(400000))))
 	if err != nil {
 		return
 	}
@@ -231,5 +247,11 @@ func (s *AppTestSuite) TestV010400UpgradeHandler() {
 
 	delegations := app.InterchainstakingKeeper.GetAllDelegations(ctx, &juno)
 	s.Require().Equal(0, len(delegations))
+
+	perfDelegations := app.InterchainstakingKeeper.GetAllPerformanceDelegations(ctx, &juno)
+	s.Require().Equal(0, len(perfDelegations))
+
+	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "uni-5", "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D", icskeeper.WithdrawStatusQueued)
+	s.Require().False(found)
 
 }

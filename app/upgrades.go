@@ -4,8 +4,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 	"strings"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -125,7 +125,14 @@ func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 					return false
 				})
 
+				//remove zone withdrawl records
+				app.InterchainstakingKeeper.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
+					app.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, zone.ChainId, record.Txhash, record.Status)
+					return false
+				})
+
 				app.InterchainstakingKeeper.DeleteZone(ctx, zone.ChainId)
+
 			}
 			return false
 		})
@@ -148,22 +155,22 @@ func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 			return nil, err
 		}
 
-		err = app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr1, banktypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
+		err = app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr1, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
 		if err != nil {
 			return nil, err
 		}
 
-		err = app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr2, banktypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
+		err = app.BankKeeper.SendCoinsFromAccountToModule(ctx, addr2, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
 		if err != nil {
 			return nil, err
 		}
 
-		err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, types.EscrowModuleAccount, banktypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(4000000))))
+		err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, types.EscrowModuleAccount, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(400000))))
 		if err != nil {
 			return nil, err
 		}
 
-		err = app.BankKeeper.BurnCoins(ctx, banktypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
+		err = app.BankKeeper.BurnCoins(ctx, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
 		if err != nil {
 			return nil, err
 		}
