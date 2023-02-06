@@ -246,7 +246,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 func checkTrustedHeader(header *tmclienttypes.Header, consState *tmclienttypes.ConsensusState) error {
 	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
 	if err != nil {
-		return sdkioerrors.Wrapf(err, "trusted validator set in not tendermint validator set type")
+		return sdkioerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
 	}
 
 	// assert that trustedVals is NextValidators of last trusted header
@@ -285,17 +285,17 @@ func checkValidity(
 
 	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
 	if err != nil {
-		return sdkioerrors.Wrapf(err, "trusted validator set in not tendermint validator set type")
+		return sdkioerrors.Wrap(err, "trusted validator set in not tendermint validator set type")
 	}
 
 	tmSignedHeader, err := tmtypes.SignedHeaderFromProto(header.SignedHeader)
 	if err != nil {
-		return sdkioerrors.Wrapf(err, "signed header in not tendermint signed header type")
+		return sdkioerrors.Wrap(err, "signed header in not tendermint signed header type")
 	}
 
 	tmValidatorSet, err := tmtypes.ValidatorSetFromProto(header.ValidatorSet)
 	if err != nil {
-		return sdkioerrors.Wrapf(err, "validator set in not tendermint validator set type")
+		return sdkioerrors.Wrap(err, "validator set in not tendermint validator set type")
 	}
 
 	// assert header height is newer than consensus state
@@ -340,7 +340,7 @@ func checkValidity(
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
 	)
 	if err != nil {
-		return sdkioerrors.Wrapf(err, "failed to verify header")
+		return sdkioerrors.Wrap(err, "failed to verify header")
 	}
 	return nil
 }

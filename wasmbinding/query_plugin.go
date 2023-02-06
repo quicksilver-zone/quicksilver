@@ -48,7 +48,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 	return func(ctx sdk.Context, request json.RawMessage) ([]byte, error) {
 		var contractQuery bindings.QuickSilverQuery
 		if err := json.Unmarshal(request, &contractQuery); err != nil {
-			return nil, sdkioerrors.Wrapf(err, "quicksilver query")
+			return nil, sdkioerrors.Wrap(err, "quicksilver query")
 		}
 
 		switch {
@@ -58,7 +58,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			fullDenom, err := GetFullDenom(creator, subdenom)
 			if err != nil {
-				return nil, sdkioerrors.Wrapf(err, "osmo full denom query")
+				return nil, sdkioerrors.Wrap(err, "osmo full denom query")
 			}
 
 			res := bindings.FullDenomResponse{
@@ -67,7 +67,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 
 			bz, err := json.Marshal(res)
 			if err != nil {
-				return nil, sdkioerrors.Wrapf(err, "osmo full denom query response")
+				return nil, sdkioerrors.Wrap(err, "osmo full denom query response")
 			}
 
 			return bz, nil

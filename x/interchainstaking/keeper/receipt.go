@@ -171,7 +171,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	if !found {
-		return sdkioerrors.Wrapf(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
+		return sdkioerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
 	chunkSize := ICAMsgChunkSize

@@ -72,11 +72,11 @@ func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
 // Namely, that the weight is in the range [1, MaxUserSpecifiedWeight)
 func ValidateUserSpecifiedWeight(weight sdk.Int) error {
 	if !weight.IsPositive() {
-		return sdkioerrors.Wrapf(gamm.ErrNotPositiveWeight, weight.String())
+		return sdkioerrors.Wrap(gamm.ErrNotPositiveWeight, weight.String())
 	}
 
 	if weight.GTE(MaxUserSpecifiedWeight) {
-		return sdkioerrors.Wrapf(gamm.ErrWeightTooLarge, weight.String())
+		return sdkioerrors.Wrap(gamm.ErrWeightTooLarge, weight.String())
 	}
 	return nil
 }

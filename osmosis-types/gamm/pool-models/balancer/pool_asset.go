@@ -86,7 +86,7 @@ func validateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 		}
 
 		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
-			return sdkioerrors.Wrapf(sdkerrors.ErrInvalidCoins, asset.Token.String())
+			return sdkioerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
 		}
 		if _, exists := assetExistsMap[asset.Token.Denom]; exists {
 			return sdkioerrors.Wrapf(gamm.ErrTooFewPoolAssets, "pool asset %s already exists", asset.Token.Denom)
