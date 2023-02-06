@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	sdkioerrors "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"time"
@@ -254,7 +255,7 @@ func checkTrustedHeader(header *tmclienttypes.Header, consState *tmclienttypes.C
 	// to do this, we check that trustedVals.Hash() == consState.NextValidatorsHash
 	tvalHash := tmTrustedValidators.Hash()
 	if !bytes.Equal(consState.NextValidatorsHash, tvalHash) {
-		return sdkerrors.Wrapf(
+		return sdkioerrors.Wrapf(
 			tmclienttypes.ErrInvalidValidatorSet,
 			"trusted validators %s, does not hash to latest trusted validators. Expected: %X, got: %X",
 			header.TrustedValidators, consState.NextValidatorsHash, tvalHash,
@@ -277,7 +278,7 @@ func checkValidity(
 	// UpdateClient only accepts updates with a header at the same revision
 	// as the trusted consensus state
 	if header.GetHeight().GetRevisionNumber() != header.TrustedHeight.RevisionNumber {
-		return sdkerrors.Wrapf(
+		return sdkioerrors.Wrapf(
 			tmclienttypes.ErrInvalidHeaderHeight,
 			"header height revision %d does not match trusted header revision %d",
 			header.GetHeight().GetRevisionNumber(), header.TrustedHeight.RevisionNumber,
@@ -301,7 +302,7 @@ func checkValidity(
 
 	// assert header height is newer than consensus state
 	// if header.GetHeight().LTE(header.TrustedHeight) {
-	// 	return sdkerrors.Wrapf(
+	// 	return sdkioerrors.Wrapf(
 	// 		tmclienttypes.ErrInvalidHeader,
 	// 		"header height ≤ consensus state height (%s ≤ %s)", header.GetHeight(), header.TrustedHeight,
 	// 	)

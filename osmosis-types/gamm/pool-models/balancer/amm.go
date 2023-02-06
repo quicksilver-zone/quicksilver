@@ -1,6 +1,7 @@
 package balancer
 
 import (
+	sdkioerrors "cosmossdk.io/errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -234,7 +235,7 @@ func ensureDenomInPool(poolAssetsByDenom map[string]PoolAsset, tokensIn sdk.Coin
 	for _, coin := range tokensIn {
 		_, ok := poolAssetsByDenom[coin.Denom]
 		if !ok {
-			return sdkerrors.Wrapf(gamm.ErrDenomNotFoundInPool, invalidInputDenomsErrFormat, coin.Denom)
+			return sdkioerrors.Wrapf(gamm.ErrDenomNotFoundInPool, invalidInputDenomsErrFormat, coin.Denom)
 		}
 	}
 

@@ -84,7 +84,7 @@ func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 			r.Completed = &time
 			app.InterchainstakingKeeper.SetReceipt(ctx, r)
 		}
-		if ctx.ChainID() == "innuendo-5" {
+		if ctx.ChainID() == "innuendo-5" || ctx.ChainID() == "testchain1" {
 
 			// clear uni-5 unbondings
 			app.InterchainstakingKeeper.IteratePrefixedUnbondingRecords(ctx, []byte("uni-5"), func(_ int64, record types.UnbondingRecord) (stop bool) {

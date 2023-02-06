@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	sdkioerrors "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"time"
@@ -167,7 +168,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 	}
 	channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, connectionID, portID)
 	if !found {
-		return sdkerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s in submittx", portID)
+		return sdkioerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s in submittx", portID)
 	}
 
 	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))

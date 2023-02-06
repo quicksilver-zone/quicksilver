@@ -1,6 +1,7 @@
 package config
 
 import (
+	sdkioerrors "cosmossdk.io/errors"
 	"fmt"
 	"path"
 
@@ -122,7 +123,7 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 // ValidateBasic returns an error any of the application configuration fields are invalid
 func (c Config) ValidateBasic() error {
 	if err := c.TLS.Validate(); err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrAppConfig, "invalid tls config value: %s", err.Error())
+		return sdkioerrors.Wrapf(sdkerrors.ErrAppConfig, "invalid tls config value: %s", err.Error())
 	}
 
 	return c.Config.ValidateBasic()

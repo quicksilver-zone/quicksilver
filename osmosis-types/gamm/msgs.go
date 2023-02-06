@@ -1,6 +1,7 @@
 package gamm
 
 import (
+	sdkioerrors "cosmossdk.io/errors"
 	"fmt"
 	"strings"
 	"time"
@@ -69,7 +70,7 @@ func (msg MsgSwapExactAmountIn) Type() string  { return TypeMsgSwapExactAmountIn
 func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = SwapAmountInRoutes(msg.Routes).Validate()
@@ -107,7 +108,7 @@ func (msg MsgSwapExactAmountOut) Type() string  { return TypeMsgSwapExactAmountO
 func (msg MsgSwapExactAmountOut) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = SwapAmountOutRoutes(msg.Routes).Validate()
@@ -145,7 +146,7 @@ func (msg MsgJoinPool) Type() string  { return TypeMsgJoinPool }
 func (msg MsgJoinPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !msg.ShareOutAmount.IsPositive() {
@@ -179,7 +180,7 @@ func (msg MsgExitPool) Type() string  { return TypeMsgExitPool }
 func (msg MsgExitPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !msg.ShareInAmount.IsPositive() {
@@ -213,7 +214,7 @@ func (msg MsgJoinSwapExternAmountIn) Type() string  { return TypeMsgJoinSwapExte
 func (msg MsgJoinSwapExternAmountIn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !msg.TokenIn.IsValid() || !msg.TokenIn.IsPositive() {
@@ -246,7 +247,7 @@ func (msg MsgJoinSwapShareAmountOut) Type() string  { return TypeMsgJoinSwapShar
 func (msg MsgJoinSwapShareAmountOut) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = sdk.ValidateDenom(msg.TokenInDenom)
@@ -284,7 +285,7 @@ func (msg MsgExitSwapExternAmountOut) Type() string  { return TypeMsgExitSwapExt
 func (msg MsgExitSwapExternAmountOut) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	if !msg.TokenOut.IsValid() || !msg.TokenOut.IsPositive() {
@@ -317,7 +318,7 @@ func (msg MsgExitSwapShareAmountIn) Type() string  { return TypeMsgExitSwapShare
 func (msg MsgExitSwapShareAmountIn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
 	}
 
 	err = sdk.ValidateDenom(msg.TokenOutDenom)
