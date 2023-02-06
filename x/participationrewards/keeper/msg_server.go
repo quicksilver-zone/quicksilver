@@ -36,16 +36,9 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
 	var pd types.ProtocolData
-	if msg.SrcZone == ctx.ChainID() {
-		pd, ok = k.GetSelfProtocolData(ctx)
-		if !ok {
-			return nil, fmt.Errorf("unable to obtain connection protocol data for %q", msg.SrcZone)
-		}
-	} else {
-		pd, ok = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, msg.SrcZone)
-		if !ok {
-			return nil, fmt.Errorf("unable to obtain connection protocol data for %q", msg.SrcZone)
-		}
+	pd, ok = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, msg.SrcZone)
+	if !ok {
+		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", msg.SrcZone)
 	}
 
 	// protocol data

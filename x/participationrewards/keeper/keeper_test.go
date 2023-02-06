@@ -89,14 +89,14 @@ func (suite *KeeperTestSuite) coreTest() {
 
 	// test ProtocolData
 	akpd := qApp.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
-	// initially we expect none
-	suite.Require().Equal(0, len(akpd))
+	// initially we expect one - the 'local' chain
+	suite.Require().Equal(1, len(akpd))
 
 	suite.setupTestProtocolData()
 
 	akpd = qApp.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
-	// added 5 in setupTestProtocolData
-	suite.Require().Equal(6, len(akpd))
+	// added 6 in setupTestProtocolData
+	suite.Require().Equal(7, len(akpd))
 
 	// advance the chains
 	suite.coordinator.CommitNBlocks(suite.chainA, 1)

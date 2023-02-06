@@ -135,7 +135,7 @@ func (k Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 		Data: selfConnectionData,
 	}
-	k.SetSelfProtocolData(ctx, &data)
+	k.SetProtocolData(ctx, ctx.ChainID(), &data)
 
 	return nil
 }
