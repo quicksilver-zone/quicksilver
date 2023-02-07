@@ -532,6 +532,7 @@ func NewQuicksilver(
 	app.EpochsKeeper = *epochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 			app.MintKeeper.Hooks(),
+			app.ClaimsManagerKeeper.Hooks(),
 			app.InterchainstakingKeeper.Hooks(),
 			app.ParticipationRewardsKeeper.Hooks(),
 		),
