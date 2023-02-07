@@ -9,6 +9,14 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+      - - name: Force Install GIT latest
+          run: |
+            apt-get install -y software-properties-common \
+            && apt-get update \
+            && add-apt-repository -y ppa:git-core/ppa \
+            && apt-get update \
+            && apt-get install -y git
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -21,7 +29,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push evinced
+      - name: Build and push quicksilverd
         uses: docker/build-push-action@v3
         with:
           push: true
