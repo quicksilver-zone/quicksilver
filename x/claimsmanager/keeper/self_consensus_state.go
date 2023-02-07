@@ -9,21 +9,24 @@ import (
 // GetSelfConsensusState returns consensus state stored every epoch
 func (k Keeper) GetSelfConsensusState(ctx sdk.Context, key string) (ibctmtypes.ConsensusState, bool) {
 	store := ctx.KVStore(k.storeKey)
-
 	var selfConsensusState ibctmtypes.ConsensusState
-	k.cdc.MustUnmarshal(store.Get(append(types.KeySelfConsensusState, []byte(key)...)), &selfConsensusState)
 
+	bz := store.Get(append(types.KeySelfConsensusState, []byte(key)...))
+	if bz == nil {
+		return selfConsensusState, false
+	}
+	k.cdc.MustUnmarshal(bz, &selfConsensusState)
 	return selfConsensusState, true
 }
 
 // SetSelfConsensusState sets the self consensus state
-func (k Keeper) SetSelfConsensusState(ctx sdk.Context, key string, consState ibctmtypes.ConsensusState) {
+func (k Keeper) SetSelfConsensusState(ctx sdk.Context, key string, consState *ibctmtypes.ConsensusState) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(store.Get(append(types.KeySelfConsensusState, []byte(key)...)), k.cdc.MustMarshal(&consState))
+	store.Set(append(types.KeySelfConsensusState, []byte(key)...), k.cdc.MustMarshal(consState))
 }
 
 // DeleteSelfConsensusState deletes the self consensus state
-func (k Keeper) DeleteSelfConsensusState(ctx sdk.Context, key string, consState ibctmtypes.ConsensusState) {
+func (k Keeper) DeleteSelfConsensusState(ctx sdk.Context, key string) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(store.Get(append(types.KeySelfConsensusState, []byte(key)...)))
+	store.Delete(append(types.KeySelfConsensusState, []byte(key)...))
 }
