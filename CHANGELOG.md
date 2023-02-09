@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 - Bump Cosmos-SDK to `v0.46.9`.
 - Use Informal Systems [fork](https://github.com/informalsystems/tendermint) of Tendermint.
 
