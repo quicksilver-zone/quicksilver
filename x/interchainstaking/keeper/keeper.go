@@ -46,6 +46,7 @@ type Keeper struct {
 	AccountKeeper       authKeeper.AccountKeeper
 	BankKeeper          bankkeeper.Keeper
 	IBCKeeper           ibckeeper.Keeper
+	IBCScopperKeeper    *capabilitykeeper.ScopedKeeper
 	TransferKeeper      ibctransferkeeper.Keeper
 	ics4Wrapper         porttypes.ICS4Wrapper
 	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
@@ -54,7 +55,7 @@ type Keeper struct {
 
 // NewKeeper returns a new instance of zones Keeper.
 // This function will panic on failure.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, claimsManagerKeeper claimsmanagerkeeper.Keeper, ics4Wrapper porttypes.ICS4Wrapper, ps paramtypes.Subspace) Keeper {
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, chanScopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, claimsManagerKeeper claimsmanagerkeeper.Keeper, ics4Wrapper porttypes.ICS4Wrapper, ps paramtypes.Subspace) Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -72,6 +73,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 		BankKeeper:          bankKeeper,
 		AccountKeeper:       accountKeeper,
 		IBCKeeper:           ibcKeeper,
+		IBCScopperKeeper:    chanScopedKeeper,
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
 		ics4Wrapper:         ics4Wrapper,
