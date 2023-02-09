@@ -1,11 +1,12 @@
 # Changelog
 
+- Bump Cosmos-SDK to `v0.46.9`.
+- Use Informal Systems [fork](https://github.com/informalsystems/tendermint) of Tendermint.
+
 ## Released
 
 ### v1.2.1
 
-- Bump Cosmos-SDK to `v0.46.8`.
-- Use Informal Systems [fork](https://github.com/informalsystems/tendermint) of Tendermint.
 - Do not remove delegation records on absence from DelegatorDelegations response
 - Add tests for delegations callback changes
 - Fix deposit address onboarding race condition
