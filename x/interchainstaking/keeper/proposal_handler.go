@@ -238,7 +238,7 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 			}
 
 		default:
-			return errors.New("unexpected key")
+			return fmt.Errorf("unexpected key '%s'", change.Key)
 		}
 	}
 	k.SetZone(ctx, &zone)

@@ -58,6 +58,11 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 	if m.LiquidityModule {
 		return errors.New("liquidity module is unsupported")
 	}
+
+	if m.Decimals == 0 {
+		return errors.New("decimals field is mandatory")
+	}
+
 	return nil
 }
 
