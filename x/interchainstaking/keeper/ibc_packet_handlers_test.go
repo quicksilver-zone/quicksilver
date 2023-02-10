@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -8,7 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -709,4 +713,54 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 			s.Require().Equal(startBalance, postBurnBalance)
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	if !found {
+		s.Fail("unable to retrieve zone for test")
+	}
+
+	// create redelegation record
+	record := icstypes.RedelegationRecord{
+		ChainId:     s.chainB.ChainID,
+		EpochNumber: 1,
+		Source:      zone.Validators[0].ValoperAddress,
+		Destination: zone.Validators[1].ValoperAddress,
+		Amount:      1000,
+	}
+
+	app.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+
+	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: zone.Validators[0].ValoperAddress, ValidatorDstAddress: zone.Validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	data, err := icatypes.SerializeCosmosTx(app.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	s.Require().NoError(err)
+
+	// validate memo < 256 bytes
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+		Memo: fmt.Sprintf("rebalance/%d", 1),
+	}
+
+	packet := channeltypes.Packet{Data: app.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+
+	ackBytes := []byte("{\"error\":\"ABCI code: 32: error handling packet on host chain: see events for details\"}")
+	// call handler
+
+	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
+	s.Require().True(found)
+
+	err = app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	s.Require().NoError(err)
+
+	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
+	s.Require().False(found)
+
 }
