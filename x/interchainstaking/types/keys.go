@@ -42,21 +42,19 @@ const (
 )
 
 var (
-	KeyPrefixZone                  = []byte{0x01}
-	KeyPrefixIntent                = []byte{0x02}
-	KeyPrefixPortMapping           = []byte{0x03}
-	KeyPrefixReceipt               = []byte{0x04}
-	KeyPrefixWithdrawalRecord      = []byte{0x05}
-	KeyPrefixUnbondingRecord       = []byte{0x06}
-	KeyPrefixDelegation            = []byte{0x07}
-	KeyPrefixPerformanceDelegation = []byte{0x08}
-	KeyPrefixSnapshotIntent        = []byte{0x09}
-	KeyPrefixRedelegationRecord    = []byte{0x10}
+	KeyPrefixZone                        = []byte{0x01}
+	KeyPrefixIntent                      = []byte{0x02}
+	KeyPrefixPortMapping                 = []byte{0x03}
+	KeyPrefixReceipt                     = []byte{0x04}
+	KeyPrefixWithdrawalRecord            = []byte{0x05}
+	KeyPrefixUnbondingRecord             = []byte{0x06}
+	KeyPrefixDelegation                  = []byte{0x07}
+	KeyPrefixPerformanceDelegation       = []byte{0x08}
+	KeyPrefixSnapshotIntent              = []byte{0x09}
+	KeyPrefixRequeuedWithdrawalRecordSeq = []byte{0x0a}
+	// fill in missing 0b - 0f before adding 0x11!
+	KeyPrefixRedelegationRecord = []byte{0x10}
 )
-
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}
 
 // ParseStakingDelegationKey parses the KV store key for a delegation from Cosmos x/staking module,
 // as defined here: https://github.com/cosmos/cosmos-sdk/blob/v0.45.6/x/staking/types/keys.go#L180

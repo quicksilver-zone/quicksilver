@@ -519,9 +519,9 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
-	currentAllocations, currentSum := k.GetDelegationMap(ctx, &zone)
+	currentAllocations, currentSum, currentLocked := k.GetDelegationMap(ctx, &zone)
 	targetAllocations := zone.GetAggregateIntentOrDefault()
-	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId), k.Logger(ctx))
+	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId), k.Logger(ctx))
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingTypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
@@ -547,7 +547,7 @@ type RebalanceTarget struct {
 	Target string
 }
 
-func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents, existingRedelegations []types.RedelegationRecord, log log.Logger) []RebalanceTarget {
+func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentLocked map[string]bool, currentSum math.Int, targetAllocations types.ValidatorIntents, existingRedelegations []types.RedelegationRecord, log log.Logger) []RebalanceTarget {
 	out := make([]RebalanceTarget, 0)
 	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
 
@@ -563,6 +563,18 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 			thisLocked = 0
 		}
 		lockedPerValidator[redelegation.Destination] = thisLocked + redelegation.Amount
+	}
+	for _, valoper := range utils.Keys(currentAllocations) {
+		// if validator already has a redelegation _to_ it, we can no longer redelegate _from_ it (transitive redelegations)
+		// remove _locked_ amount from lpv and total locked for purposes of rebalancing.
+		if currentLocked[valoper] {
+			thisLocked, found := lockedPerValidator[valoper]
+			if !found {
+				thisLocked = 0
+			}
+			totalLocked = totalLocked - thisLocked + currentAllocations[valoper].Int64()
+			lockedPerValidator[valoper] = currentAllocations[valoper].Int64()
+		}
 	}
 
 	// TODO: make these params

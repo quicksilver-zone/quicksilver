@@ -1,7 +1,9 @@
 package keeper_test
 
 import (
+	"crypto/sha256"
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -763,4 +765,498 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
 	s.Require().False(found)
 
+}
+
+func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
+	hash1 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x01}))
+	hash2 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x02}))
+	hash3 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x03}))
+	delegator1 := utils.GenerateAccAddressForTest().String()
+	delegator2 := utils.GenerateAccAddressForTest().String()
+	randRr := rand.Float64() + 1.0
+	tests := []struct {
+		name                      string
+		epoch                     int64
+		withdrawalRecords         func(zone icstypes.Zone) []icstypes.WithdrawalRecord
+		unbondingRecords          func(zone icstypes.Zone) []icstypes.UnbondingRecord
+		msgs                      func(zone icstypes.Zone) []sdk.Msg
+		expectedWithdrawalRecords func(zone icstypes.Zone) []icstypes.WithdrawalRecord
+	}{
+		{
+			name:  "1 wdr, 2 vals, 1k+1k, 1800 qasset",
+			epoch: 1,
+			withdrawalRecords: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator1,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[0].ValoperAddress,
+								Amount:  1000,
+							},
+							{
+								Valoper: zone.Validators[1].ValoperAddress,
+								Amount:  1000,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(2000))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:     hash1,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+				}
+
+			},
+			unbondingRecords: func(zone icstypes.Zone) []icstypes.UnbondingRecord {
+				return []icstypes.UnbondingRecord{
+					{
+						ChainId:       s.chainB.ChainID,
+						EpochNumber:   1,
+						Validator:     zone.Validators[0].ValoperAddress,
+						RelatedTxhash: []string{hash1},
+					},
+				}
+			},
+			msgs: func(zone icstypes.Zone) []sdk.Msg {
+				return []sdk.Msg{
+					&stakingtypes.MsgUndelegate{
+						DelegatorAddress: zone.DelegationAddress.Address,
+						ValidatorAddress: zone.Validators[0].ValoperAddress,
+						Amount:           sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+					},
+				}
+			},
+			expectedWithdrawalRecords: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator1,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[1].ValoperAddress,
+								Amount:  1000,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
+						Txhash:     hash1,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+					{
+						ChainId:      s.chainB.ChainID,
+						Delegator:    delegator1,
+						Distribution: nil,
+						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
+						Txhash:       fmt.Sprintf("%064d", 1),
+						Status:       icskeeper.WithdrawStatusQueued,
+					},
+				}
+			},
+		},
+		{
+			name:  "1 wdr, 1 vals, 1k, 900 qasset",
+			epoch: 1,
+			withdrawalRecords: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator1,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[0].ValoperAddress,
+								Amount:  1000,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
+						Txhash:     hash1,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+				}
+
+			},
+			unbondingRecords: func(zone icstypes.Zone) []icstypes.UnbondingRecord {
+				return []icstypes.UnbondingRecord{
+					{
+						ChainId:       s.chainB.ChainID,
+						EpochNumber:   1,
+						Validator:     zone.Validators[0].ValoperAddress,
+						RelatedTxhash: []string{hash1},
+					},
+				}
+			},
+			msgs: func(zone icstypes.Zone) []sdk.Msg {
+				return []sdk.Msg{
+					&stakingtypes.MsgUndelegate{
+						DelegatorAddress: zone.DelegationAddress.Address,
+						ValidatorAddress: zone.Validators[0].ValoperAddress,
+						Amount:           sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+					},
+				}
+			},
+			expectedWithdrawalRecords: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:      s.chainB.ChainID,
+						Delegator:    delegator1,
+						Distribution: nil,
+						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
+						Txhash:       hash1,
+						Status:       icskeeper.WithdrawStatusQueued,
+					},
+				}
+			},
+		},
+		{
+			name:  "3 wdr, 2 vals, 1k+0.5k, 1350 qasset; 1k+2k, 2700 qasset; 600+400, 900qasset",
+			epoch: 2,
+			withdrawalRecords: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator1,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[0].ValoperAddress,
+								Amount:  1000,
+							},
+							{
+								Valoper: zone.Validators[1].ValoperAddress,
+								Amount:  500,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1500))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1350)),
+						Txhash:     hash1,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator2,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[0].ValoperAddress,
+								Amount:  1000,
+							},
+							{
+								Valoper: zone.Validators[1].ValoperAddress,
+								Amount:  2000,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(2700)),
+						Txhash:     hash2,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator1,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[0].ValoperAddress,
+								Amount:  600,
+							},
+							{
+								Valoper: zone.Validators[1].ValoperAddress,
+								Amount:  400,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
+						Txhash:     hash3,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+				}
+
+			},
+			unbondingRecords: func(zone icstypes.Zone) []icstypes.UnbondingRecord {
+				return []icstypes.UnbondingRecord{
+					{
+						ChainId:       s.chainB.ChainID,
+						EpochNumber:   2,
+						Validator:     zone.Validators[1].ValoperAddress,
+						RelatedTxhash: []string{hash1, hash2, hash3},
+					},
+				}
+			},
+			msgs: func(zone icstypes.Zone) []sdk.Msg {
+				return []sdk.Msg{
+					&stakingtypes.MsgUndelegate{
+						DelegatorAddress: zone.DelegationAddress.Address,
+						ValidatorAddress: zone.Validators[1].ValoperAddress,
+						Amount:           sdk.NewCoin(zone.BaseDenom, sdk.NewInt(2900)),
+					},
+				}
+			},
+			expectedWithdrawalRecords: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator1,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[0].ValoperAddress,
+								Amount:  1000,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
+						Txhash:     hash1,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator2,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[0].ValoperAddress,
+								Amount:  1000,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
+						Txhash:     hash2,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator1,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[0].ValoperAddress,
+								Amount:  600,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(600))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(540)),
+						Txhash:     hash3,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+					{
+						ChainId:      s.chainB.ChainID,
+						Delegator:    delegator1,
+						Distribution: nil,
+						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(500))),
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(450)),
+						Txhash:       fmt.Sprintf("%064d", 1),
+						Status:       icskeeper.WithdrawStatusQueued,
+					},
+					{
+						ChainId:      s.chainB.ChainID,
+						Delegator:    delegator2,
+						Distribution: nil,
+						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(2000))),
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:       fmt.Sprintf("%064d", 2),
+						Status:       icskeeper.WithdrawStatusQueued,
+					},
+					{
+						ChainId:      s.chainB.ChainID,
+						Delegator:    delegator1,
+						Distribution: nil,
+						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(400))),
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(360)),
+						Txhash:       fmt.Sprintf("%064d", 3),
+						Status:       icskeeper.WithdrawStatusQueued,
+					},
+				}
+			},
+		},
+		{
+			name:  "2 wdr, random_rr, 1 vals, 1k; 2 vals; 123 + 456 ",
+			epoch: 1,
+			withdrawalRecords: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator1,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[0].ValoperAddress,
+								Amount:  1000,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(1000).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
+						Txhash:     hash1,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator2,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[1].ValoperAddress,
+								Amount:  123,
+							},
+							{
+								Valoper: zone.Validators[2].ValoperAddress,
+								Amount:  456,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(579))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(579).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
+						Txhash:     hash2,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+				}
+
+			},
+			unbondingRecords: func(zone icstypes.Zone) []icstypes.UnbondingRecord {
+				return []icstypes.UnbondingRecord{
+					{
+						ChainId:       s.chainB.ChainID,
+						EpochNumber:   1,
+						Validator:     zone.Validators[0].ValoperAddress,
+						RelatedTxhash: []string{hash1},
+					},
+					{
+						ChainId:       s.chainB.ChainID,
+						EpochNumber:   1,
+						Validator:     zone.Validators[1].ValoperAddress,
+						RelatedTxhash: []string{hash2},
+					},
+					// {
+					// 	ChainId:       s.chainB.ChainID,
+					// 	EpochNumber:   1,
+					// 	Validator:     zone.Validators[2].ValoperAddress,
+					// 	RelatedTxhash: []string{hash2},
+					// },
+				}
+			},
+			msgs: func(zone icstypes.Zone) []sdk.Msg {
+				return []sdk.Msg{
+					&stakingtypes.MsgUndelegate{
+						DelegatorAddress: zone.DelegationAddress.Address,
+						ValidatorAddress: zone.Validators[0].ValoperAddress,
+						Amount:           sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+					},
+					&stakingtypes.MsgUndelegate{
+						DelegatorAddress: zone.DelegationAddress.Address,
+						ValidatorAddress: zone.Validators[1].ValoperAddress,
+						Amount:           sdk.NewCoin(zone.BaseDenom, sdk.NewInt(123)),
+					},
+				}
+			},
+			expectedWithdrawalRecords: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:      s.chainB.ChainID,
+						Delegator:    delegator1,
+						Distribution: nil,
+						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewDec(1000).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
+						Txhash:       hash1,
+						Status:       icskeeper.WithdrawStatusQueued,
+					},
+					{
+						ChainId:      s.chainB.ChainID,
+						Delegator:    delegator2,
+						Distribution: nil,
+						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(123))),
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewDec(123).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
+						Txhash:       fmt.Sprintf("%064d", 1),
+						Status:       icskeeper.WithdrawStatusQueued,
+					},
+					{
+						ChainId:   s.chainB.ChainID,
+						Delegator: delegator2,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: zone.Validators[2].ValoperAddress,
+								Amount:  456,
+							},
+						},
+						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(456))),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(456).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
+						Txhash:     hash2,
+						Status:     icskeeper.WithdrawStatusUnbond,
+					},
+				}
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			s.setupTestZones()
+
+			app := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+
+			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			if !found {
+				s.Fail("unable to retrieve zone for test")
+			}
+
+			for _, wdr := range test.withdrawalRecords(zone) {
+				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
+			}
+
+			for _, ubr := range test.unbondingRecords(zone) {
+				app.InterchainstakingKeeper.SetUnbondingRecord(ctx, ubr)
+			}
+
+			data, err := icatypes.SerializeCosmosTx(app.InterchainstakingKeeper.GetCodec(), test.msgs(zone))
+			s.Require().NoError(err)
+
+			// validate memo < 256 bytes
+			packetData := icatypes.InterchainAccountPacketData{
+				Type: icatypes.EXECUTE_TX,
+				Data: data,
+				Memo: fmt.Sprintf("withdrawal/%d", test.epoch),
+			}
+
+			packet := channeltypes.Packet{Data: app.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+
+			ackBytes := []byte("{\"error\":\"ABCI code: 32: error handling packet on host chain: see events for details\"}")
+			// call handler
+
+			for _, ubr := range test.unbondingRecords(zone) {
+				_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, ubr.Validator, test.epoch)
+				s.Require().True(found)
+			}
+
+			err = app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+			s.Require().NoError(err)
+
+			for _, ubr := range test.unbondingRecords(zone) {
+				_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, ubr.Validator, test.epoch)
+				s.Require().False(found)
+			}
+
+			for idx, ewdr := range test.expectedWithdrawalRecords(zone) {
+				wdr, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, ewdr.Txhash, ewdr.Status)
+				s.Require().True(found)
+				s.Require().Equal(ewdr.Amount, wdr.Amount)
+				s.Require().Equal(ewdr.BurnAmount, wdr.BurnAmount)
+				s.Require().Equal(ewdr.Delegator, wdr.Delegator)
+				s.Require().Equal(ewdr.Distribution, wdr.Distribution, idx)
+				s.Require().Equal(ewdr.Status, wdr.Status)
+			}
+		})
+	}
 }

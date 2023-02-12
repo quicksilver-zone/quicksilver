@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -84,14 +83,10 @@ func (vi ValidatorIntents) GetForValoper(valoper string) (*ValidatorIntent, bool
 }
 
 func (vi ValidatorIntents) SetForValoper(valoper string, intent *ValidatorIntent) ValidatorIntents {
-	fmt.Println("Replacing valoper" + valoper)
 	for idx, i := range vi.Sort() {
 		if i.ValoperAddress == valoper {
-			fmt.Println("Found valoper at " + fmt.Sprint(idx))
-			fmt.Println("before", vi)
 			vi[idx] = vi[len(vi)-1]
 			vi = vi[:len(vi)-1]
-			fmt.Println("after", vi)
 			break
 		}
 	}

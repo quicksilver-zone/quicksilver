@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -122,6 +121,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 		switch msg.Type {
 		case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
+			// TODO: if this fails, it's okay. log but continue.
 			if !success {
 				return nil
 			}
@@ -131,6 +131,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
+			// TODO: handle this before LSM
 			if !success {
 				return nil
 			}
@@ -147,6 +148,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
+			// TODO: handle this before LSM
 			if !success {
 				return nil
 			}
@@ -162,6 +164,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgDelegate":
+			// TODO: can we safely ignore this?
 			if !success {
 				return nil
 			}
@@ -194,22 +197,25 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgUndelegate":
-			if !success {
-				return nil
-			}
-			response := stakingtypes.MsgUndelegateResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgDelegate response", "error", err)
-				return err
-			}
-			k.Logger(ctx).Info("Undelegation started", "response", response)
-			if err := k.HandleUndelegate(ctx, src, response.CompletionTime, packetData.Memo); err != nil {
-				return err
+			if success {
+				response := stakingtypes.MsgUndelegateResponse{}
+				err := proto.Unmarshal(msgData.Data, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unmarshal MsgDelegate response", "error", err)
+					return err
+				}
+				k.Logger(ctx).Info("Undelegation started", "response", response)
+				if err := k.HandleUndelegate(ctx, src, response.CompletionTime, packetData.Memo); err != nil {
+					return err
+				}
+			} else {
+				k.HandleFailedUndelegate(ctx, src, packetData.Memo)
 			}
 			continue
+
 		case "/cosmos.bank.v1beta1.MsgSend":
 			if !success {
+				// TODO: handle this.
 				return nil
 			}
 			response := banktypes.MsgSendResponse{}
@@ -223,38 +229,23 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			if err := k.HandleCompleteSend(ctx, src, packetData.Memo); err != nil {
 				return err
 			}
-			continue
-		case "/cosmos.bank.v1beta1.MsgMultiSend":
-			if !success {
-				return nil
-			}
-			response := banktypes.MsgMultiSendResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
-				return err
-			}
-			k.Logger(ctx).Info("Funds Transferred (Multi)", "response", response)
-			if err := k.HandleCompleteMultiSend(ctx, src, packetData.Memo); err != nil {
-				return err
-			}
-			continue
 		case "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":
 			if !success {
+				// safely ignore this, as we'll try again anyway.
 				return nil
 			}
 			response := distrtypes.MsgSetWithdrawAddressResponse{}
 			err := proto.Unmarshal(msgData.Data, &response)
 			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgSetWithdrawAddress response", "error", err)
 				return err
 			}
 			k.Logger(ctx).Info("Withdraw Address Updated", "response", response)
 			if err := k.HandleUpdatedWithdrawAddress(ctx, src); err != nil {
 				return err
 			}
-			continue
 		case "/ibc.applications.transfer.v1.MsgTransfer":
+			// this should be okay to fail; we'll pick it up next time around.
 			if !success {
 				return nil
 			}
@@ -268,7 +259,6 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			if err := k.HandleMsgTransfer(ctx, src); err != nil {
 				return err
 			}
-			continue
 		default:
 			k.Logger(ctx).Error("unhandled acknowledgement packet", "type", reflect.TypeOf(src).Name())
 		}
@@ -306,39 +296,6 @@ func (k *Keeper) HandleDistributeFeesFromModuleAccount(ctx sdk.Context) error {
 	balance := k.BankKeeper.GetAllBalances(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName))
 	k.Logger(ctx).Info("distributing collected fees to stakers", "amount", balance)
 	return k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, balance) // Fee collector name needs to be passed in to keeper constructor.
-}
-
-func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	k.Logger(ctx).Info("Received MsgMultiSend acknowledgement")
-	// first, type assertion. we should have banktypes.MsgMultiSend
-	sMsg, ok := msg.(*banktypes.MsgMultiSend)
-	if !ok {
-		k.Logger(ctx).Error("unable to cast source message to MsgMultiSend")
-		return errors.New("unable to cast source message to MsgMultiSend")
-	}
-
-	// check for sending of tokens from deposit -> delegate.
-	zone, err := k.GetZoneFromContext(ctx)
-	if err != nil {
-		err = fmt.Errorf("1: %w", err)
-		k.Logger(ctx).Error(err.Error())
-		return err
-	}
-
-	for _, out := range sMsg.Outputs {
-		// coerce banktype.Output to banktype.MsgSend
-		// to use in handleSendToDelegate
-		msg := banktypes.MsgSend{
-			FromAddress: "",
-			ToAddress:   out.Address,
-			Amount:      out.Coins,
-		}
-		if err := k.handleSendToDelegate(ctx, zone, &msg, memo); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) error {
@@ -463,123 +420,6 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 	return k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
 }
 
-// GetUnlockedTokensForZone will iterate over all delegation records for a zone, and then remove the
-// locked tokens (those actively being redelegated), returning a slice of int64 staking tokens that
-// are unlocked and free to redelegate or unbond.
-func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) map[string]int64 {
-	availablePerValidator := map[string]int64{}
-	for _, delegation := range k.GetAllDelegations(ctx, zone) {
-		thisAvailable, found := availablePerValidator[delegation.ValidatorAddress]
-		if !found {
-			thisAvailable = 0
-		}
-		availablePerValidator[delegation.ValidatorAddress] = thisAvailable + delegation.Amount.Amount.Int64()
-	}
-	for _, redelegation := range k.ZoneRedelegationRecords(ctx, zone.ChainId) {
-		thisAvailable, found := availablePerValidator[redelegation.Destination]
-		if found {
-			availablePerValidator[redelegation.Destination] = thisAvailable - redelegation.Amount
-		}
-	}
-	return availablePerValidator
-}
-
-// handle queued unbondings is called once per epoch to aggregate all queued unbondings into
-// a single unbond transaction per delegation.
-func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch int64) error {
-	// out here will only ever be in native bond denom
-	out := make(map[string]sdk.Coin, 0)
-	txhashes := make(map[string][]string, 0)
-
-	availablePerValidator := k.GetUnlockedTokensForZone(ctx, zone)
-
-	var err error
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
-		// copy this so we can rollback on fail
-		thisAvail := availablePerValidator
-		thisOut := make(map[string]sdk.Coin, 0)
-		k.Logger(ctx).Info("unbonding funds", "from", withdrawal.Delegator, "to", withdrawal.Recipient, "amount", withdrawal.Amount)
-		for _, dist := range withdrawal.Distribution {
-			if thisAvail[dist.Valoper] < int64(dist.Amount) {
-				// we cannot satisfy this unbond this epoch.
-				k.Logger(ctx).Error("unable to satisfy unbonding for this epoch, due to locked tokens.", "txhash", withdrawal.Txhash, "user", withdrawal.Delegator, "chain", zone.ChainId, "validator", dist.Valoper, "avail", thisAvail[dist.Valoper], "wanted", int64(dist.Amount))
-				return false
-			}
-			thisOut[dist.Valoper] = sdk.NewCoin(zone.BaseDenom, math.NewIntFromUint64(dist.Amount))
-			thisAvail[dist.Valoper] -= int64(dist.Amount)
-
-			// if the validator has been historically slashed, and delegatorShares does not match tokens, then we end up with 'clipping'.
-			// clipping is the truncation of the expected unbonding amount because of the need to have whole integer tokens.
-			// the amount unbonded is emitted as an event, but not in the response, so we never _know_ this has happened.
-			// as such, if we know the validator has hisotrical slashing, we remove 1 utoken from the distribution for this validator, with
-			// the expectation that clipping will occur. We do not reduce the amount requested to unbond.
-			val, found := zone.GetValidatorByValoper(dist.Valoper)
-			if !found {
-				// something kooky is going on...
-				err = fmt.Errorf("unable to find a validator we expected to exist [%s]", dist.Valoper)
-				return true
-			}
-			if !val.DelegatorShares.Equal(sdk.NewDecFromInt(val.VotingPower)) && dist.Amount > 0 {
-				dist.Amount--
-			}
-		}
-
-		// update record of available balances.
-		availablePerValidator = thisAvail
-
-		for valoper, amount := range thisOut {
-			existing, found := out[valoper]
-			if !found {
-				out[valoper] = amount
-				txhashes[valoper] = []string{withdrawal.Txhash}
-
-			} else {
-				out[valoper] = existing.Add(amount)
-				txhashes[valoper] = append(txhashes[valoper], withdrawal.Txhash)
-
-			}
-		}
-
-		k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, WithdrawStatusUnbond)
-		return false
-	})
-	if err != nil {
-		return err
-	}
-
-	if len(txhashes) == 0 {
-		// no records to handle.
-		return nil
-	}
-
-	var msgs []sdk.Msg
-	for _, valoper := range utils.Keys(out) {
-		if !out[valoper].Amount.IsZero() {
-			sort.Strings(txhashes[valoper])
-			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txhashes[valoper]})
-			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: out[valoper]})
-		}
-	}
-
-	k.Logger(ctx).Info("unbonding messages to send", "msg", msgs)
-
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch))
-}
-
-func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error {
-	var err error
-
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
-		if ctx.BlockTime().After(withdrawal.CompletionTime.Add(24 * time.Hour)) {
-			k.Logger(ctx).Info("garbage collecting completed unbondings")
-			k.DeleteWithdrawalRecord(ctx, zone.ChainId, withdrawal.Txhash, WithdrawStatusCompleted)
-		}
-		return false
-	})
-
-	return err
-}
-
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 	var err error
 
@@ -659,7 +499,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
 	parts := strings.Split(memo, "/")
-	if len(parts) != 2 {
+	if len(parts) != 2 || parts[0] != "rebalance" {
 		return errors.New("unexpected epoch rebalance memo format")
 	}
 
@@ -686,17 +526,18 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 
 	delegation, found := k.GetDelegation(ctx, zone, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress)
 	if !found {
+		//delegation = types.NewDelegation(redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress)
 		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch", epochNumber)
 		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
-	delegation.RedelegationEnd = completion.Unix() // this field should be a timestamp, but lets avoid unneccessary state changes.
+	delegation.RedelegationEnd = completion.Unix() // this field should be a timestamp, but lets avoid unnecessary state changes.
 	k.SetDelegation(ctx, zone, delegation)
 	return nil
 }
 
 func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
 	parts := strings.Split(memo, "/")
-	if len(parts) != 2 {
+	if len(parts) != 2 || parts[0] != "rebalance" {
 		return errors.New("unexpected epoch rebalance memo format")
 	}
 
@@ -726,7 +567,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		return errors.New("unable to cast source message to MsgUndelegate")
 	}
 	memoParts := strings.Split(memo, "/")
-	if len(memoParts) != 2 {
+	if len(memoParts) != 2 || memoParts[0] != "withdrawal" {
 		return errors.New("unexpected memo form")
 	}
 
@@ -779,6 +620,82 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		0,
 	)
 
+	return nil
+}
+
+func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	parts := strings.Split(memo, "/")
+	if len(parts) != 2 || parts[0] != "withdrawal" {
+		return errors.New("unexpected epoch undelegate memo format")
+	}
+
+	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return errors.New("unexpected epoch undelegate memo format (2)")
+	}
+
+	k.Logger(ctx).Error("Received MsgUndelegate acknowledgement error")
+	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
+	undelegateMsg, ok := msg.(*stakingtypes.MsgUndelegate)
+	if !ok {
+		return errors.New("unable to unmarshal MsgUndelegate")
+	}
+
+	zone := k.GetZoneForDelegateAccount(ctx, undelegateMsg.DelegatorAddress)
+	ubr, found := k.GetUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
+	if !found {
+		return fmt.Errorf("cannot find unbonding record for %s/%s/%d", zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
+	}
+
+	for _, hash := range ubr.RelatedTxhash {
+		wdr, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, WithdrawStatusUnbond)
+		if !found {
+			return fmt.Errorf("cannot find withdrawal record for %s/%s", zone.ChainId, hash)
+		}
+		if len(wdr.Distribution) == 1 {
+			// sanity check
+			if wdr.Distribution[0].Valoper != ubr.Validator {
+				return fmt.Errorf("unable to requeue withdrawal record for failed unbonding; expected %s, got %s", ubr.Validator, wdr.Distribution[0].Valoper)
+			}
+			wdr.Distribution = nil
+			wdr.Requeued = true
+			k.UpdateWithdrawalRecordStatus(ctx, &wdr, WithdrawStatusQueued)
+		} else {
+			// remove this validator from distribution; amend amounts; requeue.
+			newDistribution := make([]*types.Distribution, 0)
+			relatedAmount := uint64(0)
+			for _, dist := range wdr.Distribution {
+				if dist.Valoper != ubr.Validator {
+					newDistribution = append(newDistribution, dist)
+				} else {
+					relatedAmount = dist.Amount
+				}
+			}
+			wdr.Distribution = newDistribution
+			amount := wdr.Amount.AmountOf(zone.BaseDenom)
+			wdr.Amount = wdr.Amount.Sub(sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(relatedAmount)))
+			rr := sdk.NewDecFromInt(wdr.BurnAmount.Amount).Quo(sdk.NewDecFromInt(amount))
+			relatedQAsset := sdk.NewDec(int64(relatedAmount)).Mul(rr).TruncateInt()
+			wdr.BurnAmount = wdr.BurnAmount.SubAmount(relatedQAsset)
+			k.SetWithdrawalRecord(ctx, wdr)
+			// create a new record with the failed amount
+			newWdr := types.WithdrawalRecord{
+				ChainId:      zone.ChainId,
+				Delegator:    wdr.Delegator,
+				Recipient:    wdr.Recipient,
+				Distribution: nil,
+				Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(relatedAmount))),
+				BurnAmount:   sdk.NewCoin(zone.LocalDenom, relatedQAsset),
+				Txhash:       fmt.Sprintf("%064d", k.GetNextWithdrawalRecordSequence(ctx)),
+				Status:       WithdrawStatusQueued,
+				Requeued:     true,
+			}
+			k.SetWithdrawalRecord(ctx, newWdr)
+		}
+	}
+
+	k.DeleteUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
+	k.Logger(ctx).Error("Cleaning up redelegation record")
 	return nil
 }
 
