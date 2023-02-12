@@ -340,7 +340,6 @@ func (k Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone types.Zone
 				thisSubAmount := math.NewInt(int64(d.Amount)).Sub(newAmount)
 				recordSubAmount = recordSubAmount.Add(thisSubAmount)
 				d.Amount = newAmount.Uint64()
-				fmt.Println("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
 				k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
 			}
 		}

@@ -1,8 +1,9 @@
 package balancer
 
 import (
-	sdkioerrors "cosmossdk.io/errors"
 	"fmt"
+
+	sdkioerrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"

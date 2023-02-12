@@ -1,8 +1,9 @@
 package gamm
 
 import (
-	sdkioerrors "cosmossdk.io/errors"
 	"fmt"
+
+	sdkioerrors "cosmossdk.io/errors"
 )
 
 type PoolDoesNotExistError struct {

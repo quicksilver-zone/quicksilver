@@ -1,10 +1,11 @@
 package balancer
 
 import (
-	sdkioerrors "cosmossdk.io/errors"
 	"fmt"
 	"sort"
 	"strings"
+
+	sdkioerrors "cosmossdk.io/errors"
 
 	"gopkg.in/yaml.v2"
 

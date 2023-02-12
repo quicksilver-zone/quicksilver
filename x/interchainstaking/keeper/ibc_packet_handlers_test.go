@@ -764,7 +764,6 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 
 	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
 	s.Require().False(found)
-
 }
 
 func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
@@ -807,7 +806,6 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:     icskeeper.WithdrawStatusUnbond,
 					},
 				}
-
 			},
 			unbondingRecords: func(zone icstypes.Zone) []icstypes.UnbondingRecord {
 				return []icstypes.UnbondingRecord{
@@ -879,7 +877,6 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:     icskeeper.WithdrawStatusUnbond,
 					},
 				}
-
 			},
 			unbondingRecords: func(zone icstypes.Zone) []icstypes.UnbondingRecord {
 				return []icstypes.UnbondingRecord{
@@ -978,7 +975,6 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:     icskeeper.WithdrawStatusUnbond,
 					},
 				}
-
 			},
 			unbondingRecords: func(zone icstypes.Zone) []icstypes.UnbondingRecord {
 				return []icstypes.UnbondingRecord{
@@ -1119,7 +1115,6 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:     icskeeper.WithdrawStatusUnbond,
 					},
 				}
-
 			},
 			unbondingRecords: func(zone icstypes.Zone) []icstypes.UnbondingRecord {
 				return []icstypes.UnbondingRecord{
