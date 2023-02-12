@@ -86,6 +86,7 @@ message Statistics {
   int64 depositors = 4;
   int64 delegated = 5;
   int64 supply = 6;
+  string distance_to_target = 7;
 }
 
 message QueryZonesInfoRequest {
