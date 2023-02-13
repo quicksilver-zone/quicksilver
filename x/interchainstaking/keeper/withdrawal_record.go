@@ -20,6 +20,21 @@ const (
 	WithdrawStatusCompleted int32 = iota + 1
 )
 
+func (k Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) (sequence uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
+	bz := store.Get(types.KeyPrefixRequeuedWithdrawalRecordSeq)
+	if bz == nil {
+		bz := make([]byte, 8)
+		binary.BigEndian.PutUint64(bz, uint64(2))
+		store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
+		return 1
+	}
+	sequence = binary.BigEndian.Uint64(bz)
+	binary.BigEndian.PutUint64(bz, sequence+1)
+	store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
+	return sequence
+}
+
 func (k Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID string, delegator string, distribution []*types.Distribution, recipient string, amount sdk.Coins, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time) {
 	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distribution, Recipient: recipient, Amount: amount, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime}
 	k.Logger(ctx).Error("addWithdrawalRecord", "record", record)

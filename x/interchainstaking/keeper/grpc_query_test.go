@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
@@ -18,14 +17,14 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryZonesInfoRequest
+		req          *types.QueryZonesInfoRequest
 		wantErr      bool
 		expectLength int
 	}{
 		{
 			"ZoneInfos_No_State",
 			func() {},
-			&icstypes.QueryZonesInfoRequest{},
+			&types.QueryZonesInfoRequest{},
 			false,
 			0,
 		},
@@ -42,7 +41,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryZonesInfoRequest{},
+			&types.QueryZonesInfoRequest{},
 			false,
 			1,
 		},
@@ -80,13 +79,13 @@ func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 	tests := []struct {
 		name     string
 		malleate func()
-		req      *icstypes.QueryDepositAccountForChainRequest
+		req      *types.QueryDepositAccountForChainRequest
 		wantErr  bool
 	}{
 		{
 			"DepositAccount_No_State",
 			func() {},
-			&icstypes.QueryDepositAccountForChainRequest{},
+			&types.QueryDepositAccountForChainRequest{},
 			true,
 		},
 		{
@@ -101,7 +100,7 @@ func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryDepositAccountForChainRequest{},
+			&types.QueryDepositAccountForChainRequest{},
 			true,
 		},
 		{
@@ -109,7 +108,7 @@ func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 			func() {
 				// use state set from previous tests
 			},
-			&icstypes.QueryDepositAccountForChainRequest{
+			&types.QueryDepositAccountForChainRequest{
 				ChainId: suite.chainB.ChainID,
 			},
 			false,
@@ -147,7 +146,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryDelegatorIntentRequest
+		req          *types.QueryDelegatorIntentRequest
 		wantErr      bool
 		expectLength int
 	}{
@@ -164,7 +163,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryDelegatorIntentRequest{
+			&types.QueryDelegatorIntentRequest{
 				ChainId:          "boguschain",
 				DelegatorAddress: testAddress,
 			},
@@ -174,7 +173,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 		{
 			"DelegatorIntent_No_Zone_Intents",
 			func() {},
-			&icstypes.QueryDelegatorIntentRequest{
+			&types.QueryDelegatorIntentRequest{
 				ChainId:          suite.chainB.ChainID,
 				DelegatorAddress: testAddress,
 			},
@@ -184,7 +183,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 		{
 			"DelegatorIntent_No_Delegator_Intents",
 			func() {},
-			&icstypes.QueryDelegatorIntentRequest{
+			&types.QueryDelegatorIntentRequest{
 				ChainId:          suite.chainB.ChainID,
 				DelegatorAddress: testAddress,
 			},
@@ -200,11 +199,11 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
 				// set intents
 				// TODO: set standardized intents for keeper_test package
-				intents := []icstypes.DelegatorIntent{
+				intents := []types.DelegatorIntent{
 					{
 						Delegator: testAddress,
-						Intents: icstypes.ValidatorIntents{
-							&icstypes.ValidatorIntent{
+						Intents: types.ValidatorIntents{
+							&types.ValidatorIntent{
 								ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0],
 								Weight:         sdk.OneDec(),
 							},
@@ -215,7 +214,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 					icsKeeper.SetIntent(ctx, zone, intent, false)
 				}
 			},
-			&icstypes.QueryDelegatorIntentRequest{
+			&types.QueryDelegatorIntentRequest{
 				ChainId:          suite.chainB.ChainID,
 				DelegatorAddress: testAddress,
 			},
@@ -256,7 +255,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryDelegationsRequest
+		req          *types.QueryDelegationsRequest
 		wantErr      bool
 		expectLength int
 	}{
@@ -273,7 +272,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryDelegationsRequest{
+			&types.QueryDelegationsRequest{
 				ChainId: "boguschain",
 			},
 			true,
@@ -282,7 +281,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 		{
 			"Delegations_No_Zone_Delegations",
 			func() {},
-			&icstypes.QueryDelegationsRequest{
+			&types.QueryDelegationsRequest{
 				ChainId: suite.chainB.ChainID,
 			},
 			false,
@@ -296,14 +295,14 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 
 				// set delegation
 				// TODO: set standardized delegatyions for keeper_test package
-				delegation := icstypes.Delegation{
+				delegation := types.Delegation{
 					DelegationAddress: testAddress,
 					ValidatorAddress:  zone.GetValidatorsAddressesAsSlice()[0],
 					Amount:            sdk.NewCoin("denom", sdk.NewInt(15000)),
 				}
 				icsKeeper.SetDelegation(ctx, &zone, delegation)
 			},
-			&icstypes.QueryDelegationsRequest{
+			&types.QueryDelegationsRequest{
 				ChainId: suite.chainB.ChainID,
 			},
 			false,
@@ -343,7 +342,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryReceiptsRequest
+		req          *types.QueryReceiptsRequest
 		wantErr      bool
 		expectLength int
 	}{
@@ -360,7 +359,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryReceiptsRequest{
+			&types.QueryReceiptsRequest{
 				ChainId: "boguschain",
 			},
 			true,
@@ -369,7 +368,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 		{
 			"Receipts_No_Zone_Receipts",
 			func() {},
-			&icstypes.QueryReceiptsRequest{
+			&types.QueryReceiptsRequest{
 				ChainId: suite.chainB.ChainID,
 			},
 			false,
@@ -393,7 +392,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 				)
 				icsKeeper.SetReceipt(ctx, *receipt)
 			},
-			&icstypes.QueryReceiptsRequest{
+			&types.QueryReceiptsRequest{
 				ChainId: suite.chainB.ChainID,
 			},
 			false,
@@ -433,7 +432,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryWithdrawalRecordsRequest
+		req          *types.QueryWithdrawalRecordsRequest
 		wantErr      bool
 		expectLength int
 	}{
@@ -450,7 +449,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryWithdrawalRecordsRequest{
+			&types.QueryWithdrawalRecordsRequest{
 				ChainId: "boguschain",
 			},
 			true,
@@ -459,7 +458,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 		{
 			"ZoneWithdrawalRecords_No_Zone_Records",
 			func() {},
-			&icstypes.QueryWithdrawalRecordsRequest{
+			&types.QueryWithdrawalRecordsRequest{
 				ChainId:          suite.chainB.ChainID,
 				DelegatorAddress: "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
 			},
@@ -472,7 +471,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.Require().True(found)
 
-				distribution := []*icstypes.Distribution{
+				distribution := []*types.Distribution{
 					{
 						Valoper: zone.GetValidatorsAddressesAsSlice()[0],
 						Amount:  10000000,
@@ -497,7 +496,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 					time.Time{},
 				)
 			},
-			&icstypes.QueryWithdrawalRecordsRequest{
+			&types.QueryWithdrawalRecordsRequest{
 				ChainId:          suite.chainB.ChainID,
 				DelegatorAddress: "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
 			},
@@ -538,7 +537,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryWithdrawalRecordsRequest
+		req          *types.QueryWithdrawalRecordsRequest
 		wantErr      bool
 		expectLength int
 	}{
@@ -555,7 +554,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryWithdrawalRecordsRequest{},
+			&types.QueryWithdrawalRecordsRequest{},
 			false,
 			0,
 		},
@@ -565,7 +564,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.Require().True(found)
 
-				distribution := []*icstypes.Distribution{
+				distribution := []*types.Distribution{
 					{
 						Valoper: zone.GetValidatorsAddressesAsSlice()[0],
 						Amount:  10000000,
@@ -590,7 +589,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 					time.Time{},
 				)
 			},
-			&icstypes.QueryWithdrawalRecordsRequest{},
+			&types.QueryWithdrawalRecordsRequest{},
 			false,
 			1,
 		},
@@ -628,7 +627,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryUnbondingRecordsRequest
+		req          *types.QueryUnbondingRecordsRequest
 		wantErr      bool
 		expectLength int
 	}{
@@ -645,7 +644,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryUnbondingRecordsRequest{},
+			&types.QueryUnbondingRecordsRequest{},
 			false,
 			0,
 		},
@@ -657,7 +656,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 
 				icsKeeper.SetUnbondingRecord(
 					ctx,
-					icstypes.UnbondingRecord{
+					types.UnbondingRecord{
 						ChainId:       zone.ChainId,
 						EpochNumber:   1,
 						Validator:     zone.GetValidatorsAddressesAsSlice()[0],
@@ -665,7 +664,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 					},
 				)
 			},
-			&icstypes.QueryUnbondingRecordsRequest{},
+			&types.QueryUnbondingRecordsRequest{},
 			false,
 			1,
 		},
@@ -703,7 +702,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryRedelegationRecordsRequest
+		req          *types.QueryRedelegationRecordsRequest
 		wantErr      bool
 		expectLength int
 	}{
@@ -720,7 +719,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryRedelegationRecordsRequest{},
+			&types.QueryRedelegationRecordsRequest{},
 			false,
 			0,
 		},
@@ -740,7 +739,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 						Amount:      10000000,
 					})
 			},
-			&icstypes.QueryRedelegationRecordsRequest{},
+			&types.QueryRedelegationRecordsRequest{},
 			false,
 			1,
 		},

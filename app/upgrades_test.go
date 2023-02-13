@@ -1,13 +1,14 @@
 package app
 
 import (
+	"testing"
+	"time"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-	"testing"
-	"time"
 
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
@@ -198,7 +199,6 @@ func (suite *AppTestSuite) initTestZone() {
 	if err != nil {
 		return
 	}
-
 }
 
 func (s *AppTestSuite) TestV010400UpgradeHandler() {
@@ -253,5 +253,4 @@ func (s *AppTestSuite) TestV010400UpgradeHandler() {
 
 	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "uni-5", "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D", icskeeper.WithdrawStatusQueued)
 	s.Require().False(found)
-
 }
