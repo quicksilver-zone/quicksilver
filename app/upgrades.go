@@ -31,17 +31,17 @@ func isTest(ctx sdk.Context) bool {
 	return ctx.ChainID() == TestChainID
 }
 
-func isDevnet(ctx sdk.Context) bool {
-	return ctx.ChainID() == DevnetChainID
-}
+// func isDevnet(ctx sdk.Context) bool {
+// 	return ctx.ChainID() == DevnetChainID
+// }
 
 func isTestnet(ctx sdk.Context) bool {
 	return ctx.ChainID() == InnuendoChainID
 }
 
-func isMainnet(ctx sdk.Context) bool {
-	return ctx.ChainID() == ProductionChainID
-}
+// func isMainnet(ctx sdk.Context) bool {
+// 	return ctx.ChainID() == ProductionChainID
+// }
 
 func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010300UpgradeName, noOpHandler(app))
