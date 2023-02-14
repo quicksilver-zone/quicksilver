@@ -120,32 +120,28 @@ func mustGetTestBech32Address(hrp string) string {
 }
 
 func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
-	val1 := utils.GenerateValAddressForTest().String()
-	val2 := utils.GenerateValAddressForTest().String()
-	val3 := utils.GenerateValAddressForTest().String()
-	val4 := utils.GenerateValAddressForTest().String()
-
 	tests := []struct {
 		name             string
-		records          func(chainID string, hrp string) []icstypes.WithdrawalRecord
-		delegations      func(chainID string, delegateAddress string, hrp string) []icstypes.Delegation
-		redelegations    func(chainID string, delegateAddress string, hrp string) []icstypes.RedelegationRecord
+		records          func(zone *icstypes.Zone) []icstypes.WithdrawalRecord
+		delegations      func(zone *icstypes.Zone) []icstypes.Delegation
+		redelegations    func(zone *icstypes.Zone) []icstypes.RedelegationRecord
 		expectTransition []bool
+		expectError      bool
 	}{
 		{
 			name: "valid",
-			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+			records: func(zone *icstypes.Zone) []icstypes.WithdrawalRecord {
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: val1, Amount: 1000000},
-							{Valoper: val2, Amount: 1000000},
-							{Valoper: val3, Amount: 1000000},
-							{Valoper: val4, Amount: 1000000},
+							{Valoper: zone.Validators[0].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[1].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[2].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[3].ValoperAddress, Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -153,64 +149,65 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					},
 				}
 			},
-			delegations: func(chainID string, delegateAddress string, hrp string) []icstypes.Delegation {
+			delegations: func(zone *icstypes.Zone) []icstypes.Delegation {
 				return []icstypes.Delegation{
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val1,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[0].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val2,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[1].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val3,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[2].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val4,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[3].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
 					},
 				}
 			},
-			redelegations: func(chainID string, delegateAddress string, hrp string) []icstypes.RedelegationRecord {
+			redelegations: func(zone *icstypes.Zone) []icstypes.RedelegationRecord {
 				return []icstypes.RedelegationRecord{}
 			},
 			expectTransition: []bool{true},
+			expectError:      false,
 		},
 		{
 			name: "valid - two",
-			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+			records: func(zone *icstypes.Zone) []icstypes.WithdrawalRecord {
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: val1, Amount: 1000000},
-							{Valoper: val2, Amount: 1000000},
-							{Valoper: val3, Amount: 1000000},
-							{Valoper: val4, Amount: 1000000},
+							{Valoper: zone.Validators[0].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[1].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[2].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[3].ValoperAddress, Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 						Status:     icskeeper.WithdrawStatusQueued,
 					},
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: val1, Amount: 5000000},
-							{Valoper: val2, Amount: 2500000},
-							{Valoper: val3, Amount: 5000000},
-							{Valoper: val4, Amount: 2500000},
+							{Valoper: zone.Validators[0].ValoperAddress, Amount: 5000000},
+							{Valoper: zone.Validators[1].ValoperAddress, Amount: 2500000},
+							{Valoper: zone.Validators[2].ValoperAddress, Amount: 5000000},
+							{Valoper: zone.Validators[3].ValoperAddress, Amount: 2500000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
 						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
@@ -218,49 +215,50 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					},
 				}
 			},
-			delegations: func(chainID string, delegateAddress string, hrp string) []icstypes.Delegation {
+			delegations: func(zone *icstypes.Zone) []icstypes.Delegation {
 				return []icstypes.Delegation{
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val1,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[0].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(10000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val2,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[1].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(10000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val3,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[2].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(10000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val4,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[3].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(10000000)),
 					},
 				}
 			},
-			redelegations: func(chainID string, delegateAddress string, hrp string) []icstypes.RedelegationRecord {
+			redelegations: func(zone *icstypes.Zone) []icstypes.RedelegationRecord {
 				return []icstypes.RedelegationRecord{}
 			},
 			expectTransition: []bool{true, true},
+			expectError:      false,
 		},
 		{
 			name: "invalid - locked tokens",
-			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+			records: func(zone *icstypes.Zone) []icstypes.WithdrawalRecord {
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: val1, Amount: 1000000},
-							{Valoper: val2, Amount: 1000000},
-							{Valoper: val3, Amount: 1000000},
-							{Valoper: val4, Amount: 1000000},
+							{Valoper: zone.Validators[0].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[1].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[2].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[3].ValoperAddress, Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -268,73 +266,74 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					},
 				}
 			},
-			delegations: func(chainID string, delegateAddress string, hrp string) []icstypes.Delegation {
+			delegations: func(zone *icstypes.Zone) []icstypes.Delegation {
 				return []icstypes.Delegation{
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val1,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[0].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val2,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[1].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val3,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[2].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val4,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[3].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000000)),
 					},
 				}
 			},
-			redelegations: func(chainID string, delegateAddress string, hrp string) []icstypes.RedelegationRecord {
+			redelegations: func(zone *icstypes.Zone) []icstypes.RedelegationRecord {
 				return []icstypes.RedelegationRecord{
 					{
-						ChainId:        chainID,
+						ChainId:        zone.ChainId,
 						EpochNumber:    1,
-						Source:         val4,
-						Destination:    val1,
+						Source:         zone.Validators[3].ValoperAddress,
+						Destination:    zone.Validators[0].ValoperAddress,
 						Amount:         50000,
 						CompletionTime: time.Now().Add(time.Hour),
 					},
 				}
 			},
 			expectTransition: []bool{false},
+			expectError:      true,
 		},
 		{
-			name: "mixed - locked tokens prohibit first unbond, but second permitted",
-			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+			name: "mixed - locked tokens but both succeed (previously failed)",
+			records: func(zone *icstypes.Zone) []icstypes.WithdrawalRecord {
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: val1, Amount: 5000000},
-							{Valoper: val2, Amount: 2500000},
-							{Valoper: val3, Amount: 5000000},
-							{Valoper: val4, Amount: 2500000},
+							{Valoper: zone.Validators[0].ValoperAddress, Amount: 5000000},
+							{Valoper: zone.Validators[1].ValoperAddress, Amount: 2500000},
+							{Valoper: zone.Validators[2].ValoperAddress, Amount: 5000000},
+							{Valoper: zone.Validators[3].ValoperAddress, Amount: 2500000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
 						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
 						Status:     icskeeper.WithdrawStatusQueued,
 					},
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: val1, Amount: 1000000},
-							{Valoper: val2, Amount: 1000000},
-							{Valoper: val3, Amount: 1000000},
-							{Valoper: val4, Amount: 1000000},
+							{Valoper: zone.Validators[0].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[1].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[2].ValoperAddress, Amount: 1000000},
+							{Valoper: zone.Validators[3].ValoperAddress, Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -342,43 +341,44 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					},
 				}
 			},
-			delegations: func(chainID string, delegateAddress string, hrp string) []icstypes.Delegation {
+			delegations: func(zone *icstypes.Zone) []icstypes.Delegation {
 				return []icstypes.Delegation{
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val1,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[0].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(6000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val2,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[1].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(6000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val3,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[2].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(6000000)),
 					},
 					{
-						DelegationAddress: delegateAddress,
-						ValidatorAddress:  val4,
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  zone.Validators[3].ValoperAddress,
 						Amount:            sdk.NewCoin("uatom", sdk.NewInt(6000000)),
 					},
 				}
 			},
-			redelegations: func(chainID string, delegateAddress string, hrp string) []icstypes.RedelegationRecord {
+			redelegations: func(zone *icstypes.Zone) []icstypes.RedelegationRecord {
 				return []icstypes.RedelegationRecord{
 					{
-						ChainId:        chainID,
+						ChainId:        zone.ChainId,
 						EpochNumber:    1,
-						Source:         val4,
-						Destination:    val1,
+						Source:         zone.Validators[3].ValoperAddress,
+						Destination:    zone.Validators[0].ValoperAddress,
 						Amount:         1000001,
 						CompletionTime: time.Now().Add(time.Hour),
 					},
 				}
 			},
-			expectTransition: []bool{false, true},
+			expectTransition: []bool{true, true},
+			expectError:      false,
 		},
 	}
 
@@ -394,14 +394,9 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 			if !found {
 				s.Fail("unable to retrieve zone for test")
 			}
-			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val1, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
-			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val2, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
-			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val3, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
-			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val4, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
-
-			records := test.records(s.chainB.ChainID, zone.AccountPrefix)
-			delegations := test.delegations(s.chainB.ChainID, zone.DelegationAddress.Address, zone.AccountPrefix)
-			redelegations := test.redelegations(s.chainB.ChainID, zone.DelegationAddress.Address, zone.AccountPrefix)
+			records := test.records(&zone)
+			delegations := test.delegations(&zone)
+			redelegations := test.redelegations(&zone)
 
 			// set up zones
 			for _, record := range records {
@@ -423,7 +418,11 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			// trigger handler
 			err := app.InterchainstakingKeeper.HandleQueuedUnbondings(ctx, &zone, 1)
-			s.Require().NoError(err)
+			if test.expectError {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+			}
 
 			for idx, record := range records {
 				// check record with old status is opposite to expectedTransition (if false, this record should exist in status 3)
@@ -434,8 +433,11 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				s.Require().Equal(test.expectTransition[idx], found)
 
 				if test.expectTransition[idx] {
-					for _, unbonding := range record.Distribution {
+					actualRecord, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusUnbond)
+					s.Require().True(found)
+					for _, unbonding := range actualRecord.Distribution {
 						r, found := app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, unbonding.Valoper, 1)
+						fmt.Println(r)
 						s.Require().True(found)
 						s.Require().Contains(r.RelatedTxhash, record.Txhash)
 					}
@@ -448,17 +450,17 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 	tests := []struct {
 		name    string
-		records func(chainID string, hrp string) []icstypes.WithdrawalRecord
+		records func(zone *icstypes.Zone) []icstypes.WithdrawalRecord
 		message banktypes.MsgSend
 		memo    string
 		err     bool
 	}{
 		{
 			name: "invalid - no matching record",
-			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+			records: func(zone *icstypes.Zone) []icstypes.WithdrawalRecord {
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
@@ -466,7 +468,7 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -480,10 +482,10 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 		},
 		{
 			name: "valid",
-			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+			records: func(zone *icstypes.Zone) []icstypes.WithdrawalRecord {
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
@@ -491,7 +493,7 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -507,10 +509,10 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 		},
 		{
 			name: "valid - two",
-			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+			records: func(zone *icstypes.Zone) []icstypes.WithdrawalRecord {
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
@@ -518,14 +520,14 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 						Status:     icskeeper.WithdrawStatusSend,
 					},
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 5000000},
@@ -533,7 +535,7 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 5000000},
 							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1250000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
 						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
@@ -562,7 +564,7 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 				s.Fail("unable to retrieve zone for test")
 			}
 
-			records := test.records(s.chainB.ChainID, zone.AccountPrefix)
+			records := test.records(&zone)
 
 			// set up zones
 			for _, record := range records {
@@ -603,23 +605,23 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 	v2 := utils.GenerateValAddressForTest().String()
 	tests := []struct {
 		name    string
-		records func(chainID string, hrp string) []icstypes.WithdrawalRecord
+		records func(zone *icstypes.Zone) []icstypes.WithdrawalRecord
 		message []banktypes.MsgSend
 		memo    string
 		err     bool
 	}{
 		{
 			name: "valid",
-			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+			records: func(zone *icstypes.Zone) []icstypes.WithdrawalRecord {
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: v1, Amount: 1000000},
 							{Valoper: v2, Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -636,16 +638,16 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 		},
 		{
 			name: "valid - unequal",
-			records: func(chainID string, hrp string) []icstypes.WithdrawalRecord {
+			records: func(zone *icstypes.Zone) []icstypes.WithdrawalRecord {
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   chainID,
+						ChainId:   zone.ChainId,
 						Delegator: utils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: v1, Amount: 1000000},
 							{Valoper: v2, Amount: 1500000},
 						},
-						Recipient:  mustGetTestBech32Address(hrp),
+						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2500000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2500000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -675,7 +677,7 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 				s.Fail("unable to retrieve zone for test")
 			}
 
-			records := test.records(s.chainB.ChainID, zone.AccountPrefix)
+			records := test.records(&zone)
 
 			startBalance := app.BankKeeper.GetAllBalances(ctx, app.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
 			// set up zones

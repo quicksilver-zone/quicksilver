@@ -171,5 +171,4 @@ func v010400rc5UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
-
 }
