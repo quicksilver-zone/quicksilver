@@ -145,6 +145,22 @@ func v010400rc5UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) {
 			app.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "regen-redwood-1")
+			// re-register regen-redwood-1 with new connection
+			regenProp := icstypes.NewRegisterZoneProposal("register regen-redwood-1 zone",
+				"register regen-redwood-1  (regen-testnet) zone with multisend and lsm disabled",
+				"connection-8",
+				"uregen",
+				"uqregen",
+				"regen",
+				false,
+				true,
+				true,
+				false,
+				6)
+			err := icskeeper.HandleRegisterZoneProposal(ctx, app.InterchainstakingKeeper, regenProp)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		// remove expired failed redelegation records
