@@ -41,6 +41,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
+	var height ibcclienttypes.Height
 	if strings.Contains(ctx.ChainID(), "-") {
 		revisionNum, err := strconv.ParseUint(strings.Split(ctx.ChainID(), "-")[1], 10, 64)
 		if err != nil {
@@ -48,35 +49,26 @@ func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 			return err
 		}
 
-		height := ibcclienttypes.Height{
+		height = ibcclienttypes.Height{
 			RevisionNumber: revisionNum,
 			RevisionHeight: uint64(ctx.BlockHeight() - 1),
 		}
-
-		selfConsState, err := k.IBCKeeper.ClientKeeper.GetSelfConsensusState(ctx, height)
-		if err != nil {
-			k.Logger(ctx).Error("Error getting self consensus state of previous height")
-			return err
-		}
-
-		state := selfConsState.(*ibctmtypes.ConsensusState)
-		k.SetSelfConsensusState(ctx, key, state)
 	} else {
 		// ONLY FOR TESTING - ibctesting module chains donot follow standard [chainname]-[num] structure
-		height := ibcclienttypes.Height{
+		height = ibcclienttypes.Height{
 			RevisionNumber: 0, // revision number for testchain1 is 0 (because parseChainId splits on '-')
 			RevisionHeight: uint64(ctx.BlockHeight() - 1),
 		}
-
-		selfConsState, err := k.IBCKeeper.ClientKeeper.GetSelfConsensusState(ctx, height)
-		if err != nil {
-			k.Logger(ctx).Error("Error getting self consensus state of previous height")
-			return err
-		}
-
-		state := selfConsState.(*ibctmtypes.ConsensusState)
-		k.SetSelfConsensusState(ctx, key, state)
-
 	}
+
+	selfConsState, err := k.IBCKeeper.ClientKeeper.GetSelfConsensusState(ctx, height)
+	if err != nil {
+		k.Logger(ctx).Error("Error getting self consensus state of previous height")
+		return err
+	}
+
+	state := selfConsState.(*ibctmtypes.ConsensusState)
+	k.SetSelfConsensusState(ctx, key, state)
+
 	return nil
 }
