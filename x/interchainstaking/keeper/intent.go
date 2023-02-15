@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	prtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -196,5 +198,22 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 	}
 
 	k.SetIntent(ctx, zone, intent, snapshot)
+	return nil
+}
+
+func (k msgServer) validateIntents(zone types.Zone, intents []*types.ValidatorIntent) error {
+	errors := make(map[string]error)
+
+	for i, intent := range intents {
+		_, found := zone.GetValidatorByValoper(intent.ValoperAddress)
+		if !found {
+			errors[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
+		}
+	}
+
+	if len(errors) > 0 {
+		return multierror.New(errors)
+	}
+
 	return nil
 }

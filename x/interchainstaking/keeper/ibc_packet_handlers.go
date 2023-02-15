@@ -122,7 +122,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			k.Logger(ctx).Info("Delegated", "response", response)
 			// we should update delegation records here.
-			if err := k.HandleDelegate(ctx, src); err != nil {
+			if err := k.HandleDelegate(ctx, src, packetData.Memo); err != nil {
 				return err
 			}
 			continue
@@ -432,7 +432,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		for _, dist := range withdrawal.Distribution {
 			if thisAvail[dist.Valoper] < int64(dist.Amount) {
 				// we cannot satisfy this unbond this epoch.
-				k.Logger(ctx).Error("unable to satisfy unbonding for this epoch, due to locked tokens.", "txhash", withdrawal.Txhash, "user", withdrawal.Delegator, "chain", zone.ChainId)
+				k.Logger(ctx).Error("unable to satisfy unbonding for this epoch, due to locked tokens.", "txhash", withdrawal.Txhash, "user", withdrawal.Delegator, "chain", zone.ChainId, "validator", dist.Valoper, "avail", thisAvail[dist.Valoper], "wanted", int64(dist.Amount))
 				return false
 			}
 			thisOut[dist.Valoper] = sdk.NewCoin(zone.BaseDenom, math.NewIntFromUint64(dist.Amount))
@@ -529,7 +529,7 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 	var err error
 
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
-		if ctx.BlockTime().After(withdrawal.CompletionTime) && !withdrawal.CompletionTime.IsZero() { // completion date has passed.
+		if ctx.BlockTime().After(withdrawal.CompletionTime) && !withdrawal.CompletionTime.Equal(time.Time{}) { // completion date has passed.
 			k.Logger(ctx).Info("found completed unbonding")
 			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
 			err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, withdrawal.Txhash)
@@ -698,7 +698,7 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
 }
 
-func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
+func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
 	k.Logger(ctx).Info("Received MsgDelegate acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgDelegate
 	delegateMsg, ok := msg.(*stakingtypes.MsgDelegate)
@@ -713,9 +713,17 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
 			return nil
 		}
 		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
-
 	}
 
+	if memo != "rewards" {
+		receipt, found := k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, memo))
+		if !found {
+			return fmt.Errorf("unable to find receipt for hash %s", memo)
+		}
+		t := ctx.BlockTime()
+		receipt.Completed = &t
+		k.SetReceipt(ctx, receipt)
+	}
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
 }
 
@@ -731,10 +739,6 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 	if zone == nil {
 		zone = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
 		if zone == nil {
-			if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() < 248000 {
-				return errors.New("unable to find zone") // mirror existing behaviour before 248000
-			}
-			// after 248000 correctly handle SetWithdrawalAddress callback.
 			zone = k.GetZoneForDepositAccount(ctx, original.DelegatorAddress)
 			if zone == nil {
 				return errors.New("unable to find zone")

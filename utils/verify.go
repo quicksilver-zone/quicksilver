@@ -1,7 +1,9 @@
 package utils
 
 import (
+	"bytes"
 	"errors"
+	"fmt"
 	"time"
 
 	tmmath "github.com/tendermint/tendermint/libs/math"
@@ -58,4 +60,64 @@ func VerifyNonAdjacent(
 	}
 
 	return nil
+}
+
+func VerifyAdjacent(
+	trustedHeader *types.SignedHeader, // height=X
+	untrustedHeader *types.SignedHeader, // height=X+1
+	untrustedVals *types.ValidatorSet, // height=X+1
+	trustingPeriod time.Duration,
+	now time.Time,
+	maxClockDrift time.Duration,
+) error {
+	if untrustedHeader.Height != trustedHeader.Height+1 {
+		return errors.New("headers must be adjacent in height")
+	}
+
+	if light.HeaderExpired(trustedHeader, trustingPeriod, now) {
+		return light.ErrOldHeaderExpired{At: trustedHeader.Time.Add(trustingPeriod), Now: now}
+	}
+
+	// if err := verifyNewHeaderAndVals(
+	// 	untrustedHeader, untrustedVals,
+	// 	trustedHeader,
+	// 	now, maxClockDrift); err != nil {
+	// 	return ErrInvalidHeader{err}
+	// }
+
+	// Check the validator hashes are the same
+	if !bytes.Equal(untrustedHeader.ValidatorsHash, trustedHeader.NextValidatorsHash) {
+		err := fmt.Errorf("expected old header next validators (%X) to match those from new header (%X)",
+			trustedHeader.NextValidatorsHash,
+			untrustedHeader.ValidatorsHash,
+		)
+		return err
+	}
+
+	// Ensure that +2/3 of new validators signed correctly.
+	if err := untrustedVals.VerifyCommitLight(trustedHeader.ChainID, untrustedHeader.Commit.BlockID,
+		untrustedHeader.Height, untrustedHeader.Commit); err != nil {
+		return light.ErrInvalidHeader{Reason: err}
+	}
+
+	return nil
+}
+
+// Verify combines both VerifyAdjacent and VerifyNonAdjacent functions.
+func Verify(
+	trustedHeader *types.SignedHeader, // height=X
+	trustedVals *types.ValidatorSet, // height=X or height=X+1
+	untrustedHeader *types.SignedHeader, // height=Y
+	untrustedVals *types.ValidatorSet, // height=Y
+	trustingPeriod time.Duration,
+	now time.Time,
+	maxClockDrift time.Duration,
+	trustLevel tmmath.Fraction,
+) error {
+	if untrustedHeader.Height != trustedHeader.Height+1 {
+		return VerifyNonAdjacent(trustedHeader, trustedVals, untrustedHeader, untrustedVals,
+			trustingPeriod, now, maxClockDrift, trustLevel)
+	}
+
+	return VerifyAdjacent(trustedHeader, untrustedHeader, untrustedVals, trustingPeriod, now, maxClockDrift)
 }

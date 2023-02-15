@@ -29,11 +29,13 @@ func (k Keeper) GetProtocolData(ctx sdk.Context, pdType types.ProtocolDataType, 
 // SetProtocolData set protocol data info
 func (k Keeper) SetProtocolData(ctx sdk.Context, key string, data *types.ProtocolData) {
 	if data == nil {
+		k.Logger(ctx).Error("protocol data not set; value is nil")
 		return
 	}
 
 	pdType, exists := types.ProtocolDataType_value[data.Type]
 	if !exists {
+		k.Logger(ctx).Error("protocol data not set; type does not exist", "type", data.Type)
 		return
 	}
 

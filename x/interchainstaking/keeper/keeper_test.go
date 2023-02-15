@@ -75,14 +75,17 @@ func (suite *KeeperTestSuite) SetupTest() {
 
 func (suite *KeeperTestSuite) setupTestZones() {
 	proposal := &icstypes.RegisterZoneProposal{
-		Title:           "register zone A",
-		Description:     "register zone A",
-		ConnectionId:    suite.path.EndpointA.ConnectionID,
-		LocalDenom:      "uqatom",
-		BaseDenom:       "uatom",
-		AccountPrefix:   "cosmos",
-		MultiSend:       true,
-		LiquidityModule: true,
+		Title:            "register zone A",
+		Description:      "register zone A",
+		ConnectionId:     suite.path.EndpointA.ConnectionID,
+		LocalDenom:       "uqatom",
+		BaseDenom:        "uatom",
+		AccountPrefix:    "cosmos",
+		ReturnToSender:   false,
+		UnbondingEnabled: false,
+		LiquidityModule:  true,
+		DepositsEnabled:  true,
+		Decimals:         6,
 	}
 
 	qApp := suite.GetQuicksilverApp(suite.chainA)

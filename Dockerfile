@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     COMMIT=$(git log -1 --format='%H') && \
     go build \
       -mod=readonly \
-      -tags "netgo,ledger,muslc" \
+      -tags "netgo,ledger,muslc,pebbledb" \
       -ldflags "-X github.com/cosmos/cosmos-sdk/version.Name="quicksilver" \
               -X github.com/cosmos/cosmos-sdk/version.AppName="quicksilverd" \
               -X github.com/cosmos/cosmos-sdk/version.Version=$VERSION \

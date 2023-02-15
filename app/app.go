@@ -10,15 +10,6 @@ import (
 	"strings"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rakyll/statik/fs"
-	"github.com/spf13/cast"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	dbm "github.com/tendermint/tm-db"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -52,8 +43,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
+	"github.com/gorilla/mux"
+	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/wasmbinding"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/rakyll/statik/fs"
+	"github.com/spf13/cast"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	dbm "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
@@ -396,9 +396,14 @@ func NewQuicksilver(
 		proofOpsFn = utils.MockProofOps
 	}
 
+	selfProofOpsFn := utils.ValidateSelfProofOps
+	if mock {
+		selfProofOpsFn = utils.MockSelfProofOps
+	}
+
 	// use custom account for contracts
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, sdk.Bech32MainPrefix,
+		appCodec, keys[authtypes.StoreKey], app.GetSubspace(authtypes.ModuleName), authtypes.ProtoBaseAccount, maccPerms, appconfig.Bech32PrefixAccAddr,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.GetSubspace(banktypes.ModuleName), app.BlockedAddrs(),
@@ -465,6 +470,7 @@ func NewQuicksilver(
 	app.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
 		appCodec,
 		keys[claimsmanagertypes.StoreKey],
+		*app.IBCKeeper,
 	)
 
 	claimsmanagerModule := claimsmanager.NewAppModule(appCodec, app.ClaimsManagerKeeper)
@@ -500,6 +506,7 @@ func NewQuicksilver(
 		app.InterchainstakingKeeper,
 		authtypes.FeeCollectorName,
 		proofOpsFn,
+		selfProofOpsFn,
 	)
 	if err := app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, app.InterchainstakingKeeper.CallbackHandler()); err != nil {
 		panic(err)
@@ -525,6 +532,7 @@ func NewQuicksilver(
 	app.EpochsKeeper = *epochsKeeper.SetHooks(
 		epochstypes.NewMultiEpochHooks(
 			app.MintKeeper.Hooks(),
+			app.ClaimsManagerKeeper.Hooks(),
 			app.InterchainstakingKeeper.Hooks(),
 			app.ParticipationRewardsKeeper.Hooks(),
 		),

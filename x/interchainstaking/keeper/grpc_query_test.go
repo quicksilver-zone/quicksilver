@@ -52,7 +52,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
-			resp, err := icsKeeper.ZoneInfos(
+			resp, err := icsKeeper.Zones(
 				ctx,
 				tt.req,
 			)

@@ -235,7 +235,7 @@ func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkma
 	deltas := make(types.ValidatorIntents, 0)
 
 	targetValopers := func(in types.ValidatorIntents) []string {
-		out := make([]string, 0)
+		out := make([]string, 0, len(in))
 		for _, i := range in.Sort() {
 			out = append(out, i.ValoperAddress)
 		}

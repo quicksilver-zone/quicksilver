@@ -30,13 +30,13 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	if !k.GetClaimsEnabled(ctx) {
 		return nil, errors.New("claims currently disabled")
 	}
-
 	// fetch zone
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
 		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
-	pd, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, msg.SrcZone)
+	var pd types.ProtocolData
+	pd, ok = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, msg.SrcZone)
 	if !ok {
 		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", msg.SrcZone)
 	}
@@ -60,18 +60,33 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 			)
 		}
 
-		if err := k.ValidateProofOps(
-			ctx,
-			&k.icsKeeper.IBCKeeper,
-			connectionData.ConnectionID,
-			connectionData.ChainID,
-			proof.Height,
-			proof.ProofType,
-			proof.Key,
-			proof.Data,
-			proof.ProofOps,
-		); err != nil {
-			return nil, fmt.Errorf("%s: %w", pl, err)
+		// if we are claiming against Quicksilver, use the SelfProofOpsFn.
+		if msg.SrcZone == ctx.ChainID() {
+			if err := k.ValidateSelfProofOps(
+				ctx,
+				k.icsKeeper.ClaimsManagerKeeper,
+				"epoch",
+				proof.ProofType,
+				proof.Key,
+				proof.Data,
+				proof.ProofOps,
+			); err != nil {
+				return nil, fmt.Errorf("%s: %w", pl, err)
+			}
+		} else {
+			if err := k.ValidateProofOps(
+				ctx,
+				&k.icsKeeper.IBCKeeper,
+				connectionData.ConnectionID,
+				connectionData.ChainID,
+				proof.Height,
+				proof.ProofType,
+				proof.Key,
+				proof.Data,
+				proof.ProofOps,
+			); err != nil {
+				return nil, fmt.Errorf("%s: %w", pl, err)
+			}
 		}
 	}
 

@@ -3,12 +3,11 @@ package types
 import (
 	"testing"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/stretchr/testify/require"
 )
 
 func TestKeys(t *testing.T) {
-	address := utils.GenerateAccAddressForTest()
+	address := GenerateAccAddressForTest()
 
 	// zone
 	prefixClaim := GetPrefixClaim("testzone-1")
@@ -32,7 +31,7 @@ func TestKeys(t *testing.T) {
 }
 
 func TestLastEpochKeys(t *testing.T) {
-	address := utils.GenerateAccAddressForTest()
+	address := GenerateAccAddressForTest()
 
 	// zone
 	prefixClaim := GetPrefixLastEpochClaim("testzone-1")

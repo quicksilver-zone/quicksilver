@@ -195,9 +195,10 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 		k.Logger(ctx).Info("Deposit address not set")
 		return nil
 	}
+
 	withdrawalAddress := zone.WithdrawalAddress.Address
 
-	if zone.DepositAddress.WithdrawalAddress != zone.WithdrawalAddress.Address {
+	if zone.DepositAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
 		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "")
 		if err != nil {
@@ -205,7 +206,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 		}
 	}
 
-	if zone.DelegationAddress.WithdrawalAddress != zone.WithdrawalAddress.Address {
+	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
 		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "")
 		if err != nil {
@@ -313,7 +314,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 				"accountbalance",
 				0,
 			)
-			icaAccount.BalanceWaitgroup++
+			icaAccount.IncrementBalanceWaitgroup()
 
 		}
 	}
@@ -331,7 +332,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 			"accountbalance",
 			0,
 		)
-		icaAccount.BalanceWaitgroup++
+		icaAccount.IncrementBalanceWaitgroup()
 	}
 
 	k.SetZone(ctx, &zone)
@@ -388,4 +389,24 @@ OUTER:
 		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "")
 	}
 	return nil
+}
+
+func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) *types.Statistics {
+	out := &types.Statistics{}
+	out.ChainId = zone.ChainId
+	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
+	userMap := map[string]bool{}
+	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) bool {
+		for _, coin := range receipt.Amount {
+			out.Deposited += coin.Amount.Int64()
+			if _, found := userMap[receipt.Sender]; !found {
+				userMap[receipt.Sender] = true
+				out.Depositors++
+			}
+			out.Deposits++
+		}
+		return false
+	})
+	out.Supply = k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.Int64()
+	return out
 }

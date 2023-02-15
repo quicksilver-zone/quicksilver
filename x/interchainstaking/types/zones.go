@@ -12,8 +12,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (z Zone) SupportMultiSend() bool { return z.MultiSend }
-func (z Zone) SupportLsm() bool       { return z.LiquidityModule }
+func (z Zone) SupportReturnToSender() bool { return z.ReturnToSender }
+func (z Zone) IsUnbondingEnabled() bool    { return z.UnbondingEnabled }
+func (z Zone) SupportLsm() bool            { return z.LiquidityModule }
 
 func (z Zone) IsDelegateAddress(addr string) bool {
 	return z.DelegationAddress.Address == addr

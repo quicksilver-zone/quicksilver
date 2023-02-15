@@ -97,8 +97,8 @@ func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 			return 0, err
 		}
 
-		if sdkAmount.IsNegative() {
-			return 0, errors.New("unexpected negative amount")
+		if sdkAmount.IsNil() || sdkAmount.IsNegative() {
+			return 0, errors.New("unexpected amount")
 		}
 		amount += sdkAmount.Uint64()
 	}

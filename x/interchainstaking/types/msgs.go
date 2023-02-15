@@ -186,3 +186,41 @@ func (msg MsgSignalIntent) GetSigners() []sdk.AccAddress {
 	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
 	return []sdk.AccAddress{fromAddress}
 }
+
+// NewMsgGovCloseChannel - construct a msg to update signalled intent.
+func NewMsgGovCloseChannel(channelID string, portName string, fromAddress sdk.Address) *MsgGovCloseChannel {
+	return &MsgGovCloseChannel{ChannelId: channelID, PortId: portName, Authority: fromAddress.String()}
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgGovCloseChannel) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgGovCloseChannel) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{fromAddress}
+}
+
+// check channel id is correct format. validate port name?
+func (msg MsgGovCloseChannel) ValidateBasic() error { return nil }
+
+// NewMsgGovReopenChannel - construct a msg to update signalled intent.
+func NewMsgGovReopenChannel(connectionID string, portName string, fromAddress sdk.Address) *MsgGovReopenChannel {
+	return &MsgGovReopenChannel{ConnectionId: connectionID, PortId: portName, Authority: fromAddress.String()}
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgGovReopenChannel) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgGovReopenChannel) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{fromAddress}
+}
+
+// check channel id is correct format. validate port name?
+func (msg MsgGovReopenChannel) ValidateBasic() error { return nil }

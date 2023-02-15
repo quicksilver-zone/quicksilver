@@ -7,15 +7,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"sort"
-	"time"
+	"strings"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -37,6 +33,10 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	if !k.Keeper.GetUnbondingEnabled(ctx) {
 		return nil, fmt.Errorf("unbonding is currently disabled")
+	}
+
+	if msg.Value.IsNil() {
+		return nil, errors.New("cannot redeem nil-value coins")
 	}
 
 	// validate coins are positive
@@ -69,9 +69,13 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unable to find matching zone for denom %s", msg.Value.GetDenom())
 	}
 
+	if !zone.UnbondingEnabled {
+		return nil, fmt.Errorf("unbonding currently disabled for zone %s", zone.ChainId)
+	}
+
 	// does destination address match the prefix registered against the zone?
 	if _, err := utils.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
-		return nil, fmt.Errorf("destination address %s does not match expected prefix %s", msg.DestinationAddress, zone.AccountPrefix)
+		return nil, fmt.Errorf("destination address %s does not match expected prefix %s [%w]", msg.DestinationAddress, zone.AccountPrefix, err)
 	}
 
 	sender, err := sdk.AccAddressFromBech32(msg.FromAddress)
@@ -125,116 +129,12 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Value.String()),
 			sdk.NewAttribute(types.AttributeKeyRedeemAmount, nativeTokens.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
-			sdk.NewAttribute(types.AttributeKeyRecipientChain, zone.ChainId),
+			sdk.NewAttribute(types.AttributeKeyChainID, zone.ChainId),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, zone.ConnectionId),
 		),
 	})
 
 	return &types.MsgRequestRedemptionResponse{}, nil
-}
-
-// processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.
-func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error {
-	intent, found := k.GetIntent(ctx, zone, sender.String(), false)
-	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
-	msgs := make([]*lsmstakingtypes.MsgTokenizeShares, 0)
-	intents := intent.Intents
-	if !found || len(intents) == 0 {
-		// if user has no intent set (this can happen if redeeming tokens that were obtained offchain), use global intent.
-		// Note: this can be improved; user will receive a bunch of tokens.
-		intents = zone.GetAggregateIntentOrDefault()
-	}
-	outstanding := nativeTokens
-	distribution := make(map[string]uint64, 0)
-
-	availablePerValidator := k.GetUnlockedTokensForZone(ctx, &zone)
-
-	for _, intent := range intents.Sort() {
-		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
-		if thisAmount.Int64() > availablePerValidator[intent.ValoperAddress] {
-			return errors.New("unable to satisfy unbond request; delegations may be locked")
-		}
-		distribution[intent.ValoperAddress] = thisAmount.Uint64()
-		outstanding = outstanding.Sub(thisAmount)
-	}
-
-	distribution[intents[0].ValoperAddress] += outstanding.Uint64()
-
-	for _, valoper := range utils.Keys(distribution) {
-		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
-			DelegatorAddress:    zone.DelegationAddress.Address,
-			ValidatorAddress:    valoper,
-			Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewIntFromUint64(distribution[valoper])),
-			TokenizedShareOwner: destination,
-		})
-	}
-	// add unallocated dust.
-	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding)
-	sdkMsgs := make([]sdk.Msg, 0)
-	for _, msg := range msgs {
-		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
-	}
-	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
-
-	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash)
-}
-
-// queueRedemption will determine based on zone intent, the tokens to unbond, and add a withdrawal record with status QUEUED.
-func (k *Keeper) queueRedemption(
-	ctx sdk.Context,
-	zone types.Zone,
-	sender sdk.AccAddress,
-	destination string,
-	nativeTokens math.Int,
-	burnAmount sdk.Coin,
-	hash string,
-) error { //nolint:unparam // we know that the error is always nil
-	distribution := make([]*types.Distribution, 0)
-	outstanding := nativeTokens
-
-	aggregateIntent := zone.GetAggregateIntentOrDefault()
-	for _, intent := range aggregateIntent {
-		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
-		outstanding = outstanding.Sub(thisAmount)
-		dist := types.Distribution{
-			Valoper: intent.ValoperAddress,
-			Amount:  thisAmount.Uint64(),
-		}
-
-		distribution = append(distribution, &dist)
-	}
-	// handle dust ? ok to do uint64 calc here or do we use math.Int (just more verbose) ?
-	distribution[0].Amount += outstanding.Uint64()
-
-	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens))
-	k.AddWithdrawalRecord(
-		ctx,
-		zone.ChainId,
-		sender.String(),
-		distribution,
-		destination,
-		amount,
-		burnAmount,
-		hash,
-		WithdrawStatusQueued,
-		time.Time{},
-	)
-
-	return nil
-}
-
-// this can be removed: unused
-func IntentSliceToMap(in []*types.ValidatorIntent) (out map[string]*types.ValidatorIntent) {
-	out = make(map[string]*types.ValidatorIntent, 0)
-
-	sort.SliceStable(in, func(i, j int) bool {
-		return in[i].ValoperAddress > in[j].ValoperAddress
-	})
-
-	for _, intent := range in {
-		out[intent.ValoperAddress] = intent
-	}
-	return
 }
 
 func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalIntent) (*types.MsgSignalIntentResponse, error) {
@@ -263,57 +163,100 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 
 	k.SetIntent(ctx, zone, intent, false)
 
-	// ctx.EventManager().EmitEvents(sdk.Events{
-	// 	sdk.NewEvent(
-	// 		sdk.EventTypeMessage,
-	// 		sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-	// 	),
-	// 	sdk.NewEvent(
-	// 		types.EventTypeRegisterZone,
-	// 		sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ConnectionId),
-	// 		sdk.NewAttribute(types.AttributeKeyConnectionId, msg.ChainId),
-	// 	),
-	// })
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeSetIntent,
+			sdk.NewAttribute(types.AttributeKeyUser, msg.FromAddress),
+			sdk.NewAttribute(types.AttributeKeyChainID, msg.ChainId),
+		),
+	})
 
 	return &types.MsgSignalIntentResponse{}, nil
 }
 
-func (k msgServer) validateIntents(zone types.Zone, intents []*types.ValidatorIntent) error {
-	errors := make(map[string]error)
+// GovReopenChannel reopens an ICA channel
+func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	for i, intent := range intents {
-		_, found := zone.GetValidatorByValoper(intent.ValoperAddress)
-		if !found {
-			errors[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
-		}
+	// checking msg authority is the gov module address
+	// if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+	// 	return &types.MsgGovReopenChannelResponse{},
+	// 		govtypes.ErrInvalidSigner.Wrapf(
+	// 			"invalid authority: expected %s, got %s",
+	// 			k.Keeper.GetGovAuthority(ctx), msg.Authority,
+	// 		)
+	// }
+
+	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
+	parts := strings.Split(msg.PortId, ".")
+	if len(parts) != 2 {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format")
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if _, found := k.GetZone(ctx, parts[0]); !found {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
 	}
 
-	return nil
+	if parts[1] != "delegate" && parts[1] != "deposit" && parts[1] != "performance" && parts[1] != "withdrawal" {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; unexpected account")
+	}
+
+	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, msg.PortId); err != nil {
+		return &types.MsgGovReopenChannelResponse{}, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeReopenICA,
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
+		),
+	})
+
+	return &types.MsgGovReopenChannelResponse{}, nil
 }
 
-func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionID string, chainID string) error {
-	query := stakingtypes.QueryValidatorsRequest{}
-	bz1, err := k.cdc.Marshal(&query)
-	if err != nil {
-		return err
+// GovReopenChannel reopens an ICA channel
+func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovCloseChannel) (*types.MsgGovCloseChannelResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+		return &types.MsgGovCloseChannelResponse{},
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+			)
 	}
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	_, cap, err := k.Keeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortId, msg.ChannelId)
+	if err != nil {
+		return &types.MsgGovCloseChannelResponse{}, err
+	}
 
-	k.ICQKeeper.MakeRequest(
-		ctx,
-		connectionID,
-		chainID,
-		"cosmos.staking.v1beta1.Query/Validators",
-		bz1,
-		sdk.NewInt(period),
-		types.ModuleName,
-		"valset",
-		0,
-	)
-	return nil
+	if err := k.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, msg.PortId, msg.ChannelId, cap); err != nil {
+		return &types.MsgGovCloseChannelResponse{}, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeReopenICA,
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
+			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
+		),
+	})
+
+	return &types.MsgGovCloseChannelResponse{}, nil
 }
