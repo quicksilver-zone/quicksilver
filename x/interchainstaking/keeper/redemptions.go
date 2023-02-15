@@ -143,6 +143,11 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return false
 	})
 
+	// no undelegations to attempt
+	if totalToWithdraw.IsZero() {
+		return nil
+	}
+
 	allocations := k.DeterminePlanForUndelegation(ctx, zone, sdk.NewCoins(totalToWithdraw))
 	valopers := utils.Keys(allocations)
 	vidx := 0
