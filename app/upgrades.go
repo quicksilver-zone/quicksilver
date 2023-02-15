@@ -31,17 +31,18 @@ func isTest(ctx sdk.Context) bool {
 	return ctx.ChainID() == TestChainID
 }
 
-// func isDevnet(ctx sdk.Context) bool {
-// 	return ctx.ChainID() == DevnetChainID
-// }
+func isDevnet(ctx sdk.Context) bool {
+	return ctx.ChainID() == DevnetChainID
+}
 
 func isTestnet(ctx sdk.Context) bool {
 	return ctx.ChainID() == InnuendoChainID
 }
 
-// func isMainnet(ctx sdk.Context) bool {
-// 	return ctx.ChainID() == ProductionChainID
-// }
+//nolint:all //function useful for writing network specific upgrade handlers
+func isMainnet(ctx sdk.Context) bool {
+	return ctx.ChainID() == ProductionChainID
+}
 
 func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010300UpgradeName, noOpHandler(app))
@@ -168,6 +169,13 @@ func v010400rc5UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 			}
 			return false
 		})
+
+		if isTestnet(ctx) || isDevnet(ctx) {
+			app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo icstypes.Zone) (stop bool) {
+				app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zoneInfo)
+				return false
+			})
+		}
 
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
