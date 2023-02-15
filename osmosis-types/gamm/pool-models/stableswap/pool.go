@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	sdkioerrors "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/internal/cfmm_common"
@@ -189,7 +190,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 	// we ignore the decimal component, as token out amount must round down
 	tokenOutAmt := outAmtDec.TruncateInt()
 	if !tokenOutAmt.IsPositive() {
-		return sdk.Coin{}, sdkerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Coin{}, sdkioerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
 	}
 	return sdk.NewCoin(tokenOutDenom, tokenOutAmt), nil
 }
@@ -220,7 +221,7 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 	tokenInAmt := amt.Ceil().TruncateInt()
 
 	if !tokenInAmt.IsPositive() {
-		return sdk.Coin{}, sdkerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Coin{}, sdkioerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
 	}
 	return sdk.NewCoin(tokenInDenom, tokenInAmt), nil
 }

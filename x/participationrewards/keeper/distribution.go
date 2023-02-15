@@ -173,8 +173,8 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 
 		tv, exists := tvs[zone.BaseDenom]
 		if !exists {
-			err := fmt.Errorf("unable to obtain token value for zone %s", zone.ChainId)
-			return err
+			k.Logger(ctx).Error(fmt.Sprintf("unable to obtain token value for zone %s", zone.ChainId))
+			continue
 		}
 		ztvl := sdk.NewDecFromInt(k.icsKeeper.GetDelegatedAmount(ctx, &zone).Amount).Mul(tv)
 

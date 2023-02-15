@@ -11,8 +11,11 @@
   "base_denom": "uatom",
   "local_denom": "uqatom",
   "account_prefix": "cosmos",
-  "multi_send": false,
-  "liquidity_module": false
+  "deposits_enabled": true,
+  "unbonding_enabled": true,
+  "liquidity_module": false,
+  "return_to_sender": true,
+  "decimals": 6
   },
   "authority": "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p"
 }],

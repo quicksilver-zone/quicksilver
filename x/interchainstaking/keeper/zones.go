@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -12,9 +13,9 @@ import (
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 // GetZone returns zone info by chainID
@@ -195,9 +196,10 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 		k.Logger(ctx).Info("Deposit address not set")
 		return nil
 	}
+
 	withdrawalAddress := zone.WithdrawalAddress.Address
 
-	if zone.DepositAddress.WithdrawalAddress != zone.WithdrawalAddress.Address {
+	if zone.DepositAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
 		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "")
 		if err != nil {
@@ -205,7 +207,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 		}
 	}
 
-	if zone.DelegationAddress.WithdrawalAddress != zone.WithdrawalAddress.Address {
+	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
 		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "")
 		if err != nil {
@@ -388,4 +390,114 @@ OUTER:
 		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "")
 	}
 	return nil
+}
+
+func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) *types.Statistics {
+	out := &types.Statistics{}
+	out.ChainId = zone.ChainId
+	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
+	userMap := map[string]bool{}
+	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) bool {
+		for _, coin := range receipt.Amount {
+			out.Deposited += coin.Amount.Int64()
+			if _, found := userMap[receipt.Sender]; !found {
+				userMap[receipt.Sender] = true
+				out.Depositors++
+			}
+			out.Deposits++
+		}
+		return false
+	})
+	out.Supply = k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.Int64()
+	out.DistanceToTarget = fmt.Sprintf("%f", k.DistanceToTarget(ctx, zone))
+	return out
+}
+
+func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string) {
+	// clear unbondings
+	k.IteratePrefixedUnbondingRecords(ctx, []byte(chainID), func(_ int64, record types.UnbondingRecord) (stop bool) {
+		k.DeleteUnbondingRecord(ctx, record.ChainId, record.Validator, record.EpochNumber)
+		return false
+	})
+
+	// clear redelegations
+	k.IteratePrefixedRedelegationRecords(ctx, []byte(chainID), func(_ int64, _ []byte, record types.RedelegationRecord) (stop bool) {
+		k.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
+		return false
+	})
+
+	// remove zone and related records
+	k.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
+		if zone.ChainId == chainID {
+			// remove uni-5 delegation records
+			k.IterateAllDelegations(ctx, &zone, func(delegation types.Delegation) (stop bool) {
+				err := k.RemoveDelegation(ctx, &zone, delegation)
+				if err != nil {
+					panic(err)
+				}
+				return false
+			})
+
+			// remove performance delegation records
+			k.IterateAllPerformanceDelegations(ctx, &zone, func(delegation types.Delegation) (stop bool) {
+				err := k.RemoveDelegation(ctx, &zone, delegation)
+				if err != nil {
+					panic(err)
+				}
+				return false
+			})
+			// remove receipts
+			k.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				k.DeleteReceipt(ctx, GetReceiptKey(receiptInfo.ChainId, receiptInfo.Txhash))
+				return false
+			})
+
+			// remove withdrawal records
+			k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
+				k.DeleteWithdrawalRecord(ctx, zone.ChainId, record.Txhash, record.Status)
+				return false
+			})
+
+			k.DeleteZone(ctx, zone.ChainId)
+
+		}
+		return false
+	})
+
+	// remove queries in state
+	k.ICQKeeper.IterateQueries(ctx, func(_ int64, queryInfo icqtypes.Query) (stop bool) {
+		if queryInfo.ChainId == chainID {
+			k.ICQKeeper.DeleteQuery(ctx, queryInfo.Id)
+		}
+		return false
+	})
+}
+
+func (k *Keeper) CurrentDelegationsAsIntent(ctx sdk.Context, zone *types.Zone) types.ValidatorIntents {
+	currentDelegations := k.GetAllDelegations(ctx, zone)
+	intents := make(types.ValidatorIntents, 0)
+	for _, d := range currentDelegations {
+		intents = append(intents, &types.ValidatorIntent{ValoperAddress: d.ValidatorAddress, Weight: sdk.NewDecFromInt(d.Amount.Amount)})
+	}
+
+	return intents.Normalize()
+}
+
+func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) float64 {
+	current := k.CurrentDelegationsAsIntent(ctx, zone)
+	target := zone.GetAggregateIntentOrDefault()
+	preSqRt := sdk.ZeroDec()
+
+	for _, valoper := range zone.Validators {
+		c := current.MustGetForValoper(valoper.ValoperAddress)
+		t := target.MustGetForValoper(valoper.ValoperAddress)
+		v := c.Weight.SubMut(t.Weight)
+		preSqRt = preSqRt.AddMut(v.Mul(v))
+	}
+
+	psqrtf, err := preSqRt.Float64()
+	if err != nil {
+		panic("this value should never be greater than 64-bit dec!")
+	}
+	return math.Sqrt(psqrtf)
 }

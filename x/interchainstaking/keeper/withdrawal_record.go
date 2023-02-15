@@ -20,6 +20,21 @@ const (
 	WithdrawStatusCompleted int32 = iota + 1
 )
 
+func (k Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) (sequence uint64) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
+	bz := store.Get(types.KeyPrefixRequeuedWithdrawalRecordSeq)
+	if bz == nil {
+		bz := make([]byte, 8)
+		binary.BigEndian.PutUint64(bz, uint64(2))
+		store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
+		return 1
+	}
+	sequence = binary.BigEndian.Uint64(bz)
+	binary.BigEndian.PutUint64(bz, sequence+1)
+	store.Set(types.KeyPrefixRequeuedWithdrawalRecordSeq, bz)
+	return sequence
+}
+
 func (k Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID string, delegator string, distribution []*types.Distribution, recipient string, amount sdk.Coins, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time) {
 	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distribution, Recipient: recipient, Amount: amount, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime}
 	k.Logger(ctx).Error("addWithdrawalRecord", "record", record)
@@ -130,6 +145,16 @@ func (k Keeper) AllWithdrawalRecords(ctx sdk.Context) []types.WithdrawalRecord {
 	return records
 }
 
+// AllZoneWithdrawalRecords returns every record in the store for the specified zone
+func (k Keeper) AllZoneWithdrawalRecords(ctx sdk.Context, chainID string) []types.WithdrawalRecord {
+	records := []types.WithdrawalRecord{}
+	k.IterateZoneWithdrawalRecords(ctx, chainID, func(_ int64, record types.WithdrawalRecord) (stop bool) {
+		records = append(records, record)
+		return false
+	})
+	return records
+}
+
 // unbondigng records are keyed by chainId, validator and epoch, as they must be unique with regard to this triple.
 func GetUnbondingKey(chainID string, validator string, epochNumber int64) []byte {
 	epochBytes := make([]byte, 8)
@@ -190,10 +215,20 @@ func (k Keeper) IterateUnbondingRecords(ctx sdk.Context, fn func(index int64, re
 	k.IteratePrefixedUnbondingRecords(ctx, nil, fn)
 }
 
-// AllUnbondingRecords returns every record in the store for the specified zone
+// AllUnbondingRecords returns every record in the store
 func (k Keeper) AllUnbondingRecords(ctx sdk.Context) []types.UnbondingRecord {
 	records := []types.UnbondingRecord{}
 	k.IterateUnbondingRecords(ctx, func(_ int64, record types.UnbondingRecord) (stop bool) {
+		records = append(records, record)
+		return false
+	})
+	return records
+}
+
+// AllZoneUnbondingRecords returns every record in the store for the specified zone
+func (k Keeper) AllZoneUnbondingRecords(ctx sdk.Context, chainID string) []types.UnbondingRecord {
+	records := []types.UnbondingRecord{}
+	k.IteratePrefixedUnbondingRecords(ctx, []byte(chainID), func(_ int64, record types.UnbondingRecord) (stop bool) {
 		records = append(records, record)
 		return false
 	})

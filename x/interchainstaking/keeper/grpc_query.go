@@ -15,8 +15,8 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// ZoneInfos returns information about registered zones.
-func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (*types.QueryZonesInfoResponse, error) {
+// Zones returns information about registered zones.
+func (k Keeper) Zones(c context.Context, req *types.QueryZonesInfoRequest) (*types.QueryZonesInfoResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -24,6 +24,7 @@ func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var zones []types.Zone
+	var stats []*types.Statistics
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
@@ -32,6 +33,7 @@ func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (
 			return err
 		}
 		zones = append(zones, zone)
+		stats = append(stats, k.CollectStatsForZone(ctx, &zone))
 		return nil
 	})
 	if err != nil {
@@ -40,7 +42,27 @@ func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (
 
 	return &types.QueryZonesInfoResponse{
 		Zones:      zones,
+		Stats:      stats,
 		Pagination: pageRes,
+	}, nil
+}
+
+// Zones returns information about registered zones.
+func (k Keeper) Zone(c context.Context, req *types.QueryZoneInfoRequest) (*types.QueryZoneInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	zone, found := k.GetZone(ctx, req.ChainId)
+	if !found {
+		return nil, fmt.Errorf("no zone found for chain id %s", req.ChainId)
+	}
+
+	return &types.QueryZoneInfoResponse{
+		Zone:  zone,
+		Stats: k.CollectStatsForZone(ctx, &zone),
 	}, nil
 }
 
@@ -111,6 +133,7 @@ func (k Keeper) Delegations(c context.Context, req *types.QueryDelegationsReques
 }
 
 func (k Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*types.QueryReceiptsResponse, error) {
+	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -164,7 +187,7 @@ func (k Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalR
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	withdrawalrecords := k.AllWithdrawalRecords(ctx)
+	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
 
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
@@ -177,7 +200,7 @@ func (k Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRec
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	unbondings := k.AllUnbondingRecords(ctx)
+	unbondings := k.AllZoneUnbondingRecords(ctx, req.ChainId)
 
 	return &types.QueryUnbondingRecordsResponse{Unbondings: unbondings}, nil
 }
@@ -190,7 +213,7 @@ func (k Keeper) RedelegationRecords(c context.Context, req *types.QueryRedelegat
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	redelegations := k.AllRedelegationRecords(ctx)
+	redelegations := k.ZoneRedelegationRecords(ctx, req.ChainId)
 
 	return &types.QueryRedelegationRecordsResponse{Redelegations: redelegations}, nil
 }

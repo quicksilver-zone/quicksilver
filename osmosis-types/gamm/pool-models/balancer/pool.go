@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkioerrors "cosmossdk.io/errors"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/internal/cfmm_common"
 )
@@ -222,7 +222,7 @@ func (p Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	}
 
 	if len(p.PoolAssets) == 0 {
-		return -1, PoolAsset{}, sdkerrors.Wrapf(gamm.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
+		return -1, PoolAsset{}, sdkioerrors.Wrapf(gamm.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
 	}
 
 	i := sort.Search(len(p.PoolAssets), func(i int) bool {
@@ -233,11 +233,11 @@ func (p Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	})
 
 	if i < 0 || i >= len(p.PoolAssets) {
-		return -1, PoolAsset{}, sdkerrors.Wrapf(gamm.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
+		return -1, PoolAsset{}, sdkioerrors.Wrapf(gamm.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
 	}
 
 	if p.PoolAssets[i].Token.Denom != denom {
-		return -1, PoolAsset{}, sdkerrors.Wrapf(gamm.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
+		return -1, PoolAsset{}, sdkioerrors.Wrapf(gamm.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
 	}
 
 	return i, p.PoolAssets[i], nil
@@ -502,7 +502,7 @@ func (p Pool) CalcOutAmtGivenIn(
 	// We ignore the decimal component, as we round down the token amount out.
 	tokenAmountOutInt := tokenAmountOut.TruncateInt()
 	if !tokenAmountOutInt.IsPositive() {
-		return sdk.Coin{}, sdkerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Coin{}, sdkioerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
 	}
 
 	return sdk.NewCoin(tokenOutDenom, tokenAmountOutInt), nil
@@ -559,7 +559,7 @@ func (p Pool) CalcInAmtGivenOut(
 	tokenInAmt := tokenAmountInBeforeFee.Ceil().TruncateInt()
 
 	if !tokenInAmt.IsPositive() {
-		return sdk.Coin{}, sdkerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Coin{}, sdkioerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
 	}
 	return sdk.NewCoin(tokenInDenom, tokenInAmt), nil
 }
@@ -882,7 +882,7 @@ func (p *Pool) CalcTokenInShareAmountOut(
 	).Ceil().TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
 	}
 
 	return tokenInAmount, nil
@@ -909,7 +909,7 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 	).TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
 	}
 
 	poolAssetIn.Token.Amount = poolAssetIn.Token.Amount.Add(tokenInAmount)
@@ -941,11 +941,11 @@ func (p *Pool) ExitSwapExactAmountOut(
 	).TruncateInt()
 
 	if !sharesIn.IsPositive() {
-		return sdk.Int{}, sdkerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
+		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
 	}
 
 	if sharesIn.GT(shareInMaxAmount) {
-		return sdk.Int{}, sdkerrors.Wrapf(gamm.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
+		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
 	}
 
 	if err := p.exitPool(ctx, sdk.NewCoins(tokenOut), sharesIn); err != nil {

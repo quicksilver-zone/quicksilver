@@ -113,6 +113,9 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	max := sdk.NewInt(0)
 	min := sdk.NewInt(999999999999999999)
 	for _, val := range zoneValidators {
+		if val.VotingPower.IsNegative() {
+			return fmt.Errorf("unexpected negative voting power for %s", val.ValoperAddress)
+		}
 		// compute zone total voting power
 		zs.TotalVotingPower = zs.TotalVotingPower.Add(val.VotingPower)
 		if _, exists := zs.ValidatorScores[val.ValoperAddress]; !exists {

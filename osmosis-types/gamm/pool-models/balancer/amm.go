@@ -3,8 +3,9 @@ package balancer
 import (
 	"fmt"
 
+	sdkioerrors "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/osmomath"
@@ -72,11 +73,11 @@ func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
 // Namely, that the weight is in the range [1, MaxUserSpecifiedWeight)
 func ValidateUserSpecifiedWeight(weight sdk.Int) error {
 	if !weight.IsPositive() {
-		return sdkerrors.Wrap(gamm.ErrNotPositiveWeight, weight.String())
+		return sdkioerrors.Wrap(gamm.ErrNotPositiveWeight, weight.String())
 	}
 
 	if weight.GTE(MaxUserSpecifiedWeight) {
-		return sdkerrors.Wrap(gamm.ErrWeightTooLarge, weight.String())
+		return sdkioerrors.Wrap(gamm.ErrWeightTooLarge, weight.String())
 	}
 	return nil
 }
@@ -234,7 +235,7 @@ func ensureDenomInPool(poolAssetsByDenom map[string]PoolAsset, tokensIn sdk.Coin
 	for _, coin := range tokensIn {
 		_, ok := poolAssetsByDenom[coin.Denom]
 		if !ok {
-			return sdkerrors.Wrapf(gamm.ErrDenomNotFoundInPool, invalidInputDenomsErrFormat, coin.Denom)
+			return sdkioerrors.Wrapf(gamm.ErrDenomNotFoundInPool, invalidInputDenomsErrFormat, coin.Denom)
 		}
 	}
 

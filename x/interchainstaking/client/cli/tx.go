@@ -32,6 +32,7 @@ func GetTxCmd() *cobra.Command {
 
 	txCmd.AddCommand(GetSignalIntentTxCmd())
 	txCmd.AddCommand(GetRequestRedemptionTxCmd())
+	txCmd.AddCommand(GetReopenChannelTxCmd())
 
 	return txCmd
 }
@@ -83,6 +84,31 @@ func GetRequestRedemptionTxCmd() *cobra.Command {
 			}
 
 			msg := types.NewMsgRequestRedemption(coin, destinationAddress, clientCtx.GetFromAddress())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetReopenChannelTxCmd returns a CLI command handler for creating a Reopen ICA port transaction.
+func GetReopenChannelTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "reopen [connection] [port]",
+		Short: `Reopen closed ICA port.`,
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+			connectionID := args[0]
+			port := args[1]
+
+			msg := types.NewMsgGovReopenChannel(connectionID, port, clientCtx.GetFromAddress())
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
@@ -145,7 +171,7 @@ Where proposal.json contains:
 			from := clientCtx.GetFromAddress()
 
 			content := types.NewRegisterZoneProposal(proposal.Title, proposal.Description, proposal.ConnectionId, proposal.BaseDenom,
-				proposal.LocalDenom, proposal.AccountPrefix, proposal.MultiSend, proposal.LiquidityModule)
+				proposal.LocalDenom, proposal.AccountPrefix, proposal.ReturnToSender, proposal.UnbondingEnabled, proposal.DepositsEnabled, proposal.LiquidityModule, proposal.Decimals)
 
 			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)
 			if err != nil {

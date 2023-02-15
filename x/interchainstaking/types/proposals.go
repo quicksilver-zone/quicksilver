@@ -19,8 +19,8 @@ var (
 	_ govv1beta1.Content = &UpdateZoneProposal{}
 )
 
-func NewRegisterZoneProposal(title string, description string, connectionID string, baseDenom string, localDenom string, accountPrefix string, multiSend bool, liquidityModule bool) *RegisterZoneProposal {
-	return &RegisterZoneProposal{Title: title, Description: description, ConnectionId: connectionID, BaseDenom: baseDenom, LocalDenom: localDenom, AccountPrefix: accountPrefix, MultiSend: multiSend, LiquidityModule: liquidityModule}
+func NewRegisterZoneProposal(title string, description string, connectionID string, baseDenom string, localDenom string, accountPrefix string, returnToSender bool, unbonding bool, deposits bool, liquidityModule bool, decimals int64) *RegisterZoneProposal {
+	return &RegisterZoneProposal{Title: title, Description: description, ConnectionId: connectionID, BaseDenom: baseDenom, LocalDenom: localDenom, AccountPrefix: accountPrefix, ReturnToSender: returnToSender, UnbondingEnabled: unbonding, DepositsEnabled: deposits, LiquidityModule: liquidityModule, Decimals: decimals}
 }
 
 func (m RegisterZoneProposal) GetDescription() string { return m.Description }
@@ -36,7 +36,7 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 	}
 
 	// check valid connection id
-	if m.ConnectionId[0:11] != "connection-" {
+	if len(m.ConnectionId) < 12 || m.ConnectionId[0:11] != "connection-" {
 		return fmt.Errorf("invalid connection string: %s", m.ConnectionId)
 	}
 
@@ -58,6 +58,11 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 	if m.LiquidityModule {
 		return errors.New("liquidity module is unsupported")
 	}
+
+	if m.Decimals == 0 {
+		return errors.New("decimals field is mandatory")
+	}
+
 	return nil
 }
 
@@ -69,9 +74,12 @@ func (m RegisterZoneProposal) String() string {
   Connection Id:                    %s
   Base Denom:                       %s
   Local Denom:                      %s
-  Multi Send Enabled:               %t
+  Return to Sender Enabled:         %t
+  Unbonding Enabled:                %t
+  Deposits Enabled: 				%t	
   Liquidity Staking Module Enabled: %t
-`, m.Title, m.Description, m.ConnectionId, m.BaseDenom, m.LocalDenom, m.MultiSend, m.LiquidityModule)
+  Decimals:                         %d
+`, m.Title, m.Description, m.ConnectionId, m.BaseDenom, m.LocalDenom, m.ReturnToSender, m.UnbondingEnabled, m.DepositsEnabled, m.LiquidityModule, m.Decimals)
 }
 
 func NewUpdateZoneProposal(title string, description string, chainID string, changes []*UpdateZoneValue) *UpdateZoneProposal {

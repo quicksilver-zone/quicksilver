@@ -55,8 +55,11 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		AccountPrefix:      p.AccountPrefix,
 		RedemptionRate:     sdk.NewDec(1),
 		LastRedemptionRate: sdk.NewDec(1),
-		MultiSend:          p.MultiSend,
+		UnbondingEnabled:   p.UnbondingEnabled,
+		ReturnToSender:     p.ReturnToSender,
 		LiquidityModule:    p.LiquidityModule,
+		DepositsEnabled:    p.DepositsEnabled,
+		Decimals:           p.Decimals,
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 	}
 	k.SetZone(ctx, &zone)
@@ -98,7 +101,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		sdk.NewEvent(
 			types.EventTypeRegisterZone,
 			sdk.NewAttribute(types.AttributeKeyConnectionID, p.ConnectionId),
-			sdk.NewAttribute(types.AttributeKeyRecipientChain, chainID),
+			sdk.NewAttribute(types.AttributeKeyChainID, chainID),
 		),
 	})
 
@@ -150,12 +153,26 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 			}
 			zone.LiquidityModule = boolValue
 
-		case "multi_send":
+		case "unbonding_enabled":
 			boolValue, err := strconv.ParseBool(change.Value)
 			if err != nil {
 				return err
 			}
-			zone.LiquidityModule = boolValue
+			zone.UnbondingEnabled = boolValue
+
+		case "deposits_enabled":
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return err
+			}
+			zone.DepositsEnabled = boolValue
+
+		case "return_to_sender":
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return err
+			}
+			zone.ReturnToSender = boolValue
 
 		case "connection_id":
 			if !strings.HasPrefix(change.Value, "connection-") {
@@ -221,7 +238,7 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 			}
 
 		default:
-			return errors.New("unexpected key")
+			return fmt.Errorf("unexpected key '%s'", change.Key)
 		}
 	}
 	k.SetZone(ctx, &zone)
