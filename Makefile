@@ -125,8 +125,9 @@ endif
 ###############################################################################
 
 check_version:
-ifneq ($(GO_MINOR_VERSION),19)
+ifneq ($(shell expr $(GO_MINOR_VERSION) \>= 19), 1)
 	@echo "ERROR: Go version 1.19 is required for building Quicksilver. There are consensus breaking changes between binaries compiled with Go 1.18 and Go 1.19."
+	@echo "Your go version is: $(shell go version)."
 	exit 1
 endif
 
