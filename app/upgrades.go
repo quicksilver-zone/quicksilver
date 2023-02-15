@@ -24,7 +24,7 @@ const (
 
 	v010300UpgradeName    = "v1.3.0"
 	v010400UpgradeName    = "v1.4.0"
-	v010400rc5UpgradeName = "v1.4.0-rc5"
+	v010400rc6UpgradeName = "v1.4.0-rc6"
 )
 
 func isTest(ctx sdk.Context) bool {
@@ -47,7 +47,7 @@ func isMainnet(ctx sdk.Context) bool {
 func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010300UpgradeName, noOpHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010400UpgradeName, v010400UpgradeHandler(app))
-	app.UpgradeKeeper.SetUpgradeHandler(v010400rc5UpgradeName, v010400rc5UpgradeHandler(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v010400rc6UpgradeName, v010400rc6UpgradeHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -141,7 +141,7 @@ func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	}
 }
 
-func v010400rc5UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
+func v010400rc6UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) {
 			app.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "regen-redwood-1")
@@ -166,7 +166,7 @@ func v010400rc5UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 		// remove expired failed redelegation records
 		app.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(_ int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
 			if record.CompletionTime.Equal(time.Time{}) {
-				app.InterchainstakingKeeper.DeleteRedelegationRecordByKey(ctx, key)
+				app.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
 			}
 			return false
 		})

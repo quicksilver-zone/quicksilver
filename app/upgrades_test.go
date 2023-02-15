@@ -150,6 +150,16 @@ func (suite *AppTestSuite) initTestZone() {
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetRedelegationRecord(suite.chainA.GetContext(), rdRecord)
 
+	rdRecord = icstypes.RedelegationRecord{
+		ChainId:        "osmosis-1",
+		EpochNumber:    1,
+		Source:         "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
+		Destination:    "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
+		Amount:         3000000,
+		CompletionTime: time.Time{},
+	}
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetRedelegationRecord(suite.chainA.GetContext(), rdRecord)
+
 	delRecord := icstypes.Delegation{
 		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
 		DelegationAddress: "juno1z89utvygweg5l56fsk8ak7t6hh88fd0azcjpz5",
@@ -253,4 +263,20 @@ func (s *AppTestSuite) TestV010400UpgradeHandler() {
 
 	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "uni-5", "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D", icskeeper.WithdrawStatusQueued)
 	s.Require().False(found)
+}
+
+func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
+	app := s.GetQuicksilverApp(s.chainA)
+	handler := v010400rc6UpgradeHandler(app)
+	ctx := s.chainA.GetContext()
+
+	redelegations := app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
+	s.Require().Equal(1, len(redelegations))
+
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.Require().NoError(err)
+
+	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
+	s.Require().Equal(0, len(redelegations))
+
 }
