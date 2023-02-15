@@ -29,7 +29,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	q, found := k.GetQuery(ctx, msg.QueryId)
 
 	if !found {
-		k.Logger(ctx).Info("query not found", "QueryID", msg.QueryId)
+		k.Logger(ctx).Debug("query not found", "QueryID", msg.QueryId)
 
 		return &types.MsgSubmitQueryResponseResponse{}, nil
 	}
@@ -37,7 +37,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	// check if query was previously processed
 	// - indicated by query.LastHeight matching current Block Height;
 	if q.LastHeight.Int64() == ctx.BlockHeader().Height {
-		k.Logger(ctx).Info("ignoring duplicate query", "id", q.Id, "type", q.QueryType)
+		k.Logger(ctx).Debug("ignoring duplicate query", "id", q.Id, "type", q.QueryType)
 		// technically this is an error, but will cause the entire tx to fail
 		// if we have one 'bad' message, so we can just no-op here.
 		return &types.MsgSubmitQueryResponseResponse{}, nil

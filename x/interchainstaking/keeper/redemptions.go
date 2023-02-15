@@ -136,7 +136,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 			// do not process this or subsequent withdrawals this epoch.
 			return true
 		}
-		totalToWithdraw = totalToWithdraw.Add(withdrawal.Amount[0]) // withdrawal must always
+		totalToWithdraw = totalToWithdraw.Add(withdrawal.Amount[0])
 
 		amounts[withdrawal.Txhash] = withdrawal.Amount[0]
 		distributions[withdrawal.Txhash] = make([]*types.Distribution, 0)

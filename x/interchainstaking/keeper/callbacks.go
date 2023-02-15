@@ -96,7 +96,7 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	k.Logger(ctx).Info("rewards callback", "zone", query.ChainId)
+	k.Logger(ctx).Debug("rewards callback", "zone", query.ChainId)
 
 	// unmarshal request payload
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
@@ -112,7 +112,7 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 	// (initially incremented in AfterEpochEnd)
 	zone.WithdrawalWaitgroup--
 
-	k.Logger(ctx).Info("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
+	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
 
 	return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 }
@@ -132,7 +132,7 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	k.Logger(ctx).Info("Delegations callback triggered", "chain", zone.ChainId)
+	k.Logger(ctx).Debug("Delegations callback triggered", "chain", zone.ChainId)
 
 	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
 }
@@ -150,7 +150,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
-	k.Logger(ctx).Info("Delegation callback", "delegation", delegation, "chain", zone.ChainId)
+	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", zone.ChainId)
 
 	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
 		// delegation never gets removed, even with zero shares.
@@ -215,7 +215,7 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
 	}
 
-	k.Logger(ctx).Info("Deposit interval callback", "zone", zone.ChainId)
+	k.Logger(ctx).Debug("Deposit interval callback", "zone", zone.ChainId)
 
 	txs := tx.GetTxsEventResponse{}
 
@@ -233,9 +233,10 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 		hashBytes := k.cdc.MustMarshal(&req)
 		_, found = k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, txn.TxHash))
 		if found {
-			k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
+			k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
 			continue
 		}
+		k.Logger(ctx).Info("Found previously unhandled tx. Processing.", "txhash", txn.TxHash)
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}
 	return nil
@@ -355,7 +356,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
 	}
 
-	k.Logger(ctx).Info("DepositTx callback", "zone", zone.ChainId)
+	k.Logger(ctx).Debug("DepositTx callback", "zone", zone.ChainId)
 
 	res := icqtypes.GetTxWithProofResponse{}
 	if len(args) == 0 {
@@ -368,7 +369,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 
 	_, found = k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, res.GetTxResponse().TxHash))
 	if found {
-		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", res.GetTxResponse().TxHash)
+		k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", res.GetTxResponse().TxHash)
 		return nil
 	}
 
@@ -400,7 +401,6 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 
 	err = checkValidity(tmclientState, tmconsensusState, res.GetHeader(), ctx.BlockHeader().Time)
 	if err != nil {
-		k.Logger(ctx).Info("unable to validate header", "header", res.Header)
 		return fmt.Errorf("unable to validate header; %w", err)
 	}
 
@@ -475,7 +475,7 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	k.Logger(ctx).Info("AllBalances callback", "chain", zone.ChainId)
+	k.Logger(ctx).Debug("AllBalances callback", "chain", zone.ChainId)
 
 	switch {
 	case zone.DepositAddress != nil && balanceQuery.Address == zone.DepositAddress.Address:
