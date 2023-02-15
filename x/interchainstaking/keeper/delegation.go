@@ -392,10 +392,10 @@ func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string
 		existing, found := out[delegation.ValidatorAddress]
 		if !found {
 			out[delegation.ValidatorAddress] = delegation.Amount.Amount
-			locked[delegation.ValidatorAddress] = (delegation.RedelegationEnd <= ctx.BlockTime().Unix())
+			locked[delegation.ValidatorAddress] = delegation.RedelegationEnd != 0 && delegation.RedelegationEnd >= ctx.BlockTime().Unix()
 		} else {
 			out[delegation.ValidatorAddress] = existing.Add(delegation.Amount.Amount)
-			locked[delegation.ValidatorAddress] = (locked[delegation.ValidatorAddress] || (delegation.RedelegationEnd <= ctx.BlockTime().Unix()))
+			locked[delegation.ValidatorAddress] = locked[delegation.ValidatorAddress] || (delegation.RedelegationEnd != 0 && delegation.RedelegationEnd >= ctx.BlockTime().Unix())
 		}
 		sum = sum.Add(delegation.Amount.Amount)
 		return false
