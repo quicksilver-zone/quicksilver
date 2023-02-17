@@ -775,7 +775,9 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 	hash3 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x03}))
 	delegator1 := utils.GenerateAccAddressForTest().String()
 	delegator2 := utils.GenerateAccAddressForTest().String()
-	randRr := rand.Float64() + 1.0
+
+	randRr := rand.Float32() + 1.0
+
 	tests := []struct {
 		name                      string
 		epoch                     int64
@@ -1094,7 +1096,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						},
 						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
-						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(1000).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(1000).QuoTruncate(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
 						Txhash:     hash1,
 						Status:     icskeeper.WithdrawStatusUnbond,
 					},
@@ -1113,7 +1115,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						},
 						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(579))),
-						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(579).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(579).QuoTruncate(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
 						Txhash:     hash2,
 						Status:     icskeeper.WithdrawStatusUnbond,
 					},
@@ -1163,7 +1165,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: nil,
 						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
-						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewDec(1000).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewDec(1000).QuoTruncate(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
 						Txhash:       hash1,
 						Status:       icskeeper.WithdrawStatusQueued,
 					},
@@ -1173,7 +1175,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Distribution: nil,
 						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(123))),
-						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewDec(123).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
+						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewDec(123).QuoTruncate(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
 						Txhash:       fmt.Sprintf("%064d", 1),
 						Status:       icskeeper.WithdrawStatusQueued,
 					},
@@ -1188,7 +1190,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						},
 						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(456))),
-						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(456).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
+						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(456).QuoTruncate(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
 						Txhash:     hash2,
 						Status:     icskeeper.WithdrawStatusUnbond,
 					},
