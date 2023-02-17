@@ -20,3 +20,13 @@ type PortKeeper interface {
 	BindPort(ctx sdk.Context, portID string) *capabilitytypes.Capability
 	IsBound(ctx sdk.Context, portID string) bool
 }
+
+// AccountKeeper defines the expected account keeper.
+type AccountKeeper interface {
+	GetModuleAddress(moduleName string) sdk.AccAddress
+}
+
+// BankKeeper defines the expected bank keeper.
+type BankKeeper interface {
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
+}

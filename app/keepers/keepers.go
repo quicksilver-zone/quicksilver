@@ -53,7 +53,6 @@ import (
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/wasmbinding"
-	"github.com/ingenuity-build/quicksilver/x/airdrop"
 	airdropkeeper "github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
@@ -287,9 +286,9 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.ICAControllerKeeper,
-		&scopedInterchainStakingKeeper,
+		&appKeepers.ScopedInterchainStakingAccountKeeper,
 		appKeepers.InterchainQueryKeeper,
-		*appKeepers.IBCKeeper,
+		appKeepers.IBCKeeper,
 		appKeepers.TransferKeeper,
 		appKeepers.ClaimsManagerKeeper,
 		appKeepers.GetSubspace(interchainstakingtypes.ModuleName),
@@ -315,7 +314,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	)
 	appKeepers.ParticipationRewardsKeeper = &participationRewardsKeeper
 
-	if err := app.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, appKeepers.InterchainstakingKeeper.CallbackHandler()); err != nil {
+	if err := appKeepers.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, appKeepers.InterchainstakingKeeper.CallbackHandler()); err != nil {
 		panic(err)
 	}
 
@@ -338,7 +337,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 	epochsKeeper := epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 	appKeepers.EpochsKeeper = &epochsKeeper
 
-	appKeepers.ParticipationRewardsKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
+	appKeepers.ParticipationRewardsKeeper.SetEpochsKeeper(*appKeepers.EpochsKeeper)
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
@@ -427,7 +426,7 @@ func (appKeepers *AppKeepers) InitNormalKeepers(
 		proofOpsFn,
 	)
 	appKeepers.AirdropKeeper = &airdropKeeper
-	airdropModule := airdrop.NewAppModule(appCodec, appKeepers.AirdropKeeper)
+	// airdropModule := airdrop.NewAppModule(appCodec, appKeepers.AirdropKeeper)
 }
 
 // InitSpecialKeepers initiates special keepers (crisis appkeeper, upgradekeeper, params keeper)
