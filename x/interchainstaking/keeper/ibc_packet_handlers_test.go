@@ -1482,7 +1482,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	s.Require().False(present)
 }
 
-func (s *KeeperTestSuite) Testv045Callback() {
+func (s *KeeperTestSuite) Test_v045Callback() {
 	s.SetupTest()
 	s.setupTestZones()
 
@@ -1548,7 +1548,7 @@ func (s *KeeperTestSuite) Testv045Callback() {
 	s.Require().Equal(feeMaccBalance2.AmountOf("denom").Sub(feeMaccBalance.AmountOf("denom")), sdk.NewInt(100))
 }
 
-func (s *KeeperTestSuite) Testv046Callback() {
+func (s *KeeperTestSuite) Test_v046Callback() {
 	s.SetupTest()
 	s.setupTestZones()
 
