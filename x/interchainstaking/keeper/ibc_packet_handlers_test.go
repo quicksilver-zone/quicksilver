@@ -1,13 +1,15 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -1429,14 +1431,17 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, zone, 2)
+	s.Require().NoError(err)
 
 	// mock ack for redelegations
 	app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
 		if record.EpochNumber == 2 {
-			msg := stakingtypes.MsgBeginRedelegate{zone.DelegationAddress.Address,
-				record.Source,
-				record.Destination,
-				sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount))}
+			msg := stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    zone.DelegationAddress.Address,
+				ValidatorSrcAddress: record.Source,
+				ValidatorDstAddress: record.Destination,
+				Amount:              sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
+			}
 			err := app.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
 			if err != nil {
 				return false
@@ -1475,4 +1480,139 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	s.Require().False(present)
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[3].ValoperAddress, 3)
 	s.Require().False(present)
+}
+
+func (s *KeeperTestSuite) Testv045Callback() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+	app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+
+	sender := utils.GenerateAccAddressForTest()
+	senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+
+	txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+	feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	txMaccBalance := app.BankKeeper.GetAllBalances(ctx, txMacc)
+	feeMaccBalance := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+	transferMsg := ibctransfertypes.MsgTransfer{
+		SourcePort:    "transfer",
+		SourceChannel: "channel-0",
+		Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
+		Sender:        senderAddr,
+		Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+	}
+
+	response := ibctransfertypes.MsgTransferResponse{
+		Sequence: 1,
+	}
+
+	txMsgData := &sdk.TxMsgData{
+		Data:         []*sdk.MsgData{{MsgType: "/bob", Data: icatypes.ModuleCdc.MustMarshal(&response)}},
+		MsgResponses: []*codectypes.Any{},
+	}
+
+	ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+
+	acknowledgement := channeltypes.Acknowledgement{
+		Response: &channeltypes.Acknowledgement_Result{
+			Result: ackData,
+		},
+	}
+
+	pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, []sdk.Msg{&transferMsg})
+	s.Require().NoError(err)
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: pdBytes,
+		Memo: "test_acknowledgement",
+	}
+
+	packetBytes, err := icatypes.ModuleCdc.MarshalJSON(&packetData)
+	s.Require().NoError(err)
+	packet := channeltypes.Packet{
+		Data: packetBytes,
+	}
+
+	s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+
+	txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
+	feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+	// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
+	s.Require().Equal(txMaccBalance.AmountOf("denom").Sub(txMaccBalance2.AmountOf("denom")), sdk.NewInt(100))
+	// assert that fee collector module balance is now 100denom more than before HandleMsgTransfer()
+	s.Require().Equal(feeMaccBalance2.AmountOf("denom").Sub(feeMaccBalance.AmountOf("denom")), sdk.NewInt(100))
+}
+
+func (s *KeeperTestSuite) Testv046Callback() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+	app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+
+	sender := utils.GenerateAccAddressForTest()
+	senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+
+	txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+	feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	txMaccBalance := app.BankKeeper.GetAllBalances(ctx, txMacc)
+	feeMaccBalance := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+	transferMsg := ibctransfertypes.MsgTransfer{
+		SourcePort:    "transfer",
+		SourceChannel: "channel-0",
+		Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
+		Sender:        senderAddr,
+		Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+	}
+
+	response := ibctransfertypes.MsgTransferResponse{
+		Sequence: 1,
+	}
+
+	anyResponse, err := codectypes.NewAnyWithValue(&response)
+	s.Require().NoError(err)
+
+	txMsgData := &sdk.TxMsgData{
+		Data:         []*sdk.MsgData{},
+		MsgResponses: []*codectypes.Any{anyResponse},
+	}
+
+	ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+
+	acknowledgement := channeltypes.Acknowledgement{
+		Response: &channeltypes.Acknowledgement_Result{
+			Result: ackData,
+		},
+	}
+
+	pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, []sdk.Msg{&transferMsg})
+	s.Require().NoError(err)
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: pdBytes,
+		Memo: "test_acknowledgement",
+	}
+
+	packetBytes, err := icatypes.ModuleCdc.MarshalJSON(&packetData)
+	s.Require().NoError(err)
+	packet := channeltypes.Packet{
+		Data: packetBytes,
+	}
+
+	s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+
+	txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
+	feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+	// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
+	s.Require().Equal(txMaccBalance.AmountOf("denom").Sub(txMaccBalance2.AmountOf("denom")), sdk.NewInt(100))
+	// assert that fee collector module balance is now 100denom more than before HandleMsgTransfer()
+	s.Require().Equal(feeMaccBalance2.AmountOf("denom").Sub(feeMaccBalance.AmountOf("denom")), sdk.NewInt(100))
 }
