@@ -4,9 +4,10 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
+
 	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestDeconstructDenom(t *testing.T) {

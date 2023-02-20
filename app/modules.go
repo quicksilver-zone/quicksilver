@@ -45,6 +45,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v5/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop"

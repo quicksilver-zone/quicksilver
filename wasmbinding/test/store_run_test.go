@@ -5,9 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/app"
 
 	"github.com/CosmWasm/wasmd/x/wasm/keeper"
 	"github.com/CosmWasm/wasmd/x/wasm/types"

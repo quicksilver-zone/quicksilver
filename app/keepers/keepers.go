@@ -53,6 +53,8 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	tmos "github.com/tendermint/tendermint/libs/os"
+
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/wasmbinding"
@@ -74,7 +76,6 @@ import (
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	tokenfactorykeeper "github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-	tmos "github.com/tendermint/tendermint/libs/os"
 )
 
 type AppKeepers struct {

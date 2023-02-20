@@ -6,6 +6,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
@@ -118,7 +119,7 @@ func (suite *AppTestSuite) initTestZone() {
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
-	reciept := icstypes.Receipt{
+	receipt := icstypes.Receipt{
 		ChainId: "uni-5",
 		Sender:  utils.GenerateAccAddressForTest().String(),
 		Txhash:  "TestDeposit01",
@@ -130,7 +131,7 @@ func (suite *AppTestSuite) initTestZone() {
 		),
 	}
 
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), reciept)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), receipt)
 
 	ubRecord := icstypes.UnbondingRecord{
 		ChainId:       "uni-5",

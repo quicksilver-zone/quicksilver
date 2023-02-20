@@ -3,12 +3,13 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"github.com/ingenuity-build/quicksilver/app/keepers"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ingenuity-build/quicksilver/app/keepers"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"

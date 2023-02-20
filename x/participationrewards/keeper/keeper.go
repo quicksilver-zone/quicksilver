@@ -9,6 +9,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/tendermint/tendermint/libs/log"
+
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -17,7 +19,6 @@ import (
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 // userAllocation is an internal keeper struct to track transient state for
