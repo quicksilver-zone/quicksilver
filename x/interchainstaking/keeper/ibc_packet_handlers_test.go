@@ -1261,8 +1261,8 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 		})
 	}
 }
-func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 
+func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	s.SetupTest()
 	s.setupTestZones()
 
@@ -1293,7 +1293,8 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 			ValidatorAddress:  vals[2].ValoperAddress,
 			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
 			RedelegationEnd:   0,
-		}, {
+		},
+		{
 			DelegationAddress: zone.DelegationAddress.Address,
 			ValidatorAddress:  vals[3].ValoperAddress,
 			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
@@ -1313,7 +1314,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	err := app.InterchainstakingKeeper.Rebalance(ctx, zone, 1)
 	s.Require().NoError(err)
 
-	//change intents to trigger redelegations from val[3]
+	// change intents to trigger redelegations from val[3]
 	intents := icstypes.ValidatorIntents{
 		{ValoperAddress: vals[0].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
 		{ValoperAddress: vals[1].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
@@ -1328,10 +1329,12 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	// mock ack for redelegations
 	app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
 		if record.EpochNumber == 2 {
-			msg := stakingtypes.MsgBeginRedelegate{zone.DelegationAddress.Address,
+			msg := stakingtypes.MsgBeginRedelegate{
+				zone.DelegationAddress.Address,
 				record.Source,
 				record.Destination,
-				sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount))}
+				sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
+			}
 			err := app.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
 			if err != nil {
 				return false
@@ -1361,7 +1364,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, zone, 3)
 
-	//check for redelegations originating from val[0], they should not be present
+	// check for redelegations originating from val[0], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 3)
 	s.Require().False(present)
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[2].ValoperAddress, 3)
@@ -1371,7 +1374,6 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 }
 
 func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
-
 	s.SetupTest()
 	s.setupTestZones()
 
@@ -1402,7 +1404,8 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 			ValidatorAddress:  vals[2].ValoperAddress,
 			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
 			RedelegationEnd:   0,
-		}, {
+		},
+		{
 			DelegationAddress: zone.DelegationAddress.Address,
 			ValidatorAddress:  vals[3].ValoperAddress,
 			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
@@ -1474,7 +1477,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, zone, 3)
 
-	//check for redelegations originating from val[1], they should not be present
+	// check for redelegations originating from val[1], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[0].ValoperAddress, 3)
 	s.Require().False(present)
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[1].ValoperAddress, 3)

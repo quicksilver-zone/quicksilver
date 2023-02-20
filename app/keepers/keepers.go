@@ -79,7 +79,6 @@ import (
 )
 
 type AppKeepers struct {
-
 	// make scoped keepers public for test purposes
 	ScopedIBCKeeper                      capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper                 capabilitykeeper.ScopedKeeper
@@ -380,7 +379,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.GetSubspace(interchainstakingtypes.ModuleName),
 	)
 
-	//interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
+	// interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
 
 	interchainstakingIBCModule := interchainstaking.NewIBCModule(appKeepers.InterchainstakingKeeper)
 

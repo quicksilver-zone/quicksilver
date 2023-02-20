@@ -279,5 +279,4 @@ func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
 
 	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
 	s.Require().Equal(0, len(redelegations))
-
 }
