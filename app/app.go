@@ -483,12 +483,12 @@ func NewQuicksilver(
 		keys[interchainstakingtypes.StoreKey],
 		&app.AccountKeeper,
 		&app.BankKeeper,
-		&app.ICAControllerKeeper,
+		app.ICAControllerKeeper,
 		&scopedInterchainStakingKeeper,
-		&app.InterchainQueryKeeper,
+		app.InterchainQueryKeeper,
 		*app.IBCKeeper,
-		&app.TransferKeeper,
-		&app.ClaimsManagerKeeper,
+		app.TransferKeeper,
+		app.ClaimsManagerKeeper,
 		app.GetSubspace(interchainstakingtypes.ModuleName),
 	)
 	interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
@@ -538,7 +538,7 @@ func NewQuicksilver(
 		),
 	)
 
-	app.ParticipationRewardsKeeper.SetEpochsKeeper(&app.EpochsKeeper)
+	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	wasmDir := filepath.Join(homePath, "data")
