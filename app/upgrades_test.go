@@ -4,18 +4,18 @@ import (
 	"testing"
 	"time"
 
+	"github.com/ingenuity-build/quicksilver/app/upgrades"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/utils"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/ingenuity-build/quicksilver/utils"
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 func init() {
@@ -214,7 +214,7 @@ func (suite *AppTestSuite) initTestZone() {
 
 func (s *AppTestSuite) TestV010400UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
-	handler := v010400UpgradeHandler(app)
+	handler := upgrades.V010400UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
 	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
 	s.Require().NoError(err)
@@ -268,7 +268,8 @@ func (s *AppTestSuite) TestV010400UpgradeHandler() {
 
 func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
-	handler := v010400rc6UpgradeHandler(app)
+
+	handler := upgrades.V010400rc6UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
 
 	redelegations := app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")

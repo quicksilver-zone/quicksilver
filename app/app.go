@@ -216,7 +216,8 @@ func NewQuicksilver(
 	app.SetEndBlocker(app.EndBlocker)
 
 	// handle upgrades here
-	setUpgradeHandlers(app)
+	app.setUpgradeHandlers()
+	app.setUpgradeStoreLoaders()
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
