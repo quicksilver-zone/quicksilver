@@ -25,6 +25,7 @@ const (
 	v010300UpgradeName    = "v1.3.0"
 	v010400UpgradeName    = "v1.4.0"
 	v010400rc6UpgradeName = "v1.4.0-rc6"
+	v010400rc7UpgradeName = "v1.4.0-rc7"
 )
 
 func isTest(ctx sdk.Context) bool {
@@ -48,6 +49,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010300UpgradeName, noOpHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010400UpgradeName, v010400UpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010400rc6UpgradeName, v010400rc6UpgradeHandler(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v010400rc7UpgradeName, noOpHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
