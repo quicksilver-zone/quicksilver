@@ -182,5 +182,5 @@ replace (
 	github.com/iqlusioninc/liquidity-staking-module => github.com/notional-labs/liquidity-staking-module v0.0.3-0.20220914043211-d4675d9af6ae
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26
 	// pebbledb - https://gist.github.com/faddat/673107b72eccdd869b242338dd17e9d9
-	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220731185452-136c7b65fb62
+	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.8
 )
