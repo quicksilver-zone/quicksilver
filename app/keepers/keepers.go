@@ -85,7 +85,7 @@ type AppKeepers struct {
 	ScopedICAControllerKeeper            capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper                  capabilitykeeper.ScopedKeeper
 	ScopedInterchainStakingAccountKeeper capabilitykeeper.ScopedKeeper
-	scopedWasmKeeper                     capabilitykeeper.ScopedKeeper //nolint:unused //TODO: we can use this for testing
+	scopedWasmKeeper                     capabilitykeeper.ScopedKeeper // TODO: we can use this for testing
 
 	// "Normal" keepers
 	// 		SDK

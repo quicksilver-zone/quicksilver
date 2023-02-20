@@ -179,7 +179,6 @@ func appModules(
 func simulationModules(
 	app *Quicksilver,
 	encodingConfig EncodingConfig,
-	skipGenesisInvariants bool,
 ) []module.AppModuleSimulation {
 	appCodec := encodingConfig.Marshaler
 

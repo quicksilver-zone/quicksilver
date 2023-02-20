@@ -22,28 +22,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
 	"github.com/gorilla/mux"
@@ -56,12 +44,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
-	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
-	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 func Init() {
@@ -204,7 +187,7 @@ func NewQuicksilver(
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
-	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig, skipGenesisInvariants)...)
+	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig)...)
 
 	app.sm.RegisterStoreDecoders()
 
@@ -437,39 +420,6 @@ func GetMaccPerms() map[string][]string {
 	}
 
 	return dupMaccPerms
-}
-
-// initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(
-	appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey,
-) paramskeeper.Keeper {
-	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
-
-	// SDK subspaces
-	paramsKeeper.Subspace(authtypes.ModuleName)
-	paramsKeeper.Subspace(banktypes.ModuleName)
-	paramsKeeper.Subspace(stakingtypes.ModuleName)
-	paramsKeeper.Subspace(distrtypes.ModuleName)
-	paramsKeeper.Subspace(minttypes.ModuleName)
-	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
-	paramsKeeper.Subspace(crisistypes.ModuleName)
-	// ibc subspaces
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
-	paramsKeeper.Subspace(icahosttypes.SubModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
-	// quicksilver subspaces
-	paramsKeeper.Subspace(claimsmanagertypes.ModuleName)
-	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
-	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
-	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
-	paramsKeeper.Subspace(airdroptypes.ModuleName)
-	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
-	// wasm subspace
-	paramsKeeper.Subspace(wasm.ModuleName)
-
-	return paramsKeeper
 }
 
 func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
