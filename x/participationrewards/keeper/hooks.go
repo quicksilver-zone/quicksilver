@@ -81,6 +81,11 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			return
 		}
 
+		if allocation == nil {
+			// if allocation is unset, then return early to avoid panic
+			return
+		}
+
 		if err := k.allocateZoneRewards(ctx, tvs, *allocation); err != nil {
 			k.Logger(ctx).Error(err.Error())
 		}
