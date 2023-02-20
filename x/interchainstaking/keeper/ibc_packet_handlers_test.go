@@ -777,7 +777,9 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 	hash3 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x03}))
 	delegator1 := utils.GenerateAccAddressForTest().String()
 	delegator2 := utils.GenerateAccAddressForTest().String()
-	randRr := rand.Float64() + 1.0
+
+	randRr := rand.Float32() + 1.0
+
 	tests := []struct {
 		name                      string
 		epoch                     int64
