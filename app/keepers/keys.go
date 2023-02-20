@@ -1,11 +1,69 @@
 package keepers
 
 import (
+	"github.com/CosmWasm/wasmd/x/wasm"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
+	"github.com/cosmos/cosmos-sdk/x/feegrant"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	icacontrollertypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+
+	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
+	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
+
+// TODO: We need to automate this, by bundling with a module struct...
+func KVStoreKeys() []string {
+	return []string{
+		// SDK keys
+		authtypes.StoreKey,
+		banktypes.StoreKey,
+		stakingtypes.StoreKey,
+		distrtypes.StoreKey,
+		slashingtypes.StoreKey,
+		govtypes.StoreKey,
+		paramstypes.StoreKey,
+		upgradetypes.StoreKey,
+		evidencetypes.StoreKey,
+		capabilitytypes.StoreKey,
+		feegrant.StoreKey,
+		authzkeeper.StoreKey,
+		// ibc keys
+		ibchost.StoreKey,
+		ibctransfertypes.StoreKey,
+		icacontrollertypes.StoreKey,
+		icahosttypes.StoreKey,
+		// quicksilver keys
+		minttypes.StoreKey,
+		claimsmanagertypes.StoreKey,
+		epochstypes.StoreKey,
+		interchainstakingtypes.StoreKey,
+		interchainquerytypes.StoreKey,
+		participationrewardstypes.StoreKey,
+		airdroptypes.StoreKey,
+		wasm.StoreKey,
+		tokenfactorytypes.StoreKey,
+	}
+}
 
 // GenerateKeys generates new keys (KV Store, Transient store, and memory store).
 func (appKeepers *AppKeepers) GenerateKeys() {

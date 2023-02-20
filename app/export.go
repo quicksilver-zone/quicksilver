@@ -55,7 +55,7 @@ func (app *Quicksilver) ExportAppStateAndValidators(
 		return servertypes.ExportedApp{}, err
 	}
 
-	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
+	validators, err := staking.WriteValidators(ctx, *app.StakingKeeper)
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}
@@ -184,7 +184,7 @@ func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAdd
 
 	// Iterate through validators by power descending, reset bond heights, and
 	// update bond intra-tx counters.
-	store := ctx.KVStore(app.keys[stakingtypes.StoreKey])
+	store := ctx.KVStore(app.GetKey(stakingtypes.StoreKey))
 	iter := sdk.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
 	counter := int16(0)
 
