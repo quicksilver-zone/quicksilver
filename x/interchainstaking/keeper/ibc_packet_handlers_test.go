@@ -1637,10 +1637,6 @@ func (s *KeeperTestSuite) Test_v045Callback_NilResp() {
 		WithdrawAddress:  zone.WithdrawalAddress.Address,
 	}
 
-	//response := ibctransfertypes.MsgTransferResponse{
-	//	Sequence: 1,
-	//}
-
 	response := distrtypes.MsgSetWithdrawAddressResponse{}
 
 	txMsgData := &sdk.TxMsgData{
@@ -1695,10 +1691,6 @@ func (s *KeeperTestSuite) Test_v046Callback_NilResp() {
 		DelegatorAddress: zone.PerformanceAddress.Address,
 		WithdrawAddress:  zone.WithdrawalAddress.Address,
 	}
-
-	//response := ibctransfertypes.MsgTransferResponse{
-	//	Sequence: 1,
-	//}
 
 	response := distrtypes.MsgSetWithdrawAddressResponse{}
 
