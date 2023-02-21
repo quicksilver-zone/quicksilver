@@ -177,7 +177,9 @@ type ZoneDrop struct {
 ### ClaimRecord
 
 ```go
+var (
 KeyPrefixClaimRecord = []byte{0x02}
+)
 
 func GetKeyClaimRecord(chainID string, addr sdk.AccAddress) []byte {
 	return append(append(KeyPrefixClaimRecord, []byte(chainID)...), addr...)
