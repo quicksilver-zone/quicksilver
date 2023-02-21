@@ -1,4 +1,4 @@
-name: Simulation Tests
+name: simulate quicksilver
 
 on:
   pull_request:
