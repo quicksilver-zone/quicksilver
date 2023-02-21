@@ -7,7 +7,6 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -52,8 +51,8 @@ func TestQuicksilverExport(t *testing.T) {
 		0,
 		app.MakeEncodingConfig(),
 		wasm.EnableAllProposals,
-		simapp.EmptyAppOptions{},
-		app.GetWasmOpts(simapp.EmptyAppOptions{}),
+		app.EmptyAppOptions{},
+		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
 	)
 
@@ -83,8 +82,8 @@ func TestQuicksilverExport(t *testing.T) {
 		0,
 		app.MakeEncodingConfig(),
 		wasm.EnableAllProposals,
-		simapp.EmptyAppOptions{},
-		app.GetWasmOpts(simapp.EmptyAppOptions{}),
+		app.EmptyAppOptions{},
+		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
 	)
 	_, err = app2.ExportAppStateAndValidators(false, []string{})

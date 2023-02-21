@@ -3,13 +3,12 @@ package app_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/CosmWasm/wasmd/x/wasm"
 	"math/rand"
 	"os"
 	"testing"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -22,7 +21,7 @@ import (
 )
 
 func init() {
-	simapp.GetSimulatorFlags()
+	appsim.GetSimulatorFlags()
 }
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
@@ -31,12 +30,12 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 func BenchmarkSimulation(b *testing.B) {
-	simapp.FlagVerboseValue = true
-	simapp.FlagOnOperationValue = true
-	simapp.FlagAllInvariantsValue = true
-	simapp.FlagInitialBlockHeightValue = 1
+	appsim.FlagVerboseValue = true
+	appsim.FlagOnOperationValue = true
+	appsim.FlagAllInvariantsValue = true
+	appsim.FlagInitialBlockHeightValue = 1
 
-	config, db, dir, _, _, err := simapp.SetupSimulation("goleveldb-app-sim", "Simulation")
+	config, db, dir, _, _, err := appsim.SetupSimulation("goleveldb-app-sim", "Simulation")
 	require.NoError(b, err, "simulation setup failed")
 
 	b.Cleanup(func() {
@@ -53,11 +52,11 @@ func BenchmarkSimulation(b *testing.B) {
 		true,
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		simapp.FlagPeriodValue,
+		appsim.FlagPeriodValue,
 		app.MakeEncodingConfig(),
 		wasm.EnableAllProposals,
-		simapp.EmptyAppOptions{},
-		app.GetWasmOpts(simapp.EmptyAppOptions{}),
+		app.EmptyAppOptions{},
+		app.GetWasmOpts(app.EmptyAppOptions{}),
 		false,
 	)
 
@@ -80,17 +79,17 @@ func BenchmarkSimulation(b *testing.B) {
 	require.NoError(b, err)
 
 	if config.Commit {
-		simapp.PrintStats(db)
+		appsim.PrintStats(db)
 	}
 }
 
 // TestAppStateDeterminism TODO.
 func TestAppStateDeterminism(t *testing.T) {
-	if !simapp.FlagEnabledValue {
+	if !appsim.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
-	config := simapp.NewConfigFromFlags()
+	config := appsim.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = true
@@ -113,11 +112,11 @@ func TestAppStateDeterminism(t *testing.T) {
 				true,
 				map[int64]bool{},
 				app.DefaultNodeHome,
-				simapp.FlagPeriodValue,
+				appsim.FlagPeriodValue,
 				app.MakeEncodingConfig(),
 				wasm.EnableAllProposals,
-				simapp.EmptyAppOptions{},
-				app.GetWasmOpts(simapp.EmptyAppOptions{}),
+				app.EmptyAppOptions{},
+				app.GetWasmOpts(app.EmptyAppOptions{}),
 				false,
 				interBlockCacheOpt(),
 			)
@@ -141,7 +140,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			require.NoError(t, err)
 
 			if config.Commit {
-				simapp.PrintStats(db)
+				appsim.PrintStats(db)
 			}
 
 			appHash := quicksilver.LastCommitID().Hash
