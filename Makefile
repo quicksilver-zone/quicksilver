@@ -336,16 +336,33 @@ test-rpc-pending:
 
 .PHONY: run-tests test test-all test-import test-rpc $(TEST_TARGETS)
 
+SIM_NUM_BLOCKS ?= 500
+SIM_BLOCK_SIZE ?= 200
+SIM_CI_NUM_BLOCKS ?= 200
+SIM_CI_BLOCK_SIZE ?= 26
+SIM_PERIOD ?= 5
+SIM_COMMIT ?= true
+SIM_TIMEOUT ?= 24h
+
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
 	@go test -short -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
-		-NumBlocks=100 -BlockSize=200 -Commit=true -Period=0 -v -timeout 24h
+		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -Period=$(SIM_PERIOD) \
+		-v -timeout $(SIM_TIMEOUT)
+
+## test-sim-ci: Run lightweight simulation for CI pipeline
+test-sim-ci:
+	@echo "Running application benchmark for numBlocks=$(SIM_CI_NUM_BLOCKS), blockSize=$(SIM_CI_BLOCK_SIZE)"
+	@VERSION=$(VERSION) go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkSimulation$$  \
+		-Enabled=true -NumBlocks=$(SIM_CI_NUM_BLOCKS) -BlockSize=$(SIM_CI_BLOCK_SIZE) -Commit=$(SIM_COMMIT) \
+		-Period=$(SIM_PERIOD) -timeout $(SIM_TIMEOUT)
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.$(QS_DIR)/config/genesis.json will be used."
 	@go test -short -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.$(QS_DIR)/config/genesis.json \
-		-Enabled=true -NumBlocks=100 -BlockSize=200 -Commit=true -Seed=99 -Period=5 -v -timeout 24h
+		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -Seed=99 \
+		-Period=$(SIM_PERIOD) -v -timeout  $(SIM_TIMEOUT)
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
@@ -371,11 +388,12 @@ test-sim-multi-seed-short: runsim
 test-sim-benchmark-invariants:
 	@echo "Running simulation invariant benchmarks..."
 	@go test -short -mod=readonly $(SIMAPP) -benchmem -bench=BenchmarkInvariants -run=^$ \
-	-Enabled=true -NumBlocks=1000 -BlockSize=200 \
-	-Period=1 -Commit=true -Seed=57 -v -timeout 24h
+	-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) \
+	-Period=1 -Commit=$(SIM_COMMIT) -Seed=57 -v -timeout  $(SIM_TIMEOUT)
 
 .PHONY: \
 test-sim-nondeterminism \
+test-sim-ci \
 test-sim-custom-genesis-fast \
 test-sim-import-export \
 test-sim-after-import \
