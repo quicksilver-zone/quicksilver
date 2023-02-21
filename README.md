@@ -22,7 +22,7 @@ This system spec has been found to be optimal:
 
 Make sure that the above software is installed on your system. Follow the instructions for your particular platform or use your preferred platform package manager;
 
-In addition install `jq` (a command line JSON processor):
+In addition, install `jq` (a command line JSON processor):
 
  - Debian based systems:  
 `apt-get install jq`
@@ -62,11 +62,9 @@ Quicksilver utilises code and logic that originated from other projects; as an o
 
 The following modules were lifted and reused in almost entirety from Osmosis (<https://github.com/osmosis-labs/osmosis>), under the terms of the Apache 2.0 License, and we are grateful for their contribution:
 
-```
-x/mint
-x/epochs
-x/tokenfactory
-```
+    x/mint
+    x/epochs
+    x/tokenfactory
 
 We're also using CosmWasm, developed over the course of years with lead from Confio and support from the whole of Cosmos. 
 
