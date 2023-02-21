@@ -806,29 +806,32 @@ func NewQuicksilver(
 	// // NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// // transactions
 	app.sm = module.NewSimulationManager(
+		// SDK app modules
+
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		params.NewAppModule(app.ParamsKeeper),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, app.BankKeeper),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
+		params.NewAppModule(app.ParamsKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		// 	// ibc modules
+		// ibc modules
 		ibc.NewAppModule(app.IBCKeeper),
 		transferModule,
 		icaModule,
-		// 	// Quicksilver app modules
-		epochs.NewAppModule(appCodec, app.EpochsKeeper),
-		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, app.BankKeeper),
-		airdropModule,
+		// Quicksilver app modules
 		claimsmanagerModule,
+		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		interchainstakingModule,
 		interchainQueryModule,
 		participationrewardsModule,
+		airdropModule,
+		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
 	)
 
 	// app.sm.RegisterStoreDecoders()
