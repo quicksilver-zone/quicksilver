@@ -15,10 +15,10 @@ This system spec has been found to be optimal:
 4. 100Mbps bidirectional Internet connection
 
 ## Software Dependencies
-1. The Go programming language - https://go.dev/
-2. Git distributed version control - https://git-scm.com/
-3. Docker - https://www.docker.com/get-started/
-4. GNU Make - https://www.gnu.org/software/make/
+1. The Go programming language - <https://go.dev/>
+2. Git distributed version control - <https://git-scm.com/>
+3. Docker - <https://www.docker.com/get-started/>
+4. GNU Make - <https://www.gnu.org/software/make/>
 
 Make sure that the above software is installed on your system. Follow the instructions for your particular platform or use your preferred platform package manager;
 
@@ -60,7 +60,7 @@ For subsequent tests run the following if you want to start with fresh state:
 
 Quicksilver utilises code and logic that originated from other projects; as an open-source project ourselves, we believe that appropriate attribution is neccessary, in order to combat plagarism.
 
-The following modules were lifted and reused in almost entirety from Osmosis (https://github.com/osmosis-labs/osmosis), under the terms of the Apache 2.0 License, and we are grateful for their contribution:
+The following modules were lifted and reused in almost entirety from Osmosis (<https://github.com/osmosis-labs/osmosis>), under the terms of the Apache 2.0 License, and we are grateful for their contribution:
 
 ```
 x/mint
