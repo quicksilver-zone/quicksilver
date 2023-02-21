@@ -58,8 +58,10 @@ var ClaimType_value = map[string]int32{
 ### Claim
 
 ```go
-KeyPrefixClaim          = []byte{0x00}
-KeyPrefixLastEpochClaim = []byte{0x01}
+var (
+	KeyPrefixClaim          = []byte{0x00}
+	KeyPrefixLastEpochClaim = []byte{0x01}
+)
 
 // ClaimKey returns the key for storing a given claim.
 func GetGenericKeyClaim(key []byte, chainID string, address string, module ClaimType, srcChainID string) []byte {
