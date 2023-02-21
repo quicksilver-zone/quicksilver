@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"crypto/sha256"
 	"fmt"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"math/rand"
 	"testing"
 	"time"
@@ -1617,4 +1618,125 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 	s.Require().Equal(txMaccBalance.AmountOf("denom").Sub(txMaccBalance2.AmountOf("denom")), sdk.NewInt(100))
 	// assert that fee collector module balance is now 100denom more than before HandleMsgTransfer()
 	s.Require().Equal(feeMaccBalance2.AmountOf("denom").Sub(feeMaccBalance.AmountOf("denom")), sdk.NewInt(100))
+}
+
+func (s *KeeperTestSuite) Test_v045Callback_NilResp() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	if !found {
+		s.Fail("unable to retrieve zone for test")
+	}
+
+	msgSetWithdrawAddress := distrtypes.MsgSetWithdrawAddress{
+		DelegatorAddress: zone.PerformanceAddress.Address,
+		WithdrawAddress:  zone.WithdrawalAddress.Address,
+	}
+
+	//response := ibctransfertypes.MsgTransferResponse{
+	//	Sequence: 1,
+	//}
+
+	response := distrtypes.MsgSetWithdrawAddressResponse{}
+
+	txMsgData := &sdk.TxMsgData{
+		Data:         []*sdk.MsgData{{MsgType: "/bob", Data: icatypes.ModuleCdc.MustMarshal(&response)}},
+		MsgResponses: []*codectypes.Any{},
+	}
+
+	ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+
+	acknowledgement := channeltypes.Acknowledgement{
+		Response: &channeltypes.Acknowledgement_Result{
+			Result: ackData,
+		},
+	}
+
+	pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, []sdk.Msg{&msgSetWithdrawAddress})
+	s.Require().NoError(err)
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: pdBytes,
+		Memo: "test_acknowledgement",
+	}
+
+	packetBytes, err := icatypes.ModuleCdc.MarshalJSON(&packetData)
+	s.Require().NoError(err)
+	packet := channeltypes.Packet{
+		Data: packetBytes,
+	}
+
+	s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	if !found {
+		s.Fail("unable to retrieve zone for test")
+	}
+	// assert that withdraw address is set
+	s.Require().Equal(zone.WithdrawalAddress.Address, zone.PerformanceAddress.WithdrawalAddress)
+}
+
+func (s *KeeperTestSuite) Test_v046Callback_NilResp() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	if !found {
+		s.Fail("unable to retrieve zone for test")
+	}
+
+	msgSetWithdrawAddress := distrtypes.MsgSetWithdrawAddress{
+		DelegatorAddress: zone.PerformanceAddress.Address,
+		WithdrawAddress:  zone.WithdrawalAddress.Address,
+	}
+
+	//response := ibctransfertypes.MsgTransferResponse{
+	//	Sequence: 1,
+	//}
+
+	response := distrtypes.MsgSetWithdrawAddressResponse{}
+
+	anyResponse, err := codectypes.NewAnyWithValue(&response)
+	s.Require().NoError(err)
+
+	txMsgData := &sdk.TxMsgData{
+		Data:         []*sdk.MsgData{},
+		MsgResponses: []*codectypes.Any{anyResponse},
+	}
+
+	ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+
+	acknowledgement := channeltypes.Acknowledgement{
+		Response: &channeltypes.Acknowledgement_Result{
+			Result: ackData,
+		},
+	}
+
+	pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, []sdk.Msg{&msgSetWithdrawAddress})
+	s.Require().NoError(err)
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: pdBytes,
+		Memo: "test_acknowledgement",
+	}
+
+	packetBytes, err := icatypes.ModuleCdc.MarshalJSON(&packetData)
+	s.Require().NoError(err)
+	packet := channeltypes.Packet{
+		Data: packetBytes,
+	}
+
+	s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	if !found {
+		s.Fail("unable to retrieve zone for test")
+	}
+	// assert that withdraw address is set
+	s.Require().Equal(zone.WithdrawalAddress.Address, zone.PerformanceAddress.WithdrawalAddress)
 }
