@@ -154,7 +154,9 @@ var Status_value = map[string]int32{
 ### ZoneDrop
 
 ```go
+var (
 KeyPrefixZoneDrop    = []byte{0x01}
+)
 
 func GetKeyZoneDrop(chainID string) []byte {
 	return append(KeyPrefixZoneDrop, []byte(chainID)...)
