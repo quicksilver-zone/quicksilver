@@ -824,6 +824,7 @@ func NewQuicksilver(
 		// 	// Quicksilver app modules
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, app.BankKeeper),
+		airdropModule,
 		interchainstakingModule,
 	)
 
