@@ -117,8 +117,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		//nolint:staticcheck // SA1019 ignore this!
 		var msgData *sdk.MsgData
 		var msgResponse []byte
+		var msgResponseType string
 		if len(txMsgData.MsgResponses) > 0 {
 			msgResponse = txMsgData.MsgResponses[msgIndex].GetValue()
+			msgResponseType = txMsgData.MsgResponses[msgIndex].GetTypeUrl()
 		} else if len(txMsgData.Data) > 0 {
 			msgData = txMsgData.Data[msgIndex]
 		}
@@ -143,7 +145,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{}
 
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgRedeemTokensforShares response", "error", err)
@@ -168,7 +170,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return nil
 			}
 			response := lsmstakingtypes.MsgTokenizeSharesResponse{}
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgTokenizeShares response", "error", err)
@@ -192,7 +194,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return nil
 			}
 			response := stakingtypes.MsgDelegateResponse{}
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgDelegate response", "error", err)
@@ -214,7 +216,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
 			if success {
 				response := stakingtypes.MsgBeginRedelegateResponse{}
-				if msgResponse != nil {
+				if msgResponseType != "" {
 					err = proto.Unmarshal(msgResponse, &response)
 					if err != nil {
 						k.Logger(ctx).Error("unable to unpack MsgBeginRedelegate response", "error", err)
@@ -240,7 +242,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		case "/cosmos.staking.v1beta1.MsgUndelegate":
 			if success {
 				response := stakingtypes.MsgUndelegateResponse{}
-				if msgResponse != nil {
+				if msgResponseType != "" {
 					err = proto.Unmarshal(msgResponse, &response)
 					if err != nil {
 						k.Logger(ctx).Error("unable to unpack MsgUndelegate response", "error", err)
@@ -270,7 +272,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return nil
 			}
 			response := banktypes.MsgSendResponse{}
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgSend response", "error", err)
@@ -294,7 +296,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return nil
 			}
 			response := distrtypes.MsgSetWithdrawAddressResponse{}
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgSetWithdrawAddress response", "error", err)
@@ -317,7 +319,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return nil
 			}
 			response := ibctransfertypes.MsgTransferResponse{}
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgTransfer response", "error", err)
