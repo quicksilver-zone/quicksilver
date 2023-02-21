@@ -9,8 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ingenuity-build/quicksilver/wasmbinding/bindings"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	"github.com/ingenuity-build/quicksilver/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries

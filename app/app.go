@@ -44,9 +44,6 @@ import (
 	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	"github.com/gorilla/mux"
-	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
-	"github.com/ingenuity-build/quicksilver/utils"
-	"github.com/ingenuity-build/quicksilver/wasmbinding"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -54,6 +51,10 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
+
+	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
+	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/wasmbinding"
 
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
@@ -804,27 +805,27 @@ func NewQuicksilver(
 
 	// // NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// // transactions
-	// app.sm = module.NewSimulationManager(
-	// 	auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
-	// 	bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
-	// 	capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-	// 	gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-	// 	mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
-	// 	staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-	// 	distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-	// 	slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-	// 	params.NewAppModule(app.ParamsKeeper),
-	// 	evidence.NewAppModule(app.EvidenceKeeper),
-	// 	feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-	// 	authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-	// 	// ibc modules
-	// 	ibc.NewAppModule(app.IBCKeeper),
-	// 	transferModule,
-	// 	//icaModule,
-	// 	// Quicksilver app modules
-	// 	epochs.NewAppModule(appCodec, app.EpochsKeeper),
-	// 	interchainstakingModule,
-	// )
+	app.sm = module.NewSimulationManager(
+		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
+		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
+		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
+		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
+		// mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
+		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		params.NewAppModule(app.ParamsKeeper),
+		evidence.NewAppModule(app.EvidenceKeeper),
+		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
+		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
+		// 	// ibc modules
+		ibc.NewAppModule(app.IBCKeeper),
+		transferModule,
+		icaModule,
+		// 	// Quicksilver app modules
+		epochs.NewAppModule(appCodec, app.EpochsKeeper),
+		interchainstakingModule,
+	)
 
 	// app.sm.RegisterStoreDecoders()
 

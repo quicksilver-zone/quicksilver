@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 

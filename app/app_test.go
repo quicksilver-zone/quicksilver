@@ -1,4 +1,4 @@
-package app
+package app_test
 
 import (
 	"encoding/json"
@@ -6,21 +6,20 @@ import (
 	"testing"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/stretchr/testify/require"
-
+	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
-
-	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/stretchr/testify/require"
+	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
+	"github.com/tendermint/tendermint/libs/log"
 	tmtypes "github.com/tendermint/tendermint/types"
+	dbm "github.com/tendermint/tm-db"
+
+	"github.com/ingenuity-build/quicksilver/app"
 )
 
 func TestQuicksilverExport(t *testing.T) {
@@ -43,49 +42,49 @@ func TestQuicksilverExport(t *testing.T) {
 		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
 	}
 	db := dbm.NewMemDB()
-	app := NewQuicksilver(
+	quicksilver := app.NewQuicksilver(
 		log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
 		db,
 		nil,
 		true,
 		map[int64]bool{},
-		DefaultNodeHome,
+		app.DefaultNodeHome,
 		0,
-		MakeEncodingConfig(),
+		app.MakeEncodingConfig(),
 		wasm.EnableAllProposals,
 		simapp.EmptyAppOptions{},
-		GetWasmOpts(simapp.EmptyAppOptions{}),
+		app.GetWasmOpts(simapp.EmptyAppOptions{}),
 		false,
 	)
 
-	genesisState := NewDefaultGenesisState()
-	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState := app.NewDefaultGenesisState()
+	genesisState = app.GenesisStateWithValSet(t, quicksilver, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
 	require.NoError(t, err)
 
 	// Initialize the chain
-	app.InitChain(
+	quicksilver.InitChain(
 		abci.RequestInitChain{
 			ChainId:       "quicksilver-1",
 			Validators:    []abci.ValidatorUpdate{},
 			AppStateBytes: stateBytes,
 		},
 	)
-	app.Commit()
+	quicksilver.Commit()
 
 	// Making a new app object with the db, so that initchain hasn't been called
-	app2 := NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
+	app2 := app.NewQuicksilver(log.NewTMLogger(log.NewSyncWriter(os.Stdout)),
 		db,
 		nil,
 		true,
 		map[int64]bool{},
-		DefaultNodeHome,
+		app.DefaultNodeHome,
 		0,
-		MakeEncodingConfig(),
+		app.MakeEncodingConfig(),
 		wasm.EnableAllProposals,
 		simapp.EmptyAppOptions{},
-		GetWasmOpts(simapp.EmptyAppOptions{}),
+		app.GetWasmOpts(simapp.EmptyAppOptions{}),
 		false,
 	)
 	_, err = app2.ExportAppStateAndValidators(false, []string{})

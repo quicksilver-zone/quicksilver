@@ -87,7 +87,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 	)
 
 	genesisState := NewDefaultGenesisState()
-	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState = GenesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	if !isCheckTx {
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -135,7 +135,8 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 	return app, NewDefaultGenesisState()
 }
 
-func genesisStateWithValSet(t *testing.T,
+// GenesisStateWithValSet creates a quicksilver genesis state with the given validator set.
+func GenesisStateWithValSet(t *testing.T,
 	app *Quicksilver, genesisState GenesisState,
 	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,

@@ -8,6 +8,7 @@ import (
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	"github.com/ingenuity-build/quicksilver/wasmbinding/bindings"
 	tokenfactorykeeper "github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"

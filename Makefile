@@ -207,7 +207,8 @@ RUNSIM         = $(TOOLS_DESTDIR)/runsim
 runsim: $(RUNSIM)
 $(RUNSIM):
 	@echo "Installing runsim..."
-	@(cd /tmp && ${GO_MOD} go get github.com/cosmos/tools/cmd/runsim@master)
+	@(cd /tmp && go install github.com/cosmos/tools/cmd/runsim@v1.0.0)
+
 
 statik: $(STATIK)
 $(STATIK):

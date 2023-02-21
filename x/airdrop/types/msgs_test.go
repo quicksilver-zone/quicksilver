@@ -3,9 +3,10 @@ package types
 import (
 	"testing"
 
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 func TestMsgClaim_ValidateBasic(t *testing.T) {
