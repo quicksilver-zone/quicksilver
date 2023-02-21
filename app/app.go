@@ -827,6 +827,8 @@ func NewQuicksilver(
 		airdropModule,
 		claimsmanagerModule,
 		interchainstakingModule,
+		interchainQueryModule,
+		participationrewardsModule,
 	)
 
 	// app.sm.RegisterStoreDecoders()
