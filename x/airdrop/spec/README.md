@@ -155,7 +155,7 @@ var Status_value = map[string]int32{
 
 ```go
 var (
-KeyPrefixZoneDrop    = []byte{0x01}
+	KeyPrefixZoneDrop = []byte{0x01}
 )
 
 func GetKeyZoneDrop(chainID string) []byte {
@@ -178,7 +178,7 @@ type ZoneDrop struct {
 
 ```go
 var (
-KeyPrefixClaimRecord = []byte{0x02}
+	KeyPrefixClaimRecord = []byte{0x02}
 )
 
 func GetKeyClaimRecord(chainID string, addr sdk.AccAddress) []byte {
