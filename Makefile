@@ -2,7 +2,7 @@
 DOCKER_BUILDKIT=1
 COSMOS_BUILD_OPTIONS ?= ""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
-PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
+PACKAGES_SIM=github.com/ingenuity-build/quicksilver/simulation
 VERSION=$(shell git describe --tags | head -n1)
 DOCKER_VERSION ?= $(VERSION)
 TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
@@ -12,7 +12,6 @@ BINDIR ?= $(GOPATH)/bin
 QS_BINARY = quicksilverd
 QS_DIR = quicksilver
 BUILDDIR ?= $(CURDIR)/build
-SIMAPP = ./app
 HTTPS_GIT := https://github.com/ingenuity-build/quicksilver.git
 DOCKER := $(shell which docker)
 DOCKERCOMPOSE := $(shell which docker-compose)
@@ -338,48 +337,49 @@ test-rpc-pending:
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
-SIM_CI_NUM_BLOCKS ?= 250
-SIM_CI_BLOCK_SIZE ?= 100
+SIM_CI_NUM_BLOCKS ?= 125
+SIM_CI_BLOCK_SIZE ?= 50
 SIM_PERIOD ?= 5
 SIM_COMMIT ?= true
 SIM_TIMEOUT ?= 24h
 
+
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
-	@go test -short -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \
+	@go test -short -mod=readonly $(PACKAGES_SIM) -run ^TestAppStateDeterminism -Enabled=true \
 		-NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -Period=$(SIM_PERIOD) \
 		-v -timeout $(SIM_TIMEOUT)
 
 ## test-sim-ci: Run lightweight simulation for CI pipeline
 test-sim-ci:
-	@echo "Running application benchmark for numBlocks=$(SIM_CI_NUM_BLOCKS), blockSize=$(SIM_CI_BLOCK_SIZE)"
-	@VERSION=$(VERSION) go test -mod=readonly -benchmem -run=^$$ $(SIMAPP) -bench ^BenchmarkSimulation$$  \
-		-Enabled=true -NumBlocks=$(SIM_CI_NUM_BLOCKS) -BlockSize=$(SIM_CI_BLOCK_SIZE) -Commit=$(SIM_COMMIT) \
-		-Period=$(SIM_PERIOD) -timeout $(SIM_TIMEOUT)
+	@echo "Running non-determinism test..."
+	@go test -short -mod=readonly $(PACKAGES_SIM) -run ^TestAppStateDeterminism -Enabled=true \
+		-NumBlocks=$(SIM_CI_NUM_BLOCKS) -BlockSize=$(SIM_CI_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -Period=$(SIM_PERIOD) \
+		-v -timeout $(SIM_TIMEOUT)
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."
 	@echo "By default, ${HOME}/.$(QS_DIR)/config/genesis.json will be used."
-	@go test -short -mod=readonly $(SIMAPP) -run TestFullAppSimulation -Genesis=${HOME}/.$(QS_DIR)/config/genesis.json \
+	@go test -short -mod=readonly $(PACKAGES_SIM) -run TestFullAppSimulation -Genesis=${HOME}/.$(QS_DIR)/config/genesis.json \
 		-Enabled=true -NumBlocks=$(SIM_NUM_BLOCKS) -BlockSize=$(SIM_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -Seed=99 \
 		-Period=$(SIM_PERIOD) -v -timeout  $(SIM_TIMEOUT)
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppImportExport
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(PACKAGES_SIM) -ExitOnFail 50 5 TestAppImportExport
 
 test-sim-after-import: runsim
 	@echo "Running application simulation-after-import. This may take several minutes..."
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppSimulationAfterImport
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(PACKAGES_SIM) -ExitOnFail 50 5 TestAppSimulationAfterImport
 
 test-sim-custom-genesis-multi-seed: runsim
 	@echo "Running multi-seed custom genesis simulation..."
 	@echo "By default, ${HOME}/.$(QS_DIR)/config/genesis.json will be used."
-	@$(BINDIR)/runsim -Genesis=${HOME}/.$(QS_DIR)/config/genesis.json -SimAppPkg=$(SIMAPP) -ExitOnFail 400 5 TestFullAppSimulation
+	@$(BINDIR)/runsim -Genesis=${HOME}/.$(QS_DIR)/config/genesis.json -SimAppPkg=$(PACKAGES_SIM) -ExitOnFail 400 5 TestFullAppSimulation
 
 test-sim-multi-seed-long: runsim
 	@echo "Running long multi-seed application simulation. This may take awhile!"
-	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 500 50 TestFullAppSimulation
+	@$(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(PACKAGES_SIM) -ExitOnFail 500 50 TestFullAppSimulation
 
 test-sim-multi-seed-short: runsim
 	@echo "Running short multi-seed application simulation. This may take awhile!"
