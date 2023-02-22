@@ -29,7 +29,7 @@ func genDistributionProportions(r *rand.Rand) types.DistributionProportions {
 	staking := r.Int63n(99)
 	left := int64(100) - staking
 	poolIncentives := r.Int63n(left)
-	left = left - poolIncentives
+	left -= poolIncentives
 	participationRewards := r.Int63n(left)
 	communityPool := left - participationRewards
 
