@@ -1,4 +1,4 @@
-package app_test
+package simulation_test
 
 import (
 	"encoding/json"
@@ -11,17 +11,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
+	sdksimulation "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	appsim "github.com/ingenuity-build/quicksilver/app/simulation"
+	"github.com/ingenuity-build/quicksilver/simulation"
 )
 
 func init() {
-	appsim.GetSimulatorFlags()
+	simulation.GetSimulatorFlags()
 }
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
@@ -30,12 +30,12 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 func BenchmarkSimulation(b *testing.B) {
-	appsim.FlagVerboseValue = true
-	appsim.FlagOnOperationValue = true
-	appsim.FlagAllInvariantsValue = true
-	appsim.FlagInitialBlockHeightValue = 1
+	simulation.FlagVerboseValue = true
+	simulation.FlagOnOperationValue = true
+	simulation.FlagAllInvariantsValue = true
+	simulation.FlagInitialBlockHeightValue = 1
 
-	config, db, dir, _, _, err := appsim.SetupSimulation("goleveldb-app-sim", "Simulation")
+	config, db, dir, _, _, err := simulation.SetupSimulation("goleveldb-app-sim", "Simulation")
 	require.NoError(b, err, "simulation setup failed")
 
 	b.Cleanup(func() {
@@ -52,7 +52,7 @@ func BenchmarkSimulation(b *testing.B) {
 		true,
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		appsim.FlagPeriodValue,
+		simulation.FlagPeriodValue,
 		app.MakeEncodingConfig(),
 		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
@@ -61,13 +61,13 @@ func BenchmarkSimulation(b *testing.B) {
 	)
 
 	// Run randomized simulations
-	_, simParams, simErr := simulation.SimulateFromSeed(
+	_, simParams, simErr := sdksimulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		quicksilver.GetBaseApp(),
-		appsim.AppStateFn(quicksilver.AppCodec(), quicksilver.SimulationManager()),
+		simulation.AppStateFn(quicksilver.AppCodec(), quicksilver.SimulationManager()),
 		simulationtypes.RandomAccounts,
-		appsim.Operations(quicksilver, quicksilver.AppCodec(), config),
+		simulation.Operations(quicksilver, quicksilver.AppCodec(), config),
 		quicksilver.ModuleAccountAddrs(),
 		config,
 		quicksilver.AppCodec(),
@@ -75,21 +75,21 @@ func BenchmarkSimulation(b *testing.B) {
 	require.NoError(b, simErr)
 
 	// export state and simParams before the simulation error is checked
-	err = appsim.CheckExportSimulation(quicksilver, config, simParams)
+	err = simulation.CheckExportSimulation(quicksilver, config, simParams)
 	require.NoError(b, err)
 
 	if config.Commit {
-		appsim.PrintStats(db)
+		simulation.PrintStats(db)
 	}
 }
 
 // TestAppStateDeterminism TODO.
 func TestAppStateDeterminism(t *testing.T) {
-	if !appsim.FlagEnabledValue {
+	if !simulation.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
-	config := appsim.NewConfigFromFlags()
+	config := simulation.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = true
@@ -112,7 +112,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				true,
 				map[int64]bool{},
 				app.DefaultNodeHome,
-				appsim.FlagPeriodValue,
+				simulation.FlagPeriodValue,
 				app.MakeEncodingConfig(),
 				wasm.EnableAllProposals,
 				app.EmptyAppOptions{},
@@ -126,13 +126,13 @@ func TestAppStateDeterminism(t *testing.T) {
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 
-			_, _, err := simulation.SimulateFromSeed(
+			_, _, err := sdksimulation.SimulateFromSeed(
 				t,
 				os.Stdout,
 				quicksilver.GetBaseApp(),
-				appsim.AppStateFn(quicksilver.AppCodec(), quicksilver.SimulationManager()),
+				simulation.AppStateFn(quicksilver.AppCodec(), quicksilver.SimulationManager()),
 				simulationtypes.RandomAccounts,
-				appsim.Operations(quicksilver, quicksilver.AppCodec(), config),
+				simulation.Operations(quicksilver, quicksilver.AppCodec(), config),
 				quicksilver.ModuleAccountAddrs(),
 				config,
 				quicksilver.AppCodec(),
@@ -140,7 +140,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			require.NoError(t, err)
 
 			if config.Commit {
-				appsim.PrintStats(db)
+				simulation.PrintStats(db)
 			}
 
 			appHash := quicksilver.LastCommitID().Hash
