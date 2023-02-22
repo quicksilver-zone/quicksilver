@@ -2,7 +2,7 @@
 
 The `mint` module is responsible for creating tokens in a flexible way to reward
 validators, incentivize providing pool liquidity, provide funds for Quicksilver governance,
-and pay developers to maintain and improve Quicksilver.
+and pay those who participate to the Quicksilver protocol.
 
 The module is also responsible for reducing the token creation and distribution by a set period
 until it reaches its maximum supply (see `reduction_factor` and `reduction_period_in_epochs`)
@@ -196,10 +196,10 @@ query mint epoch-provisions
 List the current epoch provisions:
 
 ```bash
-osmosisd query mint epoch-provisions
+quicksilverd query mint epoch-provisions
 ```
 
-As of this writing, this number will be equal to the `genesis-epoch-provisions`. Once the `reduction_period_in_epochs` is reached, the `reduction_factor` will be initiated and reduce the amount of OSMO minted per epoch.
+As of this writing, this number will be equal to the `genesis-epoch-provisions`. Once the `reduction_period_in_epochs` is reached, the `reduction_factor` will be initiated and reduce the amount of QCK minted per epoch.
 :::
 
 ## Appendix
@@ -231,8 +231,8 @@ The following tables show overall effects on different configurations of the `mi
 <td>Value has to be a positive integer</td> 
 <td>String must be <code>day</code>, <code>week</code>, <code>month</code>, or <code>year</code></td></tr> 
 <tr><td>Current configuration</td> 
-<td><code>uosmo</code></td> 
-<td><code>821917808219.178</code> (821,9178 OSMO)</td> 
+<td><code>uqck</code></td> 
+<td><code>1639344.000</code> (163,9344 QCK)</td> 
 <td><code>day</code></td></tr>
 </tbody></table>
 
@@ -258,13 +258,13 @@ The following tables show overall effects on different configurations of the `mi
 <td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td></tr> 
 <tr><td>Current configuration</td> 
 <td><code>365</code> (epochs)</td> 
-<td><code>0.666666666666666666</code> (66.66%)</td> 
-<td><code>0.250000000000000000</code> (25%)</td></tr>
+<td><code>0.75</code> (75%)</td> 
+<td><code>0.300000000000000000</code> (30%)</td></tr>
 </tbody></table>
 
 <table><thead><tr><th></th> 
 <th><code>pool_incentives</code></th> 
-<th><code>developer_rewards</code></th> 
+<th><code>participation_rewards</code></th> 
 <th><code>community_pool</code></th></tr></thead> 
 <tbody><tr><td>Type</td> 
 <td>string (dec)</td> 
@@ -272,18 +272,18 @@ The following tables show overall effects on different configurations of the `mi
 <td>string (dec)</td></tr> 
 <tr><td>Higher</td> 
 <td>More epoch provisions go to pool incentives than other categories</td> 
-<td>More epoch provisions go to developer rewards than other categories</td> 
+<td>More epoch provisions go to participation rewards than other categories</td> 
 <td>More epoch provisions go to community pool than other categories</td></tr> 
 <tr><td>Lower</td> 
 <td>Less epoch provisions go to pool incentives than other categories</td> 
-<td>Less epoch provisions go to developer rewards than other categories</td> 
+<td>Less epoch provisions go to participation rewards than other categories</td> 
 <td>Less epoch provisions go to community pool than other categories</td></tr> 
 <tr><td>Constraints</td> 
 <td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td> 
 <td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td> 
 <td>Value has to be less or equal to <code>1</code> and all distribution categories combined must equal <code>1</code></td></tr> 
 <tr><td>Current configuration</td> 
-<td><code>0.450000000000000000</code> (45%)</td> 
-<td><code>0.250000000000000000</code> (25%)</td> 
-<td><code>0.050000000000000000</code> (5%)</td></tr>
+<td><code>0.300000000000000000</code> (30%)</td> 
+<td><code>0.300000000000000000</code> (30%)</td> 
+<td><code>0.100000000000000000</code> (10%)</td></tr>
 </tbody></table>
