@@ -46,13 +46,13 @@ func NewParams(
 	}
 }
 
-// default minting module parameters.
+// DefaultParams returns default minting module parameters.
 func DefaultParams() Params {
 	return Params{
 		MintDenom:               sdk.DefaultBondDenom,
 		GenesisEpochProvisions:  sdk.NewDec(200000000 / 122),
 		EpochIdentifier:         "day",                     // 1 day
-		ReductionPeriodInEpochs: 365,                       // 1 years
+		ReductionPeriodInEpochs: 365,                       // 1 year
 		ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
 		DistributionProportions: DistributionProportions{
 			Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
