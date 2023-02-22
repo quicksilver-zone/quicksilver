@@ -1,5 +1,5 @@
 /*
-The tokenfactory module allows any account to create a new token with
+Package tokenfactory allows any account to create a new token with
 the name `factory/{creator address}/{subdenom}`.
 
 - Mint and burn user denom to and form any account
@@ -26,6 +26,7 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/client/cli"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
+	"github.com/ingenuity-build/quicksilver/x/tokenfactory/simulation"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
@@ -180,7 +181,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // GenerateGenesisState creates a randomized GenState of the mint module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// simulation.RandomizedGenState(simState)
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
