@@ -110,7 +110,7 @@ func SimulateMsgCreateDenom(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk ty
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
+		return simtypes.NoOpMsg(types.ModuleName, TypeMsgCreateDenom, "TODO"), nil, nil
 	}
 }
 
@@ -119,6 +119,7 @@ func SimulateMsgMint(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.Ban
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		return simtypes.NoOpMsg(types.ModuleName, TypeMsgMint, "TODO"), nil, nil
 
 	}
 }
@@ -128,7 +129,7 @@ func SimulateMsgBurn(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.Ban
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
+		return simtypes.NoOpMsg(types.ModuleName, TypeMsgBurn, "TODO"), nil, nil
 	}
 }
 
@@ -137,7 +138,7 @@ func SimulateMsgChangeAdmin(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk ty
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
+		return simtypes.NoOpMsg(types.ModuleName, TypeMsgChangeAdmin, "TODO"), nil, nil
 	}
 }
 
@@ -146,6 +147,6 @@ func SimulateMsgSetDenomMetadata(cdc *codec.ProtoCodec, ak types.AccountKeeper, 
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
+		return simtypes.NoOpMsg(types.ModuleName, TypeMsgSetDenomMetadata, "TODO"), nil, nil
 	}
 }
