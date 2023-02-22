@@ -1,10 +1,11 @@
 package lockup
 
 import (
-	sdkioerrors "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"time"
+
+	sdkioerrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

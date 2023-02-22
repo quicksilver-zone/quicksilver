@@ -224,19 +224,20 @@ func (k *Keeper) PrepareDelegationMessagesForShares(ctx sdk.Context, zone *types
 }
 
 func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) map[string]sdkmath.Int {
-	currentAllocations, currentSum := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, _ := k.GetDelegationMap(ctx, zone)
 	targetAllocations := zone.GetAggregateIntentOrDefault()
 	allocations := DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
 	return allocations
 }
 
 // CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
+// Positive delta represents current allocation is below target, and vice versa.
 func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents) types.ValidatorIntents {
 	deltas := make(types.ValidatorIntents, 0)
 
 	targetValopers := func(in types.ValidatorIntents) []string {
 		out := make([]string, 0, len(in))
-		for _, i := range in.Sort() {
+		for _, i := range in {
 			out = append(out, i.ValoperAddress)
 		}
 		return out
@@ -287,21 +288,23 @@ func minDeltas(deltas types.ValidatorIntents) sdkmath.Int {
 	return minValue
 }
 
+// maxDeltas returns the greatest value in a slice of Deltas.
+func maxDeltas(deltas types.ValidatorIntents) sdkmath.Int {
+	maxValue := sdk.NewInt(math.MinInt64)
+	for _, intent := range deltas {
+		if maxValue.LT(intent.Weight.TruncateInt()) {
+			maxValue = intent.Weight.TruncateInt()
+		}
+	}
+
+	return maxValue
+}
+
 func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents, amount sdk.Coins) map[string]sdkmath.Int {
 	input := amount[0].Amount
 	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
 	minValue := minDeltas(deltas)
 	sum := sdk.ZeroInt()
-
-	// // sort keys by relative value of delta
-	// sort.SliceStable(deltas, func(i, j int) bool {
-	// 	return deltas[i].ValoperAddress > deltas[j].ValoperAddress
-	// })
-
-	// // sort keys by relative value of delta
-	// sort.SliceStable(deltas, func(i, j int) bool {
-	// 	return deltas[i].Weight.GT(deltas[j].Weight)
-	// })
 
 	// raise all deltas such that the minimum value is zero.
 	for idx := range deltas {
@@ -380,22 +383,25 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "")
 }
 
-func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string]sdkmath.Int, sdkmath.Int) {
+func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string]sdkmath.Int, sdkmath.Int, map[string]bool) {
 	out := make(map[string]sdkmath.Int)
+	locked := make(map[string]bool)
 	sum := sdk.ZeroInt()
 
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
 		existing, found := out[delegation.ValidatorAddress]
 		if !found {
 			out[delegation.ValidatorAddress] = delegation.Amount.Amount
+			locked[delegation.ValidatorAddress] = delegation.RedelegationEnd != 0 && delegation.RedelegationEnd >= ctx.BlockTime().Unix()
 		} else {
 			out[delegation.ValidatorAddress] = existing.Add(delegation.Amount.Amount)
+			locked[delegation.ValidatorAddress] = locked[delegation.ValidatorAddress] || (delegation.RedelegationEnd != 0 && delegation.RedelegationEnd >= ctx.BlockTime().Unix())
 		}
 		sum = sum.Add(delegation.Amount.Amount)
 		return false
 	})
 
-	return out, sum
+	return out, sum, locked
 }
 
 func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, validator string) error {

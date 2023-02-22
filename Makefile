@@ -1,6 +1,6 @@
 #!/usr/bin/make -f
 DOCKER_BUILDKIT=1
-COSMOS_BUILD_OPTIONS ?= "pebbledb"
+COSMOS_BUILD_OPTIONS ?= ""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
 PACKAGES_SIMTEST=$(shell go list ./... | grep '/simulation')
 VERSION=$(shell git describe --tags | head -n1)
@@ -94,6 +94,7 @@ endif
 
 ifeq ($(LINK_STATICALLY),true)
 	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
+	build_tags += muslc
 endif
 
 build_tags += $(BUILD_TAGS)
@@ -438,11 +439,11 @@ proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 
-TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.21/proto/tendermint
+TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.25/proto/tendermint
 GOGO_PROTO_URL      	= https://raw.githubusercontent.com/regen-network/protobuf/cosmos
-CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.7.1
-SDK_PROTO_URL 			= https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.46.1/proto/cosmos
-IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v5.0.0-rc2/proto
+CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.9.0
+SDK_PROTO_URL 			= https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.46.8/proto/cosmos
+IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v5.2.0/proto
 
 TM_CRYPTO_TYPES     			= third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       			= third_party/proto/tendermint/abci

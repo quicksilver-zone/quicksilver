@@ -2,7 +2,6 @@ package types
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -75,7 +74,7 @@ func (vi ValidatorIntents) Sort() ValidatorIntents {
 }
 
 func (vi ValidatorIntents) GetForValoper(valoper string) (*ValidatorIntent, bool) {
-	for _, i := range vi.Sort() {
+	for _, i := range vi {
 		if i.ValoperAddress == valoper {
 			return i, true
 		}
@@ -84,14 +83,10 @@ func (vi ValidatorIntents) GetForValoper(valoper string) (*ValidatorIntent, bool
 }
 
 func (vi ValidatorIntents) SetForValoper(valoper string, intent *ValidatorIntent) ValidatorIntents {
-	fmt.Println("Replacing valoper" + valoper)
-	for idx, i := range vi.Sort() {
+	for idx, i := range vi {
 		if i.ValoperAddress == valoper {
-			fmt.Println("Found valoper at " + fmt.Sprint(idx))
-			fmt.Println("before", vi)
 			vi[idx] = vi[len(vi)-1]
 			vi = vi[:len(vi)-1]
-			fmt.Println("after", vi)
 			break
 		}
 	}
@@ -102,8 +97,21 @@ func (vi ValidatorIntents) SetForValoper(valoper string, intent *ValidatorIntent
 
 func (vi ValidatorIntents) MustGetForValoper(valoper string) *ValidatorIntent {
 	intent, found := vi.GetForValoper(valoper)
-	if !found {
-		panic("could not find intent for valoper")
+	if !found || intent == nil {
+		return &ValidatorIntent{ValoperAddress: valoper, Weight: sdk.ZeroDec()}
 	}
 	return intent
+}
+
+func (vi ValidatorIntents) Normalize() ValidatorIntents {
+	total := sdk.ZeroDec()
+	for _, i := range vi {
+		total = total.AddMut(i.Weight)
+	}
+
+	out := make(ValidatorIntents, 0)
+	for _, i := range vi {
+		out = append(out, &ValidatorIntent{ValoperAddress: i.ValoperAddress, Weight: i.Weight.Quo(total)})
+	}
+	return out.Sort()
 }

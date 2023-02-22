@@ -27,7 +27,7 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		// 	return false
 		// }
 		if queryInfo.LastEmission.IsNil() || queryInfo.LastEmission.IsZero() || queryInfo.LastEmission.Add(queryInfo.Period).Equal(sdk.NewInt(ctx.BlockHeight())) {
-			k.Logger(ctx).Info("Interchainquery event emitted", "id", queryInfo.Id)
+			k.Logger(ctx).Debug("Interchainquery event emitted", "id", queryInfo.Id)
 			event := sdk.NewEvent(
 				sdk.EventTypeMessage,
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),

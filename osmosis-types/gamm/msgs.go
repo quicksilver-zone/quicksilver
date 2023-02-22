@@ -1,10 +1,11 @@
 package gamm
 
 import (
-	sdkioerrors "cosmossdk.io/errors"
 	"fmt"
 	"strings"
 	"time"
+
+	sdkioerrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
