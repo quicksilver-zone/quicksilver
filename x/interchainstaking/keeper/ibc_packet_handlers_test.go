@@ -300,13 +300,13 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						EpochNumber:    1,
 						Source:         zone.Validators[3].ValoperAddress,
 						Destination:    zone.Validators[0].ValoperAddress,
-						Amount:         50000,
+						Amount:         500000,
 						CompletionTime: time.Now().Add(time.Hour),
 					},
 				}
 			},
 			expectTransition: []bool{false},
-			expectError:      true,
+			expectError:      false,
 		},
 		{
 			name: "mixed - locked tokens but both succeed (previously failed)",

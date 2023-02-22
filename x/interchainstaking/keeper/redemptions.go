@@ -107,9 +107,13 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 		thisAvailable, found := availablePerValidator[redelegation.Destination]
 		if found {
 			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(sdk.NewInt(redelegation.Amount))
+			if availablePerValidator[redelegation.Destination].LT(sdk.ZeroInt()) {
+				panic("negative available amount; unable to continue")
+			}
+			total = total.Sub(sdk.NewInt(redelegation.Amount))
 		}
-		total.Sub(sdk.NewInt(redelegation.Amount))
 	}
+
 	return availablePerValidator, total
 }
 
@@ -304,6 +308,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	for idx := range deltas {
 		deltas[idx].Weight = deltas[idx].Weight.Sub(sdk.NewDecFromInt(maxValue)).Abs()
 		sum = sum.Add(deltas[idx].Weight.TruncateInt().Abs())
+		fmt.Printf("Dropped Val: %s, Weight: %s\n", deltas[idx].ValoperAddress, deltas[idx].Weight.TruncateInt())
 	}
 
 	// unequalSplit is the portion of input that should be distributed in attempt to make targets == 0
@@ -316,6 +321,9 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 			if !ok {
 				availablePerValidator[deltas[idx].ValoperAddress] = sdk.ZeroInt()
 			}
+			fmt.Println("Raw allocation", allocation)
+			fmt.Println("Available", availablePerValidator[deltas[idx].ValoperAddress])
+
 			if allocation.TruncateInt().GT(availablePerValidator[deltas[idx].ValoperAddress]) {
 				allocation = sdk.NewDecFromInt(availablePerValidator[deltas[idx].ValoperAddress])
 				availablePerValidator[deltas[idx].ValoperAddress] = sdk.ZeroInt()
