@@ -4,19 +4,19 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 
 	"github.com/ingenuity-build/quicksilver/x/mint/types"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // GetQueryCmd returns the cli query commands for the minting module.
 func GetQueryCmd() *cobra.Command {
+	fmt.Println("A")
 	mintingQueryCmd := &cobra.Command{
 		Use:                        types.ModuleName,
-		Short:                      "Querying commands for the minting module",
+		Short:                      fmt.Sprintf("Querying commands for the %s module", types.ModuleName),
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
@@ -35,7 +35,7 @@ func GetQueryCmd() *cobra.Command {
 func GetCmdQueryParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params",
-		Short: "Query the current minting parameters",
+		Short: "Get the params for the x/mint module",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -64,7 +64,7 @@ func GetCmdQueryParams() *cobra.Command {
 func GetCmdQueryEpochProvisions() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "epoch-provisions",
-		Short: "Query the current minting epoch provisions value",
+		Short: "Query the current x/mint epoch provisions value",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
