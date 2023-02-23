@@ -63,8 +63,8 @@ aggregated on an epochly basis.
 
 The Aggregate Intent is calculated epochly, based upon the Signaled Intent from
 each user, and the weight given to that intent based upon the assets the user
-holds (this information is drawn from the Claimsmanager module). This aggregate
-itnent is used as a target, for the protocol to use when determining where to
+holds (this information is drawn from the `claimsmanager` module). This aggregate
+intent is used as a target, for the protocol to use when determining where to
 allocate assets during delegation, rebalance and undelegation processes.
 
 ### Interchain Accounts
