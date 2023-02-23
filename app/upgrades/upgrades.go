@@ -38,6 +38,11 @@ func Upgrades() []Upgrade {
 			CreateUpgradeHandler: NoOpHandler,
 			StoreUpgrades:        storetypes.StoreUpgrades{},
 		},
+		{
+			UpgradeName:          V010400rc8UpgradeName,
+			CreateUpgradeHandler: V010400rc8UpgradeHandler,
+			StoreUpgrades:        storetypes.StoreUpgrades{},
+		},
 	}
 }
 
@@ -167,6 +172,36 @@ func V010400rc6UpgradeHandler(
 				return false
 			})
 		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010400rc8UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	keepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// remove expired failed redelegation records
+		keepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone icstypes.Zone) (stop bool) {
+			keepers.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) (stop bool) {
+				if delegation.RedelegationEnd < 0 {
+					delegation.RedelegationEnd = 0
+					keepers.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+				}
+				return false
+			})
+			return false
+		})
+
+		keepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(_ int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
+			if record.CompletionTime.Unix() <= 0 {
+				keepers.InterchainstakingKeeper.Logger(ctx).Info("Removing delegation record", "chainid", record.ChainId, "source", record.Source, "destination", record.Destination, "epoch", record.EpochNumber)
+				keepers.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
+			}
+			return false
+		})
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
