@@ -286,7 +286,7 @@ func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
 func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
 
-	handler := upgrades.V010400rc6UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	handler := upgrades.V010400rc8UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
 
 	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
