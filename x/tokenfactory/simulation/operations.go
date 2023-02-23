@@ -1,15 +1,17 @@
 package simulation
 
 import (
+	"github.com/ingenuity-build/quicksilver/app"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	sdksimtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	"github.com/ingenuity-build/quicksilver/simulation/simtypes"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
@@ -37,7 +39,7 @@ var (
 
 func WeightedOperations(
 	registry codectypes.InterfaceRegistry,
-	appParams simtypes.AppParams,
+	appParams sdksimtypes.AppParams,
 	cdc codec.JSONCodec,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
@@ -106,47 +108,74 @@ func WeightedOperations(
 }
 
 // SimulateMsgCreateDenom generates a MsgCreateDenom with random values.
-func SimulateMsgCreateDenom(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgCreateDenom(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) sdksimtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		return simtypes.NoOpMsg(types.ModuleName, TypeMsgCreateDenom, "TODO"), nil, nil
+		r *rand.Rand, bApp *baseapp.BaseApp, ctx sdk.Context, accs []sdksimtypes.Account, chainID string,
+	) (sdksimtypes.OperationMsg, []sdksimtypes.FutureOperation, error) {
+		minCoins := k.GetParams(ctx).DenomCreationFee
+		acc, err := simtypes.RandomSimAccountWithMinCoins(ctx, r, accs, minCoins, bk)
+		if err != nil {
+			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgCreateDenom, "no account with balance found"), nil, nil
+
+		}
+
+		msg := &types.MsgCreateDenom{
+			Sender:   acc.Address.String(),
+			Subdenom: simtypes.RandStringOfLength(r, types.MaxSubdenomLength),
+		}
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             bApp,
+			TxGen:           app.MakeEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         TypeMsgCreateDenom,
+			CoinsSpentInMsg: minCoins,
+			Context:         sdk.Context{},
+			SimAccount:      sdksimtypes.Account{},
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
 
 // SimulateMsgMint generates a MsgMint with random values.
-func SimulateMsgMint(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgMint(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) sdksimtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		return simtypes.NoOpMsg(types.ModuleName, TypeMsgMint, "TODO"), nil, nil
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []sdksimtypes.Account, chainID string,
+	) (sdksimtypes.OperationMsg, []sdksimtypes.FutureOperation, error) {
+		return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgMint, "TODO"), nil, nil
 
 	}
 }
 
 // SimulateMsgBurn generates a MsgBurn with random values.
-func SimulateMsgBurn(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgBurn(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) sdksimtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		return simtypes.NoOpMsg(types.ModuleName, TypeMsgBurn, "TODO"), nil, nil
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []sdksimtypes.Account, chainID string,
+	) (sdksimtypes.OperationMsg, []sdksimtypes.FutureOperation, error) {
+		return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgBurn, "TODO"), nil, nil
 	}
 }
 
 // SimulateMsgChangeAdmin generates a MsgChangeAdmin with random values.
-func SimulateMsgChangeAdmin(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgChangeAdmin(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) sdksimtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		return simtypes.NoOpMsg(types.ModuleName, TypeMsgChangeAdmin, "TODO"), nil, nil
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []sdksimtypes.Account, chainID string,
+	) (sdksimtypes.OperationMsg, []sdksimtypes.FutureOperation, error) {
+		return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgChangeAdmin, "TODO"), nil, nil
 	}
 }
 
 // SimulateMsgSetDenomMetadata generates a MsgSetDenomMetadata with random values.
-func SimulateMsgSetDenomMetadata(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+func SimulateMsgSetDenomMetadata(cdc *codec.ProtoCodec, ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) sdksimtypes.Operation {
 	return func(
-		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		return simtypes.NoOpMsg(types.ModuleName, TypeMsgSetDenomMetadata, "TODO"), nil, nil
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []sdksimtypes.Account, chainID string,
+	) (sdksimtypes.OperationMsg, []sdksimtypes.FutureOperation, error) {
+		return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgSetDenomMetadata, "TODO"), nil, nil
 	}
 }
