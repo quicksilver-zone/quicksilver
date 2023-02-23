@@ -146,6 +146,7 @@ require (
 	github.com/t-yuki/gocover-cobertura v0.0.0-20180217150009-aaee18c8195c // indirect
 	github.com/tdakkota/asciicheck v0.1.1 // indirect
 	github.com/tetafro/godot v1.4.11 // indirect
+	github.com/linxGnu/grocksdb v1.7.10 // indirect
 	github.com/tidwall/btree v1.5.0 // indirect
 	github.com/timakin/bodyclose v0.0.0-20221125081123-e39cf3fc478e // indirect
 	github.com/timonwong/loggercheck v0.9.3 // indirect
@@ -183,7 +184,6 @@ require (
 	github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d // indirect
 	github.com/CosmWasm/wasmvm v1.1.1
 	github.com/DataDog/zstd v1.5.0 // indirect
-	github.com/HdrHistogram/hdrhistogram-go v1.1.2 // indirect
 	github.com/Workiva/go-datastructures v1.0.53 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/aws/aws-sdk-go v1.44.122 // indirect
@@ -192,12 +192,12 @@ require (
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.3 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cockroachdb/errors v1.8.1 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20190617123548-eb05cc24525f // indirect
-	github.com/cockroachdb/pebble v0.0.0-20220726134658-7b78c71e4055 // indirect
+	github.com/cockroachdb/pebble v0.0.0-20230213222125-5d8daed0ac88 // indirect
 	github.com/cockroachdb/redact v1.0.8 // indirect
 	github.com/cockroachdb/sentry-go v0.6.1-cockroachdb.2 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
@@ -205,7 +205,6 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.2 // indirect
-	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
@@ -252,7 +251,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
-	github.com/klauspost/compress v1.15.11 // indirect
+	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/lib/pq v1.10.7 // indirect
@@ -316,5 +315,5 @@ replace (
 	github.com/iqlusioninc/liquidity-staking-module => github.com/notional-labs/liquidity-staking-module v0.0.3-0.20220914043211-d4675d9af6ae
 	github.com/tendermint/tendermint => github.com/informalsystems/tendermint v0.34.26
 	// pebbledb - https://gist.github.com/faddat/673107b72eccdd869b242338dd17e9d9
-	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220731185452-136c7b65fb62
+	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.8-0.20230214123107-77c191d0f7ee
 )
