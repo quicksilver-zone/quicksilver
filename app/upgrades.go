@@ -27,6 +27,7 @@ const (
 	v010400UpgradeName    = "v1.4.0"
 	v010400rc6UpgradeName = "v1.4.0-rc6"
 	v010400rc7UpgradeName = "v1.4.0-rc7"
+	v010400rc8UpgradeName = "v1.4.0-rc8"
 )
 
 func isTest(ctx sdk.Context) bool {
@@ -51,6 +52,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010400UpgradeName, v010400UpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010400rc6UpgradeName, v010400rc6UpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010400rc7UpgradeName, noOpHandler(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v010400rc8UpgradeName, v010400rc8UpgradeHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -195,6 +197,32 @@ func v010400rc6UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 				return false
 			})
 		}
+
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func v010400rc8UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// remove expired failed redelegation records
+		app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone icstypes.Zone) (stop bool) {
+			app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) (stop bool) {
+				if delegation.RedelegationEnd < 0 {
+					delegation.RedelegationEnd = 0
+					app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+				}
+				return false
+			})
+			return false
+		})
+
+		app.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(_ int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
+			if record.CompletionTime.Unix() <= 0 {
+				app.InterchainstakingKeeper.Logger(ctx).Info("Removing delegation record", "chainid", record.ChainId, "source", record.Source, "destination", record.Destination, "epoch", record.EpochNumber)
+				app.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
+			}
+			return false
+		})
 
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
