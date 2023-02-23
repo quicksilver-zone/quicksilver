@@ -53,11 +53,11 @@ protocol.
 ### Intent Signalling
 
 Intent Signalling is the mechanism by which users of the protocol are able to
-Signal to which validators they will their proportion of the stake pool is
-delegated. In order to maintain fungibility of qAssets, we must pool assets and
-delegate them as a single entity. Users are able to signal to which validators,
-and with what weightings, they wish their proportion of stake to be delegated.
-This is aggregated on an epochly basis.
+Signal to which validators will delegate their proportion of the stake pool to.
+In order to maintain fungibility of qAssets, we must pool assets and delegate 
+them as a single entity. Users are able to signal to which validators, and with
+what weightings, they wish their proportion of stake to be delegated. This is 
+aggregated on an epochly basis.
 
 ### Aggregate Intent
 
