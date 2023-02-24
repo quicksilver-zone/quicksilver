@@ -117,7 +117,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		//nolint:staticcheck // SA1019 ignore this!
 		var msgData *sdk.MsgData
 		var msgResponse []byte
+		var msgResponseType string
 		if len(txMsgData.MsgResponses) > 0 {
+			msgResponseType = txMsgData.MsgResponses[msgIndex].GetTypeUrl()
 			msgResponse = txMsgData.MsgResponses[msgIndex].GetValue()
 		} else if len(txMsgData.Data) > 0 {
 			msgData = txMsgData.Data[msgIndex]
@@ -143,7 +145,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{}
 
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgRedeemTokensforShares response", "error", err)
@@ -168,7 +170,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return nil
 			}
 			response := lsmstakingtypes.MsgTokenizeSharesResponse{}
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgTokenizeShares response", "error", err)
@@ -192,7 +194,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return nil
 			}
 			response := stakingtypes.MsgDelegateResponse{}
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgDelegate response", "error", err)
@@ -214,7 +216,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
 			if success {
 				response := stakingtypes.MsgBeginRedelegateResponse{}
-				if msgResponse != nil {
+				if msgResponseType != "" {
 					err = proto.Unmarshal(msgResponse, &response)
 					if err != nil {
 						k.Logger(ctx).Error("unable to unpack MsgBeginRedelegate response", "error", err)
@@ -240,7 +242,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		case "/cosmos.staking.v1beta1.MsgUndelegate":
 			if success {
 				response := stakingtypes.MsgUndelegateResponse{}
-				if msgResponse != nil {
+				if msgResponseType != "" {
 					err = proto.Unmarshal(msgResponse, &response)
 					if err != nil {
 						k.Logger(ctx).Error("unable to unpack MsgUndelegate response", "error", err)
@@ -270,7 +272,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return nil
 			}
 			response := banktypes.MsgSendResponse{}
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgSend response", "error", err)
@@ -294,7 +296,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return nil
 			}
 			response := distrtypes.MsgSetWithdrawAddressResponse{}
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgSetWithdrawAddress response", "error", err)
@@ -317,7 +319,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return nil
 			}
 			response := ibctransfertypes.MsgTransferResponse{}
-			if msgResponse != nil {
+			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
 					k.Logger(ctx).Error("unable to unpack MsgTransfer response", "error", err)
@@ -573,6 +575,9 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 }
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
+	if completion.IsZero() {
+		return errors.New("invalid zero nil completion time")
+	}
 	parts := strings.Split(memo, "/")
 	if len(parts) != 2 || parts[0] != "rebalance" {
 		return errors.New("unexpected epoch rebalance memo format")
@@ -633,6 +638,10 @@ func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo 
 }
 
 func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
+	if completion.IsZero() {
+		return errors.New("invalid zero nil completion time")
+	}
+
 	k.Logger(ctx).Info("Received MsgUndelegate acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgUndelegate
 	undelegateMsg, ok := msg.(*stakingtypes.MsgUndelegate)
