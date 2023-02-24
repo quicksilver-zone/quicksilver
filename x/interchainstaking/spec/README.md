@@ -220,7 +220,7 @@ type TransferRecord struct {
 
 ### Validator
 
-`Validator` represents relevant meta data of a validator within a zone.
+`Validator` represents relevant metadata of a validator within a zone.
 
 ```go
 type Validator struct {
