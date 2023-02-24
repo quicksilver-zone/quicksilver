@@ -9,21 +9,19 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -32,9 +30,7 @@ import (
 )
 
 const (
-	transferPort      = "transfer"
-	msgTypeWithdrawal = "withdrawal"
-	msgTypeRebalance  = "rebalance"
+	transferPort = "transfer"
 )
 
 type TypedMsg struct {
@@ -579,7 +575,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		return errors.New("invalid zero nil completion time")
 	}
 
-	epochNumber, err := types.ParseMsgMemo(memo, msgTypeRebalance)
+	epochNumber, err := types.ParseMsgMemo(memo, types.MsgTypeRebalance)
 	if err != nil {
 		return err
 	}
@@ -611,7 +607,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 }
 
 func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	epochNumber, err := types.ParseMsgMemo(memo, msgTypeRebalance)
+	epochNumber, err := types.ParseMsgMemo(memo, types.MsgTypeRebalance)
 	if err != nil {
 		return err
 	}
@@ -641,7 +637,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		return errors.New("unable to cast source message to MsgUndelegate")
 	}
 
-	epochNumber, err := types.ParseMsgMemo(memo, msgTypeWithdrawal)
+	epochNumber, err := types.ParseMsgMemo(memo, types.MsgTypeWithdrawal)
 	if err != nil {
 		return err
 	}
@@ -695,7 +691,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 }
 
 func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	epochNumber, err := types.ParseMsgMemo(memo, msgTypeWithdrawal)
+	epochNumber, err := types.ParseMsgMemo(memo, types.MsgTypeWithdrawal)
 	if err != nil {
 		return err
 	}

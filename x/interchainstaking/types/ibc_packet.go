@@ -6,6 +6,11 @@ import (
 	"strings"
 )
 
+const (
+	MsgTypeWithdrawal = "withdrawal"
+	MsgTypeRebalance  = "rebalance"
+)
+
 func ParseMsgMemo(memo, msgType string) (epochNumber int64, err error) {
 	parts := strings.Split(memo, "/")
 	if len(parts) != 2 || parts[0] != msgType {
