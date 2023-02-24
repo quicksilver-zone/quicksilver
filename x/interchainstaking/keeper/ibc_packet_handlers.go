@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
@@ -580,7 +579,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		return errors.New("invalid zero nil completion time")
 	}
 
-	epochNumber, err := parseMsgMemo(memo, msgTypeRebalance)
+	epochNumber, err := types.ParseMsgMemo(memo, msgTypeRebalance)
 	if err != nil {
 		return err
 	}
@@ -612,7 +611,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 }
 
 func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	epochNumber, err := parseMsgMemo(memo, msgTypeRebalance)
+	epochNumber, err := types.ParseMsgMemo(memo, msgTypeRebalance)
 	if err != nil {
 		return err
 	}
@@ -642,7 +641,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		return errors.New("unable to cast source message to MsgUndelegate")
 	}
 
-	epochNumber, err := parseMsgMemo(memo, msgTypeWithdrawal)
+	epochNumber, err := types.ParseMsgMemo(memo, msgTypeWithdrawal)
 	if err != nil {
 		return err
 	}
@@ -695,22 +694,8 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	return nil
 }
 
-func parseMsgMemo(memo, msgType string) (epochNumber int64, err error) {
-	parts := strings.Split(memo, "/")
-	if len(parts) != 2 || parts[0] != msgType {
-		return 0, fmt.Errorf("unexpected epoch %s memo format", msgType)
-	}
-
-	epochNumber, err = strconv.ParseInt(parts[1], 10, 64)
-	if err != nil {
-		return 0, fmt.Errorf("unexpected epoch %s memo format: %w", msgType, err)
-	}
-
-	return
-}
-
 func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	epochNumber, err := parseMsgMemo(memo, msgTypeWithdrawal)
+	epochNumber, err := types.ParseMsgMemo(memo, msgTypeWithdrawal)
 	if err != nil {
 		return err
 	}
