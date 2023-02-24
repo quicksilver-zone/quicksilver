@@ -13,18 +13,18 @@ The purpose of this module is to distribute QCK airdrops to users for engaging i
 
 ## Contents
 
-1. [Concepts](#Concepts)
-1. [State](#State)
-1. [Messages](#Messages)
-1. [Transactions](#Transactions)
-1. [Events](#Events)
-1. [Hooks](#Hooks)
-1. [Queries](#Queries)
-1. [Keepers](#Keepers)
-1. [Parameters](#Parameters)
-1. [Proposals](#Proposals)
-1. [Begin Block](#Begin-Block)
-1. [End Block](#End-Block)
+1. [Concepts](#concepts)
+1. [State](#state)
+1. [Messages](#messages)
+1. [Transactions](#transactions)
+1. [Events](#events)
+1. [Hooks](#hooks)
+1. [Queries](#queries)
+1. [Keepers](#keepers)
+1. [Parameters](#parameters)
+1. [Proposals](#proposals)
+1. [Begin Block](#begin-block)
+1. [End Block](#end-block)
 
 ## Concepts
 
@@ -154,7 +154,9 @@ var Status_value = map[string]int32{
 ### ZoneDrop
 
 ```go
-KeyPrefixZoneDrop    = []byte{0x01}
+var (
+	KeyPrefixZoneDrop = []byte{0x01}
+)
 
 func GetKeyZoneDrop(chainID string) []byte {
 	return append(KeyPrefixZoneDrop, []byte(chainID)...)
@@ -175,7 +177,9 @@ type ZoneDrop struct {
 ### ClaimRecord
 
 ```go
-KeyPrefixClaimRecord = []byte{0x02}
+var (
+	KeyPrefixClaimRecord = []byte{0x02}
+)
 
 func GetKeyClaimRecord(chainID string, addr sdk.AccAddress) []byte {
 	return append(append(KeyPrefixClaimRecord, []byte(chainID)...), addr...)
@@ -422,7 +426,7 @@ type QueryClaimRecordResponse struct {
 
 ## Keepers
 
-https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/airdrop/keeper
+<https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/airdrop/keeper>
 
 ## Parameters
 
