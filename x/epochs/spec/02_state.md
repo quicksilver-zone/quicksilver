@@ -7,7 +7,7 @@ order: 2
 Epochs module keeps `EpochInfo` objects and modify the information as epochs info changes.
 Epochs are initialized as part of genesis initialization, and modified on begin blockers or end blockers.
 
-### Epoch information type
+## Epoch information type
 
 ```protobuf
 message EpochInfo {
