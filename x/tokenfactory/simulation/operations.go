@@ -158,7 +158,7 @@ func SimulateMsgMint(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgMint, "error finding denom and admin"), nil, err
 		}
 		if addr == nil || addr.String() != acc.Address.String() {
-			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgBurn, "account is not admin"), nil, nil
+			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgMint, "account is not admin"), nil, nil
 		}
 
 		mintAmount, err := simtypes.RandPositiveInt(r, sdk.NewIntFromUint64(1000_000000))
@@ -260,7 +260,7 @@ func SimulateMsgChangeAdmin(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgChangeAdmin, "error finding denom and admin"), nil, err
 		}
 		if addr == nil || addr.String() != acc.Address.String() {
-			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgBurn, "account is not admin"), nil, nil
+			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgChangeAdmin, "account is not admin"), nil, nil
 		}
 
 		newAdmin := simtypes.RandomSimAccount(r, accs)
@@ -308,7 +308,7 @@ func SimulateMsgSetDenomMetadata(ak types.AccountKeeper, bk types.BankKeeper, k 
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgChangeAdmin, "error finding denom and admin"), nil, err
 		}
 		if addr == nil || addr.String() != acc.Address.String() {
-			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgBurn, "account is not admin"), nil, nil
+			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgChangeAdmin, "account is not admin"), nil, nil
 		}
 
 		msg := &types.MsgSetDenomMetadata{
