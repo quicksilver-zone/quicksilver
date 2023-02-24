@@ -33,8 +33,9 @@ import (
 )
 
 const (
-	transferPort = "transfer"
-	withdrawal   = "withdrawal"
+	transferPort      = "transfer"
+	msgTypeWithdrawal = "withdrawal"
+	msgTypeRebalance  = "rebalance"
 )
 
 type TypedMsg struct {
@@ -578,14 +579,10 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	if completion.IsZero() {
 		return errors.New("invalid zero nil completion time")
 	}
-	parts := strings.Split(memo, "/")
-	if len(parts) != 2 || parts[0] != "rebalance" {
-		return errors.New("unexpected epoch rebalance memo format")
-	}
 
-	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	epochNumber, err := parseMsgMemo(memo, msgTypeRebalance)
 	if err != nil {
-		return errors.New("unexpected epoch rebalance memo format (2)")
+		return err
 	}
 
 	k.Logger(ctx).Info("Received MsgBeginRedelegate acknowledgement")
@@ -615,14 +612,9 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 }
 
 func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	parts := strings.Split(memo, "/")
-	if len(parts) != 2 || parts[0] != "rebalance" {
-		return errors.New("unexpected epoch rebalance memo format")
-	}
-
-	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	epochNumber, err := parseMsgMemo(memo, msgTypeRebalance)
 	if err != nil {
-		return errors.New("unexpected epoch rebalance memo format (2)")
+		return err
 	}
 
 	k.Logger(ctx).Error("Received MsgBeginRedelegate acknowledgement error")
@@ -649,15 +641,12 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		k.Logger(ctx).Error("unable to cast source message to MsgUndelegate")
 		return errors.New("unable to cast source message to MsgUndelegate")
 	}
-	memoParts := strings.Split(memo, "/")
-	if len(memoParts) != 2 || memoParts[0] != withdrawal {
-		return errors.New("unexpected memo form")
-	}
 
-	epochNumber, err := strconv.ParseInt(memoParts[1], 10, 64)
+	epochNumber, err := parseMsgMemo(memo, msgTypeWithdrawal)
 	if err != nil {
 		return err
 	}
+
 	zone := k.GetZoneForDelegateAccount(ctx, undelegateMsg.DelegatorAddress)
 
 	ubr, found := k.GetUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
@@ -706,15 +695,24 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	return nil
 }
 
-func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
+func parseMsgMemo(memo, msgType string) (epochNumber int64, err error) {
 	parts := strings.Split(memo, "/")
-	if len(parts) != 2 || parts[0] != withdrawal {
-		return errors.New("unexpected epoch undelegate memo format")
+	if len(parts) != 2 || parts[0] != msgType {
+		return 0, fmt.Errorf("unexpected epoch %s memo format", msgType)
 	}
 
-	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	epochNumber, err = strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
-		return errors.New("unexpected epoch undelegate memo format (2)")
+		return 0, fmt.Errorf("unexpected epoch %s memo format: %w", msgType, err)
+	}
+
+	return
+}
+
+func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	epochNumber, err := parseMsgMemo(memo, msgTypeWithdrawal)
+	if err != nil {
+		return err
 	}
 
 	k.Logger(ctx).Error("Received MsgUndelegate acknowledgement error")
