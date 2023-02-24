@@ -7,19 +7,19 @@ protocol.
 
 ## Contents
 
-1. [Concepts](#Concepts)
-1. [State](#State)
-1. [Messages](#Messages)
-1. [Transactions](#Transactions)
-1. [Proposals](#Proposals)
-1. [Events](#Events)
-1. [Hooks](#Hooks)
-1. [Queries](#Queries)
-1. [Keepers](#Keepers)
-1. [Parameters](#Parameters)
-1. [Begin Block](#Begin-Block)
-1. [After Epoch End](#After-Epoch-End)
-1. [IBC](#IBC)
+1. [Concepts](#concepts)
+1. [State](#state)
+1. [Messages](#messages)
+1. [Transactions](#transactions)
+1. [Proposals](#proposals)
+1. [Events](#events)
+1. [Hooks](#hooks)
+1. [Queries](#queries)
+1. [Keepers](#keepers)
+1. [Parameters](#parameters)
+1. [Begin Block](#begin-block)
+1. [After Epoch End](#after-epoch-end)
+1. [IBC](#ibc)
 
 ## Concepts
 
@@ -673,7 +673,7 @@ Query deposit account address for a given chain.
 
 ## Keepers
 
-https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper
+<https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper>
 
 ## Parameters
 
@@ -755,7 +755,7 @@ updated.
 
 Triggered by `RequestRedemption` when a user redeems qAssets. Withdrawal
 records are set or updated accordingly.  
-See [MsgRequestRedemption](#MsgRequestRedemption).
+See [MsgRequestRedemption](#msgrequestredemption).
 
 - **Endpoint:** `/cosmos.staking.v1beta1.MsgTokenizeShares`
 - **Handler:** `HandleTokenizedShares`
@@ -779,7 +779,7 @@ Triggered at the end of every epoch during `Rebalance`.
 #### MsgSend
 
 Triggered by `TransferToDelegate` during `HandleReceiptTransaction`.  
-See [Deposit Interval](#Deposit-Interval).
+See [Deposit Interval](#deposit-interval).
 
 - **Endpoint:** `/cosmos.bank.v1beta1.MsgSend`
 - **Handler:** `HandleCompleteSend`
@@ -811,7 +811,7 @@ latency and different zone block times, etc).
 Triggered by `DistributeRewardsFromWithdrawAccount` to distribute rewards
 across the zone delegation accounts and collect fees to the module fee account.
 The `RedemptionRate` is updated accordingly.  
-See [WithdrawalAddress Balances](#WithdrawalAddress-Balances).
+See [WithdrawalAddress Balances](#withdrawaladdress-balances).
 
 - **Endpoint:** `/ibc.applications.transfer.v1.MsgTransfer`
 - **Handler:** `HandleMsgTransfer`
@@ -833,7 +833,7 @@ update the individual account balances `AccountBalanceCallback`, trigger the
 #### Delegator Delegations
 
 Query delegator delegations for each zone and update delegation records.  
-See [After Epoch End](#After-Epoch-End).
+See [After Epoch End](#after-epoch-end).
 
 - **Query:** `cosmos.staking.v1beta1.Query/DelegatorDelegations`
 - **Callback:** `DelegationsCallback`
@@ -841,7 +841,7 @@ See [After Epoch End](#After-Epoch-End).
 #### Delegate Total Rewards
 
 Withdraw delegation rewards for each zone and distribute.  
-See [After Epoch End](#After-Epoch-End).
+See [After Epoch End](#after-epoch-end).
 
 - **Query:** `cosmos.distribution.v1beta1.Query/DelegationTotalRewards`
 - **Callback:** `RewardsCallback`
@@ -849,7 +849,7 @@ See [After Epoch End](#After-Epoch-End).
 #### WithdrawalAddress Balances
 
 Triggered by `HandleWithdrawRewards`.  
-See [MsgWithdrawDelegatorReward](#MsgWithdrawDelegatorReward).
+See [MsgWithdrawDelegatorReward](#msgwithdrawdelegatorreward).
 
 - **Query:** `cosmos.bank.v1beta1.Query/AllBalances`
 - **Callback:** `DistributeRewardsFromWithdrawAccount`

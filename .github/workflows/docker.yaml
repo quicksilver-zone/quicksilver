@@ -9,6 +9,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     steps:
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
@@ -21,9 +22,22 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push evinced
-        uses: docker/build-push-action@v3
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
         with:
-          push: true
-          tags: quicksilverzone/quicksilver:latest
-          file: Dockerfile
+          go-version: '^1.19.4'
+
+      - name: Setup Golang caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-golang-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-golang-
+
+      - name: build and push container
+        run: |
+          DOCKER_BUILDKIT=1 /usr/bin/docker build . -f Dockerfile -t quicksilverzone/quicksilver:latest
+          /usr/bin/docker push quicksilverzone/quicksilver:latest 
