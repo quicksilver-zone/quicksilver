@@ -7,19 +7,19 @@ allocate and distribute protocol participation rewards to users.
 
 ## Contents
 
-1. [Concepts](#Concepts)
-1. [State](#State)
-1. [Messages](#Messages)
-1. [Transactions](#Transactions)
-1. [Proposals](#Proposals)
-1. [Events](#Events)
-1. [Hooks](#Hooks)
-1. [Queries](#Queries)
-1. [Keepers](#Keepers)
-1. [Parameters](#Parameters)
-1. [Begin Block](#Begin-Block)
-1. [End Block](#End-Block)
-1. [After Epoch End](#After-Epoch-End)
+1. [Concepts](#concepts)
+1. [State](#state)
+1. [Messages](#messages)
+1. [Transactions](#transactions)
+1. [Proposals](#proposals)
+1. [Events](#events)
+1. [Hooks](#hooks)
+1. [Queries](#queries)
+1. [Keepers](#keepers)
+1. [Parameters](#parameters)
+1. [Begin Block](#begin-block)
+1. [End Block](#end-block)
+1. [After Epoch End](#after-epoch-end)
 
 ## Concepts
 
@@ -32,7 +32,7 @@ Specifically, we want to reward users for:
 3. Holdings of off-chain assets (qAssets);
 
 The total inflation allocation for participation rewards is divided
-proportionally for each of the above according to the module [parameters](#Parameters).
+proportionally for each of the above according to the module [parameters](#parameters).
 
 ### 1. Lockup Rewards
 
@@ -341,7 +341,7 @@ type QueryProtocolDataResponse struct {
 
 ## Keepers
 
-https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/participationrewards/keeper
+<https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/participationrewards/keeper>
 
 ## Parameters
 
