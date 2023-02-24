@@ -24,7 +24,7 @@ created denom. Once a denom is created, the original creator is given
 Creates a denom of `factory/{creator address}/{subdenom}` given the denom creator
 address and the subdenom. Subdenoms can contain `[a-zA-Z0-9./]`.
 
-```go
+```protobuf
 message MsgCreateDenom {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   string subdenom = 2 [ (gogoproto.moretags) = "yaml:\"subdenom\"" ];
@@ -47,7 +47,7 @@ message MsgCreateDenom {
 Minting of a specific denom is only allowed for the current admin.
 Note, the current admin is defaulted to the creator of the denom.
 
-```go
+```protobuf
 message MsgMint {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   cosmos.base.v1beta1.Coin amount = 2 [
@@ -69,7 +69,7 @@ message MsgMint {
 Burning of a specific denom is only allowed for the current admin.
 Note, the current admin is defaulted to the creator of the denom.
 
-```go
+```protobuf
 message MsgBurn {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   cosmos.base.v1beta1.Coin amount = 2 [
@@ -90,7 +90,7 @@ message MsgBurn {
 
 Change the admin of a denom. Note, this is only allowed to be called by the current admin of the denom.
 
-```go
+```protobuf
 message MsgChangeAdmin {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   string denom = 2 [ (gogoproto.moretags) = "yaml:\"denom\"" ];
@@ -103,7 +103,7 @@ message MsgChangeAdmin {
 Setting of metadata for a specific denom is only allowed for the admin of the denom.
 It allows the overwriting of the denom metadata in the bank module.
 
-```go
+```protobuf
 message MsgChangeAdmin {
   string sender = 1 [ (gogoproto.moretags) = "yaml:\"sender\"" ];
   cosmos.bank.v1beta1.Metadata metadata = 2 [ (gogoproto.moretags) = "yaml:\"metadata\"", (gogoproto.nullable)   = false ];

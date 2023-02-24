@@ -16,7 +16,7 @@ will be lowered by `1 - reduction factor`.
 
 ```go
 func (m Minter) NextEpochProvisions(params Params) sdk.Dec {
-    return m.EpochProvisions.Mul(params.ReductionFactor)
+	return m.EpochProvisions.Mul(params.ReductionFactor)
 }
 ```
 
@@ -26,7 +26,7 @@ Calculate the provisions generated for each epoch based on current epoch provisi
 
 ```go
 func (m Minter) EpochProvision(params Params) sdk.Coin {
-    provisionAmt := m.EpochProvisions.QuoInt(sdk.NewInt(int64(params.EpochsPerYear)))
-    return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
+	provisionAmt := m.EpochProvisions.QuoInt(sdk.NewInt(int64(params.EpochsPerYear)))
+	return sdk.NewCoin(params.MintDenom, provisionAmt.TruncateInt())
 }
 ```
