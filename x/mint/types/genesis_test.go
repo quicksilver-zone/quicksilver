@@ -10,10 +10,10 @@ import (
 )
 
 func TestGenesisValidate(t *testing.T) {
-	invalidParams := types.DefaultGenesisState()
+	invalidParams := types.DefaultGenesis()
 	invalidParams.Params.MintDenom = "" // cannot be empty
 
-	invalidMinter := types.DefaultGenesisState()
+	invalidMinter := types.DefaultGenesis()
 	invalidMinter.Minter.EpochProvisions = sdk.NewDec(-1) // cannot be empty
 
 	tests := []struct {
@@ -23,7 +23,7 @@ func TestGenesisValidate(t *testing.T) {
 	}{
 		{
 			name:    "valid genesis",
-			genesis: types.DefaultGenesisState(),
+			genesis: types.DefaultGenesis(),
 			isValid: true,
 		},
 		{

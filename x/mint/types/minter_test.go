@@ -44,6 +44,16 @@ func BenchmarkNextEpochProvisions(b *testing.B) {
 	}
 }
 
+func TestEpochProvision(t *testing.T) {
+	params := types.DefaultParams()
+	minter := types.DefaultInitialMinter()
+	minter.EpochProvisions = sdk.NewDecWithPrec(75, 2)
+
+	actual := minter.NextEpochProvisions(params)
+	require.Equal(t, sdk.NewDecWithPrec(5625, 4), actual)
+	require.Equal(t, sdk.NewCoin(params.MintDenom, actual.TruncateInt()), minter.EpochProvision(params))
+}
+
 func TestMinterValidate(t *testing.T) {
 	testcases := []struct {
 		name    string
