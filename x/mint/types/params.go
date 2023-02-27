@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	yaml "gopkg.in/yaml.v2"
 
 	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Parameter store keys.
@@ -31,8 +30,8 @@ func ParamKeyTable() paramtypes.KeyTable {
 
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
-	reductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
-	mintingRewardsDistributionStartEpoch int64,
+	reductionPeriodInEpochs int64, reductionFactor sdk.Dec,
+	distrProportions DistributionProportions, mintingRewardsDistributionStartEpoch int64,
 ) Params {
 	return Params{
 		MintDenom:                            mintDenom,
@@ -47,6 +46,21 @@ func NewParams(
 
 // DefaultParams returns default minting module parameters.
 func DefaultParams() Params {
+	return NewParams(
+		sdk.DefaultBondDenom,
+		sdk.NewDec(200000000/122),
+		"day",
+		365,
+		sdk.NewDecWithPrec(75, 2),
+		DistributionProportions{
+			Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
+			PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
+			ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
+			CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.1
+		},
+		0,
+	)
+
 	return Params{
 		MintDenom:               sdk.DefaultBondDenom,
 		GenesisEpochProvisions:  sdk.NewDec(200000000 / 122),
