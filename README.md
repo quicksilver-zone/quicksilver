@@ -64,7 +64,7 @@ For subsequent tests run the following if you want to start with fresh state:
 
 ## Origination and Attribution
 
-Quicksilver utilises code and logic that originated from other projects; as an open-source project ourselves, we believe that appropriate attribution is neccessary, in order to combat plagarism.
+Quicksilver utilises code and logic that originated from other projects; as an open-source project ourselves, we believe that appropriate attribution is necessary, in order to combat plagiarism.
 
 The following modules were lifted and reused in almost entirety from Osmosis (<https://github.com/osmosis-labs/osmosis>), under the terms of the Apache 2.0 License, and we are grateful for their contribution:
 
