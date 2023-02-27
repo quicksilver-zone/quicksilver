@@ -21,11 +21,10 @@ var (
 	KeyReductionPeriodInEpochs              = []byte("ReductionPeriodInEpochs")
 	KeyReductionFactor                      = []byte("ReductionFactor")
 	KeyPoolAllocationRatio                  = []byte("PoolAllocationRatio")
-	KeyDeveloperRewardsReceiver             = []byte("DeveloperRewardsReceiver")
 	KeyMintingRewardsDistributionStartEpoch = []byte("MintingRewardsDistributionStartEpoch")
 )
 
-// ParamTable for minting module.
+// ParamKeyTable returns ParamTable for minting module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -46,7 +45,7 @@ func NewParams(
 	}
 }
 
-// default minting module parameters.
+// DefaultParams returns default minting module parameters.
 func DefaultParams() Params {
 	return Params{
 		MintDenom:               sdk.DefaultBondDenom,
@@ -158,7 +157,7 @@ func validateReductionFactor(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.GT(sdk.NewDec(1)) {
+	if v.GT(sdk.OneDec()) {
 		return errors.New("reduction factor cannot be greater than 1")
 	}
 
@@ -183,13 +182,16 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("pool incentives distribution ratio should not be negative")
 	}
 
+	if v.ParticipationRewards.IsNegative() {
+		return errors.New("participation rewards distribution ratio should not be negative")
+	}
+
 	if v.CommunityPool.IsNegative() {
 		return errors.New("community pool distribution ratio should not be negative")
 	}
 
 	totalProportions := v.Staking.Add(v.PoolIncentives).Add(v.CommunityPool).Add(v.ParticipationRewards)
-
-	if !totalProportions.Equal(sdk.NewDec(1)) {
+	if !totalProportions.Equal(sdk.OneDec()) {
 		return errors.New("total distributions ratio should be 1")
 	}
 
