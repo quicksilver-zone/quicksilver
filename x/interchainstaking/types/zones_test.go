@@ -227,9 +227,11 @@ func TestBase64MemoToIntent(t *testing.T) {
 	zone.Validators = append(zone.Validators, &types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded})
 
 	testCases := []struct {
+		name           string
 		memo           string
 		amount         int
 		expectedIntent map[string]sdk.Dec
+		wantErr        bool
 	}{
 		{
 			memo:   "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc",
@@ -258,16 +260,35 @@ func TestBase64MemoToIntent(t *testing.T) {
 				"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": sdk.NewDecWithPrec(5, 1),
 			},
 		},
+		{
+			name:    "empty memo",
+			memo:    "",
+			amount:  10,
+			wantErr: true,
+		},
+		{
+			name:    "invalid length",
+			memo:    "ToS/+Ex92tEcuMBzhukZKMVnXKS8NKaQBJTx9zza4rrxyLiP9fwLijOcPK/59acWzdcBME6ub8f0LID97qWECuxJKXmxBM1YBQyWHSAXDiwmMY78K",
+			amount:  10,
+			wantErr: true,
+		},
 	}
 
 	for _, tc := range testCases {
-		out, err := zone.ConvertMemoToOrdinalIntents(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
-		require.NoError(t, err)
-		for _, v := range out {
-			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
-				t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
+		t.Run(tc.name, func(t *testing.T) {
+			out, err := zone.ConvertMemoToOrdinalIntents(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
 			}
-		}
+
+			require.NoError(t, err)
+			for _, v := range out {
+				if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
+					t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
+				}
+			}
+		})
 	}
 }
 
@@ -484,7 +505,7 @@ func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 		Intents:   []*types.ValidatorIntent{},
 	}
 	for addr, weight := range in {
-		out.Intents = append(out.Intents, &types.ValidatorIntent{addr, weight})
+		out.Intents = append(out.Intents, &types.ValidatorIntent{ValoperAddress: addr, Weight: weight})
 	}
 	return out
 }
