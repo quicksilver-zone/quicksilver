@@ -1,10 +1,12 @@
-package types
+package types_test
 
 import (
+	"github.com/ingenuity-build/quicksilver/x/mint/types"
 	"math/rand"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 )
 
 // Benchmarking :)
@@ -15,8 +17,8 @@ import (
 // BenchmarkEpochProvision-4 3000000 429 ns/op
 func BenchmarkEpochProvision(b *testing.B) {
 	b.ReportAllocs()
-	minter := InitialMinter()
-	params := DefaultParams()
+	minter := types.InitialMinter()
+	params := types.DefaultParams()
 
 	s1 := rand.NewSource(100)
 	r1 := rand.New(s1)
@@ -32,11 +34,48 @@ func BenchmarkEpochProvision(b *testing.B) {
 // BenchmarkNextEpochProvisions-4 5000000 251 ns/op
 func BenchmarkNextEpochProvisions(b *testing.B) {
 	b.ReportAllocs()
-	minter := InitialMinter()
-	params := DefaultParams()
+	minter := types.InitialMinter()
+	params := types.DefaultParams()
 
 	// run the NextEpochProvisions function b.N times
 	for n := 0; n < b.N; n++ {
 		minter.NextEpochProvisions(params)
+	}
+}
+
+func TestMinterValidate(t *testing.T) {
+	testcases := []struct {
+		name    string
+		minter  types.Minter
+		isValid bool
+	}{
+		{
+			"valid",
+			types.InitialMinter(),
+			true,
+		},
+		{
+			"negative",
+			types.Minter{
+				EpochProvisions: sdk.NewDec(-1),
+			},
+			false,
+		},
+		{
+			"nil",
+			types.Minter{},
+			false,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.minter.Validate()
+			if !tc.isValid {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
 	}
 }
