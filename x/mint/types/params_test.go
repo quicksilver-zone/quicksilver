@@ -235,7 +235,7 @@ func TestParamsValidate(t *testing.T) {
 // TestGetDeveloperVestingProportion sanity checks that participation
 // rewards proportion equals to the value set by
 // parameter for participation rewards.
-func TestGetDeveloperVestingProportion(t *testing.T) {
+func TestGetDistributionProportions(t *testing.T) {
 	expected := sdk.NewDecWithPrec(4, 1)
 
 	params := types.Params{

@@ -1,12 +1,13 @@
 package types_test
 
 import (
-	"github.com/ingenuity-build/quicksilver/x/mint/types"
 	"math/rand"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
 // Benchmarking :)
