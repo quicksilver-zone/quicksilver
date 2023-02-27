@@ -60,21 +60,6 @@ func DefaultParams() Params {
 		},
 		0,
 	)
-
-	return Params{
-		MintDenom:               sdk.DefaultBondDenom,
-		GenesisEpochProvisions:  sdk.NewDec(200000000 / 122),
-		EpochIdentifier:         "day",                     // 1 day
-		ReductionPeriodInEpochs: 365,                       // 1 years
-		ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
-		DistributionProportions: DistributionProportions{
-			Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
-			PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
-			ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
-			CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.1
-		},
-		MintingRewardsDistributionStartEpoch: 0,
-	}
 }
 
 // validate params.
