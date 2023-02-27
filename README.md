@@ -1,10 +1,16 @@
 # Quicksilver
 
+
+|                                                                                                                                                |                                                                                                                                                                    |                                                                                                                                                       |                                                                                                                                                      |
+|------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [![codecov](https://codecov.io/gh/ingenuity-build/quicksilver/branch/main/graph/badge.svg)](https://codecov.io/gh/ingenuity-build/quicksilver) | [![Go Report Card](https://goreportcard.com/badge/github.com/ingenuity-build/quicksilver)](https://goreportcard.com/report/github.com/ingenuity-build/quicksilver) | [![license](https://img.shields.io/github/license/ingenuity-build/quicksilver.svg)](https://github.com/ingenuity-build/quicksilver/blob/main/LICENSE) | [![GolangCI](https://golangci.com/badges/github.com/ingenuity-build/quicksilver.svg)](https://golangci.com/r/github.com/ingenuity-build/quicksilver) |
+
 Quicksilver is the Cosmos Liquid Staking Zone.
 
 Many existing Liquid Staking providers take power and agency _away_ from delegators, permitting only a small whitelist
 of validators to delegate to, and stripping away users voting rights. Quicksilver aims to right these wrongs, with
 active measures to reward and incentivise decentralisation and governance participation.
+
 
 ## System Requirements
 This system spec has been found to be optimal:
