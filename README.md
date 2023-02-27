@@ -15,7 +15,7 @@ active measures to reward and incentivise decentralisation and governance partic
 ## System Requirements
 This system spec has been found to be optimal:
 
-1. Quad Core AMD or Intel (amd64) CPU; higher clock speed is preferrential to more cores, as Tendermint is largely single-threaded.
+1. Quad Core AMD or Intel (amd64) CPU; higher clock speed is preferential to more cores, as Tendermint is largely single-threaded.
 2. 32GB RAM 
 3. 1TB NVMe Storage (mechanical disk are insufficient)
 4. 100Mbps bidirectional Internet connection
