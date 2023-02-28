@@ -25,12 +25,14 @@ func TestParseStakingDelegationKeyValid(t *testing.T) {
 func TestParseStakingDelegationKeyInvalidLength(t *testing.T) {
 	var key []byte
 	_, _, err := types.ParseStakingDelegationKey(key)
-	require.Error(t, err, "invalid length (0)")
 	require.ErrorContains(t, err, "out of bounds reading byte 0")
+
+	key = []byte{0x31}
+	_, _, err = types.ParseStakingDelegationKey(key)
+	require.ErrorContains(t, err, "out of bounds reading delegator address length")
 
 	key = []byte{0x31, 0x42}
 	_, _, err = types.ParseStakingDelegationKey(key)
-	require.Error(t, err, "invalid length (1)")
 	require.ErrorContains(t, err, "invalid delegator address length")
 }
 
