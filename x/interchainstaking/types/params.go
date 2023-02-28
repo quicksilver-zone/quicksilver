@@ -29,7 +29,7 @@ var (
 
 var _ paramtypes.ParamSet = (*Params)(nil)
 
-// unmarshal the current staking params value from store key or panic
+// MustUnmarshalParams unmarshals the current staking params value from store key or panic
 func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	params, err := UnmarshalParams(cdc, value)
 	if err != nil {
@@ -39,7 +39,7 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	return params
 }
 
-// unmarshal the current staking params value from store key
+// UnmarshalParams unmarshals the current staking params value from store key
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
 	if len(value) == 0 {
 		return params, errors.New("unable to unmarshal empty byte slice")
@@ -50,31 +50,6 @@ func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err e
 	}
 
 	return
-}
-
-func validateParams(i interface{}) error {
-	v, ok := i.(Params)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v.DepositInterval <= 0 {
-		return fmt.Errorf("deposit interval must be positive: %d", v.DepositInterval)
-	}
-
-	if v.ValidatorsetInterval <= 0 {
-		return fmt.Errorf("valset interval must be positive: %d", v.ValidatorsetInterval)
-	}
-
-	if v.CommissionRate.IsNil() {
-		return errors.New("commission rate must be non-nil")
-	}
-
-	if v.CommissionRate.IsNegative() {
-		return fmt.Errorf("commission rate must be non-negative: %s", v.CommissionRate.String())
-	}
-
-	return nil
 }
 
 // NewParams creates a new ics Params instance
@@ -100,6 +75,23 @@ func DefaultParams() Params {
 		DefaultCommissionRate,
 		DefaultUnbondingEnabled,
 	)
+}
+
+// Validate validates params.
+func (p Params) Validate() error {
+	if err := validatePositiveInt(p.DepositInterval); err != nil {
+		return fmt.Errorf("invalid deposit interval: %w", err)
+	}
+
+	if err := validatePositiveInt(p.ValidatorsetInterval); err != nil {
+		return fmt.Errorf("invalid valset interval: %w", err)
+	}
+
+	if err := validateNonNegativeDec(p.CommissionRate); err != nil {
+		return fmt.Errorf("invalid commission rate: %w", err)
+	}
+
+	return nil
 }
 
 // ParamKeyTable for ics module.
@@ -158,13 +150,17 @@ func validatePositiveInt(i interface{}) error {
 }
 
 func validateNonNegativeDec(i interface{}) error {
-	intval, ok := i.(sdk.Dec)
+	dec, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if intval.IsNegative() {
-		return fmt.Errorf("invalid (negative) parameter value: %d", intval)
+	if dec.IsNil() {
+		return fmt.Errorf("invalid (nil) parameter value")
+	}
+
+	if dec.IsNegative() {
+		return fmt.Errorf("invalid (negative) parameter value: %s", dec.String())
 	}
 	return nil
 }
