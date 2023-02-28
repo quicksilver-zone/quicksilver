@@ -29,7 +29,7 @@ var (
 
 var _ paramtypes.ParamSet = (*Params)(nil)
 
-// MustUnmarshalParams unmarshals the current staking params value from store key or panic
+// MustUnmarshalParams unmarshals the current interchainstaking params value from store key or panic
 func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	params, err := UnmarshalParams(cdc, value)
 	if err != nil {
@@ -39,7 +39,7 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	return params
 }
 
-// UnmarshalParams unmarshals the current staking params value from store key
+// UnmarshalParams unmarshals the current interchainstaking params value from store key
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
 	if len(value) == 0 {
 		return params, errors.New("unable to unmarshal empty byte slice")
