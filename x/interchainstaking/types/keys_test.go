@@ -22,6 +22,18 @@ func TestParseStakingDelegationKeyValid(t *testing.T) {
 	require.Equal(t, valAddr, val, "require original and parsed validator addresses match")
 }
 
+func TestParseStakingDelegationKeyInvalidLength(t *testing.T) {
+	var key []byte
+	_, _, err := types.ParseStakingDelegationKey(key)
+	require.Error(t, err, "invalid length (0)")
+	require.ErrorContains(t, err, "out of bounds reading byte 0")
+
+	key = []byte{0x31, 0x42}
+	_, _, err = types.ParseStakingDelegationKey(key)
+	require.Error(t, err, "invalid length (1)")
+	require.ErrorContains(t, err, "invalid delegator address length")
+}
+
 func TestParseStakingDelegationKeyInvalidPrefix(t *testing.T) {
 	key := []byte{0x42}
 	_, _, err := types.ParseStakingDelegationKey(key)
@@ -36,5 +48,5 @@ func TestParseStakingDelegationKeyInvalidTruncated(t *testing.T) {
 	key := stakingtypes.GetDelegationKey(delAddr, valAddr)
 	// truncate the last byte of the key.
 	_, _, err = types.ParseStakingDelegationKey(key[:len(key)-1])
-	require.Errorf(t, err, "out of bounds reading validator address")
+	require.Error(t, err, "out of bounds reading validator address")
 }
