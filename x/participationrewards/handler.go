@@ -1,10 +1,10 @@
 package participationrewards
 
 import (
+	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -22,7 +22,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized participationrewards message type: %T", msg)
+			return nil, sdkioerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized participationrewards message type: %T", msg)
 		}
 	}
 }
@@ -34,7 +34,7 @@ func NewProposalHandler(k keeper.Keeper) govv1beta1.Handler {
 			return keeper.HandleAddProtocolDataProposal(ctx, k, c)
 
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized participationrewards proposal content type: %T", c)
+			return sdkioerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized participationrewards proposal content type: %T", c)
 		}
 	}
 }

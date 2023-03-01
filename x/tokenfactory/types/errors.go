@@ -5,7 +5,7 @@ package types
 import (
 	fmt "fmt"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkerrors "cosmossdk.io/errors"
 )
 
 // x/tokenfactory module sentinel errors
