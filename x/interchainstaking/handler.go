@@ -1,6 +1,7 @@
 package interchainstaking
 
 import (
+	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
@@ -26,7 +27,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized interchainstaking message type: %T", msg)
+			return nil, sdkioerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized interchainstaking message type: %T", msg)
 		}
 	}
 }
@@ -40,7 +41,7 @@ func NewProposalHandler(k keeper.Keeper) govv1beta1.Handler {
 			return keeper.HandleUpdateZoneProposal(ctx, k, c)
 
 		default:
-			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized interchainstaking proposal content type: %T", c)
+			return sdkioerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized interchainstaking proposal content type: %T", c)
 		}
 	}
 }
