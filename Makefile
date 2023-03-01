@@ -408,8 +408,8 @@ format:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-containerProtoVer=v0.7
-containerProtoImage=tendermintdev/sdk-proto-gen:$(containerProtoVer)
+containerProtoVer=0.9.0
+containerProtoImage=ghcr.io/cosmos/proto-builder:$(containerProtoVer)
 containerProtoGen=cosmos-sdk-proto-gen-$(containerProtoVer)
 containerProtoGenSwagger=cosmos-sdk-proto-gen-swagger-$(containerProtoVer)
 containerProtoFmt=cosmos-sdk-proto-fmt-$(containerProtoVer)
@@ -438,11 +438,11 @@ proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 
-TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.21/proto/tendermint
+TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.26/proto/tendermint
 GOGO_PROTO_URL      	= https://raw.githubusercontent.com/regen-network/protobuf/cosmos
-CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.7.1
-SDK_PROTO_URL 			= https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.46.1/proto/cosmos
-IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v5.0.0-rc2/proto
+CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.8.0
+SDK_PROTO_URL 			= https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.46.10/proto/cosmos
+IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v5.2.0/proto
 
 TM_CRYPTO_TYPES     			= third_party/proto/tendermint/crypto
 TM_ABCI_TYPES       			= third_party/proto/tendermint/abci

@@ -185,4 +185,8 @@ message Receipt {
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
     (gogoproto.nullable) = false
   ];
+  google.protobuf.Timestamp first_seen = 5
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
+  google.protobuf.Timestamp completed = 6
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
 }

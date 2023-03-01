@@ -1,14 +1,20 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -707,6 +713,293 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 
 			postBurnBalance := app.BankKeeper.GetAllBalances(ctx, app.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
 			s.Require().Equal(startBalance, postBurnBalance)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	if !found {
+		s.Fail("unable to retrieve zone for test")
+	}
+
+	// create redelegation record
+	record := icstypes.RedelegationRecord{
+		ChainId:     s.chainB.ChainID,
+		EpochNumber: 1,
+		Source:      zone.Validators[0].ValoperAddress,
+		Destination: zone.Validators[1].ValoperAddress,
+		Amount:      1000,
+	}
+
+	app.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+
+	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: zone.Validators[0].ValoperAddress, ValidatorDstAddress: zone.Validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	data, err := icatypes.SerializeCosmosTx(app.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	s.Require().NoError(err)
+
+	// validate memo < 256 bytes
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+		Memo: fmt.Sprintf("rebalance/%d", 1),
+	}
+
+	packet := channeltypes.Packet{Data: app.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+
+	ackBytes := []byte("{\"error\":\"ABCI code: 32: error handling packet on host chain: see events for details\"}")
+	// call handler
+
+	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
+	s.Require().True(found)
+
+	err = app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	s.Require().NoError(err)
+
+	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
+	s.Require().False(found)
+}
+
+func (s *KeeperTestSuite) Test_v045Callback() {
+
+	tests := []struct {
+		name             string
+		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte)
+		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
+	}{{
+		name: "msg response with some data",
+		setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
+			app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+			sender := utils.GenerateAccAddressForTest()
+			senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+			transferMsg := ibctransfertypes.MsgTransfer{
+				SourcePort:    "transfer",
+				SourceChannel: "channel-0",
+				Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
+				Sender:        senderAddr,
+				Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+			}
+			response := ibctransfertypes.MsgTransferResponse{
+				Sequence: 1,
+			}
+
+			respBytes := icatypes.ModuleCdc.MustMarshal(&response)
+			return []sdk.Msg{&transferMsg}, respBytes
+		},
+		assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
+			txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+			feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+			txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
+			feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+			// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
+
+			if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
+				return true
+			}
+			return false
+
+		},
+	},
+		{
+			name: "msg response with nil data",
+			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
+				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				if !found {
+					s.Fail("unable to retrieve zone for test")
+				}
+
+				msgSetWithdrawAddress := distrtypes.MsgSetWithdrawAddress{
+					DelegatorAddress: zone.PerformanceAddress.Address,
+					WithdrawAddress:  zone.WithdrawalAddress.Address,
+				}
+
+				response := distrtypes.MsgSetWithdrawAddressResponse{}
+
+				respBytes := icatypes.ModuleCdc.MustMarshal(&response)
+				return []sdk.Msg{&msgSetWithdrawAddress}, respBytes
+			},
+			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
+				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				if !found {
+					s.Fail("unable to retrieve zone for test")
+				}
+				// assert that withdraw address is set
+				if zone.WithdrawalAddress.Address == zone.PerformanceAddress.WithdrawalAddress {
+					return true
+				}
+				return false
+
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			s.setupTestZones()
+
+			app := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+
+			msg, msgResponseBytes := test.setStatements(ctx, app)
+
+			txMsgData := &sdk.TxMsgData{
+				Data:         []*sdk.MsgData{{MsgType: "/bob", Data: msgResponseBytes}},
+				MsgResponses: []*codectypes.Any{},
+			}
+
+			ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+
+			acknowledgement := channeltypes.Acknowledgement{
+				Response: &channeltypes.Acknowledgement_Result{
+					Result: ackData,
+				},
+			}
+
+			pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, msg)
+			s.Require().NoError(err)
+			packetData := icatypes.InterchainAccountPacketData{
+				Type: icatypes.EXECUTE_TX,
+				Data: pdBytes,
+				Memo: "test_acknowledgement",
+			}
+
+			packetBytes, err := icatypes.ModuleCdc.MarshalJSON(&packetData)
+			s.Require().NoError(err)
+			packet := channeltypes.Packet{
+				Data: packetBytes,
+			}
+
+			s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+
+			s.Require().True(test.assertStatements(ctx, app))
+
+		})
+	}
+}
+
+func (s *KeeperTestSuite) Test_v046Callback() {
+
+	tests := []struct {
+		name             string
+		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any)
+		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
+	}{{
+		name: "msg response with some data",
+		setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
+			app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+			sender := utils.GenerateAccAddressForTest()
+			senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+			transferMsg := ibctransfertypes.MsgTransfer{
+				SourcePort:    "transfer",
+				SourceChannel: "channel-0",
+				Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
+				Sender:        senderAddr,
+				Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+			}
+			response := ibctransfertypes.MsgTransferResponse{
+				Sequence: 1,
+			}
+
+			anyresponse, _ := codectypes.NewAnyWithValue(&response)
+			return []sdk.Msg{&transferMsg}, anyresponse
+		},
+		assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
+			txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+			feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+			txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
+			feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+			// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
+
+			if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
+				return true
+			}
+			return false
+
+		},
+	},
+		{
+			name: "msg response with nil data",
+			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
+				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				if !found {
+					s.Fail("unable to retrieve zone for test")
+				}
+
+				msgSetWithdrawAddress := distrtypes.MsgSetWithdrawAddress{
+					DelegatorAddress: zone.PerformanceAddress.Address,
+					WithdrawAddress:  zone.WithdrawalAddress.Address,
+				}
+
+				response := distrtypes.MsgSetWithdrawAddressResponse{}
+
+				anyresponse, _ := codectypes.NewAnyWithValue(&response)
+				return []sdk.Msg{&msgSetWithdrawAddress}, anyresponse
+			},
+			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
+				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				if !found {
+					s.Fail("unable to retrieve zone for test")
+				}
+				// assert that withdraw address is set
+				if zone.WithdrawalAddress.Address == zone.PerformanceAddress.WithdrawalAddress {
+					return true
+				}
+				return false
+
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			s.setupTestZones()
+
+			app := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+
+			msg, anyResp := test.setStatements(ctx, app)
+
+			txMsgData := &sdk.TxMsgData{
+				Data:         []*sdk.MsgData{},
+				MsgResponses: []*codectypes.Any{anyResp},
+			}
+
+			ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+
+			acknowledgement := channeltypes.Acknowledgement{
+				Response: &channeltypes.Acknowledgement_Result{
+					Result: ackData,
+				},
+			}
+
+			pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, msg)
+			s.Require().NoError(err)
+			packetData := icatypes.InterchainAccountPacketData{
+				Type: icatypes.EXECUTE_TX,
+				Data: pdBytes,
+				Memo: "test_acknowledgement",
+			}
+
+			packetBytes, err := icatypes.ModuleCdc.MarshalJSON(&packetData)
+			s.Require().NoError(err)
+			packet := channeltypes.Packet{
+				Data: packetBytes,
+			}
+
+			s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+
+			s.Require().True(test.assertStatements(ctx, app))
+
 		})
 	}
 }
