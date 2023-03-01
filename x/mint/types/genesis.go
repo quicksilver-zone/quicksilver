@@ -1,7 +1,7 @@
 package types
 
-// NewGenesisState creates a new GenesisState object.
-func NewGenesisState(minter Minter, params Params, reductionStartedEpoch int64) *GenesisState {
+// NewGenesis creates a new Genesis object.
+func NewGenesis(minter Minter, params Params, reductionStartedEpoch int64) *GenesisState {
 	return &GenesisState{
 		Minter:                minter,
 		Params:                params,
@@ -9,21 +9,21 @@ func NewGenesisState(minter Minter, params Params, reductionStartedEpoch int64) 
 	}
 }
 
-// DefaultGenesisState creates a default GenesisState object.
-func DefaultGenesisState() *GenesisState {
-	return &GenesisState{
-		Minter:                DefaultInitialMinter(),
-		Params:                DefaultParams(),
-		ReductionStartedEpoch: 0,
-	}
+// DefaultGenesis creates a default GenesisState object.
+func DefaultGenesis() *GenesisState {
+	return NewGenesis(
+		DefaultInitialMinter(),
+		DefaultParams(),
+		0,
+	)
 }
 
-// ValidateGenesis validates the provided genesis state to ensure the
+// Validate validates the provided genesis state to ensure the
 // expected invariants holds.
-func ValidateGenesis(data GenesisState) error {
-	if err := data.Params.Validate(); err != nil {
+func (gs GenesisState) Validate() error {
+	if err := gs.Params.Validate(); err != nil {
 		return err
 	}
 
-	return ValidateMinter(data.Minter)
+	return gs.Minter.Validate()
 }
