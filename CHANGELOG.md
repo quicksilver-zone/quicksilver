@@ -2,8 +2,25 @@
 
 ## Released
 
-### v1.2.1
+### v1.2.4
+- Bump Tendermint to v0.34.26 (informalsystems/tendermint)
+- Bump Cosmos-SDK to v0.46.10
+- Add v0.46.x ICA Callback handler support
+- Add adjacent block verification to Tx validation callback
+- Add first_seen and completion_time to receipts to allow for better monitoring of tx processing throughput
+- Add callback to remove redelegation records in event of transient redelegation
+- Upgrade handler:
+  - remove redelegation records with nil-timestamp (failed records)
+  - update existing receipts timestamps to upgrade block timestamp
 
+### v1.2.3
+- check for nil allocation
+- support v0.46 balance callbacks
+
+### v1.2.2
+- fix deposit address setWithdrawalAddress
+
+### v1.2.1
 - Do not remove delegation records on absence from DelegatorDelegations response
 - Add tests for delegations callback changes
 - Fix deposit address onboarding race condition
