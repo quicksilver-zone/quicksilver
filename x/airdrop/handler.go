@@ -1,6 +1,7 @@
 package airdrop
 
 import (
+	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -21,7 +22,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized airdrop message type: %T", msg)
+			return nil, sdkioerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized airdrop message type: %T", msg)
 		}
 	}
 }
