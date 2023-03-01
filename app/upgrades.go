@@ -15,13 +15,11 @@ const (
 	InnuendoChainID   = "innuendo-5"
 	DevnetChainID     = "quicktest-1"
 
-	v010204UpgradeName = "v1.2.4"
-	v010300UpgradeName = "v1.3.0" // retained for testy
+	v010300UpgradeName = "v1.3.0"
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
-	app.UpgradeKeeper.SetUpgradeHandler(v010300UpgradeName, noOpUpgradeHandler(app)) // retained for testy
-	app.UpgradeKeeper.SetUpgradeHandler(v010204UpgradeName, v010204UpgradeHandler(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v010300UpgradeName, v010300UpgradeHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -52,13 +50,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 	}
 }
 
-func noOpUpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-	}
-}
-
-func v010204UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
+func v010300UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// upgrade receipts
 		time := ctx.BlockTime()
