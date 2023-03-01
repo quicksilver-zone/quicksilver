@@ -193,8 +193,8 @@ func (m *UpdateZoneProposalWithDeposit) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UpdateZoneProposalWithDeposit proto.InternalMessageInfo
 
-// ParamChange defines an individual parameter change, for use in
-// ParameterChangeProposal.
+// UpdateZoneValue defines an individual parameter change, for use in
+// UpdateZoneProposal.
 type UpdateZoneValue struct {
 	Key   string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty" yaml:"key"`
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty" yaml:"value"`

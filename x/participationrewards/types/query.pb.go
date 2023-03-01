@@ -270,6 +270,7 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Params returns the total set of participation rewards parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// ProtocolData returns the requested protocol data.
 	ProtocolData(ctx context.Context, in *QueryProtocolDataRequest, opts ...grpc.CallOption) (*QueryProtocolDataResponse, error)
 }
 
@@ -303,6 +304,7 @@ func (c *queryClient) ProtocolData(ctx context.Context, in *QueryProtocolDataReq
 type QueryServer interface {
 	// Params returns the total set of participation rewards parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// ProtocolData returns the requested protocol data.
 	ProtocolData(context.Context, *QueryProtocolDataRequest) (*QueryProtocolDataResponse, error)
 }
 

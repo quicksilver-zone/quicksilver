@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
@@ -34,9 +35,39 @@ import (
 
 const transferPort = "transfer"
 
+type TypedMsg struct {
+	Msg  sdk.Msg
+	Type string
+}
+
+func DeserializeCosmosTxTyped(cdc codec.BinaryCodec, data []byte) ([]TypedMsg, error) {
+	var cosmosTx icatypes.CosmosTx
+	if err := cdc.Unmarshal(data, &cosmosTx); err != nil {
+		return nil, err
+	}
+
+	msgs := make([]TypedMsg, len(cosmosTx.Messages))
+
+	for i, any := range cosmosTx.Messages {
+		var msg sdk.Msg
+
+		err := cdc.UnpackAny(any, &msg)
+		if err != nil {
+			return nil, err
+		}
+
+		msgs[i] = TypedMsg{Msg: msg, Type: any.TypeUrl}
+
+	}
+
+	return msgs, nil
+}
+
 func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte) error {
 	ack := channeltypes.Acknowledgement_Result{}
 	err := json.Unmarshal(acknowledgement, &ack)
+	txMsgData := &sdk.TxMsgData{}
+	var success bool
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal acknowledgement", "error", err, "data", acknowledgement)
 		return err
@@ -51,15 +82,16 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 		k.Logger(ctx).Error("received an acknowledgement error", "error", err, "remote_err", ackErr, "data", acknowledgement)
 		defer telemetry.IncrCounter(1, types.ModuleName, "ica_acknowledgement_errors")
-		return nil
-		// return errors.New("received an acknowledgement error; unable to process") // this just causes the same errAck to be submitted repeatedly.
-	}
-	defer telemetry.IncrCounter(1, types.ModuleName, "ica_acknowledgement_success")
-	txMsgData := &sdk.TxMsgData{}
-	err = proto.Unmarshal(ack.Result, txMsgData)
-	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal acknowledgement", "error", err, "ack", ack.Result)
-		return err
+		success = false
+	} else {
+		defer telemetry.IncrCounter(1, types.ModuleName, "ica_acknowledgement_success")
+
+		err = proto.Unmarshal(ack.Result, txMsgData)
+		if err != nil {
+			k.Logger(ctx).Error("unable to unmarshal acknowledgement", "error", err, "ack", ack.Result)
+			return err
+		}
+		success = true
 	}
 
 	var packetData icatypes.InterchainAccountPacketData
@@ -72,28 +104,57 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		return errors.New("unable to unmarshal packet data; got empty JSON object")
 	}
 
-	msgs, err := icatypes.DeserializeCosmosTx(k.cdc, packetData.Data)
+	msgs, err := DeserializeCosmosTxTyped(k.cdc, packetData.Data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to decode messages", "err", err)
 		return err
 	}
 
-	for msgIndex, msgData := range txMsgData.Data {
+	for msgIndex, msg := range msgs {
+		// use msgData for v0.45 and below and msgResponse for v0.46+
+		//nolint:staticcheck // SA1019 ignore this!
+		var msgData *sdk.MsgData
+		var msgResponse []byte
+		var msgResponseType string
+		if len(txMsgData.MsgResponses) > 0 {
+			msgResponseType = txMsgData.MsgResponses[msgIndex].GetTypeUrl()
+			msgResponse = txMsgData.MsgResponses[msgIndex].GetValue()
+		} else if len(txMsgData.Data) > 0 {
+			msgData = txMsgData.Data[msgIndex]
+		}
 
-		src := msgs[msgIndex]
-		switch msgData.MsgType {
+		src := msg.Msg
+
+		switch msg.Type {
 		case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
+			// TODO: if this fails, it's okay. log but continue.
+			if !success {
+				return nil
+			}
 			k.Logger(ctx).Info("Rewards withdrawn")
 			if err := k.HandleWithdrawRewards(ctx, src); err != nil {
 				return err
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
+			// TODO: handle this before LSM
+			if !success {
+				return nil
+			}
 			response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
-				return err
+
+			if msgResponseType != "" {
+				err = proto.Unmarshal(msgResponse, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unpack MsgRedeemTokensforShares response", "error", err)
+					return err
+				}
+			} else {
+				err := proto.Unmarshal(msgData.Data, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
+					return err
+				}
 			}
 			k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
 			// we should update delegation records here.
@@ -102,11 +163,23 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
+			// TODO: handle this before LSM
+			if !success {
+				return nil
+			}
 			response := lsmstakingtypes.MsgTokenizeSharesResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgTokenizeShares response", "error", err)
-				return err
+			if msgResponseType != "" {
+				err = proto.Unmarshal(msgResponse, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unpack MsgTokenizeShares response", "error", err)
+					return err
+				}
+			} else {
+				err := proto.Unmarshal(msgData.Data, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unmarshal MsgTokenizeShares response", "error", err)
+					return err
+				}
 			}
 			k.Logger(ctx).Info("Shares tokenized", "response", response)
 			if err := k.HandleTokenizedShares(ctx, src, response.Amount, packetData.Memo); err != nil {
@@ -114,93 +187,157 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgDelegate":
+			// TODO: can we safely ignore this?
+			if !success {
+				return nil
+			}
 			response := stakingtypes.MsgDelegateResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgDelegate response", "error", err)
-				return err
+			if msgResponseType != "" {
+				err = proto.Unmarshal(msgResponse, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unpack MsgDelegate response", "error", err)
+					return err
+				}
+			} else {
+				err := proto.Unmarshal(msgData.Data, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unmarshal MsgDelegate response", "error", err)
+					return err
+				}
 			}
 			k.Logger(ctx).Info("Delegated", "response", response)
 			// we should update delegation records here.
-			if err := k.HandleDelegate(ctx, src); err != nil {
+			if err := k.HandleDelegate(ctx, src, packetData.Memo); err != nil {
 				return err
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgBeginRedelegate":
-			response := stakingtypes.MsgBeginRedelegateResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgBeginRedelegate response", "error", err)
-				return err
-			}
-			k.Logger(ctx).Info("Redelegation initiated", "response", response)
-			if err := k.HandleBeginRedelegate(ctx, src, response.CompletionTime, packetData.Memo); err != nil {
-				return err
+			if success {
+				response := stakingtypes.MsgBeginRedelegateResponse{}
+				if msgResponseType != "" {
+					err = proto.Unmarshal(msgResponse, &response)
+					if err != nil {
+						k.Logger(ctx).Error("unable to unpack MsgBeginRedelegate response", "error", err)
+						return err
+					}
+				} else {
+					err := proto.Unmarshal(msgData.Data, &response)
+					if err != nil {
+						k.Logger(ctx).Error("unable to unmarshal MsgBeginRedelegate response", "error", err)
+						return err
+					}
+				}
+				k.Logger(ctx).Info("Redelegation initiated", "response", response)
+				if err := k.HandleBeginRedelegate(ctx, src, response.CompletionTime, packetData.Memo); err != nil {
+					return err
+				}
+			} else {
+				if err := k.HandleFailedBeginRedelegate(ctx, src, packetData.Memo); err != nil {
+					return err
+				}
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgUndelegate":
-			response := stakingtypes.MsgUndelegateResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgDelegate response", "error", err)
-				return err
-			}
-			k.Logger(ctx).Info("Undelegation started", "response", response)
-			if err := k.HandleUndelegate(ctx, src, response.CompletionTime, packetData.Memo); err != nil {
-				return err
+			if success {
+				response := stakingtypes.MsgUndelegateResponse{}
+				if msgResponseType != "" {
+					err = proto.Unmarshal(msgResponse, &response)
+					if err != nil {
+						k.Logger(ctx).Error("unable to unpack MsgUndelegate response", "error", err)
+						return err
+					}
+				} else {
+					err := proto.Unmarshal(msgData.Data, &response)
+					if err != nil {
+						k.Logger(ctx).Error("unable to unmarshal MsgUndelegate response", "error", err)
+						return err
+					}
+				}
+				k.Logger(ctx).Info("Undelegation started", "response", response)
+				if err := k.HandleUndelegate(ctx, src, response.CompletionTime, packetData.Memo); err != nil {
+					return err
+				}
+			} else {
+				k.Logger(ctx).Info("Undelegation callback failed", "memo", packetData.Memo)
+				return nil
+				// if err := k.HandleFailedUndelegate(ctx, src, packetData.Memo); err != nil {
+				// 	return err
+				// }
 			}
 			continue
+
 		case "/cosmos.bank.v1beta1.MsgSend":
+			if !success {
+				// TODO: handle this.
+				return nil
+			}
 			response := banktypes.MsgSendResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgSend response", "error", err)
-				return err
+			if msgResponseType != "" {
+				err = proto.Unmarshal(msgResponse, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unpack MsgSend response", "error", err)
+					return err
+				}
+			} else {
+				err := proto.Unmarshal(msgData.Data, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unmarshal MsgSend response", "error", err)
+					return err
+				}
 			}
 			k.Logger(ctx).Info("Funds Transferred", "response", response)
 			// check tokenTransfers - if end user unescrow and burn txs
 			if err := k.HandleCompleteSend(ctx, src, packetData.Memo); err != nil {
 				return err
 			}
-			continue
-		case "/cosmos.bank.v1beta1.MsgMultiSend":
-			response := banktypes.MsgMultiSendResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
-				return err
-			}
-			k.Logger(ctx).Info("Funds Transferred (Multi)", "response", response)
-			if err := k.HandleCompleteMultiSend(ctx, src, packetData.Memo); err != nil {
-				return err
-			}
-			continue
 		case "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":
+			if !success {
+				// safely ignore this, as we'll try again anyway.
+				return nil
+			}
 			response := distrtypes.MsgSetWithdrawAddressResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgMultiSend response", "error", err)
-				return err
+			if msgResponseType != "" {
+				err = proto.Unmarshal(msgResponse, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unpack MsgSetWithdrawAddress response", "error", err)
+					return err
+				}
+			} else {
+				err := proto.Unmarshal(msgData.Data, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unmarshal MsgSetWithdrawAddress response", "error", err)
+					return err
+				}
 			}
 			k.Logger(ctx).Info("Withdraw Address Updated", "response", response)
 			if err := k.HandleUpdatedWithdrawAddress(ctx, src); err != nil {
 				return err
 			}
-			continue
 		case "/ibc.applications.transfer.v1.MsgTransfer":
+			// this should be okay to fail; we'll pick it up next time around.
+			if !success {
+				return nil
+			}
 			response := ibctransfertypes.MsgTransferResponse{}
-			err := proto.Unmarshal(msgData.Data, &response)
-			if err != nil {
-				k.Logger(ctx).Error("unable to unmarshal MsgTransfer response", "error", err)
-				return err
+			if msgResponseType != "" {
+				err = proto.Unmarshal(msgResponse, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unpack MsgTransfer response", "error", err)
+					return err
+				}
+			} else {
+				err := proto.Unmarshal(msgData.Data, &response)
+				if err != nil {
+					k.Logger(ctx).Error("unable to unmarshal MsgTransfer response", "error", err)
+					return err
+				}
 			}
 			k.Logger(ctx).Info("MsgTranfer acknowledgement received")
 			if err := k.HandleMsgTransfer(ctx, src); err != nil {
 				return err
 			}
-			continue
 		default:
-			k.Logger(ctx).Error("unhandled acknowledgement packet", "type", msgData.MsgType)
+			k.Logger(ctx).Error("unhandled acknowledgement packet", "type", reflect.TypeOf(src).Name())
 		}
 	}
 
@@ -616,6 +753,29 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	return nil
 }
 
+func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	parts := strings.Split(memo, "/")
+	if len(parts) != 2 || parts[0] != "rebalance" {
+		return errors.New("unexpected epoch rebalance memo format")
+	}
+
+	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return errors.New("unexpected epoch rebalance memo format (2)")
+	}
+
+	k.Logger(ctx).Error("Received MsgBeginRedelegate acknowledgement error")
+	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
+	redelegateMsg, ok := msg.(*stakingtypes.MsgBeginRedelegate)
+	if !ok {
+		return errors.New("unable to unmarshal MsgBeginRedelegate")
+	}
+	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
+	k.DeleteRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+	k.Logger(ctx).Error("Cleaning up redelegation record")
+	return nil
+}
+
 func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
 	k.Logger(ctx).Info("Received MsgUndelegate acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgUndelegate
@@ -698,7 +858,7 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
 }
 
-func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
+func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
 	k.Logger(ctx).Info("Received MsgDelegate acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgDelegate
 	delegateMsg, ok := msg.(*stakingtypes.MsgDelegate)
@@ -713,9 +873,17 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg) error {
 			return nil
 		}
 		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
-
 	}
 
+	if memo != "rewards" {
+		receipt, found := k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, memo))
+		if !found {
+			return fmt.Errorf("unable to find receipt for hash %s", memo)
+		}
+		t := ctx.BlockTime()
+		receipt.Completed = &t
+		k.SetReceipt(ctx, receipt)
+	}
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
 }
 
