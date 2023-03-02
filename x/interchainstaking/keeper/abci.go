@@ -17,7 +17,7 @@ import (
 type zoneItrFn func(index int64, zoneInfo *types.Zone) (stop bool)
 
 // BeginBlocker of interchainstaking module
-func (k Keeper) BeginBlocker(ctx sdk.Context) {
+func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	if ctx.BlockHeight()%30 == 0 {

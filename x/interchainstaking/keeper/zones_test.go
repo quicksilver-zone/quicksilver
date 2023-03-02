@@ -98,9 +98,9 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	require.Equal(t, nzones, len(indexToZone), "expecting unique nzones")
 
 	// 5.1. Invoke Iterate on zones.
-	gotZonesMapping := make(map[int64]*types.Zone, nzones)
+	gotZonesMapping := make(map[int64]types.Zone, nzones)
 	kpr.IterateZones(ctx, func(index int64, zone *types.Zone) bool {
-		gotZonesMapping[index] = zone
+		gotZonesMapping[index] = *zone
 		return false
 	})
 

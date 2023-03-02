@@ -85,11 +85,11 @@ func (k *Keeper) GetGovAuthority(ctx sdk.Context) string {
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) GetCodec() codec.Codec {
+func (k *Keeper) GetCodec() codec.Codec {
 	return k.cdc
 }
 
@@ -122,7 +122,7 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 }
 
 // IteratePortConnections iterates through all of the delegations.
-func (k Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortConnectionTuple) (stop bool)) {
+func (k *Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortConnectionTuple) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixPortMapping)
@@ -138,7 +138,7 @@ func (k Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortCon
 }
 
 // AllPortConnections returns all delegations used during genesis dump.
-func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionTuple) {
+func (k *Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionTuple) {
 	k.IteratePortConnections(ctx, func(pc types.PortConnectionTuple) bool {
 		pcs = append(pcs, pc)
 		return false
@@ -151,7 +151,7 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func (k Keeper) SetValidatorsForZone(ctx sdk.Context, zoneInfo *types.Zone, data []byte, request []byte) error {
+func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, zoneInfo *types.Zone, data []byte, request []byte) error {
 	validatorsRes, err := k.UnmarshalValidatorResponse(data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
@@ -204,7 +204,7 @@ func (k Keeper) SetValidatorsForZone(ctx sdk.Context, zoneInfo *types.Zone, data
 	return nil
 }
 
-func (k Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []byte) error {
+func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []byte) error {
 	validator, err := k.UnmarshalValidator(data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zone.ChainId, "err", err)
@@ -294,7 +294,7 @@ func (k Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []by
 	return nil
 }
 
-func (k Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
+func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
 	var err error
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
 		recordSubAmount := sdkmath.ZeroInt()
@@ -316,7 +316,7 @@ func (k Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zon
 	return err
 }
 
-func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
+func (k *Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 	return func(index int64, zoneInfo *types.Zone) (stop bool) {
 		if zoneInfo.DepositAddress != nil {
 			if !zoneInfo.DepositAddress.Balance.Empty() {
@@ -350,7 +350,7 @@ func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdk.Dec {
 }
 
 // MigrateParams fetches params, adds ClaimsEnabled field and re-sets params.
-func (k Keeper) MigrateParams(ctx sdk.Context) {
+func (k *Keeper) MigrateParams(ctx sdk.Context) {
 	params := types.Params{}
 	params.DepositInterval = k.GetParam(ctx, types.KeyDepositInterval)
 	params.CommissionRate = k.GetCommissionRate(ctx)
@@ -360,17 +360,17 @@ func (k Keeper) MigrateParams(ctx sdk.Context) {
 	k.paramStore.SetParamSet(ctx, &params)
 }
 
-func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
+func (k *Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 	k.paramStore.GetParamSet(clientCtx, &params)
 	return params
 }
 
 // SetParams sets the distribution parameters to the param space.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramStore.SetParamSet(ctx, &params)
 }
 
-func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
+func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
 	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 	if !found {
 		return "", fmt.Errorf("invalid connection id, \"%s\" not found", connectionID)
@@ -387,7 +387,7 @@ func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error)
 	return client.ChainId, nil
 }
 
-func (k Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
+func (k *Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
 	connectionID := ctx.Context().Value(utils.ContextKey("connectionID"))
 	if connectionID == nil {
 		return "", errors.New("connectionID not in context")
@@ -396,7 +396,7 @@ func (k Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
 	return k.GetChainID(ctx, connectionID.(string))
 }
 
-func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
+func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
 	_, addr, err := bech32.DecodeAndConvert(zone.PerformanceAddress.Address)
 	if err != nil {
 		return err
@@ -419,7 +419,7 @@ func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) e
 	return nil
 }
 
-func (k Keeper) EmitValSetQuery(ctx sdk.Context, zone *types.Zone, validatorsReq stakingtypes.QueryValidatorsRequest, period sdkmath.Int) error {
+func (k *Keeper) EmitValSetQuery(ctx sdk.Context, zone *types.Zone, validatorsReq stakingtypes.QueryValidatorsRequest, period sdkmath.Int) error {
 	bz, err := k.cdc.Marshal(&validatorsReq)
 	if err != nil {
 		return errors.New("failed to marshal valset pagination request")
@@ -440,7 +440,7 @@ func (k Keeper) EmitValSetQuery(ctx sdk.Context, zone *types.Zone, validatorsReq
 	return nil
 }
 
-func (k Keeper) EmitValidatorQuery(ctx sdk.Context, zone *types.Zone, validator stakingtypes.Validator) {
+func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, zone *types.Zone, validator stakingtypes.Validator) {
 	_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
 	data := stakingtypes.GetValidatorKey(addr)
 	k.ICQKeeper.MakeRequest(
@@ -456,7 +456,7 @@ func (k Keeper) EmitValidatorQuery(ctx sdk.Context, zone *types.Zone, validator 
 	)
 }
 
-func (k Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
+func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 	req := tx.GetTxsEventRequest{
 		Events: []string{
 			"transfer.recipient='" + zone.DepositAddress.GetAddress() + "'",
@@ -565,7 +565,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 }
 
 // UnmarshalValidatorResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.
-func (k Keeper) UnmarshalValidatorResponse(data []byte) (stakingtypes.QueryValidatorsResponse, error) {
+func (k *Keeper) UnmarshalValidatorResponse(data []byte) (stakingtypes.QueryValidatorsResponse, error) {
 	validatorsRes := stakingtypes.QueryValidatorsResponse{}
 	if len(data) == 0 {
 		return validatorsRes, errors.New("attempted to unmarshal zero length byte slice (8)")
@@ -579,7 +579,7 @@ func (k Keeper) UnmarshalValidatorResponse(data []byte) (stakingtypes.QueryValid
 }
 
 // UnmarshalValidatorRequest attempts to umarshal  a byte slice into a QueryValidatorsRequest.
-func (k Keeper) UnmarshalValidatorRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
+func (k *Keeper) UnmarshalValidatorRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
 	validatorsReq := stakingtypes.QueryValidatorsRequest{}
 	if len(data) == 0 {
 		return validatorsReq, errors.New("attempted to unmarshal zero length byte slice (8)")
@@ -593,7 +593,7 @@ func (k Keeper) UnmarshalValidatorRequest(data []byte) (stakingtypes.QueryValida
 }
 
 // UnmarshalValidator attempts to umarshal  a byte slice into a Validator.
-func (k Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error) {
+func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error) {
 	validator := stakingtypes.Validator{}
 	if len(data) == 0 {
 		return validator, errors.New("attempted to unmarshal zero length byte slice (9)")

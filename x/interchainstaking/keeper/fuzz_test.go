@@ -297,7 +297,7 @@ func (s *FuzzingTestSuite) FuzzAccountBalanceCallback(t *testing.T, respbz []byt
 		s.Require().NoError(err)
 		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
 
-		_ = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+		_ = keeper.AccountBalanceCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
 	}
 }
 
@@ -317,7 +317,7 @@ func (s *FuzzingTestSuite) FuzzDelegationsCallback(t *testing.T, respbz []byte) 
 	reqbz, err := app.AppCodec().Marshal(&query)
 	s.Require().NoError(err)
 
-	_ = keeper.DelegationsCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+	_ = keeper.DelegationsCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 }
 
 func (s *FuzzingTestSuite) FuzzAllBalancesCallback(t *testing.T, respbz []byte) {
@@ -337,7 +337,7 @@ func (s *FuzzingTestSuite) FuzzAllBalancesCallback(t *testing.T, respbz []byte) 
 	reqbz, err := app.AppCodec().Marshal(&query)
 	s.Require().NoError(err)
 
-	err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+	err = keeper.AllBalancesCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 	s.Require().NoError(err)
 }
 
@@ -346,5 +346,5 @@ func (s *FuzzingTestSuite) FuzzValsetCallback(t *testing.T, args []byte) {
 	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
 	ctx := s.chainA.GetContext()
 
-	_ = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: s.chainB.ChainID})
+	_ = keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: s.chainB.ChainID})
 }

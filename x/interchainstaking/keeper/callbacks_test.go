@@ -248,7 +248,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 			bz, err := app.AppCodec().Marshal(&query)
 			s.Require().NoError(err)
 
-			err = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
+			err = keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
 			s.Require().NoError(err)
 			// valset callback doesn't actually update validators, but does emit icq callbacks.
 			test.checks(s.Require(), ctx, app, chainBVals)
@@ -269,7 +269,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackBadChain() {
 		bz, err := app.AppCodec().Marshal(&query)
 		s.Require().NoError(err)
 
-		err = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
+		err = keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
 		// this should bail on a non-matching chain id.
 		s.Require().Error(err)
 	})
@@ -288,7 +288,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackNilValset() {
 		bz, err := app.AppCodec().Marshal(&query)
 		s.Require().NoError(err)
 
-		err = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
+		err = keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
 		// this should error on unmarshalling an empty slice, which is not a valid response here.
 		s.Require().Error(err)
 	})
@@ -307,7 +307,7 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackInvalidResponse() {
 		bz, err := app.AppCodec().Marshal(&query)
 		s.Require().NoError(err)
 
-		err = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
+		err = keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
 		// this should error on unmarshalling an empty slice, which is not a valid response here.
 		s.Require().Error(err)
 	})
@@ -347,7 +347,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackBadChain() {
 		bz, err := app.AppCodec().Marshal(&query)
 		s.Require().NoError(err)
 
-		err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
+		err = keeper.ValidatorCallback(&app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
 		// this should bail on a non-matching chain id.
 		s.Require().Error(err)
 	})
@@ -364,7 +364,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 
 		bz := []byte{}
 
-		err := keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
+		err := keeper.ValidatorCallback(&app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
 		// this should error on unmarshalling an empty slice, which is not a valid response here.
 		s.Require().Error(err)
 	})
@@ -421,7 +421,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallback() {
 			bz, err := app.AppCodec().Marshal(&test.validator)
 			s.Require().NoError(err)
 
-			err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
+			err = keeper.ValidatorCallback(&app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
 			s.Require().NoError(err)
 
 			zone, found := app.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
@@ -617,7 +617,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			bz, err := app.AppCodec().Marshal(test.validator(zone))
 			s.Require().NoError(err)
 
-			err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
+			err = keeper.ValidatorCallback(&app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
 			s.Require().NoError(err)
 
 			wr, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, s.chainB.ChainID, test.withdrawal(zone).Txhash, test.withdrawal(zone).Status)
@@ -700,7 +700,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackBadChain() {
 		bz, err := app.AppCodec().Marshal(&query)
 		s.Require().NoError(err)
 
-		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
+		err = keeper.RewardsCallback(&app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
 		// this should bail on a non-matching chain id.
 		s.Require().Error(err)
 	})
@@ -719,7 +719,7 @@ func (s *KeeperTestSuite) TestHandleRewardsEmptyRequestCallback() {
 		bz, err := app.AppCodec().Marshal(&query)
 		s.Require().NoError(err)
 
-		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
+		err = keeper.RewardsCallback(&app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
 		// this should fail because the waitgroup becomes negative.
 		s.Require().Errorf(err, "attempted to unmarshal zero length byte slice (2)")
 	})
@@ -755,7 +755,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
-		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		err = keeper.RewardsCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		//
 		s.Require().Errorf(err, "failed attempting to withdraw rewards from non-delegation account")
 	})
@@ -784,7 +784,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
-		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		err = keeper.RewardsCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		//
 		s.Require().NoError(err)
 	})
@@ -818,7 +818,7 @@ func (s *KeeperTestSuite) TestHandleValideRewardsCallback() {
 
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
-		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		err = keeper.RewardsCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		//
 		s.Require().NoError(err)
 	})
@@ -845,7 +845,7 @@ func (s *KeeperTestSuite) TestAllBalancesCallback() {
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
 
-		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		err = keeper.AllBalancesCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		s.Require().NoError(err)
 
 		// refetch zone
@@ -895,7 +895,7 @@ func (s *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
 
-		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		err = keeper.AllBalancesCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		s.Require().NoError(err)
 
 		// refetch zone
@@ -948,7 +948,7 @@ func (s *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
 
-		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		err = keeper.AllBalancesCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		s.Require().NoError(err)
 
 		// refetch zone
@@ -996,7 +996,7 @@ func (s *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
 
-		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		err = keeper.AllBalancesCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		s.Require().NoError(err)
 
 		// refetch zone
@@ -1044,7 +1044,7 @@ func (s *KeeperTestSuite) TestAllBalancesCallbackMulti() {
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
 
-		err = keeper.AllBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+		err = keeper.AllBalancesCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		s.Require().NoError(err)
 
 		// refetch zone
@@ -1096,7 +1096,7 @@ func (s *KeeperTestSuite) TestAccountBalanceCallback() {
 			s.Require().NoError(err)
 			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
 
-			err = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+			err = keeper.AccountBalanceCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
 			s.Require().NoError(err)
 		}
 	})
@@ -1126,7 +1126,7 @@ func (s *KeeperTestSuite) TestAccountBalance046Callback() {
 			s.Require().NoError(err)
 			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
 
-			err = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+			err = keeper.AccountBalanceCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
 			s.Require().NoError(err)
 		}
 	})
@@ -1155,7 +1155,7 @@ func (s *KeeperTestSuite) TestAccountBalanceCallbackMismatch() {
 			s.Require().NoError(err)
 			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
 
-			err = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+			err = keeper.AccountBalanceCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
 			s.Require().ErrorContains(err, "received coin denom qck does not match requested denom stake")
 		}
 	})
@@ -1184,7 +1184,7 @@ func (s *KeeperTestSuite) TestAccountBalanceCallbackNil() {
 			s.Require().NoError(err)
 			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
 
-			err = keeper.AccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+			err = keeper.AccountBalanceCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
 			s.Require().NoError(err)
 		}
 	})
@@ -1203,7 +1203,7 @@ func TestValsetCallbackNilValidatorReqPagination(t *testing.T) {
 	ctx := s.chainA.GetContext()
 
 	data := []byte("\x12\"\n 00000000000000000000000000000000")
-	_ = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID})
+	_ = keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID})
 }
 
 func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
@@ -1240,7 +1240,7 @@ func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	err := keeper.DelegationsCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
 
 	s.Require().NoError(err)
 
@@ -1289,7 +1289,7 @@ func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	err := keeper.DelegationsCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
 
 	s.Require().NoError(err)
 
@@ -1337,7 +1337,7 @@ func TestDelegationsCallbackOneMissing(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	err := keeper.DelegationsCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
 
 	s.Require().NoError(err)
 
@@ -1387,7 +1387,7 @@ func TestDelegationsCallbackOneAdditional(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	err := keeper.DelegationsCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
 
 	s.Require().NoError(err)
 
@@ -1435,7 +1435,7 @@ func TestDelegationCallbackNew(t *testing.T) {
 	s.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-	err = keeper.DelegationCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	err = keeper.DelegationCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
 	s.Require().NoError(err)
 
 	s.Require().Equal(4, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
@@ -1474,7 +1474,7 @@ func TestDelegationCallbackUpdate(t *testing.T) {
 	s.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-	err = keeper.DelegationCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	err = keeper.DelegationCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
 	s.Require().NoError(err)
 
 	s.Require().Equal(3, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
@@ -1513,7 +1513,7 @@ func TestDelegationCallbackNoOp(t *testing.T) {
 	s.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-	err = keeper.DelegationCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	err = keeper.DelegationCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
 	s.Require().NoError(err)
 
 	s.Require().Equal(3, len(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
@@ -1552,7 +1552,7 @@ func TestDelegationCallbackRemove(t *testing.T) {
 	s.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-	err = keeper.DelegationCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
+	err = keeper.DelegationCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID, Request: bz})
 	s.Require().NoError(err)
 
 	delegationRequests := 0
@@ -1580,7 +1580,7 @@ func TestDepositIntervalCallback(t *testing.T) {
 	app.InterchainQueryKeeper.IBCKeeper.Codec().MustUnmarshal(data, &res)
 	s.Require().NoError(err)
 
-	err = keeper.DepositIntervalCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID})
+	err = keeper.DepositIntervalCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID})
 	s.Require().NoError(err)
 	txQueryCount := 0
 	for _, query := range app.InterchainQueryKeeper.AllQueries(ctx) {
@@ -1622,7 +1622,7 @@ func TestDepositIntervalCallbackWithExistingTxs(t *testing.T) {
 	txrC := res.TxResponses[2]
 	app.InterchainstakingKeeper.SetReceipt(ctx, icstypes.Receipt{ChainId: s.chainB.ChainID, Sender: msgC.FromAddress, Txhash: txrC.TxHash, Amount: msgC.Amount})
 
-	err = keeper.DepositIntervalCallback(app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID})
+	err = keeper.DepositIntervalCallback(&app.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: s.chainB.ChainID})
 	s.Require().NoError(err)
 	txQueryCount := 0
 	for _, query := range app.InterchainQueryKeeper.AllQueries(ctx) {

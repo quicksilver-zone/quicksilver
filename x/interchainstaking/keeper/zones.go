@@ -227,7 +227,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 }
 
 // SetAccountBalanceForDenom sets the balance on an account for a given denominination.
-func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone *types.Zone, address string, coin sdk.Coin) error {
+func (k *Keeper) SetAccountBalanceForDenom(ctx sdk.Context, zone *types.Zone, address string, coin sdk.Coin) error {
 	// ? is this switch statement still required ?
 	// prior to callback we had no way to distinguish the originator
 	// with the query type in setAccountCb this is probably superfluous...
