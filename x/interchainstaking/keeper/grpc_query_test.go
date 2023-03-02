@@ -211,7 +211,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 					},
 				}
 				for _, intent := range intents {
-					icsKeeper.SetIntent(ctx, zone, intent, false)
+					icsKeeper.SetIntent(ctx, &zone, intent, false)
 				}
 			},
 			&types.QueryDelegatorIntentRequest{
@@ -383,7 +383,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 				// set receipts
 				receipt := icsKeeper.NewReceipt(
 					ctx,
-					zone,
+					&zone,
 					testAddress,
 					"testReceiptHash#01",
 					sdk.NewCoins(

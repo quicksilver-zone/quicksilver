@@ -79,7 +79,7 @@ func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	return k.SetValidatorsForZone(ctx, zone, args, query.Request)
+	return k.SetValidatorsForZone(ctx, &zone, args, query.Request)
 }
 
 func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -87,7 +87,7 @@ func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Qu
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	return SetValidatorForZone(&k, ctx, zone, args)
+	return k.SetValidatorForZone(ctx, &zone, args)
 }
 
 func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -413,7 +413,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return fmt.Errorf("unable to validate proof: %w", err)
 	}
 
-	return k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone)
+	return k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), &zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.
@@ -456,7 +456,7 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		return err
 	}
 
-	return SetAccountBalanceForDenom(k, ctx, zone, address, coin)
+	return SetAccountBalanceForDenom(k, ctx, &zone, address, coin)
 }
 
 func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {

@@ -9,9 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/math"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
-
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -19,6 +17,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -494,7 +493,9 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 		}
 	}
 
-	return k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	query := stakingtypes.QueryValidatorsRequest{}
+	return k.EmitValSetQuery(ctx, zone, query, sdkmath.NewInt(period))
 }
 
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
@@ -969,7 +970,11 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
 	}
 	k.SetDelegation(ctx, zone, delegation)
-	if err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId); err != nil {
+
+	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	query := stakingtypes.QueryValidatorsRequest{}
+	err := k.EmitValSetQuery(ctx, zone, query, sdkmath.NewInt(period))
+	if err != nil {
 		return err
 	}
 	return nil
@@ -1087,13 +1092,13 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	}
 
 	// update redemption rate
-	k.UpdateRedemptionRate(ctx, zone, rewards.Amount)
+	k.UpdateRedemptionRate(ctx, &zone, rewards.Amount)
 
 	// send tx
 	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "")
 }
 
-func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards math.Int) sdk.Msg {
+func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.Int) sdk.Msg {
 	return &banktypes.MsgSend{
 		FromAddress: zone.WithdrawalAddress.GetAddress(),
 		ToAddress:   zone.DelegationAddress.GetAddress(),

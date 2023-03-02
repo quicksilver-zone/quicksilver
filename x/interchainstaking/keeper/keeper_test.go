@@ -109,7 +109,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		// refetch the zone for each validator, else we end up with an empty valset each time!
 		zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 		suite.Require().True(found)
-		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
+		suite.Require().NoError(qApp.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&val)))
 	}
 
 	suite.coordinator.CommitNBlocks(suite.chainA, 2)
@@ -488,7 +488,7 @@ func (s *KeeperTestSuite) TestGetRatio() {
 
 			qapp.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.supply)))
 
-			actual, isZero := icsKeeper.GetRatio(ctx, zone, sdk.ZeroInt())
+			actual, isZero := icsKeeper.GetRatio(ctx, &zone, sdk.ZeroInt())
 			s.Require().Equal(tt.supply.IsZero(), isZero)
 			s.Require().Equal(tt.expected, actual)
 		})
@@ -518,7 +518,7 @@ func (s *KeeperTestSuite) TestUpdateRedemptionRate() {
 
 	// no change!
 	s.Require().Equal(sdk.OneDec(), zone.RedemptionRate)
-	icsKeeper.UpdateRedemptionRate(ctx, zone, sdk.ZeroInt())
+	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
 
 	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
@@ -526,7 +526,7 @@ func (s *KeeperTestSuite) TestUpdateRedemptionRate() {
 
 	// add 1%
 	s.Require().Equal(sdk.OneDec(), zone.RedemptionRate)
-	icsKeeper.UpdateRedemptionRate(ctx, zone, sdk.NewInt(30))
+	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.NewInt(30))
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(10)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(10)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(10)
@@ -539,7 +539,7 @@ func (s *KeeperTestSuite) TestUpdateRedemptionRate() {
 	s.Require().Equal(sdk.NewDecWithPrec(101, 2), zone.RedemptionRate)
 
 	// add >2%; cap at 2%
-	icsKeeper.UpdateRedemptionRate(ctx, zone, sdk.NewInt(500))
+	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.NewInt(500))
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(166)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(167)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(167)
@@ -552,7 +552,7 @@ func (s *KeeperTestSuite) TestUpdateRedemptionRate() {
 	s.Require().Equal(sdk.NewDecWithPrec(10302, 4), zone.RedemptionRate)
 
 	// add nothing, still cap at 2%
-	icsKeeper.UpdateRedemptionRate(ctx, zone, sdk.ZeroInt())
+	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
 	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
 	// should be capped at 2% increase. (1.01*1.02*1.02 == 1.050804)
@@ -566,7 +566,7 @@ func (s *KeeperTestSuite) TestUpdateRedemptionRate() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
 
 	// remove > 5%, cap at -5%
-	icsKeeper.UpdateRedemptionRate(ctx, zone, sdk.ZeroInt())
+	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
 	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
 
@@ -596,7 +596,7 @@ func (s *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 
 	// no change!
 	s.Require().Equal(sdk.OneDec(), zone.RedemptionRate)
-	icsKeeper.OverrideRedemptionRateNoCap(ctx, zone)
+	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
 	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
@@ -609,7 +609,7 @@ func (s *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationA)
 	icsKeeper.SetDelegation(ctx, &zone, delegationB)
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
-	icsKeeper.OverrideRedemptionRateNoCap(ctx, zone)
+	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
 	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
@@ -622,14 +622,14 @@ func (s *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationA)
 	icsKeeper.SetDelegation(ctx, &zone, delegationB)
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
-	icsKeeper.OverrideRedemptionRateNoCap(ctx, zone)
+	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
 	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
 	s.Require().Equal(sdk.NewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
 
 	// add nothing, no change
-	icsKeeper.OverrideRedemptionRateNoCap(ctx, zone)
+	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
 	s.Require().Equal(sdk.NewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
@@ -640,7 +640,7 @@ func (s *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationA)
 	icsKeeper.SetDelegation(ctx, &zone, delegationB)
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
-	icsKeeper.OverrideRedemptionRateNoCap(ctx, zone)
+	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 	zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
 

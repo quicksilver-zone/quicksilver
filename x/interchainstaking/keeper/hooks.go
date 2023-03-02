@@ -18,9 +18,9 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 	if epochIdentifier == "epoch" {
 		k.Logger(ctx).Info("handling epoch end")
 
-		k.IterateZones(ctx, func(index int64, zoneInfo types.Zone) (stop bool) {
+		k.IterateZones(ctx, func(index int64, zoneInfo *types.Zone) (stop bool) {
 			k.Logger(ctx).Info("taking a snapshot of intents")
-			err := k.AggregateIntents(ctx, &zoneInfo)
+			err := k.AggregateIntents(ctx, zoneInfo)
 			if err != nil {
 				// we can and need not panic here; logging the error is sufficient.
 				// an error here is not expected, but also not terminal.
@@ -35,7 +35,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				return false
 			}
 
-			if err := k.HandleQueuedUnbondings(ctx, &zoneInfo, epochNumber); err != nil {
+			if err := k.HandleQueuedUnbondings(ctx, zoneInfo, epochNumber); err != nil {
 				k.Logger(ctx).Error(err.Error())
 				// we can and need not panic here; logging the error is sufficient.
 				// an error here is not expected, but also not terminal.
@@ -95,7 +95,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// WithdrawalWaitgroup is decremented in RewardsCallback
 			zoneInfo.WithdrawalWaitgroup++
 			k.Logger(ctx).Info("Incrementing waitgroup for delegation", "value", zoneInfo.WithdrawalWaitgroup)
-			k.SetZone(ctx, &zoneInfo)
+			k.SetZone(ctx, zoneInfo)
 
 			return false
 		})

@@ -527,7 +527,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 			zone, found := icsKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
 			s.Require().True(found)
 
-			intent, found := icsKeeper.GetIntent(s.chainA.GetContext(), zone, testAddress, false)
+			intent, found := icsKeeper.GetIntent(s.chainA.GetContext(), &zone, testAddress, false)
 			s.Require().True(found)
 			intents := intent.GetIntents()
 

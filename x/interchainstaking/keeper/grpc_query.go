@@ -103,7 +103,7 @@ func (k Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorInte
 
 	// we can ignore bool (found) as it always returns true
 	// - see comment in GetIntent
-	intent, _ := k.GetIntent(ctx, zone, req.DelegatorAddress, false)
+	intent, _ := k.GetIntent(ctx, &zone, req.DelegatorAddress, false)
 
 	return &types.QueryDelegatorIntentResponse{Intent: &intent}, nil
 }

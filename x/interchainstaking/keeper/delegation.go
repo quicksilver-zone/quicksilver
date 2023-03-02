@@ -2,50 +2,26 @@ package keeper
 
 import (
 	"errors"
-	"math"
-	"sort"
 
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
-
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-// gets the key for delegator bond with validator
-// VALUE: staking/Delegation
-func GetDelegationKey(zone *types.Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(GetDelegationsKey(zone, delAddr), valAddr.Bytes()...)
-}
-
-// gets the prefix for a delegator for all validators
-func GetDelegationsKey(zone *types.Zone, delAddr sdk.AccAddress) []byte {
-	return append(append(types.KeyPrefixDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
-}
-
-// gets the key for delegator bond with validator
-// VALUE: staking/Delegation
-func GetPerformanceDelegationKey(zone *types.Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
-	return append(GetPerformanceDelegationsKey(zone, delAddr), valAddr.Bytes()...)
-}
-
-// gets the prefix for a delegator for all validators
-func GetPerformanceDelegationsKey(zone *types.Zone, delAddr sdk.AccAddress) []byte {
-	return append(append(types.KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
-}
-
 // GetDelegation returns a specific delegation.
-func (k Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddress string, validatorAddress string) (delegation types.Delegation, found bool) {
+func (k *Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddress string, validatorAddress string) (delegation types.Delegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	_, delAddr, _ := bech32.DecodeAndConvert(delegatorAddress)
 	_, valAddr, _ := bech32.DecodeAndConvert(validatorAddress)
 
-	key := GetDelegationKey(zone, delAddr, valAddr)
+	key := types.GetDelegationKey(zone, delAddr, valAddr)
 
 	value := store.Get(key)
 	if value == nil {
@@ -58,7 +34,7 @@ func (k Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddres
 }
 
 // GetDelegation returns a specific delegation.
-func (k Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, validatorAddress string) (delegation types.Delegation, found bool) {
+func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, validatorAddress string) (delegation types.Delegation, found bool) {
 	if zone.PerformanceAddress == nil {
 		return types.Delegation{}, false
 	}
@@ -68,7 +44,7 @@ func (k Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, vali
 	_, delAddr, _ := bech32.DecodeAndConvert(zone.PerformanceAddress.Address)
 	_, valAddr, _ := bech32.DecodeAndConvert(validatorAddress)
 
-	key := GetPerformanceDelegationKey(zone, delAddr, valAddr)
+	key := types.GetPerformanceDelegationKey(zone, delAddr, valAddr)
 
 	value := store.Get(key)
 	if value == nil {
@@ -81,7 +57,7 @@ func (k Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, vali
 }
 
 // IterateAllDelegations iterates through all of the delegations.
-func (k Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
+func (k *Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(zone.ChainId)...))
@@ -96,7 +72,7 @@ func (k Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.Zone, cb func
 }
 
 // GetAllDelegations returns all delegations used during genesis dump.
-func (k Keeper) GetAllDelegations(ctx sdk.Context, zone *types.Zone) (delegations []types.Delegation) {
+func (k *Keeper) GetAllDelegations(ctx sdk.Context, zone *types.Zone) (delegations []types.Delegation) {
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
 		delegations = append(delegations, delegation)
 		return false
@@ -106,7 +82,7 @@ func (k Keeper) GetAllDelegations(ctx sdk.Context, zone *types.Zone) (delegation
 }
 
 // IterateAllPerformanceDelegations iterates through all of the delegations.
-func (k Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
+func (k *Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...))
@@ -121,7 +97,7 @@ func (k Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, zone *types.Zo
 }
 
 // GetAllDelegations returns all delegations used during genesis dump.
-func (k Keeper) GetAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone) (delegations []types.Delegation) {
+func (k *Keeper) GetAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone) (delegations []types.Delegation) {
 	k.IterateAllPerformanceDelegations(ctx, zone, func(delegation types.Delegation) bool {
 		delegations = append(delegations, delegation)
 		return false
@@ -131,7 +107,7 @@ func (k Keeper) GetAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone) 
 }
 
 // GetAllDelegations returns all delegations used during genesis dump.
-func (k Keeper) GetAllDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (delegations []*types.Delegation) {
+func (k *Keeper) GetAllDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (delegations []*types.Delegation) {
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
 		delegations = append(delegations, &delegation)
 		return false
@@ -141,7 +117,7 @@ func (k Keeper) GetAllDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (d
 }
 
 // GetAllDelegations returns all delegations used during genesis dump.
-func (k Keeper) GetAllPerformanceDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (delegations []*types.Delegation) {
+func (k *Keeper) GetAllPerformanceDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (delegations []*types.Delegation) {
 	k.IterateAllPerformanceDelegations(ctx, zone, func(delegation types.Delegation) bool {
 		delegations = append(delegations, &delegation)
 		return false
@@ -152,7 +128,7 @@ func (k Keeper) GetAllPerformanceDelegationsAsPointer(ctx sdk.Context, zone *typ
 
 // GetDelegatorDelegations returns a given amount of all the delegations from a
 // delegator.
-func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, zone *types.Zone, delegator sdk.AccAddress) (delegations []types.Delegation) {
+func (k *Keeper) GetDelegatorDelegations(ctx sdk.Context, zone *types.Zone, delegator sdk.AccAddress) (delegations []types.Delegation) {
 	k.IterateDelegatorDelegations(ctx, zone, delegator, func(delegation types.Delegation) bool {
 		delegations = append(delegations, delegation)
 		return false
@@ -162,36 +138,36 @@ func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, zone *types.Zone, deleg
 }
 
 // SetDelegation sets a delegation.
-func (k Keeper) SetDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) {
+func (k *Keeper) SetDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) {
 	delegatorAddress := delegation.GetDelegatorAddr()
 
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
-	store.Set(GetDelegationKey(zone, delegatorAddress, delegation.GetValidatorAddr()), b)
+	store.Set(types.GetDelegationKey(zone, delegatorAddress, delegation.GetValidatorAddr()), b)
 }
 
 // SetPerformanceDelegation sets a delegation.
-func (k Keeper) SetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) {
+func (k *Keeper) SetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) {
 	delegatorAddress := delegation.GetDelegatorAddr()
 
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
-	store.Set(GetPerformanceDelegationKey(zone, delegatorAddress, delegation.GetValidatorAddr()), b)
+	store.Set(types.GetPerformanceDelegationKey(zone, delegatorAddress, delegation.GetValidatorAddr()), b)
 }
 
 // RemoveDelegation removes a delegation
-func (k Keeper) RemoveDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) error {
+func (k *Keeper) RemoveDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) error {
 	delegatorAddress := delegation.GetDelegatorAddr()
 
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(GetDelegationKey(zone, delegatorAddress, delegation.GetValidatorAddr()))
+	store.Delete(types.GetDelegationKey(zone, delegatorAddress, delegation.GetValidatorAddr()))
 	return nil
 }
 
 // IterateDelegatorDelegations iterates through one delegator's delegations.
-func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Zone, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
+func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Zone, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := GetDelegationsKey(zone, delegator)
+	delegatorPrefixKey := types.GetDelegationsKey(zone, delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
 	defer iterator.Close()
 
@@ -230,80 +206,10 @@ func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, am
 	return allocations
 }
 
-// CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
-// Positive delta represents current allocation is below target, and vice versa.
-func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents) types.ValidatorIntents {
-	deltas := make(types.ValidatorIntents, 0)
-
-	targetValopers := func(in types.ValidatorIntents) []string {
-		out := make([]string, 0, len(in))
-		for _, i := range in {
-			out = append(out, i.ValoperAddress)
-		}
-		return out
-	}(targetAllocations)
-
-	keySet := utils.Unique(append(targetValopers, utils.Keys(currentAllocations)...))
-	sort.Strings(keySet)
-	// for target allocations, raise the intent weight by the total delegated value to get target amount
-	for _, valoper := range keySet {
-		current, ok := currentAllocations[valoper]
-		if !ok {
-			current = sdk.ZeroInt()
-		}
-
-		target, ok := targetAllocations.GetForValoper(valoper)
-		if !ok {
-			target = &types.ValidatorIntent{ValoperAddress: valoper, Weight: sdk.ZeroDec()}
-		}
-		targetAmount := target.Weight.MulInt(currentSum).TruncateInt()
-		// diff between target and current allocations
-		// positive == below target, negative == above target
-		delta := targetAmount.Sub(current)
-		deltas = append(deltas, &types.ValidatorIntent{Weight: sdk.NewDecFromInt(delta), ValoperAddress: valoper})
-	}
-
-	// sort keys by relative value of delta
-	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].ValoperAddress > deltas[j].ValoperAddress
-	})
-
-	// sort keys by relative value of delta
-	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].Weight.GT(deltas[j].Weight)
-	})
-
-	return deltas
-}
-
-// minDeltas returns the lowest value in a slice of Deltas.
-func minDeltas(deltas types.ValidatorIntents) sdkmath.Int {
-	minValue := sdk.NewInt(math.MaxInt64)
-	for _, intent := range deltas {
-		if minValue.GT(intent.Weight.TruncateInt()) {
-			minValue = intent.Weight.TruncateInt()
-		}
-	}
-
-	return minValue
-}
-
-// maxDeltas returns the greatest value in a slice of Deltas.
-func maxDeltas(deltas types.ValidatorIntents) sdkmath.Int {
-	maxValue := sdk.NewInt(math.MinInt64)
-	for _, intent := range deltas {
-		if maxValue.LT(intent.Weight.TruncateInt()) {
-			maxValue = intent.Weight.TruncateInt()
-		}
-	}
-
-	return maxValue
-}
-
 func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents, amount sdk.Coins) map[string]sdkmath.Int {
 	input := amount[0].Amount
-	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
-	minValue := minDeltas(deltas)
+	deltas := types.CalculateDeltas(currentAllocations, currentSum, targetAllocations)
+	minValue := types.MinDeltas(deltas)
 	sum := sdk.ZeroInt()
 
 	// raise all deltas such that the minimum value is zero.

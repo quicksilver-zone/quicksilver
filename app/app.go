@@ -885,7 +885,7 @@ func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock
 		if !found {
 			panic("ERROR: unable to find expected stargaze-1 zone")
 		}
-		app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zone)
+		app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 	}
 
 	return app.mm.BeginBlock(ctx, req)

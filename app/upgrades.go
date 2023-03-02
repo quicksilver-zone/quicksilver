@@ -91,12 +91,12 @@ func noOpHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 func v010400UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// upgrade zones
-		app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone icstypes.Zone) (stop bool) {
+		app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 			zone.DepositsEnabled = true
 			zone.ReturnToSender = false
 			zone.UnbondingEnabled = false
 			zone.Decimals = 6
-			app.InterchainstakingKeeper.SetZone(ctx, &zone)
+			app.InterchainstakingKeeper.SetZone(ctx, zone)
 			return false
 		})
 
@@ -191,7 +191,7 @@ func v010400rc6UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 		})
 
 		if isTestnet(ctx) || isDevnet(ctx) {
-			app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo icstypes.Zone) (stop bool) {
+			app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo *icstypes.Zone) (stop bool) {
 				app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zoneInfo)
 				return false
 			})
@@ -204,11 +204,11 @@ func v010400rc6UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 func v010400rc8UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// remove expired failed redelegation records
-		app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone icstypes.Zone) (stop bool) {
-			app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) (stop bool) {
+		app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+			app.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
 				if delegation.RedelegationEnd < 0 {
 					delegation.RedelegationEnd = 0
-					app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+					app.InterchainstakingKeeper.SetDelegation(ctx, zone, delegation)
 				}
 				return false
 			})

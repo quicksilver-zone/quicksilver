@@ -84,3 +84,25 @@ func ParseStakingDelegationKey(key []byte) (sdk.AccAddress, sdk.ValAddress, erro
 	valAddr := key[3+delAddrLen : 3+delAddrLen+valAddrLen]
 	return delAddr, valAddr, nil
 }
+
+// gets the key for delegator bond with validator
+// VALUE: staking/Delegation
+func GetDelegationKey(zone *Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(GetDelegationsKey(zone, delAddr), valAddr.Bytes()...)
+}
+
+// gets the prefix for a delegator for all validators
+func GetDelegationsKey(zone *Zone, delAddr sdk.AccAddress) []byte {
+	return append(append(KeyPrefixDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
+}
+
+// gets the key for delegator bond with validator
+// VALUE: staking/Delegation
+func GetPerformanceDelegationKey(zone *Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
+	return append(GetPerformanceDelegationsKey(zone, delAddr), valAddr.Bytes()...)
+}
+
+// gets the prefix for a delegator for all validators
+func GetPerformanceDelegationsKey(zone *Zone, delAddr sdk.AccAddress) []byte {
+	return append(append(KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
+}

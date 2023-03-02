@@ -6,6 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
+
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
@@ -47,7 +51,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		return errors.New("client state is not active")
 	}
 
-	zone := types.Zone{
+	zone := &types.Zone{
 		ChainId:            chainID,
 		ConnectionId:       p.ConnectionId,
 		LocalDenom:         p.LocalDenom,
@@ -62,7 +66,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		Decimals:           p.Decimals,
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 	}
-	k.SetZone(ctx, &zone)
+	k.SetZone(ctx, zone)
 
 	// generate deposit account
 	portOwner := chainID + ".deposit"
@@ -88,7 +92,9 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		return err
 	}
 
-	err = k.EmitValsetRequery(ctx, p.ConnectionId, chainID)
+	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	query := stakingTypes.QueryValidatorsRequest{}
+	err = k.EmitValSetQuery(ctx, zone, query, sdkmath.NewInt(period))
 	if err != nil {
 		return err
 	}
@@ -232,7 +238,9 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 				return err
 			}
 
-			err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+			query := stakingTypes.QueryValidatorsRequest{}
+			err := k.EmitValSetQuery(ctx, &zone, query, sdkmath.NewInt(period))
 			if err != nil {
 				return err
 			}
