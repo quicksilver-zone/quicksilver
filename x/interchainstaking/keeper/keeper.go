@@ -148,28 +148,50 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 	return pcs
 }
 
+func (k Keeper) UnmarshalValidatorResponse(data []byte) (stakingTypes.QueryValidatorsResponse, error) {
+	validatorsRes := stakingTypes.QueryValidatorsResponse{}
+	if len(data) == 0 {
+		return validatorsRes, errors.New("attempted to unmarshal zero length byte slice (8)")
+	}
+	err := k.cdc.Unmarshal(data, &validatorsRes)
+	if err != nil {
+		return validatorsRes, err
+	}
+
+	return validatorsRes, nil
+}
+
+func (k Keeper) UnmarshalValidatorRequest(data []byte) (stakingTypes.QueryValidatorsRequest, error) {
+	validatorsReq := stakingTypes.QueryValidatorsRequest{}
+	if len(data) == 0 {
+		return validatorsReq, errors.New("attempted to unmarshal zero length byte slice (8)")
+	}
+	err := k.cdc.Unmarshal(data, &validatorsReq)
+	if err != nil {
+		return validatorsReq, err
+	}
+
+	return validatorsReq, nil
+}
+
 // ### Interval functions >>>
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte, request []byte) error {
-	validatorsRes := stakingTypes.QueryValidatorsResponse{}
-	if len(data) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (8)")
-	}
-	err := k.cdc.Unmarshal(data, &validatorsRes)
+func (k Keeper) SetValidatorsForZone(ctx sdk.Context, zoneInfo types.Zone, data []byte, request []byte) error {
+	validatorsRes, err := k.UnmarshalValidatorResponse(data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
 		return err
 	}
 
 	if validatorsRes.Pagination != nil && !bytes.Equal(validatorsRes.Pagination.NextKey, []byte{}) {
-		validatorsReq := stakingTypes.QueryValidatorsRequest{Pagination: &query.PageRequest{}}
-		err = k.cdc.Unmarshal(request, &validatorsReq)
+		validatorsReq, err := k.UnmarshalValidatorRequest(request)
 		if err != nil {
-			k.Logger(ctx).Error("unable to unmarshal request", "zone", zoneInfo.ChainId, "err", err)
+			k.Logger(ctx).Error("unable to unmarshal request info for zone", "zone", zoneInfo.ChainId, "err", err)
 			return err
 		}
+
 		if validatorsReq.Pagination == nil {
 			validatorsReq.Pagination = new(query.PageRequest)
 		}
