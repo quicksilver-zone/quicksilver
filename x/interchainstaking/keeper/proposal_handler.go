@@ -19,7 +19,7 @@ import (
 )
 
 // HandleRegisterZoneProposal is a handler for executing a passed community spend proposal
-func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZoneProposal) error {
+func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZoneProposal) error {
 	// get chain id from connection
 	chainID, err := k.GetChainID(ctx, p.ConnectionId)
 	if err != nil {
@@ -114,7 +114,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 	return nil
 }
 
-func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, portOwner string) error {
+func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, portOwner string) error {
 	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionID, portOwner, ""); err != nil { // todo: add version
 		return err
 	}
@@ -125,7 +125,7 @@ func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, 
 }
 
 // HandleUpdateZoneProposal is a handler for executing a passed community spend proposal
-func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProposal) error {
+func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZoneProposal) error {
 	zone, found := k.GetZone(ctx, p.ChainId)
 	if !found {
 		err := fmt.Errorf("unable to get registered zone for chain id: %s", p.ChainId)

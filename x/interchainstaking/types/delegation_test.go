@@ -1,8 +1,10 @@
 package types_test
 
 import (
+	"fmt"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -49,4 +51,99 @@ func TestSetForValoper(t *testing.T) {
 
 	require.Equal(t, sdk.NewDecWithPrec(40, 1), intents.MustGetForValoper(v1).Weight)
 	require.Equal(t, sdk.NewDecWithPrec(60, 1), intents.MustGetForValoper(v2).Weight)
+}
+
+func TestDetermineAllocationsForDelegation(t *testing.T) {
+	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
+	// once sorted alphabetically on valoper.
+
+	val1 := utils.GenerateValAddressForTest()
+	val2 := utils.GenerateValAddressForTest()
+	val3 := utils.GenerateValAddressForTest()
+	val4 := utils.GenerateValAddressForTest()
+
+	tc := []struct {
+		current  map[string]sdkmath.Int
+		target   types.ValidatorIntents
+		inAmount sdk.Coins
+		expected map[string]sdkmath.Int
+		dust     sdkmath.Int
+	}{
+		{
+			current: map[string]sdkmath.Int{
+				val1.String(): sdk.NewInt(350000),
+				val2.String(): sdk.NewInt(650000),
+				val3.String(): sdk.NewInt(75000),
+			},
+			target: types.ValidatorIntents{
+				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(30, 2)},
+				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(63, 2)},
+				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
+			},
+			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000))),
+			expected: map[string]sdkmath.Int{
+				val1.String(): sdk.ZeroInt(),
+				val2.String(): sdk.NewInt(33182),
+				val3.String(): sdk.NewInt(16818),
+			},
+		},
+		{
+			current: map[string]sdkmath.Int{
+				val1.String(): sdk.NewInt(52),
+				val2.String(): sdk.NewInt(24),
+				val3.String(): sdk.NewInt(20),
+				val4.String(): sdk.NewInt(4),
+			},
+			target: types.ValidatorIntents{
+				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
+				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
+				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
+				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
+			},
+			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(20))),
+			expected: map[string]sdkmath.Int{
+				val4.String(): sdk.NewInt(11),
+				val3.String(): sdk.ZeroInt(),
+				val2.String(): sdk.NewInt(6),
+				val1.String(): sdk.NewInt(3),
+			},
+		},
+		{
+			current: map[string]sdkmath.Int{
+				val1.String(): sdk.NewInt(52),
+				val2.String(): sdk.NewInt(24),
+				val3.String(): sdk.NewInt(20),
+				val4.String(): sdk.NewInt(4),
+			},
+			target: types.ValidatorIntents{
+				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
+				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
+				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
+				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
+			},
+			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50))),
+			expected: map[string]sdkmath.Int{
+				val4.String(): sdk.NewInt(20),
+				val2.String(): sdk.NewInt(13),
+				val1.String(): sdk.NewInt(10),
+				val3.String(): sdk.NewInt(7),
+			},
+		},
+	}
+
+	for caseNumber, val := range tc {
+		sum := sdkmath.ZeroInt()
+		for _, amount := range val.current {
+			sum = sum.Add(amount)
+		}
+		allocations := types.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount)
+		require.Equal(t, len(val.expected), len(allocations))
+		for valoper := range val.expected {
+			ex, ok := val.expected[valoper]
+			require.True(t, ok)
+			ac, ok := allocations[valoper]
+			require.True(t, ok)
+			require.True(t, ex.Equal(ac), fmt.Sprintf("Test Case #%d failed; allocations did not equal expected output - expected %s, got %s.", caseNumber, val.expected[valoper], allocations[valoper]))
+		}
+	}
 }

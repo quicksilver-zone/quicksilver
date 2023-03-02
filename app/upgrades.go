@@ -161,7 +161,7 @@ func v010400rc6UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 				true,
 				false,
 				6)
-			err := icskeeper.HandleRegisterZoneProposal(ctx, app.InterchainstakingKeeper, regenProp)
+			err := app.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, regenProp)
 			if err != nil {
 				return nil, err
 			}

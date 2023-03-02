@@ -178,7 +178,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	return &types.MsgSignalIntentResponse{}, nil
 }
 
-// GovReopenChannel reopens an ICA channel
+// GovReopenChannel reopens an ICA channel.
 func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -224,7 +224,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 	return &types.MsgGovReopenChannelResponse{}, nil
 }
 
-// GovReopenChannel reopens an ICA channel
+// GovCloseChannel closes an ICA channel.
 func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovCloseChannel) (*types.MsgGovCloseChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

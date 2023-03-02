@@ -91,7 +91,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	qApp := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 
-	err := icskeeper.HandleRegisterZoneProposal(ctx, qApp.InterchainstakingKeeper, proposal)
+	err := qApp.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
 	suite.Require().NoError(err)
 
 	zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)

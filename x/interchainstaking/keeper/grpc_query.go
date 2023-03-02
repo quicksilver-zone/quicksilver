@@ -13,10 +13,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = &Keeper{}
 
 // Zones returns information about registered zones.
-func (k Keeper) Zones(c context.Context, req *types.QueryZonesInfoRequest) (*types.QueryZonesInfoResponse, error) {
+func (k *Keeper) Zones(c context.Context, req *types.QueryZonesInfoRequest) (*types.QueryZonesInfoResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -47,8 +47,8 @@ func (k Keeper) Zones(c context.Context, req *types.QueryZonesInfoRequest) (*typ
 	}, nil
 }
 
-// Zones returns information about registered zones.
-func (k Keeper) Zone(c context.Context, req *types.QueryZoneInfoRequest) (*types.QueryZoneInfoResponse, error) {
+// Zone returns information about registered zones.
+func (k *Keeper) Zone(c context.Context, req *types.QueryZoneInfoRequest) (*types.QueryZoneInfoResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -67,7 +67,7 @@ func (k Keeper) Zone(c context.Context, req *types.QueryZoneInfoRequest) (*types
 }
 
 // DepositAccount returns the deposit account address for the given zone.
-func (k Keeper) DepositAccount(c context.Context, req *types.QueryDepositAccountForChainRequest) (*types.QueryDepositAccountForChainResponse, error) {
+func (k *Keeper) DepositAccount(c context.Context, req *types.QueryDepositAccountForChainRequest) (*types.QueryDepositAccountForChainResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -89,7 +89,7 @@ func (k Keeper) DepositAccount(c context.Context, req *types.QueryDepositAccount
 }
 
 // DelegatorIntent returns information about the delegation intent of the caller for the given zone.
-func (k Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorIntentRequest) (*types.QueryDelegatorIntentResponse, error) {
+func (k *Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorIntentRequest) (*types.QueryDelegatorIntentResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -108,7 +108,7 @@ func (k Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorInte
 	return &types.QueryDelegatorIntentResponse{Intent: &intent}, nil
 }
 
-func (k Keeper) Delegations(c context.Context, req *types.QueryDelegationsRequest) (*types.QueryDelegationsResponse, error) {
+func (k *Keeper) Delegations(c context.Context, req *types.QueryDelegationsRequest) (*types.QueryDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -132,7 +132,7 @@ func (k Keeper) Delegations(c context.Context, req *types.QueryDelegationsReques
 	return &types.QueryDelegationsResponse{Delegations: delegations, Tvl: sum}, nil
 }
 
-func (k Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*types.QueryReceiptsResponse, error) {
+func (k *Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*types.QueryReceiptsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -155,7 +155,7 @@ func (k Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*t
 	return &types.QueryReceiptsResponse{Receipts: receipts}, nil
 }
 
-func (k Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -179,7 +179,7 @@ func (k Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdra
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
 
-func (k Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+func (k *Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -192,7 +192,7 @@ func (k Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalR
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
 
-func (k Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRecordsRequest) (*types.QueryUnbondingRecordsResponse, error) {
+func (k *Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRecordsRequest) (*types.QueryUnbondingRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -205,7 +205,7 @@ func (k Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRec
 	return &types.QueryUnbondingRecordsResponse{Unbondings: unbondings}, nil
 }
 
-func (k Keeper) RedelegationRecords(c context.Context, req *types.QueryRedelegationRecordsRequest) (*types.QueryRedelegationRecordsResponse, error) {
+func (k *Keeper) RedelegationRecords(c context.Context, req *types.QueryRedelegationRecordsRequest) (*types.QueryRedelegationRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

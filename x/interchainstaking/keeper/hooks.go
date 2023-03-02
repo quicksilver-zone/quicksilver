@@ -9,11 +9,11 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 	return nil
 }
 
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	// every epoch
 	if epochIdentifier == "epoch" {
 		k.Logger(ctx).Info("handling epoch end")
@@ -105,14 +105,14 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 
 // ___________________________________________________________________________________________________
 
-// Hooks wrapper struct for incentives keeper
+// Hooks wrapper struct for interchainstaking keeper
 type Hooks struct {
-	k Keeper
+	k *Keeper
 }
 
 var _ epochstypes.EpochHooks = Hooks{}
 
-func (k Keeper) Hooks() Hooks {
+func (k *Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
