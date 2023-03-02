@@ -1263,8 +1263,8 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 		})
 	}
 }
-func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 
+func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	s.SetupTest()
 	s.setupTestZones()
 
@@ -1295,7 +1295,8 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 			ValidatorAddress:  vals[2].ValoperAddress,
 			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
 			RedelegationEnd:   0,
-		}, {
+		},
+		{
 			DelegationAddress: zone.DelegationAddress.Address,
 			ValidatorAddress:  vals[3].ValoperAddress,
 			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
@@ -1315,7 +1316,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	err := app.InterchainstakingKeeper.Rebalance(ctx, zone, 1)
 	s.Require().NoError(err)
 
-	//change intents to trigger redelegations from val[3]
+	// change intents to trigger redelegations from val[3]
 	intents := icstypes.ValidatorIntents{
 		{ValoperAddress: vals[0].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
 		{ValoperAddress: vals[1].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
@@ -1330,10 +1331,12 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	// mock ack for redelegations
 	app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
 		if record.EpochNumber == 2 {
-			msg := stakingtypes.MsgBeginRedelegate{zone.DelegationAddress.Address,
+			msg := stakingtypes.MsgBeginRedelegate{
+				zone.DelegationAddress.Address,
 				record.Source,
 				record.Destination,
-				sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount))}
+				sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
+			}
 			err := app.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
 			if err != nil {
 				return false
@@ -1363,7 +1366,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, zone, 3)
 
-	//check for redelegations originating from val[0], they should not be present
+	// check for redelegations originating from val[0], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 3)
 	s.Require().False(present)
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[2].ValoperAddress, 3)
@@ -1373,7 +1376,6 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 }
 
 func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
-
 	s.SetupTest()
 	s.setupTestZones()
 
@@ -1404,7 +1406,8 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 			ValidatorAddress:  vals[2].ValoperAddress,
 			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
 			RedelegationEnd:   0,
-		}, {
+		},
+		{
 			DelegationAddress: zone.DelegationAddress.Address,
 			ValidatorAddress:  vals[3].ValoperAddress,
 			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
@@ -1476,7 +1479,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, zone, 3)
 
-	//check for redelegations originating from val[1], they should not be present
+	// check for redelegations originating from val[1], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[0].ValoperAddress, 3)
 	s.Require().False(present)
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[1].ValoperAddress, 3)
@@ -1486,46 +1489,45 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 }
 
 func (s *KeeperTestSuite) Test_v045Callback() {
-
 	tests := []struct {
 		name             string
 		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte)
 		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
-	}{{
-		name: "msg response with some data",
-		setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
-			app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
-			sender := utils.GenerateAccAddressForTest()
-			senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
-			transferMsg := ibctransfertypes.MsgTransfer{
-				SourcePort:    "transfer",
-				SourceChannel: "channel-0",
-				Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
-				Sender:        senderAddr,
-				Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
-			}
-			response := ibctransfertypes.MsgTransferResponse{
-				Sequence: 1,
-			}
+	}{
+		{
+			name: "msg response with some data",
+			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
+				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				sender := utils.GenerateAccAddressForTest()
+				senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				transferMsg := ibctransfertypes.MsgTransfer{
+					SourcePort:    "transfer",
+					SourceChannel: "channel-0",
+					Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
+					Sender:        senderAddr,
+					Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+				}
+				response := ibctransfertypes.MsgTransferResponse{
+					Sequence: 1,
+				}
 
-			respBytes := icatypes.ModuleCdc.MustMarshal(&response)
-			return []sdk.Msg{&transferMsg}, respBytes
+				respBytes := icatypes.ModuleCdc.MustMarshal(&response)
+				return []sdk.Msg{&transferMsg}, respBytes
+			},
+			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
+				txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+				feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+				txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
+				feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+				// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
+
+				if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
+					return true
+				}
+				return false
+			},
 		},
-		assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
-			txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
-			feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-			txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
-			feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
-
-			// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
-
-			if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
-				return true
-			}
-			return false
-
-		},
-	},
 		{
 			name: "msg response with nil data",
 			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
@@ -1554,7 +1556,6 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 					return true
 				}
 				return false
-
 			},
 		},
 	}
@@ -1599,52 +1600,50 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 			s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
 
 			s.Require().True(test.assertStatements(ctx, app))
-
 		})
 	}
 }
 
 func (s *KeeperTestSuite) Test_v046Callback() {
-
 	tests := []struct {
 		name             string
 		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any)
 		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
-	}{{
-		name: "msg response with some data",
-		setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
-			app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
-			sender := utils.GenerateAccAddressForTest()
-			senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
-			transferMsg := ibctransfertypes.MsgTransfer{
-				SourcePort:    "transfer",
-				SourceChannel: "channel-0",
-				Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
-				Sender:        senderAddr,
-				Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
-			}
-			response := ibctransfertypes.MsgTransferResponse{
-				Sequence: 1,
-			}
+	}{
+		{
+			name: "msg response with some data",
+			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
+				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				sender := utils.GenerateAccAddressForTest()
+				senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				transferMsg := ibctransfertypes.MsgTransfer{
+					SourcePort:    "transfer",
+					SourceChannel: "channel-0",
+					Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
+					Sender:        senderAddr,
+					Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+				}
+				response := ibctransfertypes.MsgTransferResponse{
+					Sequence: 1,
+				}
 
-			anyresponse, _ := codectypes.NewAnyWithValue(&response)
-			return []sdk.Msg{&transferMsg}, anyresponse
+				anyresponse, _ := codectypes.NewAnyWithValue(&response)
+				return []sdk.Msg{&transferMsg}, anyresponse
+			},
+			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
+				txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+				feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+				txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
+				feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+				// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
+
+				if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
+					return true
+				}
+				return false
+			},
 		},
-		assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
-			txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
-			feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-			txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
-			feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
-
-			// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
-
-			if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
-				return true
-			}
-			return false
-
-		},
-	},
 		{
 			name: "msg response with nil data",
 			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
@@ -1673,7 +1672,6 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 					return true
 				}
 				return false
-
 			},
 		},
 	}
@@ -1718,7 +1716,6 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 			s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
 
 			s.Require().True(test.assertStatements(ctx, app))
-
 		})
 	}
 }

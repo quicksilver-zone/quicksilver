@@ -280,7 +280,6 @@ func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
 
 	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
 	s.Require().Equal(0, len(redelegations))
-
 }
 
 func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
@@ -289,18 +288,20 @@ func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 	ctx := s.chainA.GetContext()
 
 	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
-	osmodels := []icstypes.Delegation{{Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
-		DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
-		Height:            10,
-		ValidatorAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
-		RedelegationEnd:   -62135596800,
-	}, {
-		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17005)),
-		DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
-		Height:            11,
-		ValidatorAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
-		RedelegationEnd:   0,
-	},
+	osmodels := []icstypes.Delegation{
+		{
+			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
+			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+			Height:            10,
+			ValidatorAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
+			RedelegationEnd:   -62135596800,
+		}, {
+			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17005)),
+			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+			Height:            11,
+			ValidatorAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
+			RedelegationEnd:   0,
+		},
 	}
 
 	for _, dels := range osmodels {
@@ -343,5 +344,4 @@ func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 	s.Require().Equal(0, len(negRedelEndsAfter))
 	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
 	s.Require().Equal(0, len(redelegations))
-
 }
