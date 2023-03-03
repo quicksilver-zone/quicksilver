@@ -1,32 +1,32 @@
 package types
 
 import (
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // check to see if two validator instances are equal. Used in testing.
-func (v Validator) IsEqual(other Validator) bool {
-	if v.ValoperAddress != other.ValoperAddress {
-		return false
-	}
+// func (v Validator) IsEqual(other Validator) bool {
+//	if v.ValoperAddress != other.ValoperAddress {
+//		return false
+//	}
+//
+//	if !v.CommissionRate.Equal(other.CommissionRate) {
+//		return false
+//	}
+//
+//	if !v.DelegatorShares.Equal(other.DelegatorShares) {
+//		return false
+//	}
+//
+//	if !v.VotingPower.Equal(other.VotingPower) {
+//		return false
+//	}
+//	return true
+// }
 
-	if !v.CommissionRate.Equal(other.CommissionRate) {
-		return false
-	}
-
-	if !v.DelegatorShares.Equal(other.DelegatorShares) {
-		return false
-	}
-
-	if !v.VotingPower.Equal(other.VotingPower) {
-		return false
-	}
-	return true
-}
-
-func (v Validator) SharesToTokens(shares sdk.Dec) math.Int {
-	if v.DelegatorShares.IsZero() {
+func (v Validator) SharesToTokens(shares sdk.Dec) sdkmath.Int {
+	if v.DelegatorShares.IsNil() || v.DelegatorShares.IsZero() {
 		return sdk.ZeroInt()
 	}
 
@@ -42,23 +42,23 @@ func (di DelegatorIntent) AddOrdinal(multiplier sdk.Dec, intents ValidatorIntent
 		di.Intents = make(ValidatorIntents, 0)
 	}
 
-	di = di.Ordinalize(multiplier)
+	ordinalized := di.Ordinalize(multiplier)
 
 OUTER:
 	for _, i := range intents.Sort() {
-		for jdx, j := range di.SortedIntents() {
+		for jdx, j := range ordinalized.SortedIntents() {
 			if i.ValoperAddress == j.ValoperAddress {
-				di.Intents[jdx].Weight = j.Weight.Add(i.Weight)
+				ordinalized.Intents[jdx].Weight = j.Weight.Add(i.Weight)
 				continue OUTER
 			}
 		}
-		di.Intents = append(di.Intents, i)
+		ordinalized.Intents = append(ordinalized.Intents, i)
 	}
 
 	// we may have appended above, so resort intents.
-	di.SortedIntents()
+	ordinalized.SortedIntents()
 
-	return di.Normalize()
+	return ordinalized.Normalize()
 }
 
 func (di DelegatorIntent) IntentForValoper(valoper string) (*ValidatorIntent, bool) {
