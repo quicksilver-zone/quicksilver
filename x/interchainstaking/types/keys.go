@@ -70,13 +70,10 @@ func ParseStakingDelegationKey(key []byte) (sdk.AccAddress, sdk.ValAddress, erro
 	}
 	delAddrLen := int(key[1])
 	if len(key) < 2+delAddrLen {
-		return nil, nil, errors.New("out of bounds reading delegator address")
+		return nil, nil, errors.New("invalid delegator address length")
 	}
 	delAddr := key[2 : 2+delAddrLen]
 	// use valAddrLen to validate the val address has not been truncated.
-	if len(key) < 2+delAddrLen {
-		return nil, nil, errors.New("out of bounds reading delegator address length")
-	}
 	valAddrLen := int(key[2+delAddrLen])
 	if len(key) < 3+delAddrLen+valAddrLen {
 		return nil, nil, errors.New("out of bounds reading validator address")
