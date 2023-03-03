@@ -228,9 +228,11 @@ func TestBase64MemoToIntent(t *testing.T) {
 	zone.Validators = append(zone.Validators, &types.Validator{ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded})
 
 	testCases := []struct {
+		name           string
 		memo           string
 		amount         int
 		expectedIntent map[string]sdk.Dec
+		wantErr        bool
 	}{
 		{
 			memo:   "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc",
@@ -259,16 +261,35 @@ func TestBase64MemoToIntent(t *testing.T) {
 				"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": sdk.NewDecWithPrec(5, 1),
 			},
 		},
+		{
+			name:    "empty memo",
+			memo:    "",
+			amount:  10,
+			wantErr: true,
+		},
+		{
+			name:    "invalid length",
+			memo:    "ToS/+Ex92tEcuMBzhukZKMVnXKS8NKaQBJTx9zza4rrxyLiP9fwLijOcPK/59acWzdcBME6ub8f0LID97qWECuxJKXmxBM1YBQyWHSAXDiwmMY78K",
+			amount:  10,
+			wantErr: true,
+		},
 	}
 
 	for _, tc := range testCases {
-		out, err := zone.ConvertMemoToOrdinalIntents(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
-		require.NoError(t, err)
-		for _, v := range out {
-			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
-				t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
+		t.Run(tc.name, func(t *testing.T) {
+			out, err := zone.ConvertMemoToOrdinalIntents(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
 			}
-		}
+
+			require.NoError(t, err)
+			for _, v := range out {
+				if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
+					t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
+				}
+			}
+		})
 	}
 }
 
@@ -469,7 +490,6 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-
 		intent := zone.UpdateIntentWithCoins(intentFromDecSlice(tc.originalIntent), sdk.NewDec(int64(tc.baseAmount)), tc.amount)
 		for _, v := range intent.Intents {
 			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
@@ -477,6 +497,121 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 			}
 		}
 	}
+
+}
+
+func TestZone_GetBondedValidatorAddressesAsSlice(t *testing.T) {
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusUnbonded,
+	})
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusUnbonded,
+	})
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusBonded,
+	})
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusBonded,
+	})
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusBonded,
+	})
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusBonded,
+	})
+
+	// sorted list
+	expected := []string{
+		"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+		"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
+		"cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
+		"cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+	}
+	require.Equal(t, expected, zone.GetBondedValidatorAddressesAsSlice())
+}
+
+func TestZone_GetAggregateIntentOrDefault(t *testing.T) {
+	// empty
+	zone := types.Zone{}
+	require.Equal(t, types.ValidatorIntents(nil), zone.GetAggregateIntentOrDefault())
+
+	zone = types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusUnbonded,
+	})
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusUnbonded,
+	})
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(3000),
+		Status:         stakingtypes.BondStatusBonded,
+	})
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusBonded,
+	})
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusBonded,
+	})
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusBonded,
+	})
+
+	expected := types.ValidatorIntents{
+		&types.ValidatorIntent{
+			ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+			Weight:         sdk.NewDecWithPrec(25, 2),
+		},
+		&types.ValidatorIntent{
+			ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
+			Weight:         sdk.NewDecWithPrec(25, 2),
+		},
+		&types.ValidatorIntent{
+			ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
+			Weight:         sdk.NewDecWithPrec(25, 2),
+		},
+		&types.ValidatorIntent{
+			ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+			Weight:         sdk.NewDecWithPrec(25, 2),
+		},
+	}
+	actual := zone.GetAggregateIntentOrDefault()
+	require.Equal(t, expected, actual)
 }
 
 func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
@@ -485,7 +620,7 @@ func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 		Intents:   []*types.ValidatorIntent{},
 	}
 	for addr, weight := range in {
-		out.Intents = append(out.Intents, &types.ValidatorIntent{addr, weight})
+		out.Intents = append(out.Intents, &types.ValidatorIntent{ValoperAddress: addr, Weight: weight})
 	}
 	return out
 }
