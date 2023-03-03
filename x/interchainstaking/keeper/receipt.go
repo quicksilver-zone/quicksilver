@@ -15,8 +15,8 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
 )
 
 const (
@@ -34,7 +34,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, 
 
 	for _, event := range txr.Events {
 		if event.Type == transferPort {
-			attrs := attributesToMap(event.Attributes)
+			attrs := types.AttributesToMap(event.Attributes)
 			sender := attrs["sender"]
 			amount := attrs["amount"]
 			if attrs["recipient"] == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
@@ -101,15 +101,8 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, 
 	return nil
 }
 
-func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
-	out := make(map[string]string)
-	for _, attr := range attrs {
-		out[string(attr.Key)] = string(attr.Value)
-	}
-	return out
-}
 
-func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, inCoins sdk.Coins, returnToSender bool) error {
+func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone types.Zone, inCoins sdk.Coins, returnToSender bool) error {
 	if zone.RedemptionRate.IsZero() {
 		return errors.New("zero redemption rate")
 	}

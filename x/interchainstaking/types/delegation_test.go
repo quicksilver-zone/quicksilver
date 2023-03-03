@@ -36,11 +36,17 @@ func TestRoundtripDelegationMarshalToUnmarshal(t *testing.T) {
 	// Finally ensure that the 2nd round marshaled bytes equal the original ones.
 	marshalDelBytes2ndRound := types.MustMarshalDelegation(types.ModuleCdc, unmarshaledDel)
 	require.Equal(t, marshaledDelBytes, marshalDelBytes2ndRound, "all the marshaled bytes should be equal!")
+
+	// ensure error is returned for 0 length
+	_, err := types.UnmarshalDelegation(types.ModuleCdc, []byte{})
+	require.Error(t, err)
 }
 
 func TestSetForValoper(t *testing.T) {
 	v1 := utils.GenerateValAddressForTest().String()
 	v2 := utils.GenerateValAddressForTest().String()
+	v3 := utils.GenerateValAddressForTest().String()
+
 	intents := types.ValidatorIntents{
 		{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(10, 1)},
 		{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(90, 1)},
@@ -51,6 +57,53 @@ func TestSetForValoper(t *testing.T) {
 
 	require.Equal(t, sdk.NewDecWithPrec(40, 1), intents.MustGetForValoper(v1).Weight)
 	require.Equal(t, sdk.NewDecWithPrec(60, 1), intents.MustGetForValoper(v2).Weight)
+
+	// check failed return
+	actual := intents.MustGetForValoper(v3)
+	require.Equal(t, sdk.ZeroDec(), actual.Weight)
+}
+
+func TestNormalizeValidatorIntentsDeterminism(t *testing.T) {
+	v1 := utils.GenerateValAddressForTest().String()
+	v2 := utils.GenerateValAddressForTest().String()
+	v3 := utils.GenerateValAddressForTest().String()
+	v4 := utils.GenerateValAddressForTest().String()
+
+	cases := []struct {
+		name    string
+		intents types.ValidatorIntents
+	}{
+		{
+			name: "case 1",
+			intents: types.ValidatorIntents{
+				{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(10, 1)},
+				{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(90, 1)},
+			},
+		},
+		{
+			name: "case 2",
+			intents: types.ValidatorIntents{
+				{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(10, 1)},
+				{ValoperAddress: v2, Weight: sdk.NewDecWithPrec(90, 1)},
+				{ValoperAddress: v3, Weight: sdk.NewDecWithPrec(90, 1)},
+				{ValoperAddress: v4, Weight: sdk.NewDecWithPrec(90, 1)},
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			cached := tc.intents.Normalize()
+			// verify that sort is deterministic
+			for i := 1; i < 3; i++ {
+				normalized := tc.intents.Normalize()
+				require.Equal(t, cached, normalized)
+
+			}
+		})
+	}
+
 }
 
 func TestDetermineAllocationsForDelegation(t *testing.T) {

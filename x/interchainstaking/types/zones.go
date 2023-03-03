@@ -203,7 +203,7 @@ func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
 	return filteredIntents
 }
 
-// defaultAggregateIntents determines the default aggregate intent (for epoch 0)
+// DefaultAggregateIntents determines the default aggregate intent (for epoch 0)
 func (z *Zone) DefaultAggregateIntents() ValidatorIntents {
 	out := make(ValidatorIntents, 0)
 	for _, val := range z.GetValidatorsSorted() {
