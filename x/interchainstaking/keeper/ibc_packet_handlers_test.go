@@ -1313,7 +1313,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	// trigger rebalance
-	err := app.InterchainstakingKeeper.Rebalance(ctx, zone, 1)
+	err := app.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
 	s.Require().NoError(err)
 
 	// change intents to trigger redelegations from val[3]
@@ -1326,7 +1326,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	zone.AggregateIntent = intents
 
 	// trigger rebalance
-	err = app.InterchainstakingKeeper.Rebalance(ctx, zone, 2)
+	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
 
 	// mock ack for redelegations
 	app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
@@ -1364,7 +1364,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	zone.AggregateIntent = intents
 
 	// trigger rebalance
-	err = app.InterchainstakingKeeper.Rebalance(ctx, zone, 3)
+	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
 
 	// check for redelegations originating from val[0], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 3)
@@ -1424,7 +1424,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	// trigger rebalance
-	err := app.InterchainstakingKeeper.Rebalance(ctx, zone, 1)
+	err := app.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
 	s.Require().NoError(err)
 
 	app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) bool {
@@ -1436,7 +1436,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	})
 
 	// trigger rebalance
-	err = app.InterchainstakingKeeper.Rebalance(ctx, zone, 2)
+	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
 	s.Require().NoError(err)
 
 	// mock ack for redelegations
@@ -1477,7 +1477,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	})
 
 	// trigger rebalance
-	err = app.InterchainstakingKeeper.Rebalance(ctx, zone, 3)
+	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
 
 	// check for redelegations originating from val[1], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[0].ValoperAddress, 3)

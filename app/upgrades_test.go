@@ -311,8 +311,8 @@ func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 	zone, _ = app.InterchainstakingKeeper.GetZone(ctx, "uni-5")
 
 	var negRedelEndsBefore []icstypes.Delegation
-	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone icstypes.Zone) (stop bool) {
-		app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) (stop bool) {
+	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		app.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
 			if delegation.RedelegationEnd < 0 {
 				negRedelEndsBefore = append(negRedelEndsBefore, delegation)
 			}
@@ -331,8 +331,8 @@ func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 
 	var negRedelEndsAfter []icstypes.Delegation
 
-	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone icstypes.Zone) (stop bool) {
-		app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) (stop bool) {
+	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		app.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
 			if delegation.RedelegationEnd < 0 {
 				negRedelEndsAfter = append(negRedelEndsAfter, delegation)
 			}
