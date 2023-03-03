@@ -224,7 +224,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 	return &types.MsgGovReopenChannelResponse{}, nil
 }
 
-// GovReopenChannel reopens an ICA channel
+// GovCloseChannel reopens an ICA channel
 func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovCloseChannel) (*types.MsgGovCloseChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
