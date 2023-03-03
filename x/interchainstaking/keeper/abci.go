@@ -5,10 +5,9 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	tmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
