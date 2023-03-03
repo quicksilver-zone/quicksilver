@@ -14,6 +14,7 @@ import (
 
 // RandomizedGenState generates a random GenesisState for tokenfactory.
 func RandomizedGenState(simState *module.SimulationState) {
+	// random fee
 	feeAmt := simState.Rand.Int63n(5_000_000) + 7_500_000 // [7_500_000, 12_500_000)
 
 	tokenfactoryGenesis := types.DefaultGenesis()
