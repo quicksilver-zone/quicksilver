@@ -19,8 +19,32 @@ var (
 	_ govv1beta1.Content = &UpdateZoneProposal{}
 )
 
-func NewRegisterZoneProposal(title string, description string, connectionID string, baseDenom string, localDenom string, accountPrefix string, returnToSender bool, unbonding bool, deposits bool, liquidityModule bool, decimals int64) *RegisterZoneProposal {
-	return &RegisterZoneProposal{Title: title, Description: description, ConnectionId: connectionID, BaseDenom: baseDenom, LocalDenom: localDenom, AccountPrefix: accountPrefix, ReturnToSender: returnToSender, UnbondingEnabled: unbonding, DepositsEnabled: deposits, LiquidityModule: liquidityModule, Decimals: decimals}
+func NewRegisterZoneProposal(
+	title string,
+	description string,
+	connectionID string,
+	baseDenom string,
+	localDenom string,
+	accountPrefix string,
+	returnToSender bool,
+	unbonding bool,
+	deposits bool,
+	liquidityModule bool,
+	decimals int64,
+) *RegisterZoneProposal {
+	return &RegisterZoneProposal{
+		Title:            title,
+		Description:      description,
+		ConnectionId:     connectionID,
+		BaseDenom:        baseDenom,
+		LocalDenom:       localDenom,
+		AccountPrefix:    accountPrefix,
+		ReturnToSender:   returnToSender,
+		UnbondingEnabled: unbonding,
+		DepositsEnabled:  deposits,
+		LiquidityModule:  liquidityModule,
+		Decimals:         decimals,
+	}
 }
 
 func (m RegisterZoneProposal) GetDescription() string { return m.Description }
@@ -79,11 +103,32 @@ func (m RegisterZoneProposal) String() string {
   Deposits Enabled: 				%t	
   Liquidity Staking Module Enabled: %t
   Decimals:                         %d
-`, m.Title, m.Description, m.ConnectionId, m.BaseDenom, m.LocalDenom, m.ReturnToSender, m.UnbondingEnabled, m.DepositsEnabled, m.LiquidityModule, m.Decimals)
+`,
+		m.Title,
+		m.Description,
+		m.ConnectionId,
+		m.BaseDenom,
+		m.LocalDenom,
+		m.ReturnToSender,
+		m.UnbondingEnabled,
+		m.DepositsEnabled,
+		m.LiquidityModule,
+		m.Decimals,
+	)
 }
 
-func NewUpdateZoneProposal(title string, description string, chainID string, changes []*UpdateZoneValue) *UpdateZoneProposal {
-	return &UpdateZoneProposal{Title: title, Description: description, ChainId: chainID, Changes: changes}
+func NewUpdateZoneProposal(
+	title string,
+	description string,
+	chainID string,
+	changes []*UpdateZoneValue,
+) *UpdateZoneProposal {
+	return &UpdateZoneProposal{
+		Title:       title,
+		Description: description,
+		ChainId:     chainID,
+		Changes:     changes,
+	}
 }
 
 func (m UpdateZoneProposal) GetDescription() string { return m.Description }
