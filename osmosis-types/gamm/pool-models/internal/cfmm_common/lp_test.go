@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	gammtypes "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/balancer"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/internal/cfmm_common"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/stableswap"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // a helper function used to multiply coins

@@ -5,26 +5,23 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -34,7 +31,6 @@ import (
 
 const (
 	transferPort = "transfer"
-	withdrawal   = "withdrawal"
 )
 
 type TypedMsg struct {
@@ -578,14 +574,10 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	if completion.IsZero() {
 		return errors.New("invalid zero nil completion time")
 	}
-	parts := strings.Split(memo, "/")
-	if len(parts) != 2 || parts[0] != "rebalance" {
-		return errors.New("unexpected epoch rebalance memo format")
-	}
 
-	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	epochNumber, err := types.ParseMsgMemo(memo, types.MsgTypeRebalance)
 	if err != nil {
-		return errors.New("unexpected epoch rebalance memo format (2)")
+		return err
 	}
 
 	k.Logger(ctx).Info("Received MsgBeginRedelegate acknowledgement")
@@ -615,14 +607,9 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 }
 
 func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	parts := strings.Split(memo, "/")
-	if len(parts) != 2 || parts[0] != "rebalance" {
-		return errors.New("unexpected epoch rebalance memo format")
-	}
-
-	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	epochNumber, err := types.ParseMsgMemo(memo, types.MsgTypeRebalance)
 	if err != nil {
-		return errors.New("unexpected epoch rebalance memo format (2)")
+		return err
 	}
 
 	k.Logger(ctx).Error("Received MsgBeginRedelegate acknowledgement error")
@@ -649,15 +636,12 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		k.Logger(ctx).Error("unable to cast source message to MsgUndelegate")
 		return errors.New("unable to cast source message to MsgUndelegate")
 	}
-	memoParts := strings.Split(memo, "/")
-	if len(memoParts) != 2 || memoParts[0] != withdrawal {
-		return errors.New("unexpected memo form")
-	}
 
-	epochNumber, err := strconv.ParseInt(memoParts[1], 10, 64)
+	epochNumber, err := types.ParseMsgMemo(memo, types.MsgTypeWithdrawal)
 	if err != nil {
 		return err
 	}
+
 	zone := k.GetZoneForDelegateAccount(ctx, undelegateMsg.DelegatorAddress)
 
 	ubr, found := k.GetUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
@@ -707,14 +691,9 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 }
 
 func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	parts := strings.Split(memo, "/")
-	if len(parts) != 2 || parts[0] != withdrawal {
-		return errors.New("unexpected epoch undelegate memo format")
-	}
-
-	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	epochNumber, err := types.ParseMsgMemo(memo, types.MsgTypeWithdrawal)
 	if err != nil {
-		return errors.New("unexpected epoch undelegate memo format (2)")
+		return err
 	}
 
 	k.Logger(ctx).Error("Received MsgUndelegate acknowledgement error")
