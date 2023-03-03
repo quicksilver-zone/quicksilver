@@ -1,6 +1,6 @@
 # This is a basic workflow that is manually triggered
 
-name: build and quicksilver
+name: build and test
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
@@ -90,6 +90,7 @@ jobs:
   simulate:
     if: contains(github.event.pull_request.labels.*.name, 'run-sim')
     runs-on: ubuntu-latest
+    name: simulate quicksilver
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v3
