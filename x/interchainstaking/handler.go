@@ -36,9 +36,9 @@ func NewProposalHandler(k keeper.Keeper) govv1beta1.Handler {
 	return func(ctx sdk.Context, content govv1beta1.Content) error {
 		switch c := content.(type) {
 		case *types.RegisterZoneProposal:
-			return keeper.HandleRegisterZoneProposal(ctx, k, c)
+			return k.HandleRegisterZoneProposal(ctx, c)
 		case *types.UpdateZoneProposal:
-			return keeper.HandleUpdateZoneProposal(ctx, k, c)
+			return k.HandleUpdateZoneProposal(ctx, c)
 
 		default:
 			return sdkioerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized interchainstaking proposal content type: %T", c)

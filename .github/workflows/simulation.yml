@@ -2,14 +2,23 @@ name: simulate quicksilver
 
 on:
   pull_request:
+<<<<<<< HEAD
   push:
     paths-ignore:
       - '*.md'
+=======
+>>>>>>> main
     branches:
       - main
 jobs:
   test:
+<<<<<<< HEAD
     runs-on: ubuntu-latest
+=======
+    if: contains(github.event.pull_request.labels.*.name, 'run-sim')
+    runs-on: ubuntu-latest
+
+>>>>>>> main
     steps:
       - uses: actions/checkout@v3
 

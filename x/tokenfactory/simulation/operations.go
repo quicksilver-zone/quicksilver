@@ -148,7 +148,7 @@ func SimulateMsgMint(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 	return func(
 		r *rand.Rand, bApp *baseapp.BaseApp, ctx sdk.Context, accs []sdksimtypes.Account, chainID string,
 	) (sdksimtypes.OperationMsg, []sdksimtypes.FutureOperation, error) {
-		acc, senderExists := simtypes.RandomSimAccountWithConstraint(r, accs, accountCreatedTokenFactoryDenom(k, ctx))
+		acc, senderExists := simtypes.RandomSimAccountWithConstraint(r, accountCreatedTokenFactoryDenom(k, ctx), accs)
 		if !senderExists {
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgMint, "no account with tokenfactory denom found"), nil, nil
 		}
@@ -195,7 +195,7 @@ func SimulateMsgBurn(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keepe
 	return func(
 		r *rand.Rand, bApp *baseapp.BaseApp, ctx sdk.Context, accs []sdksimtypes.Account, chainID string,
 	) (sdksimtypes.OperationMsg, []sdksimtypes.FutureOperation, error) {
-		acc, senderExists := simtypes.RandomSimAccountWithConstraint(r, accs, accountCreatedTokenFactoryDenom(k, ctx))
+		acc, senderExists := simtypes.RandomSimAccountWithConstraint(r, accountCreatedTokenFactoryDenom(k, ctx), accs)
 		if !senderExists {
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgBurn, "no account with tokenfactory denom found"), nil, nil
 		}
@@ -250,7 +250,7 @@ func SimulateMsgChangeAdmin(ak types.AccountKeeper, bk types.BankKeeper, k keepe
 	return func(
 		r *rand.Rand, bApp *baseapp.BaseApp, ctx sdk.Context, accs []sdksimtypes.Account, chainID string,
 	) (sdksimtypes.OperationMsg, []sdksimtypes.FutureOperation, error) {
-		acc, senderExists := simtypes.RandomSimAccountWithConstraint(r, accs, accountCreatedTokenFactoryDenom(k, ctx))
+		acc, senderExists := simtypes.RandomSimAccountWithConstraint(r, accountCreatedTokenFactoryDenom(k, ctx), accs)
 		if !senderExists {
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgChangeAdmin, "no account with tokenfactory denom found"), nil, nil
 		}
@@ -298,7 +298,7 @@ func SimulateMsgSetDenomMetadata(ak types.AccountKeeper, bk types.BankKeeper, k 
 	return func(
 		r *rand.Rand, bApp *baseapp.BaseApp, ctx sdk.Context, accs []sdksimtypes.Account, chainID string,
 	) (sdksimtypes.OperationMsg, []sdksimtypes.FutureOperation, error) {
-		acc, senderExists := simtypes.RandomSimAccountWithConstraint(r, accs, accountCreatedTokenFactoryDenom(k, ctx))
+		acc, senderExists := simtypes.RandomSimAccountWithConstraint(r, accountCreatedTokenFactoryDenom(k, ctx), accs)
 		if !senderExists {
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgChangeAdmin, "no account with tokenfactory denom found"), nil, nil
 		}

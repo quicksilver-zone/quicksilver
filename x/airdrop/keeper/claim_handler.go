@@ -183,7 +183,7 @@ func (k Keeper) verifyZoneIntent(ctx sdk.Context, chainID string, address string
 		return fmt.Errorf("zone %s not found", chainID)
 	}
 
-	intent, ok := k.icsKeeper.GetIntent(ctx, zone, addr.String(), false)
+	intent, ok := k.icsKeeper.GetIntent(ctx, &zone, addr.String(), false)
 	if !ok || len(intent.Intents) == 0 {
 		return fmt.Errorf("intent not found or no intents set for %s", addr)
 	}
@@ -226,9 +226,9 @@ func (k Keeper) verifyGovernanceParticipation(ctx sdk.Context, address string) e
 func (k Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr types.ClaimRecord) error {
 	// get Osmosis zone
 	var osmoZone *icstypes.Zone
-	k.icsKeeper.IterateZones(ctx, func(_ int64, zone icstypes.Zone) (stop bool) {
+	k.icsKeeper.IterateZones(ctx, func(_ int64, zone *icstypes.Zone) (stop bool) {
 		if zone.AccountPrefix == "osmo" {
-			osmoZone = &zone
+			osmoZone = zone
 			return true
 		}
 		return false

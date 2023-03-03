@@ -25,5 +25,5 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 	minter := keeper.GetMinter(ctx)
 	params := keeper.GetParams(ctx)
 	lastReductionEpoch := keeper.GetLastReductionEpochNum(ctx)
-	return types.NewGenesisState(minter, params, lastReductionEpoch)
+	return types.NewGenesis(minter, params, lastReductionEpoch)
 }

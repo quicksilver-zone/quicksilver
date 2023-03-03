@@ -20,7 +20,7 @@ type SimAccountConstraint = func(account simulation.Account) bool
 // where acc is a uniformly sampled account from all accounts satisfying the constraint f
 // a constraint is satisfied for an account `acc` if f(acc) = true
 // accExists is false, if there is no such account.
-func RandomSimAccountWithConstraint(r *rand.Rand, accs []simulation.Account, f SimAccountConstraint) (simulation.Account, bool) {
+func RandomSimAccountWithConstraint(r *rand.Rand, f SimAccountConstraint, accs []simulation.Account) (simulation.Account, bool) {
 	filteredAddrs := []simulation.Account{}
 	for _, acc := range accs {
 		if f(acc) {
@@ -39,7 +39,7 @@ func RandomSimAccountWithMinCoins(ctx sdk.Context, r *rand.Rand, accs []simulati
 		spendableCoins := bk.SpendableCoins(ctx, acc.Address)
 		return spendableCoins.IsAllGTE(coins) && coins.DenomsSubsetOf(spendableCoins)
 	}
-	acc, found := RandomSimAccountWithConstraint(r, accs, accHasMinCoins)
+	acc, found := RandomSimAccountWithConstraint(r, accHasMinCoins, accs)
 	if !found {
 		return simulation.Account{}, errors.New("no address with min balance found")
 	}
@@ -75,7 +75,7 @@ func RandomSimAccountWithBalance(ctx sdk.Context, r *rand.Rand, accs []simulatio
 	accHasBal := func(acc simulation.Account) bool {
 		return len(bk.SpendableCoins(ctx, acc.Address)) != 0
 	}
-	acc, found := RandomSimAccountWithConstraint(r, accs, accHasBal)
+	acc, found := RandomSimAccountWithConstraint(r, accHasBal, accs)
 	if !found {
 		return simulation.Account{}, errors.New("no address with balance found. Check simulator configuration, this should be very rare")
 	}
@@ -102,7 +102,7 @@ func SelAddrWithDenoms(ctx sdk.Context, r *rand.Rand, accs []simulation.Account,
 		return true
 	}
 
-	acc, accExists := RandomSimAccountWithConstraint(r, accs, accHasDenoms)
+	acc, accExists := RandomSimAccountWithConstraint(r, accHasDenoms, accs)
 	if !accExists {
 		return acc, sdk.Coins{}, false
 	}
@@ -163,7 +163,7 @@ func RandomSimAccountWithKDenoms(ctx sdk.Context, r *rand.Rand, accs []simulatio
 	accHasBal := func(acc simulation.Account) bool {
 		return len(bk.SpendableCoins(ctx, acc.Address)) >= k
 	}
-	return RandomSimAccountWithConstraint(r, accs, accHasBal)
+	return RandomSimAccountWithConstraint(r, accHasBal, accs)
 }
 
 // RandGeometricCoin uniformly samples a denom from the addr's balances.

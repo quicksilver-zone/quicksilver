@@ -6,16 +6,15 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/utils"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/ingenuity-build/quicksilver/app/upgrades"
+	"github.com/ingenuity-build/quicksilver/utils"
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 func init() {
@@ -215,7 +214,7 @@ func (suite *AppTestSuite) initTestZone() {
 
 func (s *AppTestSuite) TestV010400UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
-	handler := v010400UpgradeHandler(app)
+	handler := upgrades.V010400UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
 	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
 	s.Require().NoError(err)
@@ -269,7 +268,8 @@ func (s *AppTestSuite) TestV010400UpgradeHandler() {
 
 func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
-	handler := v010400rc6UpgradeHandler(app)
+
+	handler := upgrades.V010400rc6UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
 
 	redelegations := app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
@@ -280,27 +280,29 @@ func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
 
 	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
 	s.Require().Equal(0, len(redelegations))
-
 }
 
 func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
-	handler := v010400rc8UpgradeHandler(app)
+
+	handler := upgrades.V010400rc8UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
 
 	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
-	osmodels := []icstypes.Delegation{{Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
-		DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
-		Height:            10,
-		ValidatorAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
-		RedelegationEnd:   -62135596800,
-	}, {
-		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17005)),
-		DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
-		Height:            11,
-		ValidatorAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
-		RedelegationEnd:   0,
-	},
+	osmodels := []icstypes.Delegation{
+		{
+			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
+			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+			Height:            10,
+			ValidatorAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
+			RedelegationEnd:   -62135596800,
+		}, {
+			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17005)),
+			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+			Height:            11,
+			ValidatorAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
+			RedelegationEnd:   0,
+		},
 	}
 
 	for _, dels := range osmodels {
@@ -310,8 +312,8 @@ func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 	zone, _ = app.InterchainstakingKeeper.GetZone(ctx, "uni-5")
 
 	var negRedelEndsBefore []icstypes.Delegation
-	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone icstypes.Zone) (stop bool) {
-		app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) (stop bool) {
+	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		app.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
 			if delegation.RedelegationEnd < 0 {
 				negRedelEndsBefore = append(negRedelEndsBefore, delegation)
 			}
@@ -330,8 +332,8 @@ func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 
 	var negRedelEndsAfter []icstypes.Delegation
 
-	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone icstypes.Zone) (stop bool) {
-		app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) (stop bool) {
+	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		app.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
 			if delegation.RedelegationEnd < 0 {
 				negRedelEndsAfter = append(negRedelEndsAfter, delegation)
 			}
@@ -343,5 +345,4 @@ func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 	s.Require().Equal(0, len(negRedelEndsAfter))
 	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
 	s.Require().Equal(0, len(redelegations))
-
 }
