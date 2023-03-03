@@ -11,6 +11,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
+const redelegationGCInterval = 30
+
 type zoneItrFn func(index int64, zoneInfo types.Zone) (stop bool)
 
 // BeginBlocker of interchainstaking module
