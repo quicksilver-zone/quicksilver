@@ -2,16 +2,14 @@ name: simulate quicksilver
 
 on:
   pull_request:
-    branches:
-      - main
-jobs:
-  test:
-    if: contains(github.event.pull_request.labels.*.name, 'run-sim')
-    runs-on: ubuntu-latest
+  schedule:
+    - cron: '0 0 * * 0'
 
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
       - uses: actions/cache@v3
         with:
           path: |
@@ -25,4 +23,4 @@ jobs:
           go-version: 1.19
 
       - name: Run simulation tests
-        run: make test-sim-ci
+        run: make test-sim-non-determinism
