@@ -254,7 +254,7 @@ func (k Keeper) calcOverallScores(
 // proportionally allocates rewards based on the individual zone allocation.
 func (k Keeper) calcUserValidatorSelectionAllocations(
 	ctx sdk.Context,
-	zone icstypes.Zone,
+	zone *icstypes.Zone,
 	zs zoneScore,
 ) []userAllocation {
 	k.Logger(ctx).Info("calcUserValidatorSelectionAllocations", "zone", zone.ChainId, "scores", zs, "allocation", zone.ValidatorSelectionAllocation)

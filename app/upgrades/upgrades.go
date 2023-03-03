@@ -63,12 +63,12 @@ func V010400UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// upgrade zones
-		keepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone icstypes.Zone) (stop bool) {
+		keepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 			zone.DepositsEnabled = true
 			zone.ReturnToSender = false
 			zone.UnbondingEnabled = false
 			zone.Decimals = 6
-			keepers.InterchainstakingKeeper.SetZone(ctx, &zone)
+			keepers.InterchainstakingKeeper.SetZone(ctx, zone)
 			return false
 		})
 
@@ -137,7 +137,7 @@ func V010400rc6UpgradeHandler(
 				true,
 				false,
 				6)
-			err := icskeeper.HandleRegisterZoneProposal(ctx, keepers.InterchainstakingKeeper, regenProp)
+			err := keepers.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, regenProp)
 			if err != nil {
 				return nil, err
 			}
@@ -167,7 +167,7 @@ func V010400rc6UpgradeHandler(
 		})
 
 		if isTestnet(ctx) || isDevnet(ctx) {
-			keepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo icstypes.Zone) (stop bool) {
+			keepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo *icstypes.Zone) (stop bool) {
 				keepers.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zoneInfo)
 				return false
 			})
@@ -184,11 +184,11 @@ func V010400rc8UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// remove expired failed redelegation records
-		keepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone icstypes.Zone) (stop bool) {
-			keepers.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) (stop bool) {
+		keepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+			keepers.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
 				if delegation.RedelegationEnd < 0 {
 					delegation.RedelegationEnd = 0
-					keepers.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+					keepers.InterchainstakingKeeper.SetDelegation(ctx, zone, delegation)
 				}
 				return false
 			})

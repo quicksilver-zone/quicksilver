@@ -56,9 +56,9 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 
 	// get base zone (Cosmos)
 	var cosmosZone *icstypes.Zone
-	k.icsKeeper.IterateZones(ctx, func(_ int64, zone icstypes.Zone) (stop bool) {
+	k.icsKeeper.IterateZones(ctx, func(_ int64, zone *icstypes.Zone) (stop bool) {
 		if zone.AccountPrefix == "cosmos" {
-			cosmosZone = &zone
+			cosmosZone = zone
 			return true
 		}
 		return false

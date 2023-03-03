@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -490,7 +490,9 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 		}
 	}
 
-	return k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	query := stakingtypes.QueryValidatorsRequest{}
+	return k.EmitValSetQuery(ctx, zone, query, sdkmath.NewInt(period))
 }
 
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
@@ -796,7 +798,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 	}
 
 	if memo != "rewards" {
-		receipt, found := k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, memo))
+		receipt, found := k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, memo))
 		if !found {
 			return fmt.Errorf("unable to find receipt for hash %s", memo)
 		}
@@ -948,7 +950,11 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
 	}
 	k.SetDelegation(ctx, zone, delegation)
-	if err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId); err != nil {
+
+	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	query := stakingtypes.QueryValidatorsRequest{}
+	err := k.EmitValSetQuery(ctx, zone, query, sdkmath.NewInt(period))
+	if err != nil {
 		return err
 	}
 	return nil
@@ -1006,7 +1012,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	}
 }
 
-func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {
+func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {
 	zone, found := k.GetZone(ctx, query.ChainId)
 	if !found {
 		return fmt.Errorf("unable to find zone for %s", query.ChainId)
@@ -1066,13 +1072,13 @@ func DistributeRewardsFromWithdrawAccount(k Keeper, ctx sdk.Context, args []byte
 	}
 
 	// update redemption rate
-	k.UpdateRedemptionRate(ctx, zone, rewards.Amount)
+	k.UpdateRedemptionRate(ctx, &zone, rewards.Amount)
 
 	// send tx
 	return k.SubmitTx(ctx, msgs, zone.WithdrawalAddress, "")
 }
 
-func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards math.Int) sdk.Msg {
+func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.Int) sdk.Msg {
 	return &banktypes.MsgSend{
 		FromAddress: zone.WithdrawalAddress.GetAddress(),
 		ToAddress:   zone.DelegationAddress.GetAddress(),

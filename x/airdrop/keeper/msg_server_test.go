@@ -315,7 +315,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 				}
 				appA.InterchainstakingKeeper.SetIntent(
 					suite.chainA.GetContext(),
-					zone,
+					&zone,
 					intent,
 					false,
 				)
