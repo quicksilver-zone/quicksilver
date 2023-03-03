@@ -6,11 +6,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -24,9 +21,9 @@ type Keeper struct {
 	cdc           codec.BinaryCodec
 	storeKey      storetypes.StoreKey
 	paramSpace    paramtypes.Subspace
-	accountKeeper authkeeper.AccountKeeper
-	bankKeeper    bankkeeper.Keeper
-	stakingKeeper stakingkeeper.Keeper
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
 	govKeeper     govkeeper.Keeper
 	icsKeeper     icskeeper.Keeper
 	icqKeeper     icqkeeper.Keeper
@@ -41,9 +38,9 @@ func NewKeeper(
 	cdc codec.Codec,
 	key storetypes.StoreKey,
 	ps paramtypes.Subspace,
-	ak authkeeper.AccountKeeper,
-	bk bankkeeper.Keeper,
-	sk stakingkeeper.Keeper,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	sk types.StakingKeeper,
 	gk govkeeper.Keeper,
 	icsk icskeeper.Keeper,
 	icqk icqkeeper.Keeper,

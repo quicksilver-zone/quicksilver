@@ -6,10 +6,11 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ingenuity-build/quicksilver/utils"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/stretchr/testify/require"
 	crypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+
+	"github.com/ingenuity-build/quicksilver/utils"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {

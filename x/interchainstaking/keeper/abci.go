@@ -13,13 +13,15 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
+const blockInterval = 30
+
 type zoneItrFn func(index int64, zoneInfo *types.Zone) (stop bool)
 
 // BeginBlocker of interchainstaking module
 func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
-	if ctx.BlockHeight()%30 == 0 {
+	if ctx.BlockHeight()%blockInterval == 0 {
 		if err := k.GCCompletedRedelegations(ctx); err != nil {
 			k.Logger(ctx).Error("error in GCCompletedRedelegations", "error", err)
 		}
@@ -27,10 +29,10 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
 		if ctx.BlockHeight()%30 == 0 {
 			// for the tasks below, we cannot panic in begin blocker; as this will crash the chain.
-			// and as failing here is not terminal we panicking is not necessary, but we should log
+			// and as failing here is not terminal panicking is not necessary, but we should log
 			// as an error. we don't return on failure here as we still want to attempt the unrelated
 			// tasks below.
-			// commenting this out until we can revisit. in it's current state it causes more issues than it fixes.
+			// commenting this out until we can revisit. in its current state it causes more issues than it fixes.
 
 			if err := k.EnsureWithdrawalAddresses(ctx, zone); err != nil {
 				k.Logger(ctx).Error("error in EnsureWithdrawalAddresses", "error", err)
@@ -41,8 +43,8 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 			if err := k.GCCompletedUnbondings(ctx, zone); err != nil {
 				k.Logger(ctx).Error("error in GCCompletedUnbondings", "error", err)
 			}
-
 		}
+
 		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
 		if found {
 			consState, found := k.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(ctx, connection.GetClientID())

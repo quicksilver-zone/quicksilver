@@ -16,10 +16,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	tmtypes "github.com/tendermint/tendermint/types"
+
 	"github.com/ingenuity-build/quicksilver/utils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 // ___________________________________________________________________________________________________
