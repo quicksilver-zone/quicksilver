@@ -8,10 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	"github.com/tendermint/tendermint/libs/log"
+
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -20,7 +19,6 @@ import (
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	"github.com/tendermint/tendermint/libs/log"
 )
 
 // userAllocation is an internal keeper struct to track transient state for
@@ -37,9 +35,9 @@ type Keeper struct {
 	cdc                  codec.BinaryCodec
 	storeKey             storetypes.StoreKey
 	paramSpace           paramtypes.Subspace
-	accountKeeper        authkeeper.AccountKeeper
-	bankKeeper           bankkeeper.Keeper
-	stakingKeeper        stakingkeeper.Keeper
+	accountKeeper        types.AccountKeeper
+	bankKeeper           types.BankKeeper
+	stakingKeeper        types.StakingKeeper
 	IcqKeeper            icqkeeper.Keeper
 	icsKeeper            icskeeper.Keeper
 	epochsKeeper         epochskeeper.Keeper
@@ -55,9 +53,9 @@ func NewKeeper(
 	cdc codec.Codec,
 	key storetypes.StoreKey,
 	ps paramtypes.Subspace,
-	ak authkeeper.AccountKeeper,
-	bk bankkeeper.Keeper,
-	sk stakingkeeper.Keeper,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
+	sk types.StakingKeeper,
 	icqk icqkeeper.Keeper,
 	icsk icskeeper.Keeper,
 	feeCollectorName string,

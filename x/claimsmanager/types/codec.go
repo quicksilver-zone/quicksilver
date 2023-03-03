@@ -6,6 +6,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/balancer"
 )

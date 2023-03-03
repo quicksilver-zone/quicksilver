@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	osmosislockuptypes "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )

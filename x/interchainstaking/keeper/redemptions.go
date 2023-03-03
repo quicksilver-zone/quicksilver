@@ -9,9 +9,10 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.

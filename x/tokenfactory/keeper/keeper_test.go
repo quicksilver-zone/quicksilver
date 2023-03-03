@@ -7,14 +7,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/ingenuity-build/quicksilver/app"
-	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"github.com/ingenuity-build/quicksilver/app"
+	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
+	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
+	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 var (
@@ -101,7 +102,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	}
 
 	suite.queryClient = types.NewQueryClient(suite.QueryHelper)
-	suite.msgServer = keeper.NewMsgServerImpl(*suite.App.TokenFactoryKeeper)
+	suite.msgServer = keeper.NewMsgServerImpl(suite.App.TokenFactoryKeeper)
 }
 
 func (suite *KeeperTestSuite) CreateDefaultDenom() {
