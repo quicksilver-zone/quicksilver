@@ -1489,46 +1489,45 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 }
 
 func (s *KeeperTestSuite) Test_v045Callback() {
-
 	tests := []struct {
 		name             string
 		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte)
 		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
-	}{{
-		name: "msg response with some data",
-		setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
-			app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
-			sender := utils.GenerateAccAddressForTest()
-			senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
-			transferMsg := ibctransfertypes.MsgTransfer{
-				SourcePort:    "transfer",
-				SourceChannel: "channel-0",
-				Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
-				Sender:        senderAddr,
-				Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
-			}
-			response := ibctransfertypes.MsgTransferResponse{
-				Sequence: 1,
-			}
+	}{
+		{
+			name: "msg response with some data",
+			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
+				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				sender := utils.GenerateAccAddressForTest()
+				senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				transferMsg := ibctransfertypes.MsgTransfer{
+					SourcePort:    "transfer",
+					SourceChannel: "channel-0",
+					Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
+					Sender:        senderAddr,
+					Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+				}
+				response := ibctransfertypes.MsgTransferResponse{
+					Sequence: 1,
+				}
 
-			respBytes := icatypes.ModuleCdc.MustMarshal(&response)
-			return []sdk.Msg{&transferMsg}, respBytes
+				respBytes := icatypes.ModuleCdc.MustMarshal(&response)
+				return []sdk.Msg{&transferMsg}, respBytes
+			},
+			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
+				txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+				feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+				txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
+				feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+				// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
+
+				if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
+					return true
+				}
+				return false
+			},
 		},
-		assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
-			txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
-			feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-			txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
-			feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
-
-			// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
-
-			if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
-				return true
-			}
-			return false
-
-		},
-	},
 		{
 			name: "msg response with nil data",
 			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
@@ -1557,7 +1556,6 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 					return true
 				}
 				return false
-
 			},
 		},
 	}
@@ -1602,52 +1600,50 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 			s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
 
 			s.Require().True(test.assertStatements(ctx, app))
-
 		})
 	}
 }
 
 func (s *KeeperTestSuite) Test_v046Callback() {
-
 	tests := []struct {
 		name             string
 		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any)
 		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
-	}{{
-		name: "msg response with some data",
-		setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
-			app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
-			sender := utils.GenerateAccAddressForTest()
-			senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
-			transferMsg := ibctransfertypes.MsgTransfer{
-				SourcePort:    "transfer",
-				SourceChannel: "channel-0",
-				Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
-				Sender:        senderAddr,
-				Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
-			}
-			response := ibctransfertypes.MsgTransferResponse{
-				Sequence: 1,
-			}
+	}{
+		{
+			name: "msg response with some data",
+			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
+				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				sender := utils.GenerateAccAddressForTest()
+				senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				transferMsg := ibctransfertypes.MsgTransfer{
+					SourcePort:    "transfer",
+					SourceChannel: "channel-0",
+					Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
+					Sender:        senderAddr,
+					Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+				}
+				response := ibctransfertypes.MsgTransferResponse{
+					Sequence: 1,
+				}
 
-			anyresponse, _ := codectypes.NewAnyWithValue(&response)
-			return []sdk.Msg{&transferMsg}, anyresponse
+				anyresponse, _ := codectypes.NewAnyWithValue(&response)
+				return []sdk.Msg{&transferMsg}, anyresponse
+			},
+			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
+				txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+				feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+				txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
+				feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+				// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
+
+				if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
+					return true
+				}
+				return false
+			},
 		},
-		assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
-			txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
-			feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-			txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
-			feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
-
-			// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
-
-			if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
-				return true
-			}
-			return false
-
-		},
-	},
 		{
 			name: "msg response with nil data",
 			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
@@ -1676,7 +1672,6 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 					return true
 				}
 				return false
-
 			},
 		},
 	}
@@ -1721,7 +1716,6 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 			s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
 
 			s.Require().True(test.assertStatements(ctx, app))
-
 		})
 	}
 }

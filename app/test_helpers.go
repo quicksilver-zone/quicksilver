@@ -9,7 +9,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -26,9 +25,13 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
-type GenesisState map[string]json.RawMessage
-
+// EmptyAppOptions is a stub implementing AppOptions
 type EmptyAppOptions struct{}
+
+// Get implements AppOptions
+func (ao EmptyAppOptions) Get(o string) interface{} {
+	return nil
+}
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // Quicksilver testing.
@@ -81,13 +84,13 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		5,
 		MakeEncodingConfig(),
 		wasm.EnableAllProposals,
-		simapp.EmptyAppOptions{},
-		GetWasmOpts(simapp.EmptyAppOptions{}),
+		EmptyAppOptions{},
+		GetWasmOpts(EmptyAppOptions{}),
 		false,
 	)
 
 	genesisState := NewDefaultGenesisState()
-	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState = GenesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	if !isCheckTx {
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -128,14 +131,15 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 		5,
 		MakeEncodingConfig(),
 		wasm.EnableAllProposals,
-		simapp.EmptyAppOptions{},
-		GetWasmOpts(simapp.EmptyAppOptions{}),
+		EmptyAppOptions{},
+		GetWasmOpts(EmptyAppOptions{}),
 		true, // set mock state to true
 	)
 	return app, NewDefaultGenesisState()
 }
 
-func genesisStateWithValSet(t *testing.T,
+// GenesisStateWithValSet creates a quicksilver genesis state with the given validator set.
+func GenesisStateWithValSet(t *testing.T,
 	app *Quicksilver, genesisState GenesisState,
 	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,

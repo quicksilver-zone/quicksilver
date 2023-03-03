@@ -22,11 +22,10 @@ var (
 	FlagCommitValue             bool
 	FlagOnOperationValue        bool // TODO: Remove in favor of binary search for invariant violation
 	FlagAllInvariantsValue      bool
-
-	FlagEnabledValue     bool
-	FlagVerboseValue     bool
-	FlagPeriodValue      uint
-	FlagGenesisTimeValue int64
+	FlagEnabledValue            bool
+	FlagVerboseValue            bool
+	FlagPeriodValue             uint
+	FlagGenesisTimeValue        int64
 )
 
 // GetSimulatorFlags gets the values of all the available simulation flags

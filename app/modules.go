@@ -148,8 +148,8 @@ func appModules(
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
@@ -180,7 +180,6 @@ func simulationModules(
 	encodingConfig EncodingConfig,
 ) []module.AppModuleSimulation {
 	appCodec := encodingConfig.Marshaler
-
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	return []module.AppModuleSimulation{
@@ -189,8 +188,8 @@ func simulationModules(
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
 		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
+		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
+		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, *app.StakingKeeper),
 		staking.NewAppModule(appCodec, *app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		params.NewAppModule(app.ParamsKeeper),
@@ -201,15 +200,15 @@ func simulationModules(
 		app.TransferModule,
 		app.ICAModule,
 		// Quicksilver app modules
-		// mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, app.BankKeeper),
-		// claimsmanager.NewAppModule(appCodec, app.ClaimsManagerKeeper),
+		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, app.BankKeeper),
+		claimsmanager.NewAppModule(appCodec, app.ClaimsManagerKeeper),
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper),
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
-		// participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
-		// airdrop.NewAppModule(appCodec, app.AirdropKeeper),
-		// tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
+		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
+		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
+		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
+		// wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
 	}
 }
 

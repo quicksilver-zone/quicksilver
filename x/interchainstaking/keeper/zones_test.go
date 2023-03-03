@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
@@ -30,8 +29,8 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		5,
 		app.MakeEncodingConfig(),
 		wasm.EnableAllProposals,
-		simapp.EmptyAppOptions{},
-		app.GetWasmOpts(simapp.EmptyAppOptions{}),
+		app.EmptyAppOptions{},
+		app.GetWasmOpts(app.EmptyAppOptions{}),
 		true,
 	)
 }
