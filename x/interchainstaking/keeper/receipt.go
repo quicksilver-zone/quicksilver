@@ -106,8 +106,6 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 		return errors.New("zero redemption rate")
 	}
 
-	var err error
-
 	outCoins := sdk.Coins{}
 	for _, inCoin := range inCoins.Sort() {
 		outAmount := sdk.NewDecFromInt(inCoin.Amount).Quo(zone.RedemptionRate).TruncateInt()
@@ -115,7 +113,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 		outCoins = outCoins.Add(outCoin)
 	}
 	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", outCoins)
-	err = k.BankKeeper.MintCoins(ctx, types.ModuleName, outCoins)
+	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, outCoins)
 	if err != nil {
 		return err
 	}
