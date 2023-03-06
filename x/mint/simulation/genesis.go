@@ -3,8 +3,9 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"math/rand"
+
+	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"

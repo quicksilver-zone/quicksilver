@@ -13,7 +13,7 @@ import (
 
 // RandomizedGenState generates a random GenesisState for interchainstaking
 func RandomizedGenState(simState *module.SimulationState) {
-	var zones = []types.Zone{
+	zones := []types.Zone{
 		{
 			ConnectionId:    "connection-77001",
 			ChainId:         "cosmoshub-4",

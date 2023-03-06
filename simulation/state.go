@@ -3,13 +3,15 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"io"
 	"math/rand"
 	"os"
 	"time"
+
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+
+	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"

@@ -11,7 +11,6 @@ import (
 
 // RandomizedGenState generates a random GenesisState for interchainquery
 func RandomizedGenState(simState *module.SimulationState) {
-
 	icqGenesis := &types.GenesisState{
 		Queries: []types.Query{},
 	}
