@@ -28,6 +28,9 @@ const (
 	DisplayDenom = "Quicksilver"
 	// BaseDenom defines to the default denomination used in Quicksilver (staking, EVN, governance, etc)
 	BaseDenom = "qck"
+
+	// DefaultBondDenom is the default bond denomination for Quicksilver.
+	DefaultBondDenom = "uqck"
 )
 
 // SetBech32Prefixes sets the global prefixes to be used when serializing addresses and public keys to Bech32 strings.

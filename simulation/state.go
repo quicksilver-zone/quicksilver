@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"io"
 	"math/rand"
 	"os"
@@ -88,6 +89,10 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		if err != nil {
 			panic(err)
 		}
+
+		// modify bond denom
+		stakingState.Params.BondDenom = appconfig.DefaultBondDenom
+
 		// compute not bonded balance
 		notBondedTokens := sdk.ZeroInt()
 		for _, val := range stakingState.Validators {
@@ -111,12 +116,20 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 
 		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
 		var found bool
-		for _, balance := range bankState.Balances {
+		var newSupply sdk.Coins
+		for i, balance := range bankState.Balances {
 			if balance.Address == stakingAddr {
 				found = true
-				break
 			}
+
+			// increase supply
+			bankState.Balances[i] = modifyGenesisBalance(r, balance, sdk.DefaultBondDenom, stakingState.Params.BondDenom)
+			newSupply.Add(bankState.Balances[i].Coins...)
 		}
+
+		// set new supply
+		bankState.Supply = newSupply
+
 		if !found {
 			bankState.Balances = append(bankState.Balances, banktypes.Balance{
 				Address: stakingAddr,
@@ -135,6 +148,34 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		}
 		return appState, simAccs, chainID, genesisTimestamp
 	}
+}
+
+var denoms = []string{"uqatom", "uqosmo", "uqjunox"}
+
+func randQAssetBalaces(r *rand.Rand, balance banktypes.Balance) (banktypes.Balance, sdk.Coins) {
+	// do not add qassets for some accounts
+	if r.Intn(100)%5 == 0 {
+		return balance, sdk.NewCoins()
+	}
+
+	denom := denoms[r.Intn(len(denoms))]
+	amount := sdk.NewInt(1_000_000_000 + r.Int63n(1_000_000_000_000))
+
+	newCoins := sdk.NewCoins(sdk.NewCoin(denom, amount))
+	balance.Coins = balance.Coins.Add(newCoins...)
+
+	return balance, newCoins
+}
+
+func modifyGenesisBalance(r *rand.Rand, balance banktypes.Balance, oldBond, newBond string) banktypes.Balance {
+	amt := balance.Coins.AmountOf(oldBond)
+	if amt.IsPositive() {
+		balance.Coins = sdk.NewCoins(sdk.NewCoin(newBond, amt))
+	}
+
+	balance, _ = randQAssetBalaces(r, balance)
+
+	return balance
 }
 
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
