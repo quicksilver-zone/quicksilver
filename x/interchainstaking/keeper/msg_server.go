@@ -35,27 +35,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unbonding is currently disabled")
 	}
 
-	if msg.Value.IsNil() {
-		return nil, errors.New("cannot redeem nil-value coins")
-	}
-
-	// validate coins are positive
-	err := msg.Value.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	if msg.Value.IsZero() {
-		return nil, errors.New("cannot redeem zero-value coins")
-	}
-
-	// validate recipient address
-	if len(msg.DestinationAddress) == 0 {
-		return nil, errors.New("recipient address not provided")
-	}
-
 	var zone *types.Zone
-
 	k.IterateZones(ctx, func(_ int64, thisZone *types.Zone) bool {
 		if thisZone.LocalDenom == msg.Value.GetDenom() {
 			zone = thisZone
@@ -78,10 +58,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("destination address %s does not match expected prefix %s [%w]", msg.DestinationAddress, zone.AccountPrefix, err)
 	}
 
-	sender, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		return nil, err
-	}
+	sender, _ := sdk.AccAddressFromBech32(msg.FromAddress) // already validated
 
 	// does the user have sufficient assets to burn
 	if !k.BankKeeper.HasBalance(ctx, sender, msg.Value) {
@@ -110,11 +87,11 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	if zone.LiquidityModule {
-		if err = k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
 			return nil, err
 		}
 	} else {
-		if err = k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+		if err := k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
 			return nil, err
 		}
 	}

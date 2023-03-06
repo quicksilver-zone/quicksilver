@@ -39,23 +39,30 @@ func (msg MsgRequestRedemption) Type() string { return TypeMsgRequestRedemption 
 
 // ValidateBasic Implements Msg.
 func (msg MsgRequestRedemption) ValidateBasic() error {
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 
 	// check from address
 	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
-		errors["FromAddress"] = err
+		errs["FromAddress"] = err
 	}
 
 	// check coin
 	if msg.Value.IsNil() || msg.Value.Amount.IsNil() {
-		errors["Value"] = ErrCoinAmountNil
+		errs["Value"] = ErrCoinAmountNil
 	} else if err = msg.Value.Validate(); err != nil {
-		errors["Value"] = err
+		errs["Value"] = err
+	} else if msg.Value.IsZero() {
+		errs["Value"] = errors.New("cannot redeem zero-value coins")
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	// validate recipient address
+	if len(msg.DestinationAddress) == 0 {
+		errs["DestinationAddress"] = errors.New("recipient address not provided")
+	}
+
+	if len(errs) > 0 {
+		return multierror.New(errs)
 	}
 
 	return nil
