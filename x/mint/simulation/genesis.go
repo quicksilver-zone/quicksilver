@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -96,7 +97,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { mintintRewardsDistributionStartEpoch = genMintintRewardsDistributionStartEpoch(r) },
 	)
 
-	mintDenom := sdk.DefaultBondDenom
+	mintDenom := appconfig.DefaultBondDenom
 
 	minter := types.Minter{EpochProvisions: epochProvisions}
 	params := types.Params{

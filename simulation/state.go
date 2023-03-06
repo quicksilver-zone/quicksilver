@@ -3,6 +3,8 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"io"
 	"math/rand"
@@ -142,9 +144,23 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			})
 		}
 
+		govStateBz, ok := rawState[govtypes.ModuleName]
+		if !ok {
+			panic("gov genesis state is missing")
+		}
+		govState := new(govv1.GenesisState)
+		err = cdc.UnmarshalJSON(govStateBz, govState)
+		if err != nil {
+			panic(err)
+		}
+
+		minDep := sdk.NewCoins(govState.DepositParams.MinDeposit...)
+		govState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(stakingState.Params.BondDenom, minDep.AmountOf(sdk.DefaultBondDenom)))
+
 		// change appState back
 		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
 		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+		rawState[govtypes.ModuleName] = cdc.MustMarshalJSON(govState)
 
 		// replace appstate
 		appState, err = json.Marshal(rawState)
