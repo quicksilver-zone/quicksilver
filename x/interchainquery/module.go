@@ -5,21 +5,18 @@ import (
 	"encoding/json"
 	"math/rand"
 
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-
+	"github.com/ingenuity-build/quicksilver/x/interchainquery/simulation"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
@@ -170,7 +167,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // GenerateGenesisState creates a randomized GenState of the pool-incentives module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	// simulation.RandomizedGenState(simState)
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.

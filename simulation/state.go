@@ -114,6 +114,11 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			panic(err)
 		}
 
+		bankState.Params.DefaultSendEnabled = true
+		bankState.Params.SendEnabled = banktypes.SendEnabledParams{
+			banktypes.NewSendEnabled(stakingState.Params.BondDenom, true),
+		}
+
 		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
 		var found bool
 		var newSupply sdk.Coins
