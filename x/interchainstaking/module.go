@@ -139,7 +139,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	// WILL NOT expose gRPC services, and that QueryServer WILL expose gRPC
 	// services;
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), &am.keeper)
 }
 
 // RegisterInvariants registers the capability module's invariants.

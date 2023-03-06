@@ -56,9 +56,9 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	var zone *types.Zone
 
-	k.IterateZones(ctx, func(_ int64, thisZone types.Zone) bool {
+	k.IterateZones(ctx, func(_ int64, thisZone *types.Zone) bool {
 		if thisZone.LocalDenom == msg.Value.GetDenom() {
-			zone = &thisZone
+			zone = thisZone
 			return true
 		}
 		return false
@@ -110,11 +110,11 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	if zone.LiquidityModule {
-		if err = k.processRedemptionForLsm(ctx, *zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+		if err = k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
 			return nil, err
 		}
 	} else {
-		if err = k.queueRedemption(ctx, *zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+		if err = k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
 			return nil, err
 		}
 	}
@@ -161,7 +161,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 		Intents:   intents,
 	}
 
-	k.SetIntent(ctx, zone, intent, false)
+	k.SetIntent(ctx, &zone, intent, false)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -178,7 +178,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	return &types.MsgSignalIntentResponse{}, nil
 }
 
-// GovReopenChannel reopens an ICA channel
+// GovReopenChannel reopens an ICA channel.
 func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -224,7 +224,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 	return &types.MsgGovReopenChannelResponse{}, nil
 }
 
-// GovCloseChannel reopens an ICA channel
+// GovCloseChannel closes an ICA channel.
 func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovCloseChannel) (*types.MsgGovCloseChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

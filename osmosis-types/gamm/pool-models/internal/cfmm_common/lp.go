@@ -4,11 +4,9 @@ import (
 	"errors"
 
 	sdkioerrors "cosmossdk.io/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-
 	"github.com/ingenuity-build/quicksilver/osmosis-types/osmoutils"
 )
 

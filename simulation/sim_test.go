@@ -29,6 +29,7 @@ func init() {
 func interBlockCacheOpt() func(*baseapp.BaseApp) {
 	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
+
 func BenchmarkSimulation(b *testing.B) {
 	simulation.FlagVerboseValue = true
 	simulation.FlagOnOperationValue = true

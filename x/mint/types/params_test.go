@@ -10,7 +10,6 @@ import (
 )
 
 func TestParamsValidate(t *testing.T) {
-
 	tests := []struct {
 		name    string
 		params  types.Params

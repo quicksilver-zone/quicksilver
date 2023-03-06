@@ -22,7 +22,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	ics "github.com/ingenuity-build/quicksilver/x/interchainstaking"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -175,13 +174,13 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		// refetch the zone for each validator, else we end up with an empty valset each time!
 		zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 		suite.Require().True(found)
-		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
+		suite.Require().NoError(qApp.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&val)))
 	}
 
 	for _, val := range suite.GetQuicksilverApp(suite.chainA).StakingKeeper.GetBondedValidatorsByPower(suite.chainA.GetContext()) {
 		zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainA.ChainID)
 		suite.Require().True(found)
-		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
+		suite.Require().NoError(qApp.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&val)))
 	}
 
 	// self zone
@@ -504,7 +503,7 @@ func (suite *KeeperTestSuite) addIntent(address string, zone icstypes.Zone, inte
 		Delegator: address,
 		Intents:   intents,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetIntent(suite.chainA.GetContext(), zone, intent, false)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetIntent(suite.chainA.GetContext(), &zone, intent, false)
 }
 
 func (suite *KeeperTestSuite) setupTestClaims() {

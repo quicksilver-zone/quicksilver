@@ -6,7 +6,9 @@ import (
 	"strconv"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
@@ -15,7 +17,7 @@ import (
 )
 
 // HandleRegisterZoneProposal is a handler for executing a passed community spend proposal
-func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZoneProposal) error {
+func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZoneProposal) error {
 	// get chain id from connection
 	chainID, err := k.GetChainID(ctx, p.ConnectionId)
 	if err != nil {
@@ -47,7 +49,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		return errors.New("client state is not active")
 	}
 
-	zone := types.Zone{
+	zone := &types.Zone{
 		ChainId:            chainID,
 		ConnectionId:       p.ConnectionId,
 		LocalDenom:         p.LocalDenom,
@@ -62,7 +64,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		Decimals:           p.Decimals,
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 	}
-	k.SetZone(ctx, &zone)
+	k.SetZone(ctx, zone)
 
 	// generate deposit account
 	portOwner := chainID + ".deposit"
@@ -88,7 +90,9 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 		return err
 	}
 
-	err = k.EmitValsetRequery(ctx, p.ConnectionId, chainID)
+	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	query := stakingTypes.QueryValidatorsRequest{}
+	err = k.EmitValSetQuery(ctx, zone, query, sdkmath.NewInt(period))
 	if err != nil {
 		return err
 	}
@@ -108,7 +112,7 @@ func HandleRegisterZoneProposal(ctx sdk.Context, k Keeper, p *types.RegisterZone
 	return nil
 }
 
-func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, portOwner string) error {
+func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, portOwner string) error {
 	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionID, portOwner, ""); err != nil { // todo: add version
 		return err
 	}
@@ -119,7 +123,7 @@ func (k Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, 
 }
 
 // HandleUpdateZoneProposal is a handler for executing a passed community spend proposal
-func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProposal) error {
+func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZoneProposal) error {
 	zone, found := k.GetZone(ctx, p.ChainId)
 	if !found {
 		err := fmt.Errorf("unable to get registered zone for chain id: %s", p.ChainId)
@@ -232,7 +236,9 @@ func HandleUpdateZoneProposal(ctx sdk.Context, k Keeper, p *types.UpdateZoneProp
 				return err
 			}
 
-			err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+			query := stakingTypes.QueryValidatorsRequest{}
+			err := k.EmitValSetQuery(ctx, &zone, query, sdkmath.NewInt(period))
 			if err != nil {
 				return err
 			}

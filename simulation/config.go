@@ -22,11 +22,10 @@ var (
 	FlagCommitValue             bool
 	FlagOnOperationValue        bool // TODO: Remove in favor of binary search for invariant violation
 	FlagAllInvariantsValue      bool
-
-	FlagEnabledValue     bool
-	FlagVerboseValue     bool
-	FlagPeriodValue      uint
-	FlagGenesisTimeValue int64
+	FlagEnabledValue            bool
+	FlagVerboseValue            bool
+	FlagPeriodValue             uint
+	FlagGenesisTimeValue        int64
 )
 
 // GetSimulatorFlags gets the values of all the available simulation flags
@@ -46,8 +45,6 @@ func GetSimulatorFlags() {
 	flag.BoolVar(&FlagCommitValue, "Commit", false, "have the simulation commit")
 	flag.BoolVar(&FlagOnOperationValue, "SimulateEveryOperation", false, "run slow invariants every operation")
 	flag.BoolVar(&FlagAllInvariantsValue, "PrintAllInvariants", false, "print all invariants if a broken invariant is found")
-
-	// simulation flags
 	flag.BoolVar(&FlagEnabledValue, "Enabled", false, "enable the simulation")
 	flag.BoolVar(&FlagVerboseValue, "Verbose", false, "verbose log output")
 	flag.UintVar(&FlagPeriodValue, "Period", 0, "run slow invariants only once every period assertions")
