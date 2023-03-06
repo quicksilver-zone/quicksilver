@@ -154,11 +154,11 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			}
 
 			// increase supply
-			var addIntent bool
+			var addIntent bool //nolint:staticcheck
 			bankState.Balances[i], addIntent = modifyGenesisBalance(r, balance, sdk.DefaultBondDenom, stakingState.Params.BondDenom)
 			newSupply.Add(bankState.Balances[i].Coins...)
-			if addIntent {
-				// do something
+			if addIntent { //nolint:staticcheck
+				// add intents
 			}
 		}
 

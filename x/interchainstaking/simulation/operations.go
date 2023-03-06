@@ -86,7 +86,7 @@ func SimulateMsgRequestRedemption(ak types.AccountKeeper, bk types.BankKeeper, k
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgRequestRedemption, "could not find acc with q asset"), nil, nil
 		}
 
-		amt := sdk.NewInt(rand.Int63n(balance.Amount.Int64()))
+		amt := sdk.NewInt(r.Int63n(balance.Amount.Int64()))
 		value := sdk.NewCoin(balance.Denom, amt)
 
 		var zone *types.Zone
