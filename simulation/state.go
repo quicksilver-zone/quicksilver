@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"io"
 	"math/rand"
 	"os"
@@ -118,6 +119,26 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			panic(err)
 		}
 
+		icsStateBz, ok := rawState[interchainstakingtypes.ModuleName]
+		if !ok {
+			panic("interchainstaking genesis state is missing")
+		}
+		icsState := new(interchainstakingtypes.GenesisState)
+		err = cdc.UnmarshalJSON(icsStateBz, icsState)
+		if err != nil {
+			panic(err)
+		}
+
+		govStateBz, ok := rawState[govtypes.ModuleName]
+		if !ok {
+			panic("gov genesis state is missing")
+		}
+		govState := new(govv1.GenesisState)
+		err = cdc.UnmarshalJSON(govStateBz, govState)
+		if err != nil {
+			panic(err)
+		}
+
 		bankState.Params.DefaultSendEnabled = true
 		bankState.Params.SendEnabled = banktypes.SendEnabledParams{
 			banktypes.NewSendEnabled(stakingState.Params.BondDenom, true),
@@ -132,11 +153,11 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			}
 
 			// increase supply
-			var addDeposit bool
-			bankState.Balances[i], addDeposit = modifyGenesisBalance(r, balance, sdk.DefaultBondDenom, stakingState.Params.BondDenom)
+			var addIntent bool
+			bankState.Balances[i], addIntent = modifyGenesisBalance(r, balance, sdk.DefaultBondDenom, stakingState.Params.BondDenom)
 			newSupply.Add(bankState.Balances[i].Coins...)
-			if addDeposit {
-
+			if addIntent {
+				// do something
 			}
 		}
 
@@ -150,16 +171,6 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			})
 		}
 
-		govStateBz, ok := rawState[govtypes.ModuleName]
-		if !ok {
-			panic("gov genesis state is missing")
-		}
-		govState := new(govv1.GenesisState)
-		err = cdc.UnmarshalJSON(govStateBz, govState)
-		if err != nil {
-			panic(err)
-		}
-
 		minDep := sdk.NewCoins(govState.DepositParams.MinDeposit...)
 		govState.DepositParams.MinDeposit = sdk.NewCoins(sdk.NewCoin(stakingState.Params.BondDenom, minDep.AmountOf(sdk.DefaultBondDenom)))
 
@@ -167,6 +178,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
 		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
 		rawState[govtypes.ModuleName] = cdc.MustMarshalJSON(govState)
+		rawState[interchainstakingtypes.ModuleName] = cdc.MustMarshalJSON(icsState)
 
 		// replace appstate
 		appState, err = json.Marshal(rawState)
@@ -177,9 +189,9 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 	}
 }
 
-var denoms = []string{"uqatom", "uqosmo", "uqjunox"}
-
 func randQAssetBalaces(r *rand.Rand, balance banktypes.Balance) (banktypes.Balance, bool) {
+	var denoms = []string{"uqatom", "uqosmo", "uqjunox"}
+
 	// do not add qassets for some accounts
 	if r.Intn(100)%5 == 0 {
 		return balance, false

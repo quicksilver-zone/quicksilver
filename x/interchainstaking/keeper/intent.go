@@ -70,7 +70,7 @@ func (k *Keeper) IterateIntents(ctx sdk.Context, zone *types.Zone, snapshot bool
 
 // AllIntents returns every intent in the store for the specified zone
 func (k *Keeper) AllIntents(ctx sdk.Context, zone *types.Zone, snapshot bool) []types.DelegatorIntent {
-	intents := []types.DelegatorIntent{}
+	var intents []types.DelegatorIntent
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		intents = append(intents, intent)
 		return false
@@ -80,7 +80,7 @@ func (k *Keeper) AllIntents(ctx sdk.Context, zone *types.Zone, snapshot bool) []
 
 // AllIntentsAsPointer returns every intent in the store for the specified zone
 func (k *Keeper) AllIntentsAsPointer(ctx sdk.Context, zone *types.Zone, snapshot bool) []*types.DelegatorIntent {
-	intents := []*types.DelegatorIntent{}
+	var intents []*types.DelegatorIntent
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		intents = append(intents, &intent)
 		return false
