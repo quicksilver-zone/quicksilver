@@ -132,8 +132,12 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			}
 
 			// increase supply
-			bankState.Balances[i] = modifyGenesisBalance(r, balance, sdk.DefaultBondDenom, stakingState.Params.BondDenom)
+			var addDeposit bool
+			bankState.Balances[i], addDeposit = modifyGenesisBalance(r, balance, sdk.DefaultBondDenom, stakingState.Params.BondDenom)
 			newSupply.Add(bankState.Balances[i].Coins...)
+			if addDeposit {
+
+			}
 		}
 
 		// set new supply
@@ -175,10 +179,10 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 
 var denoms = []string{"uqatom", "uqosmo", "uqjunox"}
 
-func randQAssetBalaces(r *rand.Rand, balance banktypes.Balance) (banktypes.Balance, sdk.Coins) {
+func randQAssetBalaces(r *rand.Rand, balance banktypes.Balance) (banktypes.Balance, bool) {
 	// do not add qassets for some accounts
 	if r.Intn(100)%5 == 0 {
-		return balance, sdk.NewCoins()
+		return balance, false
 	}
 
 	denom := denoms[r.Intn(len(denoms))]
@@ -187,18 +191,16 @@ func randQAssetBalaces(r *rand.Rand, balance banktypes.Balance) (banktypes.Balan
 	newCoins := sdk.NewCoins(sdk.NewCoin(denom, amount))
 	balance.Coins = balance.Coins.Add(newCoins...)
 
-	return balance, newCoins
+	return balance, true
 }
 
-func modifyGenesisBalance(r *rand.Rand, balance banktypes.Balance, oldBond, newBond string) banktypes.Balance {
+func modifyGenesisBalance(r *rand.Rand, balance banktypes.Balance, oldBond, newBond string) (banktypes.Balance, bool) {
 	amt := balance.Coins.AmountOf(oldBond)
 	if amt.IsPositive() {
 		balance.Coins = sdk.NewCoins(sdk.NewCoin(newBond, amt))
 	}
 
-	balance, _ = randQAssetBalaces(r, balance)
-
-	return balance
+	return randQAssetBalaces(r, balance)
 }
 
 // AppStateRandomizedFn creates calls each module's GenesisState generator function

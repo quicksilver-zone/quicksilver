@@ -147,10 +147,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	}
 
 	// validate intents (aggregated errors)
-	intents, err := types.IntentsFromString(msg.Intents)
-	if err != nil {
-		return nil, err
-	}
+	intents, _ := types.IntentsFromString(msg.Intents) // already validated
 
 	if err := k.validateIntents(zone, intents); err != nil {
 		return nil, err

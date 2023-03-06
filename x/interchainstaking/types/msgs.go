@@ -93,7 +93,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 		return nil, errors.New("invalid intents string")
 	}
 
-	out := []*ValidatorIntent{}
+	var out []*ValidatorIntent
 
 	wsum := sdk.ZeroDec()
 	istrs := strings.Split(input, ",")
