@@ -2,8 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
@@ -87,8 +85,6 @@ func (server msgServer) Burn(goCtx context.Context, msg *types.MsgBurn) (*types.
 	if msg.Sender != authorityMetadata.GetAdmin() {
 		return nil, types.ErrUnauthorized
 	}
-
-	fmt.Println(msg.Amount)
 
 	err = server.Keeper.burnFrom(ctx, msg.Amount, msg.Sender)
 	if err != nil {
