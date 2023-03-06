@@ -15,31 +15,34 @@ import (
 func RandomizedGenState(simState *module.SimulationState) {
 	zones := []types.Zone{
 		{
-			ConnectionId:    "connection-77001",
-			ChainId:         "cosmoshub-4",
-			AccountPrefix:   "cosmos",
-			LocalDenom:      "uqatom",
-			BaseDenom:       "uatom",
-			MultiSend:       false,
-			LiquidityModule: false,
+			ConnectionId:     "connection-77001",
+			ChainId:          "cosmoshub-4",
+			AccountPrefix:    "cosmos",
+			LocalDenom:       "uqatom",
+			BaseDenom:        "uatom",
+			MultiSend:        false,
+			LiquidityModule:  false,
+			UnbondingEnabled: true,
 		},
 		{
-			ConnectionId:    "connection-77002",
-			ChainId:         "osmosis-1",
-			AccountPrefix:   "osmo",
-			LocalDenom:      "uqosmo",
-			BaseDenom:       "uosmo",
-			MultiSend:       false,
-			LiquidityModule: true,
+			ConnectionId:     "connection-77002",
+			ChainId:          "osmosis-1",
+			AccountPrefix:    "osmo",
+			LocalDenom:       "uqosmo",
+			BaseDenom:        "uosmo",
+			MultiSend:        false,
+			LiquidityModule:  false,
+			UnbondingEnabled: true,
 		},
 		{
-			ConnectionId:    "connection-77003",
-			ChainId:         "uni-5",
-			AccountPrefix:   "juno",
-			LocalDenom:      "uqjunox",
-			BaseDenom:       "ujunox",
-			MultiSend:       false,
-			LiquidityModule: true,
+			ConnectionId:     "connection-77003",
+			ChainId:          "uni-5",
+			AccountPrefix:    "juno",
+			LocalDenom:       "uqjunox",
+			BaseDenom:        "ujunox",
+			MultiSend:        false,
+			LiquidityModule:  false,
+			UnbondingEnabled: true,
 		},
 	}
 
@@ -53,8 +56,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 		z.Validators = append(z.Validators, &types.Validator{ValoperAddress: z.AccountPrefix + "valoper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded})
 	}
 
+	params := types.DefaultParams()
+	params.UnbondingEnabled = true
+
 	icsGenesis := &types.GenesisState{
-		Params:                 types.DefaultParams(),
+		Params:                 params,
 		Zones:                  zones,
 		Receipts:               nil,
 		Delegations:            nil,

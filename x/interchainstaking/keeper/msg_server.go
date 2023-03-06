@@ -55,7 +55,6 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	var zone *types.Zone
-
 	k.IterateZones(ctx, func(_ int64, thisZone *types.Zone) bool {
 		if thisZone.LocalDenom == msg.Value.GetDenom() {
 			zone = thisZone
@@ -85,7 +84,8 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 
 	// does the user have sufficient assets to burn
 	if !k.BankKeeper.HasBalance(ctx, sender, msg.Value) {
-		return nil, errors.New("account has insufficient balance of qasset to burn")
+		amt := k.BankKeeper.GetBalance(ctx, sender, msg.Value.GetDenom())
+		return nil, fmt.Errorf("account has insufficient balance of qasset to burn: balance %s, burnAmount %s", msg.Value, amt)
 	}
 
 	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
