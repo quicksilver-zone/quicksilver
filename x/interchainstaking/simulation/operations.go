@@ -2,11 +2,12 @@ package simulation
 
 import (
 	"errors"
+	"math/rand"
+
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/ingenuity-build/quicksilver/simulation/simtypes"
 	"github.com/ingenuity-build/quicksilver/utils"
-	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

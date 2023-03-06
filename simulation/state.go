@@ -3,11 +3,12 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
-	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"io"
 	"math/rand"
 	"os"
 	"time"
+
+	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -190,7 +191,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 }
 
 func randQAssetBalaces(r *rand.Rand, balance banktypes.Balance) (banktypes.Balance, bool) {
-	var denoms = []string{"uqatom", "uqosmo", "uqjunox"}
+	denoms := []string{"uqatom", "uqosmo", "uqjunox"}
 
 	// do not add qassets for some accounts
 	if r.Intn(100)%5 == 0 {
