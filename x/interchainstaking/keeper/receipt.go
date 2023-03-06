@@ -119,8 +119,11 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 	}
 
 	if zone.ReturnToSender {
-		var srcPort string
-		var srcChannel string
+		var (
+			srcPort    string
+			srcChannel string
+		)
+
 		k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
 			if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == transferPort && channel.State == channeltypes.OPEN {
 				srcChannel = channel.Counterparty.ChannelId
