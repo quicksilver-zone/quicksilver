@@ -21,7 +21,7 @@ var (
 	chainB      *ibctesting.TestChain
 	path        *ibctesting.Path
 
-	testAddress sdk.AccAddress = utils.GenerateAccAddressForTest()
+	testAddress sdk.AccAddress = utils.GenerateAccAddressForTest(r)
 )
 
 func init() {

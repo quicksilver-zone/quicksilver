@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"crypto/rand"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,43 +55,43 @@ func ValAddressFromBech32(address string, checkHRP string) (addr sdk.ValAddress,
 		return nil, err
 	}
 
-	return sdk.ValAddress(bz), nil
+	return bz, nil
 }
 
-func GenerateAccAddressForTest() sdk.AccAddress {
+func GenerateAccAddressForTest(r *rand.Rand) sdk.AccAddress {
 	size := 32 // change the length of the generated random string here
 
 	rb := make([]byte, size)
-	_, err := rand.Read(rb)
+	_, err := r.Read(rb)
 	if err != nil {
 		panic(err)
 	}
 
-	return sdk.AccAddress(rb)
+	return rb
 }
 
-func GenerateValAddressForTest() sdk.ValAddress {
+func GenerateValAddressForTest(r *rand.Rand) sdk.ValAddress {
 	size := 32 // change the length of the generated random string here
 
 	rb := make([]byte, size)
-	_, err := rand.Read(rb)
+	_, err := r.Read(rb)
 	if err != nil {
 		panic(err)
 	}
 
-	return sdk.ValAddress(rb)
+	return rb
 }
 
-func GenerateValAddressForTestWithPrefix(hrp string) string {
-	addr, err := bech32.ConvertAndEncode(hrp, GenerateValAddressForTest())
+func GenerateValAddressForTestWithPrefix(r *rand.Rand, hrp string) string {
+	addr, err := bech32.ConvertAndEncode(hrp, GenerateValAddressForTest(r))
 	if err != nil {
 		panic(err)
 	}
 	return addr
 }
 
-func GenerateAccAddressForTestWithPrefix(hrp string) string {
-	addr, err := bech32.ConvertAndEncode(hrp, GenerateAccAddressForTest())
+func GenerateAccAddressForTestWithPrefix(r *rand.Rand, hrp string) string {
+	addr, err := bech32.ConvertAndEncode(hrp, GenerateAccAddressForTest(r))
 	if err != nil {
 		panic(err)
 	}

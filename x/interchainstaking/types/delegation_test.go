@@ -43,9 +43,9 @@ func TestRoundtripDelegationMarshalToUnmarshal(t *testing.T) {
 }
 
 func TestSetForValoper(t *testing.T) {
-	v1 := utils.GenerateValAddressForTest().String()
-	v2 := utils.GenerateValAddressForTest().String()
-	v3 := utils.GenerateValAddressForTest().String()
+	v1 := utils.GenerateValAddressForTest(r).String()
+	v2 := utils.GenerateValAddressForTest(r).String()
+	v3 := utils.GenerateValAddressForTest(r).String()
 
 	intents := types.ValidatorIntents{
 		{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(10, 1)},
@@ -64,10 +64,10 @@ func TestSetForValoper(t *testing.T) {
 }
 
 func TestNormalizeValidatorIntentsDeterminism(t *testing.T) {
-	v1 := utils.GenerateValAddressForTest().String()
-	v2 := utils.GenerateValAddressForTest().String()
-	v3 := utils.GenerateValAddressForTest().String()
-	v4 := utils.GenerateValAddressForTest().String()
+	v1 := utils.GenerateValAddressForTest(r).String()
+	v2 := utils.GenerateValAddressForTest(r).String()
+	v3 := utils.GenerateValAddressForTest(r).String()
+	v4 := utils.GenerateValAddressForTest(r).String()
 
 	cases := []struct {
 		name    string
@@ -109,10 +109,10 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
 	// once sorted alphabetically on valoper.
 
-	val1 := utils.GenerateValAddressForTest()
-	val2 := utils.GenerateValAddressForTest()
-	val3 := utils.GenerateValAddressForTest()
-	val4 := utils.GenerateValAddressForTest()
+	val1 := utils.GenerateValAddressForTest(r)
+	val2 := utils.GenerateValAddressForTest(r)
+	val3 := utils.GenerateValAddressForTest(r)
+	val4 := utils.GenerateValAddressForTest(r)
 
 	tc := []struct {
 		current  map[string]sdkmath.Int

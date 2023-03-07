@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -26,7 +27,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-var testAddress = utils.GenerateAccAddressForTest().String()
+var (
+	r           = rand.New(rand.NewSource(time.Now().Unix()))
+	testAddress = utils.GenerateAccAddressForTest(r).String()
+)
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
@@ -184,10 +188,10 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	}
 
 	// self zone
-	performanceAddressOsmo := utils.GenerateAccAddressForTestWithPrefix("osmo")
+	performanceAddressOsmo := utils.GenerateAccAddressForTestWithPrefix(r, "osmo")
 	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "self", "uosmo")
 	suite.Require().NoError(err)
-	performanceAccountOsmo.WithdrawalAddress = utils.GenerateAccAddressForTestWithPrefix("osmo")
+	performanceAccountOsmo.WithdrawalAddress = utils.GenerateAccAddressForTestWithPrefix(r, "osmo")
 
 	zoneSelf := icstypes.Zone{
 		ConnectionId:       "connection-77004",
@@ -228,10 +232,10 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	qApp.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneSelf)
 
 	// cosmos zone
-	performanceAddressCosmos := utils.GenerateAccAddressForTestWithPrefix("cosmos")
+	performanceAddressCosmos := utils.GenerateAccAddressForTestWithPrefix(r, "cosmos")
 	performanceAccountCosmos, err := icstypes.NewICAAccount(performanceAddressCosmos, "cosmoshub-4.performance", "uatom")
 	suite.Require().NoError(err)
-	performanceAccountCosmos.WithdrawalAddress = utils.GenerateAccAddressForTestWithPrefix("cosmos")
+	performanceAccountCosmos.WithdrawalAddress = utils.GenerateAccAddressForTestWithPrefix(r, "cosmos")
 
 	zoneCosmos := icstypes.Zone{
 		ConnectionId:       "connection-77001",
@@ -278,9 +282,9 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		ReturnToSender:  false,
 		LiquidityModule: true,
 		PerformanceAddress: &icstypes.ICAAccount{
-			Address:           utils.GenerateAccAddressForTestWithPrefix("osmo"),
+			Address:           utils.GenerateAccAddressForTestWithPrefix(r, "osmo"),
 			PortName:          "cosmoshub-4.performance",
-			WithdrawalAddress: utils.GenerateAccAddressForTestWithPrefix("osmo"),
+			WithdrawalAddress: utils.GenerateAccAddressForTestWithPrefix(r, "osmo"),
 		},
 	}
 	qApp.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneOsmosis)
@@ -338,7 +342,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID string, connectionID st
 		return err
 	}
 
-	addr, err := bech32.ConvertAndEncode(remotePrefix, utils.GenerateAccAddressForTest())
+	addr, err := bech32.ConvertAndEncode(remotePrefix, utils.GenerateAccAddressForTest(r))
 	if err != nil {
 		return err
 	}
@@ -459,8 +463,8 @@ func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender string, has
 
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), receipt)
 
-	delegationAddress := utils.GenerateAccAddressForTestWithPrefix("cosmos")
-	validatorAddress := utils.GenerateValAddressForTestWithPrefix("cosmos")
+	delegationAddress := utils.GenerateAccAddressForTestWithPrefix(r, "cosmos")
+	validatorAddress := utils.GenerateValAddressForTestWithPrefix(r, "cosmos")
 	delegation := icstypes.Delegation{
 		DelegationAddress: delegationAddress,
 		ValidatorAddress:  validatorAddress,

@@ -339,6 +339,7 @@ SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_CI_NUM_BLOCKS ?= 125
 SIM_CI_BLOCK_SIZE ?= 50
+SIM_SEED := 1477522307588101653
 SIM_PERIOD ?= 5
 SIM_COMMIT ?= true
 SIM_TIMEOUT ?= 24h
@@ -355,7 +356,7 @@ test-sim-ci:
 	@echo "Running non-determinism test..."
 	@go test -short -mod=readonly $(PACKAGES_SIM) -run ^TestAppStateDeterminism -Enabled=true \
 		-NumBlocks=$(SIM_CI_NUM_BLOCKS) -BlockSize=$(SIM_CI_BLOCK_SIZE) -Commit=$(SIM_COMMIT) -Period=$(SIM_PERIOD) \
-		-v -timeout $(SIM_TIMEOUT)
+		-Seed=$(SIM_SEED) -v -timeout $(SIM_TIMEOUT)
 
 test-sim-custom-genesis-fast:
 	@echo "Running custom genesis simulation..."

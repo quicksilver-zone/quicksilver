@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/rand"
 	"testing"
 	"time"
 
@@ -12,7 +13,10 @@ import (
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-var testAddress = utils.GenerateAccAddressForTest().String()
+var (
+	r           = rand.New(rand.NewSource(time.Now().Unix()))
+	testAddress = utils.GenerateAccAddressForTest(r).String()
+)
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp

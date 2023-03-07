@@ -99,7 +99,7 @@ func SimulateMsgRequestRedemption(ak types.AccountKeeper, bk types.BankKeeper, k
 			return false
 		})
 
-		dest, err := bech32.ConvertAndEncode(zone.AccountPrefix, utils.GenerateAccAddressForTest())
+		dest, err := bech32.ConvertAndEncode(zone.AccountPrefix, utils.GenerateAccAddressForTest(r))
 		if err != nil {
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgRequestRedemption, "unable to generate dest account"), nil, nil
 		}

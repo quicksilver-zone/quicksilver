@@ -24,7 +24,7 @@ import (
 )
 
 func TestCoinFromRequestKey(t *testing.T) {
-	accAddr := utils.GenerateAccAddressForTest()
+	accAddr := utils.GenerateAccAddressForTest(r)
 	prefix := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
 	query := append(prefix, []byte("denom")...)
 
@@ -36,7 +36,7 @@ func TestCoinFromRequestKey(t *testing.T) {
 // ValSetCallback
 
 func (s *KeeperTestSuite) TestHandleValsetCallback() {
-	newVal := utils.GenerateValAddressForTest()
+	newVal := utils.GenerateValAddressForTest(r)
 
 	tests := []struct {
 		name   string
@@ -372,7 +372,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 }
 
 func (s *KeeperTestSuite) TestHandleValidatorCallback() {
-	newVal := utils.GenerateAccAddressForTestWithPrefix("cosmosvaloper")
+	newVal := utils.GenerateAccAddressForTestWithPrefix(r, "cosmosvaloper")
 
 	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
 	zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
@@ -739,7 +739,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 		zone.WithdrawalWaitgroup++
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		user := utils.GenerateAccAddressForTest()
+		user := utils.GenerateAccAddressForTest(r)
 
 		query := distrtypes.QueryDelegationTotalRewardsRequest{
 			DelegatorAddress: user.String(),

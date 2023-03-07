@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	user1 = utils.GenerateAccAddressForTest()
-	user2 = utils.GenerateAccAddressForTest()
+	user1 = utils.GenerateAccAddressForTest(r)
+	user2 = utils.GenerateAccAddressForTest(r)
 )
 
 func (suite *KeeperTestSuite) TestKeeper_IntentStore() {

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"math/rand"
 	"testing"
 	"time"
 
@@ -44,6 +45,8 @@ type AppTestSuite struct {
 	chainB *ibctesting.TestChain
 
 	path *ibctesting.Path
+
+	r *rand.Rand
 }
 
 func (s *AppTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *Quicksilver {
@@ -57,6 +60,8 @@ func (s *AppTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *Quicksilv
 
 // SetupTest creates a coordinator with 2 test chains.
 func (suite *AppTestSuite) SetupTest() {
+	suite.r = rand.New(rand.NewSource(time.Now().Unix()))
+
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)         // initializes 2 test chains
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1)) // convenience and readability
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2)) // convenience and readability
@@ -71,6 +76,8 @@ func (suite *AppTestSuite) SetupTest() {
 }
 
 func (suite *AppTestSuite) initTestZone() {
+	r := suite.r
+
 	// test zone
 	zone := icstypes.Zone{
 		ConnectionId:    suite.path.EndpointA.ConnectionID,
@@ -120,7 +127,7 @@ func (suite *AppTestSuite) initTestZone() {
 
 	receipt := icstypes.Receipt{
 		ChainId: "uni-5",
-		Sender:  utils.GenerateAccAddressForTest().String(),
+		Sender:  utils.GenerateAccAddressForTest(r).String(),
 		Txhash:  "TestDeposit01",
 		Amount: sdk.NewCoins(
 			sdk.NewCoin(
@@ -172,7 +179,7 @@ func (suite *AppTestSuite) initTestZone() {
 
 	wRecord := icstypes.WithdrawalRecord{
 		ChainId:   "uni-5",
-		Delegator: utils.GenerateAccAddressForTest().String(),
+		Delegator: utils.GenerateAccAddressForTest(r).String(),
 		Distribution: []*icstypes.Distribution{
 			{Valoper: "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn", Amount: 1000000},
 			{Valoper: "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed", Amount: 1000000},

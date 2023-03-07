@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/zlib"
 	"encoding/json"
+	"math/rand"
 	"testing"
 	"time"
 
@@ -44,6 +45,8 @@ type KeeperTestSuite struct {
 	chainB *ibctesting.TestChain
 
 	path *ibctesting.Path
+
+	r *rand.Rand
 }
 
 func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
@@ -57,6 +60,8 @@ func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Qu
 
 // SetupTest creates a coordinator with 2 test chains.
 func (suite *KeeperTestSuite) SetupTest() {
+	suite.r = rand.New(rand.NewSource(time.Now().Unix()))
+
 	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)         // initializes 2 test chains
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1)) // convenience and readability
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2)) // convenience and readability

@@ -116,7 +116,7 @@ func TestInvalidPaginationForQueryZones(t *testing.T) {
 
 func FuzzValsetCallback(f *testing.F) {
 	// 1. Generate the seeds.
-	newVal := utils.GenerateValAddressForTest()
+	newVal := utils.GenerateValAddressForTest(r)
 	valSetFuncs := []func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse{
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
 			new := in[0]

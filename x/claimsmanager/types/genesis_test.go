@@ -1,34 +1,31 @@
-package types
+package types_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 func TestGenesisState(t *testing.T) {
 	// test default genesis state
-	testGenesisState := GenesisState{
-		Params{},
-		nil,
-	}
-	defaultGenesisState := DefaultGenesisState()
+	testGenesisState := types.GenesisState{}
+	defaultGenesisState := types.DefaultGenesisState()
 	require.Equal(t, *defaultGenesisState, testGenesisState)
 	// test new genesis state
-	newGenesisState := NewGenesisState(
-		Params{},
+	newGenesisState := types.NewGenesisState(
+		types.Params{},
 	)
-	testGenesisState = GenesisState{
-		Params{},
-		nil,
-	}
+	testGenesisState = types.GenesisState{}
 	require.Equal(t, *newGenesisState, testGenesisState)
 }
 
 func TestGenesisState_Validate(t *testing.T) {
 	type fields struct {
-		Params Params
-		Claims []*Claim
+		Params types.Params
+		Claims []*types.Claim
 	}
 	tests := []struct {
 		name    string
@@ -43,10 +40,10 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			"invalid_claim",
 			fields{
-				Params: DefaultParams(),
-				Claims: []*Claim{
+				Params: types.DefaultParams(),
+				Claims: []*types.Claim{
 					{
-						UserAddress: GenerateAccAddressForTest().String(),
+						UserAddress: utils.GenerateAccAddressForTest(r).String(),
 						ChainId:     "testzone-1",
 						Amount:      0,
 					},
@@ -57,10 +54,10 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			"valid_claim",
 			fields{
-				Params: DefaultParams(),
-				Claims: []*Claim{
+				Params: types.DefaultParams(),
+				Claims: []*types.Claim{
 					{
-						UserAddress: GenerateAccAddressForTest().String(),
+						UserAddress: utils.GenerateAccAddressForTest(r).String(),
 						ChainId:     "testzone-1",
 						Amount:      1000000,
 					},
@@ -71,7 +68,7 @@ func TestGenesisState_Validate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gs := GenesisState{
+			gs := types.GenesisState{
 				Params: tt.fields.Params,
 				Claims: tt.fields.Claims,
 			}

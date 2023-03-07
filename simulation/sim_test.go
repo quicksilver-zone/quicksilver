@@ -3,7 +3,6 @@ package simulation_test
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
 	"testing"
 
@@ -101,8 +100,6 @@ func TestAppStateDeterminism(t *testing.T) {
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	for i := 0; i < numSeeds; i++ {
-		config.Seed = rand.Int63()
-
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			db := dbm.NewMemDB()
 

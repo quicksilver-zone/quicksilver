@@ -24,7 +24,7 @@ var testClaims = []types.Claim{
 	},
 	// random user claim on chainB (using osmosis pool)
 	{
-		UserAddress: utils.GenerateAccAddressForTest().String(),
+		UserAddress: utils.GenerateAccAddressForTest(r).String(),
 		// ChainId:       suite.chainB.ChainID,
 		Module:        types.ClaimTypeOsmosisPool,
 		SourceChainId: "osmosis-1",
@@ -48,7 +48,7 @@ var testClaims = []types.Claim{
 	},
 	// random user claim on "cosmoshub-4" (liquid)
 	{
-		UserAddress:   utils.GenerateAccAddressForTest().String(),
+		UserAddress:   utils.GenerateAccAddressForTest(r).String(),
 		ChainId:       "cosmoshub-4",
 		Module:        types.ClaimTypeLiquidToken,
 		SourceChainId: "",

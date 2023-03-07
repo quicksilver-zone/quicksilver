@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"fmt"
@@ -11,10 +11,11 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
-	userAddress := utils.GenerateAccAddressForTest().String()
+	userAddress := utils.GenerateAccAddressForTest(r).String()
 
 	type fields struct {
 		UserAddress string
@@ -86,7 +87,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := MsgSubmitClaim{
+			msg := types.MsgSubmitClaim{
 				UserAddress: tt.fields.UserAddress,
 				Zone:        tt.fields.Zone,
 				SrcZone:     tt.fields.SrcZone,
@@ -105,7 +106,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgSubmitClaim_GetSigners(t *testing.T) {
-	validAddress := utils.GenerateAccAddressForTest().String()
+	validAddress := utils.GenerateAccAddressForTest(r).String()
 	validAcc, _ := sdk.AccAddressFromBech32(validAddress)
 
 	type fields struct {
@@ -134,7 +135,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := MsgSubmitClaim{
+			msg := types.MsgSubmitClaim{
 				UserAddress: tt.fields.UserAddress,
 				Zone:        tt.fields.Zone,
 				ClaimType:   tt.fields.ClaimType,
@@ -149,7 +150,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 }
 
 func TestNewMsgSubmitClaim(t *testing.T) {
-	userAddress := utils.GenerateAccAddressForTest()
+	userAddress := utils.GenerateAccAddressForTest(r)
 	type args struct {
 		userAddress sdk.Address
 		srcZone     string
@@ -160,11 +161,11 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *MsgSubmitClaim
+		want *types.MsgSubmitClaim
 	}{
 		{
-			"test",
-			args{
+			name: "test",
+			args: args{
 				userAddress,
 				"osmosis-1",
 				"juno",
@@ -179,7 +180,7 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 					},
 				},
 			},
-			&MsgSubmitClaim{
+			want: &types.MsgSubmitClaim{
 				userAddress.String(),
 				"juno",
 				"osmosis-1",
@@ -198,7 +199,7 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewMsgSubmitClaim(tt.args.userAddress, tt.args.srcZone, tt.args.zone, tt.args.claimType, tt.args.proofs); !reflect.DeepEqual(got, tt.want) {
+			if got := types.NewMsgSubmitClaim(tt.args.userAddress, tt.args.srcZone, tt.args.zone, tt.args.claimType, tt.args.proofs); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewMsgSubmitClaim() = %v, want %v", got, tt.want)
 			}
 		})

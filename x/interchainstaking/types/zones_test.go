@@ -13,8 +13,8 @@ import (
 )
 
 func TestIsDelegateAddress(t *testing.T) {
-	acc := utils.GenerateAccAddressForTest()
-	acc2 := utils.GenerateAccAddressForTest()
+	acc := utils.GenerateAccAddressForTest(r)
+	acc2 := utils.GenerateAccAddressForTest(r)
 	bech32 := utils.ConvertAccAddressForTestUsingPrefix(acc, "cosmos")
 	bech322 := utils.ConvertAccAddressForTestUsingPrefix(acc2, "cosmos")
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", DelegationAddress: &types.ICAAccount{Address: bech32}}
@@ -23,7 +23,7 @@ func TestIsDelegateAddress(t *testing.T) {
 }
 
 func TestGetDelegationAccount(t *testing.T) {
-	acc := utils.GenerateAccAddressForTest()
+	acc := utils.GenerateAccAddressForTest(r)
 	bech32 := utils.ConvertAccAddressForTestUsingPrefix(acc, "cosmos")
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", DelegationAddress: &types.ICAAccount{Address: bech32}}
 	zone2 := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
@@ -615,7 +615,7 @@ func TestZone_GetAggregateIntentOrDefault(t *testing.T) {
 
 func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 	out := types.DelegatorIntent{
-		Delegator: utils.GenerateAccAddressForTest().String(),
+		Delegator: utils.GenerateAccAddressForTest(r).String(),
 		Intents:   []*types.ValidatorIntent{},
 	}
 	for addr, weight := range in {

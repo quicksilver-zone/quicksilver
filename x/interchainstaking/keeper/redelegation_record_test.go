@@ -11,8 +11,8 @@ func (s *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
 	qapp := s.GetQuicksilverApp(s.chainA)
 	ctx := s.chainA.GetContext()
 
-	testValidatorOne := utils.GenerateAccAddressForTestWithPrefix("cosmosvaloper")
-	testValidatorTwo := utils.GenerateValAddressForTestWithPrefix("cosmosvaloper")
+	testValidatorOne := utils.GenerateAccAddressForTestWithPrefix(r, "cosmosvaloper")
+	testValidatorTwo := utils.GenerateValAddressForTestWithPrefix(r, "cosmosvaloper")
 
 	s.SetupTest()
 

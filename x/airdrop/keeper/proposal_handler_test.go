@@ -11,6 +11,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
+	r := suite.r
 	appA := suite.GetQuicksilverApp(suite.chainA)
 
 	validZoneDrop := types.ZoneDrop{
@@ -35,7 +36,7 @@ func (suite *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 		IsConcluded: false,
 	}
 	userAddresses := []string{
-		utils.GenerateAccAddressForTest().String(),
+		utils.GenerateAccAddressForTest(r).String(),
 	}
 
 	prop := types.RegisterZoneDropProposal{}

@@ -15,10 +15,11 @@ import (
 )
 
 func (suite *KeeperTestSuite) Test_msgServer_Claim() {
+	r := suite.r
 	appA := suite.GetQuicksilverApp(suite.chainA)
 	// appB := suite.GetQuicksilverApp(suite.chainB)
 
-	userAddress := utils.GenerateAccAddressForTest().String()
+	userAddress := utils.GenerateAccAddressForTest(r).String()
 	denom := "uatom" // same as test zone setup in keeper_test
 
 	msg := types.MsgClaim{}

@@ -1,9 +1,12 @@
-package types
+package types_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 func TestClaim_ValidateBasic(t *testing.T) {
@@ -34,7 +37,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_chain_id",
 			fields{
-				UserAddress: GenerateAccAddressForTest().String(),
+				UserAddress: utils.GenerateAccAddressForTest(r).String(),
 				ChainId:     "",
 				Amount:      10000,
 			},
@@ -43,7 +46,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_chain_id",
 			fields{
-				UserAddress: GenerateAccAddressForTest().String(),
+				UserAddress: utils.GenerateAccAddressForTest(r).String(),
 				ChainId:     "",
 				Amount:      10000,
 			},
@@ -52,7 +55,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_amount",
 			fields{
-				UserAddress: GenerateAccAddressForTest().String(),
+				UserAddress: utils.GenerateAccAddressForTest(r).String(),
 				ChainId:     "testzone-1",
 				Amount:      0,
 			},
@@ -61,7 +64,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 		{
 			"valid",
 			fields{
-				UserAddress: GenerateAccAddressForTest().String(),
+				UserAddress: utils.GenerateAccAddressForTest(r).String(),
 				ChainId:     "testzone-1",
 				Amount:      1000000,
 			},
@@ -70,7 +73,7 @@ func TestClaim_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := Claim{
+			c := types.Claim{
 				UserAddress: tt.fields.UserAddress,
 				ChainId:     tt.fields.ChainId,
 				Amount:      tt.fields.Amount,

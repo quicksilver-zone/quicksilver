@@ -103,14 +103,14 @@ type delegationUpdate struct {
 }
 
 func (s *KeeperTestSuite) TestUpdateDelegation() {
-	del1 := utils.GenerateAccAddressForTest()
+	del1 := utils.GenerateAccAddressForTest(r)
 
-	val1 := utils.GenerateValAddressForTest()
-	val2 := utils.GenerateValAddressForTest()
-	val3 := utils.GenerateValAddressForTest()
-	val4 := utils.GenerateValAddressForTest()
-	val5 := utils.GenerateValAddressForTest()
-	val6 := utils.GenerateValAddressForTest()
+	val1 := utils.GenerateValAddressForTest(r)
+	val2 := utils.GenerateValAddressForTest(r)
+	val3 := utils.GenerateValAddressForTest(r)
+	val4 := utils.GenerateValAddressForTest(r)
+	val5 := utils.GenerateValAddressForTest(r)
+	val6 := utils.GenerateValAddressForTest(r)
 
 	tests := []struct {
 		name       string
@@ -225,10 +225,10 @@ func TestCalculateDeltas(t *testing.T) {
 	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
 	// once sorted alphabetically on valoper.
 
-	val1 := utils.GenerateValAddressForTest()
-	val2 := utils.GenerateValAddressForTest()
-	val3 := utils.GenerateValAddressForTest()
-	val4 := utils.GenerateValAddressForTest()
+	val1 := utils.GenerateValAddressForTest(r)
+	val2 := utils.GenerateValAddressForTest(r)
+	val3 := utils.GenerateValAddressForTest(r)
+	val4 := utils.GenerateValAddressForTest(r)
 
 	zone := types.Zone{Validators: []*types.Validator{
 		{ValoperAddress: val1.String(), CommissionRate: sdk.NewDecWithPrec(30, 2), Status: stakingtypes.BondStatusBonded},
@@ -358,10 +358,10 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
 	// once sorted alphabetically on valoper.
 
-	val1 := utils.GenerateValAddressForTest()
-	val2 := utils.GenerateValAddressForTest()
-	val3 := utils.GenerateValAddressForTest()
-	val4 := utils.GenerateValAddressForTest()
+	val1 := utils.GenerateValAddressForTest(r)
+	val2 := utils.GenerateValAddressForTest(r)
+	val3 := utils.GenerateValAddressForTest(r)
+	val4 := utils.GenerateValAddressForTest(r)
 
 	zone := types.Zone{Validators: []*types.Validator{
 		{ValoperAddress: val1.String(), CommissionRate: sdk.NewDecWithPrec(30, 2), Status: stakingtypes.BondStatusBonded},
@@ -601,8 +601,8 @@ func (s *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 		zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 		s.Require().True(found)
 
-		delegator := utils.GenerateAccAddressForTest()
-		validator := utils.GenerateValAddressForTest()
+		delegator := utils.GenerateAccAddressForTest(r)
+		validator := utils.GenerateValAddressForTest(r)
 
 		_, found = app.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegator.String(), validator.String())
 		s.Require().False(found)
