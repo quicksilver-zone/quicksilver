@@ -6,6 +6,7 @@ import (
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+
 	"github.com/ingenuity-build/quicksilver/simulation/simtypes"
 	"github.com/ingenuity-build/quicksilver/utils"
 
