@@ -97,7 +97,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		}
 
 		if !allocation.Lockup.IsZero() {
-			// at genesis lockup will be disable, and enabled when ICS is used.
+			// at genesis lockup will be disabled, and enabled when ICS is used.
 			if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
 				k.Logger(ctx).Error(err.Error())
 				return err
