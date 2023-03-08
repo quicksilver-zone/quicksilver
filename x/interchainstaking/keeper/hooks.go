@@ -15,6 +15,8 @@ func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 }
 
 func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	k.Logger(ctx).Info("EPOCH-TEST", epochIdentifier, epochNumber, "EPOCH_TEST")
+
 	// every epoch
 	if epochIdentifier == "epoch" {
 		k.Logger(ctx).Info("handling epoch end")
@@ -118,6 +120,7 @@ func (k *Keeper) Hooks() Hooks {
 }
 
 // epochs hooks
+
 func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }
