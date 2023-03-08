@@ -157,7 +157,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
 
 				// save
-				const saveFile = "simulation_export.sim"
+				const saveFile = "simulation_export.json"
 				fmt.Printf("\nsaving simulated state to %s...\n\n", saveFile)
 				err = os.WriteFile("../"+saveFile, exp.AppState, 0644)
 				require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
