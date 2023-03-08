@@ -1,0 +1,917 @@
+[
+  {
+    "chain_id": "elgafar-1",
+    "delegations": [
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper1q48vyzzz82kh9sn2zsslna3mhujx70s7yg5jzf",
+        "amount": {
+          "denom": "ustars",
+          "amount": "12271846"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper1p2sffxw9rl2w6zgf5p3n62jdd4lfps8er7trec",
+        "amount": {
+          "denom": "ustars",
+          "amount": "210598"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper1p4tn8y546u0kvg52vmkewawmndkjmdg2dqknyj",
+        "amount": {
+          "denom": "ustars",
+          "amount": "12271846"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper19mrx78nd8kyghyhjet8ehlyayjhn4pd29jk4na",
+        "amount": {
+          "denom": "ustars",
+          "amount": "12271846"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper129k0elyjzl3fnh05exnd438d35fkkatcnhln03",
+        "amount": {
+          "denom": "ustars",
+          "amount": "12271846"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper12xlxetf292m9llh5y9gwv92wkqwwagxulwl5l0",
+        "amount": {
+          "denom": "ustars",
+          "amount": "12271846"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper12g7yk2quzqu3vhg8uvgmwtyc85c8upj0s66y5x",
+        "amount": {
+          "denom": "ustars",
+          "amount": "12271846"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper1tmngt23kq392tyfahlret9qasqk0kn66y504lm",
+        "amount": {
+          "denom": "ustars",
+          "amount": "12271848"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper10vdvkwt0ytsqmvldqgrjktnu4t3fmh05cjcjx7",
+        "amount": {
+          "denom": "ustars",
+          "amount": "12271846"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper1jt9w26mpxxjsk63mvd4m2ynj0af09cslura0ec",
+        "amount": {
+          "denom": "ustars",
+          "amount": "12271846"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "stars1knp6fe9ffqpf0wg758yjlcx86rylr723m9s3cvy2qrcuascra83qtp7fmu",
+        "validator_address": "starsvaloper1ck4n6fq2er7g7380pdzqhxjlk6tevyzp7389vm",
+        "amount": {
+          "denom": "ustars",
+          "amount": "12271846"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      }
+    ]
+  },
+  {
+    "chain_id": "theta-testnet-001",
+    "delegations": [
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1qvne2jk8zxd7txxvm8duq70jvgtkuk2qr6j708",
+        "amount": {
+          "denom": "uatom",
+          "amount": "73252"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1qjcr5n3twusjeuexumyqaa7urxh4sppjuqav8a",
+        "amount": {
+          "denom": "uatom",
+          "amount": "82850"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1zcjcj7una47tpjyl7gtmxr4x0z3q0wtt9e2mmx",
+        "amount": {
+          "denom": "uatom",
+          "amount": "473962"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1r45hrnm2h8frrud87ln7a9qacwzy9nlgysk5ae",
+        "amount": {
+          "denom": "uatom",
+          "amount": "74898"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1ymz3kjtf9zkfmm2s2lry7eh0zd9ez3vc5yp00f",
+        "amount": {
+          "denom": "uatom",
+          "amount": "493261"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper19rfw8uuesgaevrxyzq4w4vc6dmgk6cfmv7rhmx",
+        "amount": {
+          "denom": "uatom",
+          "amount": "834126"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper19hn0m3zc03utmjuej3tpyptykrkxn7jqflzjdq",
+        "amount": {
+          "denom": "uatom",
+          "amount": "1151727"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1xecnv85jffd2h7l4xunyt26yc87jh8ky2p6vc3",
+        "amount": {
+          "denom": "uatom",
+          "amount": "740436"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper183aycgtstp67r6s4vd7ts2npp2ckk4xah7rxj6",
+        "amount": {
+          "denom": "uatom",
+          "amount": "1001417"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1t8dv80kdq3t2g88kn8vtyeldvnf8xq5c4sklmx",
+        "amount": {
+          "denom": "uatom",
+          "amount": "2639300"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1tflk30mq5vgqjdly92kkhhq3raev2hnz6eete3",
+        "amount": {
+          "denom": "uatom",
+          "amount": "1006202"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1tcdsg5gzk6ff0yf2xl7dxdrduwxuwp0405qtt2",
+        "amount": {
+          "denom": "uatom",
+          "amount": "73299"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1vsg89egfwqj86g6mypprsj6u2qadn2dg2c7tky",
+        "amount": {
+          "denom": "uatom",
+          "amount": "74110"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper10v6wvdenee8r9l6wlsphcgur2ltl8ztkfrvj9a",
+        "amount": {
+          "denom": "uatom",
+          "amount": "497251"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1s5jrzpfjc3xe2f2rd0dmkf0clatq785yv9txul",
+        "amount": {
+          "denom": "uatom",
+          "amount": "480695"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper13n6wqhq8la352je00nwq847ktp47pgknseu6kk",
+        "amount": {
+          "denom": "uatom",
+          "amount": "732986"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1j4kz9p3m4gjqxgt2fqre5sgrw6qu5fm9r4kkjp",
+        "amount": {
+          "denom": "uatom",
+          "amount": "12198"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper15aptdqmm7ddgtcrjvc5hs988rlrkze406p56m2",
+        "amount": {
+          "denom": "uatom",
+          "amount": "790447"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper15l0dktrl5wxhxxczfxla262zzzueu6v8dhh04f",
+        "amount": {
+          "denom": "uatom",
+          "amount": "908149"
+        },
+        "height": 0,
+        "redelegation_end": 1676682913
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper14vy0qldpz50uyclvmmxeldcetwzykgws0c65fa",
+        "amount": {
+          "denom": "uatom",
+          "amount": "75013"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper14kat43pch503puh42udkm94f5dprz7an9ta9ce",
+        "amount": {
+          "denom": "uatom",
+          "amount": "1710783"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1c28cfmvvne62n5347h3nptar7ka0dffxam8ct3",
+        "amount": {
+          "denom": "uatom",
+          "amount": "1397547"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1epcnxgkwlgj3mlzp6httkqx9znnkj0zdhesayn",
+        "amount": {
+          "denom": "uatom",
+          "amount": "77062"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1ew7mygawfz0y2wsj5h9w76dc3hmgrj4hglfsxx",
+        "amount": {
+          "denom": "uatom",
+          "amount": "12194"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1mqf94r54xhklqu7265cxupczpu8es7ewgca7tf",
+        "amount": {
+          "denom": "uatom",
+          "amount": "813432"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1mngvkkhm6g7nqxh4hcv8hjxvgax4m8xujzt964",
+        "amount": {
+          "denom": "uatom",
+          "amount": "1007041"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper17lgg03ze9x6xka02fs0hhw4ad4wwg05heqr2y8",
+        "amount": {
+          "denom": "uatom",
+          "amount": "483042"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "cosmos1nl32m0hmn3lr99qzq6pl2g4vv6zqt766vq62xff9tnngn4dcgu5qjld0km",
+        "validator_address": "cosmosvaloper1l35836f5k5ashh2ysluhnd0krghy5qeskw7tuf",
+        "amount": {
+          "denom": "uatom",
+          "amount": "1009415"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      }
+    ]
+  },
+  {
+    "chain_id": "osmo-test-4",
+    "delegations": [
+      {
+        "delegation_address": "osmo10lkp27l6n43a5kg3sawcyv9j4g7a0xpfj5vjlp4fq6dat9muuh9q6e33u9",
+        "validator_address": "osmovaloper1q4vztyczsvt2vmtajd99d9hdhyqcltgz0cyp0y",
+        "amount": {
+          "denom": "uosmo",
+          "amount": "3141"
+        },
+        "height": 0,
+        "redelegation_end": 1678399515
+      },
+      {
+        "delegation_address": "osmo10lkp27l6n43a5kg3sawcyv9j4g7a0xpfj5vjlp4fq6dat9muuh9q6e33u9",
+        "validator_address": "osmovaloper1tuexu04de5274ydxa6alz6xk942pxtyk3m2dpe",
+        "amount": {
+          "denom": "uosmo",
+          "amount": "61056"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "osmo10lkp27l6n43a5kg3sawcyv9j4g7a0xpfj5vjlp4fq6dat9muuh9q6e33u9",
+        "validator_address": "osmovaloper10jwrlfnqgu3a3cttw5zehkykpdmtmnuwk9hxwc",
+        "amount": {
+          "denom": "uosmo",
+          "amount": "772987"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "osmo10lkp27l6n43a5kg3sawcyv9j4g7a0xpfj5vjlp4fq6dat9muuh9q6e33u9",
+        "validator_address": "osmovaloper13glny6fl92cnxe63u9jxldhpjg72ut7g8q74sx",
+        "amount": {
+          "denom": "uosmo",
+          "amount": "61056"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "osmo10lkp27l6n43a5kg3sawcyv9j4g7a0xpfj5vjlp4fq6dat9muuh9q6e33u9",
+        "validator_address": "osmovaloper1c584m4lq25h83yp6ag8hh4htjr92d954kphp96",
+        "amount": {
+          "denom": "uosmo",
+          "amount": "772987"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "osmo10lkp27l6n43a5kg3sawcyv9j4g7a0xpfj5vjlp4fq6dat9muuh9q6e33u9",
+        "validator_address": "osmovaloper16v0qlksp0hdkx6s2t2rewte3p27ce66j0j9qc4",
+        "amount": {
+          "denom": "uosmo",
+          "amount": "772987"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "osmo10lkp27l6n43a5kg3sawcyv9j4g7a0xpfj5vjlp4fq6dat9muuh9q6e33u9",
+        "validator_address": "osmovaloper1l0ta4rw7zauqplzhsvcsgxveuqptauf6e4eg7a",
+        "amount": {
+          "denom": "uosmo",
+          "amount": "772984"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      }
+    ]
+  },
+  {
+    "chain_id": "regen-redwood-1",
+    "delegations": [
+      {
+        "delegation_address": "regen1asvvhppz4f79v64tgt28h4sfy0nfkz9q7qzv0ad68frd2kmtwm8qwsx2x5",
+        "validator_address": "regenvaloper1399y9huuus9phlv2d5fjnznem65nlmsn0qgfrd",
+        "amount": {
+          "denom": "uregen",
+          "amount": "28079325"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "regen1asvvhppz4f79v64tgt28h4sfy0nfkz9q7qzv0ad68frd2kmtwm8qwsx2x5",
+        "validator_address": "regenvaloper15cea7lrp06c86hc3azzm0ffuvuya4e62p4hfuz",
+        "amount": {
+          "denom": "uregen",
+          "amount": "28079325"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "regen1asvvhppz4f79v64tgt28h4sfy0nfkz9q7qzv0ad68frd2kmtwm8qwsx2x5",
+        "validator_address": "regenvaloper1hjr5ukxfxqlcef363an2snd0wgsnkte06s6trj",
+        "amount": {
+          "denom": "uregen",
+          "amount": "28079325"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "regen1asvvhppz4f79v64tgt28h4sfy0nfkz9q7qzv0ad68frd2kmtwm8qwsx2x5",
+        "validator_address": "regenvaloper1mtt8vx43nz8l7zje4h7kfmh0gxzypjqxsxww59",
+        "amount": {
+          "denom": "uregen",
+          "amount": "28079326"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      }
+    ]
+  },
+  {
+    "chain_id": "uni-6",
+    "delegations": [
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1qh8kt85tm3dy86l564475j3pnqdqggls3xmges",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "42736"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1zzy4vk4fl2lud0suc4u5kwzpx5h6640z9930yj",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73433"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1zzl2zdjz6f6a30lfpu7srhuzjvwtqeetu04k2k",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "66227"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1z8tvmvjes5wug59wcm87rszxn47mgd7rann0tw",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "66227"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1zcwdza44mgw0f2esmchc9r32rzzw9n7cttd6rx",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "66796"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1z7d40s08sy946ss3ylm9eqn6adaa5t7l3l4n4p",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "66227"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1rgfjuehj7elwd4qq06663ec7rmtnzqdhqqxdp8",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "68189"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1rncye5ahgj9tp302talm5fm5v7f2xpymaq0ldk",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "51106"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1ycqvkgq53yj3xantcwz9q26l9rl0aay8827x2l",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "66227"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper19yltltjed5688sullftzurhdshmjwtm8kvf67t",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "56378"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper192p0qmgz6rsda5fdnrvd63cgyzk6y93xcn8vzu",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper19w2488ntfgpduzqq3sk4j5x387zynwkn6799ag",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper19akcnx4k5dc38ccax0hkvfm37kwxraj6g6vpte",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1xf53ecnaqwgqy4gzeycphwf2s8rx2rsaaq8uww",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "29859"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1xwazl8ftks4gn00y5x3c47auquc62ssuvynw64",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "66227"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1x5wgh6vwye60wv3dtshs9dmqggwfx2ld60eds2",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "66227"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper186them6frfyjz08cvljm9zl6eyph7v2n23pfl7",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "56373"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper187le90np6vasdttsjl4m8cf7qkhqqph6ulxyu3",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1gda3espwnf3ezqj4wqw22pf2tfhwp4em2j2nlp",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1t30jjapppmrjeky60sxeeakgqzlkaqk8xn4h05",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1tjtg3jhcwcmmfs3muc5eny55927kdkm2ewuqse",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1dpqqm52mnvf6uq2ufecxglw205t262k2hgqfxs",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1dma7pr7fmn9fsn6n0700qxwjcm52y8rwnqh6pm",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "42716"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1w9fllydnchng7e3mug9a6xq3dz6vmgls2mh52l",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "66227"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1w8cpaaljwrytquj86kvp9s72lvmddcc208ghun",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "69843"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1wf8k2vu0n0fyps2lakjpqtq6kt3xlg7qasdxyt",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "66227"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1wlccc6nvzcng8tcftk8q35jwmrghrxqaenq5lk",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "66227"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1jpfy4sgeqms2pc3tc5ryjgc0egrunfqsk3k53c",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "56375"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1jrxluc6weuzpqcm5auxgzvdg3u2alft7m24m67",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "115080"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1jt9w26mpxxjsk63mvd4m2ynj0af09csl2wtj45",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1jwwe0evxkgrdhjur9ygsf7u4s2ykmefkulexjv",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "69843"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1js39xtjqpr755stcns30dmfqkclktg68qt6lyl",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1jmvdr9p7nltuq2ywfxs0ln0wx6faan5cklcpn0",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "42721"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper15fem6r9cwmrnyrm6m49gyur4t3323ulsztl8xn",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper15twk6xu5rnrrlnf7c5zy92gvykcs4h5u8m5dme",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73458"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1kn8z6hdfrmg94qnxvft9h6chlhqykag8kz03wu",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "64574"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1hyrlu2hewymhuyqds6tuwmpwsjwaw6tchuwzsn",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "73450"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1ledn4lu2sgejusndxfz7lrtz50sm02h3jcvmv6",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "64574"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      },
+      {
+        "delegation_address": "juno1x0s8a7dekg9cfr4m60ypg4e9nnhss7e4e78z96td8tp80kxy9nzq54cq23",
+        "validator_address": "junovaloper1l7cgv557nxz9dmmwj09r5ueuuu3weq7cn8rmlf",
+        "amount": {
+          "denom": "ujunox",
+          "amount": "42716"
+        },
+        "height": 0,
+        "redelegation_end": 0
+      }
+    ]
+  }
+]
