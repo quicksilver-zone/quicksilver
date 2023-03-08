@@ -150,6 +150,20 @@ func TestAppStateDeterminism(t *testing.T) {
 					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 				)
 			}
+
+			// export the final run
+			if j == 4 && i == 2 {
+				exp, err := quicksilver.ExportAppStateAndValidators(false, []string{})
+				require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
+
+				// save
+				const saveFile = "simulation_export.sim"
+				fmt.Printf("\nsaving simulated state to %s...\n\n", saveFile)
+				err = os.WriteFile("../"+saveFile, exp.AppState, 0644)
+				require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
+
+			}
 		}
 	}
+
 }

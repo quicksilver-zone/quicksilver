@@ -30,3 +30,6 @@ scripts/wallets.sh
 
 # Coverage
 coverage.txt
+
+# sim log
+*.sim
