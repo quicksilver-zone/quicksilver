@@ -63,7 +63,7 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("delegation", Callback(DelegationCallback)).
 		AddCallback("distributerewards", Callback(DistributeRewardsFromWithdrawAccount)).
 		AddCallback("depositinterval", Callback(DepositIntervalCallback)).
-		AddCallback("deposittx", Callback(DepositTx)).
+		AddCallback("deposittx", Callback(DepositTxCallback)).
 		AddCallback("perfbalance", Callback(PerfBalanceCallback)).
 		AddCallback("accountbalance", Callback(AccountBalanceCallback)).
 		AddCallback("allbalances", Callback(AllBalancesCallback))
@@ -264,10 +264,10 @@ func checkTrustedHeader(header *tmclienttypes.Header, consState *tmclienttypes.C
 	return nil
 }
 
-// pulled directly from ibc-go tm light client
-// checkValidity checks if the Tendermint header is valid.
+// checkTMStateValidity checks if the Tendermint header is valid.
 // CONTRACT: consState.Height == header.TrustedHeight
-func checkValidity(
+// pulled directly from ibc-go tm light client
+func checkTMStateValidity(
 	clientState *tmclienttypes.ClientState, consState *tmclienttypes.ConsensusState,
 	header *tmclienttypes.Header, currentTimestamp time.Time,
 ) error {
@@ -347,44 +347,19 @@ func checkValidity(
 	return nil
 }
 
-func DepositTx(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetZone(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-
-	if !zone.DepositsEnabled {
-		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
-	}
-
-	k.Logger(ctx).Debug("DepositTx callback", "zone", zone.ChainId)
-
-	res := icqtypes.GetTxWithProofResponse{}
-	if len(args) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (6)")
-	}
-	err := k.cdc.Unmarshal(args, &res)
-	if err != nil {
-		return err
-	}
-
-	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, res.GetTxResponse().TxHash))
-	if found {
-		k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", res.GetTxResponse().TxHash)
-		return nil
-	}
-
-	// validate proof
+// CheckTMHeaderForZone verifies the Tendermint consensus and client states for a given zone. Returns error if unable
+// to verify.
+func (k *Keeper) CheckTMHeaderForZone(ctx sdk.Context, zone *types.Zone, res icqtypes.GetTxWithProofResponse) error {
 	connection, _ := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
-
 	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
 	if !found {
 		return errors.New("unable to fetch client state")
 	}
-
-	/** we can call ClientKeeper.CheckHeaderAndUpdateState() here, but this causes state changes inside the IBCKeeper which feels bad.
-	  so instead we copy the above two functions wholesale from ibc-go (this sucks too, but with predicatable behaviour) and validate
-	  the inbound header manually. */
+	/*
+	   We can call ClientKeeper.CheckHeaderAndUpdateState() here, but this causes state changes inside the IBCKeeper
+	   which feels bad. so instead we copy the above two functions wholesale from ibc-go (this sucks too, but with
+	   predictable behaviour) and validate the inbound header manually.
+	*/
 	consensusState, found := k.IBCKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, res.Header.TrustedHeight)
 	if !found {
 		return fmt.Errorf("unable to fetch consensus state for trusted height: %s", res.Header.TrustedHeight.String())
@@ -400,7 +375,8 @@ func DepositTx(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) er
 		return errors.New("unable to marshal consensus state")
 	}
 
-	err = checkValidity(tmclientState, tmconsensusState, res.GetHeader(), ctx.BlockHeader().Time)
+	// validate tendermint statefor
+	err := checkTMStateValidity(tmclientState, tmconsensusState, res.GetHeader(), ctx.BlockHeader().Time)
 	if err != nil {
 		return fmt.Errorf("unable to validate header; %w", err)
 	}
@@ -414,7 +390,46 @@ func DepositTx(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) er
 		return fmt.Errorf("unable to validate proof: %w", err)
 	}
 
-	return k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), &zone)
+	return nil
+}
+
+// DepositTxCallback is a callback that verifies client chain state validity, gets Tx receipt and calls
+// HandleReceiptForTransaction.
+func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	// check validity
+	if len(args) == 0 {
+		return errors.New("attempted to unmarshal zero length byte slice (6)")
+	}
+
+	zone, found := k.GetZone(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+
+	if !zone.DepositsEnabled {
+		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
+	}
+
+	k.Logger(ctx).Debug("DepositTx callback", "zone", zone.ChainId)
+
+	res := icqtypes.GetTxWithProofResponse{}
+	err := k.cdc.Unmarshal(args, &res)
+	if err != nil {
+		return err
+	}
+
+	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, res.GetTxResponse().TxHash))
+	if found {
+		k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", res.GetTxResponse().TxHash)
+		return nil
+	}
+
+	err = k.CheckTMHeaderForZone(ctx, &zone, res)
+	if err != nil {
+		return fmt.Errorf("unable  to verify proof: %w", err)
+	}
+
+	return k.HandleReceiptForTransaction(ctx, res.GetTxResponse(), res.GetTx(), &zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.
