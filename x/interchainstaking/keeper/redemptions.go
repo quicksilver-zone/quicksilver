@@ -72,8 +72,8 @@ func (k *Keeper) queueRedemption(
 	hash string,
 ) error { //nolint:unparam // we know that the error is always nil
 	distribution := make([]*types.Distribution, 0)
-
 	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens))
+
 	k.AddWithdrawalRecord(
 		ctx,
 		zone.ChainId,
