@@ -68,24 +68,25 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress)
 		return fmt.Errorf("unable to decode sender address. Ignoring. senderAddress=%q", senderAddress)
 	}
+	var accAddress sdk.AccAddress = addressBytes
 
 	if err := zone.ValidateCoinsForZone(ctx, coins); err != nil {
-		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before. That is okay, we'll catch it next round!)
+		// we expect this to trigger if the valset has changed recently (i.e. we haven't seen the validator before.
+		// That is okay, we'll catch it next round!)
 		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
 		return fmt.Errorf("unable to validate coins. Ignoring. senderAddress=%q", senderAddress)
 	}
 
-	var accAddress sdk.AccAddress = addressBytes
-
-	k.Logger(ctx).Info("Found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "sender", senderAddress, "local", accAddress.String(), "chain id", zone.ChainId, "amount", coins, "hash", hash)
+	k.Logger(ctx).Info("Found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", accAddress.String(), "chain id", zone.ChainId, "amount", coins, "hash", hash)
 	// create receipt
 
 	if err := k.UpdateIntent(ctx, accAddress, zone, coins, memo); err != nil {
-		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
+
 	if err := k.MintQAsset(ctx, accAddress, senderAddress, zone, coins, false); err != nil {
-		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
 
@@ -95,7 +96,6 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 	}
 
 	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
-
 	k.SetReceipt(ctx, *receipt)
 
 	return nil
