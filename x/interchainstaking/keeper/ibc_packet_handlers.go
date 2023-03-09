@@ -29,10 +29,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-const (
-	transferPort = "transfer"
-)
-
 type TypedMsg struct {
 	Msg  sdk.Msg
 	Type string
@@ -1044,7 +1040,7 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	var remotePort string
 	var remoteChannel string
 	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
-		if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == transferPort && channel.State == channeltypes.OPEN {
+		if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
 			remoteChannel = channel.Counterparty.ChannelId
 			remotePort = channel.Counterparty.PortId
 			return true

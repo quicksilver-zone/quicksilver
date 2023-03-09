@@ -33,7 +33,7 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 	coins := sdk.Coins{}
 
 	for _, event := range txr.Events {
-		if event.Type == transferPort {
+		if event.Type == types.TransferPort {
 			attrs := types.AttributesToMap(event.Attributes)
 			sender := attrs["sender"]
 			amount := attrs["amount"]
@@ -124,7 +124,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 		var srcPort string
 		var srcChannel string
 		k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
-			if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == transferPort && channel.State == channeltypes.OPEN {
+			if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
 				srcChannel = channel.Counterparty.ChannelId
 				srcPort = channel.Counterparty.PortId
 				return true
