@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -70,7 +70,7 @@ func (k *Keeper) IterateIntents(ctx sdk.Context, zone *types.Zone, snapshot bool
 
 // AllIntents returns every intent in the store for the specified zone
 func (k *Keeper) AllIntents(ctx sdk.Context, zone *types.Zone, snapshot bool) []types.DelegatorIntent {
-	intents := []types.DelegatorIntent{}
+	var intents []types.DelegatorIntent
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		intents = append(intents, intent)
 		return false
@@ -80,7 +80,7 @@ func (k *Keeper) AllIntents(ctx sdk.Context, zone *types.Zone, snapshot bool) []
 
 // AllIntentsAsPointer returns every intent in the store for the specified zone
 func (k *Keeper) AllIntentsAsPointer(ctx sdk.Context, zone *types.Zone, snapshot bool) []*types.DelegatorIntent {
-	intents := []*types.DelegatorIntent{}
+	var intents []*types.DelegatorIntent
 	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		intents = append(intents, &intent)
 		return false
@@ -102,12 +102,12 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone *types.Zone) error {
 		// 	return true
 		// }
 		// balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
-		balance := sdk.NewCoin(zone.LocalDenom, math.ZeroInt())
+		balance := sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt())
 
 		// grab offchain asset value, and raise the users' base value by this amount.
 		// currently ignoring base value (locally held assets)
 		k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, intent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
-			balance.Amount = balance.Amount.Add(math.NewIntFromUint64(data.Amount))
+			balance.Amount = balance.Amount.Add(sdkmath.NewIntFromUint64(data.Amount))
 			// claim amounts are in zone.baseDenom - but given weights are all relative to one another this okay.
 			k.Logger(ctx).Error("Intents - found claim for user", "user", intent.Delegator, "claim amount", data.Amount, "new balance", balance.Amount)
 			return false
@@ -153,10 +153,14 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone *types.Zone) error {
 	return nil
 }
 
-func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone *types.Zone, inAmount sdk.Coins, memo string) error {
+// UpdateIntent updates
+func (k *Keeper) UpdateIntent(ctx sdk.Context, delegator sdk.AccAddress, zone *types.Zone, inAmount sdk.Coins, memo string) error {
 	snapshot := false
+	updateWithCoin := inAmount.IsValid()
+	updateWithMemo := len(memo) > 0
+
 	// this is here because we need access to the bankKeeper to ordinalize intent
-	intent, _ := k.GetIntent(ctx, zone, sender.String(), snapshot)
+	delIntent, _ := k.GetIntent(ctx, zone, delegator.String(), snapshot)
 
 	// ordinalize
 	// this is the currently held amount
@@ -165,54 +169,53 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone *type
 	// if balance.Amount.IsNil() {
 	// 	balance.Amount = math.ZeroInt()
 	// }
-	balance := sdk.NewCoin(zone.BaseDenom, math.ZeroInt())
+	claimAmt := sdkmath.ZeroInt()
 
 	// grab offchain asset value, and raise the users' base value by this amount.
-	k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, sender.String(), func(index int64, data prtypes.Claim) (stop bool) {
-		k.Logger(ctx).Error("Update intents - found claim for user", "user", intent.Delegator, "claim amount", data.Amount, "new balance", balance.Amount)
-
-		balance.Amount = balance.Amount.Add(math.NewIntFromUint64(data.Amount))
+	k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, delegator.String(), func(index int64, claim prtypes.Claim) (stop bool) {
+		claimAmt = claimAmt.Add(sdkmath.NewIntFromUint64(claim.Amount))
+		k.Logger(ctx).Error("Update intents - found claim for user", "user", delIntent.Delegator, "claim amount", claim.Amount, "new balance", claimAmt)
 		return false
 	})
 
 	// inAmount is ordinal with respect to the redemption rate, so we must scale
-	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(balance.Amount))
+	baseBalance := zone.RedemptionRate.Mul(sdk.NewDecFromInt(claimAmt))
 	if baseBalance.IsZero() {
 		return nil
 	}
 
-	if inAmount.IsValid() {
-		intent = zone.UpdateIntentWithCoins(intent, baseBalance, inAmount)
+	if updateWithCoin {
+		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount)
 	}
 
-	if len(memo) > 0 {
+	if updateWithMemo {
 		var err error
-		intent, err = zone.UpdateIntentWithMemo(intent, memo, baseBalance, inAmount)
+		delIntent, err = zone.UpdateIntentWithMemo(delIntent, memo, baseBalance, inAmount)
 		if err != nil {
 			return err
 		}
 	}
 
-	if len(intent.Intents) == 0 {
+	if len(delIntent.Intents) == 0 {
 		return nil
 	}
 
-	k.SetIntent(ctx, zone, intent, snapshot)
+	k.SetIntent(ctx, zone, delIntent, snapshot)
 	return nil
 }
 
-func (k msgServer) validateIntents(zone types.Zone, intents []*types.ValidatorIntent) error {
-	errors := make(map[string]error)
+func (k msgServer) validateValidatorIntents(zone types.Zone, intents []*types.ValidatorIntent) error {
+	errMap := make(map[string]error)
 
 	for i, intent := range intents {
 		_, found := zone.GetValidatorByValoper(intent.ValoperAddress)
 		if !found {
-			errors[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
+			errMap[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
 		}
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errMap) > 0 {
+		return multierror.New(errMap)
 	}
 
 	return nil
