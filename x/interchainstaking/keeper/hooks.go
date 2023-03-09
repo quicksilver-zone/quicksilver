@@ -24,7 +24,7 @@ func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 // and re-queries icq for new zone info.
 func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	// every epoch
-	if epochIdentifier == "epoch" {
+	if epochIdentifier == types.EpochIdentifier {
 		k.Logger(ctx).Info("handling epoch end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 
 		k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
@@ -97,7 +97,12 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				"epoch_number", epochNumber,
 			)
 
-			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zoneInfo.Validators))}}
+			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{
+				DelegatorAddr: zone.DelegationAddress.Address,
+				Pagination: &query.PageRequest{
+					Limit: uint64(len(zone.Validators)),
+				},
+			}
 			bz := k.cdc.MustMarshal(&delegationQuery)
 
 			k.ICQKeeper.MakeRequest(
