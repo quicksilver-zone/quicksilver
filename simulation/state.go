@@ -13,8 +13,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
-
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -30,6 +28,8 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/app"
 )
+
+var denoms = []string{"uqatom", "uqosmo", "uqjunox"}
 
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
@@ -96,8 +96,16 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			panic(err)
 		}
 
-		// modify bond denom
-		stakingState.Params.BondDenom = appconfig.DefaultBondDenom
+		icsStateBz, ok := rawState[interchainstakingtypes.ModuleName]
+		if !ok {
+			panic("staking genesis state is missing")
+		}
+
+		icsState := new(interchainstakingtypes.GenesisState)
+		err = cdc.UnmarshalJSON(icsStateBz, icsState)
+		if err != nil {
+			panic(err)
+		}
 
 		// compute not bonded balance
 		notBondedTokens := sdk.ZeroInt()
@@ -120,16 +128,6 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			panic(err)
 		}
 
-		icsStateBz, ok := rawState[interchainstakingtypes.ModuleName]
-		if !ok {
-			panic("interchainstaking genesis state is missing")
-		}
-		icsState := new(interchainstakingtypes.GenesisState)
-		err = cdc.UnmarshalJSON(icsStateBz, icsState)
-		if err != nil {
-			panic(err)
-		}
-
 		govStateBz, ok := rawState[govtypes.ModuleName]
 		if !ok {
 			panic("gov genesis state is missing")
@@ -145,6 +143,13 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			banktypes.NewSendEnabled(stakingState.Params.BondDenom, true),
 		}
 
+		delMap := map[string][]*interchainstakingtypes.Delegation{}
+		for _, denom := range denoms {
+			delMap[denom] = []*interchainstakingtypes.Delegation{}
+		}
+
+		zoneMap := createZoneMap(icsState.Zones)
+
 		stakingAddr := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName).String()
 		var found bool
 		var newSupply sdk.Coins
@@ -154,13 +159,34 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			}
 
 			// increase supply
-			var addIntent bool //nolint:staticcheck
-			bankState.Balances[i], addIntent = modifyGenesisBalance(r, balance, sdk.DefaultBondDenom, stakingState.Params.BondDenom)
+			var (
+				addDel  bool
+				newCoin sdk.Coin
+			)
+			bankState.Balances[i], newCoin, addDel = modifyGenesisBalance(r, balance, sdk.DefaultBondDenom, sdk.DefaultBondDenom)
 			newSupply.Add(bankState.Balances[i].Coins...)
-			if addIntent { //nolint:staticcheck
-				// add intents
+			if addDel {
+				zone := zoneMap[newCoin.Denom]
+				val := zone.Validators[r.Intn(len(zone.Validators))]
+
+				delMap[newCoin.Denom] = append(delMap[newCoin.Denom], &interchainstakingtypes.Delegation{
+					DelegationAddress: zone.DelegationAddress.Address,
+					ValidatorAddress:  val.ValoperAddress,
+					Amount:            newCoin,
+					Height:            0,
+				})
 			}
 		}
+
+		var delegations []interchainstakingtypes.DelegationsForZone
+		for _, denom := range denoms {
+			zone := zoneMap[denom]
+			delegations = append(delegations, interchainstakingtypes.DelegationsForZone{
+				ChainId:     zone.ChainId,
+				Delegations: delMap[denom],
+			})
+		}
+		icsState.Delegations = delegations
 
 		// set new supply
 		bankState.Supply = newSupply
@@ -190,24 +216,22 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 	}
 }
 
-func randQAssetBalaces(r *rand.Rand, balance banktypes.Balance) (banktypes.Balance, bool) {
-	denoms := []string{"uqatom", "uqosmo", "uqjunox"}
-
+func randQAssetBalaces(r *rand.Rand, balance banktypes.Balance) (banktypes.Balance, sdk.Coin, bool) {
 	// do not add qassets for some accounts
 	if r.Intn(100)%5 == 0 {
-		return balance, false
+		return balance, sdk.Coin{}, false
 	}
 
 	denom := denoms[r.Intn(len(denoms))]
 	amount := sdk.NewInt(1_000_000_000 + r.Int63n(1_000_000_000_000))
 
-	newCoins := sdk.NewCoins(sdk.NewCoin(denom, amount))
-	balance.Coins = balance.Coins.Add(newCoins...)
+	newCoin := sdk.NewCoin(denom, amount)
+	balance.Coins = balance.Coins.Add(sdk.NewCoins(newCoin)...)
 
-	return balance, true
+	return balance, newCoin, true
 }
 
-func modifyGenesisBalance(r *rand.Rand, balance banktypes.Balance, oldBond, newBond string) (banktypes.Balance, bool) {
+func modifyGenesisBalance(r *rand.Rand, balance banktypes.Balance, oldBond, newBond string) (banktypes.Balance, sdk.Coin, bool) {
 	amt := balance.Coins.AmountOf(oldBond)
 	if amt.IsPositive() {
 		balance.Coins = sdk.NewCoins(sdk.NewCoin(newBond, amt))
@@ -320,4 +344,13 @@ func AppStateFromGenesisFileFn(r io.Reader, cdc codec.JSONCodec, genesisFile str
 	}
 
 	return genesis, newAccs
+}
+
+func createZoneMap(zones []interchainstakingtypes.Zone) map[string]interchainstakingtypes.Zone {
+	m := make(map[string]interchainstakingtypes.Zone)
+	for _, zone := range zones {
+		m[zone.LocalDenom] = zone
+	}
+
+	return m
 }

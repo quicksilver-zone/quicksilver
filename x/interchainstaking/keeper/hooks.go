@@ -17,17 +17,17 @@ func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	// every epoch
 	if epochIdentifier == "epoch" {
-		k.Logger(ctx).Info("handling epoch end")
+		k.Logger(ctx).Info("handling epoch end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 
 		k.IterateZones(ctx, func(index int64, zoneInfo *types.Zone) (stop bool) {
-			k.Logger(ctx).Info("taking a snapshot of intents")
+			k.Logger(ctx).Info("taking a snapshot of intents", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 			err := k.AggregateIntents(ctx, zoneInfo)
 			if err != nil {
 				// we can and need not panic here; logging the error is sufficient.
 				// an error here is not expected, but also not terminal.
 				// we don't return on failure here as we still want to attempt
 				// the unrelated tasks below.
-				k.Logger(ctx).Error("encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch", "error", err)
+				k.Logger(ctx).Error("encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch", "error", err.Error(), "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 			}
 
 			if zoneInfo.DelegationAddress == nil {
@@ -37,7 +37,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			}
 
 			if err := k.HandleQueuedUnbondings(ctx, zoneInfo, epochNumber); err != nil {
-				k.Logger(ctx).Error(err.Error())
+				k.Logger(ctx).Error("encountered a problem handling queued unbondings", "error", err.Error(), "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 				// we can and need not panic here; logging the error is sufficient.
 				// an error here is not expected, but also not terminal.
 				// we don't return on failure here as we still want to attempt
@@ -50,16 +50,16 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				// an error here is not expected, but also not terminal.
 				// we don't return on failure here as we still want to attempt
 				// the unrelated tasks below.
-				k.Logger(ctx).Error("encountered a problem rebalancing", "error", err.Error())
+				k.Logger(ctx).Error("encountered a problem rebalancing", "error", err.Error(), "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 			}
 
 			if zoneInfo.WithdrawalWaitgroup > 0 {
-				k.Logger(ctx).Error("epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!")
+				k.Logger(ctx).Error("epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 				zoneInfo.WithdrawalWaitgroup = 0
 			}
 
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
-			k.Logger(ctx).Info("Withdrawing rewards")
+			k.Logger(ctx).Info("withdrawing rewards", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 
 			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zoneInfo.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zoneInfo.Validators))}}
 			bz := k.cdc.MustMarshal(&delegationQuery)
@@ -95,7 +95,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			// this allows us to track the response for every protocol delegator
 			// WithdrawalWaitgroup is decremented in RewardsCallback
 			zoneInfo.WithdrawalWaitgroup++
-			k.Logger(ctx).Info("Incrementing waitgroup for delegation", "value", zoneInfo.WithdrawalWaitgroup)
+			k.Logger(ctx).Info("incrementing waitgroup for delegation", "value", zoneInfo.WithdrawalWaitgroup, "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 			k.SetZone(ctx, zoneInfo)
 
 			return false

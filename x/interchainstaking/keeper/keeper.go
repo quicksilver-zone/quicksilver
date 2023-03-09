@@ -504,10 +504,10 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRe
 		return false
 	})
 	ratio, isZero := k.GetRatio(ctx, zone, epochRewards.Add(delegationsInProcess))
-	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
-	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
-	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
-	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, zone).Amount.Add(epochRewards).Add(delegationsInProcess))
+	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards, "chain_id", zone.ChainId)
+	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate, "chain_id", zone.ChainId)
+	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate, "chain_id", zone.ChainId)
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, zone).Amount.Add(epochRewards).Add(delegationsInProcess), "chain_id", zone.ChainId)
 
 	// soft cap redemption rate, instead of panicking.
 	delta := ratio.Quo(zone.RedemptionRate)
@@ -568,10 +568,10 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 		})
 	}
 	if len(msgs) == 0 {
-		k.Logger(ctx).Info("No rebalancing required")
+		k.Logger(ctx).Info("no rebalancing required", "chain_id", zone.ChainId, "epoch_number", epochNumber)
 		return nil
 	}
-	k.Logger(ctx).Debug("Send rebalancing messages", "msgs", msgs)
+	k.Logger(ctx).Debug("sending rebalancing messages", "msgs", msgs, "chain_id", zone.ChainId, "epoch_number", epochNumber)
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber))
 }
 

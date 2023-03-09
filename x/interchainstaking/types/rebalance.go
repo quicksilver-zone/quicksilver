@@ -88,7 +88,7 @@ func DetermineAllocationsForRebalancing(
 		lockedPerValidator[redelegation.Destination] = thisLocked + redelegation.Amount
 	}
 	for _, valoper := range utils.Keys(currentAllocations) {
-		// if validator already has a redelegation _to_ it, we can no longer redelegate _from_ it (transitive redelegations)
+		// if validator already has a redelegation _to_ it, we can no longer regenerate _from_ it (transitive redelegations)
 		// remove _locked_ amount from lpv and total locked for purposes of rebalancing.
 		if currentLocked[valoper] {
 			thisLocked, found := lockedPerValidator[valoper]
@@ -104,7 +104,7 @@ func DetermineAllocationsForRebalancing(
 	maxCanRebalanceTotal := currentSum.Sub(sdkmath.NewInt(totalLocked)).Quo(sdk.NewInt(2))
 	maxCanRebalance := sdkmath.MinInt(maxCanRebalanceTotal, currentSum.Quo(sdk.NewInt(7)))
 	if log != nil {
-		log.Debug("Rebalancing", "totalLocked", totalLocked, "lockedPerValidator", lockedPerValidator, "canRebalanceTotal", maxCanRebalanceTotal, "canRebalanceEpoch", maxCanRebalance)
+		log.Debug("rebalancing", "totalLocked", totalLocked, "lockedPerValidator", lockedPerValidator, "canRebalanceTotal", maxCanRebalanceTotal, "canRebalanceEpoch", maxCanRebalance)
 	}
 
 	// deltas are sorted in CalculateDeltas; don't re-sort.

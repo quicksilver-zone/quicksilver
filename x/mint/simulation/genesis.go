@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"math/rand"
 
-	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
@@ -98,7 +96,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		func(r *rand.Rand) { mintintRewardsDistributionStartEpoch = genMintintRewardsDistributionStartEpoch(r) },
 	)
 
-	mintDenom := appconfig.DefaultBondDenom
+	mintDenom := sdk.DefaultBondDenom
 
 	minter := types.Minter{EpochProvisions: epochProvisions}
 	params := types.Params{
