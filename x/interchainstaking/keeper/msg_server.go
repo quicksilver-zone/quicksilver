@@ -155,7 +155,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 		Intents:   intents,
 	}
 
-	k.SetIntent(ctx, &zone, intent, false)
+	k.SetDelegatorIntent(ctx, &zone, intent, false)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

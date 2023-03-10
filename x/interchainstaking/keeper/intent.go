@@ -20,8 +20,8 @@ func (k *Keeper) getStoreKey(zone *types.Zone, snapshot bool) []byte {
 	return append(types.KeyPrefixIntent, []byte(zone.ChainId)...)
 }
 
-// GetIntent returns intent info by zone and delegator
-func (k *Keeper) GetIntent(ctx sdk.Context, zone *types.Zone, delegator string, snapshot bool) (types.DelegatorIntent, bool) {
+// GetDelegatorIntent returns intent info by zone and delegator
+func (k *Keeper) GetDelegatorIntent(ctx sdk.Context, zone *types.Zone, delegator string, snapshot bool) (types.DelegatorIntent, bool) {
 	intent := types.DelegatorIntent{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 	bz := store.Get([]byte(delegator))
@@ -33,21 +33,21 @@ func (k *Keeper) GetIntent(ctx sdk.Context, zone *types.Zone, delegator string, 
 	return intent, true
 }
 
-// SetIntent store the delegator intent
-func (k *Keeper) SetIntent(ctx sdk.Context, zone *types.Zone, intent types.DelegatorIntent, snapshot bool) {
+// SetDelegatorIntent store the delegator intent
+func (k *Keeper) SetDelegatorIntent(ctx sdk.Context, zone *types.Zone, intent types.DelegatorIntent, snapshot bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 	bz := k.cdc.MustMarshal(&intent)
 	store.Set([]byte(intent.Delegator), bz)
 }
 
-// DeleteIntent deletes delegator intent
-func (k *Keeper) DeleteIntent(ctx sdk.Context, zone *types.Zone, delegator string, snapshot bool) {
+// DeleteDelegatorIntent deletes delegator intent
+func (k *Keeper) DeleteDelegatorIntent(ctx sdk.Context, zone *types.Zone, delegator string, snapshot bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 	store.Delete([]byte(delegator))
 }
 
-// IterateIntents iterate through intents for a given zone
-func (k *Keeper) IterateIntents(ctx sdk.Context, zone *types.Zone, snapshot bool, fn func(index int64, intent types.DelegatorIntent) (stop bool)) {
+// IterateDelegatorIntents iterate through delegator intents for a given zone
+func (k *Keeper) IterateDelegatorIntents(ctx sdk.Context, zone *types.Zone, snapshot bool, fn func(index int64, intent types.DelegatorIntent) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -68,34 +68,34 @@ func (k *Keeper) IterateIntents(ctx sdk.Context, zone *types.Zone, snapshot bool
 	}
 }
 
-// AllIntents returns every intent in the store for the specified zone
-func (k *Keeper) AllIntents(ctx sdk.Context, zone *types.Zone, snapshot bool) []types.DelegatorIntent {
+// AllDelegatorIntents returns every intent in the store for the specified zone
+func (k *Keeper) AllDelegatorIntents(ctx sdk.Context, zone *types.Zone, snapshot bool) []types.DelegatorIntent {
 	var intents []types.DelegatorIntent
-	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
+	k.IterateDelegatorIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		intents = append(intents, intent)
 		return false
 	})
 	return intents
 }
 
-// AllIntentsAsPointer returns every intent in the store for the specified zone
-func (k *Keeper) AllIntentsAsPointer(ctx sdk.Context, zone *types.Zone, snapshot bool) []*types.DelegatorIntent {
+// AllDelegatorIntentsAsPointer returns every intent in the store for the specified zone
+func (k *Keeper) AllDelegatorIntentsAsPointer(ctx sdk.Context, zone *types.Zone, snapshot bool) []*types.DelegatorIntent {
 	var intents []*types.DelegatorIntent
-	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
+	k.IterateDelegatorIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
 		intents = append(intents, &intent)
 		return false
 	})
 	return intents
 }
 
-func (k *Keeper) AggregateIntents(ctx sdk.Context, zone *types.Zone) error {
-	var err error
+// AggregateDelegatorIntents takes a snapshot of delegator intents for a given zone.
+func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) error {
 	snapshot := false
 	aggregate := make(types.ValidatorIntents, 0)
 	ordinalizedIntentSum := sdk.ZeroDec()
 	// reduce intents
 
-	k.IterateIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
+	k.IterateDelegatorIntents(ctx, zone, snapshot, func(_ int64, delIntent types.DelegatorIntent) (stop bool) {
 		// addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
 		// if localErr != nil {
 		// 	err = localErr
@@ -106,32 +106,40 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone *types.Zone) error {
 
 		// grab offchain asset value, and raise the users' base value by this amount.
 		// currently ignoring base value (locally held assets)
-		k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, intent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
+		k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, delIntent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
 			balance.Amount = balance.Amount.Add(sdkmath.NewIntFromUint64(data.Amount))
 			// claim amounts are in zone.baseDenom - but given weights are all relative to one another this okay.
-			k.Logger(ctx).Error("Intents - found claim for user", "user", intent.Delegator, "claim amount", data.Amount, "new balance", balance.Amount)
+			k.Logger(ctx).Error(
+				"intents - found claim for user",
+				"user", delIntent.Delegator,
+				"claim amount", data.Amount,
+				"new balance", balance.Amount,
+			)
 			return false
 		})
 
-		intents := intent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
-		k.Logger(ctx).Error("Intents - ordinalized", "user", intent.Delegator, "new balance", balance.Amount, "normal intents", intent.Intents, "intents", intents)
+		valIntents := delIntent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
+		k.Logger(ctx).Error(
+			"intents - ordinalized",
+			"user", delIntent.Delegator,
+			"new balance", balance.Amount,
+			"normal intents", delIntent.Intents,
+			"intents", valIntents,
+		)
 
-		for vIntent := range intents.Sort() {
-			thisIntent, ok := aggregate.GetForValoper(intents[vIntent].ValoperAddress)
-			ordinalizedIntentSum = ordinalizedIntentSum.Add(intents[vIntent].Weight)
-			if !ok {
-				aggregate = append(aggregate, intents[vIntent])
+		for idx := range valIntents.Sort() {
+			valIntent, found := aggregate.GetForValoper(valIntents[idx].ValoperAddress)
+			ordinalizedIntentSum = ordinalizedIntentSum.Add(valIntents[idx].Weight)
+			if !found {
+				aggregate = append(aggregate, valIntents[idx])
 			} else {
-				thisIntent.Weight = thisIntent.Weight.Add(intents[vIntent].Weight)
-				aggregate = aggregate.SetForValoper(intents[vIntent].ValoperAddress, thisIntent)
+				valIntent.Weight = valIntent.Weight.Add(valIntents[idx].Weight)
+				aggregate = aggregate.SetForValoper(valIntents[idx].ValoperAddress, valIntent)
 			}
 		}
 
 		return false
 	})
-	if err != nil {
-		return err
-	}
 
 	if len(aggregate) > 0 && ordinalizedIntentSum.IsZero() {
 		return errors.New("ordinalized intent sum is zero, this may happen if no claims are recorded")
@@ -139,28 +147,32 @@ func (k *Keeper) AggregateIntents(ctx sdk.Context, zone *types.Zone) error {
 
 	// normalise aggregated intents again.
 	newAggregate := make(types.ValidatorIntents, 0)
-	for _, intent := range aggregate.Sort() {
-		if !intent.Weight.IsZero() && intent.Weight.IsPositive() {
-			intent.Weight = intent.Weight.Quo(ordinalizedIntentSum)
-			newAggregate = append(newAggregate, intent)
+	for _, valIntent := range aggregate.Sort() {
+		if !valIntent.Weight.IsZero() && valIntent.Weight.IsPositive() {
+			valIntent.Weight = valIntent.Weight.Quo(ordinalizedIntentSum)
+			newAggregate = append(newAggregate, valIntent)
 		}
 	}
 
-	k.Logger(ctx).Info("aggregates", "agg", newAggregate, "chain", zone.ChainId)
+	k.Logger(ctx).Info(
+		"aggregates",
+		"agg", newAggregate,
+		"chain", zone.ChainId,
+	)
 
 	zone.AggregateIntent = newAggregate
 	k.SetZone(ctx, zone)
 	return nil
 }
 
-// UpdateIntent updates
-func (k *Keeper) UpdateIntent(ctx sdk.Context, delegator sdk.AccAddress, zone *types.Zone, inAmount sdk.Coins, memo string) error {
+// UpdateDelegatorIntent updates
+func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress, zone *types.Zone, inAmount sdk.Coins, memo string) error {
 	snapshot := false
 	updateWithCoin := inAmount.IsValid()
 	updateWithMemo := len(memo) > 0
 
 	// this is here because we need access to the bankKeeper to ordinalize intent
-	delIntent, _ := k.GetIntent(ctx, zone, delegator.String(), snapshot)
+	delIntent, _ := k.GetDelegatorIntent(ctx, zone, delegator.String(), snapshot)
 
 	// ordinalize
 	// this is the currently held amount
@@ -200,7 +212,7 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, delegator sdk.AccAddress, zone *t
 		return nil
 	}
 
-	k.SetIntent(ctx, zone, delIntent, snapshot)
+	k.SetDelegatorIntent(ctx, zone, delIntent, snapshot)
 	return nil
 }
 

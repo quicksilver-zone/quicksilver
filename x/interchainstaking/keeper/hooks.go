@@ -17,7 +17,7 @@ func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 // AfterEpochEnd is called after any registered epoch ends.
 // calls:
 //
-//	k.AggregateIntents
+//	k.AggregateDelegatorIntents
 //	k.HandleQueuedUnbondings
 //	k.Rebalance
 //
@@ -28,8 +28,12 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 		k.Logger(ctx).Info("handling epoch end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 
 		k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
-			k.Logger(ctx).Info("taking a snapshot of intents")
-			err := k.AggregateIntents(ctx, zone)
+			k.Logger(ctx).Info(
+				"taking a snapshot of delegator intents",
+				"epoch_identifier", epochIdentifier,
+				"epoch_number", epochNumber,
+			)
+			err := k.AggregateDelegatorIntents(ctx, zone)
 			if err != nil {
 				// we can and need not panic here; logging the error is sufficient.
 				// an error here is not expected, but also not terminal.

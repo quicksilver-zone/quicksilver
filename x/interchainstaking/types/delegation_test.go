@@ -103,7 +103,6 @@ func TestNormalizeValidatorIntentsDeterminism(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestDetermineAllocationsForDelegation(t *testing.T) {
