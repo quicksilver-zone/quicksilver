@@ -18,13 +18,13 @@ func CoinFromRequestKey(query []byte, accAddr sdk.AccAddress) (sdk.Coin, error) 
 
 func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
 	balancesStore := query[1:]
-	accAddr2, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	gotAccAddress, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return "", err
 	}
 
-	if !accAddr2.Equals(accAddr) {
-		return "", fmt.Errorf("account mismatch; expected %s, got %s", accAddr.String(), accAddr2.String())
+	if !gotAccAddress.Equals(accAddr) {
+		return "", fmt.Errorf("account mismatch; expected %s, got %s", accAddr.String(), gotAccAddress.String())
 	}
 
 	return denom, nil
