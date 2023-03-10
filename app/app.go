@@ -46,7 +46,7 @@ import (
 	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func Init() {
+func init() {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		panic(err)
