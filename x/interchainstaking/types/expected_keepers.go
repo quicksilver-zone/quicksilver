@@ -41,3 +41,8 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
 }
+
+// ScopedIBCKeeper defines the expected scoped ibc keeper
+type ScopedIBCKeeper interface {
+	ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error
+}

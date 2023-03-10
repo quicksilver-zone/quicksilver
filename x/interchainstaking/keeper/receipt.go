@@ -221,7 +221,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 		_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
 		if err != nil {
-			return err
+			return fmt.Errorf("error sending ICA Tx: %w", err)
 		}
 
 		// remove chunk from original msg slice

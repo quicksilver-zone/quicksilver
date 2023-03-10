@@ -8,11 +8,6 @@ import (
 	"os"
 	"time"
 
-	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -22,11 +17,14 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	tmjson "github.com/tendermint/tendermint/libs/json"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/ingenuity-build/quicksilver/app"
+	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 var denoms = []string{"uqatom", "uqosmo", "uqjunox"}
@@ -118,7 +116,6 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		notBondedCoins := sdk.NewCoin(stakingState.Params.BondDenom, notBondedTokens)
 		// edit bank state to make it have the not bonded pool tokens
 		bankStateBz, ok := rawState[banktypes.ModuleName]
-		// TODO(fdymylja/jonathan): should we panic in this case
 		if !ok {
 			panic("bank genesis state is missing")
 		}
@@ -187,6 +184,16 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			})
 		}
 		icsState.Delegations = delegations
+
+		// set up port connections
+		for _, zone := range icsState.Zones {
+			portID := zone.GetDelegationAddress().GetPortName()
+			connectionID := "test" + portID
+			icsState.PortConnections = append(icsState.PortConnections, interchainstakingtypes.PortConnectionTuple{
+				ConnectionId: connectionID,
+				PortId:       portID,
+			})
+		}
 
 		// set new supply
 		bankState.Supply = newSupply

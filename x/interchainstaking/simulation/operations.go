@@ -2,7 +2,12 @@ package simulation
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
+
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -37,6 +42,7 @@ func WeightedOperations(
 	cdc codec.JSONCodec,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
+	sk types.ScopedIBCKeeper,
 	k keeper.Keeper,
 ) simulation.WeightedOperations {
 	var (
@@ -63,10 +69,12 @@ func WeightedOperations(
 		),
 		simulation.NewWeightedOperation(
 			weightMsgRequestRedemption,
-			SimulateMsgRequestRedemption(ak, bk, k),
+			SimulateMsgRequestRedemption(ak, bk, sk, k),
 		),
 	}
 }
+
+var ibcPortsSetup = make(map[string]bool)
 
 // SimulateMsgSignalIntent generates a MsgSignalIntent with random values.
 func SimulateMsgSignalIntent(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) sdksimtypes.Operation {
@@ -78,7 +86,7 @@ func SimulateMsgSignalIntent(ak types.AccountKeeper, bk types.BankKeeper, k keep
 }
 
 // SimulateMsgRequestRedemption generates a MsgRequestRedemption with random values.
-func SimulateMsgRequestRedemption(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) sdksimtypes.Operation {
+func SimulateMsgRequestRedemption(ak types.AccountKeeper, bk types.BankKeeper, sk types.ScopedIBCKeeper, k keeper.Keeper) sdksimtypes.Operation {
 	return func(
 		r *rand.Rand, bApp *baseapp.BaseApp, ctx sdk.Context, accs []sdksimtypes.Account, chainID string,
 	) (sdksimtypes.OperationMsg, []sdksimtypes.FutureOperation, error) {
@@ -102,6 +110,34 @@ func SimulateMsgRequestRedemption(ak types.AccountKeeper, bk types.BankKeeper, k
 		dest, err := bech32.ConvertAndEncode(zone.AccountPrefix, utils.GenerateAccAddressForTest(r))
 		if err != nil {
 			return sdksimtypes.NoOpMsg(types.ModuleName, TypeMsgRequestRedemption, "unable to generate dest account"), nil, nil
+		}
+
+		// ensure that channel exists for the zone
+		portID := zone.GetDelegationAddress().GetPortName()
+		if found := ibcPortsSetup[portID]; !found {
+			channelID := k.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctx)
+			connectionID, _ := k.GetConnectionForPort(ctx, portID)
+			k.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.PortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
+			k.ICAControllerKeeper.SetActiveChannelID(ctx, connectionID, portID, channelID)
+			path := host.ChannelCapabilityPath(portID, channelID)
+			fmt.Printf("\nsetting up mock channel capability, portID: %s, channelID: %s, connectionID: %s, cap: %s\n",
+				portID, channelID, connectionID, path)
+			chanCap, err := k.ScopedKeeper().NewCapability(
+				ctx,
+				path,
+			)
+			if err != nil {
+				panic(err)
+			}
+
+			err = sk.ClaimCapability(ctx, chanCap, path)
+			if err != nil {
+				panic(err)
+			}
+			k.ICAControllerKeeper.SetActiveChannelID(ctx, connectionID, portID, channelID)
+			k.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, portID, channelID, 1)
+
+			ibcPortsSetup[portID] = true
 		}
 
 		msg := &types.MsgRequestRedemption{
