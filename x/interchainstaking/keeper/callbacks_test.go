@@ -23,16 +23,6 @@ import (
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func TestCoinFromRequestKey(t *testing.T) {
-	accAddr := utils.GenerateAccAddressForTest()
-	prefix := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
-	query := append(prefix, []byte("denom")...)
-
-	coin, err := utils.CoinFromRequestKey(query, accAddr)
-	require.NoError(t, err)
-	require.Equal(t, "denom", coin.Denom)
-}
-
 // ValSetCallback
 
 func (s *KeeperTestSuite) TestHandleValsetCallback() {
@@ -681,7 +671,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 // 			s.Require().NoError(err)
 
 // 			expected := test.expected(zone.Validators)
-// 			fmt.Println(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))
+// 			9(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))
 // 			_, found = app.InterchainstakingKeeper.GetDelegation(ctx, &zone, expected.DelegationAddress, expected.ValidatorAddress)
 // 			s.Require().True(found)
 // 		})

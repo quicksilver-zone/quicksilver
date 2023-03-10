@@ -7,20 +7,15 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-// coinFromRequestKey parses
-func CoinFromRequestKey(query []byte, accAddr sdk.AccAddress) (sdk.Coin, error) {
-	denom, err := DenomFromRequestKey(query, accAddr)
-	if err != nil {
-		return sdk.Coin{}, err
-	}
-	return sdk.NewCoin(denom, sdk.ZeroInt()), nil
-}
-
 func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
 	balancesStore := query[1:]
 	gotAccAddress, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return "", err
+	}
+
+	if len(denom) == 0 {
+		return "", fmt.Errorf("key contained no denom")
 	}
 
 	if !gotAccAddress.Equals(accAddr) {
