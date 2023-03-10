@@ -671,7 +671,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 // 			s.Require().NoError(err)
 
 // 			expected := test.expected(zone.Validators)
-// 			9(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))
+// 			fmt.Println(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))
 // 			_, found = app.InterchainstakingKeeper.GetDelegation(ctx, &zone, expected.DelegationAddress, expected.ValidatorAddress)
 // 			s.Require().True(found)
 // 		})
