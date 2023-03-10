@@ -12,7 +12,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	tmstore "github.com/tendermint/tendermint/store"
-	tmdb "github.com/tendermint/tm-db"
+	tmdb "github.com/cometbft/cometbft-db"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/tendermint/tendermint/config"
