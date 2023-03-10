@@ -10,13 +10,14 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/ingenuity-build/quicksilver/app"
 	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 )
 
 func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
@@ -283,7 +284,6 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			"local_callback_nil",
 			func(ctx sdk.Context, appA *app.Quicksilver) {},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
-
 				address := utils.GenerateAccAddressForTest()
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
@@ -323,7 +323,6 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 				suite.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
 			},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
-
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
 
 				query := abci.RequestQuery{
@@ -374,7 +373,6 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 				appA.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("%s/uqatom", suite.chainA.ChainID), pd)
 			},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
-
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
 
 				query := abci.RequestQuery{

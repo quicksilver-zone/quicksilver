@@ -1,9 +1,10 @@
 package types_test
 
 import (
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"strings"
 	"testing"
+
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	"github.com/stretchr/testify/require"
 )
