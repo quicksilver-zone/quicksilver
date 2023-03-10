@@ -1327,6 +1327,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
+	s.Require().NoError(err)
 
 	// mock ack for redelegations
 	app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
@@ -1354,7 +1355,8 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	s.Require().True(present)
 
 	// change intents to trigger transitive redelegations which should fail rebalance
-	zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
 	intents = icstypes.ValidatorIntents{
 		{ValoperAddress: vals[0].ValoperAddress, Weight: sdk.NewDecWithPrec(1, 1)},
 		{ValoperAddress: vals[1].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
@@ -1365,6 +1367,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
+	s.Require().NoError(err)
 
 	// check for redelegations originating from val[0], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 3)
@@ -1478,6 +1481,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
+	s.Require().NoError(err)
 
 	// check for redelegations originating from val[1], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[0].ValoperAddress, 3)
@@ -1497,7 +1501,8 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 		{
 			name: "msg response with some data",
 			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
-				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				err := app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				s.Require().NoError(err)
 				sender := utils.GenerateAccAddressForTest(r)
 				senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
 				transferMsg := ibctransfertypes.MsgTransfer{
@@ -1613,7 +1618,8 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 		{
 			name: "msg response with some data",
 			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
-				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				err := app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				s.Require().NoError(err)
 				sender := utils.GenerateAccAddressForTest(r)
 				senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
 				transferMsg := ibctransfertypes.MsgTransfer{
@@ -1627,8 +1633,9 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 					Sequence: 1,
 				}
 
-				anyresponse, _ := codectypes.NewAnyWithValue(&response)
-				return []sdk.Msg{&transferMsg}, anyresponse
+				anyResponse, err := codectypes.NewAnyWithValue(&response)
+				s.Require().NoError(err)
+				return []sdk.Msg{&transferMsg}, anyResponse
 			},
 			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
 				txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
@@ -1659,8 +1666,9 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 
 				response := distrtypes.MsgSetWithdrawAddressResponse{}
 
-				anyresponse, _ := codectypes.NewAnyWithValue(&response)
-				return []sdk.Msg{&msgSetWithdrawAddress}, anyresponse
+				anyResponse, err := codectypes.NewAnyWithValue(&response)
+				s.Require().NoError(err)
+				return []sdk.Msg{&msgSetWithdrawAddress}, anyResponse
 			},
 			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
 				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
