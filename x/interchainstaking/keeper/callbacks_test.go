@@ -28,9 +28,9 @@ func TestCoinFromRequestKey(t *testing.T) {
 	prefix := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
 	query := append(prefix, []byte("denom")...)
 
-	coin, err := utils.CoinFromRequestKey(query, accAddr)
+	denom, err := utils.DenomFromRequestKey(query, accAddr)
 	require.NoError(t, err)
-	require.Equal(t, "denom", coin.Denom)
+	require.Equal(t, "denom", denom)
 }
 
 // ValSetCallback
