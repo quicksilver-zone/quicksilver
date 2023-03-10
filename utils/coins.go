@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"bytes"
-	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // coinFromRequestKey parses
@@ -17,13 +17,14 @@ func CoinFromRequestKey(query []byte, accAddr sdk.AccAddress) (sdk.Coin, error) 
 }
 
 func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
-	idx := bytes.Index(query, accAddr)
-	if idx == -1 {
-		return "", errors.New("AccountBalanceCallback: invalid request query")
-	}
-	denom := string(query[idx+len(accAddr):])
-	if err := sdk.ValidateDenom(denom); err != nil {
+	balancesStore := query[1:]
+	accAddr2, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	if err != nil {
 		return "", err
+	}
+
+	if !accAddr2.Equals(accAddr) {
+		return "", fmt.Errorf("account mismatch; expected %s, got %s", accAddr.String(), accAddr2.String())
 	}
 
 	return denom, nil
