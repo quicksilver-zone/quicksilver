@@ -26,11 +26,11 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 	zoneValidatorAddresses := zone.GetValidatorsAddressesAsSlice()
 
 	// check that there are no intents
-	intents := icsKeeper.AllIntents(ctx, &zone, false)
+	intents := icsKeeper.AllDelegatorIntents(ctx, &zone, false)
 	suite.Require().Len(intents, 0)
 
 	// set intents for testAddress
-	icsKeeper.SetIntent(
+	icsKeeper.SetDelegatorIntent(
 		ctx,
 		&zone,
 		icstypes.DelegatorIntent{
@@ -57,7 +57,7 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 		false,
 	)
 	// set intents for user1
-	icsKeeper.SetIntent(
+	icsKeeper.SetDelegatorIntent(
 		ctx,
 		&zone,
 		icstypes.DelegatorIntent{
@@ -84,7 +84,7 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 		false,
 	)
 	// set intents for user2
-	icsKeeper.SetIntent(
+	icsKeeper.SetDelegatorIntent(
 		ctx,
 		&zone,
 		icstypes.DelegatorIntent{
@@ -108,20 +108,20 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 	)
 
 	// check for intents set above
-	intents = icsKeeper.AllIntents(ctx, &zone, false)
+	intents = icsKeeper.AllDelegatorIntents(ctx, &zone, false)
 	suite.Require().Len(intents, 3)
 
 	// delete intent for testAddress
-	icsKeeper.DeleteIntent(ctx, &zone, testAddress, false)
+	icsKeeper.DeleteDelegatorIntent(ctx, &zone, testAddress, false)
 
 	// check intents
-	intents = icsKeeper.AllIntents(ctx, &zone, false)
+	intents = icsKeeper.AllDelegatorIntents(ctx, &zone, false)
 	suite.Require().Len(intents, 2)
 
 	suite.T().Logf("intents:\n%+v\n", intents)
 
 	// update intent for user1
-	err := icsKeeper.UpdateIntent(
+	err := icsKeeper.UpdateDelegatorIntent(
 		ctx,
 		user2,
 		&zone,
@@ -136,7 +136,7 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 	suite.Require().NoError(err)
 
 	// load and match pointers
-	intentsPointers := icsKeeper.AllIntentsAsPointer(ctx, &zone, false)
+	intentsPointers := icsKeeper.AllDelegatorIntentsAsPointer(ctx, &zone, false)
 	for i, ip := range intentsPointers {
 		suite.Require().Equal(intents[i], *ip)
 	}
@@ -322,10 +322,10 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			}
 
 			for _, intent := range tt.intents(zone) {
-				icsKeeper.SetIntent(ctx, &zone, intent, false)
+				icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
 			}
 
-			icsKeeper.AggregateIntents(ctx, &zone)
+			icsKeeper.AggregateDelegatorIntents(ctx, &zone)
 
 			// refresh zone to pull new aggregate
 			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -433,14 +433,14 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 			}
 
 // 			for _, intent := range tt.intents(zone) {
-// 				icsKeeper.SetIntent(ctx, zone, intent, false)
+// 				icsKeeper.SetDelegatorIntent(ctx, zone, intent, false)
 // 			}
 
 // 			for _, claim := range tt.claims(zone) {
 // 				qapp.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
 // 			}
 
-// 			icsKeeper.AggregateIntents(ctx, zone)
+// 			icsKeeper.AggregateDelegatorIntents(ctx, zone)
 
 // 			// refresh zone to pull new aggregate
 // 			zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)

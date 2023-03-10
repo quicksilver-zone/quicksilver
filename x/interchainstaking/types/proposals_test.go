@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {

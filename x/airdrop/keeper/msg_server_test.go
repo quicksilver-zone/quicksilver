@@ -314,7 +314,7 @@ func (suite *KeeperTestSuite) Test_msgServer_Claim() {
 						},
 					},
 				}
-				appA.InterchainstakingKeeper.SetIntent(
+				appA.InterchainstakingKeeper.SetDelegatorIntent(
 					suite.chainA.GetContext(),
 					&zone,
 					intent,

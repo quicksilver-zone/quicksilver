@@ -28,6 +28,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+// RequestRedemption handles MsgRequestRedemption by creating a corresponding withdrawal record queued for unbonding.
 func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -64,7 +65,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	})
 
 	// does zone exist?
-	if nil == zone {
+	if zone == nil {
 		return nil, fmt.Errorf("unable to find matching zone for denom %s", msg.Value.GetDenom())
 	}
 
@@ -89,14 +90,8 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
-	var rate sdk.Dec
-	rate = zone.LastRedemptionRate
-	if zone.RedemptionRate.LT(rate) {
-		rate = zone.RedemptionRate
-	}
-
+	rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
 	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
-
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
 	k.Logger(ctx).Info("tokens to distribute", "amount", outTokens)
 
@@ -106,16 +101,16 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	hashString := hex.EncodeToString(hash[:])
 
 	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.EscrowModuleAccount, sdk.NewCoins(msg.Value)); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to send coins to escrow account: %w", err)
 	}
 
 	if zone.LiquidityModule {
 		if err = k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to process redemption for LSM: %w", err)
 		}
 	} else {
 		if err = k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("unable to queue redemption: %w", err)
 		}
 	}
 
@@ -147,8 +142,12 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	}
 
 	// validate intents (aggregated errors)
-	intents, _ := types.IntentsFromString(msg.Intents) // already validated
-	if err := k.validateIntents(zone, intents); err != nil {
+	intents, err := types.IntentsFromString(msg.Intents) // already validated
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.validateValidatorIntents(zone, intents); err != nil {
 		return nil, err
 	}
 
@@ -157,7 +156,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 		Intents:   intents,
 	}
 
-	k.SetIntent(ctx, &zone, intent, false)
+	k.SetDelegatorIntent(ctx, &zone, intent, false)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
