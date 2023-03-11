@@ -9,13 +9,13 @@ import (
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (k Keeper) allocateHoldingsRewards(ctx sdk.Context) error {
+func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 	k.Logger(ctx).Info("allocateHoldingsRewards")
 
 	// obtain and iterate all claim records for each zone
 	for i, zone := range k.icsKeeper.AllZones(ctx) {
 		k.Logger(ctx).Info("zones", "i", i, "zone", zone.ChainId)
-		userAllocations := k.calcUserHoldingsAllocations(ctx, zone)
+		userAllocations := k.CalcUserHoldingsAllocations(ctx, zone)
 
 		if err := k.distributeToUsers(ctx, userAllocations); err != nil {
 			// we might want to do a soft fail here so that all zones are not affected...
@@ -28,7 +28,7 @@ func (k Keeper) allocateHoldingsRewards(ctx sdk.Context) error {
 	return nil
 }
 
-func (k Keeper) calcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone) []userAllocation {
+func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone) []userAllocation {
 	k.Logger(ctx).Info("calcUserHoldingsAllocations", "zone", zone.ChainId, "allocations", zone.HoldingsAllocation)
 
 	userAllocations := make([]userAllocation, 0)

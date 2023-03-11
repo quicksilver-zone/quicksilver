@@ -79,7 +79,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	)
 
 	// snapshot obtained and used here
-	userAllocations := k.calcUserValidatorSelectionAllocations(ctx, &zone, *zs)
+	userAllocations := k.CalcUserValidatorSelectionAllocations(ctx, &zone, *zs)
 
 	if err := k.distributeToUsers(ctx, userAllocations); err != nil {
 		return err

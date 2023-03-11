@@ -39,11 +39,11 @@ type userScore struct {
 	Score   sdk.Dec
 }
 
-// allocateValidatorSelectionRewards utilizes IBC to query the performance
+// AllocateValidatorSelectionRewards utilizes IBC to query the performance
 // rewards account for each zone to determine validator performance and
 // corresponding rewards allocations. Each zone's response is dealt with
 // individually in a callback.
-func (k Keeper) allocateValidatorSelectionRewards(ctx sdk.Context) {
+func (k Keeper) AllocateValidatorSelectionRewards(ctx sdk.Context) {
 	k.Logger(ctx).Info("allocateValidatorChoiceRewards")
 
 	for i, zone := range k.icsKeeper.AllZones(ctx) {
@@ -86,21 +86,21 @@ func (k Keeper) getZoneScores(
 		ValidatorScores:  make(map[string]*validator),
 	}
 
-	if err := k.calcDistributionScores(ctx, zone, &zs); err != nil {
+	if err := k.CalcDistributionScores(ctx, zone, &zs); err != nil {
 		return nil, err
 	}
 
-	if err := k.calcOverallScores(ctx, zone, delegatorRewards, &zs); err != nil {
+	if err := k.CalcOverallScores(ctx, zone, delegatorRewards, &zs); err != nil {
 		return nil, err
 	}
 
 	return &zs, nil
 }
 
-// calcDistributionScores calculates the validator distribution scores for the
+// CalcDistributionScores calculates the validator distribution scores for the
 // given zone based on the normalized voting power of the validators; scoring
 // favours smaller validators for decentraliztion purposes.
-func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *zoneScore) error {
+func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *zoneScore) error {
 	k.Logger(ctx).Info("calculate distribution scores", "zone", zone.ChainId)
 
 	zoneValidators := zone.GetValidatorsSorted()
@@ -166,7 +166,7 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	return nil
 }
 
-// calcOverallScores calculates the overall validator scores for the given zone
+// CalcOverallScores calculates the overall validator scores for the given zone
 // based on the combination of performance score and distribution score.
 //
 // The performance score is first calculated based on validator rewards earned
@@ -178,7 +178,7 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 //
 // On completion a msg is submitted to withdraw the zone performance rewards,
 // resetting zone performance scoring for the next epoch.
-func (k Keeper) calcOverallScores(
+func (k Keeper) CalcOverallScores(
 	ctx sdk.Context,
 	zone icstypes.Zone,
 	delegatorRewards distrtypes.QueryDelegationTotalRewardsResponse,
@@ -249,10 +249,10 @@ func (k Keeper) calcOverallScores(
 	return nil
 }
 
-// calcUserValidatorSelectionAllocations returns a slice of userAllocation. It
+// CalcUserValidatorSelectionAllocations returns a slice of userAllocation. It
 // calculates individual user scores relative to overall zone score and then
 // proportionally allocates rewards based on the individual zone allocation.
-func (k Keeper) calcUserValidatorSelectionAllocations(
+func (k Keeper) CalcUserValidatorSelectionAllocations(
 	ctx sdk.Context,
 	zone *icstypes.Zone,
 	zs zoneScore,
