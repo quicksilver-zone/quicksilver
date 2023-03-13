@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/config"
-
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
@@ -21,6 +19,7 @@ import (
 
 	quicksilver "github.com/ingenuity-build/quicksilver/app"
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
+	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/config"
 	"github.com/ingenuity-build/quicksilver/test/e2e/initialization"
 )
 

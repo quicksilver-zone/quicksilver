@@ -6,14 +6,13 @@ import (
 	"testing"
 	"time"
 
-	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
-	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/config"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
+	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
+	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/config"
 	"github.com/ingenuity-build/quicksilver/test/e2e/containers"
 	"github.com/ingenuity-build/quicksilver/test/e2e/initialization"
 )

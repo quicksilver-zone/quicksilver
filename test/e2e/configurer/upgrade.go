@@ -7,12 +7,11 @@ import (
 	"testing"
 	"time"
 
-	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
-	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/config"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/chain"
+	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/config"
 	"github.com/ingenuity-build/quicksilver/test/e2e/containers"
 	"github.com/ingenuity-build/quicksilver/test/e2e/initialization"
 )

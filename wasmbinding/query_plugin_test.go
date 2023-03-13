@@ -215,7 +215,7 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 	}
 }
 
-// TestDeterministicJsonMarshal test that we get deterministic JSON marshalled response upon
+// TestDeterministicJsonMarshal tests that we get deterministic JSON marshalled response upon
 // proto struct update in the state machine.
 func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 	testCases := []struct {

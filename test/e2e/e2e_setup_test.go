@@ -6,10 +6,9 @@ import (
 	"strconv"
 	"testing"
 
-	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
-
 	"github.com/stretchr/testify/suite"
 
+	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/test/e2e/configurer"
 )
 

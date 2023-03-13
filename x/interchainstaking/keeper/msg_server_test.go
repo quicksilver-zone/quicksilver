@@ -309,7 +309,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 	for _, tt := range tests {
 		tt := tt
 
-		// run test with LSM disabled.
+		// run tests with LSM disabled.
 		s.Run(tt.name, func() {
 			s.SetupTest()
 			s.setupTestZones()
@@ -345,7 +345,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			}
 		})
 
-		// run test with LSM enabled.
+		// run tests with LSM enabled.
 		tt.name = tt.name + "_LSM_enabled"
 		s.Run(tt.name, func() {
 			s.SetupTest()

@@ -155,7 +155,7 @@ func TestDefaultIntentWithOneUnbondedOneUnbonding(t *testing.T) {
 	}
 }
 
-// add more default test here.
+// add more default tests here.
 
 func TestCoinsToIntent(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}

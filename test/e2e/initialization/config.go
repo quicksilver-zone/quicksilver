@@ -15,7 +15,6 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	staketypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/gogo/protobuf/proto"
 	tmjson "github.com/tendermint/tendermint/libs/json"
@@ -25,7 +24,7 @@ import (
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
-// NodeConfig is a confiuration for the node supplied from the test runner
+// NodeConfig is a configuration for the node supplied from the test runner
 // to initialization scripts. It should be backwards compatible with earlier
 // versions. If this struct is updated, the change must be backported to earlier
 // branches that might be used for upgrade testing.

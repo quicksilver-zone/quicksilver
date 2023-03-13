@@ -157,7 +157,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 /*func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
 	val := s.network.Validators[0]
 
-	test := []struct {
+	tests := []struct {
 		name      string
 		args      []string
 		expectErr bool
@@ -193,7 +193,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			&types.QueryDepositAccountForChainResponse{},
 		},
 	}
-	for _, tt := range test {
+	for _, tt := range tests {
 		tt := tt
 
 		s.Run(tt.name, func() {

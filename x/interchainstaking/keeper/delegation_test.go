@@ -223,7 +223,7 @@ func (s *KeeperTestSuite) TestUpdateDelegation() {
 }
 
 func TestCalculateDeltas(t *testing.T) {
-	// we auto generate the validator addresses in these test. any dust gets allocated to the first validator in the list
+	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
 	// once sorted alphabetically on valoper.
 
 	val1 := utils.GenerateValAddressForTest()
@@ -356,7 +356,7 @@ func TestCalculateDeltas(t *testing.T) {
 }
 
 func TestDetermineAllocationsForRebalance(t *testing.T) {
-	// we auto generate the validator addresses in these test. any dust gets allocated to the first validator in the list
+	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
 	// once sorted alphabetically on valoper.
 
 	val1 := utils.GenerateValAddressForTest()

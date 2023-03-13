@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
 		},
 	}
 
-	// run test:
+	// run tests:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 		},
 	}
 
-	// run test:
+	// run tests:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 		},
 	}
 
-	// run test:
+	// run tests:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -311,7 +311,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 		},
 	}
 
-	// run test:
+	// run tests:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -401,7 +401,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 		},
 	}
 
-	// run test:
+	// run tests:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -506,7 +506,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 		},
 	}
 
-	// run test:
+	// run tests:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -596,7 +596,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 		},
 	}
 
-	// run test:
+	// run tests:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -671,7 +671,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 		},
 	}
 
-	// run test:
+	// run tests:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -746,7 +746,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 		},
 	}
 
-	// run test:
+	// run tests:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()

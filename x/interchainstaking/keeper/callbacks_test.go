@@ -913,7 +913,7 @@ func (s *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
 	})
 }
 
-// test where we have an existing balance and that balance is now reported as zero.
+// tests where we have an existing balance and that balance is now reported as zero.
 // we expect that an icq query will be emitted to assert with proof that the balance
 // is now zero.
 func (s *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {

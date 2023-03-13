@@ -8,12 +8,10 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-
-	govv1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govv1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/require"
 	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
@@ -21,7 +19,7 @@ import (
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
-// QueryBalancer returns balances at the address.
+// QueryBalances returns balances at the address.
 func (n *NodeConfig) QueryBalances(address string) (sdk.Coins, error) {
 	path := fmt.Sprintf("cosmos/bank/v1beta1/balances/%s", address)
 	bz, err := n.QueryGRPCGateway(path)

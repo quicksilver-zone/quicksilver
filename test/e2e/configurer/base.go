@@ -11,10 +11,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/chain"
-
 	"github.com/stretchr/testify/require"
 
+	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/chain"
 	"github.com/ingenuity-build/quicksilver/test/e2e/containers"
 	"github.com/ingenuity-build/quicksilver/test/e2e/initialization"
 	"github.com/ingenuity-build/quicksilver/test/e2e/util"
