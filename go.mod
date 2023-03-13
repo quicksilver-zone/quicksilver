@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	cosmossdk.io/math v1.0.0-beta.4
-	github.com/CosmWasm/wasmd v0.30.0
+	github.com/CosmWasm/wasmd v0.29.2
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft-db v0.7.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
