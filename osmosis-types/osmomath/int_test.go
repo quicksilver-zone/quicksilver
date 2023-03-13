@@ -103,7 +103,7 @@ func (s *intTestSuite) TestIntPanic() {
 // Tests below uses randomness
 // Since we are using *big.Int as underlying value
 // and (U/)Int is immutable value(see TestImmutability(U/)Int)
-// it is safe to use randomness in the test
+// it is safe to use randomness in the tests
 func (s *intTestSuite) TestIdentInt() {
 	for d := 0; d < 1000; d++ {
 		n := rand.Int63()
