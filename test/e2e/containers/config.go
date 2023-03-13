@@ -18,8 +18,9 @@ const (
 	// Current Git branch quicksilver repo/version. It is meant to be built locally.
 	// It is used when skipping upgrade by setting QUICKSILVER_E2E_SKIP_UPGRADE to true).
 	// This image should be pre-built with `make docker-build-debug` either in CI or locally.
-	CurrentBranchQuickSilverRepository = "quicksilverzone/quicksilver"
-	CurrentBranchQuicksilverTag        = "latest"
+
+	CurrentBranchQuickSilverRepository = "quicksilver"
+	CurrentBranchQuicksilverTag        = "debug"
 	// Pre-upgrade quicksilver repo/tag to pull.
 	// It should be uploaded to Docker Hub. QUICKSILVER_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
@@ -33,7 +34,7 @@ const (
 	relayerTag        = "1.2.0"
 )
 
-// Returns ImageConfig needed for running e2e test.
+// NewImageConfig returns ImageConfig needed for running e2e test.
 // If isUpgrade is true, returns images for running the upgrade
 // If isFork is true, utilizes provided fork height to initiate fork logic
 func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
@@ -65,7 +66,7 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 		config.QuicksilverTag = CurrentBranchQuicksilverTag
 	} else {
 		// Upgrades are run at the time when upgrade height is reached
-		// and are submitted via a governance proposal. Thefore, we
+		// and are submitted via a governance proposal. Therefore, we
 		// must start running the previous Osmosis version. Then, the node
 		// should auto-upgrade, at which point we can restart the updated
 		// Osmosis validator container.

@@ -108,9 +108,11 @@ func TestSingleNodeInit(t *testing.T) {
 	// Setup
 	existingChain, err := initialization.InitChain(id, dataDir, existingChainNodeConfigs, time.Second*3, forkHeight)
 	require.NoError(t, err)
+	t.Logf("chain: %v", existingChain)
 
 	actualNode, err := initialization.InitSingleNode(existingChain.ChainMeta.ID, dataDir, filepath.Join(existingChain.Nodes[0].ConfigDir, "config", "genesis.json"), expectedConfig, 3, "testHash", []string{"some server"}, []string{"some server"})
 	require.NoError(t, err)
+	t.Logf("node: %v", actualNode)
 
 	validateNode(t, id, dataDir, expectedConfig, actualNode)
 }

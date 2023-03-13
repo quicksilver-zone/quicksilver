@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
+	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/test/e2e/configurer"
 )
 
@@ -39,6 +40,9 @@ type IntegrationTestSuite struct {
 }
 
 func TestIntegrationTestSuite(t *testing.T) {
+	cmdcfg.SetupConfig()
+	cmdcfg.RegisterDenoms()
+
 	isEnabled := os.Getenv(e2eEnabledEnv)
 	if isEnabled != "True" {
 		t.Skip(fmt.Sprintf("e2e test is disabled. To run, set %s to True", e2eEnabledEnv))

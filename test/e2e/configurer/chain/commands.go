@@ -80,7 +80,7 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 
 func (n *NodeConfig) StoreWasmCode(wasmFile, from string) {
 	n.LogActionF("storing wasm code from file %s", wasmFile)
-	cmd := []string{"quicksilverd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uosmo", "--gas-adjustment=1.3"}
+	cmd := []string{"quicksilverd", "tx", "wasm", "store", wasmFile, fmt.Sprintf("--from=%s", from), "--gas=auto", "--gas-prices=0.1uqck", "--gas-adjustment=1.3"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully stored")
@@ -333,7 +333,7 @@ func (n *NodeConfig) QueryPropStatusTimed(proposalNumber int, desiredStatus stri
 		},
 		1*time.Minute,
 		10*time.Millisecond,
-		"Osmosis node failed to retrieve prop tally",
+		"Quicksilver node failed to retrieve prop tally",
 	)
 	elapsed := time.Since(start)
 	totalTime <- elapsed

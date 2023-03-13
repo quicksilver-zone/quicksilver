@@ -334,6 +334,13 @@ test-rpc:
 test-rpc-pending:
 	./scripts/integration-test-all.sh -t "pending" -q 1 -z 1 -s 2 -m "pending" -r "true"
 
+RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
+RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
+RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
+docker-build-debug:
+	@DOCKER_BUILDKIT=1 $(DOCKER) build -t quicksilver:${COMMIT} --build-arg BASE_IMG_TAG=debug --build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) -f test/e2e/e2e.Dockerfile .
+	@DOCKER_BUILDKIT=1 $(DOCKER) tag quicksilver:${COMMIT} quicksilver:debug
+
 # test-e2e runs a full e2e test suite
 # deletes any pre-existing QUICKSILVER containers before running.
 #
@@ -366,7 +373,7 @@ e2e-check-image-sha:
 	test/e2e/scripts/run/check_image_sha.sh
 
 e2e-remove-resources:
-	# test/e2e/scripts/run/remove_stale_resources.sh
+	test/e2e/scripts/run/remove_stale_resources.sh
 
 .PHONY: run-tests test test-all test-import test-rpc $(TEST_TARGETS)
 

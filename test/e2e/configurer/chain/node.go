@@ -73,7 +73,7 @@ func (n *NodeConfig) Run() error {
 		},
 		2*time.Minute,
 		time.Second,
-		"Osmosis node failed to produce blocks",
+		"Quicksilver node failed to produce blocks",
 	)
 
 	if err := n.extractOperatorAddressIfValidator(); err != nil {

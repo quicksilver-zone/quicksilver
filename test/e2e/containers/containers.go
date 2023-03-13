@@ -42,7 +42,7 @@ type Manager struct {
 }
 
 // NewManager creates a new Manager instance and initializes
-// all Docker specific utilies. Returns an error if initialiation fails.
+// all Docker specific utilizes. Returns an error if initialization fails.
 func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Manager, err error) {
 	docker = &Manager{
 		ImageConfig:       NewImageConfig(isUpgrade, isFork),
@@ -229,8 +229,6 @@ func (m *Manager) RunNodeResource(containerName, valCondifDir string) (*dockerte
 		},
 	}
 
-	fmt.Println(runOpts.Repository)
-	fmt.Println(runOpts.Tag)
 	resource, err := m.pool.RunWithOptions(runOpts, noRestart)
 	if err != nil {
 		return nil, err
