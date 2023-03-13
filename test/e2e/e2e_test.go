@@ -2,12 +2,14 @@ package e2e
 
 import (
 	"fmt"
-	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/chain"
-	"github.com/ingenuity-build/quicksilver/test/e2e/initialization"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"os"
 	"path/filepath"
 	"time"
+
+	coretypes "github.com/tendermint/tendermint/rpc/core/types"
+
+	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/chain"
+	"github.com/ingenuity-build/quicksilver/test/e2e/initialization"
 )
 
 // Reusable Checks
