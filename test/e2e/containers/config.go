@@ -18,8 +18,8 @@ const (
 	// Current Git branch quicksilver repo/version. It is meant to be built locally.
 	// It is used when skipping upgrade by setting QUICKSILVER_E2E_SKIP_UPGRADE to true).
 	// This image should be pre-built with `make docker-build-debug` either in CI or locally.
-	CurrentBranchQuickSilverRepository = "quicksilver"
-	CurrentBranchQuicksilverTag        = "debug"
+	CurrentBranchQuickSilverRepository = "quicksilverzone/quicksilver"
+	CurrentBranchQuicksilverTag        = "latest"
 	// Pre-upgrade quicksilver repo/tag to pull.
 	// It should be uploaded to Docker Hub. QUICKSILVER_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.

@@ -165,7 +165,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 
 // RunHermesResource runs a Hermes container. Returns the container resource and error if any.
 // the name of the hermes container is "<chain A id>-<chain B id>-relayer"
-func (m *Manager) RunHermesResource(chainAID, osmoARelayerNodeName, osmoAValMnemonic, chainBID, osmoBRelayerNodeName, osmoBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunHermesResource(chainAID, quickARelayerNodeName, quickAValMnemonic, chainBID, quickBRelayerNodeName, quickBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
 	hermesResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       hermesContainerName,
@@ -186,12 +186,12 @@ func (m *Manager) RunHermesResource(chainAID, osmoARelayerNodeName, osmoAValMnem
 				"3031/tcp": {{HostIP: "", HostPort: "3031"}},
 			},
 			Env: []string{
-				fmt.Sprintf("OSMO_A_E2E_CHAIN_ID=%s", chainAID),
-				fmt.Sprintf("OSMO_B_E2E_CHAIN_ID=%s", chainBID),
-				fmt.Sprintf("OSMO_A_E2E_VAL_MNEMONIC=%s", osmoAValMnemonic),
-				fmt.Sprintf("OSMO_B_E2E_VAL_MNEMONIC=%s", osmoBValMnemonic),
-				fmt.Sprintf("OSMO_A_E2E_VAL_HOST=%s", osmoARelayerNodeName),
-				fmt.Sprintf("OSMO_B_E2E_VAL_HOST=%s", osmoBRelayerNodeName),
+				fmt.Sprintf("QUICK_A_E2E_CHAIN_ID=%s", chainAID),
+				fmt.Sprintf("QUICK_B_E2E_CHAIN_ID=%s", chainBID),
+				fmt.Sprintf("QUICK_A_E2E_VAL_MNEMONIC=%s", quickAValMnemonic),
+				fmt.Sprintf("QUICK_B_E2E_VAL_MNEMONIC=%s", quickBValMnemonic),
+				fmt.Sprintf("QUICK_A_E2E_VAL_HOST=%s", quickARelayerNodeName),
+				fmt.Sprintf("QUICK_B_E2E_VAL_HOST=%s", quickBRelayerNodeName),
 			},
 			Entrypoint: []string{
 				"sh",
@@ -229,6 +229,8 @@ func (m *Manager) RunNodeResource(containerName, valCondifDir string) (*dockerte
 		},
 	}
 
+	fmt.Println(runOpts.Repository)
+	fmt.Println(runOpts.Tag)
 	resource, err := m.pool.RunWithOptions(runOpts, noRestart)
 	if err != nil {
 		return nil, err
