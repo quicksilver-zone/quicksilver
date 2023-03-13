@@ -244,9 +244,9 @@ func (m *Manager) RunNodeResource(containerName, valCondifDir string) (*dockerte
 // The genesis and configs are to be mounted on the init container as volume on mountDir path.
 // Returns the container resource and error if any. This method does not Purge the container. The caller
 // must deal with removing the resource.
-func (m *Manager) RunChainInitResource(chainID string, chainVotingPeriod, chainExpeditedVotingPeriod int, validatorConfigBytes []byte, mountDir string, forkHeight int) (*dockertest.Resource, error) {
+func (m *Manager) RunChainInitResource(chainID string, chainVotingPeriod int, validatorConfigBytes []byte, mountDir string, forkHeight int) (*dockertest.Resource, error) {
 	votingPeriodDuration := time.Duration(chainVotingPeriod * 1000000000)
-	expeditedVotingPeriodDuration := time.Duration(chainExpeditedVotingPeriod * 1000000000)
+	fmt.Printf("initializing chain resource...\nRepository: %s\nTag: %s\n", m.ImageConfig.InitRepository, m.ImageConfig.InitTag)
 
 	initResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
@@ -259,7 +259,6 @@ func (m *Manager) RunChainInitResource(chainID string, chainVotingPeriod, chainE
 				fmt.Sprintf("--chain-id=%s", chainID),
 				fmt.Sprintf("--config=%s", validatorConfigBytes),
 				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
-				fmt.Sprintf("--expedited-voting-period=%v", expeditedVotingPeriodDuration),
 				fmt.Sprintf("--fork-height=%v", forkHeight),
 			},
 			User: "root:root",

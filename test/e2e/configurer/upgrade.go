@@ -71,7 +71,7 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 		forkHeight -= config.ForkHeightPreUpgradeOffset
 	}
 
-	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.ID, int(chainConfig.VotingPeriod), int(chainConfig.ExpeditedVotingPeriod), validatorConfigBytes, tmpDir, int(forkHeight))
+	chainInitResource, err := uc.containerManager.RunChainInitResource(chainConfig.ID, int(chainConfig.VotingPeriod), validatorConfigBytes, tmpDir, int(forkHeight))
 	if err != nil {
 		return err
 	}
