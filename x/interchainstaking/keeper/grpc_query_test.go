@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
 		},
 	}
 
-	// run tests:
+	// run test:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 		{
 			"DepositAccount_Valid_Request",
 			func() {
-				// use state set from previous tests
+				// use state set from previous test
 			},
 			&types.QueryDepositAccountForChainRequest{
 				ChainId: suite.chainB.ChainID,
@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 		},
 	}
 
-	// run tests:
+	// run test:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -224,7 +224,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 		},
 	}
 
-	// run tests:
+	// run test:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -311,7 +311,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 		},
 	}
 
-	// run tests:
+	// run test:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -401,7 +401,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 		},
 	}
 
-	// run tests:
+	// run test:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -506,7 +506,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 		},
 	}
 
-	// run tests:
+	// run test:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -596,7 +596,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 		},
 	}
 
-	// run tests:
+	// run test:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -671,7 +671,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 		},
 	}
 
-	// run tests:
+	// run test:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
@@ -746,7 +746,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 		},
 	}
 
-	// run tests:
+	// run test:
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()

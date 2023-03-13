@@ -9,7 +9,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
-// TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint
+// TestMintDenomMsg test TypeMsgMint message is emitted on a successful mint
 func (suite *KeeperTestSuite) TestMintDenomMsg() {
 	// Create a denom
 	suite.CreateDefaultDenom()
@@ -49,7 +49,7 @@ func (suite *KeeperTestSuite) TestMintDenomMsg() {
 	}
 }
 
-// TestBurnDenomMsg tests TypeMsgBurn message is emitted on a successful burn
+// TestBurnDenomMsg test TypeMsgBurn message is emitted on a successful burn
 func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 	// Create a denom.
 	suite.CreateDefaultDenom()
@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestBurnDenomMsg() {
 	}
 }
 
-// TestCreateDenomMsg tests TypeMsgCreateDenom message is emitted on a successful denom creation
+// TestCreateDenomMsg test TypeMsgCreateDenom message is emitted on a successful denom creation
 func (suite *KeeperTestSuite) TestCreateDenomMsg() {
 	defaultDenomCreationFee := types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000000)))}
 	for _, tc := range []struct {
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestCreateDenomMsg() {
 	}
 }
 
-// TestChangeAdminDenomMsg tests TypeMsgChangeAdmin message is emitted on a successful admin change
+// TestChangeAdminDenomMsg test TypeMsgChangeAdmin message is emitted on a successful admin change
 func (suite *KeeperTestSuite) TestChangeAdminDenomMsg() {
 	for _, tc := range []struct {
 		desc                    string
@@ -179,7 +179,7 @@ func (suite *KeeperTestSuite) TestChangeAdminDenomMsg() {
 	}
 }
 
-// TestSetDenomMetaDataMsg tests TypeMsgSetDenomMetadata message is emitted on a successful denom metadata change
+// TestSetDenomMetaDataMsg test TypeMsgSetDenomMetadata message is emitted on a successful denom metadata change
 func (suite *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 	// setup test
 	suite.SetupTest()

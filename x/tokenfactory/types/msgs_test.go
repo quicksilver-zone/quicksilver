@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
-// TestMsgCreateDenom tests if valid/invalid create denom messages are properly validated/invalidated
+// TestMsgCreateDenom test if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgCreateDenom(t *testing.T) {
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
@@ -78,7 +78,7 @@ func TestMsgCreateDenom(t *testing.T) {
 	}
 }
 
-// TestMsgMint tests if valid/invalid create denom messages are properly validated/invalidated
+// TestMsgMint test if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgMint(t *testing.T) {
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
@@ -151,7 +151,7 @@ func TestMsgMint(t *testing.T) {
 	}
 }
 
-// TestMsgBurn tests if valid/invalid create denom messages are properly validated/invalidated
+// TestMsgBurn test if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgBurn(t *testing.T) {
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
@@ -221,7 +221,7 @@ func TestMsgBurn(t *testing.T) {
 	}
 }
 
-// TestMsgChangeAdmin tests if valid/invalid create denom messages are properly validated/invalidated
+// TestMsgChangeAdmin test if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgChangeAdmin(t *testing.T) {
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()
@@ -295,7 +295,7 @@ func TestMsgChangeAdmin(t *testing.T) {
 	}
 }
 
-// TestMsgSetDenomMetadata tests if valid/invalid create denom messages are properly validated/invalidated
+// TestMsgSetDenomMetadata test if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgSetDenomMetadata(t *testing.T) {
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()

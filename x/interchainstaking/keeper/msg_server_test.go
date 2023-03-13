@@ -309,7 +309,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 	for _, tt := range tests {
 		tt := tt
 
-		// run tests with LSM disabled.
+		// run test with LSM disabled.
 		s.Run(tt.name, func() {
 			s.SetupTest()
 			s.setupTestZones()
@@ -345,7 +345,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			}
 		})
 
-		// run tests with LSM enabled.
+		// run test with LSM enabled.
 		tt.name = tt.name + "_LSM_enabled"
 		s.Run(tt.name, func() {
 			s.SetupTest()
@@ -503,7 +503,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 
 			msg := tt.malleate(s)
 			// validateBasic not explicitly tested here - but we don't call it inside msgSrv.SignalIntent
-			// so call here to make sure out tests are sane.
+			// so call here to make sure out test are sane.
 			err := msg.ValidateBasic()
 			if tt.failsValidations {
 				s.Require().Error(err)

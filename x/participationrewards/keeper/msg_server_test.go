@@ -21,7 +21,7 @@ import (
 )
 
 func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
-	// TODO: these tests ought to validate the error received.
+	// TODO: these test ought to validate the error received.
 	appA := suite.GetQuicksilverApp(suite.chainA)
 
 	msg := types.MsgSubmitClaim{}

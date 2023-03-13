@@ -216,7 +216,7 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 // 		address string
 // 		fn      func(index int64, data types.Claim) (stop bool)
 // 	}
-// 	tests := []struct {
+// 	test := []struct {
 // 		name string
 // 		args args
 // 	}{
@@ -258,7 +258,7 @@ func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
 // 			},
 // 		},
 // 	}
-// 	for _, tt := range tests {
+// 	for _, tt := range test {
 // 		suite.Run(tt.name, func() {
 // 			k.IterateLastEpochUserClaims(suite.chainA.GetContext(), tt.args.chainID, tt.args.address, tt.args.fn)
 // 		})

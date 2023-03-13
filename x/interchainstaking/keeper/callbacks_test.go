@@ -626,7 +626,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 // 		expected func(vals []*types.Validator) types.Delegation
 // 	}
 
-// 	tests := []TestCase{
+// 	test := []TestCase{
 // 		func() TestCase {
 // 			d1 := utils.GenerateValAddressForTest()
 // 			return TestCase{
@@ -647,7 +647,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 // 		}(),
 // 	}
 
-// 	for _, test := range tests {
+// 	for _, test := range test {
 // 		s.Run(test.name, func() {
 // 			s.SetupTest()
 // 			s.SetupZones()
@@ -913,7 +913,7 @@ func (s *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
 	})
 }
 
-// tests where we have an existing balance and that balance is now reported as zero.
+// test where we have an existing balance and that balance is now reported as zero.
 // we expect that an icq query will be emitted to assert with proof that the balance
 // is now zero.
 func (s *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {

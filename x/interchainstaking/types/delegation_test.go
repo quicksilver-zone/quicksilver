@@ -106,7 +106,7 @@ func TestNormalizeValidatorIntentsDeterminism(t *testing.T) {
 }
 
 func TestDetermineAllocationsForDelegation(t *testing.T) {
-	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
+	// we auto generate the validator addresses in these test. any dust gets allocated to the first validator in the list
 	// once sorted alphabetically on valoper.
 
 	val1 := utils.GenerateValAddressForTest()

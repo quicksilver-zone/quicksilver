@@ -3,7 +3,7 @@ package simulation_test
 import (
 	"encoding/json"
 	"fmt"
-	simulation2 "github.com/ingenuity-build/quicksilver/tests/simulation"
+	simulation2 "github.com/ingenuity-build/quicksilver/test/simulation"
 	"math/rand"
 	"os"
 	"testing"

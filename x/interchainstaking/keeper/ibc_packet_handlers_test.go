@@ -83,7 +83,7 @@ func TestHandleMsgTransferBadRecipient(t *testing.T) {
 
 // TODO: add test cases for send.
 // func (s *KeeperTestSuite) TestHandleSendToDelegate() {
-// 	tests := []struct {
+// 	test := []struct {
 // 		name string
 // 	}{
 // 		{
@@ -91,7 +91,7 @@ func TestHandleMsgTransferBadRecipient(t *testing.T) {
 // 		},
 // 	}
 
-// 	for _, test := range tests {
+// 	for _, test := range test {
 // 		s.Run(test.name, func() {
 
 // 			s.SetupTest()
