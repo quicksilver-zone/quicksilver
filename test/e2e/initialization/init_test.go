@@ -10,6 +10,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/test/e2e/initialization"
 )
 
@@ -17,6 +18,11 @@ const forkHeight = 10
 
 var expectedConfigFiles = []string{
 	"app.toml", "config.toml", "genesis.json", "node_key.json", "priv_validator_key.json",
+}
+
+func init() {
+	cmdcfg.SetupConfig()
+	cmdcfg.RegisterDenoms()
 }
 
 // TestChainInit test that chain initialization correctly initializes a full chain
