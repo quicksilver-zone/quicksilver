@@ -117,14 +117,21 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.Require().NoError(err)
 
 	// Epoch boundary
-	err = qApp.ParticipationRewardsKeeper.AfterEpochEnd(suite.chainA.GetContext(), "epoch", 3)
+	ctx := suite.chainA.GetContext()
+	qApp.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		suite.Require().NoError(qApp.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(qApp.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+		suite.Require().NoError(qApp.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(qApp.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+		return false
+	})
+
+	err = qApp.ParticipationRewardsKeeper.AfterEpochEnd(ctx, "epoch", 3)
 	suite.Require().NoError(err)
 
-	_, found := qApp.ClaimsManagerKeeper.GetLastEpochClaim(suite.chainA.GetContext(), "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
+	_, found := qApp.ClaimsManagerKeeper.GetLastEpochClaim(ctx, "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
 	suite.Require().True(found)
 
 	// zone for remote chain
-	zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+	zone, found := qApp.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
 
 	valRewards := make(map[string]sdk.Dec)

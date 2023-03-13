@@ -256,11 +256,11 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 	ctx sdk.Context,
 	zone *icstypes.Zone,
 	zs zoneScore,
-) []userAllocation {
+) []UserAllocation {
 	k.Logger(ctx).Info("calcUserValidatorSelectionAllocations", "zone", zone.ChainId, "scores", zs, "allocation", zone.ValidatorSelectionAllocation)
 	// fmt.Printf("calcUserValidatorSelectionAllocations\n\tzone: %v\n\tscores: %v\n\tallocation: %v\n", zone.ChainId, zs, zone.ValidatorSelectionAllocation)
 
-	userAllocations := make([]userAllocation, 0)
+	userAllocations := make([]UserAllocation, 0)
 
 	if zone.ValidatorSelectionAllocation == 0 {
 		k.Logger(ctx).Info("validator selection allocation is zero, nothing to allocate")
@@ -303,7 +303,7 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 	tokensPerPoint := allocation.Quo(sum)
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
-		ua := userAllocation{
+		ua := UserAllocation{
 			Address: us.Address,
 			Amount:  us.Score.Mul(tokensPerPoint).TruncateInt(),
 		}
