@@ -24,6 +24,4 @@ var (
 	MinDepositValue = govv1types.DefaultMinDepositTokens.Int64()
 	// Minimum deposit value for proposal to be submitted.
 	InitialMinDeposit = MinDepositValue / 4
-
-	StrideMigrateWallet = "stride-migration"
 )

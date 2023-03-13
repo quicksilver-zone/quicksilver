@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
-	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/config"
 	"github.com/ingenuity-build/quicksilver/test/e2e/containers"
 	"github.com/ingenuity-build/quicksilver/test/e2e/initialization"
@@ -178,17 +177,6 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	)
 
 	c.t.Log("successfully sent IBC tokens")
-}
-
-func (c *Config) EnableSuperfluidAsset(denom string) {
-	chain, err := c.GetDefaultNode()
-	require.NoError(c.t, err)
-	chain.SubmitSuperfluidProposal(denom, sdk.NewCoin(appconfig.BaseDenom, sdk.NewInt(config.InitialMinDeposit)))
-	c.LatestProposalNumber++
-	chain.DepositProposal(c.LatestProposalNumber)
-	for _, node := range c.NodeConfigs {
-		node.VoteYesProposal(initialization.ValidatorWalletName, c.LatestProposalNumber)
-	}
 }
 
 // GetDefaultNode returns the default node of the chain.
