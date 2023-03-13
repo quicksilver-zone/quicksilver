@@ -2,10 +2,11 @@ package e2e
 
 import (
 	"fmt"
-	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 	"os"
 	"strconv"
 	"testing"
+
+	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 
 	"github.com/stretchr/testify/suite"
 

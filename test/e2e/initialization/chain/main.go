@@ -14,14 +14,14 @@ func main() {
 	var (
 		valConfig    []*initialization.NodeConfig
 		dataDir      string
-		chainId      string
+		chainID      string
 		config       string
 		votingPeriod time.Duration
 		forkHeight   int
 	)
 
 	flag.StringVar(&dataDir, "data-dir", "", "chain data directory")
-	flag.StringVar(&chainId, "chain-id", "", "chain ID")
+	flag.StringVar(&chainID, "chain-id", "", "chain ID")
 	flag.StringVar(&config, "config", "", "serialized config")
 	flag.DurationVar(&votingPeriod, "voting-period", 30000000000, "voting period")
 	flag.IntVar(&forkHeight, "fork-height", 0, "fork height")
@@ -41,14 +41,14 @@ func main() {
 		panic(err)
 	}
 
-	createdChain, err := initialization.InitChain(chainId, dataDir, valConfig, votingPeriod, forkHeight)
+	createdChain, err := initialization.InitChain(chainID, dataDir, valConfig, votingPeriod, forkHeight)
 	if err != nil {
 		panic(err)
 	}
 
 	b, _ := json.Marshal(createdChain)
-	fileName := fmt.Sprintf("%v/%v-encode", dataDir, chainId)
-	if err = os.WriteFile(fileName, b, 0o777); err != nil {
+	fileName := fmt.Sprintf("%v/%v-encode", dataDir, chainID)
+	if err = os.WriteFile(fileName, b, 0o777); err != nil { //nolint:gosec
 		panic(err)
 	}
 }
