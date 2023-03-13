@@ -22,7 +22,7 @@ func init() {
 	ibctesting.DefaultTestingAppInit = SetupTestingApp
 }
 
-// TestKeeperTestSuite runs all the test within this package.
+// TestKeeperTestSuite runs all the tests within this package.
 func TestAppTestSuite(t *testing.T) {
 	suite.Run(t, new(AppTestSuite))
 }
