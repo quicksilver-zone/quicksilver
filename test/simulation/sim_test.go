@@ -3,10 +3,11 @@ package simulation_test
 import (
 	"encoding/json"
 	"fmt"
-	simulation2 "github.com/ingenuity-build/quicksilver/test/simulation"
 	"math/rand"
 	"os"
 	"testing"
+
+	simulation2 "github.com/ingenuity-build/quicksilver/test/simulation"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/baseapp"

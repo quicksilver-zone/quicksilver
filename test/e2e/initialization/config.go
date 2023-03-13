@@ -3,7 +3,6 @@ package initialization
 import (
 	"encoding/json"
 	"fmt"
-
 	"path/filepath"
 	"time"
 
@@ -48,7 +47,7 @@ const (
 	AtomDenom           = "uatom"
 	OsmoIBCDenom        = "ibc/ED07A3391A112B175915CD8FAF43A2DA8E4790EDE12566649D0C2F97716B8518"
 	StakeIBCDenom       = "ibc/C053D637CCA2A2BA030E2C5EE1B28A16F71CCB0E45E8BE52766DC1B241B7787"
-	E2EFeeToken         = "e2e-default-feetoken"
+	E2EFeeToken         = "e2e-default-feetoken" //nolint:gosec
 	UstIBCDenom         = "ibc/BE1BB42D4BE3C30D50B68D7C41DB4DFCE9678E8EF8C539F6E6A9345048894FCC"
 	LuncIBCDenom        = "ibc/0EF15DF2F02480ADE0BB6E85D9EBB5DAEA2836D3860E9F97F9AADE4F57A31AA0"
 	MinGasPrice         = "0.000"
@@ -83,12 +82,6 @@ const (
 	StarsDenom                = "stars"
 	StStarsDenom              = "stStars"
 	DefaultStrideDenomBalance = QuickBalanceA
-
-	// Stride pool ids to migrate
-	// Can be removed after v15 upgrade.
-	StOSMO_OSMOPoolId   = 833
-	StJUNO_JUNOPoolId   = 817
-	StSTARS_STARSPoolId = 810
 )
 
 var (
@@ -106,7 +99,7 @@ var (
 	QuickToken      = sdk.NewInt64Coin(QuickDenom, IbcSendAmount) // 3,300quick
 	StakeToken      = sdk.NewInt64Coin(StakeDenom, IbcSendAmount) // 3,300ustake
 	tenQuick        = sdk.Coins{sdk.NewInt64Coin(QuickDenom, 10_000_000)}
-	fiftyQuick      = sdk.Coins{sdk.NewInt64Coin(QuickDenom, 50_000_000)}
+	fiftyQuick      = sdk.Coins{sdk.NewInt64Coin(QuickDenom, 50_000_000)} //nolint:unused
 	WalletFeeTokens = sdk.NewCoin(E2EFeeToken, sdk.NewInt(WalletFeeBalance))
 )
 
@@ -200,7 +193,7 @@ func updateModuleGenesis[V proto.Message](appGenState map[string]json.RawMessage
 	return nil
 }
 
-func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.Duration, forkHeight int) error {
+func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight int) error {
 	// initialize a genesis file
 	configDir := chain.nodes[0].configDir()
 	for _, val := range chain.nodes {
@@ -209,12 +202,11 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 			return err
 		}
 
-		if chain.chainMeta.Id == ChainAID {
-
+		if chain.chainMeta.ID == ChainAID {
 			if err := addAccount(configDir, "", InitBalanceStrA+","+StridePoolBalances, addr, forkHeight); err != nil {
 				return err
 			}
-		} else if chain.chainMeta.Id == ChainBID {
+		} else if chain.chainMeta.ID == ChainBID {
 			if err := addAccount(configDir, "", InitBalanceStrB+","+StridePoolBalances, addr, forkHeight); err != nil {
 				return err
 			}
@@ -286,14 +278,14 @@ func initGenesis(chain *internalChain, votingPeriod, expeditedVotingPeriod time.
 
 	genDoc.AppState = bz
 
-	genesisJson, err := tmjson.MarshalIndent(genDoc, "", "  ")
+	genesisJSON, err := tmjson.MarshalIndent(genDoc, "", "  ")
 	if err != nil {
 		return err
 	}
 
 	// write the updated genesis file to each validator
 	for _, val := range chain.nodes {
-		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), genesisJson); err != nil {
+		if err := util.WriteFile(filepath.Join(val.configDir(), "config", "genesis.json"), genesisJSON); err != nil {
 			return err
 		}
 	}
@@ -356,7 +348,7 @@ func updateGenUtilGenesis(c *internalChain) func(*genutiltypes.GenesisState) {
 			}
 
 			stakeAmountCoin := StakeAmountCoinA
-			if c.chainMeta.Id != ChainAID {
+			if c.chainMeta.ID != ChainAID {
 				stakeAmountCoin = StakeAmountCoinB
 			}
 			createValmsg, err := node.buildCreateValidatorMsg(stakeAmountCoin)
