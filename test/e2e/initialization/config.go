@@ -293,7 +293,7 @@ func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight in
 
 func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes.GenesisState) {
 	return func(bankGenState *banktypes.GenesisState) {
-		denomsToRegister := append([]string{StakeDenom, IonDenom, QuickDenom, AtomDenom, LuncIBCDenom, UstIBCDenom})
+		denomsToRegister := []string{StakeDenom, IonDenom, QuickDenom, AtomDenom, LuncIBCDenom, UstIBCDenom}
 		for _, denom := range denomsToRegister {
 			setDenomMetadata(bankGenState, denom)
 		}
