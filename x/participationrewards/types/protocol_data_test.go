@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// test that {} is an invalid string, and that an error is thrown when unmarshalled.
+// tests that {} is an invalid string, and that an error is thrown when unmarshalled.
 // see: https://github.com/ingenuity-build/quicksilver/issues/214
 func TestUnmarshalProtocolDataRejectsZeroLengthJson(t *testing.T) {
 	_, err := UnmarshalProtocolData(ProtocolDataTypeOsmosisPool, []byte("{}"))

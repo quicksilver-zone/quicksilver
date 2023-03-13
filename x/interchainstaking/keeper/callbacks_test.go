@@ -626,7 +626,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 // 		expected func(vals []*types.Validator) types.Delegation
 // 	}
 
-// 	test := []TestCase{
+// 	tests := []TestCase{
 // 		func() TestCase {
 // 			d1 := utils.GenerateValAddressForTest()
 // 			return TestCase{
@@ -647,7 +647,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 // 		}(),
 // 	}
 
-// 	for _, test := range test {
+// 	for _, test := range tests {
 // 		s.Run(test.name, func() {
 // 			s.SetupTest()
 // 			s.SetupZones()

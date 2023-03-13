@@ -13,7 +13,7 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 )
 
-// TestMsgCreateDenom test if valid/invalid create denom messages are properly validated/invalidated
+// TestMsgCreateDenom tests if valid/invalid create denom messages are properly validated/invalidated
 func TestMsgCreateDenom(t *testing.T) {
 	// generate a private/public key pair and get the respective address
 	pk1 := ed25519.GenPrivKey().PubKey()

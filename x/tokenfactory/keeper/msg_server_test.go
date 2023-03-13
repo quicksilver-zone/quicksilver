@@ -9,7 +9,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
-// TestMintDenomMsg test TypeMsgMint message is emitted on a successful mint
+// TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint
 func (suite *KeeperTestSuite) TestMintDenomMsg() {
 	// Create a denom
 	suite.CreateDefaultDenom()

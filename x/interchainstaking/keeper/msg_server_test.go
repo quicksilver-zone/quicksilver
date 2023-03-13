@@ -503,7 +503,7 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 
 			msg := tt.malleate(s)
 			// validateBasic not explicitly tested here - but we don't call it inside msgSrv.SignalIntent
-			// so call here to make sure out test are sane.
+			// so call here to make sure out tests are sane.
 			err := msg.ValidateBasic()
 			if tt.failsValidations {
 				s.Require().Error(err)

@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 		{
 			"DepositAccount_Valid_Request",
 			func() {
-				// use state set from previous test
+				// use state set from previous tests
 			},
 			&types.QueryDepositAccountForChainRequest{
 				ChainId: suite.chainB.ChainID,
