@@ -3,6 +3,7 @@ package simulation_test
 import (
 	"encoding/json"
 	"fmt"
+	simulation2 "github.com/ingenuity-build/quicksilver/tests/simulation"
 	"math/rand"
 	"os"
 	"testing"
@@ -17,11 +18,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/simulation"
 )
 
 func init() {
-	simulation.GetSimulatorFlags()
+	simulation2.GetSimulatorFlags()
 }
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent
@@ -31,12 +31,12 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 }
 
 func BenchmarkSimulation(b *testing.B) {
-	simulation.FlagVerboseValue = true
-	simulation.FlagOnOperationValue = true
-	simulation.FlagAllInvariantsValue = true
-	simulation.FlagInitialBlockHeightValue = 1
+	simulation2.FlagVerboseValue = true
+	simulation2.FlagOnOperationValue = true
+	simulation2.FlagAllInvariantsValue = true
+	simulation2.FlagInitialBlockHeightValue = 1
 
-	config, db, dir, _, _, err := simulation.SetupSimulation("goleveldb-app-sim", "Simulation")
+	config, db, dir, _, _, err := simulation2.SetupSimulation("goleveldb-app-sim", "Simulation")
 	require.NoError(b, err, "simulation setup failed")
 
 	b.Cleanup(func() {
@@ -53,7 +53,7 @@ func BenchmarkSimulation(b *testing.B) {
 		true,
 		map[int64]bool{},
 		app.DefaultNodeHome,
-		simulation.FlagPeriodValue,
+		simulation2.FlagPeriodValue,
 		app.MakeEncodingConfig(),
 		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
@@ -66,9 +66,9 @@ func BenchmarkSimulation(b *testing.B) {
 		b,
 		os.Stdout,
 		quicksilver.GetBaseApp(),
-		simulation.AppStateFn(quicksilver.AppCodec(), quicksilver.SimulationManager()),
+		simulation2.AppStateFn(quicksilver.AppCodec(), quicksilver.SimulationManager()),
 		simulationtypes.RandomAccounts,
-		simulation.Operations(quicksilver, quicksilver.AppCodec(), config),
+		simulation2.Operations(quicksilver, quicksilver.AppCodec(), config),
 		quicksilver.ModuleAccountAddrs(),
 		config,
 		quicksilver.AppCodec(),
@@ -76,21 +76,21 @@ func BenchmarkSimulation(b *testing.B) {
 	require.NoError(b, simErr)
 
 	// export state and simParams before the simulation error is checked
-	err = simulation.CheckExportSimulation(quicksilver, config, simParams)
+	err = simulation2.CheckExportSimulation(quicksilver, config, simParams)
 	require.NoError(b, err)
 
 	if config.Commit {
-		simulation.PrintStats(db)
+		simulation2.PrintStats(db)
 	}
 }
 
 // TestAppStateDeterminism TODO.
 func TestAppStateDeterminism(t *testing.T) {
-	if !simulation.FlagEnabledValue {
+	if !simulation2.FlagEnabledValue {
 		t.Skip("skipping application simulation")
 	}
 
-	config := simulation.NewConfigFromFlags()
+	config := simulation2.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
 	config.OnOperation = true
@@ -113,7 +113,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				true,
 				map[int64]bool{},
 				app.DefaultNodeHome,
-				simulation.FlagPeriodValue,
+				simulation2.FlagPeriodValue,
 				app.MakeEncodingConfig(),
 				wasm.EnableAllProposals,
 				app.EmptyAppOptions{},
@@ -131,9 +131,9 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				quicksilver.GetBaseApp(),
-				simulation.AppStateFn(quicksilver.AppCodec(), quicksilver.SimulationManager()),
+				simulation2.AppStateFn(quicksilver.AppCodec(), quicksilver.SimulationManager()),
 				simulationtypes.RandomAccounts,
-				simulation.Operations(quicksilver, quicksilver.AppCodec(), config),
+				simulation2.Operations(quicksilver, quicksilver.AppCodec(), config),
 				quicksilver.ModuleAccountAddrs(),
 				config,
 				quicksilver.AppCodec(),
@@ -141,7 +141,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			require.NoError(t, err)
 
 			if config.Commit {
-				simulation.PrintStats(db)
+				simulation2.PrintStats(db)
 			}
 
 			appHash := quicksilver.LastCommitID().Hash

@@ -2,7 +2,7 @@
 DOCKER_BUILDKIT=1
 COSMOS_BUILD_OPTIONS ?= ""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
-PACKAGES_SIM=github.com/ingenuity-build/quicksilver/simulation
+PACKAGES_SIM=github.com/ingenuity-build/quicksilver/tests/simulation
 VERSION=$(shell git describe --tags | head -n1)
 DOCKER_VERSION ?= $(VERSION)
 TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
