@@ -766,7 +766,7 @@ func (d *BigDec) UnmarshalAmino(bz []byte) error { return d.Unmarshal(bz) }
 
 // helpers
 
-// DecsEqual test if two decimal arrays are equal
+// DecsEqual tests if two decimal arrays are equal
 func DecsEqual(d1s, d2s []BigDec) bool {
 	if len(d1s) != len(d2s) {
 		return false
