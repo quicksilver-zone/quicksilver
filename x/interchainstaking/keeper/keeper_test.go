@@ -81,7 +81,6 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		LocalDenom:      "uqatom",
 		BaseDenom:       "uatom",
 		AccountPrefix:   "cosmos",
-		MultiSend:       true,
 		LiquidityModule: true,
 	}
 

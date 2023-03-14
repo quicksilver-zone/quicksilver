@@ -595,7 +595,7 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 }
 
 func (s *KeeperTestSuite) TestHandleValideRewardsCallback() {
-	s.Run("valid response, negative waitgroup", func() {
+	s.Run("empty response", func() {
 		s.SetupTest()
 		s.setupTestZones()
 
@@ -611,12 +611,7 @@ func (s *KeeperTestSuite) TestHandleValideRewardsCallback() {
 			DelegatorAddress: zone.DelegationAddress.Address,
 		}
 
-		response := distrtypes.QueryDelegationTotalRewardsResponse{
-			Rewards: []distrtypes.DelegationDelegatorReward{
-				{ValidatorAddress: s.chainB.Vals.Validators[0].String(), Reward: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdk.NewInt((1000))))},
-			},
-			Total: sdk.NewDecCoins(sdk.NewDecCoin("uatom", sdk.NewInt((1000)))),
-		}
+		response := distrtypes.QueryDelegationTotalRewardsResponse{}
 		reqbz, err := app.AppCodec().Marshal(&query)
 		s.Require().NoError(err)
 
