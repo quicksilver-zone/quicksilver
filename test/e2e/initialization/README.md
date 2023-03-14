@@ -74,7 +74,6 @@ initResource, err := m.pool.RunWithOptions(
 				fmt.Sprintf("--chain-id=%s", chainId),
 				fmt.Sprintf("--config=%s", validatorConfigBytes),
 				fmt.Sprintf("--voting-period=%v", votingPeriodDuration),
-				fmt.Sprintf("--expedited-voting-period=%v", expeditedVotingPeriodDuration),
 				fmt.Sprintf("--fork-height=%v", forkHeight),
 			},
 			User: "root:root",

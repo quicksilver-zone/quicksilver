@@ -184,35 +184,6 @@ func (n *NodeConfig) FailIBCTransfer(from, recipient, amount string) {
 	n.LogActionF("Failed to send IBC transfer (as expected)")
 }
 
-// SwapExactAmountIn swaps tokenInCoin to get at least tokenOutMinAmountInt of the other token's pool out.
-// swapRoutePoolIds is the comma separated list of pool ids to swap through.
-// swapRouteDenoms is the comma separated list of denoms to swap through.
-// To reproduce locally:
-// docker container exec <container id> quicksilverd tx gamm swap-exact-amount-in <tokeinInCoin> <tokenOutMinAmountInt> --swap-route-pool-ids <swapRoutePoolIds> --swap-route-denoms <swapRouteDenoms> --chain-id=<id>--from=<address> --keyring-backend=test -b=block --yes --log_format=json
-func (n *NodeConfig) SwapExactAmountIn(tokenInCoin, tokenOutMinAmountInt string, swapRoutePoolIDs string, swapRouteDenoms string, from string) {
-	n.LogActionF("swapping %s to get a minimum of %s with pool id routes (%s) and denom routes (%s)", tokenInCoin, tokenOutMinAmountInt, swapRoutePoolIDs, swapRouteDenoms)
-	cmd := []string{"quicksilverd", "tx", "gamm", "swap-exact-amount-in", tokenInCoin, tokenOutMinAmountInt, fmt.Sprintf("--swap-route-pool-ids=%s", swapRoutePoolIDs), fmt.Sprintf("--swap-route-denoms=%s", swapRouteDenoms), fmt.Sprintf("--from=%s", from)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully swapped")
-}
-
-func (n *NodeConfig) JoinPoolExactAmountIn(tokenIn string, poolID uint64, shareOutMinAmount string, from string) {
-	n.LogActionF("join-swap-extern-amount-in (%s)  (%s) from (%s), pool id (%d)", tokenIn, shareOutMinAmount, from, poolID)
-	cmd := []string{"quicksilverd", "tx", "gamm", "join-swap-extern-amount-in", tokenIn, shareOutMinAmount, fmt.Sprintf("--pool-id=%d", poolID), fmt.Sprintf("--from=%s", from)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully joined pool")
-}
-
-func (n *NodeConfig) ExitPool(from, minAmountsOut string, poolID uint64, shareAmountIn string) {
-	n.LogActionF("exiting gamm pool")
-	cmd := []string{"quicksilverd", "tx", "gamm", "exit-pool", fmt.Sprintf("--min-amounts-out=%s", minAmountsOut), fmt.Sprintf("--share-amount-in=%s", shareAmountIn), fmt.Sprintf("--pool-id=%d", poolID), fmt.Sprintf("--from=%s", from)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully exited pool %d, minAmountsOut %s, shareAmountIn %s", poolID, minAmountsOut, shareAmountIn)
-}
-
 func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight int64, initialDeposit sdk.Coin) {
 	n.LogActionF("submitting upgrade proposal %s for height %d", upgradeVersion, upgradeHeight)
 	cmd := []string{"quicksilverd", "tx", "gov", "submit-proposal", "software-upgrade", upgradeVersion, fmt.Sprintf("--title=\"%s upgrade\"", upgradeVersion), "--description=\"upgrade proposal submission\"", fmt.Sprintf("--upgrade-height=%d", upgradeHeight), "--upgrade-info=\"\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
@@ -221,20 +192,9 @@ func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight 
 	n.LogActionF("successfully submitted upgrade proposal")
 }
 
-func (n *NodeConfig) SubmitSuperfluidProposal(asset string, initialDeposit sdk.Coin) {
-	n.LogActionF("submitting superfluid proposal for asset %s", asset)
-	cmd := []string{"quicksilverd", "tx", "gov", "submit-proposal", "set-superfluid-assets-proposal", fmt.Sprintf("--superfluid-assets=%s", asset), fmt.Sprintf("--title=\"%s superfluid asset\"", asset), fmt.Sprintf("--description=\"%s superfluid asset\"", asset), "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
-	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
-	require.NoError(n.t, err)
-	n.LogActionF("successfully submitted superfluid proposal for asset %s", asset)
-}
-
-func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin, isExpedited bool) {
+func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin) {
 	n.LogActionF("submitting text gov proposal")
 	cmd := []string{"quicksilverd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
-	if isExpedited {
-		cmd = append(cmd, "--is-expedited=true")
-	}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully submitted text gov proposal")
