@@ -7,7 +7,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"sort"
+	"strings"
 	"time"
 
 	"cosmossdk.io/math"
@@ -316,4 +318,87 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionID string, chainID 
 		0,
 	)
 	return nil
+}
+
+// GovReopenChannel reopens an ICA channel.
+func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	// if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+	// 	return &types.MsgGovReopenChannelResponse{},
+	// 		govtypes.ErrInvalidSigner.Wrapf(
+	// 			"invalid authority: expected %s, got %s",
+	// 			k.Keeper.GetGovAuthority(ctx), msg.Authority,
+	// 		)
+	// }
+
+	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
+	parts := strings.Split(msg.PortId, ".")
+	if len(parts) != 2 {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format")
+	}
+
+	if _, found := k.GetZone(ctx, parts[0]); !found {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
+	}
+
+	if parts[1] != "delegate" && parts[1] != "deposit" && parts[1] != "performance" && parts[1] != "withdrawal" {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; unexpected account")
+	}
+
+	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, msg.PortId); err != nil {
+		return &types.MsgGovReopenChannelResponse{}, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeReopenICA,
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
+		),
+	})
+
+	return &types.MsgGovReopenChannelResponse{}, nil
+}
+
+// GovCloseChannel closes an ICA channel.
+func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovCloseChannel) (*types.MsgGovCloseChannelResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+		return &types.MsgGovCloseChannelResponse{},
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	_, cap, err := k.Keeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortId, msg.ChannelId)
+	if err != nil {
+		return &types.MsgGovCloseChannelResponse{}, err
+	}
+
+	if err := k.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, msg.PortId, msg.ChannelId, cap); err != nil {
+		return &types.MsgGovCloseChannelResponse{}, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeReopenICA,
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
+			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
+		),
+	})
+
+	return &types.MsgGovCloseChannelResponse{}, nil
 }
