@@ -28,6 +28,21 @@ service Msg {
       body : "*"
     };
   };
+
+  rpc GovCloseChannel(MsgGovCloseChannel) returns (MsgGovCloseChannelResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/interchainstaking/close_channel"
+      body : "*"
+    };
+  };
+
+  rpc GovReopenChannel(MsgGovReopenChannel)
+      returns (MsgGovReopenChannelResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/interchainstaking/reopen_channel"
+      body : "*"
+    };
+  };
 }
 
 // MsgRequestRedemption represents a message type to request a burn of qAssets
