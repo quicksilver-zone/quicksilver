@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"bytes"
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -588,13 +589,16 @@ func (s *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 
 		respbz, err := app.AppCodec().Marshal(&response)
 		s.Require().NoError(err)
+
+		epoch := app.EpochsKeeper.GetEpochInfo(ctx, "epoch")
+		fmt.Println(epoch)
 		err = keeper.RewardsCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 		//
 		s.Require().NoError(err)
 	})
 }
 
-func (s *KeeperTestSuite) TestHandleValideRewardsCallback() {
+func (s *KeeperTestSuite) TestHandleValRewardsCallback() {
 	s.Run("empty response", func() {
 		s.SetupTest()
 		s.setupTestZones()

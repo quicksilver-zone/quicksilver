@@ -639,3 +639,7 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 
 	return out
 }
+
+func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
+	k.EpochsKeeper = epochsKeeper
+}
