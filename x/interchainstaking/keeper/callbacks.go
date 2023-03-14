@@ -100,6 +100,15 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 
 	k.Logger(ctx).Info("rewards callback", "zone", query.ChainId)
 
+	epochInfo := k.EpochsKeeper.GetEpochInfo(ctx, "epoch")
+	if err := k.HandleQueuedUnbondings(ctx, &zone, epochInfo.CurrentEpoch); err != nil {
+		k.Logger(ctx).Error(err.Error())
+	}
+
+	if err := k.Rebalance(ctx, zone, epochInfo.CurrentEpoch); err != nil {
+		k.Logger(ctx).Error("encountered a problem rebalancing", "error", err.Error())
+	}
+
 	// unmarshal request payload
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	if len(query.Request) == 0 {

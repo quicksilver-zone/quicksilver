@@ -35,23 +35,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				return false
 			}
 
-			if err := k.HandleQueuedUnbondings(ctx, &zoneInfo, epochNumber); err != nil {
-				k.Logger(ctx).Error(err.Error())
-				// we can and need not panic here; logging the error is sufficient.
-				// an error here is not expected, but also not terminal.
-				// we don't return on failure here as we still want to attempt
-				// the unrelated tasks below.
-			}
-
-			err = k.Rebalance(ctx, zoneInfo, epochNumber)
-			if err != nil {
-				// we can and need not panic here; logging the error is sufficient.
-				// an error here is not expected, but also not terminal.
-				// we don't return on failure here as we still want to attempt
-				// the unrelated tasks below.
-				k.Logger(ctx).Error("encountered a problem rebalancing", "error", err.Error())
-			}
-
 			if zoneInfo.WithdrawalWaitgroup > 0 {
 				k.Logger(ctx).Error("epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!")
 				zoneInfo.WithdrawalWaitgroup = 0
