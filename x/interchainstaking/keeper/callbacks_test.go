@@ -23,16 +23,6 @@ import (
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func TestCoinFromRequestKey(t *testing.T) {
-	accAddr := utils.GenerateAccAddressForTest()
-	prefix := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
-	query := append(prefix, []byte("denom")...)
-
-	coin, err := utils.CoinFromRequestKey(query, accAddr)
-	require.NoError(t, err)
-	require.Equal(t, "denom", coin.Denom)
-}
-
 // ValSetCallback
 
 func (s *KeeperTestSuite) TestHandleValsetCallback() {
