@@ -18,14 +18,14 @@ const (
 	DevnetChainID     = "quicktest-1"
 
 	v010204UpgradeName = "v1.2.4"
-	v010205UpgradeName = "v1.2.5"
+	v010207UpgradeName = "v1.2.7"
 	v010300UpgradeName = "v1.3.0" // retained for testy
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010300UpgradeName, noOpUpgradeHandler(app)) // retained for testy
 	app.UpgradeKeeper.SetUpgradeHandler(v010204UpgradeName, v010204UpgradeHandler(app))
-	app.UpgradeKeeper.SetUpgradeHandler(v010205UpgradeName, v010205UpgradeHandler(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v010207UpgradeName, v010207UpgradeHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -83,7 +83,7 @@ func v010204UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	}
 }
 
-func v010205UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
+func v010207UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// update minter epoch-provisions
 		minter := app.MintKeeper.GetMinter(ctx)
