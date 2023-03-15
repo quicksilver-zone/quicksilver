@@ -7,6 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
 // upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch)
@@ -16,12 +18,14 @@ const (
 	DevnetChainID     = "quicktest-1"
 
 	v010204UpgradeName = "v1.2.4"
+	v010205UpgradeName = "v1.2.5"
 	v010300UpgradeName = "v1.3.0" // retained for testy
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010300UpgradeName, noOpUpgradeHandler(app)) // retained for testy
 	app.UpgradeKeeper.SetUpgradeHandler(v010204UpgradeName, v010204UpgradeHandler(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v010205UpgradeName, v010205UpgradeHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -75,6 +79,26 @@ func v010204UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 			}
 		}
 
+		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
+	}
+}
+
+func v010205UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		// update minter epoch-provisions
+		minter := app.MintKeeper.GetMinter(ctx)
+		minter.EpochProvisions = sdk.NewDec(50_000_000_000_000).Quo(sdk.NewDec(365))
+		app.MintKeeper.SetMinter(ctx, minter)
+
+		// update params
+		params := app.MintKeeper.GetParams(ctx)
+		params.DistributionProportions = minttypes.DistributionProportions{
+			Staking:              sdk.NewDecWithPrec(80, 2),
+			PoolIncentives:       sdk.NewDecWithPrec(17, 2),
+			ParticipationRewards: sdk.NewDec(0),
+			CommunityPool:        sdk.NewDecWithPrec(3, 2),
+		}
+		app.MintKeeper.SetParams(ctx, params)
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }

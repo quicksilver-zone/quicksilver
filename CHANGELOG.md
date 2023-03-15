@@ -2,6 +2,13 @@
 
 ## Released
 
+### v1.2.5
+- Backport `GovRepenChannel` tx and `GovCloseChannel` proposal
+- Add Logic to handle pending delegations on `regen-1` post upgrade once channel are open.
+- Upgrade Handler:
+  - Fix `EpochProvisions` value 
+  - Set DistributionProportions params
+
 ### v1.2.4
 - Bump Tendermint to v0.34.26 (informalsystems/tendermint)
 - Bump Cosmos-SDK to v0.46.10
