@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -16,7 +17,26 @@ type zoneItrFn func(index int64, zoneInfo types.Zone) (stop bool)
 // BeginBlocker of interchainstaking module
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-
+	//post upgrade-v1.2.5 processing
+	if ctx.BlockHeight() == 14540740 {
+		k.IterateReceipts(ctx, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+			if receiptInfo.ChainId == "regen-1" && receiptInfo.Completed == nil {
+				sendMsg := banktypes.MsgSend{
+					FromAddress: "",
+					ToAddress:   "",
+					Amount:      receiptInfo.Amount,
+				}
+				zone, found := k.GetZone(ctx, "regen-1")
+				if found {
+					err := k.handleSendToDelegate(ctx, &zone, &sendMsg, receiptInfo.Txhash)
+					if err != nil {
+						panic(err)
+					}
+				}
+			}
+			return false
+		})
+	}
 	if ctx.BlockHeight()%30 == 0 {
 		if err := k.GCCompletedRedelegations(ctx); err != nil {
 			k.Logger(ctx).Error("error in GCCompletedRedelegations", "error", err)
