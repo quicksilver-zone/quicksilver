@@ -29,7 +29,7 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 				if found {
 					err := k.handleSendToDelegate(ctx, &zone, &sendMsg, receiptInfo.Txhash)
 					if err != nil {
-						panic(err)
+						k.Logger(ctx).Error("error in processing Pending delegations for regen-1 ", "error", err)
 					}
 				}
 			}
