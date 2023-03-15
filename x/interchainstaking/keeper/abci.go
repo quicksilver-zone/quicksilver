@@ -2,13 +2,12 @@ package keeper
 
 import (
 	"bytes"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -17,7 +16,7 @@ type zoneItrFn func(index int64, zoneInfo types.Zone) (stop bool)
 // BeginBlocker of interchainstaking module
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	//post upgrade-v1.2.5 processing
+	// post upgrade-v1.2.5 processing
 	if ctx.BlockHeight() == 14540740 {
 		k.IterateReceipts(ctx, func(_ int64, receiptInfo types.Receipt) (stop bool) {
 			if receiptInfo.ChainId == "regen-1" && receiptInfo.Completed == nil {

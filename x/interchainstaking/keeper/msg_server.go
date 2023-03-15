@@ -7,19 +7,18 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"sort"
 	"strings"
 	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
-
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 type msgServer struct {

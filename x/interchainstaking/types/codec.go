@@ -31,7 +31,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgRequestRedemption{},
 		&MsgGovCloseChannel{},
 		&MsgGovReopenChannel{},
-
 	)
 
 	registry.RegisterImplementations(
