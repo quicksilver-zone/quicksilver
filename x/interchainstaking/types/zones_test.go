@@ -497,7 +497,6 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 			}
 		}
 	}
-
 }
 
 func TestZone_GetBondedValidatorAddressesAsSlice(t *testing.T) {

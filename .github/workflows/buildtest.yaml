@@ -72,7 +72,7 @@ jobs:
       - name: test quicksilver
         run: |
           make test-unit-cover
-          cat coverage.txt | grep .pb.go -v | grep .pb.gw.go -v | grep osmosis-types -v > coverage_nogen.txt
+          cat coverage.txt | grep .pb.go -v | grep .pb.gw.go -v | grep osmosis-types -v | grep -l 'DONTCOVER' -v > coverage_nogen.txt
 
       - name: "Go vulnerability checks"
         continue-on-error: true    #temp-till we upgrade to v1.20
