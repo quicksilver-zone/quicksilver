@@ -323,10 +323,10 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionID string, chainID 
 func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// remove leanding prefix icacontroller- if passed in msg
-	portId := strings.Replace(msg.PortId, "icacontroller-", "", -1)
+	portID := strings.ReplaceAll(msg.PortId, "icacontroller-", "")
 
 	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
-	parts := strings.Split(portId, ".")
+	parts := strings.Split(portID, ".")
 
 	if len(parts) != 2 {
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format")
@@ -340,7 +340,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; unexpected account")
 	}
 
-	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portId); err != nil {
+	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
 		return &types.MsgGovReopenChannelResponse{}, err
 	}
 
@@ -351,7 +351,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		),
 		sdk.NewEvent(
 			types.EventTypeReopenICA,
-			sdk.NewAttribute(types.AttributeKeyPortID, portId),
+			sdk.NewAttribute(types.AttributeKeyPortID, portID),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
 		),
 	})
