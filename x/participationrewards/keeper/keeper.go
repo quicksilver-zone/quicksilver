@@ -121,7 +121,7 @@ func (k Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 	selfConnectionData, err := json.Marshal(types.ConnectionProtocolData{
 		ConnectionID: types.SelfConnection,
 		ChainID:      ctx.ChainID(),
-		LastEpoch:    ctx.BlockHeight() - 1,
+		LastEpoch:    ctx.BlockHeight() - 2, // reason why -2 works here.
 		Prefix:       config.Bech32Prefix,
 	})
 	if err != nil {
