@@ -29,6 +29,9 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgSignalIntent{},
 		&MsgRequestRedemption{},
+		&MsgGovCloseChannel{},
+		&MsgGovReopenChannel{},
+
 	)
 
 	registry.RegisterImplementations(
