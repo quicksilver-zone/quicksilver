@@ -17,7 +17,7 @@ type zoneItrFn func(index int64, zoneInfo types.Zone) (stop bool)
 func (k Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	// post upgrade-v1.2.5 processing
-	if ctx.BlockHeight() == 14540740 {
+	if ctx.BlockHeight() == 1116500 && ctx.ChainID() == "quicksilver-2" {
 		zone, found := k.GetZone(ctx, "regen-1")
 		if found {
 			k.IterateReceipts(ctx, func(_ int64, receiptInfo types.Receipt) (stop bool) {

@@ -2,6 +2,9 @@
 
 ## Released
 
+### v1.2.6
+- fix release height
+
 ### v1.2.5
 - Backport `GovRepenChannel` tx and `GovCloseChannel` proposal
 - Add Logic to handle pending delegations on `regen-1` post upgrade once channel are open.
