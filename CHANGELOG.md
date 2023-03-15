@@ -2,6 +2,9 @@
 
 ## Released
 
+### v1.2.7
+- fix upgrade handler
+
 ### v1.2.6
 - fix release height
 

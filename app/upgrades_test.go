@@ -278,9 +278,9 @@ func (suite *AppTestSuite) initTestZone() {
 	}
 }
 
-func (s *AppTestSuite) TestV010205UpgradeHandler() {
+func (s *AppTestSuite) TestV010207UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
-	handler := v010205UpgradeHandler(app)
+	handler := v010207UpgradeHandler(app)
 	ctx := s.chainA.GetContext()
 
 	expectedVal := sdk.NewDec(50_000_000_000_000).Quo(sdk.NewDec(365))
