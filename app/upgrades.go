@@ -92,10 +92,10 @@ func v010205UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 		//update params
 		params := app.MintKeeper.GetParams(ctx)
 		params.DistributionProportions = minttypes.DistributionProportions{
-			Staking:              sdk.NewDec(0.8),
-			PoolIncentives:       sdk.NewDec(0.17),
+			Staking:              sdk.NewDecWithPrec(80, 2),
+			PoolIncentives:       sdk.NewDecWithPrec(17, 2),
 			ParticipationRewards: sdk.NewDec(0),
-			CommunityPool:        sdk.NewDec(0.03),
+			CommunityPool:        sdk.NewDecWithPrec(3, 2),
 		}
 		app.MintKeeper.SetParams(ctx, params)
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
