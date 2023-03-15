@@ -283,7 +283,7 @@ func (s *AppTestSuite) TestV010205UpgradeHandler() {
 	handler := v010205UpgradeHandler(app)
 	ctx := s.chainA.GetContext()
 
-	expectedVal := sdk.NewDec(50000000000000).Quo(sdk.NewDec(365))
+	expectedVal := sdk.NewDec(50_000_000_000_000).Quo(sdk.NewDec(365))
 	expectedProportions := minttypes.DistributionProportions{
 		Staking:              sdk.NewDecWithPrec(80, 2),
 		PoolIncentives:       sdk.NewDecWithPrec(17, 2),

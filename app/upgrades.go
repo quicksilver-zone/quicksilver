@@ -87,7 +87,7 @@ func v010205UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// update minter epoch-provisions
 		minter := app.MintKeeper.GetMinter(ctx)
-		minter.EpochProvisions = sdk.NewDec(50000000000000).Quo(sdk.NewDec(365))
+		minter.EpochProvisions = sdk.NewDec(50_000_000_000_000).Quo(sdk.NewDec(365))
 		app.MintKeeper.SetMinter(ctx, minter)
 
 		// update params
