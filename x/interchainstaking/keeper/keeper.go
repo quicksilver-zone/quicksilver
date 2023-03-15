@@ -55,7 +55,19 @@ type Keeper struct {
 
 // NewKeeper returns a new instance of zones Keeper.
 // This function will panic on failure.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, claimsManagerKeeper claimsmanagerkeeper.Keeper, epochsKeeper epochskeeper.Keeper, ps paramtypes.Subspace) Keeper {
+func NewKeeper(
+	cdc codec.Codec,
+	storeKey storetypes.StoreKey,
+	accountKeeper authKeeper.AccountKeeper,
+	bankKeeper bankkeeper.Keeper,
+	icacontrollerkeeper icacontrollerkeeper.Keeper,
+	scopedKeeper *capabilitykeeper.ScopedKeeper,
+	icqKeeper interchainquerykeeper.Keeper,
+	ibcKeeper ibckeeper.Keeper,
+	transferKeeper ibctransferkeeper.Keeper,
+	claimsManagerKeeper claimsmanagerkeeper.Keeper,
+	ps paramtypes.Subspace,
+) Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -79,7 +91,6 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 		IBCKeeper:           ibcKeeper,
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
-		EpochsKeeper:        epochsKeeper,
 
 		paramStore: ps,
 	}
@@ -87,6 +98,10 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 
 func (k *Keeper) GetGovAuthority(ctx sdk.Context) string {
 	return sdk.MustBech32ifyAddressBytes(config.Bech32Prefix, k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
+}
+
+func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
+	k.EpochsKeeper = epochsKeeper
 }
 
 // Logger returns a module-specific logger.
@@ -638,8 +653,4 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 	})
 
 	return out
-}
-
-func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
-	k.EpochsKeeper = epochsKeeper
 }

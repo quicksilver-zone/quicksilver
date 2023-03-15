@@ -325,15 +325,6 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionID string, chainID 
 func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// checking msg authority is the gov module address
-	// if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
-	// 	return &types.MsgGovReopenChannelResponse{},
-	// 		govtypes.ErrInvalidSigner.Wrapf(
-	// 			"invalid authority: expected %s, got %s",
-	// 			k.Keeper.GetGovAuthority(ctx), msg.Authority,
-	// 		)
-	// }
-
 	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
 	parts := strings.Split(msg.PortId, ".")
 	if len(parts) != 2 {
