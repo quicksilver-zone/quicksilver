@@ -278,7 +278,7 @@ func (suite *AppTestSuite) initTestZone() {
 	}
 }
 
-func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
+func (s *AppTestSuite) TestV010205UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
 	handler := v010205UpgradeHandler(app)
 	ctx := s.chainA.GetContext()
