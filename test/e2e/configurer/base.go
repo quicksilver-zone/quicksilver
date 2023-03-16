@@ -104,6 +104,18 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		return err
 	}
 
+	icqCfgPath := path.Join(tmpDir, "icq")
+
+	if err := os.MkdirAll(icqCfgPath, 0o755); err != nil {
+		return err
+	}
+
+	xccLookupCfgPath := path.Join(tmpDir, "xcc-lookup")
+
+	if err := os.MkdirAll(xccLookupCfgPath, 0o755); err != nil {
+		return err
+	}
+
 	relayerNodeA := chainConfigA.NodeConfigs[0]
 	relayerNodeB := chainConfigB.NodeConfigs[0]
 
@@ -154,6 +166,20 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		"hermes relayer not healthy")
 
 	bc.t.Logf("started Hermes relayer container: %s", hermesResource.Container.ID)
+
+	icqResource, err := bc.containerManager.RunICQResource(icqCfgPath)
+	if err != nil {
+		return err
+	}
+
+	bc.t.Logf("started icq relayer container: %s", icqResource.Container.ID)
+
+	xccLookupResource, err := bc.containerManager.RunXCCLookupResource(xccLookupCfgPath)
+	if err != nil {
+		return err
+	}
+
+	bc.t.Logf("started XCC-Lookup container: %s", xccLookupResource.Container.ID)
 
 	// XXX: Give time to both networks to start, otherwise we might see gRPC
 	// transport errors.

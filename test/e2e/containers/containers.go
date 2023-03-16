@@ -16,7 +16,10 @@ import (
 )
 
 const (
-	hermesContainerName = "hermes-relayer"
+	hermesContainerName    = "hermes-relayer"
+	icqContainerName       = "icq-relayer"
+	xccLookupContainerName = "xcc-lookup"
+
 	// The maximum number of times debug logs are printed to console
 	// per CLI command.
 	maxDebugLogsPerCommand = 3
@@ -76,9 +79,14 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainID string, conta
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
 
-// ExecHermesCmd executes command on the hermes relaer container.
+// ExecHermesCmd executes command on the hermes relayer container.
 func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
 	return m.ExecCmd(t, hermesContainerName, command, success)
+}
+
+// ExecICQCmd executes command on the ICQ relayer container.
+func (m *Manager) ExecICQCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	return m.ExecCmd(t, icqContainerName, command, success)
 }
 
 // ExecCmd executes command by running it on the node container (specified by containerName)
@@ -169,8 +177,8 @@ func (m *Manager) RunHermesResource(chainAID, quickARelayerNodeName, quickAValMn
 	hermesResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       hermesContainerName,
-			Repository: m.RelayerRepository,
-			Tag:        m.RelayerTag,
+			Repository: m.HermesRepository,
+			Tag:        m.HermesTag,
 			NetworkID:  m.network.Network.ID,
 			Cmd: []string{
 				"start",
@@ -208,9 +216,67 @@ func (m *Manager) RunHermesResource(chainAID, quickARelayerNodeName, quickAValMn
 	return hermesResource, nil
 }
 
+// RunICQResource runs an ICQ container. Returns the container resource and error if any.
+// the name of the ICQ container is "<chain A id>-<chain B id>-relayer"
+func (m *Manager) RunICQResource(icqCfgPath string) (*dockertest.Resource, error) {
+	icqResource, err := m.pool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       icqContainerName,
+			Repository: m.ICQRepository,
+			Tag:        m.ICQTag,
+			NetworkID:  m.network.Network.ID,
+			User:       "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s/:/root/interchain-queries", icqCfgPath),
+			},
+			ExposedPorts: []string{
+				"3032",
+			},
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"3032/tcp": {{HostIP: "", HostPort: "3032"}},
+			},
+		},
+		noRestart,
+	)
+	if err != nil {
+		return nil, err
+	}
+	m.resources[icqContainerName] = icqResource
+	return icqResource, nil
+}
+
+// RunXCCLookupResource runs an XCCLookup container. Returns the container resource and error if any.
+// the name of the XCCLookup container is "<chain A id>-<chain B id>-relayer"
+func (m *Manager) RunXCCLookupResource(xccLookupCfgPath string) (*dockertest.Resource, error) {
+	xccLookupResource, err := m.pool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       xccLookupContainerName,
+			Repository: m.XCCLookupRepository,
+			Tag:        m.XCCLookupTag,
+			NetworkID:  m.network.Network.ID,
+			User:       "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s/:/root/xcclookup", xccLookupCfgPath),
+			},
+			ExposedPorts: []string{
+				"3033",
+			},
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"3033/tcp": {{HostIP: "", HostPort: "3033"}},
+			},
+		},
+		noRestart,
+	)
+	if err != nil {
+		return nil, err
+	}
+	m.resources[xccLookupContainerName] = xccLookupResource
+	return xccLookupResource, nil
+}
+
 // RunNodeResource runs a node container. Assigns containerName to the container.
 // Mounts the container on valConfigDir volume on the running host. Returns the container resource and error if any.
-func (m *Manager) RunNodeResource(containerName, valCondifDir string) (*dockertest.Resource, error) {
+func (m *Manager) RunNodeResource(containerName, valCondigDir string) (*dockertest.Resource, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -224,7 +290,7 @@ func (m *Manager) RunNodeResource(containerName, valCondifDir string) (*dockerte
 		User:       "root:root",
 		Cmd:        []string{"start"},
 		Mounts: []string{
-			fmt.Sprintf("%s/:/quicksilver/.quicksilverd", valCondifDir),
+			fmt.Sprintf("%s/:/quicksilver/.quicksilverd", valCondigDir),
 			fmt.Sprintf("%s/scripts:/quicksilver", pwd),
 		},
 	}

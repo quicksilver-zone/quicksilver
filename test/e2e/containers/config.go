@@ -9,8 +9,14 @@ type ImageConfig struct {
 	QuicksilversRepository string
 	QuicksilverTag         string
 
-	RelayerRepository string
-	RelayerTag        string
+	HermesRepository string
+	HermesTag        string
+
+	ICQRepository string
+	ICQTag        string
+
+	XCCLookupRepository string
+	XCCLookupTag        string
 }
 
 //nolint:deadcode
@@ -30,8 +36,14 @@ const (
 	previousVersionInitRepository = "quicksilverzone/quicksilver"
 	previousVersionInitTag        = "v1.2.4"
 	// Hermes repo/version for relayer
-	relayerRepository = "informalsystems/hermes"
-	relayerTag        = "1.3.0"
+	hermesRepository = "informalsystems/hermes"
+	hermesTag        = "1.3.0"
+	// ICQ repo/version for relayer
+	icqRepository = "quicksilverzone/interchain-queries"
+	icqTag        = "v0.8.8-beta.1"
+
+	xccLookupRepository = "quicksilverzone/xcclookup"
+	xccLookupTag        = "v0.4.2"
 )
 
 // NewImageConfig returns ImageConfig needed for running e2e test.
@@ -39,8 +51,12 @@ const (
 // If isFork is true, utilizes provided fork height to initiate fork logic
 func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 	config := ImageConfig{
-		RelayerRepository: relayerRepository,
-		RelayerTag:        relayerTag,
+		HermesRepository:    hermesRepository,
+		HermesTag:           hermesTag,
+		ICQRepository:       icqRepository,
+		ICQTag:              icqTag,
+		XCCLookupRepository: xccLookupRepository,
+		XCCLookupTag:        xccLookupTag,
 	}
 
 	if !isUpgrade {

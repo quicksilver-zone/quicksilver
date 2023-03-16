@@ -124,12 +124,12 @@ func (s *IntegrationTestSuite) TestStateSync() {
 				return true
 			}
 		}
-		s.T().Log("state sync snashot after trust height is not found")
+		s.T().Log("state sync snapshot after trust height is not found")
 		return false
 	}
 	runningNode.WaitUntil(hasSnapshotsAvailable)
 
-	// start the state synchin node.
+	// start the state synching node.
 	err = stateSynchingNode.Run()
 	s.Require().NoError(err)
 
