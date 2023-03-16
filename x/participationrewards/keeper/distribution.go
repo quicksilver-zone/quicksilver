@@ -236,6 +236,8 @@ func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []UserAllocat
 		if err != nil {
 			k.Logger(ctx).Error("distribute to user", "address", ua.Address, "coins", coins)
 			hasError = true
+		} else {
+			k.Logger(ctx).Info("distribute to user", "address", ua.Address, "coins", coins, "remaining", k.GetModuleBalance(ctx))
 		}
 	}
 

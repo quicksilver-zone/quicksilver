@@ -15,30 +15,34 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 	k.Logger(ctx).Info("allocateHoldingsRewards")
 
 	// obtain and iterate all claim records for each zone
-	for i, zone := range k.icsKeeper.AllZones(ctx) {
-		k.Logger(ctx).Info("zones", "i", i, "zone", zone.ChainId)
+	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		k.Logger(ctx).Info("zones", "zone", zone.ChainId)
 		userAllocations, remaining := k.CalcUserHoldingsAllocations(ctx, zone)
 
 		if err := k.distributeToUsers(ctx, userAllocations); err != nil {
+			k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
 			// we might want to do a soft fail here so that all zones are not affected...
-			return err
+			return false
 		}
 
 		if remaining.IsPositive() {
+			k.Logger(ctx).Error("remaining amount to return to incentives pool", "remainder", remaining, "pool balance", k.GetModuleBalance(ctx))
 			// send unclaimed remainder to incentives pool
 			if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, airdroptypes.ModuleName, sdk.NewCoins(sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), remaining))); err != nil {
-				return err
+				k.Logger(ctx).Error("failed to send remaining amount to return to incentives pool", "remainder", remaining, "pool balance", k.GetModuleBalance(ctx), "err", err)
+				return false
 			}
 		}
 
 		k.icsKeeper.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
-	}
+		return false
+	})
 
 	return nil
 }
 
 // calculate allocations per user for a given zone, based upon claims submitted and zone
-func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone icstypes.Zone) ([]UserAllocation, math.Int) {
+func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]UserAllocation, math.Int) {
 	k.Logger(ctx).Info("calcUserHoldingsAllocations", "zone", zone.ChainId, "allocations", zone.HoldingsAllocation)
 
 	userAllocations := make([]UserAllocation, 0)

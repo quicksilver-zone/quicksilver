@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 			suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
 			suite.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
 
-			allocations, remainder := appA.ParticipationRewardsKeeper.CalcUserHoldingsAllocations(ctx, zone)
+			allocations, remainder := appA.ParticipationRewardsKeeper.CalcUserHoldingsAllocations(ctx, &zone)
 			suite.Require().ElementsMatch(tt.want, allocations)
 			suite.Require().ElementsMatch(tt.remainder, remainder)
 		})

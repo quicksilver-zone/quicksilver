@@ -68,23 +68,6 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			sub.Hooks(ctx, k)
 		}
 
-		if epochNumber < epochsDeferred {
-			k.Logger(ctx).Info("defer...", "epoch", epochNumber)
-
-			// create snapshot of current intents for the next epoch boundary
-			// requires intents to be set, no intents no snapshot...
-			// further snapshots will be taken during
-			// ValidatorSelectionRewardsCallback;
-			for _, zone := range k.icsKeeper.AllZones(ctx) {
-				zone := zone
-				for _, di := range k.icsKeeper.AllDelegatorIntents(ctx, &zone, false) {
-					k.icsKeeper.SetDelegatorIntent(ctx, &zone, di, true)
-				}
-			}
-
-			return nil
-		}
-
 		tvs, err := k.calcTokenValues(ctx)
 		if err != nil {
 			k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
