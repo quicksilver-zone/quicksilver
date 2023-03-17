@@ -8,12 +8,11 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdksimtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
 	"github.com/ingenuity-build/quicksilver/osmosis-types/osmoutils"
-	"github.com/ingenuity-build/quicksilver/simulation/simtypes"
+	"github.com/ingenuity-build/quicksilver/test/simulation/simtypes"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
