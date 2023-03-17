@@ -41,7 +41,7 @@ const (
 	// ICQ repo/version for relayer
 	icqRepository = "quicksilverzone/interchain-queries"
 	icqTag        = "v0.8.8-beta.1"
-
+	// xccLookup repo/version
 	xccLookupRepository = "quicksilverzone/xcclookup"
 	xccLookupTag        = "v0.4.2"
 )

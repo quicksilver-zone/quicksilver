@@ -91,11 +91,9 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 	}
 
 	hermesCfgPath := path.Join(tmpDir, "hermes")
-
 	if err := os.MkdirAll(hermesCfgPath, 0o755); err != nil {
 		return err
 	}
-
 	_, err = util.CopyFile(
 		filepath.Join("./scripts/", "hermes_bootstrap.sh"),
 		filepath.Join(hermesCfgPath, "hermes_bootstrap.sh"),
@@ -105,8 +103,14 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 	}
 
 	icqCfgPath := path.Join(tmpDir, "icq")
-
 	if err := os.MkdirAll(icqCfgPath, 0o755); err != nil {
+		return err
+	}
+	_, err = util.CopyFile(
+		filepath.Join("./scripts/", "icq_bootstrap.sh"),
+		filepath.Join(icqCfgPath, "icq_bootstrap.sh"),
+	)
+	if err != nil {
 		return err
 	}
 
@@ -132,7 +136,6 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 	}
 
 	endpoint := fmt.Sprintf("http://%s/state", hermesResource.GetHostPort("3031/tcp"))
-
 	require.Eventually(bc.t, func() bool {
 		resp, err := http.Get(endpoint) //nolint:gosec
 		if err != nil {
@@ -167,10 +170,40 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 
 	bc.t.Logf("started Hermes relayer container: %s", hermesResource.Container.ID)
 
-	icqResource, err := bc.containerManager.RunICQResource(icqCfgPath)
+	icqResource, err := bc.containerManager.RunICQResource(
+		chainConfigA.ID,
+		chainConfigB.ID,
+		icqCfgPath)
 	if err != nil {
 		return err
 	}
+
+	endpoint = fmt.Sprintf("http://%s/metrics", icqResource.GetHostPort("2112/tcp"))
+	bc.t.Logf("endpoint: %s %v", endpoint, icqResource.Container.State)
+	require.Eventually(bc.t, func() bool {
+		resp, err := http.Get(endpoint) //nolint:gosec
+		if err != nil {
+			return false
+		}
+
+		defer resp.Body.Close()
+
+		bz, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return false
+		}
+
+		var respBody map[string]interface{}
+		if err := json.Unmarshal(bz, &respBody); err != nil {
+			return false
+		}
+
+		fmt.Println("NICE", respBody)
+		return true
+	},
+		5*time.Minute,
+		time.Second,
+		"icq relayer not healthy")
 
 	bc.t.Logf("started icq relayer container: %s", icqResource.Container.ID)
 
