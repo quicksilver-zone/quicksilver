@@ -58,3 +58,11 @@ func RegisterDenoms() {
 func SetWasmConfig(config *sdk.Config) {
 	config.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 }
+
+func SetupConfig() {
+	config := sdk.GetConfig()
+	SetBech32Prefixes(config)
+	SetBip44CoinType(config)
+	SetWasmConfig(config)
+	config.Seal()
+}

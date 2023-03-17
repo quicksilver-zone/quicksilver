@@ -17,7 +17,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/simulation"
+	"github.com/ingenuity-build/quicksilver/test/simulation"
 )
 
 func init() {
