@@ -6,14 +6,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
 )
 
 func main() {
-	setupConfig()
+	cmdcfg.SetupConfig()
 	cmdcfg.RegisterDenoms()
 
 	userHomeDir, err := os.UserHomeDir()
@@ -33,12 +32,4 @@ func main() {
 			os.Exit(1)
 		}
 	}
-}
-
-func setupConfig() {
-	config := sdk.GetConfig()
-	cmdcfg.SetBech32Prefixes(config)
-	cmdcfg.SetBip44CoinType(config)
-	cmdcfg.SetWasmConfig(config)
-	config.Seal()
 }
