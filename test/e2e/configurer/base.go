@@ -120,16 +120,16 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		return err
 	}
 
-	relayerNodeA := chainConfigA.NodeConfigs[0]
-	relayerNodeB := chainConfigB.NodeConfigs[0]
+	nodeConfigA := chainConfigA.NodeConfigs[0]
+	nodeConfigB := chainConfigB.NodeConfigs[0]
 
 	hermesResource, err := bc.containerManager.RunHermesResource(
 		chainConfigA.ID,
-		relayerNodeA.Name,
-		relayerNodeA.Mnemonic,
+		nodeConfigA.Name,
+		nodeConfigA.Mnemonic,
 		chainConfigB.ID,
-		relayerNodeB.Name,
-		relayerNodeB.Mnemonic,
+		nodeConfigB.Name,
+		nodeConfigB.Mnemonic,
 		hermesCfgPath)
 	if err != nil {
 		return err
@@ -172,7 +172,9 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 
 	icqResource, err := bc.containerManager.RunICQResource(
 		chainConfigA.ID,
+		nodeConfigA.Name,
 		chainConfigB.ID,
+		nodeConfigB.Name,
 		icqCfgPath)
 	if err != nil {
 		return err

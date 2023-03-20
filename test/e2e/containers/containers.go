@@ -218,7 +218,7 @@ func (m *Manager) RunHermesResource(chainAID, quickARelayerNodeName, quickAValMn
 
 // RunICQResource runs an ICQ container. Returns the container resource and error if any.
 // the name of the ICQ container is "<chain A id>-<chain B id>-relayer"
-func (m *Manager) RunICQResource(chainAID, chainBID, icqCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunICQResource(chainAID, quickARelayerNodeName, chainBID, quickBRelayerNodeName, icqCfgPath string) (*dockertest.Resource, error) {
 	icqResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       icqContainerName,
@@ -227,7 +227,7 @@ func (m *Manager) RunICQResource(chainAID, chainBID, icqCfgPath string) (*docker
 			NetworkID:  m.network.Network.ID,
 			User:       "root:root",
 			Mounts: []string{
-				fmt.Sprintf("%s/:/root/interchain-queries", icqCfgPath),
+				fmt.Sprintf("%s/:/root/icq", icqCfgPath),
 			},
 			ExposedPorts: []string{
 				"2112",
@@ -238,6 +238,8 @@ func (m *Manager) RunICQResource(chainAID, chainBID, icqCfgPath string) (*docker
 			Env: []string{
 				fmt.Sprintf("QUICK_A_E2E_CHAIN_ID=%s", chainAID),
 				fmt.Sprintf("QUICK_B_E2E_CHAIN_ID=%s", chainBID),
+				fmt.Sprintf("QUICK_A_E2E_VAL_HOST=%s", quickARelayerNodeName),
+				fmt.Sprintf("QUICK_B_E2E_VAL_HOST=%s", quickBRelayerNodeName),
 			},
 			Entrypoint: []string{
 				"sh",
