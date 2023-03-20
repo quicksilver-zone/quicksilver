@@ -26,4 +26,5 @@ FROM alpine:3.17
 COPY --from=builder /src/app/build/quicksilverd /usr/local/bin/quicksilverd
 RUN adduser -S -h /quicksilver -D quicksilver -u 1000
 USER quicksilver
+
 CMD ["quicksilverd", "start"]
