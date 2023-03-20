@@ -98,7 +98,7 @@ services:
       - osmosisd
       - start
   hermes:
-    image: quicksilverzone/hermes:v1.0.0
+    image: quicksilverzone/hermes:v1.3.0
     hostname: hermes
     volumes:
       - ./data/hermes:/hermes/.hermes
