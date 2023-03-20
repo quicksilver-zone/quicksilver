@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -ex
 
@@ -29,7 +29,7 @@ chains:
     key: default
     chain-id: '$QUICK_B_E2E_CHAIN_ID'
     rpc-addr: 'http://$QUICK_B_E2E_VAL_HOST:26657'
-    grpc-addr: 'http://$QUICK_B_E2E_VAL_HOST:9090'
+    grpc-addr: 'http://$QUICK_A_E2E_VAL_HOST:9090'
     account-prefix: quick
     keyring-backend: test
     gas-adjustment: 1.2
@@ -43,4 +43,4 @@ chains:
     sign-mode: direct
 EOF
 
-interchain-queries run
+interchain-queries run -d

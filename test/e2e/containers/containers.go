@@ -173,17 +173,14 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 
 // RunHermesResource runs a Hermes container. Returns the container resource and error if any.
 // the name of the hermes container is "<chain A id>-<chain B id>-relayer"
-func (m *Manager) RunHermesResource(chainAID, quickARelayerNodeName, quickAValMnemonic, chainBID, quickBRelayerNodeName, quickBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunHermesResource(t *testing.T, chainAID, quickARelayerNodeName, quickAValMnemonic, chainBID, quickBRelayerNodeName, quickBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
 	hermesResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       hermesContainerName,
 			Repository: m.HermesRepository,
 			Tag:        m.HermesTag,
 			NetworkID:  m.network.Network.ID,
-			Cmd: []string{
-				"start",
-			},
-			User: "root:root",
+			User:       "root:root",
 			Mounts: []string{
 				fmt.Sprintf("%s/:/root/hermes", hermesCfgPath),
 			},
@@ -213,25 +210,49 @@ func (m *Manager) RunHermesResource(chainAID, quickARelayerNodeName, quickAValMn
 		return nil, err
 	}
 	m.resources[hermesContainerName] = hermesResource
+
+	var (
+		outBuf bytes.Buffer
+		errBuf bytes.Buffer
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	err = m.pool.Client.Logs(docker.LogsOptions{
+		Context:           ctx,
+		Container:         hermesResource.Container.ID,
+		OutputStream:      &outBuf,
+		ErrorStream:       &errBuf,
+		InactivityTimeout: 0,
+		Stderr:            true,
+		Stdout:            true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if m.isDebugLogEnabled {
+		t.Logf(outBuf.String())
+		t.Logf(errBuf.String())
+	}
+
 	return hermesResource, nil
 }
 
 // RunICQResource runs an ICQ container. Returns the container resource and error if any.
 // the name of the ICQ container is "<chain A id>-<chain B id>-relayer"
-func (m *Manager) RunICQResource(chainAID, quickARelayerNodeName, chainBID, quickBRelayerNodeName, icqCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunICQResource(t *testing.T, chainAID, quickANodeName, chainBID, quickBNodeName, icqCfgPath string) (*dockertest.Resource, error) {
 	icqResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       icqContainerName,
 			Repository: m.ICQRepository,
 			Tag:        m.ICQTag,
 			NetworkID:  m.network.Network.ID,
-			Cmd: []string{
-				"interchain-queries",
-				"run",
-			},
+
 			User: "root:root",
 			Mounts: []string{
-				fmt.Sprintf("%s/:/root/icq", icqCfgPath),
+				fmt.Sprintf("%s/:/root", icqCfgPath),
 			},
 			ExposedPorts: []string{
 				"2112",
@@ -242,14 +263,20 @@ func (m *Manager) RunICQResource(chainAID, quickARelayerNodeName, chainBID, quic
 			Env: []string{
 				fmt.Sprintf("QUICK_A_E2E_CHAIN_ID=%s", chainAID),
 				fmt.Sprintf("QUICK_B_E2E_CHAIN_ID=%s", chainBID),
-				fmt.Sprintf("QUICK_A_E2E_VAL_HOST=%s", quickARelayerNodeName),
-				fmt.Sprintf("QUICK_B_E2E_VAL_HOST=%s", quickBRelayerNodeName),
+				fmt.Sprintf("QUICK_A_E2E_VAL_HOST=%s", quickANodeName),
+				fmt.Sprintf("QUICK_B_E2E_VAL_HOST=%s", quickBNodeName),
 			},
 			Entrypoint: []string{
 				"sh",
 				"-c",
-				"chmod +x /root/icq/icq_bootstrap.sh && /root/icq/icq_bootstrap.sh",
+				"--verbose",
+				"which sh && chmod +x /root/icq_bootstrap.sh && /root/icq_bootstrap.sh",
 			},
+			//Cmd: []string{
+			//	"interchain-queries",
+			//	"run",
+			//	"-d",
+			//},
 		},
 		noRestart,
 	)
@@ -257,6 +284,38 @@ func (m *Manager) RunICQResource(chainAID, quickARelayerNodeName, chainBID, quic
 		return nil, err
 	}
 	m.resources[icqContainerName] = icqResource
+
+	_, err = m.pool.Client.InspectContainer(icqResource.Container.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		outBuf bytes.Buffer
+		errBuf bytes.Buffer
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	err = m.pool.Client.Logs(docker.LogsOptions{
+		Context:           ctx,
+		Container:         icqResource.Container.ID,
+		OutputStream:      &outBuf,
+		ErrorStream:       &errBuf,
+		InactivityTimeout: 0,
+		Stderr:            true,
+		Stdout:            true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if m.isDebugLogEnabled {
+		t.Logf(outBuf.String())
+		t.Logf(errBuf.String())
+	}
+
 	return icqResource, nil
 }
 
@@ -303,7 +362,9 @@ func (m *Manager) RunNodeResource(containerName, valCondigDir string) (*dockerte
 		Tag:        m.QuicksilverTag,
 		NetworkID:  m.network.Network.ID,
 		User:       "root:root",
-		Cmd:        []string{"start"},
+		Cmd: []string{
+			"start",
+		},
 		Mounts: []string{
 			fmt.Sprintf("%s/:/quicksilver/.quicksilverd", valCondigDir),
 			fmt.Sprintf("%s/scripts:/quicksilver", pwd),

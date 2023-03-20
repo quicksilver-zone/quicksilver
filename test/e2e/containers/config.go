@@ -31,10 +31,10 @@ const (
 	// It should be uploaded to Docker Hub. QUICKSILVER_E2E_SKIP_UPGRADE should be unset
 	// for this functionality to be used.
 	previousVersionQuicksilverRepository = "quicksilverzone/quicksilver"
-	previousVersionQuicksilverTag        = "v1.4.0-rc9"
+	previousVersionQuicksilverTag        = "v1.2.4"
 	// Pre-upgrade repo/tag for quicksilver initialization (this should be one version below upgradeVersion)
 	previousVersionInitRepository = "quicksilverzone/quicksilver"
-	previousVersionInitTag        = "v1.2.4"
+	previousVersionInitTag        = "v1.2.7"
 	// Hermes repo/version for relayer
 	hermesRepository = "informalsystems/hermes"
 	hermesTag        = "1.3.0"
@@ -83,9 +83,9 @@ func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 	} else {
 		// Upgrades are run at the time when upgrade height is reached
 		// and are submitted via a governance proposal. Therefore, we
-		// must start running the previous Osmosis version. Then, the node
+		// must start running the previous Quicksilver version. Then, the node
 		// should auto-upgrade, at which point we can restart the updated
-		// Osmosis validator container.
+		// Quicksilver validator container.
 		config.QuicksilversRepository = previousVersionQuicksilverRepository
 		config.QuicksilverTag = previousVersionQuicksilverTag
 	}

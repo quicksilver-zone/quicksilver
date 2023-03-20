@@ -23,6 +23,10 @@ func withIBC(setupHandler setupFn) setupFn {
 			return err
 		}
 
+		if err := configurer.RunICQ(); err != nil {
+			return err
+		}
+
 		return nil
 	}
 }
