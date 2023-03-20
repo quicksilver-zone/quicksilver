@@ -225,7 +225,11 @@ func (m *Manager) RunICQResource(chainAID, quickARelayerNodeName, chainBID, quic
 			Repository: m.ICQRepository,
 			Tag:        m.ICQTag,
 			NetworkID:  m.network.Network.ID,
-			User:       "root:root",
+			Cmd: []string{
+				"interchain-queries",
+				"run",
+			},
+			User: "root:root",
 			Mounts: []string{
 				fmt.Sprintf("%s/:/root/icq", icqCfgPath),
 			},
