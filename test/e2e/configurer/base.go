@@ -94,6 +94,18 @@ func (bc *baseConfigurer) RunICQ() error {
 	return nil
 }
 
+func (bc *baseConfigurer) RunXCC() error {
+	// Run a icq relayer between every possible pair of chains.
+	for i := 0; i < len(bc.chainConfigs); i++ {
+		for j := i + 1; j < len(bc.chainConfigs); j++ {
+			if err := bc.runXCCLookup(bc.chainConfigs[i], bc.chainConfigs[j]); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
 	bc.t.Log("starting Hermes relayer container...")
 
@@ -198,14 +210,8 @@ func (bc *baseConfigurer) runICQRelayer(chainConfigA *chain.Config, chainConfigB
 
 	bc.t.Logf(filepath.Join(icqCfgPath, "icq_bootstrap.sh"))
 
-	xccLookupCfgPath := path.Join(tmpDir, "xcc-lookup")
-	if err := os.MkdirAll(xccLookupCfgPath, 0o755); err != nil {
-		return err
-	}
-
 	nodeConfigA := chainConfigA.NodeConfigs[0]
 	nodeConfigB := chainConfigB.NodeConfigs[0]
-
 	icqResource, err := bc.containerManager.RunICQResource(
 		bc.t,
 		chainConfigA.ID,
@@ -223,12 +229,54 @@ func (bc *baseConfigurer) runICQRelayer(chainConfigA *chain.Config, chainConfigB
 
 	bc.t.Logf("started icq relayer container: %s", icqResource.Container.ID)
 
-	xccLookupResource, err := bc.containerManager.RunXCCLookupResource(xccLookupCfgPath)
+	// XXX: Give time to both networks to start, otherwise we might see gRPC
+	// transport errors.
+	time.Sleep(10 * time.Second)
+
+	return nil
+}
+
+func (bc *baseConfigurer) runXCCLookup(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
+	bc.t.Log("starting XCCLookup container...")
+
+	tmpDir, err := os.MkdirTemp("", "quicksilver-e2e-testnet-xcc-")
 	if err != nil {
 		return err
 	}
 
-	bc.t.Logf("started XCC-Lookup container: %s", xccLookupResource.Container.ID)
+	xccCfgPath := path.Join(tmpDir, "icq")
+	if err := os.MkdirAll(xccCfgPath, 0o755); err != nil {
+		return err
+	}
+	_, err = util.CopyFile(
+		filepath.Join("./scripts/", "xcc_bootstrap.sh"),
+		filepath.Join(xccCfgPath, "xcc_bootstrap.sh"),
+	)
+	if err != nil {
+		return err
+	}
+
+	bc.t.Logf(filepath.Join(xccCfgPath, "xcc_bootstrap.sh"))
+
+	nodeConfigA := chainConfigA.NodeConfigs[0]
+	nodeConfigB := chainConfigB.NodeConfigs[0]
+
+	xccResource, err := bc.containerManager.RunXCCLookupResource(
+		bc.t,
+		chainConfigA.ID,
+		nodeConfigA.Name,
+		chainConfigB.ID,
+		nodeConfigB.Name,
+		xccCfgPath,
+	)
+	if err != nil {
+		return err
+	}
+
+	// endpoint = fmt.Sprintf("http://%s/metrics", icqResource.GetHostPort("2112/tcp"))
+	require.True(bc.t, xccResource.Container.State.Running)
+
+	bc.t.Logf("started XCC-Lookup container: %s", xccResource.Container.ID)
 
 	// XXX: Give time to both networks to start, otherwise we might see gRPC
 	// transport errors.

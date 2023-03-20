@@ -23,6 +23,8 @@ type Configurer interface {
 	RunIBC() error
 
 	RunICQ() error
+
+	RunXCC() error
 }
 
 var (

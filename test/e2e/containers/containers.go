@@ -249,8 +249,7 @@ func (m *Manager) RunICQResource(t *testing.T, chainAID, quickANodeName, chainBI
 			Repository: m.ICQRepository,
 			Tag:        m.ICQTag,
 			NetworkID:  m.network.Network.ID,
-
-			User: "root:root",
+			User:       "root:root",
 			Mounts: []string{
 				fmt.Sprintf("%s/:/root", icqCfgPath),
 			},
@@ -269,14 +268,8 @@ func (m *Manager) RunICQResource(t *testing.T, chainAID, quickANodeName, chainBI
 			Entrypoint: []string{
 				"sh",
 				"-c",
-				"--verbose",
-				"which sh && chmod +x /root/icq_bootstrap.sh && /root/icq_bootstrap.sh",
+				"chmod +x /root/icq_bootstrap.sh && /root/icq_bootstrap.sh",
 			},
-			//Cmd: []string{
-			//	"interchain-queries",
-			//	"run",
-			//	"-d",
-			//},
 		},
 		noRestart,
 	)
@@ -321,7 +314,7 @@ func (m *Manager) RunICQResource(t *testing.T, chainAID, quickANodeName, chainBI
 
 // RunXCCLookupResource runs an XCCLookup container. Returns the container resource and error if any.
 // the name of the XCCLookup container is "<chain A id>-<chain B id>-relayer"
-func (m *Manager) RunXCCLookupResource(xccLookupCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunXCCLookupResource(t *testing.T, chainAID, quickANodeName, chainBID, quickBNodeName, xccLookupCfgPath string) (*dockertest.Resource, error) {
 	xccLookupResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       xccLookupContainerName,
@@ -338,6 +331,17 @@ func (m *Manager) RunXCCLookupResource(xccLookupCfgPath string) (*dockertest.Res
 			PortBindings: map[docker.Port][]docker.PortBinding{
 				"3033/tcp": {{HostIP: "", HostPort: "3033"}},
 			},
+			Env: []string{
+				fmt.Sprintf("QUICK_A_E2E_CHAIN_ID=%s", chainAID),
+				fmt.Sprintf("QUICK_B_E2E_CHAIN_ID=%s", chainBID),
+				fmt.Sprintf("QUICK_A_E2E_VAL_HOST=%s", quickANodeName),
+				fmt.Sprintf("QUICK_B_E2E_VAL_HOST=%s", quickBNodeName),
+			},
+			Entrypoint: []string{
+				"sh",
+				"-c",
+				"chmod +x /root/xcc_bootstrap.sh && /root/xcc_bootstrap.sh",
+			},
 		},
 		noRestart,
 	)
@@ -345,6 +349,38 @@ func (m *Manager) RunXCCLookupResource(xccLookupCfgPath string) (*dockertest.Res
 		return nil, err
 	}
 	m.resources[xccLookupContainerName] = xccLookupResource
+
+	_, err = m.pool.Client.InspectContainer(xccLookupResource.Container.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		outBuf bytes.Buffer
+		errBuf bytes.Buffer
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	err = m.pool.Client.Logs(docker.LogsOptions{
+		Context:           ctx,
+		Container:         xccLookupResource.Container.ID,
+		OutputStream:      &outBuf,
+		ErrorStream:       &errBuf,
+		InactivityTimeout: 0,
+		Stderr:            true,
+		Stdout:            true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if m.isDebugLogEnabled {
+		t.Logf(outBuf.String())
+		t.Logf(errBuf.String())
+	}
+
 	return xccLookupResource, nil
 }
 
