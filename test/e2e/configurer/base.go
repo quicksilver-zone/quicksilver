@@ -208,8 +208,6 @@ func (bc *baseConfigurer) runICQRelayer(chainConfigA *chain.Config, chainConfigB
 		return err
 	}
 
-	bc.t.Logf(filepath.Join(icqCfgPath, "icq_bootstrap.sh"))
-
 	nodeConfigA := chainConfigA.NodeConfigs[0]
 	nodeConfigB := chainConfigB.NodeConfigs[0]
 	icqResource, err := bc.containerManager.RunICQResource(
@@ -223,8 +221,6 @@ func (bc *baseConfigurer) runICQRelayer(chainConfigA *chain.Config, chainConfigB
 	if err != nil {
 		return err
 	}
-
-	// endpoint = fmt.Sprintf("http://%s/metrics", icqResource.GetHostPort("2112/tcp"))
 	require.True(bc.t, icqResource.Container.State.Running)
 
 	bc.t.Logf("started icq relayer container: %s", icqResource.Container.ID)
@@ -244,7 +240,7 @@ func (bc *baseConfigurer) runXCCLookup(chainConfigA *chain.Config, chainConfigB 
 		return err
 	}
 
-	xccCfgPath := path.Join(tmpDir, "icq")
+	xccCfgPath := path.Join(tmpDir, "xcc")
 	if err := os.MkdirAll(xccCfgPath, 0o755); err != nil {
 		return err
 	}
@@ -256,11 +252,8 @@ func (bc *baseConfigurer) runXCCLookup(chainConfigA *chain.Config, chainConfigB 
 		return err
 	}
 
-	bc.t.Logf(filepath.Join(xccCfgPath, "xcc_bootstrap.sh"))
-
 	nodeConfigA := chainConfigA.NodeConfigs[0]
 	nodeConfigB := chainConfigB.NodeConfigs[0]
-
 	xccResource, err := bc.containerManager.RunXCCLookupResource(
 		bc.t,
 		chainConfigA.ID,
@@ -272,8 +265,6 @@ func (bc *baseConfigurer) runXCCLookup(chainConfigA *chain.Config, chainConfigB 
 	if err != nil {
 		return err
 	}
-
-	// endpoint = fmt.Sprintf("http://%s/metrics", icqResource.GetHostPort("2112/tcp"))
 	require.True(bc.t, xccResource.Container.State.Running)
 
 	bc.t.Logf("started XCC-Lookup container: %s", xccResource.Container.ID)
