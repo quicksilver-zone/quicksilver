@@ -86,8 +86,8 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	}
 
 	// create snapshot of current intents for next epoch boundary
-	for _, di := range k.icsKeeper.AllIntents(ctx, &zone, false) {
-		k.icsKeeper.SetIntent(ctx, &zone, di, true)
+	for _, di := range k.icsKeeper.AllDelegatorIntents(ctx, &zone, false) {
+		k.icsKeeper.SetDelegatorIntent(ctx, &zone, di, true)
 	}
 
 	// set zone ValidatorSelectionAllocation to zero

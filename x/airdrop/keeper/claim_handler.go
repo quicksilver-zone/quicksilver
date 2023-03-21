@@ -183,7 +183,7 @@ func (k Keeper) verifyZoneIntent(ctx sdk.Context, chainID string, address string
 		return fmt.Errorf("zone %s not found", chainID)
 	}
 
-	intent, ok := k.icsKeeper.GetIntent(ctx, &zone, addr.String(), false)
+	intent, ok := k.icsKeeper.GetDelegatorIntent(ctx, &zone, addr.String(), false)
 	if !ok || len(intent.Intents) == 0 {
 		return fmt.Errorf("intent not found or no intents set for %s", addr)
 	}
