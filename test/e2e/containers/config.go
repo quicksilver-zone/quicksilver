@@ -36,8 +36,8 @@ const (
 	previousVersionInitRepository = "quicksilverzone/quicksilver"
 	previousVersionInitTag        = "v1.2.7"
 	// Hermes repo/version for relayer
-	hermesRepository = "informalsystems/hermes"
-	hermesTag        = "1.3.0"
+	hermesRepository = "quicksilverzone/hermes"
+	hermesTag        = "v1.3.0"
 	// ICQ repo/version for relayer
 	icqRepository = "quicksilverzone/interchain-queries"
 	icqTag        = "v0.8.8-beta.1"
