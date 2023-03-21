@@ -66,7 +66,6 @@ func (k Keeper) AllocateValidatorSelectionRewards(ctx sdk.Context) {
 		)
 		return false
 	})
-
 }
 
 // getZoneScores returns an instance of zoneScore containing the calculated
