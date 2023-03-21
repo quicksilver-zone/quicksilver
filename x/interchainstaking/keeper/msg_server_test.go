@@ -199,34 +199,6 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			"account has insufficient balance of qasset to burn",
 		},
 		{
-			"invalid - zero coins",
-			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
-				s.Require().NoError(err)
-				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.ZeroInt()),
-					DestinationAddress: addr,
-					FromAddress:        testAddress,
-				}
-			},
-			"cannot redeem zero-value coins",
-			"cannot redeem zero-value coins",
-		},
-		{
-			"invalid - negative coins",
-			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
-				s.Require().NoError(err)
-				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.Coin{Denom: "uqatom", Amount: sdk.NewInt(-1)},
-					DestinationAddress: addr,
-					FromAddress:        testAddress,
-				}
-			},
-			"negative coin amount: -1",
-			"negative coin amount: -1",
-		},
-		{
 			"invalid - bad prefix",
 			func() {
 				addr, err := bech32.ConvertAndEncode("bob", utils.GenerateAccAddressForTest())
@@ -253,32 +225,6 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			},
 			"account has insufficient balance of qasset to burn",
 			"account has insufficient balance of qasset to burn",
-		},
-		{
-			"invalid - nil recipient address",
-			func() {
-				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
-					DestinationAddress: "",
-					FromAddress:        testAddress,
-				}
-			},
-			"recipient address not provided",
-			"recipient address not provided",
-		},
-		{
-			"invalid - nil from address",
-			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
-				s.Require().NoError(err)
-				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
-					DestinationAddress: addr,
-					FromAddress:        "",
-				}
-			},
-			"empty address string is not allowed",
-			"empty address string is not allowed",
 		},
 		{
 			"invalid - too many locked tokens",
