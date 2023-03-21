@@ -150,7 +150,9 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.ID, "--src-chain", c.ID, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
 	outBuf, _, err := c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
 	require.NoError(c.t, err)
-	c.t.Logf("Hermes SendIBC: %s\n", outBuf.String())
+	if c.containerManager.IsDebugLogEnabled {
+		c.t.Logf("Hermes SendIBC: %s\n", outBuf.String())
+	}
 
 	require.Eventually(
 		c.t,

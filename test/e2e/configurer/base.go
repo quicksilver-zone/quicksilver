@@ -83,7 +83,7 @@ func (bc *baseConfigurer) RunIBC() error {
 }
 
 func (bc *baseConfigurer) RunICQ() error {
-	// Run a icq relayer between every possible pair of chains.
+	// Run icq relayer between every possible pair of chains.
 	for i := 0; i < len(bc.chainConfigs); i++ {
 		for j := i + 1; j < len(bc.chainConfigs); j++ {
 			if err := bc.runICQRelayer(bc.chainConfigs[i], bc.chainConfigs[j]); err != nil {
@@ -95,7 +95,7 @@ func (bc *baseConfigurer) RunICQ() error {
 }
 
 func (bc *baseConfigurer) RunXCC() error {
-	// Run a icq relayer between every possible pair of chains.
+	// Run xcc for every possible pair of chains.
 	for i := 0; i < len(bc.chainConfigs); i++ {
 		for j := i + 1; j < len(bc.chainConfigs); j++ {
 			if err := bc.runXCCLookup(bc.chainConfigs[i], bc.chainConfigs[j]); err != nil {
@@ -140,6 +140,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		nodeConfigB.Mnemonic,
 		hermesCfgPath,
 	)
+
 	if err != nil {
 		return err
 	}

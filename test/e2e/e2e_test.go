@@ -129,7 +129,7 @@ func (s *IntegrationTestSuite) TestStateSync() {
 	}
 	runningNode.WaitUntil(hasSnapshotsAvailable)
 
-	// start the state synching node.
+	// start the state syncing node.
 	err = stateSynchingNode.Run()
 	s.Require().NoError(err)
 

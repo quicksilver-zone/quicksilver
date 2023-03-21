@@ -41,7 +41,7 @@ type Manager struct {
 	pool              *dockertest.Pool
 	network           *dockertest.Network
 	resources         map[string]*dockertest.Resource
-	isDebugLogEnabled bool
+	IsDebugLogEnabled bool
 }
 
 // NewManager creates a new Manager instance and initializes
@@ -50,7 +50,7 @@ func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Ma
 	docker = &Manager{
 		ImageConfig:       NewImageConfig(isUpgrade, isFork),
 		resources:         make(map[string]*dockertest.Resource),
-		isDebugLogEnabled: isDebugLogEnabled,
+		IsDebugLogEnabled: isDebugLogEnabled,
 	}
 	docker.pool, err = dockertest.NewPool("")
 	if err != nil {
@@ -108,7 +108,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
-	if m.isDebugLogEnabled {
+	if m.IsDebugLogEnabled {
 		t.Logf("\n\nRunning: \"%s\", success condition is \"%s\"", command, success)
 	}
 	maxDebugLogTriesLeft := maxDebugLogsPerCommand
@@ -142,7 +142,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			// Note that this does not match all errors.
 			// This only works if CLI outpurs "Error" or "error"
 			// to stderr.
-			if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 {
+			if (defaultErrRegex.MatchString(errBufString) || m.IsDebugLogEnabled) && maxDebugLogTriesLeft > 0 {
 				t.Log("\nstderr:")
 				t.Log(errBufString)
 
@@ -232,7 +232,7 @@ func (m *Manager) RunHermesResource(t *testing.T, chainAID, quickARelayerNodeNam
 		return nil, err
 	}
 
-	if m.isDebugLogEnabled {
+	if m.IsDebugLogEnabled {
 		t.Logf(outBuf.String())
 		t.Logf(errBuf.String())
 	}
@@ -304,7 +304,7 @@ func (m *Manager) RunICQResource(t *testing.T, chainAID, quickANodeName, chainBI
 		return nil, err
 	}
 
-	if m.isDebugLogEnabled {
+	if m.IsDebugLogEnabled {
 		t.Logf(outBuf.String())
 		t.Logf(errBuf.String())
 	}
@@ -376,7 +376,7 @@ func (m *Manager) RunXCCLookupResource(t *testing.T, chainAID, quickANodeName, c
 		return nil, err
 	}
 
-	if m.isDebugLogEnabled {
+	if m.IsDebugLogEnabled {
 		t.Logf(outBuf.String())
 		t.Logf(errBuf.String())
 	}
