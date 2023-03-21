@@ -24,7 +24,6 @@ type BankKeeper interface {
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	SpendableCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	// AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int)
 }
 

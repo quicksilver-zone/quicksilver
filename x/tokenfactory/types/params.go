@@ -16,7 +16,7 @@ var (
 	KeyDenomCreationFee = []byte("DenomCreationFee")
 )
 
-// ParamTable for gamm module.
+// ParamKeyTable returns KeyTable for tokenfactory module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
@@ -27,7 +27,7 @@ func NewParams(denomCreationFee sdk.Coins) Params {
 	}
 }
 
-// validate params.
+// Validate validates params.
 func (p Params) Validate() error {
 	if err := validateDenomCreationFee(p.DenomCreationFee); err != nil {
 		return err
@@ -36,7 +36,7 @@ func (p Params) Validate() error {
 	return nil
 }
 
-// Implements params.ParamSet.
+// ParamSetPairs implements params.ParamSet.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDenomCreationFee, &p.DenomCreationFee, validateDenomCreationFee),
@@ -57,7 +57,7 @@ func validateDenomCreationFee(i interface{}) error {
 }
 
 func DefaultParams() Params {
-	return Params{
-		DenomCreationFee: sdk.NewCoins(sdk.NewInt64Coin(BaseCoinUnit, 10_000_000)),
-	}
+	return NewParams(
+		sdk.NewCoins(sdk.NewInt64Coin(BaseCoinUnit, 10_000_000)),
+	)
 }
