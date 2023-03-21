@@ -1332,10 +1332,10 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
 		if record.EpochNumber == 2 {
 			msg := stakingtypes.MsgBeginRedelegate{
-				zone.DelegationAddress.Address,
-				record.Source,
-				record.Destination,
-				sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
+				DelegatorAddress:    zone.DelegationAddress.Address,
+				ValidatorSrcAddress: record.Source,
+				ValidatorDstAddress: record.Destination,
+				Amount:              sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
 			}
 			err := app.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
 			if err != nil {

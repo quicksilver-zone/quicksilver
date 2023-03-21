@@ -14,7 +14,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 	k.Logger(ctx).Info("allocateHoldingsRewards")
 
 	// obtain and iterate all claim records for each zone
-	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+	k.icsKeeper.IterateZones(ctx, func(_ int64, zone *icstypes.Zone) (stop bool) {
 		k.Logger(ctx).Info("zones", "zone", zone.ChainId)
 		userAllocations, remaining := k.CalcUserHoldingsAllocations(ctx, zone)
 
