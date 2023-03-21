@@ -1327,6 +1327,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
+	s.Require().NoError(err)
 
 	// mock ack for redelegations
 	app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
@@ -1365,6 +1366,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
+	s.Require().NoError(err)
 
 	// check for redelegations originating from val[0], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 3)
