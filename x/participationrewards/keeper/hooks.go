@@ -77,8 +77,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// ValidatorSelectionRewardsCallback;
 			for _, zone := range k.icsKeeper.AllZones(ctx) {
 				zone := zone
-				for _, di := range k.icsKeeper.AllIntents(ctx, &zone, false) {
-					k.icsKeeper.SetIntent(ctx, &zone, di, true)
+				for _, di := range k.icsKeeper.AllDelegatorIntents(ctx, &zone, false) {
+					k.icsKeeper.SetDelegatorIntent(ctx, &zone, di, true)
 				}
 			}
 
