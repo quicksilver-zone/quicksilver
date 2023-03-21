@@ -503,7 +503,7 @@ func (suite *KeeperTestSuite) addIntent(address string, zone icstypes.Zone, inte
 		Delegator: address,
 		Intents:   intents,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetIntent(suite.chainA.GetContext(), &zone, intent, false)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegatorIntent(suite.chainA.GetContext(), &zone, intent, false)
 }
 
 func (suite *KeeperTestSuite) setupTestClaims() {

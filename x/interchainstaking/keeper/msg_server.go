@@ -28,6 +28,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+// RequestRedemption handles MsgRequestRedemption by creating a corresponding withdrawal record queued for unbonding.
 func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -35,27 +36,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unbonding is currently disabled")
 	}
 
-	if msg.Value.IsNil() {
-		return nil, errors.New("cannot redeem nil-value coins")
-	}
-
-	// validate coins are positive
-	err := msg.Value.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	if msg.Value.IsZero() {
-		return nil, errors.New("cannot redeem zero-value coins")
-	}
-
-	// validate recipient address
-	if len(msg.DestinationAddress) == 0 {
-		return nil, errors.New("recipient address not provided")
-	}
-
 	var zone *types.Zone
-
 	k.IterateZones(ctx, func(_ int64, thisZone *types.Zone) bool {
 		if thisZone.LocalDenom == msg.Value.GetDenom() {
 			zone = thisZone
@@ -65,7 +46,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	})
 
 	// does zone exist?
-	if nil == zone {
+	if zone == nil {
 		return nil, fmt.Errorf("unable to find matching zone for denom %s", msg.Value.GetDenom())
 	}
 
@@ -78,10 +59,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("destination address %s does not match expected prefix %s [%w]", msg.DestinationAddress, zone.AccountPrefix, err)
 	}
 
-	sender, err := sdk.AccAddressFromBech32(msg.FromAddress)
-	if err != nil {
-		return nil, err
-	}
+	sender, _ := sdk.AccAddressFromBech32(msg.FromAddress) // already validated
 
 	// does the user have sufficient assets to burn
 	if !k.BankKeeper.HasBalance(ctx, sender, msg.Value) {
@@ -89,14 +67,8 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	// get min of LastRedemptionRate (N-1) and RedemptionRate (N)
-	var rate sdk.Dec
-	rate = zone.LastRedemptionRate
-	if zone.RedemptionRate.LT(rate) {
-		rate = zone.RedemptionRate
-	}
-
+	rate := sdk.MinDec(zone.LastRedemptionRate, zone.RedemptionRate)
 	nativeTokens := sdk.NewDecFromInt(msg.Value.Amount).Mul(rate).TruncateInt()
-
 	outTokens := sdk.NewCoin(zone.BaseDenom, nativeTokens)
 	k.Logger(ctx).Info("tokens to distribute", "amount", outTokens)
 
@@ -106,16 +78,16 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	hashString := hex.EncodeToString(hash[:])
 
 	if err := k.BankKeeper.SendCoinsFromAccountToModule(ctx, sender, types.EscrowModuleAccount, sdk.NewCoins(msg.Value)); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to send coins to escrow account: %w", err)
 	}
 
 	if zone.LiquidityModule {
-		if err = k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
-			return nil, err
+		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+			return nil, fmt.Errorf("unable to process redemption for LSM: %w", err)
 		}
 	} else {
-		if err = k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
-			return nil, err
+		if err := k.queueRedemption(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+			return nil, fmt.Errorf("unable to queue redemption: %w", err)
 		}
 	}
 
@@ -152,7 +124,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 		return nil, err
 	}
 
-	if err := k.validateIntents(zone, intents); err != nil {
+	if err := k.validateValidatorIntents(zone, intents); err != nil {
 		return nil, err
 	}
 
@@ -161,7 +133,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 		Intents:   intents,
 	}
 
-	k.SetIntent(ctx, &zone, intent, false)
+	k.SetDelegatorIntent(ctx, &zone, intent, false)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

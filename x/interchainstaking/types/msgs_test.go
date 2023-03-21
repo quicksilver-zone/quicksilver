@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -161,23 +161,59 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"valid_zero",
+			"invalid_nil_destination_address",
 			fields{
 				Value: sdk.Coin{
 					Denom:  "stake",
-					Amount: math.ZeroInt(),
+					Amount: sdkmath.OneInt(),
+				},
+				DestinationAddress: "",
+				FromAddress:        utils.GenerateAccAddressForTest().String(),
+			},
+			true,
+		},
+		{
+			"invalid_nil_from_address",
+			fields{
+				Value: sdk.Coin{
+					Denom:  "stake",
+					Amount: sdkmath.OneInt(),
+				},
+				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				FromAddress:        "",
+			},
+			true,
+		},
+		{
+			"invalid_zero",
+			fields{
+				Value: sdk.Coin{
+					Denom:  "stake",
+					Amount: sdkmath.ZeroInt(),
 				},
 				DestinationAddress: utils.GenerateAccAddressForTest().String(),
 				FromAddress:        utils.GenerateAccAddressForTest().String(),
 			},
-			false,
+			true,
+		},
+		{
+			"invalid_negative",
+			fields{
+				Value: sdk.Coin{
+					Denom:  "stake",
+					Amount: sdkmath.NewInt(-1),
+				},
+				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				FromAddress:        utils.GenerateAccAddressForTest().String(),
+			},
+			true,
 		},
 		{
 			"valid_value",
 			fields{
 				Value: sdk.Coin{
 					Denom:  "stake",
-					Amount: math.ZeroInt(),
+					Amount: sdkmath.OneInt(),
 				},
 				DestinationAddress: utils.GenerateAccAddressForTest().String(),
 				FromAddress:        utils.GenerateAccAddressForTest().String(),
