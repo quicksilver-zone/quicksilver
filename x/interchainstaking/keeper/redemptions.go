@@ -178,20 +178,21 @@ WITHDRAWAL:
 				}
 				amounts[hash] = sdk.NewCoin(amounts[hash].Denom, sdk.ZeroInt())
 				continue WITHDRAWAL
-			} else {
-				distributions[hash] = append(distributions[hash], &types.Distribution{Valoper: v, Amount: allocations[v].Uint64()})
-				amounts[hash] = sdk.NewCoin(amounts[hash].Denom, amounts[hash].Amount.Sub(allocations[v]))
-				existing, found := out[v]
-				if !found {
-					out[v] = sdk.NewCoin(zone.BaseDenom, allocations[v])
-					txhashes[v] = []string{hash}
-
-				} else {
-					out[v] = existing.Add(sdk.NewCoin(zone.BaseDenom, allocations[v]))
-					txhashes[v] = append(txhashes[v], hash)
-				}
-				allocations[v] = sdk.ZeroInt()
 			}
+
+			distributions[hash] = append(distributions[hash], &types.Distribution{Valoper: v, Amount: allocations[v].Uint64()})
+			amounts[hash] = sdk.NewCoin(amounts[hash].Denom, amounts[hash].Amount.Sub(allocations[v]))
+			existing, found := out[v]
+			if !found {
+				out[v] = sdk.NewCoin(zone.BaseDenom, allocations[v])
+				txhashes[v] = []string{hash}
+
+			} else {
+				out[v] = existing.Add(sdk.NewCoin(zone.BaseDenom, allocations[v]))
+				txhashes[v] = append(txhashes[v], hash)
+			}
+			allocations[v] = sdk.ZeroInt()
+
 			if allocations[v].IsZero() {
 				fmt.Println("valopers len", len(valopers))
 				fmt.Println("vidx+1", vidx+1)

@@ -116,13 +116,10 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	// which should be the biggest source. This will always be a small amount, and will count toward the delta calculations on the next run.
 	dust := amount[0].Amount.Sub(outSum)
 	for idx := len(deltas) - 1; idx >= 0; idx-- {
-		if dust.GT(availablePerValidator[deltas[idx].ValoperAddress]) {
-			continue
-		} else {
+		if dust.LTE(availablePerValidator[deltas[idx].ValoperAddress]) {
 			outWeights[deltas[idx].ValoperAddress] = outWeights[deltas[idx].ValoperAddress].Add(dust)
 			break
 		}
-
 	}
 
 	return outWeights

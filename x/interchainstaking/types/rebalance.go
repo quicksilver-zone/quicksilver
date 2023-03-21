@@ -160,14 +160,13 @@ func DetermineAllocationsForRebalancing(
 			amount = src.Weight.Abs().TruncateInt()
 		}
 
-		if tgt.Weight.Abs().TruncateInt().IsZero() { //nolint:gocritic
+		if tgt.Weight.Abs().TruncateInt().IsZero() {
 			tgtIdx++
 			continue
-		} else if tgt.Weight.Abs().TruncateInt().GT(toRebalance) {
-			// amount == amount!
-		} else {
+		} else if tgt.Weight.Abs().TruncateInt().LTE(toRebalance) {
 			amount = sdk.MinInt(amount, tgt.Weight.Abs().TruncateInt())
 		}
+
 		out = append(out, RebalanceTarget{Amount: amount, Target: tgt.ValoperAddress, Source: src.ValoperAddress})
 		deltas[srcIdx].Weight = src.Weight.Add(sdk.NewDecFromInt(amount))
 		deltas[tgtIdx].Weight = tgt.Weight.Sub(sdk.NewDecFromInt(amount))
