@@ -58,7 +58,6 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	userAmountsMap := make(map[string]math.Int)
 
 	k.icsKeeper.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
-
 		amount := math.NewIntFromUint64(claim.Amount)
 		k.Logger(ctx).Info(
 			"claim",

@@ -26,7 +26,6 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 		{
 			"zero claims; no allocation",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-
 			},
 			[]keeper.UserAllocation{},
 			sdk.ZeroInt(),
