@@ -1,4 +1,5 @@
 #!/usr/bin/make -f
+
 DOCKER_BUILDKIT=1
 COSMOS_BUILD_OPTIONS ?= ""
 PACKAGES_NOSIMULATION=$(shell go list ./... | grep -v '/simulation')
@@ -14,6 +15,7 @@ QS_BINARY = quicksilverd
 QS_DIR = quicksilver
 BUILDDIR ?= $(CURDIR)/build
 HTTPS_GIT := https://github.com/ingenuity-build/quicksilver.git
+
 DOCKER := $(shell which docker)
 DOCKERCOMPOSE := $(shell which docker-compose)
 DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
@@ -125,21 +127,21 @@ endif
 ###                                  Build                                  ###
 ###############################################################################
 
+BUILD_TARGETS := build install
+
 check_version:
 ifneq ($(GO_MINOR_VERSION),19)
-	@echo "ERROR: Go version 1.19 is required for building Quicksilver. There are consensus breaking changes between binaries compiled with Go 1.18 and Go 1.19."
+	@echo "ERROR: Go version 1.19 is required for building Quicksilver. There are consensus breaking changes between binaries compiled with and without Go 1.19."
 	exit 1
 endif
 
-BUILD_TARGETS := build install
-
-
 build: BUILD_ARGS=-o $(BUILDDIR)/
+
 build-linux:
 	GOOS=linux GOARCH=amd64 LEDGER_ENABLED=false $(MAKE) build
 
 $(BUILD_TARGETS): check_version go.sum $(BUILDDIR)/
-	go $@ $(BUILD_FLAGS) $(BUILD_ARGS) ./cmd/quicksilverd
+	go $@ -mod=readonly $(BUILD_FLAGS) $(BUILD_ARGS) ./cmd/quicksilverd
 
 $(BUILDDIR)/:
 	mkdir -p $(BUILDDIR)/
@@ -387,6 +389,7 @@ e2e-check-image-sha:
 
 e2e-remove-resources:
 	test/e2e/scripts/run/remove_stale_resources.sh
+
 
 .PHONY: run-tests test test-all test-import test-rpc $(TEST_TARGETS)
 
