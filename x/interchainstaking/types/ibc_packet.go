@@ -9,6 +9,8 @@ import (
 const (
 	MsgTypeWithdrawal = "withdrawal"
 	MsgTypeRebalance  = "rebalance"
+	// TransferPort is the portID for ibc transfer module.
+	TransferPort = "transfer"
 )
 
 func ParseMsgMemo(memo, msgType string) (epochNumber int64, err error) {

@@ -15,7 +15,7 @@ import (
 
 const blockInterval = 30
 
-type zoneItrFn func(index int64, zoneInfo *types.Zone) (stop bool)
+type zoneItrFn func(index int64, zone *types.Zone) (stop bool)
 
 // BeginBlocker of interchainstaking module
 func (k *Keeper) BeginBlocker(ctx sdk.Context) {
@@ -35,13 +35,13 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 			// commenting this out until we can revisit. in its current state it causes more issues than it fixes.
 
 			if err := k.EnsureWithdrawalAddresses(ctx, zone); err != nil {
-				k.Logger(ctx).Error("error in EnsureWithdrawalAddresses", "error", err)
+				k.Logger(ctx).Error("error in EnsureWithdrawalAddresses", "error", err.Error())
 			}
 			if err := k.HandleMaturedUnbondings(ctx, zone); err != nil {
-				k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err)
+				k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err.Error())
 			}
 			if err := k.GCCompletedUnbondings(ctx, zone); err != nil {
-				k.Logger(ctx).Error("error in GCCompletedUnbondings", "error", err)
+				k.Logger(ctx).Error("error in GCCompletedUnbondings", "error", err.Error())
 			}
 		}
 
@@ -58,7 +58,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 						query := stakingTypes.QueryValidatorsRequest{}
 						err := k.EmitValSetQuery(ctx, zone, query, sdkmath.NewInt(period))
 						if err != nil {
-							k.Logger(ctx).Error("unable to trigger valset update query", "error", err)
+							k.Logger(ctx).Error("unable to trigger valset update query", "error", err.Error())
 							// failing to emit the valset update is not terminal but constitutes
 							// an error, as if this starts happening frequent it is something
 							// we should investigate.

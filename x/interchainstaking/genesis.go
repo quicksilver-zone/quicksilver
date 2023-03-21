@@ -49,7 +49,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic("unable to find zone for delegation")
 		}
 		for _, delegatorIntent := range delegatorIntentsForZone.DelegationIntent {
-			k.SetIntent(ctx, &zone, *delegatorIntent, false)
+			k.SetDelegatorIntent(ctx, &zone, *delegatorIntent, false)
 		}
 	}
 
@@ -98,9 +98,9 @@ func ExportDelegatorIntentsPerZone(ctx sdk.Context, k keeper.Keeper) []types.Del
 	delegatorIntentsForZones := make([]types.DelegatorIntentsForZone, 0)
 	k.IterateZones(ctx, func(_ int64, zoneInfo *types.Zone) (stop bool) {
 		// export current epoch intents
-		delegatorIntentsForZones = append(delegatorIntentsForZones, types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllIntentsAsPointer(ctx, zoneInfo, false), Snapshot: false})
+		delegatorIntentsForZones = append(delegatorIntentsForZones, types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zoneInfo, false), Snapshot: false})
 		// export last epoch intents
-		delegatorIntentsForZones = append(delegatorIntentsForZones, types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllIntentsAsPointer(ctx, zoneInfo, true), Snapshot: true})
+		delegatorIntentsForZones = append(delegatorIntentsForZones, types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zoneInfo, true), Snapshot: true})
 		return false
 	})
 	return delegatorIntentsForZones

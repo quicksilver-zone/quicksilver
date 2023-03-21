@@ -170,10 +170,6 @@ func NewQuicksilver(
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
 
-	// setup simulation
-	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig)...)
-	app.sm.RegisterStoreDecoders()
-
 	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
 	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
 	app.mm.SetOrderInitGenesis(orderInitBlockers()...)
@@ -190,6 +186,8 @@ func NewQuicksilver(
 	//
 	// NOTE: this is not required apps that don't use the simulator for fuzz testing
 	// transactions
+	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig)...)
+	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
 	app.MountKVStores(app.GetKVStoreKey())

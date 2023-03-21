@@ -41,7 +41,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 
-	// TODO: Do some randomization later
 	fmt.Printf("Selected deterministically generated epoch parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(epochGenesis)
 }
