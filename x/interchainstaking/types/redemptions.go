@@ -122,6 +122,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 			outWeights[deltas[idx].ValoperAddress] = outWeights[deltas[idx].ValoperAddress].Add(dust)
 			break
 		}
+
 	}
 
 	return outWeights

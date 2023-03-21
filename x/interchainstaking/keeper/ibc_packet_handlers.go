@@ -340,7 +340,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	return nil
 }
 
-func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet) error {
+func (k *Keeper) HandleTimeout(_ sdk.Context, _ channeltypes.Packet) error {
 	return nil
 }
 
@@ -415,9 +415,9 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 	for _, coin := range msg.Amount {
 		if coin.Denom == zone.BaseDenom {
 			allocations := k.DeterminePlanForDelegation(ctx, zone, msg.Amount)
-			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(ctx, zone, allocations)...)
+			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(zone, allocations)...)
 		} else {
-			msgs = append(msgs, k.PrepareDelegationMessagesForShares(ctx, zone, msg.Amount)...)
+			msgs = append(msgs, k.PrepareDelegationMessagesForShares(zone, msg.Amount)...)
 		}
 	}
 
@@ -479,7 +479,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 			newDist := make([]*types.Distribution, 0)
 			i := 0
 			for idx := range withdrawalRecord.Distribution {
-				if _, delete := dlist[idx]; !delete {
+				if _, remove := dlist[idx]; !remove {
 					newDist = append(newDist, withdrawalRecord.Distribution[idx])
 				}
 				i++
@@ -843,7 +843,7 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 }
 
 // TODO: this should be part of Keeper, but part of zone. Refactor me.
-func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, amount sdk.Coin) (string, error) {
+func (k *Keeper) GetValidatorForToken(ctx sdk.Context, _ string, amount sdk.Coin) (string, error) {
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("3: %w", err)

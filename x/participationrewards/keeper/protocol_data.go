@@ -45,12 +45,12 @@ func (k Keeper) SetProtocolData(ctx sdk.Context, key string, data *types.Protoco
 }
 
 // DeleteProtocolData delete protocol data info
-func (k Keeper) DeleteProtocolData(ctx sdk.Context, key string, protocol string) {
+func (k Keeper) DeleteProtocolData(ctx sdk.Context, key string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
 	store.Delete([]byte(key))
 }
 
-// IteratePrefixedProtocolDatas iterate through protocol datas with the given prefix and perform the provided function
+// IteratePrefixedProtocolDatas iterate through protocol data with the given prefix and perform the provided function
 func (k Keeper) IteratePrefixedProtocolDatas(ctx sdk.Context, key []byte, fn func(index int64, data types.ProtocolData) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
 	iterator := sdk.KVStorePrefixIterator(store, key)

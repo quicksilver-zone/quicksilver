@@ -29,7 +29,7 @@ import (
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions
-func (ao EmptyAppOptions) Get(o string) interface{} {
+func (ao EmptyAppOptions) Get(_ string) interface{} {
 	return nil
 }
 

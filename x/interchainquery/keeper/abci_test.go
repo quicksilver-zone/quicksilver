@@ -19,7 +19,6 @@ func (suite *KeeperTestSuite) TestEndBlocker() {
 	id := keeper.GenerateQueryHash(suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "")
 
 	query := suite.GetSimApp(suite.chainA).InterchainQueryKeeper.NewQuery(
-		suite.chainA.GetContext(),
 		"",
 		suite.path.EndpointB.ConnectionID,
 		suite.chainB.ChainID,

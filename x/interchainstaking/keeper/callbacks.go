@@ -198,7 +198,7 @@ func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqt
 	}
 
 	// initialize performance delegations
-	if err := k.UpdatePerformanceDelegations(ctx, zone, response); err != nil {
+	if err := k.UpdatePerformanceDelegations(ctx, zone); err != nil {
 		k.Logger(ctx).Info(err.Error())
 		return err
 	}

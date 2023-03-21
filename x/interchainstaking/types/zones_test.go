@@ -62,8 +62,8 @@ func TestValidateCoinsForZone(t *testing.T) {
 	zone.Validators = append(zone.Validators, &types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded})
 	zone.Validators = append(zone.Validators, &types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded})
 
-	require.NoError(t, zone.ValidateCoinsForZone(sdk.Context{}, sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy1", sdk.OneInt()))))
-	require.Errorf(t, zone.ValidateCoinsForZone(sdk.Context{}, sdk.NewCoins(sdk.NewCoin("cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr1", sdk.OneInt()))), "invalid denom for zone: cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr1")
+	require.NoError(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy1", sdk.OneInt()))))
+	require.Errorf(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr1", sdk.OneInt()))), "invalid denom for zone: cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr1")
 }
 
 func TestDefaultIntent(t *testing.T) {

@@ -5,5 +5,5 @@ import (
 )
 
 // BeginBlocker of claimsmanager module
-func (k Keeper) BeginBlocker(ctx sdk.Context) {
+func (k Keeper) BeginBlocker(_ sdk.Context) {
 }

@@ -59,7 +59,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the claimsmanager module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var gs types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -111,7 +111,7 @@ func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // Route returns the message routing key for the claimsmanager module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the claimsmanager module's querier route name.
@@ -120,7 +120,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the x/claimsmanager module's sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
 	}
@@ -157,7 +157,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 // EndBlock executes all ABCI EndBlock logic respective to the claimsmanager module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
@@ -169,23 +169,22 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the mint module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
 	// simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
 	return nil
 }
 
 // RandomizedParams creates randomized mint param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 	return []simtypes.ParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
-func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations doesn't return any mint module operation.

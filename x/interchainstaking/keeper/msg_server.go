@@ -237,12 +237,12 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 			)
 	}
 
-	_, cap, err := k.Keeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortId, msg.ChannelId)
+	_, c, err := k.Keeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortId, msg.ChannelId)
 	if err != nil {
 		return &types.MsgGovCloseChannelResponse{}, err
 	}
 
-	if err := k.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, msg.PortId, msg.ChannelId, cap); err != nil {
+	if err := k.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, msg.PortId, msg.ChannelId, c); err != nil {
 		return &types.MsgGovCloseChannelResponse{}, err
 	}
 

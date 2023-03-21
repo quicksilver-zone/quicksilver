@@ -325,10 +325,7 @@ func (m *Manager) ClearResources() error {
 		}
 	}
 
-	if err := m.pool.RemoveNetwork(m.network); err != nil {
-		return err
-	}
-	return nil
+	return m.pool.RemoveNetwork(m.network)
 }
 
 func noRestart(config *docker.HostConfig) {
