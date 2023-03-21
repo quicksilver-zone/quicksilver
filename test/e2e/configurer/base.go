@@ -140,7 +140,6 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		nodeConfigB.Mnemonic,
 		hermesCfgPath,
 	)
-
 	if err != nil {
 		return err
 	}
