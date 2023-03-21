@@ -27,6 +27,10 @@ func withIBC(setupHandler setupFn) setupFn {
 			return err
 		}
 
+		if err := configurer.RunXCC(); err != nil {
+			return err
+		}
+
 		return nil
 	}
 }

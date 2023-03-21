@@ -233,7 +233,7 @@ func (bc *baseConfigurer) runICQRelayer(chainConfigA *chain.Config, chainConfigB
 }
 
 func (bc *baseConfigurer) runXCCLookup(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
-	bc.t.Log("starting XCCLookup container...")
+	bc.t.Log("starting XCC-Lookup container...")
 
 	tmpDir, err := os.MkdirTemp("", "quicksilver-e2e-testnet-xcc-")
 	if err != nil {

@@ -42,8 +42,8 @@ const (
 	icqRepository = "quicksilverzone/interchain-queries"
 	icqTag        = "v0.8.8-beta.1"
 	// xccLookup repo/version
-	xccLookupRepository = "quicksilverzone/xcclookup"
-	xccLookupTag        = "v0.4.2"
+	xccLookupRepository = "shmoopler24/xcclookup"
+	xccLookupTag        = "latest"
 )
 
 // NewImageConfig returns ImageConfig needed for running e2e test.

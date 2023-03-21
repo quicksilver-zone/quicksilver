@@ -251,7 +251,7 @@ func (m *Manager) RunICQResource(t *testing.T, chainAID, quickANodeName, chainBI
 			NetworkID:  m.network.Network.ID,
 			User:       "root:root",
 			Mounts: []string{
-				fmt.Sprintf("%s/:/root", icqCfgPath),
+				fmt.Sprintf("%s/:/root/icq", icqCfgPath),
 			},
 			ExposedPorts: []string{
 				"2112",
@@ -268,7 +268,7 @@ func (m *Manager) RunICQResource(t *testing.T, chainAID, quickANodeName, chainBI
 			Entrypoint: []string{
 				"sh",
 				"-c",
-				"chmod +x /root/icq_bootstrap.sh && /root/icq_bootstrap.sh",
+				"chmod +x /root/icq/icq_bootstrap.sh && /root/icq/icq_bootstrap.sh",
 			},
 		},
 		noRestart,
@@ -340,7 +340,7 @@ func (m *Manager) RunXCCLookupResource(t *testing.T, chainAID, quickANodeName, c
 			Entrypoint: []string{
 				"sh",
 				"-c",
-				"chmod +x /root/xcc_bootstrap.sh && /root/xcc_bootstrap.sh",
+				"chmod +x /root/xcclookup/xcc_bootstrap.sh && /root/xcclookup/xcc_bootstrap.sh",
 			},
 		},
 		noRestart,
