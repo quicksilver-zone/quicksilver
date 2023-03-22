@@ -148,8 +148,11 @@ func (c *Config) SendIBC(dstChain *Config, recipient string, token sdk.Coin) {
 	require.NoError(c.t, err)
 	balancesDstPre := removeFeeTokenFromBalance(balancesDstPreWithTxFeeBalance)
 	cmd := []string{"hermes", "tx", "ft-transfer", "--dst-chain", dstChain.ID, "--src-chain", c.ID, "--src-port", "transfer", "--src-channel", "channel-0", "--amount", token.Amount.String(), fmt.Sprintf("--denom=%s", token.Denom), fmt.Sprintf("--receiver=%s", recipient), "--timeout-height-offset=1000"}
-	_, _, err = c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
+	outBuf, _, err := c.containerManager.ExecHermesCmd(c.t, cmd, "SUCCESS")
 	require.NoError(c.t, err)
+	if c.containerManager.IsDebugLogEnabled {
+		c.t.Logf("Hermes SendIBC: %s\n", outBuf.String())
+	}
 
 	require.Eventually(
 		c.t,
@@ -194,14 +197,14 @@ func (c *Config) GetPersistentPeers() []string {
 	return peers
 }
 
-// Returns the nodeIndex'th node on the chain
+// GetNodeAtIndex returns the nodeIndex'th node on the chain
 func (c *Config) GetNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.getNodeAtIndex(nodeIndex)
 }
 
 func (c *Config) getNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	if nodeIndex > len(c.NodeConfigs) {
-		return nil, fmt.Errorf("node index (%d) is greter than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
+		return nil, fmt.Errorf("node index (%d) is greater than the number of nodes available (%d)", nodeIndex, len(c.NodeConfigs))
 	}
 	return c.NodeConfigs[nodeIndex], nil
 }
