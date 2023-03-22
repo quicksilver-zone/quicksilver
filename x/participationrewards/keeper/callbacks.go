@@ -145,7 +145,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
 	}
-	k.Logger(ctx).Error("epoch callback called")
+	k.Logger(ctx).Debug("epoch callback called")
 	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
 	connectionData := iConnectionData.(types.ConnectionProtocolData)
 
@@ -162,7 +162,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	if err != nil {
 		return err
 	}
-	k.Logger(ctx).Error("got block response", "block", blockResponse)
+	k.Logger(ctx).Debug("got block response", "block", blockResponse)
 
 	if blockResponse.SdkBlock == nil {
 		// v0.45 and below
@@ -187,7 +187,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 		0,
 	)
 
-	k.Logger(ctx).Error("emitted client update", "height", connectionData.LastEpoch)
+	k.Logger(ctx).Debug("emitted client update", "height", connectionData.LastEpoch)
 
 	data.Data, err = json.Marshal(connectionData)
 	if err != nil {
