@@ -16,7 +16,15 @@ func withIBC(setupHandler setupFn) setupFn {
 			return err
 		}
 
-		return configurer.RunIBC()
+		if err := configurer.RunIBC(); err != nil {
+			return err
+		}
+
+		if err := configurer.RunICQ(); err != nil {
+			return err
+		}
+
+		return configurer.RunXCC()
 	}
 }
 

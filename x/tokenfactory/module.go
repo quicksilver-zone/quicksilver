@@ -1,5 +1,5 @@
 /*
-The tokenfactory module allows any account to create a new token with
+Package tokenfactory allows any account to create a new token with
 the name `factory/{creator address}/{subdenom}`.
 
 - Mint and burn user denom to and form any account
@@ -26,6 +26,7 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/client/cli"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
+	"github.com/ingenuity-build/quicksilver/x/tokenfactory/simulation"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
@@ -179,8 +180,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the mint module.
-func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
-	// simulation.RandomizedGenState(simState)
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
@@ -195,10 +196,11 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
 func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
-	// sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
 }
 
 // WeightedOperations doesn't return any mint module operation.
-func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
-	return nil
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+	)
 }

@@ -17,7 +17,7 @@ import (
 
 // processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.
 func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, sender sdk.AccAddress, destination string, nativeTokens math.Int, burnAmount sdk.Coin, hash string) error {
-	intent, found := k.GetIntent(ctx, zone, sender.String(), false)
+	intent, found := k.GetDelegatorIntent(ctx, zone, sender.String(), false)
 	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
 	msgs := make([]*lsmstakingtypes.MsgTokenizeShares, 0)
 	intents := intent.Intents
@@ -72,8 +72,8 @@ func (k *Keeper) queueRedemption(
 	hash string,
 ) error { //nolint:unparam // we know that the error is always nil
 	distribution := make([]*types.Distribution, 0)
-
 	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens))
+
 	k.AddWithdrawalRecord(
 		ctx,
 		zone.ChainId,
@@ -122,12 +122,12 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 // a single unbond transaction per delegation.
 func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch int64) error {
 	// out here will only ever be in native bond denom
-	out := make(map[string]sdk.Coin, 0)
-	txhashes := make(map[string][]string, 0)
+	valOutCoinsMap := make(map[string]sdk.Coin, 0)
+	txHashes := make(map[string][]string, 0)
 
 	totalToWithdraw := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
-	distributions := make(map[string][]*types.Distribution, 0)
-	amounts := make(map[string]sdk.Coin, 0)
+	txDistrsMap := make(map[string][]*types.Distribution, 0)
+	txCoinMap := make(map[string]sdk.Coin, 0)
 	_, totalAvailable := k.GetUnlockedTokensForZone(ctx, zone)
 
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
@@ -143,8 +143,8 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		}
 		totalToWithdraw = totalToWithdraw.Add(withdrawal.Amount[0])
 
-		amounts[withdrawal.Txhash] = withdrawal.Amount[0]
-		distributions[withdrawal.Txhash] = make([]*types.Distribution, 0)
+		txCoinMap[withdrawal.Txhash] = withdrawal.Amount[0]
+		txDistrsMap[withdrawal.Txhash] = make([]*types.Distribution, 0)
 		return false
 	})
 
@@ -153,54 +153,53 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return nil
 	}
 
-	allocations := k.DeterminePlanForUndelegation(ctx, zone, sdk.NewCoins(totalToWithdraw))
-	valopers := utils.Keys(allocations)
+	allocationsMap := k.DeterminePlanForUndelegation(ctx, zone, sdk.NewCoins(totalToWithdraw))
+	valopers := utils.Keys(allocationsMap)
 	vidx := 0
 	v := valopers[vidx]
 WITHDRAWAL:
-	for _, hash := range utils.Keys(amounts) {
+	for _, hash := range utils.Keys(txCoinMap) {
 		for {
-			fmt.Println(amounts[hash].Amount)
-			if amounts[hash].Amount.IsZero() {
+			if txCoinMap[hash].Amount.IsZero() {
 				continue WITHDRAWAL
 			}
-			if allocations[v].GT(amounts[hash].Amount) {
-				allocations[v] = allocations[v].Sub(amounts[hash].Amount)
-				distributions[hash] = append(distributions[hash], &types.Distribution{Valoper: v, Amount: amounts[hash].Amount.Uint64()})
-				existing, found := out[v]
+			if allocationsMap[v].GT(txCoinMap[hash].Amount) {
+				allocationsMap[v] = allocationsMap[v].Sub(txCoinMap[hash].Amount)
+				txDistrsMap[hash] = append(txDistrsMap[hash], &types.Distribution{Valoper: v, Amount: txCoinMap[hash].Amount.Uint64()})
+				existing, found := valOutCoinsMap[v]
 				if !found {
-					out[v] = amounts[hash]
-					txhashes[v] = []string{hash}
+					valOutCoinsMap[v] = txCoinMap[hash]
+					txHashes[v] = []string{hash}
 
 				} else {
-					out[v] = existing.Add(amounts[hash])
-					txhashes[v] = append(txhashes[v], hash)
+					valOutCoinsMap[v] = existing.Add(txCoinMap[hash])
+					txHashes[v] = append(txHashes[v], hash)
 				}
-				amounts[hash] = sdk.NewCoin(amounts[hash].Denom, sdk.ZeroInt())
+				txCoinMap[hash] = sdk.NewCoin(txCoinMap[hash].Denom, sdk.ZeroInt())
 				continue WITHDRAWAL
 			}
 
-			distributions[hash] = append(distributions[hash], &types.Distribution{Valoper: v, Amount: allocations[v].Uint64()})
-			amounts[hash] = sdk.NewCoin(amounts[hash].Denom, amounts[hash].Amount.Sub(allocations[v]))
-			existing, found := out[v]
+			txDistrsMap[hash] = append(txDistrsMap[hash], &types.Distribution{Valoper: v, Amount: allocationsMap[v].Uint64()})
+			txCoinMap[hash] = sdk.NewCoin(txCoinMap[hash].Denom, txCoinMap[hash].Amount.Sub(allocationsMap[v]))
+			existing, found := valOutCoinsMap[v]
 			if !found {
-				out[v] = sdk.NewCoin(zone.BaseDenom, allocations[v])
-				txhashes[v] = []string{hash}
+				valOutCoinsMap[v] = sdk.NewCoin(zone.BaseDenom, allocationsMap[v])
+				txHashes[v] = []string{hash}
 
 			} else {
-				out[v] = existing.Add(sdk.NewCoin(zone.BaseDenom, allocations[v]))
-				txhashes[v] = append(txhashes[v], hash)
+				valOutCoinsMap[v] = existing.Add(sdk.NewCoin(zone.BaseDenom, allocationsMap[v]))
+				txHashes[v] = append(txHashes[v], hash)
 			}
-			allocations[v] = sdk.ZeroInt()
 
-			if allocations[v].IsZero() {
+			allocationsMap[v] = sdk.ZeroInt()
+			if allocationsMap[v].IsZero() {
 				fmt.Println("valopers len", len(valopers))
 				fmt.Println("vidx+1", vidx+1)
 				if len(valopers) > vidx+1 {
 					vidx++
 					v = valopers[vidx]
 				} else {
-					if !amounts[hash].Amount.IsZero() {
+					if !txCoinMap[hash].Amount.IsZero() {
 						return fmt.Errorf("unable to satisfy unbonding")
 					}
 					continue WITHDRAWAL
@@ -209,26 +208,26 @@ WITHDRAWAL:
 		}
 	}
 
-	for _, hash := range utils.Keys(distributions) {
+	for _, hash := range utils.Keys(txDistrsMap) {
 		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, WithdrawStatusQueued)
 		if !found {
 			return errors.New("unable to find withdrawal record")
 		}
-		record.Distribution = distributions[hash]
+		record.Distribution = txDistrsMap[hash]
 		k.UpdateWithdrawalRecordStatus(ctx, &record, WithdrawStatusUnbond)
 	}
 
-	if len(txhashes) == 0 {
+	if len(txHashes) == 0 {
 		// no records to handle.
 		return nil
 	}
 
 	var msgs []sdk.Msg
-	for _, valoper := range utils.Keys(out) {
-		if !out[valoper].Amount.IsZero() {
-			sort.Strings(txhashes[valoper])
-			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txhashes[valoper]})
-			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: out[valoper]})
+	for _, valoper := range utils.Keys(valOutCoinsMap) {
+		if !valOutCoinsMap[valoper].Amount.IsZero() {
+			sort.Strings(txHashes[valoper])
+			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashes[valoper]})
+			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: valOutCoinsMap[valoper]})
 		}
 	}
 

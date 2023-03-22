@@ -212,7 +212,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 					},
 				}
 				for _, intent := range intents {
-					icsKeeper.SetIntent(ctx, &zone, intent, false)
+					icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
 				}
 			},
 			&types.QueryDelegatorIntentRequest{

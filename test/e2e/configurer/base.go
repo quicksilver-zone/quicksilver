@@ -71,10 +71,34 @@ func (bc *baseConfigurer) runValidators(chainConfig *chain.Config) error {
 }
 
 func (bc *baseConfigurer) RunIBC() error {
-	// Run a relayer between every possible pair of chains.
+	// Run a hermes relayer between every possible pair of chains.
 	for i := 0; i < len(bc.chainConfigs); i++ {
 		for j := i + 1; j < len(bc.chainConfigs); j++ {
 			if err := bc.runIBCRelayer(bc.chainConfigs[i], bc.chainConfigs[j]); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (bc *baseConfigurer) RunICQ() error {
+	// Run icq relayer between every possible pair of chains.
+	for i := 0; i < len(bc.chainConfigs); i++ {
+		for j := i + 1; j < len(bc.chainConfigs); j++ {
+			if err := bc.runICQRelayer(bc.chainConfigs[i], bc.chainConfigs[j]); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (bc *baseConfigurer) RunXCC() error {
+	// Run xcc for every possible pair of chains.
+	for i := 0; i < len(bc.chainConfigs); i++ {
+		for j := i + 1; j < len(bc.chainConfigs); j++ {
+			if err := bc.runXCCLookup(bc.chainConfigs[i], bc.chainConfigs[j]); err != nil {
 				return err
 			}
 		}
@@ -91,11 +115,9 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 	}
 
 	hermesCfgPath := path.Join(tmpDir, "hermes")
-
 	if err := os.MkdirAll(hermesCfgPath, 0o755); err != nil {
 		return err
 	}
-
 	_, err = util.CopyFile(
 		filepath.Join("./scripts/", "hermes_bootstrap.sh"),
 		filepath.Join(hermesCfgPath, "hermes_bootstrap.sh"),
@@ -104,23 +126,26 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 		return err
 	}
 
-	relayerNodeA := chainConfigA.NodeConfigs[0]
-	relayerNodeB := chainConfigB.NodeConfigs[0]
+	bc.t.Logf(filepath.Join(hermesCfgPath, "hermes_bootstrap.sh"))
 
+	nodeConfigA := chainConfigA.NodeConfigs[0]
+	nodeConfigB := chainConfigB.NodeConfigs[0]
 	hermesResource, err := bc.containerManager.RunHermesResource(
+		bc.t,
 		chainConfigA.ID,
-		relayerNodeA.Name,
-		relayerNodeA.Mnemonic,
+		nodeConfigA.Name,
+		nodeConfigA.Mnemonic,
 		chainConfigB.ID,
-		relayerNodeB.Name,
-		relayerNodeB.Mnemonic,
-		hermesCfgPath)
+		nodeConfigB.Name,
+		nodeConfigB.Mnemonic,
+		hermesCfgPath,
+	)
 	if err != nil {
 		return err
 	}
 
+	require.True(bc.t, hermesResource.Container.State.Running)
 	endpoint := fmt.Sprintf("http://%s/state", hermesResource.GetHostPort("3031/tcp"))
-
 	require.Eventually(bc.t, func() bool {
 		resp, err := http.Get(endpoint) //nolint:gosec
 		if err != nil {
@@ -159,8 +184,96 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 	// transport errors.
 	time.Sleep(10 * time.Second)
 
-	// create the client, connection and channel between the two Osmosis chains
+	// create the client, connection and channel between the two Quicksilver chains
 	return bc.connectIBCChains(chainConfigA, chainConfigB)
+}
+
+func (bc *baseConfigurer) runICQRelayer(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
+	bc.t.Log("starting ICQ relayer container...")
+
+	tmpDir, err := os.MkdirTemp("", "quicksilver-e2e-testnet-icq-")
+	if err != nil {
+		return err
+	}
+
+	icqCfgPath := path.Join(tmpDir, "icq")
+	if err := os.MkdirAll(icqCfgPath, 0o755); err != nil {
+		return err
+	}
+	_, err = util.CopyFile(
+		filepath.Join("./scripts/", "icq_bootstrap.sh"),
+		filepath.Join(icqCfgPath, "icq_bootstrap.sh"),
+	)
+	if err != nil {
+		return err
+	}
+
+	nodeConfigA := chainConfigA.NodeConfigs[0]
+	nodeConfigB := chainConfigB.NodeConfigs[0]
+	icqResource, err := bc.containerManager.RunICQResource(
+		bc.t,
+		chainConfigA.ID,
+		nodeConfigA.Name,
+		chainConfigB.ID,
+		nodeConfigB.Name,
+		icqCfgPath,
+	)
+	if err != nil {
+		return err
+	}
+	require.True(bc.t, icqResource.Container.State.Running)
+
+	bc.t.Logf("started icq relayer container: %s", icqResource.Container.ID)
+
+	// XXX: Give time to both networks to start, otherwise we might see gRPC
+	// transport errors.
+	time.Sleep(10 * time.Second)
+
+	return nil
+}
+
+func (bc *baseConfigurer) runXCCLookup(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
+	bc.t.Log("starting XCC-Lookup container...")
+
+	tmpDir, err := os.MkdirTemp("", "quicksilver-e2e-testnet-xcc-")
+	if err != nil {
+		return err
+	}
+
+	xccCfgPath := path.Join(tmpDir, "xcc")
+	if err := os.MkdirAll(xccCfgPath, 0o755); err != nil {
+		return err
+	}
+	_, err = util.CopyFile(
+		filepath.Join("./scripts/", "xcc_bootstrap.sh"),
+		filepath.Join(xccCfgPath, "xcc_bootstrap.sh"),
+	)
+	if err != nil {
+		return err
+	}
+
+	nodeConfigA := chainConfigA.NodeConfigs[0]
+	nodeConfigB := chainConfigB.NodeConfigs[0]
+	xccResource, err := bc.containerManager.RunXCCLookupResource(
+		bc.t,
+		chainConfigA.ID,
+		nodeConfigA.Name,
+		chainConfigB.ID,
+		nodeConfigB.Name,
+		xccCfgPath,
+	)
+	if err != nil {
+		return err
+	}
+	require.True(bc.t, xccResource.Container.State.Running)
+
+	bc.t.Logf("started XCC-Lookup container: %s", xccResource.Container.ID)
+
+	// XXX: Give time to both networks to start, otherwise we might see gRPC
+	// transport errors.
+	time.Sleep(10 * time.Second)
+
+	return nil
 }
 
 func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config) error {

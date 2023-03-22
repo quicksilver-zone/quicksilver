@@ -30,7 +30,7 @@ type NodeConfig struct {
 	setupTime time.Time
 }
 
-// NewNodeConfig returens new initialized NodeConfig.
+// NewNodeConfig returns new initialized NodeConfig.
 func NewNodeConfig(t *testing.T, initNode *initialization.Node, initConfig *initialization.NodeConfig, chainID string, containerManager *containers.Manager) *NodeConfig {
 	return &NodeConfig{
 		Node:             *initNode,
