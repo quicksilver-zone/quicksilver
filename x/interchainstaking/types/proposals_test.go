@@ -4,8 +4,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"

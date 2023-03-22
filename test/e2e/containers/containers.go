@@ -16,7 +16,10 @@ import (
 )
 
 const (
-	hermesContainerName = "hermes-relayer"
+	hermesContainerName    = "hermes-relayer"
+	icqContainerName       = "icq-relayer"
+	xccLookupContainerName = "xcc-lookup"
+
 	// The maximum number of times debug logs are printed to console
 	// per CLI command.
 	maxDebugLogsPerCommand = 3
@@ -38,7 +41,7 @@ type Manager struct {
 	pool              *dockertest.Pool
 	network           *dockertest.Network
 	resources         map[string]*dockertest.Resource
-	isDebugLogEnabled bool
+	IsDebugLogEnabled bool
 }
 
 // NewManager creates a new Manager instance and initializes
@@ -47,7 +50,7 @@ func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Ma
 	docker = &Manager{
 		ImageConfig:       NewImageConfig(isUpgrade, isFork),
 		resources:         make(map[string]*dockertest.Resource),
-		isDebugLogEnabled: isDebugLogEnabled,
+		IsDebugLogEnabled: isDebugLogEnabled,
 	}
 	docker.pool, err = dockertest.NewPool("")
 	if err != nil {
@@ -76,9 +79,14 @@ func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainID string, conta
 	return m.ExecCmd(t, containerName, txCommand, successStr)
 }
 
-// ExecHermesCmd executes command on the hermes relaer container.
+// ExecHermesCmd executes command on the hermes relayer container.
 func (m *Manager) ExecHermesCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
 	return m.ExecCmd(t, hermesContainerName, command, success)
+}
+
+// ExecICQCmd executes command on the ICQ relayer container.
+func (m *Manager) ExecICQCmd(t *testing.T, command []string, success string) (bytes.Buffer, bytes.Buffer, error) {
+	return m.ExecCmd(t, icqContainerName, command, success)
 }
 
 // ExecCmd executes command by running it on the node container (specified by containerName)
@@ -100,7 +108,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
 	defer cancel()
 
-	if m.isDebugLogEnabled {
+	if m.IsDebugLogEnabled {
 		t.Logf("\n\nRunning: \"%s\", success condition is \"%s\"", command, success)
 	}
 	maxDebugLogTriesLeft := maxDebugLogsPerCommand
@@ -134,7 +142,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 			// Note that this does not match all errors.
 			// This only works if CLI outpurs "Error" or "error"
 			// to stderr.
-			if (defaultErrRegex.MatchString(errBufString) || m.isDebugLogEnabled) && maxDebugLogTriesLeft > 0 {
+			if (defaultErrRegex.MatchString(errBufString) || m.IsDebugLogEnabled) && maxDebugLogTriesLeft > 0 {
 				t.Log("\nstderr:")
 				t.Log(errBufString)
 
@@ -165,17 +173,14 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 
 // RunHermesResource runs a Hermes container. Returns the container resource and error if any.
 // the name of the hermes container is "<chain A id>-<chain B id>-relayer"
-func (m *Manager) RunHermesResource(chainAID, quickARelayerNodeName, quickAValMnemonic, chainBID, quickBRelayerNodeName, quickBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunHermesResource(t *testing.T, chainAID, quickARelayerNodeName, quickAValMnemonic, chainBID, quickBRelayerNodeName, quickBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
 	hermesResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       hermesContainerName,
-			Repository: m.RelayerRepository,
-			Tag:        m.RelayerTag,
+			Repository: m.HermesRepository,
+			Tag:        m.HermesTag,
 			NetworkID:  m.network.Network.ID,
-			Cmd: []string{
-				"start",
-			},
-			User: "root:root",
+			User:       "root:root",
 			Mounts: []string{
 				fmt.Sprintf("%s/:/root/hermes", hermesCfgPath),
 			},
@@ -205,12 +210,183 @@ func (m *Manager) RunHermesResource(chainAID, quickARelayerNodeName, quickAValMn
 		return nil, err
 	}
 	m.resources[hermesContainerName] = hermesResource
+
+	var (
+		outBuf bytes.Buffer
+		errBuf bytes.Buffer
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	err = m.pool.Client.Logs(docker.LogsOptions{
+		Context:           ctx,
+		Container:         hermesResource.Container.ID,
+		OutputStream:      &outBuf,
+		ErrorStream:       &errBuf,
+		InactivityTimeout: 0,
+		Stderr:            true,
+		Stdout:            true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if m.IsDebugLogEnabled {
+		t.Logf(outBuf.String())
+		t.Logf(errBuf.String())
+	}
+
 	return hermesResource, nil
+}
+
+// RunICQResource runs an ICQ container. Returns the container resource and error if any.
+// the name of the ICQ container is "<chain A id>-<chain B id>-relayer"
+func (m *Manager) RunICQResource(t *testing.T, chainAID, quickANodeName, chainBID, quickBNodeName, icqCfgPath string) (*dockertest.Resource, error) {
+	icqResource, err := m.pool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       icqContainerName,
+			Repository: m.ICQRepository,
+			Tag:        m.ICQTag,
+			NetworkID:  m.network.Network.ID,
+			User:       "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s/:/root/icq", icqCfgPath),
+			},
+			ExposedPorts: []string{
+				"2112",
+			},
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"2112/tcp": {{HostIP: "", HostPort: "2112"}},
+			},
+			Env: []string{
+				fmt.Sprintf("QUICK_A_E2E_CHAIN_ID=%s", chainAID),
+				fmt.Sprintf("QUICK_B_E2E_CHAIN_ID=%s", chainBID),
+				fmt.Sprintf("QUICK_A_E2E_VAL_HOST=%s", quickANodeName),
+				fmt.Sprintf("QUICK_B_E2E_VAL_HOST=%s", quickBNodeName),
+			},
+			Entrypoint: []string{
+				"sh",
+				"-c",
+				"chmod +x /root/icq/icq_bootstrap.sh && /root/icq/icq_bootstrap.sh",
+			},
+		},
+		noRestart,
+	)
+	if err != nil {
+		return nil, err
+	}
+	m.resources[icqContainerName] = icqResource
+
+	_, err = m.pool.Client.InspectContainer(icqResource.Container.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		outBuf bytes.Buffer
+		errBuf bytes.Buffer
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	err = m.pool.Client.Logs(docker.LogsOptions{
+		Context:           ctx,
+		Container:         icqResource.Container.ID,
+		OutputStream:      &outBuf,
+		ErrorStream:       &errBuf,
+		InactivityTimeout: 0,
+		Stderr:            true,
+		Stdout:            true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if m.IsDebugLogEnabled {
+		t.Logf(outBuf.String())
+		t.Logf(errBuf.String())
+	}
+
+	return icqResource, nil
+}
+
+// RunXCCLookupResource runs an XCCLookup container. Returns the container resource and error if any.
+// the name of the XCCLookup container is "<chain A id>-<chain B id>-relayer"
+func (m *Manager) RunXCCLookupResource(t *testing.T, chainAID, quickANodeName, chainBID, quickBNodeName, xccLookupCfgPath string) (*dockertest.Resource, error) {
+	xccLookupResource, err := m.pool.RunWithOptions(
+		&dockertest.RunOptions{
+			Name:       xccLookupContainerName,
+			Repository: m.XCCLookupRepository,
+			Tag:        m.XCCLookupTag,
+			NetworkID:  m.network.Network.ID,
+			User:       "root:root",
+			Mounts: []string{
+				fmt.Sprintf("%s/:/root/xcclookup", xccLookupCfgPath),
+			},
+			ExposedPorts: []string{
+				"3033",
+			},
+			PortBindings: map[docker.Port][]docker.PortBinding{
+				"3033/tcp": {{HostIP: "", HostPort: "3033"}},
+			},
+			Env: []string{
+				fmt.Sprintf("QUICK_A_E2E_CHAIN_ID=%s", chainAID),
+				fmt.Sprintf("QUICK_B_E2E_CHAIN_ID=%s", chainBID),
+				fmt.Sprintf("QUICK_A_E2E_VAL_HOST=%s", quickANodeName),
+				fmt.Sprintf("QUICK_B_E2E_VAL_HOST=%s", quickBNodeName),
+			},
+			Entrypoint: []string{
+				"sh",
+				"-c",
+				"chmod +x /root/xcclookup/xcc_bootstrap.sh && /root/xcclookup/xcc_bootstrap.sh",
+			},
+		},
+		noRestart,
+	)
+	if err != nil {
+		return nil, err
+	}
+	m.resources[xccLookupContainerName] = xccLookupResource
+
+	_, err = m.pool.Client.InspectContainer(xccLookupResource.Container.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var (
+		outBuf bytes.Buffer
+		errBuf bytes.Buffer
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	defer cancel()
+
+	err = m.pool.Client.Logs(docker.LogsOptions{
+		Context:           ctx,
+		Container:         xccLookupResource.Container.ID,
+		OutputStream:      &outBuf,
+		ErrorStream:       &errBuf,
+		InactivityTimeout: 0,
+		Stderr:            true,
+		Stdout:            true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if m.IsDebugLogEnabled {
+		t.Logf(outBuf.String())
+		t.Logf(errBuf.String())
+	}
+
+	return xccLookupResource, nil
 }
 
 // RunNodeResource runs a node container. Assigns containerName to the container.
 // Mounts the container on valConfigDir volume on the running host. Returns the container resource and error if any.
-func (m *Manager) RunNodeResource(containerName, valCondifDir string) (*dockertest.Resource, error) {
+func (m *Manager) RunNodeResource(containerName, valCondigDir string) (*dockertest.Resource, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		return nil, err
@@ -222,9 +398,11 @@ func (m *Manager) RunNodeResource(containerName, valCondifDir string) (*dockerte
 		Tag:        m.QuicksilverTag,
 		NetworkID:  m.network.Network.ID,
 		User:       "root:root",
-		Cmd:        []string{"start"},
+		Cmd: []string{
+			"start",
+		},
 		Mounts: []string{
-			fmt.Sprintf("%s/:/quicksilver/.quicksilverd", valCondifDir),
+			fmt.Sprintf("%s/:/quicksilver/.quicksilverd", valCondigDir),
 			fmt.Sprintf("%s/scripts:/quicksilver", pwd),
 		},
 	}
