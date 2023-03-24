@@ -1,11 +1,14 @@
 package osmomath
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
 
 var pointOne = sdk.OneDec().QuoInt64(10)
 
 // SigFigRound rounds to a specified significant figure.
-func SigFigRound(d sdk.Dec, tenToSigFig sdk.Int) sdk.Dec {
+func SigFigRound(d sdk.Dec, tenToSigFig math.Int) sdk.Dec {
 	if d.IsZero() {
 		return d
 	}

@@ -204,7 +204,7 @@ func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_SubmitClaim_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_SubmitClaim_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgSubmitClaim)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -216,7 +216,7 @@ func _Msg_SubmitClaim_Handler(srv interface{}, ctx context.Context, dec func(int
 		Server:     srv,
 		FullMethod: "/quicksilver.participationrewards.v1.Msg/SubmitClaim",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).SubmitClaim(ctx, req.(*MsgSubmitClaim))
 	}
 	return interceptor(ctx, in, info, handler)

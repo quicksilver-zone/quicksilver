@@ -69,7 +69,7 @@ type writerLogger struct {
 
 var _ log.Logger = (*writerLogger)(nil)
 
-func (wl *writerLogger) Info(msg string, keyVals ...interface{}) {
+func (wl *writerLogger) Info(msg string, keyVals ...any) {
 	wl.mu.Lock()
 	defer wl.mu.Unlock()
 

@@ -231,7 +231,7 @@ func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_CreateBalancerPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_CreateBalancerPool_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgCreateBalancerPool)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -243,7 +243,7 @@ func _Msg_CreateBalancerPool_Handler(srv interface{}, ctx context.Context, dec f
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.poolmodels.balancer.v1beta1.Msg/CreateBalancerPool",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).CreateBalancerPool(ctx, req.(*MsgCreateBalancerPool))
 	}
 	return interceptor(ctx, in, info, handler)

@@ -324,7 +324,7 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_EpochInfos_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_EpochInfos_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryEpochsInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -336,13 +336,13 @@ func _Query_EpochInfos_Handler(srv interface{}, ctx context.Context, dec func(in
 		Server:     srv,
 		FullMethod: "/quicksilver.epochs.v1.Query/EpochInfos",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).EpochInfos(ctx, req.(*QueryEpochsInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_CurrentEpoch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_CurrentEpoch_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryCurrentEpochRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -354,7 +354,7 @@ func _Query_CurrentEpoch_Handler(srv interface{}, ctx context.Context, dec func(
 		Server:     srv,
 		FullMethod: "/quicksilver.epochs.v1.Query/CurrentEpoch",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).CurrentEpoch(ctx, req.(*QueryCurrentEpochRequest))
 	}
 	return interceptor(ctx, in, info, handler)

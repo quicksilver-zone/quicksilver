@@ -122,14 +122,14 @@ func (n *NodeConfig) QueryGovModuleAccount() string {
 
 	out, _, err := n.containerManager.ExecCmd(n.t, n.Name, cmd, "")
 	require.NoError(n.t, err)
-	var result map[string][]interface{}
+	var result map[string][]any
 	err = json.Unmarshal(out.Bytes(), &result)
 	require.NoError(n.t, err)
 	for _, acc := range result["accounts"] {
-		account, ok := acc.(map[string]interface{})
+		account, ok := acc.(map[string]any)
 		require.True(n.t, ok)
 		if account["name"] == "gov" {
-			moduleAccount, ok := account["base_account"].(map[string]interface{})["address"].(string)
+			moduleAccount, ok := account["base_account"].(map[string]any)["address"].(string)
 			require.True(n.t, ok)
 			return moduleAccount
 		}

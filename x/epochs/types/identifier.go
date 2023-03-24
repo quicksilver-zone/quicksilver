@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func ValidateEpochIdentifierInterface(i interface{}) error {
+func ValidateEpochIdentifierInterface(i any) error {
 	v, ok := i.(string)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

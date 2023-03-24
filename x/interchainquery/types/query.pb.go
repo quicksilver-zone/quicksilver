@@ -315,7 +315,7 @@ func RegisterQuerySrvrServer(s grpc1.Server, srv QuerySrvrServer) {
 	s.RegisterService(&_QuerySrvr_serviceDesc, srv)
 }
 
-func _QuerySrvr_Queries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _QuerySrvr_Queries_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryRequestsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -327,7 +327,7 @@ func _QuerySrvr_Queries_Handler(srv interface{}, ctx context.Context, dec func(i
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainquery.v1.QuerySrvr/Queries",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QuerySrvrServer).Queries(ctx, req.(*QueryRequestsRequest))
 	}
 	return interceptor(ctx, in, info, handler)

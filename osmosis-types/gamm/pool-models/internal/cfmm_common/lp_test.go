@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -80,7 +81,7 @@ func TestCalcExitPool(t *testing.T) {
 	tests := []struct {
 		name          string
 		pool          gammtypes.PoolI
-		exitingShares sdk.Int
+		exitingShares math.Int
 		expError      bool
 	}{
 		{
@@ -149,7 +150,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 		name        string
 		pool        func() gammtypes.PoolI
 		tokensIn    sdk.Coins
-		expNumShare sdk.Int
+		expNumShare math.Int
 		expRemCoin  sdk.Coins
 	}{
 		{

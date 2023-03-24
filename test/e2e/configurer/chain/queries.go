@@ -108,7 +108,7 @@ func (n *NodeConfig) QueryWasmSmart(contract, msg string, result any) error {
 	return nil
 }
 
-func (n *NodeConfig) QueryWasmSmartObject(contract, msg string) (resultObject map[string]interface{}, err error) {
+func (n *NodeConfig) QueryWasmSmartObject(contract, msg string) (resultObject map[string]any, err error) {
 	err = n.QueryWasmSmart(contract, msg, &resultObject)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (n *NodeConfig) QueryWasmSmartObject(contract, msg string) (resultObject ma
 	return resultObject, nil
 }
 
-func (n *NodeConfig) QueryWasmSmartArray(contract, msg string) (resultArray []interface{}, err error) {
+func (n *NodeConfig) QueryWasmSmartArray(contract, msg string) (resultArray []any, err error) {
 	err = n.QueryWasmSmart(contract, msg, &resultArray)
 	if err != nil {
 		return nil, err

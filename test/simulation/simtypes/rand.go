@@ -44,7 +44,7 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// RandPositiveInt get a rand positive sdk.Int
+// RandPositiveInt get a rand positive math.Int
 func RandPositiveInt(r *rand.Rand, max sdkmath.Int) (sdkmath.Int, error) {
 	if !max.GTE(sdk.OneInt()) {
 		return sdkmath.Int{}, errors.New("max too small")
@@ -187,7 +187,7 @@ func RandLTEBound[T constraints.Integer](r *rand.Rand, upperbound T) T {
 	return t
 }
 
-func RandSelect[T interface{}](r *rand.Rand, args ...T) T {
+func RandSelect[T any](r *rand.Rand, args ...T) T {
 	choice := RandLTBound(r, len(args))
 	return args[choice]
 }

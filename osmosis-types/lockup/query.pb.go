@@ -1954,7 +1954,7 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_ModuleBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_ModuleBalance_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(ModuleBalanceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1966,13 +1966,13 @@ func _Query_ModuleBalance_Handler(srv interface{}, ctx context.Context, dec func
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/ModuleBalance",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).ModuleBalance(ctx, req.(*ModuleBalanceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ModuleLockedAmount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_ModuleLockedAmount_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(ModuleLockedAmountRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1984,13 +1984,13 @@ func _Query_ModuleLockedAmount_Handler(srv interface{}, ctx context.Context, dec
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/ModuleLockedAmount",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).ModuleLockedAmount(ctx, req.(*ModuleLockedAmountRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountUnlockableCoins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountUnlockableCoins_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountUnlockableCoinsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2002,13 +2002,13 @@ func _Query_AccountUnlockableCoins_Handler(srv interface{}, ctx context.Context,
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountUnlockableCoins",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountUnlockableCoins(ctx, req.(*AccountUnlockableCoinsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountUnlockingCoins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountUnlockingCoins_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountUnlockingCoinsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2020,13 +2020,13 @@ func _Query_AccountUnlockingCoins_Handler(srv interface{}, ctx context.Context, 
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountUnlockingCoins",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountUnlockingCoins(ctx, req.(*AccountUnlockingCoinsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountLockedCoins_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountLockedCoins_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountLockedCoinsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2038,13 +2038,13 @@ func _Query_AccountLockedCoins_Handler(srv interface{}, ctx context.Context, dec
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountLockedCoins",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountLockedCoins(ctx, req.(*AccountLockedCoinsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountLockedPastTime_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountLockedPastTime_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountLockedPastTimeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2056,13 +2056,13 @@ func _Query_AccountLockedPastTime_Handler(srv interface{}, ctx context.Context, 
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountLockedPastTime",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountLockedPastTime(ctx, req.(*AccountLockedPastTimeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountLockedPastTimeNotUnlockingOnly_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountLockedPastTimeNotUnlockingOnly_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountLockedPastTimeNotUnlockingOnlyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2074,13 +2074,13 @@ func _Query_AccountLockedPastTimeNotUnlockingOnly_Handler(srv interface{}, ctx c
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountLockedPastTimeNotUnlockingOnly",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountLockedPastTimeNotUnlockingOnly(ctx, req.(*AccountLockedPastTimeNotUnlockingOnlyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountUnlockedBeforeTime_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountUnlockedBeforeTime_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountUnlockedBeforeTimeRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2092,13 +2092,13 @@ func _Query_AccountUnlockedBeforeTime_Handler(srv interface{}, ctx context.Conte
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountUnlockedBeforeTime",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountUnlockedBeforeTime(ctx, req.(*AccountUnlockedBeforeTimeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountLockedPastTimeDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountLockedPastTimeDenom_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountLockedPastTimeDenomRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2110,13 +2110,13 @@ func _Query_AccountLockedPastTimeDenom_Handler(srv interface{}, ctx context.Cont
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountLockedPastTimeDenom",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountLockedPastTimeDenom(ctx, req.(*AccountLockedPastTimeDenomRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_LockedDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_LockedDenom_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(LockedDenomRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2128,13 +2128,13 @@ func _Query_LockedDenom_Handler(srv interface{}, ctx context.Context, dec func(i
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/LockedDenom",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).LockedDenom(ctx, req.(*LockedDenomRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_LockedByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_LockedByID_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(LockedRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2146,13 +2146,13 @@ func _Query_LockedByID_Handler(srv interface{}, ctx context.Context, dec func(in
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/LockedByID",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).LockedByID(ctx, req.(*LockedRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_SyntheticLockupsByLockupID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_SyntheticLockupsByLockupID_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(SyntheticLockupsByLockupIDRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2164,13 +2164,13 @@ func _Query_SyntheticLockupsByLockupID_Handler(srv interface{}, ctx context.Cont
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/SyntheticLockupsByLockupID",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).SyntheticLockupsByLockupID(ctx, req.(*SyntheticLockupsByLockupIDRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountLockedLongerDuration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountLockedLongerDuration_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountLockedLongerDurationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2182,13 +2182,13 @@ func _Query_AccountLockedLongerDuration_Handler(srv interface{}, ctx context.Con
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountLockedLongerDuration",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountLockedLongerDuration(ctx, req.(*AccountLockedLongerDurationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountLockedDuration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountLockedDuration_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountLockedDurationRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2200,13 +2200,13 @@ func _Query_AccountLockedDuration_Handler(srv interface{}, ctx context.Context, 
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountLockedDuration",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountLockedDuration(ctx, req.(*AccountLockedDurationRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountLockedLongerDurationNotUnlockingOnly_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountLockedLongerDurationNotUnlockingOnly_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountLockedLongerDurationNotUnlockingOnlyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2218,13 +2218,13 @@ func _Query_AccountLockedLongerDurationNotUnlockingOnly_Handler(srv interface{},
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountLockedLongerDurationNotUnlockingOnly",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountLockedLongerDurationNotUnlockingOnly(ctx, req.(*AccountLockedLongerDurationNotUnlockingOnlyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountLockedLongerDurationDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountLockedLongerDurationDenom_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(AccountLockedLongerDurationDenomRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -2236,7 +2236,7 @@ func _Query_AccountLockedLongerDurationDenom_Handler(srv interface{}, ctx contex
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Query/AccountLockedLongerDurationDenom",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountLockedLongerDurationDenom(ctx, req.(*AccountLockedLongerDurationDenomRequest))
 	}
 	return interceptor(ctx, in, info, handler)

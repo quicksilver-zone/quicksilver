@@ -3,7 +3,7 @@ package types
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,11 +14,11 @@ func TestQuery_ValidateBasic(t *testing.T) {
 		ChainId      string
 		QueryType    string
 		Request      []byte
-		Period       sdk.Int
-		LastHeight   sdk.Int
+		Period       math.Int
+		LastHeight   math.Int
 		CallbackId   string
 		Ttl          uint64
-		LastEmission sdk.Int
+		LastEmission math.Int
 	}
 	tests := []struct {
 		name    string
@@ -55,8 +55,8 @@ func TestQuery_ValidateBasic(t *testing.T) {
 func TestDataPoint_ValidateBasic(t *testing.T) {
 	type fields struct {
 		Id           string
-		RemoteHeight sdk.Int
-		LocalHeight  sdk.Int
+		RemoteHeight math.Int
+		LocalHeight  math.Int
 		Value        []byte
 	}
 	tests := []struct {

@@ -592,7 +592,7 @@ func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_LockTokens_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_LockTokens_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgLockTokens)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -604,13 +604,13 @@ func _Msg_LockTokens_Handler(srv interface{}, ctx context.Context, dec func(inte
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Msg/LockTokens",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).LockTokens(ctx, req.(*MsgLockTokens))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_BeginUnlockingAll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_BeginUnlockingAll_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgBeginUnlockingAll)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -622,13 +622,13 @@ func _Msg_BeginUnlockingAll_Handler(srv interface{}, ctx context.Context, dec fu
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Msg/BeginUnlockingAll",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).BeginUnlockingAll(ctx, req.(*MsgBeginUnlockingAll))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_BeginUnlocking_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_BeginUnlocking_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgBeginUnlocking)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -640,13 +640,13 @@ func _Msg_BeginUnlocking_Handler(srv interface{}, ctx context.Context, dec func(
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Msg/BeginUnlocking",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).BeginUnlocking(ctx, req.(*MsgBeginUnlocking))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ExtendLockup_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_ExtendLockup_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgExtendLockup)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -658,7 +658,7 @@ func _Msg_ExtendLockup_Handler(srv interface{}, ctx context.Context, dec func(in
 		Server:     srv,
 		FullMethod: "/osmosis.lockup.Msg/ExtendLockup",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).ExtendLockup(ctx, req.(*MsgExtendLockup))
 	}
 	return interceptor(ctx, in, info, handler)

@@ -292,7 +292,7 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_Claims_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Claims_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryClaimsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -304,13 +304,13 @@ func _Query_Claims_Handler(srv interface{}, ctx context.Context, dec func(interf
 		Server:     srv,
 		FullMethod: "/quicksilver.claimsmanager.v1.Query/Claims",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).Claims(ctx, req.(*QueryClaimsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_LastEpochClaims_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_LastEpochClaims_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryClaimsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -322,13 +322,13 @@ func _Query_LastEpochClaims_Handler(srv interface{}, ctx context.Context, dec fu
 		Server:     srv,
 		FullMethod: "/quicksilver.claimsmanager.v1.Query/LastEpochClaims",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).LastEpochClaims(ctx, req.(*QueryClaimsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_UserClaims_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_UserClaims_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryClaimsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -340,13 +340,13 @@ func _Query_UserClaims_Handler(srv interface{}, ctx context.Context, dec func(in
 		Server:     srv,
 		FullMethod: "/quicksilver.claimsmanager.v1.Query/UserClaims",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).UserClaims(ctx, req.(*QueryClaimsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_UserLastEpochClaims_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_UserLastEpochClaims_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryClaimsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -358,7 +358,7 @@ func _Query_UserLastEpochClaims_Handler(srv interface{}, ctx context.Context, de
 		Server:     srv,
 		FullMethod: "/quicksilver.claimsmanager.v1.Query/UserLastEpochClaims",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).UserLastEpochClaims(ctx, req.(*QueryClaimsRequest))
 	}
 	return interceptor(ctx, in, info, handler)

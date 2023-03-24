@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdkioerrors "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
@@ -70,7 +71,7 @@ func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
 // ValidateUserSpecifiedWeight ensures that a weight that is provided from user-input anywhere
 // for creating a pool obeys the expected guarantees.
 // Namely, that the weight is in the range [1, MaxUserSpecifiedWeight)
-func ValidateUserSpecifiedWeight(weight sdk.Int) error {
+func ValidateUserSpecifiedWeight(weight math.Int) error {
 	if !weight.IsPositive() {
 		return sdkioerrors.Wrap(gamm.ErrNotPositiveWeight, weight.String())
 	}

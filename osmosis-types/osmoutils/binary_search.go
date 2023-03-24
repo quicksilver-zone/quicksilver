@@ -3,6 +3,7 @@ package osmoutils
 import (
 	"errors"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,10 +12,10 @@ import (
 // ErrTolerance.Compare(a, b) returns true iff:
 // |a - b| <= AdditiveTolerance
 // |a - b| / min(a, b) <= MultiplicativeTolerance
-// Each check is respectively ignored if the entry is nil (sdk.Dec{}, sdk.Int{})
+// Each check is respectively ignored if the entry is nil (sdk.Dec{}, math.Int{})
 // Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.
 type ErrTolerance struct {
-	AdditiveTolerance       sdk.Int
+	AdditiveTolerance       math.Int
 	MultiplicativeTolerance sdk.Dec
 }
 
@@ -22,7 +23,7 @@ type ErrTolerance struct {
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) Compare(expected, actual sdk.Int) int {
+func (e ErrTolerance) Compare(expected, actual math.Int) int {
 	diff := expected.Sub(actual).Abs()
 
 	comparisonSign := 0
@@ -59,18 +60,18 @@ func (e ErrTolerance) Compare(expected, actual sdk.Int) int {
 // Binary search inputs between [lowerbound, upperbound] to a monotonic increasing function f.
 // We stop once f(found_input) meets the ErrTolerance constraints.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
-func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
-	lowerbound sdk.Int,
-	upperbound sdk.Int,
-	targetOutput sdk.Int,
+func BinarySearch(f func(input math.Int) (math.Int, error),
+	lowerbound math.Int,
+	upperbound math.Int,
+	targetOutput math.Int,
 	errTolerance ErrTolerance,
 	maxIterations int,
-) (sdk.Int, error) {
+) (math.Int, error) {
 	// Setup base case of loop
 	curEstimate := lowerbound.Add(upperbound).QuoRaw(2)
 	curOutput, err := f(curEstimate)
 	if err != nil {
-		return sdk.Int{}, err
+		return math.Int{}, err
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
@@ -85,11 +86,11 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 		curEstimate = lowerbound.Add(upperbound).QuoRaw(2)
 		curOutput, err = f(curEstimate)
 		if err != nil {
-			return sdk.Int{}, err
+			return math.Int{}, err
 		}
 	}
 	if curIteration == maxIterations {
-		return sdk.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
+		return math.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
 	}
 	return curEstimate, nil
 }

@@ -414,7 +414,7 @@ var fileDescriptor_196cdf77e041fc72 = []byte{
 	0xf4, 0xac, 0xfd, 0x09, 0x00, 0x00, 0xff, 0xff, 0x24, 0x0d, 0xe8, 0xd3, 0x7a, 0x07, 0x00, 0x00,
 }
 
-func (this *ParamsV1) Equal(that interface{}) bool {
+func (this *ParamsV1) Equal(that any) bool {
 	if that == nil {
 		return this == nil
 	}
@@ -444,7 +444,7 @@ func (this *ParamsV1) Equal(that interface{}) bool {
 	}
 	return true
 }
-func (this *Params) Equal(that interface{}) bool {
+func (this *Params) Equal(that any) bool {
 	if that == nil {
 		return this == nil
 	}

@@ -1354,7 +1354,7 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_Zones_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Zones_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryZonesInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1366,13 +1366,13 @@ func _Query_Zones_Handler(srv interface{}, ctx context.Context, dec func(interfa
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Query/Zones",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).Zones(ctx, req.(*QueryZonesInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Zone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Zone_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryZoneInfoRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1384,13 +1384,13 @@ func _Query_Zone_Handler(srv interface{}, ctx context.Context, dec func(interfac
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Query/Zone",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).Zone(ctx, req.(*QueryZoneInfoRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_DepositAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_DepositAccount_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryDepositAccountForChainRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1402,13 +1402,13 @@ func _Query_DepositAccount_Handler(srv interface{}, ctx context.Context, dec fun
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Query/DepositAccount",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).DepositAccount(ctx, req.(*QueryDepositAccountForChainRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_DelegatorIntent_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_DelegatorIntent_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryDelegatorIntentRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1420,13 +1420,13 @@ func _Query_DelegatorIntent_Handler(srv interface{}, ctx context.Context, dec fu
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Query/DelegatorIntent",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).DelegatorIntent(ctx, req.(*QueryDelegatorIntentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Delegations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Delegations_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryDelegationsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1438,13 +1438,13 @@ func _Query_Delegations_Handler(srv interface{}, ctx context.Context, dec func(i
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Query/Delegations",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).Delegations(ctx, req.(*QueryDelegationsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Receipts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Receipts_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryReceiptsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1456,13 +1456,13 @@ func _Query_Receipts_Handler(srv interface{}, ctx context.Context, dec func(inte
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Query/Receipts",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).Receipts(ctx, req.(*QueryReceiptsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ZoneWithdrawalRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_ZoneWithdrawalRecords_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryWithdrawalRecordsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1474,13 +1474,13 @@ func _Query_ZoneWithdrawalRecords_Handler(srv interface{}, ctx context.Context, 
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Query/ZoneWithdrawalRecords",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).ZoneWithdrawalRecords(ctx, req.(*QueryWithdrawalRecordsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_WithdrawalRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_WithdrawalRecords_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryWithdrawalRecordsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1492,13 +1492,13 @@ func _Query_WithdrawalRecords_Handler(srv interface{}, ctx context.Context, dec 
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Query/WithdrawalRecords",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).WithdrawalRecords(ctx, req.(*QueryWithdrawalRecordsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_UnbondingRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_UnbondingRecords_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryUnbondingRecordsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1510,13 +1510,13 @@ func _Query_UnbondingRecords_Handler(srv interface{}, ctx context.Context, dec f
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Query/UnbondingRecords",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).UnbondingRecords(ctx, req.(*QueryUnbondingRecordsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_RedelegationRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_RedelegationRecords_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryRedelegationRecordsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1528,7 +1528,7 @@ func _Query_RedelegationRecords_Handler(srv interface{}, ctx context.Context, de
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Query/RedelegationRecords",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).RedelegationRecords(ctx, req.(*QueryRedelegationRecordsRequest))
 	}
 	return interceptor(ctx, in, info, handler)

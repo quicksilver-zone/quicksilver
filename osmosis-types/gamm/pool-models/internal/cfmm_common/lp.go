@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	sdkioerrors "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
@@ -13,7 +14,7 @@ import (
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
 
 // CalcExitPool returns how many tokens should come out, when exiting k LP shares against a "standard" CFMM
-func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdk.Int, exitFee sdk.Dec) (sdk.Coins, error) {
+func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares math.Int, exitFee sdk.Dec) (sdk.Coins, error) {
 	totalShares := pool.GetTotalShares()
 	if exitingShares.GTE(totalShares) {
 		return sdk.Coins{}, sdkioerrors.Wrapf(gamm.ErrLimitMaxAmount, errMsgFormatSharesLargerThanMax, exitingShares, totalShares)
@@ -62,7 +63,7 @@ func CalcExitPool(ctx sdk.Context, pool gamm.PoolI, exitingShares sdk.Int, exitF
 //  1. iterate through all the tokens provided as an argument, calculate how much ratio it accounts for the asset in the pool
 //  2. get the minimal share ratio that would work as the benchmark for all tokens.
 //  3. calculate the number of shares that could be joined (total share * min share ratio), return the remaining coins
-func MaximalExactRatioJoin(p gamm.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares sdk.Int, remCoins sdk.Coins, err error) {
+func MaximalExactRatioJoin(p gamm.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (numShares math.Int, remCoins sdk.Coins, err error) {
 	coinShareRatios := make([]sdk.Dec, len(tokensIn))
 	minShareRatio := sdk.MaxSortableDec
 	maxShareRatio := sdk.ZeroDec()
@@ -125,8 +126,8 @@ func MaximalExactRatioJoin(p gamm.PoolI, ctx sdk.Context, tokensIn sdk.Coins) (n
 func BinarySearchSingleAssetJoin(
 	pool gamm.PoolI,
 	tokenIn sdk.Coin,
-	poolWithAddedLiquidityAndShares func(newLiquidity sdk.Coin, newShares sdk.Int) gamm.PoolI,
-) (numLPShares sdk.Int, err error) {
+	poolWithAddedLiquidityAndShares func(newLiquidity sdk.Coin, newShares math.Int) gamm.PoolI,
+) (numLPShares math.Int, err error) {
 	// use dummy context
 	ctx := sdk.Context{}
 	// Need to get something that makes the result correct within 1 LP share
@@ -141,7 +142,7 @@ func BinarySearchSingleAssetJoin(
 
 	// Creates a pool with tokenIn liquidity added, where it created `sharesIn` number of shares.
 	// Returns how many tokens you'd get, if you then exited all of `sharesIn` for tokenIn.Denom
-	estimateCoinOutGivenShares := func(sharesIn sdk.Int) (tokenOut sdk.Int, err error) {
+	estimateCoinOutGivenShares := func(sharesIn math.Int) (tokenOut math.Int, err error) {
 		// new pool with added liquidity & LP shares, which we can mutate.
 		poolWithUpdatedLiquidity := poolWithAddedLiquidityAndShares(tokenIn, sharesIn)
 		swapToDenom := tokenIn.Denom
@@ -149,7 +150,7 @@ func BinarySearchSingleAssetJoin(
 		exitFee := sdk.ZeroDec()
 		exitedCoins, err := poolWithUpdatedLiquidity.ExitPool(ctx, sharesIn, exitFee)
 		if err != nil {
-			return sdk.Int{}, err
+			return math.Int{}, err
 		}
 
 		return swapAllCoinsToSingleAsset(poolWithUpdatedLiquidity, ctx, exitedCoins, swapToDenom)
@@ -163,7 +164,7 @@ func BinarySearchSingleAssetJoin(
 	return numLPShares, err
 }
 
-func swapAllCoinsToSingleAsset(pool gamm.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (sdk.Int, error) {
+func swapAllCoinsToSingleAsset(pool gamm.PoolI, ctx sdk.Context, inTokens sdk.Coins, swapToDenom string) (math.Int, error) {
 	swapFee := sdk.ZeroDec()
 	tokenOutAmt := inTokens.AmountOfNoDenomValidation(swapToDenom)
 	for _, coin := range inTokens {
@@ -172,7 +173,7 @@ func swapAllCoinsToSingleAsset(pool gamm.PoolI, ctx sdk.Context, inTokens sdk.Co
 		}
 		tokenOut, err := pool.SwapOutAmtGivenIn(ctx, sdk.NewCoins(coin), swapToDenom, swapFee)
 		if err != nil {
-			return sdk.Int{}, err
+			return math.Int{}, err
 		}
 		tokenOutAmt = tokenOutAmt.Add(tokenOut.Amount)
 	}

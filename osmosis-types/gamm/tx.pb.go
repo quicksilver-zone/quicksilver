@@ -1190,7 +1190,7 @@ func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_JoinPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_JoinPool_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgJoinPool)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1202,13 +1202,13 @@ func _Msg_JoinPool_Handler(srv interface{}, ctx context.Context, dec func(interf
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Msg/JoinPool",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).JoinPool(ctx, req.(*MsgJoinPool))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ExitPool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_ExitPool_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgExitPool)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1220,13 +1220,13 @@ func _Msg_ExitPool_Handler(srv interface{}, ctx context.Context, dec func(interf
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Msg/ExitPool",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).ExitPool(ctx, req.(*MsgExitPool))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_SwapExactAmountIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_SwapExactAmountIn_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgSwapExactAmountIn)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1238,13 +1238,13 @@ func _Msg_SwapExactAmountIn_Handler(srv interface{}, ctx context.Context, dec fu
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Msg/SwapExactAmountIn",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).SwapExactAmountIn(ctx, req.(*MsgSwapExactAmountIn))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_SwapExactAmountOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_SwapExactAmountOut_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgSwapExactAmountOut)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1256,13 +1256,13 @@ func _Msg_SwapExactAmountOut_Handler(srv interface{}, ctx context.Context, dec f
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Msg/SwapExactAmountOut",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).SwapExactAmountOut(ctx, req.(*MsgSwapExactAmountOut))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_JoinSwapExternAmountIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_JoinSwapExternAmountIn_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgJoinSwapExternAmountIn)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1274,13 +1274,13 @@ func _Msg_JoinSwapExternAmountIn_Handler(srv interface{}, ctx context.Context, d
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Msg/JoinSwapExternAmountIn",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).JoinSwapExternAmountIn(ctx, req.(*MsgJoinSwapExternAmountIn))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_JoinSwapShareAmountOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_JoinSwapShareAmountOut_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgJoinSwapShareAmountOut)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1292,13 +1292,13 @@ func _Msg_JoinSwapShareAmountOut_Handler(srv interface{}, ctx context.Context, d
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Msg/JoinSwapShareAmountOut",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).JoinSwapShareAmountOut(ctx, req.(*MsgJoinSwapShareAmountOut))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ExitSwapExternAmountOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_ExitSwapExternAmountOut_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgExitSwapExternAmountOut)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1310,13 +1310,13 @@ func _Msg_ExitSwapExternAmountOut_Handler(srv interface{}, ctx context.Context, 
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Msg/ExitSwapExternAmountOut",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).ExitSwapExternAmountOut(ctx, req.(*MsgExitSwapExternAmountOut))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ExitSwapShareAmountIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_ExitSwapShareAmountIn_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgExitSwapShareAmountIn)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1328,7 +1328,7 @@ func _Msg_ExitSwapShareAmountIn_Handler(srv interface{}, ctx context.Context, de
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Msg/ExitSwapShareAmountIn",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).ExitSwapShareAmountIn(ctx, req.(*MsgExitSwapShareAmountIn))
 	}
 	return interceptor(ctx, in, info, handler)

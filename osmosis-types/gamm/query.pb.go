@@ -1266,7 +1266,7 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_Pools_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Pools_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryPoolsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1278,13 +1278,13 @@ func _Query_Pools_Handler(srv interface{}, ctx context.Context, dec func(interfa
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Query/Pools",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).Pools(ctx, req.(*QueryPoolsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_NumPools_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_NumPools_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryNumPoolsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1296,13 +1296,13 @@ func _Query_NumPools_Handler(srv interface{}, ctx context.Context, dec func(inte
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Query/NumPools",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).NumPools(ctx, req.(*QueryNumPoolsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_TotalLiquidity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_TotalLiquidity_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryTotalLiquidityRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1314,13 +1314,13 @@ func _Query_TotalLiquidity_Handler(srv interface{}, ctx context.Context, dec fun
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Query/TotalLiquidity",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).TotalLiquidity(ctx, req.(*QueryTotalLiquidityRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_Pool_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Pool_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryPoolRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1332,13 +1332,13 @@ func _Query_Pool_Handler(srv interface{}, ctx context.Context, dec func(interfac
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Query/Pool",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).Pool(ctx, req.(*QueryPoolRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_PoolParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_PoolParams_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryPoolParamsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1350,13 +1350,13 @@ func _Query_PoolParams_Handler(srv interface{}, ctx context.Context, dec func(in
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Query/PoolParams",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).PoolParams(ctx, req.(*QueryPoolParamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_TotalPoolLiquidity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_TotalPoolLiquidity_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryTotalPoolLiquidityRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1368,13 +1368,13 @@ func _Query_TotalPoolLiquidity_Handler(srv interface{}, ctx context.Context, dec
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Query/TotalPoolLiquidity",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).TotalPoolLiquidity(ctx, req.(*QueryTotalPoolLiquidityRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_TotalShares_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_TotalShares_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryTotalSharesRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1386,13 +1386,13 @@ func _Query_TotalShares_Handler(srv interface{}, ctx context.Context, dec func(i
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Query/TotalShares",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).TotalShares(ctx, req.(*QueryTotalSharesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_SpotPrice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_SpotPrice_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QuerySpotPriceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1404,13 +1404,13 @@ func _Query_SpotPrice_Handler(srv interface{}, ctx context.Context, dec func(int
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Query/SpotPrice",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).SpotPrice(ctx, req.(*QuerySpotPriceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_EstimateSwapExactAmountIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_EstimateSwapExactAmountIn_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QuerySwapExactAmountInRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1422,13 +1422,13 @@ func _Query_EstimateSwapExactAmountIn_Handler(srv interface{}, ctx context.Conte
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountIn",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).EstimateSwapExactAmountIn(ctx, req.(*QuerySwapExactAmountInRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_EstimateSwapExactAmountOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_EstimateSwapExactAmountOut_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QuerySwapExactAmountOutRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -1440,7 +1440,7 @@ func _Query_EstimateSwapExactAmountOut_Handler(srv interface{}, ctx context.Cont
 		Server:     srv,
 		FullMethod: "/osmosis.gamm.v1beta1.Query/EstimateSwapExactAmountOut",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).EstimateSwapExactAmountOut(ctx, req.(*QuerySwapExactAmountOutRequest))
 	}
 	return interceptor(ctx, in, info, handler)

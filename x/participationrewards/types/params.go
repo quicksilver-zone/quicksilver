@@ -65,7 +65,7 @@ func (p *ParamsV1) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-func validateDistributionProportions(i interface{}) error {
+func validateDistributionProportions(i any) error {
 	dp, ok := i.(DistributionProportions)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -74,7 +74,7 @@ func validateDistributionProportions(i interface{}) error {
 	return dp.ValidateBasic()
 }
 
-func validateBoolean(i interface{}) error {
+func validateBoolean(i any) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

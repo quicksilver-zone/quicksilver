@@ -100,7 +100,7 @@ var fileDescriptor_c9ff2afb43053125 = []byte{
 	0xff, 0xff, 0xf4, 0xec, 0x72, 0x36, 0x39, 0x01, 0x00, 0x00,
 }
 
-func (this *DenomAuthorityMetadata) Equal(that interface{}) bool {
+func (this *DenomAuthorityMetadata) Equal(that any) bool {
 	if that == nil {
 		return this == nil
 	}

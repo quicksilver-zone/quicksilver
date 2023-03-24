@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,8 +35,8 @@ func ParseUint64SliceFromString(s, separator string) ([]uint64, error) {
 	return parsedInts, nil
 }
 
-func ParseSdkIntFromString(s, separator string) ([]sdk.Int, error) {
-	var parsedInts []sdk.Int
+func ParseSdkIntFromString(s, separator string) ([]math.Int, error) {
+	var parsedInts []math.Int
 	for _, weightStr := range strings.Split(s, separator) {
 		weightStr = strings.TrimSpace(weightStr)
 

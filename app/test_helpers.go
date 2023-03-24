@@ -31,7 +31,7 @@ import (
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions
-func (ao EmptyAppOptions) Get(o string) interface{} {
+func (ao EmptyAppOptions) Get(o string) any {
 	return nil
 }
 

@@ -715,7 +715,7 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_Params_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryParamsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -727,13 +727,13 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 		Server:     srv,
 		FullMethod: "/quicksilver.airdrop.v1.Query/Params",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ZoneDrop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_ZoneDrop_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryZoneDropRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -745,13 +745,13 @@ func _Query_ZoneDrop_Handler(srv interface{}, ctx context.Context, dec func(inte
 		Server:     srv,
 		FullMethod: "/quicksilver.airdrop.v1.Query/ZoneDrop",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).ZoneDrop(ctx, req.(*QueryZoneDropRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AccountBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AccountBalance_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryAccountBalanceRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -763,13 +763,13 @@ func _Query_AccountBalance_Handler(srv interface{}, ctx context.Context, dec fun
 		Server:     srv,
 		FullMethod: "/quicksilver.airdrop.v1.Query/AccountBalance",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).AccountBalance(ctx, req.(*QueryAccountBalanceRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ZoneDrops_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_ZoneDrops_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryZoneDropsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -781,13 +781,13 @@ func _Query_ZoneDrops_Handler(srv interface{}, ctx context.Context, dec func(int
 		Server:     srv,
 		FullMethod: "/quicksilver.airdrop.v1.Query/ZoneDrops",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).ZoneDrops(ctx, req.(*QueryZoneDropsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ClaimRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_ClaimRecord_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryClaimRecordRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -799,13 +799,13 @@ func _Query_ClaimRecord_Handler(srv interface{}, ctx context.Context, dec func(i
 		Server:     srv,
 		FullMethod: "/quicksilver.airdrop.v1.Query/ClaimRecord",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).ClaimRecord(ctx, req.(*QueryClaimRecordRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_ClaimRecords_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_ClaimRecords_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(QueryClaimRecordsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -817,7 +817,7 @@ func _Query_ClaimRecords_Handler(srv interface{}, ctx context.Context, dec func(
 		Server:     srv,
 		FullMethod: "/quicksilver.airdrop.v1.Query/ClaimRecords",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(QueryServer).ClaimRecords(ctx, req.(*QueryClaimRecordsRequest))
 	}
 	return interceptor(ctx, in, info, handler)

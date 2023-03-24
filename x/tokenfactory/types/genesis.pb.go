@@ -169,7 +169,7 @@ var fileDescriptor_ec8c23d19841526d = []byte{
 	0xa2, 0x9e, 0xcb, 0x02, 0x00, 0x00,
 }
 
-func (this *GenesisDenom) Equal(that interface{}) bool {
+func (this *GenesisDenom) Equal(that any) bool {
 	if that == nil {
 		return this == nil
 	}

@@ -73,7 +73,7 @@ type ChainResponse struct {
 	Data []byte `json:"data"`
 }
 
-func queryCustom(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, contract sdk.AccAddress, request bindings.QuickSilverQuery, response interface{}) {
+func queryCustom(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, contract sdk.AccAddress, request bindings.QuickSilverQuery, response any) {
 	msgBz, err := json.Marshal(request)
 	require.NoError(t, err)
 

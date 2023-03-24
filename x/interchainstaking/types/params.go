@@ -128,7 +128,7 @@ func (p ParamsV1) String() string {
 	return string(out)
 }
 
-func validateBoolean(i interface{}) error {
+func validateBoolean(i any) error {
 	_, ok := i.(bool)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -137,7 +137,7 @@ func validateBoolean(i interface{}) error {
 	return nil
 }
 
-func validatePositiveInt(i interface{}) error {
+func validatePositiveInt(i any) error {
 	intval, ok := i.(uint64)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
@@ -149,7 +149,7 @@ func validatePositiveInt(i interface{}) error {
 	return nil
 }
 
-func validateNonNegativeDec(i interface{}) error {
+func validateNonNegativeDec(i any) error {
 	dec, ok := i.(sdk.Dec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)

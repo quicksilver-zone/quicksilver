@@ -674,7 +674,7 @@ func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
 	s.RegisterService(&_Msg_serviceDesc, srv)
 }
 
-func _Msg_CreateDenom_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_CreateDenom_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgCreateDenom)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -686,13 +686,13 @@ func _Msg_CreateDenom_Handler(srv interface{}, ctx context.Context, dec func(int
 		Server:     srv,
 		FullMethod: "/quicksilver.tokenfactory.v1beta1.Msg/CreateDenom",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).CreateDenom(ctx, req.(*MsgCreateDenom))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Mint_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_Mint_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgMint)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -704,13 +704,13 @@ func _Msg_Mint_Handler(srv interface{}, ctx context.Context, dec func(interface{
 		Server:     srv,
 		FullMethod: "/quicksilver.tokenfactory.v1beta1.Msg/Mint",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).Mint(ctx, req.(*MsgMint))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Burn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_Burn_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgBurn)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -722,13 +722,13 @@ func _Msg_Burn_Handler(srv interface{}, ctx context.Context, dec func(interface{
 		Server:     srv,
 		FullMethod: "/quicksilver.tokenfactory.v1beta1.Msg/Burn",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).Burn(ctx, req.(*MsgBurn))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ChangeAdmin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_ChangeAdmin_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgChangeAdmin)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -740,13 +740,13 @@ func _Msg_ChangeAdmin_Handler(srv interface{}, ctx context.Context, dec func(int
 		Server:     srv,
 		FullMethod: "/quicksilver.tokenfactory.v1beta1.Msg/ChangeAdmin",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).ChangeAdmin(ctx, req.(*MsgChangeAdmin))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_SetDenomMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Msg_SetDenomMetadata_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
 	in := new(MsgSetDenomMetadata)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -758,7 +758,7 @@ func _Msg_SetDenomMetadata_Handler(srv interface{}, ctx context.Context, dec fun
 		Server:     srv,
 		FullMethod: "/quicksilver.tokenfactory.v1beta1.Msg/SetDenomMetadata",
 	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+	handler := func(ctx context.Context, req any) (any, error) {
 		return srv.(MsgServer).SetDenomMetadata(ctx, req.(*MsgSetDenomMetadata))
 	}
 	return interceptor(ctx, in, info, handler)
