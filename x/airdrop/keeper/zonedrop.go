@@ -103,7 +103,7 @@ func (k Keeper) IsActiveZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
 	// negated checks here ensure inclusive range
-	return !bt.Before(zd.StartTime) && !bt.After(zd.StartTime.Add(zd.Duration).Add(zd.Decay))
+	return bt.After(zd.StartTime) && bt.Before(zd.StartTime.Add(zd.Duration).Add(zd.Decay))
 }
 
 // AllFutureZoneDrops returns all future zone airdrops.

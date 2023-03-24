@@ -12,7 +12,7 @@ type LockupHooks interface {
 	OnStartUnlock(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time)
 	OnTokenUnlocked(ctx sdk.Context, address sdk.AccAddress, lockID uint64, amount sdk.Coins, lockDuration time.Duration, unlockTime time.Time)
 	OnTokenSlashed(ctx sdk.Context, lockID uint64, amount sdk.Coins)
-	OnLockupExtend(ctx sdk.Context, lockID uint64, prevDuration time.Duration, newDuration time.Duration)
+	OnLockupExtend(ctx sdk.Context, lockID uint64, prevDuration, newDuration time.Duration)
 }
 
 var _ LockupHooks = MultiLockupHooks{}

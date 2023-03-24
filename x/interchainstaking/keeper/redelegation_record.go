@@ -8,7 +8,7 @@ import (
 )
 
 // GetRedelegationRecord returns Redelegation record info by zone, validator and epoch
-func (k *Keeper) GetRedelegationRecord(ctx sdk.Context, chainID string, source string, destination string, epochNumber int64) (types.RedelegationRecord, bool) {
+func (k *Keeper) GetRedelegationRecord(ctx sdk.Context, chainID, source, destination string, epochNumber int64) (types.RedelegationRecord, bool) {
 	record := types.RedelegationRecord{}
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
@@ -28,7 +28,7 @@ func (k *Keeper) SetRedelegationRecord(ctx sdk.Context, record types.Redelegatio
 }
 
 // DeleteRedelegationRecord deletes Redelegation record
-func (k *Keeper) DeleteRedelegationRecord(ctx sdk.Context, chainID string, source string, destination string, epochNumber int64) {
+func (k *Keeper) DeleteRedelegationRecord(ctx sdk.Context, chainID, source, destination string, epochNumber int64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
 	store.Delete(types.GetRedelegationKey(chainID, source, destination, epochNumber))
 }

@@ -46,7 +46,7 @@ type Manager struct {
 
 // NewManager creates a new Manager instance and initializes
 // all Docker specific utilizes. Returns an error if initialization fails.
-func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Manager, err error) {
+func NewManager(isUpgrade, isFork, isDebugLogEnabled bool) (docker *Manager, err error) {
 	docker = &Manager{
 		ImageConfig:       NewImageConfig(isUpgrade, isFork),
 		resources:         make(map[string]*dockertest.Resource),
@@ -64,14 +64,14 @@ func NewManager(isUpgrade bool, isFork bool, isDebugLogEnabled bool) (docker *Ma
 }
 
 // ExecTxCmd Runs ExecTxCmdWithSuccessString searching for `code: 0`
-func (m *Manager) ExecTxCmd(t *testing.T, chainID string, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
+func (m *Manager) ExecTxCmd(t *testing.T, chainID, containerName string, command []string) (bytes.Buffer, bytes.Buffer, error) {
 	return m.ExecTxCmdWithSuccessString(t, chainID, containerName, command, "code: 0")
 }
 
 // ExecTxCmdWithSuccessString Runs ExecCmd, with flags for txs added.
 // namely adding flags `--chain-id={chain-id} -b=block --yes --keyring-backend=test "--log_format=json" --gas=400000`,
 // and searching for `successStr`
-func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainID string, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
+func (m *Manager) ExecTxCmdWithSuccessString(t *testing.T, chainID, containerName string, command []string, successStr string) (bytes.Buffer, bytes.Buffer, error) {
 	allTxArgs := []string{fmt.Sprintf("--chain-id=%s", chainID)}
 	allTxArgs = append(allTxArgs, txArgs...)
 
@@ -173,7 +173,7 @@ func (m *Manager) ExecCmd(t *testing.T, containerName string, command []string, 
 
 // RunHermesResource runs a Hermes container. Returns the container resource and error if any.
 // the name of the hermes container is "<chain A id>-<chain B id>-relayer"
-func (m *Manager) RunHermesResource(t *testing.T, chainAID, quickARelayerNodeName, quickAValMnemonic, chainBID, quickBRelayerNodeName, quickBValMnemonic string, hermesCfgPath string) (*dockertest.Resource, error) {
+func (m *Manager) RunHermesResource(t *testing.T, chainAID, quickARelayerNodeName, quickAValMnemonic, chainBID, quickBRelayerNodeName, quickBValMnemonic, hermesCfgPath string) (*dockertest.Resource, error) {
 	hermesResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       hermesContainerName,
@@ -470,7 +470,7 @@ func (m *Manager) GetNodeResource(containerName string) (*dockertest.Resource, e
 // necessary to connect to the portId exposed inside the container.
 // The container is determined by containerName.
 // Returns the host-port or error if any.
-func (m *Manager) GetHostPort(containerName string, portID string) (string, error) {
+func (m *Manager) GetHostPort(containerName, portID string) (string, error) {
 	resource, err := m.GetNodeResource(containerName)
 	if err != nil {
 		return "", err

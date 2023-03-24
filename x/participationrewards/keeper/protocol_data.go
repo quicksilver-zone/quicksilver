@@ -45,7 +45,7 @@ func (k Keeper) SetProtocolData(ctx sdk.Context, key string, data *types.Protoco
 }
 
 // DeleteProtocolData delete protocol data info
-func (k Keeper) DeleteProtocolData(ctx sdk.Context, key string, protocol string) {
+func (k Keeper) DeleteProtocolData(ctx sdk.Context, key, protocol string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
 	store.Delete([]byte(key))
 }

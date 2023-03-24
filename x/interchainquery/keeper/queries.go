@@ -11,13 +11,13 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
-func GenerateQueryHash(connectionID string, chainID string, queryType string, request []byte, module string) string {
+func GenerateQueryHash(connectionID, chainID, queryType string, request []byte, module string) string {
 	return fmt.Sprintf("%x", crypto.Sha256(append([]byte(module+connectionID+chainID+queryType), request...)))
 }
 
 // ----------------------------------------------------------------
 
-func (k Keeper) NewQuery(ctx sdk.Context, module string, connectionID string, chainID string, queryType string, request []byte, period math.Int, callbackID string, ttl uint64) *types.Query {
+func (k Keeper) NewQuery(ctx sdk.Context, module, connectionID, chainID, queryType string, request []byte, period math.Int, callbackID string, ttl uint64) *types.Query {
 	return &types.Query{Id: GenerateQueryHash(connectionID, chainID, queryType, request, module), ConnectionId: connectionID, ChainId: chainID, QueryType: queryType, Request: request, Period: period, LastHeight: sdk.ZeroInt(), CallbackId: callbackID, Ttl: ttl}
 }
 

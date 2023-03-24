@@ -22,7 +22,7 @@ type ErrTolerance struct {
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
+func (e ErrTolerance) Compare(expected, actual sdk.Int) int {
 	diff := expected.Sub(actual).Abs()
 
 	comparisonSign := 0

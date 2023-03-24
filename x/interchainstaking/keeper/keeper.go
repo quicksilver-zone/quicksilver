@@ -113,7 +113,7 @@ func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capabilit
 	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
 }
 
-func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID string, port string) {
+func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID, port string) {
 	mapping := types.PortConnectionTuple{ConnectionId: connectionID, PortId: port}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
 	bz := k.cdc.MustMarshal(&mapping)
@@ -162,7 +162,7 @@ func (k *Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnection
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, zoneInfo *types.Zone, data []byte, request []byte) error {
+func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, zoneInfo *types.Zone, data, request []byte) error {
 	validatorsRes, err := k.UnmarshalValidatorResponse(data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)

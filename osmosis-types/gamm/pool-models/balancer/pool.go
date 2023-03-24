@@ -244,7 +244,7 @@ func (p Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 }
 
 func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
-	Aasset PoolAsset, Basset PoolAsset, err error,
+	Aasset, Basset PoolAsset, err error,
 ) {
 	Aasset, found1 := getPoolAssetByDenom(p.PoolAssets, tokenADenom)
 	Basset, found2 := getPoolAssetByDenom(p.PoolAssets, tokenBDenom)
@@ -255,7 +255,7 @@ func (p Pool) parsePoolAssetsByDenoms(tokenADenom, tokenBDenom string) (
 }
 
 func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
-	tokenA sdk.Coin, Aasset PoolAsset, Basset PoolAsset, err error,
+	tokenA sdk.Coin, Aasset, Basset PoolAsset, err error,
 ) {
 	if len(tokensA) != 1 {
 		return tokenA, Aasset, Basset, errors.New("expected tokensB to be of length one")
@@ -264,8 +264,8 @@ func (p Pool) parsePoolAssets(tokensA sdk.Coins, tokenBDenom string) (
 	return tokensA[0], Aasset, Basset, err
 }
 
-func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
-	Aasset PoolAsset, Basset PoolAsset, err error,
+func (p Pool) parsePoolAssetsCoins(tokensA, tokensB sdk.Coins) (
+	Aasset, Basset PoolAsset, err error,
 ) {
 	if len(tokensB) != 1 {
 		return Aasset, Basset, errors.New("expected tokensA to be of length one")
@@ -582,7 +582,7 @@ func (p *Pool) SwapInAmtGivenOut(
 }
 
 // ApplySwap.
-func (p *Pool) applySwap(ctx sdk.Context, tokensIn sdk.Coins, tokensOut sdk.Coins) error {
+func (p *Pool) applySwap(ctx sdk.Context, tokensIn, tokensOut sdk.Coins) error {
 	// Also ensures that len(tokensIn) = 1 = len(tokensOut)
 	inPoolAsset, outPoolAsset, err := p.parsePoolAssetsCoins(tokensIn, tokensOut)
 	if err != nil {

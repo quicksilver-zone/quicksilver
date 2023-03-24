@@ -14,7 +14,7 @@ import (
 // It assumes that both pool assets have the same token denominations,
 // with the denominations in the same order.
 // Returned weights can (and probably will have some) be negative.
-func subPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
+func subPoolAssetWeights(base, other []PoolAsset) []PoolAsset {
 	weightDifference := make([]PoolAsset, len(base))
 	// TODO: Consider deleting these panics for performance
 	if len(base) != len(other) {
@@ -36,7 +36,7 @@ func subPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
 // It assumes that both pool assets have the same token denominations,
 // with the denominations in the same order.
 // Returned weights can be negative.
-func addPoolAssetWeights(base []PoolAsset, other []PoolAsset) []PoolAsset {
+func addPoolAssetWeights(base, other []PoolAsset) []PoolAsset {
 	weightSum := make([]PoolAsset, len(base))
 	// TODO: Consider deleting these panics for performance
 	if len(base) != len(other) {

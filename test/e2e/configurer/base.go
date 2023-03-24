@@ -106,7 +106,7 @@ func (bc *baseConfigurer) RunXCC() error {
 	return nil
 }
 
-func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
+func (bc *baseConfigurer) runIBCRelayer(chainConfigA, chainConfigB *chain.Config) error {
 	bc.t.Log("starting Hermes relayer container...")
 
 	tmpDir, err := os.MkdirTemp("", "quicksilver-e2e-testnet-hermes-")
@@ -188,7 +188,7 @@ func (bc *baseConfigurer) runIBCRelayer(chainConfigA *chain.Config, chainConfigB
 	return bc.connectIBCChains(chainConfigA, chainConfigB)
 }
 
-func (bc *baseConfigurer) runICQRelayer(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
+func (bc *baseConfigurer) runICQRelayer(chainConfigA, chainConfigB *chain.Config) error {
 	bc.t.Log("starting ICQ relayer container...")
 
 	tmpDir, err := os.MkdirTemp("", "quicksilver-e2e-testnet-icq-")
@@ -232,7 +232,7 @@ func (bc *baseConfigurer) runICQRelayer(chainConfigA *chain.Config, chainConfigB
 	return nil
 }
 
-func (bc *baseConfigurer) runXCCLookup(chainConfigA *chain.Config, chainConfigB *chain.Config) error {
+func (bc *baseConfigurer) runXCCLookup(chainConfigA, chainConfigB *chain.Config) error {
 	bc.t.Log("starting XCC-Lookup container...")
 
 	tmpDir, err := os.MkdirTemp("", "quicksilver-e2e-testnet-xcc-")
@@ -276,7 +276,7 @@ func (bc *baseConfigurer) runXCCLookup(chainConfigA *chain.Config, chainConfigB 
 	return nil
 }
 
-func (bc *baseConfigurer) connectIBCChains(chainA *chain.Config, chainB *chain.Config) error {
+func (bc *baseConfigurer) connectIBCChains(chainA, chainB *chain.Config) error {
 	bc.t.Logf("connecting %s and %s chains via IBC", chainA.ChainMeta.ID, chainB.ChainMeta.ID)
 	cmd := []string{"hermes", "create", "channel", "--a-chain", chainA.ChainMeta.ID, "--b-chain", chainB.ChainMeta.ID, "--a-port", "transfer", "--b-port", "transfer", "--new-client-connection", "--yes"}
 	_, _, err := bc.containerManager.ExecHermesCmd(bc.t, cmd, "SUCCESS")

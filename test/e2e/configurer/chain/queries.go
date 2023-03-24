@@ -85,7 +85,7 @@ func (n *NodeConfig) QueryLatestWasmCodeID() uint64 {
 	return response.CodeInfos[len(response.CodeInfos)-1].CodeID
 }
 
-func (n *NodeConfig) QueryWasmSmart(contract string, msg string, result any) error {
+func (n *NodeConfig) QueryWasmSmart(contract, msg string, result any) error {
 	// base64-encode the msg
 	encodedMsg := base64.StdEncoding.EncodeToString([]byte(msg))
 	path := fmt.Sprintf("/cosmwasm/wasm/v1/contract/%s/smart/%s", contract, encodedMsg)
@@ -108,7 +108,7 @@ func (n *NodeConfig) QueryWasmSmart(contract string, msg string, result any) err
 	return nil
 }
 
-func (n *NodeConfig) QueryWasmSmartObject(contract string, msg string) (resultObject map[string]interface{}, err error) {
+func (n *NodeConfig) QueryWasmSmartObject(contract, msg string) (resultObject map[string]interface{}, err error) {
 	err = n.QueryWasmSmart(contract, msg, &resultObject)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func (n *NodeConfig) QueryWasmSmartObject(contract string, msg string) (resultOb
 	return resultObject, nil
 }
 
-func (n *NodeConfig) QueryWasmSmartArray(contract string, msg string) (resultArray []interface{}, err error) {
+func (n *NodeConfig) QueryWasmSmartArray(contract, msg string) (resultArray []interface{}, err error) {
 	err = n.QueryWasmSmart(contract, msg, &resultArray)
 	if err != nil {
 		return nil, err

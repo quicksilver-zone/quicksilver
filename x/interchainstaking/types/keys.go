@@ -106,13 +106,13 @@ func GetPerformanceDelegationsKey(zone *Zone, delAddr sdk.AccAddress) []byte {
 	return append(append(KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
 }
 
-func GetReceiptKey(chainID string, txhash string) string {
+func GetReceiptKey(chainID, txhash string) string {
 	return fmt.Sprintf("%s/%s", chainID, txhash)
 }
 
 // GetRedelegationKey gets the redelegation key.
 // Unbondigng records are keyed by chainId, validator and epoch, as they must be unique with regard to this triple.
-func GetRedelegationKey(chainID string, source string, destination string, epochNumber int64) []byte {
+func GetRedelegationKey(chainID, source, destination string, epochNumber int64) []byte {
 	epochBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(epochBytes, uint64(epochNumber))
 	return append(KeyPrefixRedelegationRecord, append(append([]byte(chainID), []byte(source+destination)...), epochBytes...)...)
@@ -128,7 +128,7 @@ func GetWithdrawalKey(chainID string, status int32) []byte {
 
 // GetUnbondingKey gets the unbonding key.
 // unbondigng records are keyed by chainId, validator and epoch, as they must be unique with regard to this triple.
-func GetUnbondingKey(chainID string, validator string, epochNumber int64) []byte {
+func GetUnbondingKey(chainID, validator string, epochNumber int64) []byte {
 	epochBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(epochBytes, uint64(epochNumber))
 	return append(KeyPrefixUnbondingRecord, append(append([]byte(chainID), []byte(validator)...), epochBytes...)...)

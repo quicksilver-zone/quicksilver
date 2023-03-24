@@ -35,7 +35,7 @@ func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) (sequence uint
 	return sequence
 }
 
-func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID string, delegator string, distribution []*types.Distribution, recipient string, amount sdk.Coins, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time) {
+func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distribution []*types.Distribution, recipient string, amount sdk.Coins, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time) {
 	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distribution, Recipient: recipient, Amount: amount, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime}
 	k.Logger(ctx).Error("addWithdrawalRecord", "record", record)
 	k.SetWithdrawalRecord(ctx, record)
@@ -44,7 +44,7 @@ func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID string, delegator 
 ///----------------------------------------------------------------
 
 // GetWithdrawalRecord returns withdrawal record info by zone and delegator
-func (k *Keeper) GetWithdrawalRecord(ctx sdk.Context, chainID string, txhash string, status int32) (types.WithdrawalRecord, bool) {
+func (k *Keeper) GetWithdrawalRecord(ctx sdk.Context, chainID, txhash string, status int32) (types.WithdrawalRecord, bool) {
 	record := types.WithdrawalRecord{}
 
 	key, err := hex.DecodeString(txhash)
@@ -78,7 +78,7 @@ func (k *Keeper) UpdateWithdrawalRecordStatus(ctx sdk.Context, withdrawal *types
 }
 
 // DeleteWithdrawalRecord deletes withdrawal record
-func (k *Keeper) DeleteWithdrawalRecord(ctx sdk.Context, chainID string, txhash string, status int32) {
+func (k *Keeper) DeleteWithdrawalRecord(ctx sdk.Context, chainID, txhash string, status int32) {
 	key, err := hex.DecodeString(txhash)
 	if err != nil {
 		panic(err)
@@ -148,7 +148,7 @@ func (k *Keeper) AllZoneWithdrawalRecords(ctx sdk.Context, chainID string) []typ
 }
 
 // GetUnbondingRecord returns unbonding record info by zone, validator and epoch
-func (k *Keeper) GetUnbondingRecord(ctx sdk.Context, chainID string, validator string, epochNumber int64) (types.UnbondingRecord, bool) {
+func (k *Keeper) GetUnbondingRecord(ctx sdk.Context, chainID, validator string, epochNumber int64) (types.UnbondingRecord, bool) {
 	record := types.UnbondingRecord{}
 
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
@@ -168,7 +168,7 @@ func (k *Keeper) SetUnbondingRecord(ctx sdk.Context, record types.UnbondingRecor
 }
 
 // DeleteUnbondingRecord deletes unbonding record
-func (k *Keeper) DeleteUnbondingRecord(ctx sdk.Context, chainID string, validator string, epochNumber int64) {
+func (k *Keeper) DeleteUnbondingRecord(ctx sdk.Context, chainID, validator string, epochNumber int64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
 	store.Delete(types.GetUnbondingKey(chainID, validator, epochNumber))
 }

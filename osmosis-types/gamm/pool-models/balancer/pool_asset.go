@@ -3,7 +3,6 @@ package balancer
 import (
 	"fmt"
 	"sort"
-	"strings"
 
 	"gopkg.in/yaml.v2"
 
@@ -65,7 +64,7 @@ func sortPoolAssetsByDenom(assets []PoolAsset) {
 		PoolAssetA := assets[i]
 		PoolAssetB := assets[j]
 
-		return strings.Compare(PoolAssetA.Token.Denom, PoolAssetB.Token.Denom) == -1
+		return PoolAssetA.Token.Denom < PoolAssetB.Token.Denom
 	})
 }
 

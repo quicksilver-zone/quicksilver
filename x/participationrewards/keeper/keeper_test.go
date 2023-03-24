@@ -286,7 +286,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	qApp.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneOsmosis)
 }
 
-func (suite *KeeperTestSuite) setupChannelForICA(chainID string, connectionID string, accountSuffix string, remotePrefix string) error {
+func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountSuffix, remotePrefix string) error {
 	qApp := suite.GetQuicksilverApp(suite.chainA)
 
 	ibcModule := ics.NewIBCModule(qApp.InterchainstakingKeeper)
@@ -403,7 +403,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		"testchain1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3")
 }
 
-func (suite *KeeperTestSuite) addProtocolData(Type types.ProtocolDataType, Data string, Key string) {
+func (suite *KeeperTestSuite) addProtocolData(Type types.ProtocolDataType, Data, Key string) {
 	pd := types.ProtocolData{
 		Type: types.ProtocolDataType_name[int32(Type)],
 		Data: []byte(Data),
@@ -449,7 +449,7 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 	)
 }
 
-func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender string, hash string, coins sdk.Coins) {
+func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender, hash string, coins sdk.Coins) {
 	receipt := icstypes.Receipt{
 		ChainId: zone.ChainId,
 		Sender:  sender,
@@ -525,7 +525,7 @@ func (suite *KeeperTestSuite) setupTestClaims() {
 	)
 }
 
-func (suite *KeeperTestSuite) addClaim(address string, chainID string, claimType cmtypes.ClaimType, sourceChainID string, amount uint64) {
+func (suite *KeeperTestSuite) addClaim(address, chainID string, claimType cmtypes.ClaimType, sourceChainID string, amount uint64) {
 	claim := cmtypes.Claim{
 		UserAddress:   address,
 		ChainId:       chainID,

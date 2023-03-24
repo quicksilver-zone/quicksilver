@@ -11,7 +11,7 @@ import (
 )
 
 // NewDelegation creates a new delegation object
-func NewDelegation(delegatorAddr string, validatorAddr string, amount sdk.Coin) Delegation {
+func NewDelegation(delegatorAddr, validatorAddr string, amount sdk.Coin) Delegation {
 	return Delegation{
 		DelegationAddress: delegatorAddr,
 		ValidatorAddress:  validatorAddr,

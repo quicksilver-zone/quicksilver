@@ -15,7 +15,7 @@ import (
 )
 
 // GetDelegation returns a specific delegation.
-func (k *Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddress string, validatorAddress string) (delegation types.Delegation, found bool) {
+func (k *Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddress, validatorAddress string) (delegation types.Delegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	_, delAddr, _ := bech32.DecodeAndConvert(delegatorAddress)

@@ -930,7 +930,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 	return nil
 }
 
-func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress string, validatorAddress string, amount sdk.Coin, zone *types.Zone, absolute bool) error {
+func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddress, validatorAddress string, amount sdk.Coin, zone *types.Zone, absolute bool) error {
 	delegation, found := k.GetDelegation(ctx, zone, delegatorAddress, validatorAddress)
 
 	if !found {

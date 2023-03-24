@@ -117,7 +117,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	suite.coordinator.CommitNBlocks(suite.chainB, 2)
 }
 
-func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID string, connectionID string, accountSuffix string, remotePrefix string) error {
+func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, connectionID, accountSuffix, remotePrefix string) error {
 	qApp := suite.GetQuicksilverApp(suite.chainA)
 
 	ibcModule := ics.NewIBCModule(qApp.InterchainstakingKeeper)

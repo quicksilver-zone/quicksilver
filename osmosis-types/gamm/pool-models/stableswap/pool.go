@@ -150,7 +150,7 @@ func (p Pool) getLiquidityIndexMap() map[string]int {
 // It requires caller to validate that tokensIn and tokensOut only consist of
 // denominations in the pool.
 // The function sanity checks this, and panics if not the case.
-func (p *Pool) updatePoolLiquidityForSwap(tokensIn sdk.Coins, tokensOut sdk.Coins) {
+func (p *Pool) updatePoolLiquidityForSwap(tokensIn, tokensOut sdk.Coins) {
 	numTokens := p.PoolLiquidity.Len()
 	// update liquidity
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...).Sub(tokensOut...)
@@ -236,7 +236,7 @@ func (p *Pool) SwapInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDen
 	return tokenIn, nil
 }
 
-func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom string, quoteAssetDenom string) (sdk.Dec, error) {
+func (p Pool) SpotPrice(ctx sdk.Context, baseAssetDenom, quoteAssetDenom string) (sdk.Dec, error) {
 	reserves, err := p.getScaledPoolAmts(baseAssetDenom, quoteAssetDenom)
 	if err != nil {
 		return sdk.Dec{}, err

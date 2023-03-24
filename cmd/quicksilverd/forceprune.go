@@ -95,7 +95,7 @@ func forceprune() *cobra.Command {
 
 // pruneBlockStoreAndGetHeights prunes blockstore and returns the startHeight and currentHeight.
 func pruneBlockStoreAndGetHeights(dbPath string, fullHeight int64) (
-	startHeight int64, currentHeight int64, err error,
+	startHeight, currentHeight int64, err error,
 ) {
 	opts := opt.Options{
 		DisableSeeksCompaction: true,

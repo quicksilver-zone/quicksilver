@@ -40,7 +40,7 @@ func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.
 	return chain.export()
 }
 
-func InitSingleNode(chainID, dataDir string, existingGenesisDir string, nodeConfig *NodeConfig, trustHeight int64, trustHash string, stateSyncRPCServers []string, persistentPeers []string) (*Node, error) {
+func InitSingleNode(chainID, dataDir, existingGenesisDir string, nodeConfig *NodeConfig, trustHeight int64, trustHash string, stateSyncRPCServers, persistentPeers []string) (*Node, error) {
 	if nodeConfig.IsValidator {
 		return nil, errors.New("creating individual validator nodes after starting up chain is not currently supported")
 	}

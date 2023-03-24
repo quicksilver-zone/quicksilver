@@ -15,11 +15,11 @@ import (
 	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 )
 
-type ProofOpsFn func(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error
+type ProofOpsFn func(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID, chainID string, height int64, module string, key, data []byte, proofOps *crypto.ProofOps) error
 
-type SelfProofOpsFn func(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keeper, consensusStateKey string, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error
+type SelfProofOpsFn func(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keeper, consensusStateKey, module string, key, data []byte, proofOps *crypto.ProofOps) error
 
-func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
+func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID, chainID string, height int64, module string, key, data []byte, proofOps *crypto.ProofOps) error {
 	if proofOps == nil {
 		return errors.New("unable to validate proof. No proof submitted")
 	}
@@ -64,7 +64,7 @@ func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID
 	return nil
 }
 
-func ValidateSelfProofOps(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keeper, consensusStateKey string, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
+func ValidateSelfProofOps(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keeper, consensusStateKey, module string, key, data []byte, proofOps *crypto.ProofOps) error {
 	if proofOps == nil {
 		return errors.New("unable to validate proof. No proof submitted")
 	}
@@ -98,10 +98,10 @@ func ValidateSelfProofOps(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keep
 	return nil
 }
 
-func MockSelfProofOps(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keeper, consensusStateKey string, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
+func MockSelfProofOps(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keeper, consensusStateKey, module string, key, data []byte, proofOps *crypto.ProofOps) error {
 	return nil
 }
 
-func MockProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
+func MockProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID, chainID string, height int64, module string, key, data []byte, proofOps *crypto.ProofOps) error {
 	return nil
 }

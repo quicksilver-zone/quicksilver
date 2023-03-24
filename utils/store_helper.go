@@ -22,7 +22,7 @@ func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 	return keys
 }
 
-func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, parseValue func([]byte) (T, error)) ([]T, error) {
+func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart, keyEnd []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	iterator := storeObj.Iterator(keyStart, keyEnd)
 	defer iterator.Close()
 	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
@@ -42,7 +42,7 @@ func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, s
 	return GetIterValuesWithStop(storeObj, keyStart, keyEnd, false, stopFn, parseValue)
 }
 
-func makeIterator(storeObj store.KVStore, keyStart []byte, keyEnd []byte, reverse bool) store.Iterator {
+func makeIterator(storeObj store.KVStore, keyStart, keyEnd []byte, reverse bool) store.Iterator {
 	if reverse {
 		return storeObj.ReverseIterator(keyStart, keyEnd)
 	}
@@ -70,7 +70,7 @@ func GetFirstValueAfterPrefixInclusive[T any](storeObj store.KVStore, keyStart [
 	return GetFirstValueInRange(storeObj, keyStart, []byte{0xff}, false, parseValue)
 }
 
-func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, reverseIterate bool, parseValue func([]byte) (T, error)) (T, error) {
+func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart, keyEnd []byte, reverseIterate bool, parseValue func([]byte) (T, error)) (T, error) {
 	iterator := makeIterator(storeObj, keyStart, keyEnd, reverseIterate)
 	defer iterator.Close()
 

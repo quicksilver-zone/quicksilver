@@ -45,5 +45,5 @@ func GetCreatorPrefix(creator string) []byte {
 
 // GetCreatorsPrefix returns the store prefix where a list of all creator addresses are stored
 func GetCreatorsPrefix() []byte {
-	return []byte(strings.Join([]string{CreatorPrefixKey, ""}, KeySeparator))
+	return []byte(CreatorPrefixKey + KeySeparator + "")
 }

@@ -43,7 +43,7 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 
 	var resp *http.Response
 	require.Eventually(n.t, func() bool {
-		req, err := http.NewRequest("GET", fullQueryPath, nil)
+		req, err := http.NewRequest("GET", fullQueryPath, http.NoBody)
 		if err != nil {
 			return false
 		}
@@ -226,7 +226,7 @@ func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
 	n.LogActionF("successfully voted no on proposal: %d", proposalNumber)
 }
 
-func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string) {
+func (n *NodeConfig) BankSend(amount, sendAddress, receiveAddress string) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"quicksilverd", "tx", "bank", "send", sendAddress, receiveAddress, amount, "--from=val"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
@@ -254,7 +254,7 @@ func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []strin
 	return n.CreateWalletAndFundFrom(walletName, initialization.ValidatorWalletName, tokensToFund)
 }
 
-func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName string, fundingWalletName string, tokensToFund []string) string {
+func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName, fundingWalletName string, tokensToFund []string) string {
 	n.LogActionF("Sending tokens to %s", newWalletName)
 
 	walletAddr := n.CreateWallet(newWalletName)

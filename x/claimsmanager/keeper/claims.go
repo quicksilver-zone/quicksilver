@@ -7,12 +7,12 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
-func (k Keeper) NewClaim(ctx sdk.Context, address string, chainID string, module types.ClaimType, srcChainID string, amount uint64) types.Claim {
+func (k Keeper) NewClaim(ctx sdk.Context, address, chainID string, module types.ClaimType, srcChainID string, amount uint64) types.Claim {
 	return types.Claim{UserAddress: address, ChainId: chainID, Module: module, SourceChainId: srcChainID, Amount: amount}
 }
 
 // GetClaim returns claim
-func (k Keeper) GetClaim(ctx sdk.Context, chainID string, address string, module types.ClaimType, srcChainID string) (types.Claim, bool) {
+func (k Keeper) GetClaim(ctx sdk.Context, chainID, address string, module types.ClaimType, srcChainID string) (types.Claim, bool) {
 	data := types.Claim{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
 	key := types.GetKeyClaim(chainID, address, module, srcChainID)
@@ -26,7 +26,7 @@ func (k Keeper) GetClaim(ctx sdk.Context, chainID string, address string, module
 }
 
 // GetLastEpochClaim returns claim from last epoch
-func (k Keeper) GetLastEpochClaim(ctx sdk.Context, chainID string, address string, module types.ClaimType, srcChainID string) (types.Claim, bool) {
+func (k Keeper) GetLastEpochClaim(ctx sdk.Context, chainID, address string, module types.ClaimType, srcChainID string) (types.Claim, bool) {
 	data := types.Claim{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
 	key := types.GetKeyLastEpochClaim(chainID, address, module, srcChainID)
@@ -89,7 +89,7 @@ func (k Keeper) IterateClaims(ctx sdk.Context, chainID string, fn func(index int
 }
 
 // IterateUserClaims iterates through zone claims for a given address.
-func (k Keeper) IterateUserClaims(ctx sdk.Context, chainID string, address string, fn func(index int64, data types.Claim) (stop bool)) {
+func (k Keeper) IterateUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data types.Claim) (stop bool)) {
 	// noop
 	if fn == nil {
 		return
@@ -135,7 +135,7 @@ func (k Keeper) IterateLastEpochClaims(ctx sdk.Context, chainID string, fn func(
 }
 
 // IterateLastEpochUserClaims iterates through zone claims from last epoch for a given user.
-func (k Keeper) IterateLastEpochUserClaims(ctx sdk.Context, chainID string, address string, fn func(index int64, data types.Claim) (stop bool)) {
+func (k Keeper) IterateLastEpochUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data types.Claim) (stop bool)) {
 	// noop
 	if fn == nil {
 		return
@@ -230,7 +230,7 @@ func (k Keeper) AllZoneClaims(ctx sdk.Context, chainID string) []*types.Claim {
 	return claims
 }
 
-func (k Keeper) AllZoneUserClaims(ctx sdk.Context, chainID string, address string) []*types.Claim {
+func (k Keeper) AllZoneUserClaims(ctx sdk.Context, chainID, address string) []*types.Claim {
 	claims := []*types.Claim{}
 	k.IterateUserClaims(ctx, chainID, address, func(_ int64, claim types.Claim) (stop bool) {
 		claims = append(claims, &claim)
@@ -248,7 +248,7 @@ func (k Keeper) AllZoneLastEpochClaims(ctx sdk.Context, chainID string) []*types
 	return claims
 }
 
-func (k Keeper) AllZoneLastEpochUserClaims(ctx sdk.Context, chainID string, address string) []*types.Claim {
+func (k Keeper) AllZoneLastEpochUserClaims(ctx sdk.Context, chainID, address string) []*types.Claim {
 	claims := []*types.Claim{}
 	k.IterateLastEpochUserClaims(ctx, chainID, address, func(_ int64, claim types.Claim) (stop bool) {
 		claims = append(claims, &claim)

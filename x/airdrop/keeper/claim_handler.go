@@ -172,7 +172,7 @@ func (k Keeper) verifyBondedDelegation(ctx sdk.Context, address string) error {
 
 // verifyZoneIntent indicates if the given address has intent set for the given
 // zone (chainID).
-func (k Keeper) verifyZoneIntent(ctx sdk.Context, chainID string, address string) error {
+func (k Keeper) verifyZoneIntent(ctx sdk.Context, chainID, address string) error {
 	addr, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
 		return err
