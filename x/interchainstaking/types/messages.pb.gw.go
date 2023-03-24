@@ -392,13 +392,13 @@ func RegisterMsgHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 }
 
 var (
-	pattern_Msg_RequestRedemption_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "interchainstaking", "redeem"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_RequestRedemption_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "interchainstaking", "redeem"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Msg_SignalIntent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "interchainstaking", "intent"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_SignalIntent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "interchainstaking", "intent"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Msg_GovCloseChannel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "interchainstaking", "close_channel"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_GovCloseChannel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "interchainstaking", "close_channel"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Msg_GovReopenChannel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "interchainstaking", "reopen_channel"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Msg_GovReopenChannel_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "interchainstaking", "reopen_channel"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (
