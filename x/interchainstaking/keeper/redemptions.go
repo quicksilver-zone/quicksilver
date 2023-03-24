@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/golang/protobuf/proto"
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -52,9 +53,9 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	}
 	// add unallocated dust.
 	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding)
-	sdkMsgs := make([]sdk.Msg, 0)
+	sdkMsgs := make([]proto.Message, 0)
 	for _, msg := range msgs {
-		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
+		sdkMsgs = append(sdkMsgs, proto.Message(msg))
 	}
 	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
 

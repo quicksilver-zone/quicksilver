@@ -29,11 +29,9 @@ func NewParams(denomCreationFee sdk.Coins) Params {
 
 // Validate validates params.
 func (p Params) Validate() error {
-	if err := validateDenomCreationFee(p.DenomCreationFee); err != nil {
-		return err
-	}
+	err := validateDenomCreationFee(p.DenomCreationFee)
 
-	return nil
+	return err
 }
 
 // ParamSetPairs implements params.ParamSet.

@@ -15,9 +15,10 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
+	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/app"
@@ -747,7 +748,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	app.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
 
 	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: zone.Validators[0].ValoperAddress, ValidatorDstAddress: zone.Validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
-	data, err := icatypes.SerializeCosmosTx(app.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	data, err := icatypes.SerializeCosmosTx(app.InterchainstakingKeeper.GetCodec(), []proto.Message{redelegate})
 	s.Require().NoError(err)
 
 	// validate memo < 256 bytes
@@ -1491,7 +1492,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 func (s *KeeperTestSuite) Test_v045Callback() {
 	tests := []struct {
 		name             string
-		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte)
+		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]proto.Message, []byte)
 		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
 	}{
 		{
@@ -1530,7 +1531,7 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 		},
 		{
 			name: "msg response with nil data",
-			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
+			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]proto.Message, []byte) {
 				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				if !found {
 					s.Fail("unable to retrieve zone for test")
@@ -1544,7 +1545,7 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 				response := distrtypes.MsgSetWithdrawAddressResponse{}
 
 				respBytes := icatypes.ModuleCdc.MustMarshal(&response)
-				return []sdk.Msg{&msgSetWithdrawAddress}, respBytes
+				return []proto.Message{&msgSetWithdrawAddress}, respBytes
 			},
 			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
 				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)

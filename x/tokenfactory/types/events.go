@@ -2,7 +2,7 @@ package types
 
 // event types
 //
-//nolint:gosec
+//nolint:gosec // not hard coded credentials
 const (
 	AttributeAmount              = "amount"
 	AttributeCreator             = "creator"

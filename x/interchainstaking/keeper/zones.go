@@ -12,8 +12,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/gogo/protobuf/proto"
 
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	icatypes "github.com/cosmos/ibc-go/v6/modules/apps/27-interchain-accounts/types"
 
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -179,7 +180,7 @@ func (k *Keeper) EnsureICAActive(ctx sdk.Context, zone *types.Zone, account *typ
 
 	// channel is not active; attempt reopen.
 	k.Logger(ctx).Error("channel is inactive. attempting to reopen.", "connection", zone.ConnectionId, "port", account.GetPortName())
-	return k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, strings.TrimPrefix(account.GetPortName(), icatypes.PortPrefix), "")
+	return k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, strings.TrimPrefix(account.GetPortName(), icatypes.ControllerPortPrefix), "")
 }
 
 func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {
@@ -202,7 +203,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DepositAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "")
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DepositAddress, "")
 		if err != nil {
 			return err
 		}
@@ -210,7 +211,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "")
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DelegationAddress, "")
 		if err != nil {
 			return err
 		}
@@ -219,7 +220,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 	// set withdrawal address for performance address, if it exists
 	if zone.PerformanceAddress != nil && zone.PerformanceAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.PerformanceAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "")
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "")
 		if err != nil {
 			return err
 		}
@@ -372,7 +373,7 @@ OUTER:
 
 	// send delegations to validators
 	k.Logger(ctx).Info("send performance delegations", "zone", zone.ChainId)
-	var msgs []sdk.Msg
+	var msgs []proto.Message
 	for _, val := range validatorsToDelegate {
 		k.Logger(ctx).Info(
 			"performance delegation",
