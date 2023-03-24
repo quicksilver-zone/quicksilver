@@ -49,7 +49,7 @@ func Upgrades() []Upgrade {
 func NoOpHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	keepers *keepers.AppKeepers,
+	_ *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		return mm.RunMigrations(ctx, configurator, fromVM)

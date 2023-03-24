@@ -192,7 +192,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	mock bool,
 	homePath string,
 	invCheckPeriod uint,
-	appOpts servertypes.AppOptions,
+	_ servertypes.AppOptions,
 	wasmDir string,
 	wasmConfig wasm.Config,
 	wasmEnabledProposals []wasm.ProposalType,

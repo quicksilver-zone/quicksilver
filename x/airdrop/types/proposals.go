@@ -41,11 +41,7 @@ func (m RegisterZoneDropProposal) ValidateBasic() error {
 	}
 
 	// validate ZoneDrop
-	if err := m.ZoneDrop.ValidateBasic(); err != nil {
-		return err
-	}
-
-	return nil
+	return m.ZoneDrop.ValidateBasic()
 }
 
 // String implements the Stringer interface.

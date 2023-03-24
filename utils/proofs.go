@@ -98,10 +98,10 @@ func ValidateSelfProofOps(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keep
 	return nil
 }
 
-func MockSelfProofOps(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keeper, consensusStateKey string, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
+func MockSelfProofOps(_ sdk.Context, _ claimsmanagerkeeper.Keeper, _ string, _ string, _ []byte, _ []byte, _ *crypto.ProofOps) error {
 	return nil
 }
 
-func MockProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
+func MockProofOps(_ sdk.Context, _ *ibcKeeper.Keeper, _ string, _ string, _ int64, _ string, _ []byte, _ []byte, _ *crypto.ProofOps) error {
 	return nil
 }

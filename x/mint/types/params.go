@@ -62,7 +62,7 @@ func DefaultParams() Params {
 	)
 }
 
-// validate params.
+// Validate validates params.
 func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err
@@ -82,11 +82,7 @@ func (p Params) Validate() error {
 	if err := validateDistributionProportions(p.DistributionProportions); err != nil {
 		return err
 	}
-	if err := validateMintingRewardsDistributionStartEpoch(p.MintingRewardsDistributionStartEpoch); err != nil {
-		return err
-	}
-
-	return nil
+	return validateMintingRewardsDistributionStartEpoch(p.MintingRewardsDistributionStartEpoch)
 }
 
 // String implements the Stringer interface.
@@ -117,11 +113,7 @@ func validateMintDenom(i interface{}) error {
 	if strings.TrimSpace(v) == "" {
 		return errors.New("mint denom cannot be blank")
 	}
-	if err := sdk.ValidateDenom(v); err != nil {
-		return err
-	}
-
-	return nil
+	return sdk.ValidateDenom(v)
 }
 
 func validateGenesisEpochProvisions(i interface{}) error {

@@ -179,7 +179,7 @@ func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Zone, 
 	}
 }
 
-func (k *Keeper) PrepareDelegationMessagesForCoins(ctx sdk.Context, zone *types.Zone, allocations map[string]sdkmath.Int) []sdk.Msg {
+func (k *Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations map[string]sdkmath.Int) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
 		if !allocations[valoper].IsZero() {
@@ -189,7 +189,7 @@ func (k *Keeper) PrepareDelegationMessagesForCoins(ctx sdk.Context, zone *types.
 	return msgs
 }
 
-func (k *Keeper) PrepareDelegationMessagesForShares(ctx sdk.Context, zone *types.Zone, coins sdk.Coins) []sdk.Msg {
+func (k *Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.Coins) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, coin := range coins.Sort() {
 		if !coin.IsZero() {
