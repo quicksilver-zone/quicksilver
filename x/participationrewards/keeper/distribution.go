@@ -144,7 +144,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 // allocateZoneRewards executes zone based rewards allocation. This entails
 // rewards that are proportionally distributed to zones based on the tvl for
 // each zone relative to the tvl of the QS protocol.
-func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation RewardsAllocation) error {
+func (k Keeper) AllocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation RewardsAllocation) error {
 	k.Logger(ctx).Info("allocateZoneRewards", "token values", tvs, "allocation", allocation)
 
 	if err := k.setZoneAllocations(ctx, tvs, allocation); err != nil {
@@ -210,7 +210,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 }
 
 // distributeToUsers sends the allocated user rewards to the user address.
-func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []UserAllocation) error {
+func (k Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []UserAllocation) error {
 	k.Logger(ctx).Info("distributeToUsers", "allocations", userAllocations)
 	hasError := false
 

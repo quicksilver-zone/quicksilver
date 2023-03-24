@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -19,7 +21,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 		k.Logger(ctx).Info("zones", "zone", zone.ChainId)
 		userAllocations, remaining := k.CalcUserHoldingsAllocations(ctx, zone)
 
-		if err := k.distributeToUsers(ctx, userAllocations); err != nil {
+		if err := k.DistributeToUsers(ctx, userAllocations); err != nil {
 			k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
 			// we might want to do a soft fail here so that all zones are not affected...
 			return false
@@ -88,6 +90,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	tokensPerAsset := sdk.NewDecFromInt(zoneAllocation).Quo(sdk.NewDecFromInt(supply.Amount))
 
 	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset)
+	fmt.Println("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset, "allocation", zoneAllocation, "supply", supply.Amount)
 
 	for _, address := range utils.Keys(userAmountsMap) {
 		amount := userAmountsMap[address]

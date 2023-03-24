@@ -11,8 +11,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
-	appA := suite.GetQuicksilverApp(suite.chainA)
-
 	user1 := utils.GenerateAccAddressForTest()
 	user2 := utils.GenerateAccAddressForTest()
 
@@ -85,11 +83,11 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 			[]keeper.UserAllocation{
 				{
 					Address: user1.String(),
-					Amount:  sdk.NewInt(1000),
+					Amount:  sdk.NewInt(1000), // 500 / 2500 (0.2) * 5000 = 1000
 				},
 				{
 					Address: user2.String(),
-					Amount:  sdk.NewInt(2000),
+					Amount:  sdk.NewInt(2000), // 1000 / 2500 (0.4) * 5000 = 2000
 				},
 			},
 			sdk.NewInt(2000),
@@ -109,11 +107,11 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 			[]keeper.UserAllocation{
 				{
 					Address: user1.String(),
-					Amount:  sdk.NewInt(1666),
+					Amount:  sdk.NewInt(1666), // 500/1500 (0.33333) * 5000 == 1666
 				},
 				{
 					Address: user2.String(),
-					Amount:  sdk.NewInt(3333),
+					Amount:  sdk.NewInt(3333), // 1000/1500 (0.66666) * 5000 = 3333
 				},
 			},
 			sdk.OneInt(),
@@ -124,6 +122,9 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 		tt := tt
 
 		suite.Run(tt.name, func() {
+			suite.SetupTest()
+
+			appA := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
 			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
