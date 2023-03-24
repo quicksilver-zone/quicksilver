@@ -145,10 +145,8 @@ func compactBlockStore(dbPath string) (err error) {
 	if err != nil {
 		return err
 	}
-	if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
-		return err
-	}
-	return nil
+
+	return db.CompactRange(*util.BytesPrefix([]byte{}))
 }
 
 // forcepruneStateStore prunes and compacts state storage.
@@ -202,8 +200,6 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	}
 
 	fmt.Println("Compacting State Store ...")
-	if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
-		return err
-	}
-	return nil
+
+	return db.CompactRange(*util.BytesPrefix([]byte{}))
 }

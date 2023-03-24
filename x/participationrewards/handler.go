@@ -10,24 +10,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-// NewHandler returns a handler for participationrewards module messages
-func NewHandler(k keeper.Keeper) sdk.Handler {
-	msgServer := keeper.NewMsgServerImpl(k)
-
-	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
-		ctx = ctx.WithEventManager(sdk.NewEventManager())
-
-		switch msg := msg.(type) {
-		case *types.MsgSubmitClaim:
-			res, err := msgServer.SubmitClaim(sdk.WrapSDKContext(ctx), msg)
-			return sdk.WrapServiceResult(ctx, res, err)
-
-		default:
-			return nil, sdkioerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized participationrewards message type: %T", msg)
-		}
-	}
-}
-
 func NewProposalHandler(k keeper.Keeper) govv1beta1.Handler {
 	return func(ctx sdk.Context, content govv1beta1.Content) error {
 		switch c := content.(type) {

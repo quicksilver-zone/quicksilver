@@ -60,7 +60,7 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 
 // createDenom creates a new token denom
 func (m *CustomMessenger) createDenom(ctx sdk.Context, contractAddr sdk.AccAddress, createDenom *bindings.CreateDenom) ([]sdk.Event, [][]byte, error) {
-	err := PerformCreateDenom(m.tokenFactory, m.bank, ctx, contractAddr, createDenom)
+	err := PerformCreateDenom(m.tokenFactory, ctx, contractAddr, createDenom)
 	if err != nil {
 		return nil, nil, sdkioerrors.Wrap(err, "perform create denom")
 	}
@@ -68,7 +68,7 @@ func (m *CustomMessenger) createDenom(ctx sdk.Context, contractAddr sdk.AccAddre
 }
 
 // PerformCreateDenom is used with createDenom to create a token denom; validates the msgCreateDenom.
-func PerformCreateDenom(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk.Context, contractAddr sdk.AccAddress, createDenom *bindings.CreateDenom) error {
+func PerformCreateDenom(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk.AccAddress, createDenom *bindings.CreateDenom) error {
 	if createDenom == nil {
 		return wasmvmtypes.InvalidRequest{Err: "create denom null create denom"}
 	}

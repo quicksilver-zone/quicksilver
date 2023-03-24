@@ -46,7 +46,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connection
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixDeposit:
 
 		if zone.DepositAddress == nil {
-			zone.DepositAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
+			zone.DepositAddress, err = types.NewICAAccount(address, portID)
 			if err != nil {
 				return err
 			}
@@ -73,7 +73,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connection
 	// withdrawal address
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixWithdrawal:
 		if zone.WithdrawalAddress == nil {
-			zone.WithdrawalAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
+			zone.WithdrawalAddress, err = types.NewICAAccount(address, portID)
 			if err != nil {
 				return err
 			}
@@ -82,7 +82,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connection
 	// delegation addresses
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixDelegate:
 		if zone.DelegationAddress == nil {
-			zone.DelegationAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
+			zone.DelegationAddress, err = types.NewICAAccount(address, portID)
 			if err != nil {
 				return err
 			}
@@ -92,7 +92,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connection
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixPerformance:
 		if zone.PerformanceAddress == nil {
 			ctx.Logger().Info("create performance account")
-			zone.PerformanceAddress, err = types.NewICAAccount(address, portID, zone.BaseDenom)
+			zone.PerformanceAddress, err = types.NewICAAccount(address, portID)
 			if err != nil {
 				return err
 			}

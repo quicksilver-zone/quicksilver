@@ -138,7 +138,7 @@ func addAccount(path, moniker, amountStr string, accAddr sdk.AccAddress, forkHei
 		return fmt.Errorf("failed to add account to genesis state; account already exists: %s", accAddr)
 	}
 
-	// Add the new account to the set of genesis accounts and sanitize the
+	// Add the newInternal account to the set of genesis accounts and sanitize the
 	// accounts afterwards.
 	accs = append(accs, genAccount)
 	accs = authtypes.SanitizeGenesisAccounts(accs)
@@ -245,7 +245,7 @@ func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight in
 		return err
 	}
 
-	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis(appGenState))
+	err = updateModuleGenesis(appGenState, banktypes.ModuleName, &banktypes.GenesisState{}, updateBankGenesis())
 	if err != nil {
 		return err
 	}
@@ -291,7 +291,7 @@ func initGenesis(chain *internalChain, votingPeriod time.Duration, forkHeight in
 	return nil
 }
 
-func updateBankGenesis(appGenState map[string]json.RawMessage) func(s *banktypes.GenesisState) {
+func updateBankGenesis() func(s *banktypes.GenesisState) {
 	return func(bankGenState *banktypes.GenesisState) {
 		denomsToRegister := []string{StakeDenom, IonDenom, QuickDenom, AtomDenom, LuncIBCDenom, UstIBCDenom}
 		for _, denom := range denomsToRegister {

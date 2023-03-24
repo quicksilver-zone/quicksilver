@@ -202,7 +202,7 @@ func RandCoinSubsetFromBalance(ctx sdk.Context, r *rand.Rand, addr sdk.AccAddres
 // RandomFees returns a random fee by selecting a random coin denomination and
 // amount from the account's available balance. If the user doesn't have enough
 // funds for paying fees, it returns empty coins.
-func RandomFees(ctx sdk.Context, r *rand.Rand, spendableCoins sdk.Coins) (sdk.Coins, error) {
+func RandomFees(r *rand.Rand, spendableCoins sdk.Coins) (sdk.Coins, error) {
 	if spendableCoins.Empty() {
 		return nil, nil
 	}
