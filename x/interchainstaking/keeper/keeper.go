@@ -91,7 +91,7 @@ func NewKeeper(
 	}
 }
 
-func (k *Keeper) GetGovAuthority(ctx sdk.Context) string {
+func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
 	return sdk.MustBech32ifyAddressBytes(config.Bech32Prefix, k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
 }
 

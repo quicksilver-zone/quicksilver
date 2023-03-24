@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) TestKeeper_NewClaim() {
 	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
-			got := k.NewClaim(suite.chainA.GetContext(), tt.args.address, tt.args.chainID, tt.args.module, tt.args.srcChainID, tt.args.amount)
+			got := k.NewClaim(tt.args.address, tt.args.chainID, tt.args.module, tt.args.srcChainID, tt.args.amount)
 			suite.Require().Equal(tt.want, got)
 		})
 	}

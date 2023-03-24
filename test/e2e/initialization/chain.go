@@ -12,7 +12,7 @@ type internalChain struct {
 	nodes     []*internalNode
 }
 
-func new(id, dataDir string) *internalChain {
+func newInternal(id, dataDir string) *internalChain {
 	chainMeta := ChainMeta{
 		ID:      id,
 		DataDir: dataDir,

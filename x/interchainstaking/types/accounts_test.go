@@ -13,7 +13,7 @@ import (
 func NewICA() *types.ICAAccount {
 	addr := []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19}
 	accAddr := sdk.AccAddress(addr)
-	ica, err := types.NewICAAccount(accAddr.String(), "mercury-1.deposit", "uqck")
+	ica, err := types.NewICAAccount(accAddr.String(), "mercury-1.deposit")
 	if err != nil {
 		panic("failed to create ICA")
 	}
@@ -21,7 +21,7 @@ func NewICA() *types.ICAAccount {
 }
 
 func TestNewICAAccountBadAddr(t *testing.T) {
-	ica, err := types.NewICAAccount("cosmos1ssrxxe4xsls57ehrkswlkhlk", "mercury-1.deposit", "qck")
+	ica, err := types.NewICAAccount("cosmos1ssrxxe4xsls57ehrkswlkhlk", "mercury-1.deposit")
 	require.Nil(t, ica, "expecting a nil ICAAccount")
 	require.NotNil(t, err, "expecting a non-nil error")
 	require.Contains(t, err.Error(), "invalid checksum")
