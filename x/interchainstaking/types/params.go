@@ -46,10 +46,10 @@ func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err e
 	}
 	err = cdc.Unmarshal(value, &params)
 	if err != nil {
-		return
+		return params, err
 	}
 
-	return
+	return params, nil
 }
 
 // NewParams creates a new ics Params instance

@@ -24,5 +24,5 @@ func ParseMsgMemo(memo, msgType string) (epochNumber int64, err error) {
 		return 0, fmt.Errorf("unexpected epoch %s memo format: %w", msgType, err)
 	}
 
-	return
+	return epochNumber, nil
 }
