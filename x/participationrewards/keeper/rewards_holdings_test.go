@@ -6,7 +6,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -17,7 +16,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 	tests := []struct {
 		name      string
 		malleate  func(ctx sdk.Context, appA *app.Quicksilver)
-		want      []keeper.UserAllocation
+		want      []types.UserAllocation
 		remainder math.Int
 		wantErr   string
 	}{
@@ -28,7 +27,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 				zone.HoldingsAllocation = 0
 				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
 			},
-			[]keeper.UserAllocation{},
+			[]types.UserAllocation{},
 			sdk.ZeroInt(),
 			"",
 		},
@@ -41,7 +40,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: "otherchain-1", Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 500})
 				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: "otherchain-1", Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 1000})
 			},
-			[]keeper.UserAllocation{},
+			[]types.UserAllocation{},
 			sdk.NewInt(64000),
 			"",
 		},
@@ -56,7 +55,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 2500})
 				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 2500})
 			},
-			[]keeper.UserAllocation{
+			[]types.UserAllocation{
 				{
 					Address: user1.String(),
 					Amount:  sdk.NewInt(2500),
@@ -80,7 +79,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 500})
 				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 1000})
 			},
-			[]keeper.UserAllocation{
+			[]types.UserAllocation{
 				{
 					Address: user1.String(),
 					Amount:  sdk.NewInt(1000), // 500 / 2500 (0.2) * 5000 = 1000
@@ -104,7 +103,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 500})
 				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 1000})
 			},
-			[]keeper.UserAllocation{
+			[]types.UserAllocation{
 				{
 					Address: user1.String(),
 					Amount:  sdk.NewInt(1666), // 500/1500 (0.33333) * 5000 == 1666

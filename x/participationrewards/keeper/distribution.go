@@ -210,7 +210,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 }
 
 // distributeToUsers sends the allocated user rewards to the user address.
-func (k Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []UserAllocation) error {
+func (k Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.UserAllocation) error {
 	k.Logger(ctx).Info("distributeToUsers", "allocations", userAllocations)
 	hasError := false
 

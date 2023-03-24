@@ -44,10 +44,10 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 }
 
 // calculate allocations per user for a given zone, based upon claims submitted and zone
-func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]UserAllocation, math.Int) {
+func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]types.UserAllocation, math.Int) {
 	k.Logger(ctx).Info("calcUserHoldingsAllocations", "zone", zone.ChainId, "allocations", zone.HoldingsAllocation)
 
-	userAllocations := make([]UserAllocation, 0)
+	userAllocations := make([]types.UserAllocation, 0)
 	supply := k.bankKeeper.GetSupply(ctx, zone.LocalDenom)
 
 	if zone.HoldingsAllocation == 0 || supply.Amount.IsZero() {
@@ -95,7 +95,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	for _, address := range utils.Keys(userAmountsMap) {
 		amount := userAmountsMap[address]
 		userAllocation := sdk.NewDecFromInt(amount).Mul(tokensPerAsset).TruncateInt()
-		allocation := UserAllocation{
+		allocation := types.UserAllocation{
 			Address: address,
 			Amount:  userAllocation,
 		}
