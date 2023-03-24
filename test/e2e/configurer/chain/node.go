@@ -76,11 +76,7 @@ func (n *NodeConfig) Run() error {
 		"Quicksilver node failed to produce blocks",
 	)
 
-	if err := n.extractOperatorAddressIfValidator(); err != nil {
-		return err
-	}
-
-	return nil
+	return n.extractOperatorAddressIfValidator()
 }
 
 // Stop stops the node from running and removes its container.

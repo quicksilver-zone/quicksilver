@@ -199,7 +199,7 @@ func RegisterQuerySrvrHandlerClient(ctx context.Context, mux *runtime.ServeMux, 
 }
 
 var (
-	pattern_QuerySrvr_Queries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainquery", "v1", "queries", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_QuerySrvr_Queries_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainquery", "v1", "queries", "chain_id"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

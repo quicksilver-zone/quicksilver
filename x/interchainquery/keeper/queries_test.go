@@ -13,7 +13,6 @@ func (suite *KeeperTestSuite) TestQuery() {
 	suite.NoError(err)
 
 	query := suite.GetSimApp(suite.chainA).InterchainQueryKeeper.NewQuery(
-		suite.chainA.GetContext(),
 		"",
 		suite.path.EndpointB.ConnectionID,
 		suite.chainB.ChainID,

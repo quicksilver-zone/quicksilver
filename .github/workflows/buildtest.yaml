@@ -1,10 +1,10 @@
 # This is a basic workflow that is manually triggered
 
-name: compile quicksilver
+name: build and test
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
-on: [push, pull_request, workflow_dispatch]
+on: [pull_request, workflow_dispatch]
 
 # This workflow makes x86_64 for windows, and linux.
 
@@ -12,8 +12,11 @@ jobs:
   build:
     strategy:
       matrix:
-        targetos: [linux, windows]
         arch: [amd64]
+        targetos: [linux, windows, darwin]
+        include:
+          - targetos: darwin
+            arch: arm64
     runs-on: ubuntu-latest
     name: build quicksilver
     steps:
@@ -87,5 +90,23 @@ jobs:
           flags: unittests
           fail_ci_if_error: true
           verbose: true
+  simulate:
+    if: contains(github.event.pull_request.labels.*.name, 'run-sim')
+    runs-on: ubuntu-latest
+    name: simulate quicksilver
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.19
 
-
+      - name: Run simulation tests
+        run: make test-sim-ci

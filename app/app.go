@@ -32,9 +32,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
-	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -42,6 +40,7 @@ import (
 	dbm "github.com/tendermint/tm-db"
 
 	"github.com/ingenuity-build/quicksilver/app/keepers"
+	"github.com/ingenuity-build/quicksilver/docs"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -352,9 +351,10 @@ func (app *Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.A
 
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
-	// register swagger API from root so that other applications can override easily
+	// register swagger API
 	if apiConfig.Swagger {
-		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
+		apiSvr.Router.Handle("/swagger.yml", http.FileServer(http.FS(docs.Swagger)))
+		apiSvr.Router.HandleFunc("/", docs.Handler(Name, "/swagger.yml"))
 	}
 }
 
@@ -398,17 +398,6 @@ func (app *Quicksilver) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 func (app *Quicksilver) GetTxConfig() client.TxConfig {
 	cfg := MakeEncodingConfig()
 	return cfg.TxConfig
-}
-
-// RegisterSwaggerAPI registers swagger route with API Server
-func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
-	statikFS, err := fs.New()
-	if err != nil {
-		panic(err)
-	}
-
-	staticServer := http.FileServer(statikFS)
-	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
 }
 
 // GetMaccPerms returns a copy of the module account permissions

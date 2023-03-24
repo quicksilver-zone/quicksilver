@@ -70,8 +70,8 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 	}
 	var senderAccAddress sdk.AccAddress = addressBytes
 
-	if err := zone.ValidateCoinsForZone(ctx, assets); err != nil {
-		// we expect this to trigger if the valset has changed recently (i.e. we haven't seen the validator before.
+	if err := zone.ValidateCoinsForZone(assets); err != nil {
+		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before.
 		// That is okay, we'll catch it next round!)
 		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
 		return fmt.Errorf("unable to validate coins. Ignoring. senderAddress=%q", senderAddress)
@@ -84,9 +84,8 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-
 	if err := k.MintQAsset(ctx, senderAccAddress, senderAddress, zone, assets); err != nil {
-		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
+		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
 
