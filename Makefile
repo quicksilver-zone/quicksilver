@@ -393,6 +393,47 @@ e2e-remove-resources:
 
 .PHONY: run-tests test test-all test-import test-rpc $(TEST_TARGETS)
 
+###############################################################################
+###                             e2e interchain test                         ###
+###############################################################################
+
+# Executes basic chain tests via interchaintest
+ictest-basic:
+	@cd test/interchaintest && go test -race -v -run TestBasic .
+
+# Executes a basic chain upgrade test via interchaintest
+ictest-upgrade:
+	@cd test/interchaintest && go test -race -v -run TestBasicQuicksilverUpgrade .
+
+# Executes a basic chain upgrade locally via interchaintest after compiling a local image as quicksilver:local
+ictest-upgrade-local: local-image ictest-upgrade
+
+# Executes IBC tests via interchaintest
+ictest-ibc:
+	@cd test/interchaintest && go test -race -v -run TestQuicksilverGaiaIBCTransfer .
+
+# Executes all tests via interchaintest after compiling a local image as quicksilver:local
+ictest-all: local-image ictest-basic ictest-upgrade ictest-ibc
+
+.PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all
+
+###############################################################################
+###                                  heighliner                             ###
+###############################################################################
+
+get-heighliner:
+	@git clone https://github.com/strangelove-ventures/heighliner.git
+	@cd heighliner && go install
+
+local-image:
+ifeq (,$(shell which heighliner))
+	@echo 'heighliner' binary not found. Consider running `make get-heighliner`
+else
+	heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
+endif
+
+.PHONY: get-heighliner local-image
+
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
 SIM_CI_NUM_BLOCKS ?= 125

@@ -3,7 +3,7 @@ module github.com/ingenuity-build/quicksilver/test/interchaintest
 go 1.19
 
 require (
-	github.com/strangelove-ventures/ibctest/v5 v5.0.0-20220913161738-3ce4706429e0
+	github.com/strangelove-ventures/ibctest/v5 v5.0.0-20220926164354-b3185ba0ead3
 	github.com/stretchr/testify v1.8.2
 	go.uber.org/zap v1.24.0
 )

@@ -13,7 +13,7 @@ func GetDockerImageInfo() (repo, version string) {
 	repo = QuickSilverE2ERepo
 	if !found {
 		// make local-image
-		repo = "quicksilverzone/quicksilver"
+		repo = "quicksilver"
 		branchVersion = "local"
 	}
 

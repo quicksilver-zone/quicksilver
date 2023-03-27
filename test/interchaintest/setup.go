@@ -5,14 +5,14 @@ import (
 )
 
 var (
-	QuickSilverE2ERepo  = "quicksilverzone/quicksilver@latest"
+	QuickSilverE2ERepo  = "docker.io/aljo242/quicksilver-interchain"
 	QuicksilverMainRepo = "quicksilverzone/quicksilver@v1.2.7"
 
-	// repo, version = GetDockerImageInfo()
+	repo, version = GetDockerImageInfo()
 
 	QuicksilverImage = ibc.DockerImage{
-		Repository: "quicksilverzone/quicksilver",
-		Version:    "latest",
+		Repository: repo,
+		Version:    version,
 		UidGid:     "1025:1025",
 	}
 

@@ -19,7 +19,7 @@ func TestBasicQuicksilverStart(t *testing.T) {
 
 	t.Parallel()
 
-	// Create chain factory with Juno
+	// Create chain factory with Quicksilver
 	numVals := 1
 	numFullNodes := 1
 
