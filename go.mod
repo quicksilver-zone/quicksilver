@@ -322,3 +322,8 @@ replace (
 	// pebbledb - https://gist.github.com/faddat/673107b72eccdd869b242338dd17e9d9
 	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220731185452-136c7b65fb62
 )
+
+retract (
+	// do not use
+	v1.2.5
+)
