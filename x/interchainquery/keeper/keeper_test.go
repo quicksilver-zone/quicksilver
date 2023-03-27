@@ -108,7 +108,6 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 		{
 			suite.GetSimApp(suite.chainA).InterchainQueryKeeper.
 				NewQuery(
-					suite.chainA.GetContext(),
 					"",
 					suite.path.EndpointB.ConnectionID,
 					suite.chainB.ChainID,
@@ -124,7 +123,6 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 		{
 			suite.GetSimApp(suite.chainA).InterchainQueryKeeper.
 				NewQuery(
-					suite.chainA.GetContext(),
 					"",
 					suite.path.EndpointB.ConnectionID,
 					suite.chainB.ChainID,
@@ -140,7 +138,6 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 		{
 			suite.GetSimApp(suite.chainA).InterchainQueryKeeper.
 				NewQuery(
-					suite.chainA.GetContext(),
 					"",
 					suite.path.EndpointB.ConnectionID,
 					suite.chainB.ChainID,
@@ -156,7 +153,6 @@ func (suite *KeeperTestSuite) TestSubmitQueryResponse() {
 		{
 			suite.GetSimApp(suite.chainA).InterchainQueryKeeper.
 				NewQuery(
-					suite.chainA.GetContext(),
 					"",
 					suite.path.EndpointB.ConnectionID,
 					suite.chainB.ChainID,
