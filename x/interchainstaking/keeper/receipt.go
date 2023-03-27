@@ -156,10 +156,10 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 
 func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone types.Zone, coins sdk.Coins, memo string) error {
 	msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
-	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo)
+	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo, zone.MessagesPerTx)
 }
 
-func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string) error {
+func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error {
 	portID := account.GetPortName()
 	connectionID, err := k.GetConnectionForPort(ctx, portID)
 	if err != nil {
@@ -175,7 +175,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		return sdkioerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	chunkSize := ICAMsgChunkSize
+	chunkSize := int(messagesPerTx)
 	timeoutTimestamp := uint64(ctx.BlockTime().Add(24 * time.Hour).UnixNano())
 
 	for {

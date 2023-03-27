@@ -512,7 +512,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) 
 		return nil
 	}
 	k.Logger(ctx).Info("Send rebalancing messages", "msgs", msgs)
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber))
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber), zone.MessagesPerTx)
 }
 
 type RebalanceTarget struct {

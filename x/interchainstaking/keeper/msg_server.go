@@ -178,7 +178,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sende
 	}
 	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
 
-	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash)
+	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx)
 }
 
 // queueRedemption will determine based on zone intent, the tokens to unbond, and add a withdrawal record with status QUEUED.
