@@ -107,7 +107,7 @@ func v010207UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 
 func v010208UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		// set messages per tx a maximum of (max_gas per tx/block divided by 1m)
+		// set messages per tx a maximum of (max_gas per tx/block divided by 1m); be conservative for now and we can tweak later.
 
 		// cosmos
 		zone, found := app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
@@ -136,7 +136,7 @@ func v010208UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 		zone.MessagesPerTx = 20
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		//regen
+		// regen
 		zone, found = app.InterchainstakingKeeper.GetZone(ctx, "regen-1")
 		if !found {
 			panic("unable to find zone regen-1")
@@ -150,5 +150,4 @@ func v010208UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 		}
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
-
 }

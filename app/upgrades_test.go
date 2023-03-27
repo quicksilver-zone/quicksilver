@@ -8,13 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/stretchr/testify/suite"
 )
 
 // TODO: this test runs in isolation, but fails as part of `make test`.
