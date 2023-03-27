@@ -35,27 +35,27 @@ func NewIBCModule(k keeper.Keeper) IBCModule {
 // OnChanOpenInit implements the IBCModule interface
 func (im IBCModule) OnChanOpenInit(
 	ctx sdk.Context,
-	order channeltypes.Order,
-	connectionHops []string,
+	_ channeltypes.Order,
+	_ []string,
 	portID string,
 	channelID string,
 	chanCap *capabilitytypes.Capability,
-	counterparty channeltypes.Counterparty,
-	version string,
+	_ channeltypes.Counterparty,
+	_ string,
 ) (string, error) {
 	return "", im.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
 }
 
 // OnChanOpenTry implements the IBCModule interface
 func (im IBCModule) OnChanOpenTry(
-	ctx sdk.Context,
-	order channeltypes.Order,
-	connectionHops []string,
-	portID,
-	channelID string,
-	chanCap *capabilitytypes.Capability,
-	counterparty channeltypes.Counterparty,
-	counterpartyVersion string,
+	_ sdk.Context,
+	_ channeltypes.Order,
+	_ []string,
+	_,
+	_ string,
+	_ *capabilitytypes.Capability,
+	_ channeltypes.Counterparty,
+	_ string,
 ) (string, error) {
 	return "", nil
 }
@@ -65,8 +65,8 @@ func (im IBCModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
 	channelID string,
-	counterPartyChannelID string,
-	counterpartyVersion string,
+	_ string,
+	_ string,
 ) error {
 	// get connection from port
 	connectionID, _, err := im.keeper.IBCKeeper.ChannelKeeper.GetChannelConnection(ctx, portID, channelID)
@@ -78,27 +78,27 @@ func (im IBCModule) OnChanOpenAck(
 
 // OnChanOpenConfirm implements the IBCModule interface
 func (im IBCModule) OnChanOpenConfirm(
-	ctx sdk.Context,
-	portID,
-	channelID string,
+	_ sdk.Context,
+	_,
+	_ string,
 ) error {
 	return nil
 }
 
 // OnChanCloseInit implements the IBCModule interface
 func (im IBCModule) OnChanCloseInit(
-	ctx sdk.Context,
-	portID,
-	channelID string,
+	_ sdk.Context,
+	_,
+	_ string,
 ) error {
 	return nil
 }
 
 // OnChanCloseConfirm implements the IBCModule interface
 func (im IBCModule) OnChanCloseConfirm(
-	ctx sdk.Context,
-	portID,
-	channelID string,
+	_ sdk.Context,
+	_,
+	_ string,
 ) error {
 	return nil
 }
@@ -107,9 +107,9 @@ func (im IBCModule) OnChanCloseConfirm(
 // is returned if the packet data is successfully decoded and the receive application
 // logic returns without error.
 func (im IBCModule) OnRecvPacket(
-	ctx sdk.Context,
-	packet channeltypes.Packet,
-	relayer sdk.AccAddress,
+	_ sdk.Context,
+	_ channeltypes.Packet,
+	_ sdk.AccAddress,
 ) ibcexported.Acknowledgement {
 	return channeltypes.NewErrorAcknowledgement(errors.New("cannot receive packet via interchain accounts authentication module"))
 }
@@ -119,7 +119,7 @@ func (im IBCModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
 	acknowledgement []byte,
-	relayer sdk.AccAddress,
+	_ sdk.AccAddress,
 ) error {
 	connectionID, _, err := im.keeper.IBCKeeper.ChannelKeeper.GetChannelConnection(ctx, packet.SourcePort, packet.SourceChannel)
 	if err != nil {
@@ -140,19 +140,19 @@ func (im IBCModule) OnAcknowledgementPacket(
 func (im IBCModule) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
-	relayer sdk.AccAddress,
+	_ sdk.AccAddress,
 ) error {
 	return im.keeper.HandleTimeout(ctx, packet)
 }
 
 // NegotiateAppVersion implements the IBCModule interface
 func (im IBCModule) NegotiateAppVersion(
-	ctx sdk.Context,
-	order channeltypes.Order,
-	connectionID string,
-	portID string,
-	counterparty channeltypes.Counterparty,
-	proposedVersion string,
+	_ sdk.Context,
+	_ channeltypes.Order,
+	_ string,
+	_ string,
+	_ channeltypes.Counterparty,
+	_ string,
 ) (string, error) {
 	return "", nil
 }

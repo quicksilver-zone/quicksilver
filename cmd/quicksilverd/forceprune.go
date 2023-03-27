@@ -7,16 +7,14 @@ import (
 	"os/exec"
 	"strconv"
 
+	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
-
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
-	tmstore "github.com/tendermint/tendermint/store"
-	tmdb "github.com/tendermint/tm-db"
-
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/tendermint/tendermint/config"
+	tmstore "github.com/tendermint/tendermint/store"
 )
 
 const (
@@ -146,10 +144,8 @@ func compactBlockStore(dbPath string) (err error) {
 	if err != nil {
 		return err
 	}
-	if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
-		return err
-	}
-	return nil
+
+	return db.CompactRange(*util.BytesPrefix([]byte{}))
 }
 
 // forcepruneStateStore prunes and compacts state storage.
@@ -203,8 +199,5 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	}
 
 	fmt.Println("Compacting State Store ...")
-	if err = db.CompactRange(*util.BytesPrefix([]byte{})); err != nil {
-		return err
-	}
-	return nil
+	return db.CompactRange(*util.BytesPrefix([]byte{}))
 }

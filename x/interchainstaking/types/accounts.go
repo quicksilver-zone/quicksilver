@@ -8,7 +8,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 )
 
-func NewICAAccount(addr string, portID string, baseDenom string) (*ICAAccount, error) {
+func NewICAAccount(addr, portID string) (*ICAAccount, error) {
 	if _, err := utils.AccAddressFromBech32(addr, ""); err != nil {
 		return nil, err
 	}

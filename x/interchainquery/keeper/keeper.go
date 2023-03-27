@@ -140,7 +140,7 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, connectionID string, chainID strin
 				panic(err)
 			}
 		}
-		newQuery := k.NewQuery(ctx, module, connectionID, chainID, queryType, request, period, callbackID, ttl)
+		newQuery := k.NewQuery(module, connectionID, chainID, queryType, request, period, callbackID, ttl)
 		k.SetQuery(ctx, *newQuery)
 	} else {
 		// a re-request of an existing query triggers resetting of height to trigger immediately.

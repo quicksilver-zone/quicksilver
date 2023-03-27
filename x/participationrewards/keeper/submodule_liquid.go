@@ -15,7 +15,7 @@ type LiquidTokensModule struct{}
 
 var _ Submodule = &LiquidTokensModule{}
 
-func (m *LiquidTokensModule) Hooks(ctx sdk.Context, k Keeper) {
+func (m *LiquidTokensModule) Hooks(_ sdk.Context, _ Keeper) {
 }
 
 func (m *LiquidTokensModule) IsActive() bool {

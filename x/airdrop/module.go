@@ -58,7 +58,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 }
 
 // ValidateGenesis performs genesis state validation for the airdrop module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var gs types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
@@ -68,7 +68,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterRESTRoutes registers the airdrop module's REST service handlers.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
+func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 // This function will panic on failure.
@@ -116,7 +116,7 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 
 // Route returns the message routing key for the airdrop module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the airdrop module's querier route name.
@@ -125,7 +125,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the x/airdrop module's sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
 	}
@@ -156,7 +156,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the airdrop module.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the airdrop module. It

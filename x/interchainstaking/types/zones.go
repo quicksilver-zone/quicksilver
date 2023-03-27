@@ -35,7 +35,7 @@ func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
 	return z.DelegationAddress, nil
 }
 
-func (z *Zone) ValidateCoinsForZone(ctx sdk.Context, coins sdk.Coins) error {
+func (z *Zone) ValidateCoinsForZone(coins sdk.Coins) error {
 	zoneVals := z.GetValidatorsAddressesAsSlice()
 
 COINS:

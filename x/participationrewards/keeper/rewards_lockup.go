@@ -17,9 +17,6 @@ func (k Keeper) allocateLockupRewards(ctx sdk.Context, allocation math.Int) erro
 			allocation,
 		),
 	)
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, coins); err != nil {
-		return err
-	}
 
-	return nil
+	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, coins)
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
-func (k Keeper) NewClaim(ctx sdk.Context, address string, chainID string, module types.ClaimType, srcChainID string, amount uint64) types.Claim {
+func (k Keeper) NewClaim(address, chainID string, module types.ClaimType, srcChainID string, amount uint64) types.Claim {
 	return types.Claim{UserAddress: address, ChainId: chainID, Module: module, SourceChainId: srcChainID, Amount: amount}
 }
 
