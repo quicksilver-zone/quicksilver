@@ -33,6 +33,6 @@ var (
 		EncodingConfig:      nil,
 	}
 
-	pathQuicksilverGaia = "quicksilver-gaia"
-	genesisWalletAmount = int64(10_000_000)
+	pathQuicksilverOsmosis = "quicksilver-osmosis"
+	genesisWalletAmount    = int64(10_000_000)
 )
