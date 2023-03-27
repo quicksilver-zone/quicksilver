@@ -2,6 +2,16 @@
 
 ## Released
 
+### v1.2.8
+- Add feature to configure max-tx size per zone
+- Set `ICATimeout` to 6h
+- Add logic to clear pending delegations when a channel is reopened
+- Bump `cosmos-sdk` to `v0.46.11`
+- Bump `comet-bft` to `0.34.27`
+- Upgrade Handler:
+  - set messages per tx a maximum of (`max_gas per tx on hostchain per block` / `1m`) for every zone
+  - flush outstanding delegations 
+
 ### v1.2.7
 - fix upgrade handler
 
