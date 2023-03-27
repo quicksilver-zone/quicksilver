@@ -409,8 +409,9 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 	return nil
 }
 
-func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone) error {
+func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone) (int, error) {
 	var err error
+	count := 0
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
 		if receiptInfo.Completed == nil {
 			sendMsg := banktypes.MsgSend{
@@ -423,8 +424,9 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone) 
 				k.Logger(ctx).Error("error in processing pending delegations", "chain", zone.ChainId, "receipt", receiptInfo.Txhash, "error", err)
 				return true
 			}
+			count++
 		}
 		return false
 	})
-	return err
+	return count, err
 }
