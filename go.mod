@@ -6,6 +6,7 @@ require (
 	cosmossdk.io/math v1.0.0-beta.4
 	github.com/CosmWasm/wasmd v0.29.2
 	github.com/client9/misspell v0.3.4
+	github.com/cometbft/cometbft-db v0.7.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8
 	github.com/cosmos/cosmos-sdk v0.46.11
 	github.com/cosmos/ibc-go/v5 v5.2.0
@@ -56,7 +57,6 @@ require (
 	github.com/butuzov/ireturn v0.1.1 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.0.0-20230227094218-b8c73b2037b8 // indirect
-	github.com/cometbft/cometbft-db v0.7.0 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/daixiang0/gci v0.10.1 // indirect
 	github.com/denis-tingaikin/go-header v0.4.3 // indirect
@@ -323,7 +323,5 @@ replace (
 	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.7-0.20220731185452-136c7b65fb62
 )
 
-retract (
-	// do not use
-	v1.2.5
-)
+// do not use
+retract [v1.2.5, v1.2.6]
