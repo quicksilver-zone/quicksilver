@@ -20,7 +20,7 @@ func VerifyNonAdjacent(
 	untrustedVals *types.ValidatorSet, // height=Y
 	trustingPeriod time.Duration,
 	now time.Time,
-	maxClockDrift time.Duration,
+	_ time.Duration,
 	trustLevel tmmath.Fraction,
 ) error {
 	if untrustedHeader.Height == trustedHeader.Height+1 {
@@ -68,7 +68,7 @@ func VerifyAdjacent(
 	untrustedVals *types.ValidatorSet, // height=X+1
 	trustingPeriod time.Duration,
 	now time.Time,
-	maxClockDrift time.Duration,
+	_ time.Duration,
 ) error {
 	if untrustedHeader.Height != trustedHeader.Height+1 {
 		return errors.New("headers must be adjacent in height")

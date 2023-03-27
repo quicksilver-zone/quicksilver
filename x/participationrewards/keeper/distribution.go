@@ -153,11 +153,7 @@ func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation
 
 	k.allocateValidatorSelectionRewards(ctx)
 
-	if err := k.allocateHoldingsRewards(ctx); err != nil {
-		return err
-	}
-
-	return nil
+	return k.allocateHoldingsRewards(ctx)
 }
 
 // setZoneAllocations returns the proportional zone rewards allocations as a

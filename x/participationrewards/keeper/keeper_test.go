@@ -161,7 +161,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	// cosmos zone
 	performanceAddressCosmos := utils.GenerateAccAddressForTestWithPrefix("cosmos")
-	performanceAccountCosmos, err := icstypes.NewICAAccount(performanceAddressCosmos, "cosmoshub-4.performance", "uatom")
+	performanceAccountCosmos, err := icstypes.NewICAAccount(performanceAddressCosmos, "cosmoshub-4.performance")
 	suite.Require().NoError(err)
 	performanceAccountCosmos.WithdrawalAddress = utils.GenerateAccAddressForTestWithPrefix("cosmos")
 

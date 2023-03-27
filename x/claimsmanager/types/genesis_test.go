@@ -3,8 +3,9 @@ package types
 import (
 	"testing"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 func TestGenesisState(t *testing.T) {

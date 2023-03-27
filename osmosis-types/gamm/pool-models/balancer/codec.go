@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	proto "github.com/gogo/protobuf/proto"
+
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 )
 

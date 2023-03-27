@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
@@ -14,7 +15,7 @@ const (
 
 var _ govv1beta1.Content = &AddProtocolDataProposal{}
 
-func NewAddProtocolDataProposal(title string, description string, datatype string, protocol string, key string, data json.RawMessage) *AddProtocolDataProposal {
+func NewAddProtocolDataProposal(title, description, datatype, key string, data json.RawMessage) *AddProtocolDataProposal {
 	return &AddProtocolDataProposal{Title: title, Description: description, Type: datatype, Data: data, Key: key}
 }
 

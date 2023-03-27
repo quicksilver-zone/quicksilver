@@ -141,7 +141,7 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 }
 
 // GetProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the `AllocationRatio`.
-func (k Keeper) GetProportions(ctx sdk.Context, mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
+func (k Keeper) GetProportions(mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
 	return sdk.NewCoin(mintedCoin.Denom, sdk.NewDecFromInt(mintedCoin.Amount).Mul(ratio).TruncateInt())
 }
 
@@ -151,14 +151,14 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 	proportions := params.DistributionProportions
 
 	// allocate staking incentives into fee collector account to be moved to on next begin blocker by staking module
-	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.Staking))
+	stakingIncentivesCoins := sdk.NewCoins(k.GetProportions(mintedCoin, proportions.Staking))
 	err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, stakingIncentivesCoins)
 	if err != nil {
 		return err
 	}
 
 	// allocate pool allocation ratio to pool-incentives module account account
-	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(ctx, mintedCoin, proportions.PoolIncentives))
+	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(mintedCoin, proportions.PoolIncentives))
 	// temporary until we have incentives pool sorted :)
 
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, airdroptypes.ModuleName, poolIncentivesCoins)
@@ -166,7 +166,7 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		return err
 	}
 
-	participationRewardCoin := k.GetProportions(ctx, mintedCoin, proportions.ParticipationRewards)
+	participationRewardCoin := k.GetProportions(mintedCoin, proportions.ParticipationRewards)
 	participationRewardCoins := sdk.NewCoins(participationRewardCoin)
 	participationRewardsAddress := k.accountKeeper.GetModuleAddress(participationrewards.ModuleName)
 	k.Logger(ctx).Info("participation rewards", "Proportion", proportions.ParticipationRewards, "Coins", participationRewardCoins, "Address", participationRewardsAddress)

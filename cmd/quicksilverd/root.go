@@ -36,6 +36,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+
 	"github.com/ingenuity-build/quicksilver/app"
 	quicksilverconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 

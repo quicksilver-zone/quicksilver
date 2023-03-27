@@ -83,7 +83,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 	}
 }
 
-func (k *Keeper) GetGovAuthority(ctx sdk.Context) string {
+func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
 	return sdk.MustBech32ifyAddressBytes(config.Bech32Prefix, k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
 }
 
@@ -606,12 +606,10 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 			amount = src.Weight.Abs().TruncateInt()
 		}
 
-		if tgt.Weight.Abs().TruncateInt().IsZero() { //nolint:gocritic
+		if tgt.Weight.Abs().TruncateInt().IsZero() {
 			tgtIdx++
 			continue
-		} else if tgt.Weight.Abs().TruncateInt().GT(toRebalance) {
-			// amount == amount!
-		} else {
+		} else if tgt.Weight.Abs().TruncateInt().LTE(toRebalance) {
 			amount = sdk.MinInt(amount, tgt.Weight.Abs().TruncateInt())
 		}
 		out = append(out, RebalanceTarget{Amount: amount, Target: tgt.ValoperAddress, Source: src.ValoperAddress})

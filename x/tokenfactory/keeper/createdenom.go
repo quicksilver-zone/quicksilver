@@ -16,7 +16,7 @@ func (k Keeper) CreateDenom(ctx sdk.Context, creatorAddr string, subdenom string
 		return "", err
 	}
 
-	err = k.chargeForCreateDenom(ctx, creatorAddr, subdenom)
+	err = k.chargeForCreateDenom(ctx, creatorAddr)
 	if err != nil {
 		return "", err
 	}
@@ -70,7 +70,7 @@ func (k Keeper) validateCreateDenom(ctx sdk.Context, creatorAddr string, subdeno
 	return denom, nil
 }
 
-func (k Keeper) chargeForCreateDenom(ctx sdk.Context, creatorAddr string, subdenom string) (err error) { //nolint:unparam
+func (k Keeper) chargeForCreateDenom(ctx sdk.Context, creatorAddr string) (err error) {
 	// Send creation fee to community pool
 	creationFee := k.GetParams(ctx).DenomCreationFee
 	accAddr, err := sdk.AccAddressFromBech32(creatorAddr)

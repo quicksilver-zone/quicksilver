@@ -5,6 +5,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 )
 

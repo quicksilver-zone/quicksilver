@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestKeeper_Queries() {
 				Address: testAddress,
 			},
 			k.UserLastEpochClaims,
-			2, // 2 expected from chainB, 1 ommited as it was not archived
+			2, // 2 expected from chainB, 1 omitted as it was not archived
 		},
 	}
 

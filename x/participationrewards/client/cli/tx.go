@@ -123,7 +123,7 @@ Where proposal.json contains:
 
 			from := clientCtx.GetFromAddress()
 
-			content := types.NewAddProtocolDataProposal(proposal.Title, proposal.Description, proposal.Type, proposal.Protocol, proposal.Key,
+			content := types.NewAddProtocolDataProposal(proposal.Title, proposal.Description, proposal.Type, proposal.Key,
 				proposal.Data)
 
 			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)

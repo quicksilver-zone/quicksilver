@@ -156,10 +156,7 @@ func (k Keeper) EnsureICAsActive(ctx sdk.Context, zone *types.Zone) error {
 	if err := k.EnsureICAActive(ctx, zone, zone.PerformanceAddress); err != nil {
 		return err
 	}
-	if err := k.EnsureICAActive(ctx, zone, zone.WithdrawalAddress); err != nil {
-		return err
-	}
-	return nil
+	return k.EnsureICAActive(ctx, zone, zone.WithdrawalAddress)
 }
 
 func (k Keeper) EnsureICAActive(ctx sdk.Context, zone *types.Zone, account *types.ICAAccount) error {
@@ -338,7 +335,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 	return nil
 }
 
-func (k Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone, response []byte) error {
+func (k Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone) error {
 	k.Logger(ctx).Info("Initialize performance delegations")
 
 	delegations := k.GetAllPerformanceDelegations(ctx, &zone)

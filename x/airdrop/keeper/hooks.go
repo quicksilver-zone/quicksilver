@@ -6,10 +6,10 @@ import (
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
-func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) {
 }
 
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+func (k Keeper) AfterEpochEnd(_ sdk.Context, _ string, _ int64) {
 }
 
 // ___________________________________________________________________________________________________

@@ -60,6 +60,6 @@ func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID
 	return nil
 }
 
-func MockProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
+func MockProofOps(_ sdk.Context, _ *ibcKeeper.Keeper, _ string, _ string, _ int64, _ string, _ []byte, _ []byte, _ *crypto.ProofOps) error {
 	return nil
 }

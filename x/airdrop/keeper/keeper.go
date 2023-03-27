@@ -91,7 +91,7 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 // GetModuleAccountAddress gets the airdrop module account address.
-func (k Keeper) GetModuleAccountAddress(ctx sdk.Context) sdk.AccAddress {
+func (k Keeper) GetModuleAccountAddress(_ sdk.Context) sdk.AccAddress {
 	return k.accountKeeper.GetModuleAddress(types.ModuleName)
 }
 

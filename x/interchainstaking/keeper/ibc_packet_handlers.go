@@ -344,7 +344,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	return nil
 }
 
-func (k *Keeper) HandleTimeout(ctx sdk.Context, packet channeltypes.Packet) error {
+func (k *Keeper) HandleTimeout(_ sdk.Context, _ channeltypes.Packet) error {
 	return nil
 }
 
@@ -516,7 +516,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 			newDist := make([]*types.Distribution, 0)
 			i := 0
 			for idx := range withdrawalRecord.Distribution {
-				if _, delete := dlist[idx]; !delete {
+				if _, remove := dlist[idx]; !remove {
 					newDist = append(newDist, withdrawalRecord.Distribution[idx])
 				}
 				i++
@@ -849,7 +849,7 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensforShares")
 		return errors.New("unable to cast source message to MsgRedeemTokensforShares")
 	}
-	validatorAddress, err := k.GetValidatorForToken(ctx, redeemMsg.DelegatorAddress, redeemMsg.Amount)
+	validatorAddress, err := k.GetValidatorForToken(ctx, redeemMsg.Amount)
 	if err != nil {
 		return err
 	}
@@ -925,7 +925,7 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 }
 
 // TODO: this should be part of Keeper, but part of zone. Refactor me.
-func (k *Keeper) GetValidatorForToken(ctx sdk.Context, delegatorAddress string, amount sdk.Coin) (string, error) {
+func (k *Keeper) GetValidatorForToken(ctx sdk.Context, amount sdk.Coin) (string, error) {
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("3: %w", err)
@@ -1032,10 +1032,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(ctx sdk.Context, delegatorAddr
 		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
 	}
 	k.SetDelegation(ctx, zone, delegation)
-	if err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId); err != nil {
-		return err
-	}
-	return nil
+	return k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
 }
 
 func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {

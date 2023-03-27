@@ -53,7 +53,7 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			map[int64]bool{},
 			DefaultNodeHome,
 			0,
-			MakeEncodingConfig(),
+			encCfg,
 			wasm.EnableAllProposals,
 			simapp.EmptyAppOptions{},
 			GetWasmOpts(simapp.EmptyAppOptions{}),
