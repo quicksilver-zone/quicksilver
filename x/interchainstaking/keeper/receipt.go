@@ -176,6 +176,9 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 	}
 
 	chunkSize := int(messagesPerTx)
+	if chunkSize == 0 {
+		chunkSize = ICAMsgChunkSize
+	}
 	timeoutTimestamp := uint64(ctx.BlockTime().Add(24 * time.Hour).UnixNano())
 
 	for {
