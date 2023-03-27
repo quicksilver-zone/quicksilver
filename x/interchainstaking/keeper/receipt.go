@@ -23,6 +23,7 @@ import (
 const (
 	Unset           = "unset"
 	ICAMsgChunkSize = 5
+	ICATimeout      = time.Hour * 6
 )
 
 func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.Zone) error {
@@ -180,7 +181,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		chunkSize = ICAMsgChunkSize
 	}
 
-	timeoutTimestamp := uint64(ctx.BlockTime().Add(24 * time.Hour).UnixNano())
+	timeoutTimestamp := uint64(ctx.BlockTime().Add(ICATimeout).UnixNano())
 
 	for {
 		// if no messages, no chunks!
