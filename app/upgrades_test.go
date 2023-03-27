@@ -1,18 +1,20 @@
 package app
 
 import (
+	"testing"
+	"time"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-	"github.com/stretchr/testify/suite"
-	"testing"
-	"time"
 )
 
 // TODO: this test runs in isolation, but fails as part of `make test`.
@@ -184,7 +186,7 @@ func (suite *AppTestSuite) initTestZone() {
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
-	reciept := icstypes.Receipt{
+	receipt := icstypes.Receipt{
 		ChainId: "uni-5",
 		Sender:  utils.GenerateAccAddressForTest().String(),
 		Txhash:  "TestDeposit01",
@@ -196,7 +198,7 @@ func (suite *AppTestSuite) initTestZone() {
 		),
 	}
 
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), reciept)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), receipt)
 
 	ubRecord := icstypes.UnbondingRecord{
 		ChainId:       "uni-5",
@@ -300,5 +302,4 @@ func (s *AppTestSuite) TestV010207UpgradeHandler() {
 	// assert DistributionProportions
 	params := app.MintKeeper.GetParams(ctx)
 	s.Require().Equal(expectedProportions, params.DistributionProportions)
-
 }

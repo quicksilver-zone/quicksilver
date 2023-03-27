@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	"github.com/spf13/cobra"
+
+	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	tmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 

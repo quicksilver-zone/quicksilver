@@ -8,11 +8,12 @@ import (
 	cosmosmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	"github.com/stretchr/testify/require"
 )
 
 func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
