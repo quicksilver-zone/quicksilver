@@ -8,6 +8,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -406,4 +407,24 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 		return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "perf/"+validator, zone.MessagesPerTx)
 	}
 	return nil
+}
+
+func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone) error {
+	var err error
+	k.IterateReceipts(ctx, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+		if receiptInfo.ChainId == zone.ChainId && receiptInfo.Completed == nil {
+			sendMsg := banktypes.MsgSend{
+				FromAddress: "",
+				ToAddress:   "",
+				Amount:      receiptInfo.Amount,
+			}
+			err = k.handleSendToDelegate(ctx, zone, &sendMsg, receiptInfo.Txhash)
+			if err != nil {
+				k.Logger(ctx).Error("error in processing pending delegations", "chain", zone.ChainId, "receipt", receiptInfo.Txhash, "error", err)
+				return true
+			}
+		}
+		return false
+	})
+	return err
 }
