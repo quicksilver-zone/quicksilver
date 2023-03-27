@@ -114,7 +114,7 @@ func v010208UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 		if !found {
 			panic("unable to find zone cosmoshub-4")
 		}
-		// block has is 40m
+		// block gas is 40m
 		zone.MessagesPerTx = 30
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
