@@ -411,8 +411,8 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 
 func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone) error {
 	var err error
-	k.IterateReceipts(ctx, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-		if receiptInfo.ChainId == zone.ChainId && receiptInfo.Completed == nil {
+	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+		if receiptInfo.Completed == nil {
 			sendMsg := banktypes.MsgSend{
 				FromAddress: "",
 				ToAddress:   "",
