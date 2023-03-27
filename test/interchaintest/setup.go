@@ -1,23 +1,22 @@
 package interchaintest
 
 import (
-	quicksilver "github.com/ingenuity-build/quicksilver/app"
 	"github.com/strangelove-ventures/ibctest/v5/ibc"
 )
 
 var (
-	QuickSilverE2ERepo  = "ghcr.io/cosmoscontracts/juno-e2e"
-	QuicksilverMainRepo = "ghcr.io/cosmoscontracts/juno"
+	QuickSilverE2ERepo  = "quicksilverzone/quicksilver@latest"
+	QuicksilverMainRepo = "quicksilverzone/quicksilver@v1.2.7"
 
-	repo, version = GetDockerImageInfo()
+	// repo, version = GetDockerImageInfo()
 
 	QuicksilverImage = ibc.DockerImage{
-		Repository: repo,
-		Version:    version,
+		Repository: "quicksilverzone/quicksilver",
+		Version:    "latest",
 		UidGid:     "1025:1025",
 	}
 
-	junoConfig = ibc.ChainConfig{
+	config = ibc.ChainConfig{
 		Type:                "cosmos",
 		Name:                "quicksilver",
 		ChainID:             "quicksilver-2",
@@ -31,7 +30,7 @@ var (
 		NoHostMount:         false,
 		ModifyGenesis:       nil,
 		ConfigFileOverrides: nil,
-		EncodingConfig:      quicksilver.MakeEncodingConfig(),
+		EncodingConfig:      nil,
 	}
 
 	pathQuicksilverGaia = "quicksilver-gaia"
