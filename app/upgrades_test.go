@@ -8,13 +8,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/stretchr/testify/suite"
 )
 
 // TODO: this test runs in isolation, but fails as part of `make test`.
@@ -302,4 +302,70 @@ func (s *AppTestSuite) TestV010207UpgradeHandler() {
 	// assert DistributionProportions
 	params := app.MintKeeper.GetParams(ctx)
 	s.Require().Equal(expectedProportions, params.DistributionProportions)
+}
+
+func (s *AppTestSuite) TestV010208UpgradeHandler() {
+	app := s.GetQuicksilverApp(s.chainA)
+
+	// cosmos zone
+	zone := icstypes.Zone{
+		ConnectionId:    "connection-77001",
+		ChainId:         "cosmoshub-4",
+		AccountPrefix:   "cosmos",
+		LocalDenom:      "uqatom",
+		BaseDenom:       "uatom",
+		MultiSend:       false,
+		LiquidityModule: false,
+	}
+	app.InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	// osmosis zone
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-77002",
+		ChainId:         "osmosis-1",
+		AccountPrefix:   "osmo",
+		LocalDenom:      "uqosmo",
+		BaseDenom:       "uosmo",
+		MultiSend:       false,
+		LiquidityModule: false,
+	}
+	app.InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	// osmosis zone
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-77003",
+		ChainId:         "regen-1",
+		AccountPrefix:   "regen",
+		LocalDenom:      "uqregen",
+		BaseDenom:       "uregen",
+		MultiSend:       false,
+		LiquidityModule: false,
+	}
+	app.InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	// osmosis zone
+	zone = icstypes.Zone{
+		ConnectionId:    "connection-77004",
+		ChainId:         "stargaze-1",
+		AccountPrefix:   "stars",
+		LocalDenom:      "uqstars",
+		BaseDenom:       "ustars",
+		MultiSend:       false,
+		LiquidityModule: false,
+	}
+	app.InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	handler := v010208UpgradeHandler(app)
+	ctx := s.chainA.GetContext()
+
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.Require().NoError(err)
+
+	ctx = s.chainA.GetContext()
+
+	for zone, limit := range map[string]int64{"regen-1": 2, "osmosis-1": 20, "stargaze-1": 50, "cosmoshub-4": 30} {
+		zone, found := app.InterchainstakingKeeper.GetZone(ctx, zone)
+		s.Require().True(found)
+		s.Require().Equal(limit, zone.MessagesPerTx)
+	}
 }

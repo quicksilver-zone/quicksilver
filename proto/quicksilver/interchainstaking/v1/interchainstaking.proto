@@ -44,6 +44,7 @@ message Zone {
     (gogoproto.nullable) = false
   ];
   int64 unbonding_period = 22;
+  int64 messages_per_tx = 23;
 }
 
 message ICAAccount {
