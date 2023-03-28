@@ -507,7 +507,7 @@ func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdk.
 // redemption rate
 
 func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
-	delegationsInProcess := k.GetDelegationsInProcess()
+	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone)
 	ratio, isZero := k.GetRatio(ctx, zone, epochRewards.Add(delegationsInProcess))
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
