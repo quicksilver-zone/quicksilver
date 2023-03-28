@@ -22,6 +22,7 @@ message RegisterZoneProposal {
       [ (gogoproto.moretags) = "yaml:\"account_prefix\"" ];
   bool multi_send = 7;
   bool liquidity_module = 8;
+  int64 messages_per_tx = 9;
 }
 
 message RegisterZoneProposalWithDeposit {
@@ -40,6 +41,7 @@ message RegisterZoneProposalWithDeposit {
   bool liquidity_module = 8
       [ (gogoproto.moretags) = "yaml:\"liquidity_module\"" ];
   string deposit = 9 [ (gogoproto.moretags) = "yaml:\"deposit\"" ];
+  int64 messages_per_tx = 10;
 }
 
 message UpdateZoneProposal {

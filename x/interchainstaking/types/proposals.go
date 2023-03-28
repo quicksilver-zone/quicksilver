@@ -36,6 +36,10 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 	}
 
 	// check valid connection id
+	if len(m.ConnectionId) < 12 {
+		return fmt.Errorf("invalid length connection string: %s", m.ConnectionId)
+	}
+
 	if m.ConnectionId[0:11] != "connection-" {
 		return fmt.Errorf("invalid connection string: %s", m.ConnectionId)
 	}
@@ -55,6 +59,11 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 		return errors.New("account prefix must be at least 2 characters") // ki is shortest to date.
 	}
 
+	// validate messages_per_tx
+	if m.MessagesPerTx < 1 {
+		return errors.New("messages_per_tx must be a positive non-zero integer")
+	}
+
 	if m.LiquidityModule {
 		return errors.New("liquidity module is unsupported")
 	}
@@ -71,7 +80,8 @@ func (m RegisterZoneProposal) String() string {
   Local Denom:                      %s
   Multi Send Enabled:               %t
   Liquidity Staking Module Enabled: %t
-`, m.Title, m.Description, m.ConnectionId, m.BaseDenom, m.LocalDenom, m.MultiSend, m.LiquidityModule)
+  Messages per Tx:                  %d
+`, m.Title, m.Description, m.ConnectionId, m.BaseDenom, m.LocalDenom, m.MultiSend, m.LiquidityModule, m.MessagesPerTx)
 }
 
 func NewUpdateZoneProposal(title string, description string, chainID string, changes []*UpdateZoneValue) *UpdateZoneProposal {

@@ -140,6 +140,7 @@ Where proposal.json contains:
   "account_prefix": "cosmos",
   "multi_send": true,
   "liquidity_module": false,
+  "messages_per_tx": "5",
   "deposit": "512000000uqck"
 }
 `),
@@ -161,6 +162,10 @@ Where proposal.json contains:
 			err = sdk.ValidateDenom(proposal.BaseDenom)
 			if err != nil {
 				return err
+			}
+
+			if proposal.MessagesPerTx < 1 {
+				return errors.New("messages_per_tx must be a positive non-zero integer")
 			}
 
 			deposit, err := sdk.ParseCoinsNormalized(proposal.Deposit)

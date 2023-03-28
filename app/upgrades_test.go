@@ -304,7 +304,7 @@ func (s *AppTestSuite) TestV010207UpgradeHandler() {
 	s.Require().Equal(expectedProportions, params.DistributionProportions)
 }
 
-func (s *AppTestSuite) TestV010208UpgradeHandler() {
+func (s *AppTestSuite) TestV010209UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
 
 	// cosmos zone
@@ -355,7 +355,7 @@ func (s *AppTestSuite) TestV010208UpgradeHandler() {
 	}
 	app.InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
-	handler := v010208UpgradeHandler(app)
+	handler := v010209UpgradeHandler(app)
 	ctx := s.chainA.GetContext()
 
 	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())

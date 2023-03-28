@@ -19,7 +19,7 @@ const (
 
 	v010204UpgradeName = "v1.2.4"
 	v010207UpgradeName = "v1.2.7"
-	v010208UpgradeName = "v1.2.8"
+	v010209UpgradeName = "v1.2.9"
 	v010300UpgradeName = "v1.3.0" // retained for testy
 )
 
@@ -27,7 +27,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010300UpgradeName, noOpUpgradeHandler(app)) // retained for testy
 	app.UpgradeKeeper.SetUpgradeHandler(v010204UpgradeName, v010204UpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010207UpgradeName, v010207UpgradeHandler(app))
-	app.UpgradeKeeper.SetUpgradeHandler(v010208UpgradeName, v010208UpgradeHandler(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v010209UpgradeName, v010209UpgradeHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -105,7 +105,7 @@ func v010207UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	}
 }
 
-func v010208UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
+func v010209UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// set messages per tx a maximum of (max_gas per tx/block divided by 1m); be conservative for now and we can tweak later.
 

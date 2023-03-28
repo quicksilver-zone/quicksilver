@@ -2,6 +2,9 @@
 
 ## Released
 
+### v1.2.9
+- Add message_per_tx param to zone registration and update proposals
+
 ### v1.2.8
 - Add feature to configure max-tx size per zone
 - Set `ICATimeout` to 6h
