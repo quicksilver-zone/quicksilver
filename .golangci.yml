@@ -8,31 +8,133 @@ run:
 linters:
   disable-all: true
   enable:
+    # Check for pass []any as any in variadic func(...any).
+      # Rare case but saved me from debugging a few times.
+    - asasalint
+    # I prefer plane ASCII identifiers.
+    # Symbol `∆` instead of `delta` looks cool but no thanks.
+    - asciicheck
+    # Checks for dangerous unicode character sequences.
+    # Super rare but why not to be a bit paranoid?
+    - bidichk
     - bodyclose
+    # Check whether the function uses a non-inherited context.
+    - contextcheck
+    # Check for two durations multiplied together.
+    - durationcheck
     - depguard
     - dogsled
     - errcheck
+    # Checks `Err-` prefix for var and `-Error` suffix for error type.
+    - errname
+    # Suggests to use `%w` for error-wrapping.
+    - errorlint
+    # Checks for pointers to enclosing loop variables.
+    - exportloopref
     - goconst
     - gocritic
+    # Forces to put `.` at the end of the comment. Code is poetry.
+    - godot
+    # Might not be that important, but I prefer to keep all of them.
+    # `gofumpt` is amazing, kudos to Daniel Marti https://github.com/mvdan/gofumpt
+    - gofmt
     - gofumpt
-    - revive
+    - goimports
+    # Allow or ban replace directives in go.mod
+    # or force explanation for retract directives.
+    - gomoddirectives
     - gosec
     - gosimple
     - govet
     - ineffassign
     - misspell
     - nakedret
-    - exportloopref
+    # Both require a bit more explicit returns.
+    - nilerr
+    - nilnil
+    # Finds sending HTTP request without context.Context.
+    - noctx
+    # Finds slices that could potentially be pre-allocated.
+    # Small performance win + cleaner code.
+    - prealloc
+    # Finds shadowing of Go's predeclared identifiers.
+    # I hear a lot of complaints from junior developers.
+    # But after some time they find it very useful.
+    - predeclared
+    # Lint your Prometheus metrics name.
+    - promlinter
+    # Checks that package variables are not reassigned.
+    # Super rare case but can catch bad things (like `io.EOF = nil`)
+    - reassign
+    - revive
     - staticcheck
     - stylecheck
+    # Checks that package variables are not reassigned.
+    # Super rare case but can catch bad things (like `io.EOF = nil`)
+    - reassign
     - typecheck
+    # Test-related checks. All of them are good.
+    - tenv
+    - testableexamples
+    - thelper
+    - tparallel
     - unconvert
     - unused
     - unparam
-    - misspell
-    - nolintlint
+    # Detect the possibility to use variables/constants from stdlib.
+    - usestdlibvars
+    # Finds wasted assignment statements.
+    - wastedassign
 
 exclude-rules:
   - linters:
       - nolintlint
     text: "should be written without leading space"
+
+linters-settings:
+  # I'm biased and I'm enabling more than 100 checks
+  # Might be too much for you. See https://go-critic.com/overview.html
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      # These 3 will detect many cases, but they do sense
+      # if it's performance oriented code
+      - hugeParam
+      - rangeExprCopy
+      - rangeValCopy
+
+  errcheck:
+    # Report `a := b.(MyStruct)` when `a, ok := ...` should be.
+    check-type-assertions: true # Default: false
+
+    # Report skipped checks:`num, _ := strconv.Atoi(numStr)`.
+    check-blank: true # Default: false
+
+    # Function to skip.
+    exclude-functions:
+      - io/ioutil.ReadFile
+      - io.Copy(*bytes.Buffer)
+      - io.Copy(os.Stdout)
+
+  govet:
+    disable:
+      - fieldalignment # I'm ok to waste some bytes
+
+  nakedret:
+    # No naked returns, ever.
+    max-func-lines: 1 # Default: 30
+
+  tagliatelle:
+    case:
+      rules:
+        json: snake # why it's not a `snake` by default?!
+        yaml: snake # why it's not a `snake` by default?!
+        xml: camel
+        bson: camel
+        avro: snake
+        mapstructure: kebab
