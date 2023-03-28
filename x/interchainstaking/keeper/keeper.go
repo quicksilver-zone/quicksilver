@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -491,7 +492,7 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 	)
 }
 
-func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdk.Int {
+func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) math.Int {
 	delegationsInProcess := sdkmath.ZeroInt()
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
 		if receipt.Completed == nil {
