@@ -325,4 +325,8 @@ replace (
 )
 
 // do not use
-retract [v1.2.5, v1.2.6]
+retract (
+	v1.2.8 // unreleased
+	v1.2.6 // unreleased
+	v1.2.5 // unreleased
+)
