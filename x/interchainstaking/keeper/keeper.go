@@ -109,8 +109,8 @@ func (k *Keeper) ScopedKeeper() *capabilitykeeper.ScopedKeeper {
 }
 
 // ClaimCapability claims the channel capability passed via the OnOpenChanInit callback
-func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
-	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
+func (k *Keeper) ClaimCapability(ctx sdk.Context, capability *capabilitytypes.Capability, name string) error {
+	return k.scopedKeeper.ClaimCapability(ctx, capability, name)
 }
 
 func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID string, port string) {

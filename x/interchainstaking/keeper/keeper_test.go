@@ -106,11 +106,12 @@ func (s *KeeperTestSuite) setupTestZones() {
 	s.Require().NoError(s.setupChannelForICA(ctx, s.chainB.ChainID, s.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
 	s.Require().NoError(s.setupChannelForICA(ctx, s.chainB.ChainID, s.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
 
-	for _, val := range s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext()) {
+	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext())
+	for i := range vals {
 		// refetch the zone for each validator, else we end up with an empty valset each time!
 		zone, found := qApp.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
 		s.Require().True(found)
-		s.Require().NoError(qApp.InterchainstakingKeeper.SetValidatorForZone(s.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&val)))
+		s.Require().NoError(qApp.InterchainstakingKeeper.SetValidatorForZone(s.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
 	}
 
 	s.coordinator.CommitNBlocks(s.chainA, 2)
@@ -186,7 +187,8 @@ func (s *KeeperTestSuite) giveFunds(ctx sdk.Context, denom string, amount int64,
 			math.NewInt(amount),
 		),
 	)
-	qApp.MintKeeper.MintCoins(ctx, balance)
+	err := qApp.MintKeeper.MintCoins(ctx, balance)
+	s.Require().NoError(err)
 	addr, err := utils.AccAddressFromBech32(address, "")
 	s.Require().NoError(err)
 	err = qApp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, balance)
@@ -487,7 +489,8 @@ func (s *KeeperTestSuite) TestGetRatio() {
 				icsKeeper.SetDelegation(ctx, &zone, delegation)
 			}
 
-			qapp.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.supply)))
+			err := qapp.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.supply)))
+			s.Require().NoError(err)
 
 			actual, isZero := icsKeeper.GetRatio(ctx, &zone, sdk.ZeroInt())
 			s.Require().Equal(tt.supply.IsZero(), isZero)
@@ -515,7 +518,8 @@ func (s *KeeperTestSuite) TestUpdateRedemptionRate() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationB)
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
 
-	app.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
+	err := app.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
+	s.Require().NoError(err)
 
 	// no change!
 	s.Require().Equal(sdk.OneDec(), zone.RedemptionRate)
@@ -593,7 +597,8 @@ func (s *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationB)
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
 
-	app.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
+	err := app.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
+	s.Require().NoError(err)
 
 	// no change!
 	s.Require().Equal(sdk.OneDec(), zone.RedemptionRate)

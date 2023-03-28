@@ -56,32 +56,32 @@ func (s *AppTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *Quicksilv
 }
 
 // SetupTest creates a coordinator with 2 test chains.
-func (suite *AppTestSuite) SetupTest() {
-	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)         // initializes 2 test chains
-	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1)) // convenience and readability
-	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2)) // convenience and readability
+func (s *AppTestSuite) SetupTest() {
+	s.coordinator = ibctesting.NewCoordinator(s.T(), 2)         // initializes 2 test chains
+	s.chainA = s.coordinator.GetChain(ibctesting.GetChainID(1)) // convenience and readability
+	s.chainB = s.coordinator.GetChain(ibctesting.GetChainID(2)) // convenience and readability
 
-	suite.path = newQuicksilverPath(suite.chainA, suite.chainB)
-	suite.coordinator.SetupConnections(suite.path)
+	s.path = newQuicksilverPath(s.chainA, s.chainB)
+	s.coordinator.SetupConnections(s.path)
 
-	suite.coordinator.CurrentTime = time.Now().UTC()
-	suite.coordinator.UpdateTime()
+	s.coordinator.CurrentTime = time.Now().UTC()
+	s.coordinator.UpdateTime()
 
-	suite.initTestZone()
+	s.initTestZone()
 }
 
-func (suite *AppTestSuite) initTestZone() {
+func (s *AppTestSuite) initTestZone() {
 	// test zone
 	zone := icstypes.Zone{
-		ConnectionId:    suite.path.EndpointA.ConnectionID,
-		ChainId:         suite.chainB.ChainID,
+		ConnectionId:    s.path.EndpointA.ConnectionID,
+		ChainId:         s.chainB.ChainID,
 		AccountPrefix:   "bcosmos",
 		LocalDenom:      "uqatom",
 		BaseDenom:       "uatom",
 		MultiSend:       false,
 		LiquidityModule: true,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
 	// cosmos zone
 	zone = icstypes.Zone{
@@ -93,7 +93,7 @@ func (suite *AppTestSuite) initTestZone() {
 		MultiSend:       false,
 		LiquidityModule: false,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
 	// osmosis zone
 	zone = icstypes.Zone{
@@ -105,7 +105,7 @@ func (suite *AppTestSuite) initTestZone() {
 		MultiSend:       false,
 		LiquidityModule: true,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 	// uni-5 zone
 	zone = icstypes.Zone{
 		ConnectionId:    "connection-77003",
@@ -116,7 +116,7 @@ func (suite *AppTestSuite) initTestZone() {
 		MultiSend:       false,
 		LiquidityModule: true,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
 	receipt := icstypes.Receipt{
 		ChainId: "uni-5",
@@ -130,7 +130,7 @@ func (suite *AppTestSuite) initTestZone() {
 		),
 	}
 
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), receipt)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetReceipt(s.chainA.GetContext(), receipt)
 
 	ubRecord := icstypes.UnbondingRecord{
 		ChainId:       "uni-5",
@@ -138,7 +138,7 @@ func (suite *AppTestSuite) initTestZone() {
 		Validator:     "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn",
 		RelatedTxhash: []string{"ABC012"},
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetUnbondingRecord(suite.chainA.GetContext(), ubRecord)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetUnbondingRecord(s.chainA.GetContext(), ubRecord)
 
 	rdRecord := icstypes.RedelegationRecord{
 		ChainId:        "uni-5",
@@ -146,9 +146,9 @@ func (suite *AppTestSuite) initTestZone() {
 		Source:         "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn",
 		Destination:    "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed",
 		Amount:         3000000,
-		CompletionTime: time.Time(suite.chainA.GetContext().BlockTime().Add(time.Hour)),
+		CompletionTime: s.chainA.GetContext().BlockTime().Add(time.Hour),
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetRedelegationRecord(suite.chainA.GetContext(), rdRecord)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), rdRecord)
 
 	rdRecord = icstypes.RedelegationRecord{
 		ChainId:        "osmosis-1",
@@ -158,7 +158,7 @@ func (suite *AppTestSuite) initTestZone() {
 		Amount:         3000000,
 		CompletionTime: time.Time{},
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetRedelegationRecord(suite.chainA.GetContext(), rdRecord)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), rdRecord)
 
 	delRecord := icstypes.Delegation{
 		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
@@ -168,7 +168,7 @@ func (suite *AppTestSuite) initTestZone() {
 		RedelegationEnd:   -62135596800,
 	}
 
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(suite.chainA.GetContext(), &zone, delRecord)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetDelegation(s.chainA.GetContext(), &zone, delRecord)
 
 	wRecord := icstypes.WithdrawalRecord{
 		ChainId:   "uni-5",
@@ -183,9 +183,9 @@ func (suite *AppTestSuite) initTestZone() {
 		Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 		Status:     icskeeper.WithdrawStatusQueued,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetWithdrawalRecord(suite.chainA.GetContext(), wRecord)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), wRecord)
 
-	err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
+	err := s.GetQuicksilverApp(s.chainA).BankKeeper.MintCoins(s.chainA.GetContext(), tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
 	if err != nil {
 		return
 	}
@@ -198,15 +198,15 @@ func (suite *AppTestSuite) initTestZone() {
 		return
 	}
 
-	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
+	err = s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(s.chainA.GetContext(), tokenfactorytypes.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
 	if err != nil {
 		return
 	}
-	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, addr2, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
+	err = s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(s.chainA.GetContext(), tokenfactorytypes.ModuleName, addr2, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
 	if err != nil {
 		return
 	}
-	err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToModule(suite.chainA.GetContext(), tokenfactorytypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(400000))))
+	err = s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToModule(s.chainA.GetContext(), tokenfactorytypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(400000))))
 	if err != nil {
 		return
 	}

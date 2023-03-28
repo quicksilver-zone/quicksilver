@@ -27,15 +27,15 @@ func (suite *KeeperTestSuite) TestQuery() {
 	suite.GetSimApp(suite.chainA).InterchainQueryKeeper.SetQuery(suite.chainA.GetContext(), *query)
 
 	// get the stored query
-	id := keeper.GenerateQueryHash(query.ConnectionId, query.ChainId, query.QueryType, query.Request, "")
+	id := keeper.GenerateQueryHash(query.ConnectionID, query.ChainID, query.QueryType, query.Request, "")
 	getQuery, found := suite.GetSimApp(suite.chainA).InterchainQueryKeeper.GetQuery(suite.chainA.GetContext(), id)
 	suite.True(found)
-	suite.Equal(suite.path.EndpointB.ConnectionID, getQuery.ConnectionId)
-	suite.Equal(suite.chainB.ChainID, getQuery.ChainId)
+	suite.Equal(suite.path.EndpointB.ConnectionID, getQuery.ConnectionID)
+	suite.Equal(suite.chainB.ChainID, getQuery.ChainID)
 	suite.Equal("cosmos.staking.v1beta1.Query/Validators", getQuery.QueryType)
 	suite.Equal(sdk.NewInt(200), getQuery.Period)
 	suite.Equal(uint64(0), getQuery.Ttl)
-	suite.Equal("", getQuery.CallbackId)
+	suite.Equal("", getQuery.CallbackID)
 
 	// get all the queries
 	queries := suite.GetSimApp(suite.chainA).InterchainQueryKeeper.AllQueries(suite.chainA.GetContext())

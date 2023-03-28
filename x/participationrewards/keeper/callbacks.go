@@ -141,9 +141,9 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
 func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainId)
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainID)
 	if !ok {
-		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
+		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainID)
 	}
 
 	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
@@ -175,8 +175,8 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	// trigger a client update at the epoch boundary
 	k.IcqKeeper.MakeRequest(
 		ctx,
-		query.ConnectionId,
-		query.ChainId,
+		query.ConnectionID,
+		query.ChainID,
 		"ibc.ClientUpdate",
 		heightInBytes,
 		sdk.NewInt(-1),
@@ -189,6 +189,6 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	if err != nil {
 		return err
 	}
-	k.SetProtocolData(ctx, query.ChainId, &data)
+	k.SetProtocolData(ctx, query.ChainID, &data)
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -140,7 +141,7 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 			for {
 				// Read each record from csv
 				record, err := r.Read()
-				if err == io.EOF {
+				if errors.Is(err, io.EOF) {
 					break
 				}
 

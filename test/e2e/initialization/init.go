@@ -23,11 +23,11 @@ func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.
 		return nil, err
 	}
 
-	var peers []string
-	for _, peer := range chain.nodes {
+	peers := make([]string, len(chain.nodes))
+	for i, peer := range chain.nodes {
 		peerID := fmt.Sprintf("%s@%s:26656", peer.getNodeKey().ID(), peer.moniker)
 		peer.peerID = peerID
-		peers = append(peers, peerID)
+		peers[i] = peerID
 	}
 
 	for _, node := range chain.nodes {
@@ -40,7 +40,7 @@ func InitChain(id, dataDir string, nodeConfigs []*NodeConfig, votingPeriod time.
 	return chain.export()
 }
 
-func InitSingleNode(chainID, dataDir string, existingGenesisDir string, nodeConfig *NodeConfig, trustHeight int64, trustHash string, stateSyncRPCServers []string, persistentPeers []string) (*Node, error) {
+func InitSingleNode(chainID, dataDir, existingGenesisDir string, nodeConfig *NodeConfig, trustHeight int64, trustHash string, stateSyncRPCServers []string, persistentPeers []string) (*Node, error) {
 	if nodeConfig.IsValidator {
 		return nil, errors.New("creating individual validator nodes after starting up chain is not currently supported")
 	}

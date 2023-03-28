@@ -33,6 +33,8 @@ func TestNoStorageWithoutProposal(t *testing.T) {
 }
 
 func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksilver, addr sdk.AccAddress) {
+	t.Helper()
+
 	govKeeper := quicksilverApp.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)

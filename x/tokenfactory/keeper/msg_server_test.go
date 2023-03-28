@@ -42,7 +42,8 @@ func (s *KeeperTestSuite) TestMintDenomMsg() {
 			ctx := s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test mint message
-			s.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
+			_, err := s.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
+			s.Require().NoError(err)
 			// Ensure current number and type of event is emitted
 			s.AssertEventEmitted(ctx, types.TypeMsgMint, tc.expectedMessageEvents)
 		})
@@ -54,7 +55,8 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 	// Create a denom.
 	s.CreateDefaultDenom()
 	// mint 10 default token for testAcc[0]
-	s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10)))
+	_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10)))
+	s.Require().NoError(err)
 
 	for _, tc := range []struct {
 		desc                  string
@@ -82,7 +84,8 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 			ctx := s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test burn message
-			s.msgServer.Burn(sdk.WrapSDKContext(ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
+			_, err := s.msgServer.Burn(sdk.WrapSDKContext(ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
+			s.Require().NoError(err)
 			// Ensure current number and type of event is emitted
 			s.AssertEventEmitted(ctx, types.TypeMsgBurn, tc.expectedMessageEvents)
 		})
@@ -121,7 +124,8 @@ func (s *KeeperTestSuite) TestCreateDenomMsg() {
 			// Set denom creation fee in params
 			tokenFactoryKeeper.SetParams(s.Ctx, tc.denomCreationFee)
 			// Test create denom message
-			s.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), tc.subdenom))
+			_, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), tc.subdenom))
+			s.Require().NoError(err)
 			// Ensure current number and type of event is emitted
 			s.AssertEventEmitted(ctx, types.TypeMsgCreateDenom, tc.expectedMessageEvents)
 		})
@@ -170,9 +174,13 @@ func (s *KeeperTestSuite) TestChangeAdminDenomMsg() {
 			res, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
 			s.Require().NoError(err)
 			testDenom := res.GetNewTokenDenom()
-			s.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(testDenom, 10)))
+			_, err = s.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(testDenom, 10)))
+			s.Require().NoError(err)
+
 			// Test change admin message
-			s.msgServer.ChangeAdmin(sdk.WrapSDKContext(ctx), tc.msgChangeAdmin(testDenom))
+			_, err = s.msgServer.ChangeAdmin(sdk.WrapSDKContext(ctx), tc.msgChangeAdmin(testDenom))
+			s.Require().NoError(err)
+
 			// Ensure current number and type of event is emitted
 			s.AssertEventEmitted(ctx, types.TypeMsgChangeAdmin, tc.expectedMessageEvents)
 		})
@@ -239,7 +247,8 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 			ctx := s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test set denom metadata message
-			s.msgServer.SetDenomMetadata(sdk.WrapSDKContext(ctx), &tc.msgSetDenomMetadata)
+			_, err := s.msgServer.SetDenomMetadata(sdk.WrapSDKContext(ctx), &tc.msgSetDenomMetadata)
+			s.Require().NoError(err)
 			// Ensure current number and type of event is emitted
 			s.AssertEventEmitted(ctx, types.TypeMsgSetDenomMetadata, tc.expectedMessageEvents)
 		})

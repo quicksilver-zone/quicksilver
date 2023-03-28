@@ -35,7 +35,7 @@ func (msg MsgClaim) ValidateBasic() error {
 	errors := make(map[string]error)
 
 	if len(msg.ChainId) == 0 {
-		errors["ChainId"] = ErrUndefinedAttribute
+		errors["ChainID"] = ErrUndefinedAttribute
 	}
 
 	action := int(msg.Action)

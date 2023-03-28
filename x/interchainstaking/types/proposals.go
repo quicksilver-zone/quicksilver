@@ -95,7 +95,7 @@ func (m RegisterZoneProposal) String() string {
 	return fmt.Sprintf(`Interchain Staking  Zone Registration Proposal:
   Title:                            %s
   Description:                      %s
-  Connection Id:                    %s
+  Connection ID:                    %s
   Base Denom:                       %s
   Local Denom:                      %s
   Return to Sender Enabled:         %t

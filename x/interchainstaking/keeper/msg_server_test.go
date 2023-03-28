@@ -244,7 +244,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					Source:         zone.GetValidatorsAddressesAsSlice()[0],
 					Destination:    zone.GetValidatorsAddressesAsSlice()[1],
 					Amount:         3000000,
-					CompletionTime: time.Time(s.chainA.GetContext().BlockTime().Add(time.Hour)),
+					CompletionTime: s.chainA.GetContext().BlockTime().Add(time.Hour),
 				})
 			},
 			"",
@@ -266,8 +266,10 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			params.UnbondingEnabled = true
 			s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetParams(ctx, params)
 
-			s.GetQuicksilverApp(s.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-			s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			err := s.GetQuicksilverApp(s.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			s.Require().NoError(err)
+			err = s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			s.Require().NoError(err)
 
 			// disable LSM
 			zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
@@ -303,8 +305,10 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			params.UnbondingEnabled = true
 			s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetParams(ctx, params)
 
-			s.GetQuicksilverApp(s.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-			s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			err := s.GetQuicksilverApp(s.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			s.Require().NoError(err)
+			err = s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			s.Require().NoError(err)
 
 			// enable LSM
 			zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
@@ -454,9 +458,8 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 			if tt.failsValidations {
 				s.Require().Error(err)
 				return
-			} else {
-				s.Require().NoError(err)
 			}
+			s.Require().NoError(err)
 
 			msgSrv := icskeeper.NewMsgServerImpl(s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.SignalIntent(sdk.WrapSDKContext(s.chainA.GetContext()), msg)

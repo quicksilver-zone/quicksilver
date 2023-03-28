@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetKeyZoneDrop(t *testing.T) {
-	testId := "test-01"
+	testID := "test-01"
 	type args struct {
 		chainID string
 	}
@@ -22,9 +22,9 @@ func TestGetKeyZoneDrop(t *testing.T) {
 		{
 			"valid",
 			args{
-				chainID: testId,
+				chainID: testID,
 			},
-			append([]byte{0x1}, []byte(testId)...),
+			append([]byte{0x1}, []byte(testID)...),
 		},
 	}
 	for _, tt := range tests {
@@ -41,7 +41,7 @@ func TestGetKeyZoneDrop(t *testing.T) {
 }
 
 func TestGetKeyClaimRecord(t *testing.T) {
-	testId := "test-01"
+	testID := "test-01"
 	testAddress := "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"
 	testAcc, _ := sdk.AccAddressFromBech32(testAddress)
 	type args struct {
@@ -56,10 +56,10 @@ func TestGetKeyClaimRecord(t *testing.T) {
 		{
 			"valid",
 			args{
-				chainID: testId,
+				chainID: testID,
 				addr:    testAcc,
 			},
-			append(append([]byte{0x2}, []byte(testId)...), testAcc...),
+			append(append([]byte{0x2}, []byte(testID)...), testAcc...),
 		},
 	}
 	for _, tt := range tests {
@@ -76,7 +76,7 @@ func TestGetKeyClaimRecord(t *testing.T) {
 }
 
 func TestGetPrefixClaimRecord(t *testing.T) {
-	testId := "tester-01"
+	testID := "tester-01"
 	type args struct {
 		chainID string
 	}
@@ -88,9 +88,9 @@ func TestGetPrefixClaimRecord(t *testing.T) {
 		{
 			"valid",
 			args{
-				chainID: testId,
+				chainID: testID,
 			},
-			append([]byte{0x2}, []byte(testId)...),
+			append([]byte{0x2}, []byte(testID)...),
 		},
 	}
 	for _, tt := range tests {

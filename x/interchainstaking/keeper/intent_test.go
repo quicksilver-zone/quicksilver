@@ -325,7 +325,8 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 				icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
 			}
 
-			icsKeeper.AggregateDelegatorIntents(ctx, &zone)
+			err := icsKeeper.AggregateDelegatorIntents(ctx, &zone)
+			s.Require().NoError(err)
 
 			// refresh zone to pull new aggregate
 			zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
@@ -354,7 +355,7 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 // 			},
 // 			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
 // 				return map[string]cmtypes.Claim{
-// 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+// 					user1.String(): {UserAddress: user1.String(), ChainID: zone.ChainID, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
 // 				}
 // 			},
 // 			balances: func(denom string) map[string]sdk.Coins { return map[string]sdk.Coins{} },
@@ -374,7 +375,7 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 // 			},
 // 			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
 // 				return map[string]cmtypes.Claim{
-// 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+// 					user1.String(): {UserAddress: user1.String(), ChainID: zone.ChainID, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
 // 				}
 // 			},
 // 			balances: func(denom string) map[string]sdk.Coins {
@@ -397,7 +398,7 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 // 			},
 // 			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
 // 				return map[string]cmtypes.Claim{
-// 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+// 					user1.String(): {UserAddress: user1.String(), ChainID: zone.ChainID, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
 // 				}
 // 			},
 // 			balances: func(denom string) map[string]sdk.Coins {

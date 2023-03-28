@@ -71,12 +71,12 @@ func (suite *InterChainQueryTestSuite) TestInitGenesis() {
 	id := keeper.GenerateQueryHash(suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "")
 	queryResponse, found := suite.GetSimApp(suite.chainA).InterchainQueryKeeper.GetQuery(suite.chainA.GetContext(), id)
 	suite.True(found)
-	suite.Equal(suite.path.EndpointB.ConnectionID, queryResponse.ConnectionId)
-	suite.Equal(suite.chainB.ChainID, queryResponse.ChainId)
+	suite.Equal(suite.path.EndpointB.ConnectionID, queryResponse.ConnectionID)
+	suite.Equal(suite.chainB.ChainID, queryResponse.ChainID)
 	suite.Equal("cosmos.staking.v1beta1.Query/Validators", queryResponse.QueryType)
 	suite.Equal(sdk.NewInt(200), queryResponse.Period)
 	suite.Equal(uint64(0), queryResponse.Ttl)
-	suite.Equal("", queryResponse.CallbackId)
+	suite.Equal("", queryResponse.CallbackID)
 }
 
 func newSimAppPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {

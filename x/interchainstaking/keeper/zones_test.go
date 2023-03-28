@@ -19,6 +19,8 @@ import (
 )
 
 func newQuicksilver(t *testing.T) *app.Quicksilver {
+	t.Helper()
+
 	return app.NewQuicksilver(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),

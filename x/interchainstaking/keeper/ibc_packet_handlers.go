@@ -1009,9 +1009,9 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 }
 
 func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {
-	zone, found := k.GetZone(ctx, query.ChainId)
+	zone, found := k.GetZone(ctx, query.ChainID)
 	if !found {
-		return fmt.Errorf("unable to find zone for %s", query.ChainId)
+		return fmt.Errorf("unable to find zone for %s", query.ChainID)
 	}
 
 	// query all balances as chains can accumulate fees in different denoms.
@@ -1031,8 +1031,7 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	// prepare rewards distribution
 	rewards := sdk.NewCoin(zone.BaseDenom, baseDenomAmount.Sub(baseDenomFee))
 
-	var msgs []sdk.Msg
-	msgs = append(msgs, k.prepareRewardsDistributionMsgs(zone, rewards.Amount))
+	msgs := []sdk.Msg{k.prepareRewardsDistributionMsgs(zone, rewards.Amount)}
 
 	// multiDenomFee is the balance of withdrawal account minus the redelegated rewards.
 	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards}...)

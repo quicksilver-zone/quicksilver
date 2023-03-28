@@ -150,7 +150,7 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 	}
 
 	if msg.ChainId == "" {
-		errm["ChainId"] = errors.New("undefined")
+		errm["ChainID"] = errors.New("undefined")
 	}
 
 	wantSum := sdk.OneDec()

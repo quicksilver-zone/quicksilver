@@ -243,6 +243,8 @@ func (m *Manager) RunHermesResource(t *testing.T, chainAID, quickARelayerNodeNam
 // RunICQResource runs an ICQ container. Returns the container resource and error if any.
 // the name of the ICQ container is "<chain A id>-<chain B id>-relayer"
 func (m *Manager) RunICQResource(t *testing.T, chainAID, quickANodeName, chainBID, quickBNodeName, icqCfgPath string) (*dockertest.Resource, error) {
+	t.Helper()
+
 	icqResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       icqContainerName,
@@ -315,6 +317,8 @@ func (m *Manager) RunICQResource(t *testing.T, chainAID, quickANodeName, chainBI
 // RunXCCLookupResource runs an XCCLookup container. Returns the container resource and error if any.
 // the name of the XCCLookup container is "<chain A id>-<chain B id>-relayer"
 func (m *Manager) RunXCCLookupResource(t *testing.T, chainAID, quickANodeName, chainBID, quickBNodeName, xccLookupCfgPath string) (*dockertest.Resource, error) {
+	t.Helper()
+
 	xccLookupResource, err := m.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       xccLookupContainerName,

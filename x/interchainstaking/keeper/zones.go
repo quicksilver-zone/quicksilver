@@ -369,19 +369,20 @@ OUTER:
 
 	// send delegations to validators
 	k.Logger(ctx).Info("send performance delegations", "zone", zone.ChainId)
-	var msgs []sdk.Msg
-	for _, val := range validatorsToDelegate {
+
+	msgs := make([]sdk.Msg, len(validatorsToDelegate))
+	for i, val := range validatorsToDelegate {
 		k.Logger(ctx).Info(
 			"performance delegation",
 			"zone", zone.ChainId,
 			"validator", val,
 			"amount", amount,
 		)
-		msgs = append(msgs, &stakingtypes.MsgDelegate{
+		msgs[i] = &stakingtypes.MsgDelegate{
 			DelegatorAddress: zone.PerformanceAddress.GetAddress(),
 			ValidatorAddress: val,
 			Amount:           amount,
-		})
+		}
 	}
 
 	if len(msgs) > 0 {
@@ -464,8 +465,8 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 
 	// remove queries in state
 	k.ICQKeeper.IterateQueries(ctx, func(_ int64, queryInfo icqtypes.Query) (stop bool) {
-		if queryInfo.ChainId == chainID {
-			k.ICQKeeper.DeleteQuery(ctx, queryInfo.Id)
+		if queryInfo.ChainID == chainID {
+			k.ICQKeeper.DeleteQuery(ctx, queryInfo.ID)
 		}
 		return false
 	})

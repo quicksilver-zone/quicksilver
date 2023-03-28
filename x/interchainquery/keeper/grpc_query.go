@@ -31,7 +31,7 @@ func (k Keeper) Queries(c context.Context, req *types.QueryRequestsRequest) (*ty
 			return false, err
 		}
 
-		if query.ChainId == req.ChainId && (query.LastEmission.IsNil() || query.LastEmission.IsZero() || query.LastEmission.GTE(query.LastHeight)) {
+		if query.ChainID == req.ChainId && (query.LastEmission.IsNil() || query.LastEmission.IsZero() || query.LastEmission.GTE(query.LastHeight)) {
 			queries = append(queries, query)
 			return true, nil
 		}

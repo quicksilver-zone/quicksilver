@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

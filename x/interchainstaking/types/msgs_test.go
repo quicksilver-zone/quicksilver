@@ -100,7 +100,7 @@ func TestIntentsFromStringInvalidValoperAddressesFailsOnValidate(t *testing.T) {
 
 func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
 	type fields struct {
-		ChainId     string
+		ChainID     string
 		Intents     string
 		FromAddress string
 	}
@@ -118,7 +118,7 @@ func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			msg := types.MsgSignalIntent{
-				ChainId:     tt.fields.ChainId,
+				ChainId:     tt.fields.ChainID,
 				Intents:     tt.fields.Intents,
 				FromAddress: tt.fields.FromAddress,
 			}

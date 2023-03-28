@@ -31,6 +31,8 @@ type UpgradeConfigurer struct {
 var _ Configurer = (*UpgradeConfigurer)(nil)
 
 func NewUpgradeConfigurer(t *testing.T, chainConfigs []*chain.Config, setupTests setupFn, containerManager *containers.Manager, upgradeVersion string, forkHeight int64) Configurer {
+	t.Helper()
+
 	return &UpgradeConfigurer{
 		baseConfigurer: baseConfigurer{
 			chainConfigs:     chainConfigs,
@@ -82,7 +84,7 @@ func (uc *UpgradeConfigurer) ConfigureChain(chainConfig *chain.Config) error {
 	// without this, test attempts to unmarshal file before docker container is finished writing
 	var initializedChain initialization.Chain
 	for i := 0; i < config.MaxRetries; i++ {
-		initializedChainBytes, _ := os.ReadFile(fileName)
+		initializedChainBytes, _ := os.ReadFile(fileName) //nolint
 		err = json.Unmarshal(initializedChainBytes, &initializedChain)
 		if err == nil {
 			break

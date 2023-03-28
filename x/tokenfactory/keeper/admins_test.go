@@ -42,6 +42,7 @@ func (s *KeeperTestSuite) TestAdminMsgs() {
 
 	// Test Change Admin
 	_, err = s.msgServer.ChangeAdmin(sdk.WrapSDKContext(s.Ctx), types.NewMsgChangeAdmin(s.TestAccs[0].String(), s.defaultDenom, s.TestAccs[1].String()))
+	s.Require().NoError(err)
 	queryRes, err = s.queryClient.DenomAuthorityMetadata(s.Ctx.Context(), &types.QueryDenomAuthorityMetadataRequest{
 		Denom: s.defaultDenom,
 	})
@@ -129,7 +130,9 @@ func (s *KeeperTestSuite) TestBurnDenom() {
 	s.CreateDefaultDenom()
 
 	// mint 10 default token for testAcc[0]
-	s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10)))
+	_, err := s.msgServer.Mint(sdk.WrapSDKContext(s.Ctx), types.NewMsgMint(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 10)))
+	s.Require().NoError(err)
+
 	addr0bal += 10
 
 	for _, tc := range []struct {

@@ -22,19 +22,19 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	// emit events for periodic queries
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
 		// if queryInfo.QueryType == "ibc.ClientUpdate" && queryInfo.LastEmission.AddRaw(1000).LTE(sdk.NewInt(ctx.BlockHeight())) {
-		// 	k.DeleteQuery(ctx, queryInfo.Id)
+		// 	k.DeleteQuery(ctx, queryInfo.ID)
 		// 	k.Logger(ctx).Error("Deleting stale query")
 		// 	return false
 		// }
 		if queryInfo.LastEmission.IsNil() || queryInfo.LastEmission.IsZero() || queryInfo.LastEmission.Add(queryInfo.Period).Equal(sdk.NewInt(ctx.BlockHeight())) {
-			k.Logger(ctx).Debug("Interchainquery event emitted", "id", queryInfo.Id)
+			k.Logger(ctx).Debug("Interchainquery event emitted", "id", queryInfo.ID)
 			event := sdk.NewEvent(
 				sdk.EventTypeMessage,
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 				sdk.NewAttribute(sdk.AttributeKeyAction, types.AttributeValueQuery),
-				sdk.NewAttribute(types.AttributeKeyQueryID, queryInfo.Id),
-				sdk.NewAttribute(types.AttributeKeyChainID, queryInfo.ChainId),
-				sdk.NewAttribute(types.AttributeKeyConnectionID, queryInfo.ConnectionId),
+				sdk.NewAttribute(types.AttributeKeyQueryID, queryInfo.ID),
+				sdk.NewAttribute(types.AttributeKeyChainID, queryInfo.ChainID),
+				sdk.NewAttribute(types.AttributeKeyConnectionID, queryInfo.ConnectionID),
 				sdk.NewAttribute(types.AttributeKeyType, queryInfo.QueryType),
 				// TODO: add height to request type
 				sdk.NewAttribute(types.AttributeKeyHeight, "0"),

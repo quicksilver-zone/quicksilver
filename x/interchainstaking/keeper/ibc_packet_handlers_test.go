@@ -32,7 +32,8 @@ func TestHandleMsgTransferGood(t *testing.T) {
 	require.NoError(t, err)
 
 	sender := utils.GenerateAccAddressForTest()
-	senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+	senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
+	require.NoError(t, err)
 
 	txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
 	feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
@@ -71,7 +72,8 @@ func TestHandleMsgTransferBadRecipient(t *testing.T) {
 	app, ctx := app.GetAppWithContext(t, true)
 
 	sender := utils.GenerateAccAddressForTest()
-	senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+	senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
+	require.NoError(t, err)
 
 	transferMsg := ibctransfertypes.MsgTransfer{
 		SourcePort:    "transfer",
@@ -696,8 +698,8 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 			}
 
 			// trigger handler
-			for _, msg := range test.message {
-				err := app.InterchainstakingKeeper.HandleWithdrawForUser(ctx, &zone, &msg, test.memo)
+			for i := range test.message {
+				err := app.InterchainstakingKeeper.HandleWithdrawForUser(ctx, &zone, &test.message[i], test.memo)
 				if test.err {
 					s.Require().Error(err)
 				} else {
@@ -1141,7 +1143,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						RelatedTxhash: []string{hash2},
 					},
 					// {
-					// 	ChainId:       s.chainB.ChainID,
+					// 	ChainID:       s.chainB.ChainID,
 					// 	EpochNumber:   1,
 					// 	Validator:     zone.Validators[2].ValoperAddress,
 					// 	RelatedTxhash: []string{hash2},
@@ -1368,6 +1370,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
+	s.Require().NoError(err)
 
 	// check for redelegations originating from val[0], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 3)
@@ -1481,6 +1484,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 
 	// trigger rebalance
 	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
+	s.Require().NoError(err)
 
 	// check for redelegations originating from val[1], they should not be present
 	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[0].ValoperAddress, 3)
@@ -1500,9 +1504,12 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 		{
 			name: "msg response with some data",
 			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
-				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				err := app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				s.Require().NoError(err)
 				sender := utils.GenerateAccAddressForTest()
-				senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				s.Require().NoError(err)
+
 				transferMsg := ibctransfertypes.MsgTransfer{
 					SourcePort:    "transfer",
 					SourceChannel: "channel-0",
@@ -1574,7 +1581,8 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 			msg, msgResponseBytes := test.setStatements(ctx, app)
 
 			txMsgData := &sdk.TxMsgData{
-				Data:         []*sdk.MsgData{{MsgType: "/bob", Data: msgResponseBytes}},
+				// we need to support this older deprecated type
+				Data:         []*sdk.MsgData{{MsgType: "/bob", Data: msgResponseBytes}}, //nolint:staticcheck
 				MsgResponses: []*codectypes.Any{},
 			}
 
@@ -1616,9 +1624,12 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 		{
 			name: "msg response with some data",
 			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
-				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				err := app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				s.Require().NoError(err)
 				sender := utils.GenerateAccAddressForTest()
-				senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				s.Require().NoError(err)
+
 				transferMsg := ibctransfertypes.MsgTransfer{
 					SourcePort:    "transfer",
 					SourceChannel: "channel-0",
@@ -1630,8 +1641,9 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 					Sequence: 1,
 				}
 
-				anyresponse, _ := codectypes.NewAnyWithValue(&response)
-				return []sdk.Msg{&transferMsg}, anyresponse
+				anyResponse, err := codectypes.NewAnyWithValue(&response)
+				s.Require().NoError(err)
+				return []sdk.Msg{&transferMsg}, anyResponse
 			},
 			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
 				txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
@@ -1662,8 +1674,9 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 
 				response := distrtypes.MsgSetWithdrawAddressResponse{}
 
-				anyresponse, _ := codectypes.NewAnyWithValue(&response)
-				return []sdk.Msg{&msgSetWithdrawAddress}, anyresponse
+				anyResponse, err := codectypes.NewAnyWithValue(&response)
+				s.Require().NoError(err)
+				return []sdk.Msg{&msgSetWithdrawAddress}, anyResponse
 			},
 			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
 				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
@@ -1690,7 +1703,7 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 			msg, anyResp := test.setStatements(ctx, app)
 
 			txMsgData := &sdk.TxMsgData{
-				Data:         []*sdk.MsgData{},
+				Data:         []*sdk.MsgData{}, //nolint:staticcheck
 				MsgResponses: []*codectypes.Any{anyResp},
 			}
 

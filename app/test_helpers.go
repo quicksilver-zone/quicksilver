@@ -56,8 +56,11 @@ var DefaultConsensusParams = &abci.ConsensusParams{
 
 // Setup initializes a new Quicksilver. A Nop logger is set in Quicksilver.
 func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
+	t.Helper()
+
 	privVal := mock.NewPV()
-	pubKey, _ := privVal.GetPubKey()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
 
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
@@ -115,6 +118,8 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 }
 
 func GetAppWithContext(t *testing.T, init bool) (*Quicksilver, sdk.Context) {
+	t.Helper()
+
 	app := Setup(t, !init)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
 	return app, ctx
@@ -146,6 +151,8 @@ func GenesisStateWithValSet(t *testing.T,
 	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) GenesisState {
+	t.Helper()
+
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)

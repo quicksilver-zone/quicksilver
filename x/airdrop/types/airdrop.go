@@ -14,7 +14,7 @@ func (zd ZoneDrop) ValidateBasic() error {
 
 	// must be defined
 	if len(zd.ChainId) == 0 {
-		errors["ChainId"] = ErrUndefinedAttribute
+		errors["ChainID"] = ErrUndefinedAttribute
 	}
 
 	// must be greater or equal to 0
@@ -86,7 +86,7 @@ func (cr ClaimRecord) ValidateBasic() error {
 
 	// must be defined
 	if len(cr.ChainId) == 0 {
-		errors["ChainId"] = ErrUndefinedAttribute
+		errors["ChainID"] = ErrUndefinedAttribute
 	}
 
 	// must be valid bech32

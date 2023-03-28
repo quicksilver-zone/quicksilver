@@ -14,6 +14,8 @@ import (
 )
 
 func CreateTestInput(t *testing.T) (*app.Quicksilver, sdk.Context) {
+	t.Helper()
+
 	quicksilverApp := app.Setup(t, false)
 	ctx := quicksilverApp.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quicksilver-1", Time: time.Now().UTC()})
 	return quicksilverApp, ctx

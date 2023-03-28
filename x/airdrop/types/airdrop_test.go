@@ -11,7 +11,7 @@ import (
 
 func TestZoneDrop_ValidateBasic(t *testing.T) {
 	type fields struct {
-		ChainId     string
+		ChainID     string
 		StartTime   time.Time
 		Duration    time.Duration
 		Decay       time.Duration
@@ -32,7 +32,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 		{
 			"invalid-weights-exceeded",
 			fields{
-				ChainId:    "",
+				ChainID:    "",
 				StartTime:  time.Now().Add(time.Hour),
 				Duration:   -time.Minute,
 				Decay:      -time.Second,
@@ -49,7 +49,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 		{
 			"invalid-weights-insufficient",
 			fields{
-				ChainId:    "",
+				ChainID:    "",
 				StartTime:  time.Now().Add(time.Hour),
 				Duration:   0,
 				Decay:      0,
@@ -66,7 +66,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 		{
 			"invalid-actions-exceeded",
 			fields{
-				ChainId:    "test-1",
+				ChainID:    "test-1",
 				StartTime:  time.Now().Add(-time.Hour),
 				Duration:   time.Hour,
 				Decay:      30 * time.Minute,
@@ -92,7 +92,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 		{
 			"valid",
 			fields{
-				ChainId:    "test-1",
+				ChainID:    "test-1",
 				StartTime:  time.Now().Add(-time.Hour),
 				Duration:   time.Hour,
 				Decay:      30 * time.Minute,
@@ -111,7 +111,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			zd := ZoneDrop{
-				ChainId:     tt.fields.ChainId,
+				ChainId:     tt.fields.ChainID,
 				StartTime:   tt.fields.StartTime,
 				Duration:    tt.fields.Duration,
 				Decay:       tt.fields.Decay,
@@ -133,7 +133,7 @@ func TestZoneDrop_ValidateBasic(t *testing.T) {
 
 func TestClaimRecord_ValidateBasic(t *testing.T) {
 	type fields struct {
-		ChainId          string
+		ChainID          string
 		Address          string
 		ActionsCompleted map[int32]*CompletedAction
 		MaxAllocation    uint64
@@ -152,7 +152,7 @@ func TestClaimRecord_ValidateBasic(t *testing.T) {
 		{
 			"invalid-00",
 			fields{
-				ChainId:       "",
+				ChainID:       "",
 				Address:       "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9lj",
 				MaxAllocation: 0,
 				ActionsCompleted: map[int32]*CompletedAction{
@@ -168,7 +168,7 @@ func TestClaimRecord_ValidateBasic(t *testing.T) {
 		{
 			"invalid-01",
 			fields{
-				ChainId:       "test-01",
+				ChainID:       "test-01",
 				Address:       "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs",
 				MaxAllocation: 144000,
 				ActionsCompleted: map[int32]*CompletedAction{
@@ -184,7 +184,7 @@ func TestClaimRecord_ValidateBasic(t *testing.T) {
 		{
 			"invalid-02",
 			fields{
-				ChainId:       "test-01",
+				ChainID:       "test-01",
 				Address:       "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs",
 				MaxAllocation: 144000,
 				ActionsCompleted: map[int32]*CompletedAction{
@@ -208,7 +208,7 @@ func TestClaimRecord_ValidateBasic(t *testing.T) {
 		{
 			"valid",
 			fields{
-				ChainId:       "test-01",
+				ChainID:       "test-01",
 				Address:       "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs",
 				MaxAllocation: 144000,
 				ActionsCompleted: map[int32]*CompletedAction{
@@ -265,7 +265,7 @@ func TestClaimRecord_ValidateBasic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cr := ClaimRecord{
-				ChainId:          tt.fields.ChainId,
+				ChainId:          tt.fields.ChainID,
 				Address:          tt.fields.Address,
 				ActionsCompleted: tt.fields.ActionsCompleted,
 				MaxAllocation:    tt.fields.MaxAllocation,

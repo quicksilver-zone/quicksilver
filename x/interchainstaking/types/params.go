@@ -45,11 +45,7 @@ func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err e
 		return params, errors.New("unable to unmarshal empty byte slice")
 	}
 	err = cdc.Unmarshal(value, &params)
-	if err != nil {
-		return
-	}
-
-	return
+	return params, err
 }
 
 // NewParams creates a new ics Params instance

@@ -3,41 +3,39 @@ package types
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 )
 
 func TestQuery_ValidateBasic(t *testing.T) {
 	type fields struct {
-		Id           string
-		ConnectionId string
-		ChainId      string
+		ID           string
+		ConnectionID string
+		ChainID      string
 		QueryType    string
 		Request      []byte
-		Period       sdk.Int
-		LastHeight   sdk.Int
-		CallbackId   string
+		Period       sdkmath.Int
+		LastHeight   sdkmath.Int
+		CallbackID   string
 		Ttl          uint64
-		LastEmission sdk.Int
+		LastEmission sdkmath.Int
 	}
-	tests := []struct {
+	var tests []struct {
 		name    string
 		fields  fields
 		wantErr bool
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			q := Query{
-				Id:           tt.fields.Id,
-				ConnectionId: tt.fields.ConnectionId,
-				ChainId:      tt.fields.ChainId,
+				ID:           tt.fields.ID,
+				ConnectionID: tt.fields.ConnectionID,
+				ChainID:      tt.fields.ChainID,
 				QueryType:    tt.fields.QueryType,
 				Request:      tt.fields.Request,
 				Period:       tt.fields.Period,
 				LastHeight:   tt.fields.LastHeight,
-				CallbackId:   tt.fields.CallbackId,
+				CallbackID:   tt.fields.CallbackID,
 				Ttl:          tt.fields.Ttl,
 				LastEmission: tt.fields.LastEmission,
 			}
@@ -54,22 +52,20 @@ func TestQuery_ValidateBasic(t *testing.T) {
 
 func TestDataPoint_ValidateBasic(t *testing.T) {
 	type fields struct {
-		Id           string
-		RemoteHeight sdk.Int
-		LocalHeight  sdk.Int
+		ID           string
+		RemoteHeight sdkmath.Int
+		LocalHeight  sdkmath.Int
 		Value        []byte
 	}
-	tests := []struct {
+	var tests []struct {
 		name    string
 		fields  fields
 		wantErr bool
-	}{
-		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			dp := DataPoint{
-				Id:           tt.fields.Id,
+				Id:           tt.fields.ID,
 				RemoteHeight: tt.fields.RemoteHeight,
 				LocalHeight:  tt.fields.LocalHeight,
 				Value:        tt.fields.Value,

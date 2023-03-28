@@ -230,7 +230,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 // ---------------------------------------------------------------
 
-func (k *Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
+func (k *Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
 	t := ctx.BlockTime()
 	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t}
 }
