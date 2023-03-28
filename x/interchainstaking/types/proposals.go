@@ -36,6 +36,10 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 	}
 
 	// check valid connection id
+	if len(m.ConnectionId) < 12 {
+		return fmt.Errorf("invalid length connection string: %s", m.ConnectionId)
+	}
+
 	if m.ConnectionId[0:11] != "connection-" {
 		return fmt.Errorf("invalid connection string: %s", m.ConnectionId)
 	}
