@@ -2674,7 +2674,7 @@ func (m *Zone) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -5366,7 +5366,7 @@ func (m *PortConnectionTuple) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {

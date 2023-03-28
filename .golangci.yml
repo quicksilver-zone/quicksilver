@@ -1,5 +1,5 @@
 run:
-  tests: false
+  tests: true
   # timeout for analysis, e.g. 30s, 5m, default is 1m
   timeout: 5m
   skip-dirs:
@@ -49,9 +49,6 @@ linters:
     - ineffassign
     - misspell
     - nakedret
-    # Both require a bit more explicit returns.
-    - nilerr
-    - nilnil
     # Finds sending HTTP request without context.Context.
     - noctx
     # Finds slices that could potentially be pre-allocated.

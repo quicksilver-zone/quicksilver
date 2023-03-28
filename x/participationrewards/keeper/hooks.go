@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -56,7 +57,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			k.GetParams(ctx).DistributionProportions,
 		)
 		if err != nil {
-			if err == types.ErrNothingToAllocate {
+			if errors.Is(err, types.ErrNothingToAllocate) {
 				k.Logger(ctx).Info(err.Error())
 			} else {
 				k.Logger(ctx).Error(err.Error())
