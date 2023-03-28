@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -14,8 +12,6 @@ import (
 )
 
 func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
-	k.Logger(ctx).Info("allocateHoldingsRewards")
-
 	// obtain and iterate all claim records for each zone
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		k.Logger(ctx).Info("zones", "zone", zone.ChainId)
@@ -45,7 +41,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 
 // calculate allocations per user for a given zone, based upon claims submitted and zone
 func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]types.UserAllocation, math.Int) {
-	k.Logger(ctx).Info("calcUserHoldingsAllocations", "zone", zone.ChainId, "allocations", zone.HoldingsAllocation)
+	k.Logger(ctx).Info("CalcUserHoldingsAllocations", "zone", zone.ChainId, "allocations", zone.HoldingsAllocation)
 
 	userAllocations := make([]types.UserAllocation, 0)
 	supply := k.bankKeeper.GetSupply(ctx, zone.LocalDenom)
@@ -90,7 +86,6 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	tokensPerAsset := sdk.NewDecFromInt(zoneAllocation).Quo(sdk.NewDecFromInt(supply.Amount))
 
 	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset)
-	fmt.Println("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset, "allocation", zoneAllocation, "supply", supply.Amount)
 
 	for _, address := range utils.Keys(userAmountsMap) {
 		amount := userAmountsMap[address]
