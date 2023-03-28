@@ -491,9 +491,7 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 	)
 }
 
-// redemption rate
-
-func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
+func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdk.Int {
 	delegationsInProcess := sdkmath.ZeroInt()
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
 		if receipt.Completed == nil {
@@ -503,6 +501,13 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRe
 		}
 		return false
 	})
+	return delegationsInProcess
+}
+
+// redemption rate
+
+func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
+	delegationsInProcess := k.GetDelegationsInProcess()
 	ratio, isZero := k.GetRatio(ctx, zone, epochRewards.Add(delegationsInProcess))
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
