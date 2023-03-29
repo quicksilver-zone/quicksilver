@@ -7,7 +7,7 @@ import (
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	if epochIdentifier == "epoch" && epochNumber > 1 {
+	if epochIdentifier == epochstypes.EpochIdentifierEpoch && epochNumber > 1 {
 		if err := k.StoreSelfConsensusState(ctx, "epoch"); err != nil {
 			k.Logger(ctx).Error("unable to store consensus state", "error", err)
 			return err

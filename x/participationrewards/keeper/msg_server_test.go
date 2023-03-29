@@ -232,7 +232,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							Key:       key,
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
-							Height:    11,
+							Height:    10,
 							ProofType: "bank",
 						},
 					},
@@ -290,7 +290,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 				query := abci.RequestQuery{
 					Data:   key,
 					Path:   "/store/bank/key",
-					Height: ctx.BlockHeight() - 1,
+					Height: ctx.BlockHeight() - 2,
 					Prove:  true,
 				}
 
@@ -328,7 +328,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 				query := abci.RequestQuery{
 					Data:   key,
 					Path:   "/store/bank/key",
-					Height: ctx.BlockHeight() - 1,
+					Height: ctx.BlockHeight() - 2,
 					Prove:  true,
 				}
 
@@ -378,7 +378,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 				query := abci.RequestQuery{
 					Data:   key,
 					Path:   "/store/bank/key",
-					Height: ctx.BlockHeight() - 1,
+					Height: ctx.BlockHeight() - 2,
 					Prove:  true,
 				}
 
