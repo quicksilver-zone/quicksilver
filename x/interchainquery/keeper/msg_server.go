@@ -55,7 +55,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	noDelete := false
 	// execute registered callbacks.
 
-	keys := make([]string, len(k.callbacks))
+	keys := make([]string, 0)
 	for k := range k.callbacks {
 		keys = append(keys, k)
 	}
