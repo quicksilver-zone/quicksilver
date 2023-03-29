@@ -32,7 +32,6 @@ func TestGetKeyZoneDrop(t *testing.T) {
 			got := GetKeyZoneDrop(tt.args.chainID)
 			if !reflect.DeepEqual(got, tt.want) {
 				err := fmt.Errorf("GetKeyZoneDrop() = %v, want %v", got, tt.want)
-				// t.Logf("Error:\n%v\n", err)
 				require.NoError(t, err)
 				return
 			}

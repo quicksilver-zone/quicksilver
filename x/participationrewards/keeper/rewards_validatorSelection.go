@@ -14,7 +14,7 @@ import (
 
 // zoneScore is an internal struct to track transient state for the calculation
 // of zone scores. It specifically tallies the total zone voting power used in
-// calculations to determine validator voting power percentages;
+// calculations to determine validator voting power percentages.
 type zoneScore struct {
 	ZoneID           string // chainID
 	TotalVotingPower math.Int

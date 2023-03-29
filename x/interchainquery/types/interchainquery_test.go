@@ -17,7 +17,7 @@ func TestQuery_ValidateBasic(t *testing.T) {
 		Period       sdkmath.Int
 		LastHeight   sdkmath.Int
 		CallbackID   string
-		Ttl          uint64
+		TTL          uint64
 		LastEmission sdkmath.Int
 	}
 	var tests []struct {
@@ -36,7 +36,7 @@ func TestQuery_ValidateBasic(t *testing.T) {
 				Period:       tt.fields.Period,
 				LastHeight:   tt.fields.LastHeight,
 				CallbackID:   tt.fields.CallbackID,
-				Ttl:          tt.fields.Ttl,
+				Ttl:          tt.fields.TTL,
 				LastEmission: tt.fields.LastEmission,
 			}
 

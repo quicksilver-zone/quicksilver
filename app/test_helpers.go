@@ -27,10 +27,10 @@ import (
 	dbm "github.com/tendermint/tm-db"
 )
 
-// EmptyAppOptions is a stub implementing AppOptions
+// EmptyAppOptions is a stub implementing AppOptions.
 type EmptyAppOptions struct{}
 
-// Get implements AppOptions
+// Get implements AppOptions.
 func (ao EmptyAppOptions) Get(_ string) interface{} {
 	return nil
 }
@@ -125,8 +125,8 @@ func GetAppWithContext(t *testing.T, init bool) (*Quicksilver, sdk.Context) {
 	return app, ctx
 }
 
-// SetupTestingApp initializes the IBC-go testing application
-func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
+// SetupTestingApp initializes the IBC-go testing application.
+func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
 	app := NewQuicksilver(
 		log.NewNopLogger(),

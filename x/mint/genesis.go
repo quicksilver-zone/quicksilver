@@ -8,22 +8,22 @@ import (
 )
 
 // InitGenesis new mint genesis.
-func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, ak types.AccountKeeper, data *types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k keeper.Keeper, ak types.AccountKeeper, data *types.GenesisState) {
 	data.Minter.EpochProvisions = data.Params.GenesisEpochProvisions
-	keeper.SetMinter(ctx, data.Minter)
-	keeper.SetParams(ctx, data.Params)
+	k.SetMinter(ctx, data.Minter)
+	k.SetParams(ctx, data.Params)
 
 	if !ak.HasAccount(ctx, ak.GetModuleAddress(types.ModuleName)) {
 		ak.GetModuleAccount(ctx, types.ModuleName)
 	}
 
-	keeper.SetLastReductionEpochNum(ctx, data.ReductionStartedEpoch)
+	k.SetLastReductionEpochNum(ctx, data.ReductionStartedEpoch)
 }
 
 // ExportGenesis returns a GenesisState for a given context and keeper.
-func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
-	minter := keeper.GetMinter(ctx)
-	params := keeper.GetParams(ctx)
-	lastReductionEpoch := keeper.GetLastReductionEpochNum(ctx)
+func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+	minter := k.GetMinter(ctx)
+	params := k.GetParams(ctx)
+	lastReductionEpoch := k.GetLastReductionEpochNum(ctx)
 	return types.NewGenesis(minter, params, lastReductionEpoch)
 }

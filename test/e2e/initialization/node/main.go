@@ -43,7 +43,7 @@ func main() {
 
 	flag.Parse()
 
-	if len(dataDir) == 0 {
+	if dataDir == "" {
 		panic("data-dir is required")
 	}
 

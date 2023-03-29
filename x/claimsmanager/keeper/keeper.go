@@ -68,7 +68,7 @@ func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 		return err
 	}
 
-	state := selfConsState.(*ibctmtypes.ConsensusState)
+	state, _ := selfConsState.(*ibctmtypes.ConsensusState)
 	k.SetSelfConsensusState(ctx, key, state)
 
 	return nil

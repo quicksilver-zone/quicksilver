@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
@@ -37,11 +36,11 @@ type KeeperTestSuite struct {
 	TestAccs     []sdk.AccAddress
 }
 
-// Setup sets up basic environment for suite (App, Ctx, and test accounts)
+// Setup sets up basic environment for suite (App, Ctx, and test accounts).
 func (s *KeeperTestSuite) Setup() {
 	cmdcfg.SetBech32Prefixes(sdk.GetConfig())
 	s.App = app.Setup(s.T(), false)
-	s.Ctx = s.App.BaseApp.NewContext(false, tmtypes.Header{Height: 1, ChainID: "quick-1", Time: time.Now().UTC()})
+	s.Ctx = s.App.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quick-1", Time: time.Now().UTC()})
 	s.QueryHelper = &baseapp.QueryServiceTestHelper{
 		GRPCQueryRouter: s.App.GRPCQueryRouter(),
 		Ctx:             s.Ctx,
@@ -50,7 +49,7 @@ func (s *KeeperTestSuite) Setup() {
 	s.TestAccs = CreateRandomAccounts(3)
 }
 
-// CreateRandomAccounts is a function return a list of randomly generated AccAddresses
+// CreateRandomAccounts is a function return a list of randomly generated AccAddresses.
 func CreateRandomAccounts(numAccts int) []sdk.AccAddress {
 	testAddrs := make([]sdk.AccAddress, numAccts)
 	for i := 0; i < numAccts; i++ {
@@ -72,7 +71,7 @@ func (s *KeeperTestSuite) FundAcc(acc sdk.AccAddress, amounts sdk.Coins) {
 func (s *KeeperTestSuite) SetupTestForInitGenesis() {
 	// Setting to True, leads to init genesis not running
 	s.App = app.Setup(s.T(), true)
-	s.Ctx = s.App.BaseApp.NewContext(true, tmtypes.Header{})
+	s.Ctx = s.App.BaseApp.NewContext(true, tmproto.Header{})
 }
 
 // AssertEventEmitted asserts that ctx's event manager has emitted the given number of events
@@ -106,26 +105,29 @@ func (s *KeeperTestSuite) SetupTest() {
 }
 
 func (s *KeeperTestSuite) CreateDefaultDenom() {
-	res, _ := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+	s.T().Helper()
+
+	res, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(s.Ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), "bitcoin"))
+	s.Require().NoError(err)
 	s.defaultDenom = res.GetNewTokenDenom()
 }
 
 func (s *KeeperTestSuite) TestCreateModuleAccount() {
-	app := s.App
+	quicksilver := s.App
 
 	// remove module account
-	tokenfactoryModuleAccount := app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
-	app.AccountKeeper.RemoveAccount(s.Ctx, tokenfactoryModuleAccount)
+	tokenfactoryModuleAccount := quicksilver.AccountKeeper.GetAccount(s.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
+	quicksilver.AccountKeeper.RemoveAccount(s.Ctx, tokenfactoryModuleAccount)
 
 	// ensure module account was removed
-	s.Ctx = app.BaseApp.NewContext(false, tmproto.Header{})
-	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
+	s.Ctx = quicksilver.BaseApp.NewContext(false, tmproto.Header{})
+	tokenfactoryModuleAccount = quicksilver.AccountKeeper.GetAccount(s.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
 	s.Require().Nil(tokenfactoryModuleAccount)
 
 	// create module account
-	app.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
+	quicksilver.TokenFactoryKeeper.CreateModuleAccount(s.Ctx)
 
 	// check that the module account is now initialized
-	tokenfactoryModuleAccount = app.AccountKeeper.GetAccount(s.Ctx, app.AccountKeeper.GetModuleAddress(types.ModuleName))
+	tokenfactoryModuleAccount = quicksilver.AccountKeeper.GetAccount(s.Ctx, quicksilver.AccountKeeper.GetModuleAddress(types.ModuleName))
 	s.Require().NotNil(tokenfactoryModuleAccount)
 }

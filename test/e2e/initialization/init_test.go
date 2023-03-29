@@ -122,11 +122,13 @@ func TestSingleNodeInit(t *testing.T) {
 	validateNode(t, id, dataDir, expectedConfig, actualNode)
 }
 
-func validateNode(t *testing.T, chainId string, dataDir string, expectedConfig *initialization.NodeConfig, actualNode *initialization.Node) {
-	require.Equal(t, fmt.Sprintf("%s-node-%s", chainId, expectedConfig.Name), actualNode.Name)
+func validateNode(t *testing.T, chainID, dataDir string, expectedConfig *initialization.NodeConfig, actualNode *initialization.Node) {
+	t.Helper()
+
+	require.Equal(t, fmt.Sprintf("%s-node-%s", chainID, expectedConfig.Name), actualNode.Name)
 	require.Equal(t, expectedConfig.IsValidator, actualNode.IsValidator)
 
-	expectedPath := fmt.Sprintf("%s/%s/%s-node-%s", dataDir, chainId, chainId, expectedConfig.Name)
+	expectedPath := fmt.Sprintf("%s/%s/%s-node-%s", dataDir, chainID, chainID, expectedConfig.Name)
 
 	require.Equal(t, expectedPath, actualNode.ConfigDir)
 

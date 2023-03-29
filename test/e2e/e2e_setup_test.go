@@ -14,17 +14,17 @@ import (
 const (
 	// Environment variable signifying whether to run e2e tests.
 	e2eEnabledEnv = "QUICKSILVER_E2E"
-	// Environment variable name to skip the upgrade tests
+	// Environment variable name to skip the upgrade tests.
 	skipUpgradeEnv = "QUICKSILVER_E2E_SKIP_UPGRADE"
-	// Environment variable name to skip the IBC tests
+	// Environment variable name to skip the IBC tests.
 	skipIBCEnv = "QUICKSILVER_E2E_SKIP_IBC"
 	// Environment variable name to skip state sync testing
 	// skipStateSyncEnv = "QUICKSILVER_E2E_SKIP_STATE_SYNC"
-	// Environment variable name to determine if this upgrade is a fork
+	// Environment variable name to determine if this upgrade is a fork.
 	forkHeightEnv = "QUICKSILVER_E2E_FORK_HEIGHT"
-	// Environment variable name to skip cleaning up Docker resources in teardown
+	// Environment variable name to skip cleaning up Docker resources in teardown.
 	skipCleanupEnv = "QUICKSILVER_E2E_SKIP_CLEANUP"
-	// Environment variable name to determine what version we are upgrading to
+	// Environment variable name to determine what version we are upgrading to.
 	upgradeVersionEnv = "QUICKSILVER_E2E_UPGRADE_VERSION"
 )
 

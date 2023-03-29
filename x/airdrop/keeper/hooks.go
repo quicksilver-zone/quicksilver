@@ -16,7 +16,7 @@ func (k Keeper) AfterEpochEnd(_ sdk.Context, _ string, _ int64) error {
 
 // ___________________________________________________________________________________________________
 
-// Hooks wrapper struct for incentives keeper
+// Hooks wrapper struct for airdrop keeper.
 type Hooks struct {
 	k Keeper
 }
@@ -27,7 +27,7 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-// epochs hooks
+// epochs hooks.
 func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }

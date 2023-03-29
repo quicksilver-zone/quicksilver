@@ -15,7 +15,7 @@ import (
 )
 
 // GetDelegation returns a specific delegation.
-func (k *Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddress string, validatorAddress string) (delegation types.Delegation, found bool) {
+func (k *Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddress, validatorAddress string) (delegation types.Delegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	_, delAddr, _ := bech32.DecodeAndConvert(delegatorAddress)
@@ -33,7 +33,7 @@ func (k *Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddre
 	return delegation, true
 }
 
-// GetDelegation returns a specific delegation.
+// GetPerformanceDelegation returns a specific delegation.
 func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, validatorAddress string) (delegation types.Delegation, found bool) {
 	if zone.PerformanceAddress == nil {
 		return types.Delegation{}, false
@@ -155,7 +155,7 @@ func (k *Keeper) SetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, del
 	store.Set(types.GetPerformanceDelegationKey(zone, delegatorAddress, delegation.GetValidatorAddr()), b)
 }
 
-// RemoveDelegation removes a delegation
+// RemoveDelegation removes a delegation.
 func (k *Keeper) RemoveDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) error {
 	delegatorAddress := delegation.GetDelegatorAddr()
 
@@ -243,10 +243,10 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "")
 }
 
-func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (map[string]sdkmath.Int, sdkmath.Int, map[string]bool) {
-	out := make(map[string]sdkmath.Int)
-	locked := make(map[string]bool)
-	sum := sdk.ZeroInt()
+func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool) {
+	out = make(map[string]sdkmath.Int)
+	locked = make(map[string]bool)
+	sum = sdk.ZeroInt()
 
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
 		existing, found := out[delegation.ValidatorAddress]

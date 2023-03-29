@@ -144,9 +144,9 @@ func (uc *UpgradeConfigurer) RunUpgrade() error {
 
 	// Check if the nodes are running
 	for chainIndex, chainConfig := range uc.chainConfigs {
-		chain := uc.baseConfigurer.GetChainConfig(chainIndex)
+		chainCfg := uc.baseConfigurer.GetChainConfig(chainIndex)
 		for validatorIdx := range chainConfig.NodeConfigs {
-			node := chain.NodeConfigs[validatorIdx]
+			node := chainCfg.NodeConfigs[validatorIdx]
 			// Check node status
 			_, err = node.Status()
 			if err != nil {

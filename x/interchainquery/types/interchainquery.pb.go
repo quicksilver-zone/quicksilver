@@ -750,7 +750,7 @@ func (m *Query) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 9:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Ttl", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TTL", wireType)
 			}
 			m.Ttl = 0
 			for shift := uint(0); ; shift += 7 {

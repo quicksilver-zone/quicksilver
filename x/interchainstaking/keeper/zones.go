@@ -19,7 +19,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// GetZone returns zone info by chainID
+// GetZone returns zone info by chainID.
 func (k *Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
 	zone := types.Zone{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
@@ -32,20 +32,20 @@ func (k *Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
 	return zone, true
 }
 
-// SetZone set zone info
+// SetZone set zone info.
 func (k *Keeper) SetZone(ctx sdk.Context, zone *types.Zone) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := k.cdc.MustMarshal(zone)
 	store.Set([]byte(zone.ChainId), bz)
 }
 
-// DeleteZone delete zone info
+// DeleteZone delete zone info.
 func (k *Keeper) DeleteZone(ctx sdk.Context, chainID string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	store.Delete([]byte(chainID))
 }
 
-// IterateZones iterate through zones
+// IterateZones iterate through zones.
 func (k *Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo *types.Zone) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
@@ -95,7 +95,7 @@ func (k *Keeper) AllZones(ctx sdk.Context) []types.Zone {
 	return zones
 }
 
-// GetZoneFromContext determines the zone from the current context
+// GetZoneFromContext determines the zone from the current context.
 func (k *Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 	chainID, err := k.GetChainIDFromContext(ctx)
 	if err != nil {
@@ -224,7 +224,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 	return nil
 }
 
-// SetAccountBalanceForDenom sets the balance on an account for a given denominination.
+// SetAccountBalanceForDenom sets the balance on an account for a given denomination.
 func (k *Keeper) SetAccountBalanceForDenom(ctx sdk.Context, zone *types.Zone, address string, coin sdk.Coin) error {
 	// ? is this switch statement still required ?
 	// prior to callback we had no way to distinguish the originator

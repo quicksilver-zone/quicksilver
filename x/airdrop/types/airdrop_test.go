@@ -274,7 +274,6 @@ func TestClaimRecord_ValidateBasic(t *testing.T) {
 
 			err := cr.ValidateBasic()
 			if tt.wantErr {
-				// t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
 				return
 			}

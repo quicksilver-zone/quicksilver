@@ -9,7 +9,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
-// TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint
+// TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint.
 func (s *KeeperTestSuite) TestMintDenomMsg() {
 	// Create a denom
 	s.CreateDefaultDenom()
@@ -20,14 +20,16 @@ func (s *KeeperTestSuite) TestMintDenomMsg() {
 		mintDenom             string
 		admin                 string
 		valid                 bool
+		expectedError         error
 		expectedMessageEvents int
 	}{
 		{
-			desc:      "denom does not exist",
-			amount:    10,
-			mintDenom: "factory/QCK1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
-			admin:     s.TestAccs[0].String(),
-			valid:     false,
+			desc:          "denom does not exist",
+			amount:        10,
+			mintDenom:     "factory/QCK1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44/evmos",
+			admin:         s.TestAccs[0].String(),
+			valid:         false,
+			expectedError: types.ErrDenomDoesNotExist,
 		},
 		{
 			desc:                  "success case",
@@ -43,14 +45,14 @@ func (s *KeeperTestSuite) TestMintDenomMsg() {
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test mint message
 			_, err := s.msgServer.Mint(sdk.WrapSDKContext(ctx), types.NewMsgMint(tc.admin, sdk.NewInt64Coin(tc.mintDenom, 10)))
-			s.Require().NoError(err)
+			s.Require().ErrorIs(err, tc.expectedError)
 			// Ensure current number and type of event is emitted
 			s.AssertEventEmitted(ctx, types.TypeMsgMint, tc.expectedMessageEvents)
 		})
 	}
 }
 
-// TestBurnDenomMsg test TypeMsgBurn message is emitted on a successful burn
+// TestBurnDenomMsg test TypeMsgBurn message is emitted on a successful burn.
 func (s *KeeperTestSuite) TestBurnDenomMsg() {
 	// Create a denom.
 	s.CreateDefaultDenom()
@@ -64,13 +66,15 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 		burnDenom             string
 		admin                 string
 		valid                 bool
+		expectedError         error
 		expectedMessageEvents int
 	}{
 		{
-			desc:      "denom does not exist",
-			burnDenom: "factory/quick1vprpg84y4c50fxpf9ngza2y0p0q3k7yrw2q8tf/evmos",
-			admin:     s.TestAccs[0].String(),
-			valid:     false,
+			desc:          "denom does not exist",
+			burnDenom:     "factory/quick1vprpg84y4c50fxpf9ngza2y0p0q3k7yrw2q8tf/evmos",
+			admin:         s.TestAccs[0].String(),
+			valid:         false,
+			expectedError: types.ErrUnauthorized,
 		},
 		{
 			desc:                  "success case",
@@ -85,14 +89,14 @@ func (s *KeeperTestSuite) TestBurnDenomMsg() {
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test burn message
 			_, err := s.msgServer.Burn(sdk.WrapSDKContext(ctx), types.NewMsgBurn(tc.admin, sdk.NewInt64Coin(tc.burnDenom, 10)))
-			s.Require().NoError(err)
+			s.Require().ErrorIs(err, tc.expectedError)
 			// Ensure current number and type of event is emitted
 			s.AssertEventEmitted(ctx, types.TypeMsgBurn, tc.expectedMessageEvents)
 		})
 	}
 }
 
-// TestCreateDenomMsg test TypeMsgCreateDenom message is emitted on a successful denom creation
+// TestCreateDenomMsg test TypeMsgCreateDenom message is emitted on a successful denom creation.
 func (s *KeeperTestSuite) TestCreateDenomMsg() {
 	defaultDenomCreationFee := types.Params{DenomCreationFee: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000000)))}
 	for _, tc := range []struct {
@@ -100,6 +104,7 @@ func (s *KeeperTestSuite) TestCreateDenomMsg() {
 		denomCreationFee      types.Params
 		subdenom              string
 		valid                 bool
+		expectedError         error
 		expectedMessageEvents int
 	}{
 		{
@@ -107,6 +112,7 @@ func (s *KeeperTestSuite) TestCreateDenomMsg() {
 			denomCreationFee: defaultDenomCreationFee,
 			subdenom:         "assadsadsadasdasdsadsadsadsadsadsadsklkadaskkkdasdasedskhanhassyeunganassfnlksdflksafjlkasd",
 			valid:            false,
+			expectedError:    types.ErrSubdenomTooLong,
 		},
 		{
 			desc:                  "success case: defaultDenomCreationFee",
@@ -125,14 +131,14 @@ func (s *KeeperTestSuite) TestCreateDenomMsg() {
 			tokenFactoryKeeper.SetParams(s.Ctx, tc.denomCreationFee)
 			// Test create denom message
 			_, err := s.msgServer.CreateDenom(sdk.WrapSDKContext(ctx), types.NewMsgCreateDenom(s.TestAccs[0].String(), tc.subdenom))
-			s.Require().NoError(err)
+			s.Require().ErrorIs(err, tc.expectedError)
 			// Ensure current number and type of event is emitted
 			s.AssertEventEmitted(ctx, types.TypeMsgCreateDenom, tc.expectedMessageEvents)
 		})
 	}
 }
 
-// TestChangeAdminDenomMsg test TypeMsgChangeAdmin message is emitted on a successful admin change
+// TestChangeAdminDenomMsg test TypeMsgChangeAdmin message is emitted on a successful admin change.
 func (s *KeeperTestSuite) TestChangeAdminDenomMsg() {
 	for _, tc := range []struct {
 		desc                    string
@@ -141,6 +147,7 @@ func (s *KeeperTestSuite) TestChangeAdminDenomMsg() {
 		expectedAdminIndex      int
 		msgMint                 func(denom string) *types.MsgMint
 		expectedMintPass        bool
+		expectedError           error
 		expectedMessageEvents   int
 	}{
 		{
@@ -149,6 +156,7 @@ func (s *KeeperTestSuite) TestChangeAdminDenomMsg() {
 				return types.NewMsgChangeAdmin(s.TestAccs[1].String(), denom, s.TestAccs[2].String())
 			},
 			expectedChangeAdminPass: false,
+			expectedError:           types.ErrUnauthorized,
 			expectedAdminIndex:      0,
 		},
 		{
@@ -179,7 +187,7 @@ func (s *KeeperTestSuite) TestChangeAdminDenomMsg() {
 
 			// Test change admin message
 			_, err = s.msgServer.ChangeAdmin(sdk.WrapSDKContext(ctx), tc.msgChangeAdmin(testDenom))
-			s.Require().NoError(err)
+			s.Require().ErrorIs(err, tc.expectedError)
 
 			// Ensure current number and type of event is emitted
 			s.AssertEventEmitted(ctx, types.TypeMsgChangeAdmin, tc.expectedMessageEvents)
@@ -187,7 +195,7 @@ func (s *KeeperTestSuite) TestChangeAdminDenomMsg() {
 	}
 }
 
-// TestSetDenomMetaDataMsg test TypeMsgSetDenomMetadata message is emitted on a successful denom metadata change
+// TestSetDenomMetaDataMsg test TypeMsgSetDenomMetadata message is emitted on a successful denom metadata change.
 func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 	// setup test
 	s.SetupTest()
@@ -197,6 +205,7 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 		desc                  string
 		msgSetDenomMetadata   types.MsgSetDenomMetadata
 		expectedPass          bool
+		expectedError         error
 		expectedMessageEvents int
 	}{
 		{
@@ -240,7 +249,8 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 				Name:    "QCK",
 				Symbol:  "QCK",
 			}),
-			expectedPass: false,
+			expectedPass:  false,
+			expectedError: types.ErrUnauthorized,
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
@@ -248,7 +258,7 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test set denom metadata message
 			_, err := s.msgServer.SetDenomMetadata(sdk.WrapSDKContext(ctx), &tc.msgSetDenomMetadata)
-			s.Require().NoError(err)
+			s.Require().ErrorIs(err, tc.expectedError)
 			// Ensure current number and type of event is emitted
 			s.AssertEventEmitted(ctx, types.TypeMsgSetDenomMetadata, tc.expectedMessageEvents)
 		})

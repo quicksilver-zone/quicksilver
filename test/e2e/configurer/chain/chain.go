@@ -199,7 +199,7 @@ func (c *Config) GetPersistentPeers() []string {
 	return peers
 }
 
-// GetNodeAtIndex returns the nodeIndex'th node on the chain
+// GetNodeAtIndex returns the nodeIndex'th node on the chain.
 func (c *Config) GetNodeAtIndex(nodeIndex int) (*NodeConfig, error) {
 	return c.getNodeAtIndex(nodeIndex)
 }

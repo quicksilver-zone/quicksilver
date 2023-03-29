@@ -72,12 +72,12 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 	// tvs[uatom] = 1.0
 
 	// capture errors from iterator
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, data types.ProtocolData) bool {
 		idxLabel := fmt.Sprintf("index[%d]", idx)
 		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, data.Data)
 		if err != nil {
-			errors[idxLabel] = err
+			errs[idxLabel] = err
 			return true
 		}
 		pool, _ := ipool.(types.OsmosisPoolProtocolData)
@@ -98,7 +98,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 		for chainID, denom := range pool.Zones {
 			zone, ok := k.icsKeeper.GetZone(ctx, chainID)
 			if !ok {
-				errors[idxLabel] = fmt.Errorf("zone not found, %s", chainID)
+				errs[idxLabel] = fmt.Errorf("zone not found, %s", chainID)
 				return true
 			}
 
@@ -114,17 +114,17 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 
 		if isCosmosPair {
 			if pool.PoolData == nil {
-				errors[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
+				errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
 				return true
 			}
 			pool, err := pool.GetPool()
 			if err != nil {
-				errors[idxLabel] = err
+				errs[idxLabel] = err
 				return true
 			}
 			value, err := pool.SpotPrice(ctx, baseIBCDenom, queryIBCDenom)
 			if err != nil {
-				errors[idxLabel] = err
+				errs[idxLabel] = err
 				return true
 			}
 
@@ -134,8 +134,8 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 		return false
 	})
 
-	if len(errors) > 0 {
-		return nil, multierror.New(errors)
+	if len(errs) > 0 {
+		return nil, multierror.New(errs)
 	}
 
 	return tvs, nil

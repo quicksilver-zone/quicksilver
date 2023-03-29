@@ -8,7 +8,7 @@ import (
 	sdkioerrors "cosmossdk.io/errors"
 )
 
-// x/tokenfactory module sentinel errors
+// x/tokenfactory module sentinel errors.
 var (
 	ErrDenomExists              = sdkioerrors.Register(ModuleName, 2, "attempting to create a denom that already exists (has bank metadata)")
 	ErrUnauthorized             = sdkioerrors.Register(ModuleName, 3, "unauthorized account")

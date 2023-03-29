@@ -167,9 +167,9 @@ func FuzzValsetCallback(f *testing.F) {
 	for _, valFunc := range valSetFuncs {
 		// 1.5. Set up a fresh test suite given that valFunc can mutate inputs.
 		chainBVals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetValidators(suite.chainB.GetContext(), 300)
-		query := valFunc(chainBVals)
+		queryRes := valFunc(chainBVals)
 		app := suite.GetQuicksilverApp(suite.chainA)
-		bz, err := app.AppCodec().Marshal(&query)
+		bz, err := app.AppCodec().Marshal(&queryRes)
 		suite.Require().NoError(err)
 		f.Add(bz)
 	}
@@ -315,10 +315,10 @@ func (s *FuzzingTestSuite) FuzzDelegationsCallback(respbz []byte) {
 	ctx := s.chainA.GetContext()
 
 	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-	query := stakingtypes.QueryDelegatorDelegationsRequest{
+	queryReq := stakingtypes.QueryDelegatorDelegationsRequest{
 		DelegatorAddr: zone.DelegationAddress.Address,
 	}
-	reqbz, err := app.AppCodec().Marshal(&query)
+	reqbz, err := app.AppCodec().Marshal(&queryReq)
 	s.Require().NoError(err)
 
 	err = keeper.DelegationsCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainID: s.chainB.ChainID, Request: reqbz})
@@ -336,10 +336,10 @@ func (s *FuzzingTestSuite) FuzzAllBalancesCallback(respbz []byte) {
 
 	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 
-	query := banktypes.QueryAllBalancesRequest{
+	queryReq := banktypes.QueryAllBalancesRequest{
 		Address: zone.DepositAddress.Address,
 	}
-	reqbz, err := app.AppCodec().Marshal(&query)
+	reqbz, err := app.AppCodec().Marshal(&queryReq)
 	s.Require().NoError(err)
 
 	err = keeper.AllBalancesCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainID: s.chainB.ChainID, Request: reqbz})

@@ -19,10 +19,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/wasmbinding/bindings"
 )
 
-// we must pay this many uosmo for every pool we create
-var poolFee int64 = 1000000000
+// we must pay this many uosmo for every pool we create.
+var poolFee int64 = 1000000000 //nolint:unused
 
-var defaultFunds = sdk.NewCoins(
+var defaultFunds = sdk.NewCoins( //nolint:unused
 	sdk.NewInt64Coin("qck", 333000000),
 	sdk.NewInt64Coin("umai", 555000000+2*poolFee),
 	sdk.NewInt64Coin("uck", 999000000),

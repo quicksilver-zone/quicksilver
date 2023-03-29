@@ -41,12 +41,12 @@ func VerifyNonAdjacent(
 	// Ensure that +`trustLevel` (default 1/3) or more of last trusted validators signed correctly.
 	err := trustedVals.VerifyCommitLightTrusting(trustedHeader.ChainID, untrustedHeader.Commit, trustLevel)
 	if err != nil {
-		switch e := err.(type) {
-		case types.ErrNotEnoughVotingPowerSigned:
-			return light.ErrNewValSetCantBeTrusted{Reason: e}
-		default:
-			return e
+		var typeError *types.ErrNotEnoughVotingPowerSigned
+		if errors.As(err, &typeError) {
+			return light.ErrNewValSetCantBeTrusted{Reason: *typeError}
 		}
+
+		return err
 	}
 
 	// Ensure that +2/3 of new validators signed correctly.

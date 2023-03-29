@@ -15,7 +15,7 @@ func NewGenesisState(params Params, zoneDrops []*ZoneDrop, claimRecords []*Claim
 	}
 }
 
-// DefaultGenesis returns the default ics genesis state
+// DefaultGenesisState returns the default ics genesis state.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		Params:       DefaultParams(),
@@ -24,7 +24,7 @@ func DefaultGenesisState() *GenesisState {
 	}
 }
 
-// ValidateGenesis validates the provided genesis state to ensure the
+// Validate validates the provided genesis state to ensure the
 // expected invariants hold.
 func (gs GenesisState) Validate() error {
 	if err := gs.Params.Validate(); err != nil {

@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"encoding/json"
-	encoding_json "encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -123,7 +122,7 @@ func TestAddProtocolDataProposal_String(t *testing.T) {
 		Protocol    string
 		Type        string
 		Key         string
-		Data        encoding_json.RawMessage
+		Data        json.RawMessage
 	}
 
 	tt := fields{
@@ -189,5 +188,5 @@ func BenchmarkUpdateZoneProposalString(b *testing.B) {
 	if sink == nil {
 		b.Fatal("Benchmark did not run")
 	}
-	sink = (interface{})(nil)
+	sink = interface{}(nil)
 }

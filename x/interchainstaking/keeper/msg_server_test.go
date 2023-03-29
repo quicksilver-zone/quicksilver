@@ -294,7 +294,7 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 		})
 
 		// run tests with LSM enabled.
-		tt.name = tt.name + "_LSM_enabled"
+		tt.name += "_LSM_enabled"
 		s.Run(tt.name, func() {
 			s.SetupTest()
 			s.setupTestZones()
@@ -471,8 +471,8 @@ func (s *KeeperTestSuite) TestSignalIntent() {
 				s.Require().NotNil(res)
 			}
 
-			qapp := s.GetQuicksilverApp(s.chainA)
-			icsKeeper := qapp.InterchainstakingKeeper
+			quicksilver := s.GetQuicksilverApp(s.chainA)
+			icsKeeper := quicksilver.InterchainstakingKeeper
 			zone, found := icsKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
 			s.Require().True(found)
 

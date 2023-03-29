@@ -45,6 +45,10 @@ const (
 	EnvPrefix = "QUICK"
 )
 
+type appCreator struct {
+	encCfg app.EncodingConfig
+}
+
 // NewRootCmd creates a new root command for quicksilverd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, app.EncodingConfig) {
@@ -272,10 +276,6 @@ func (ac appCreator) newApp(
 
 func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
-}
-
-type appCreator struct {
-	encCfg app.EncodingConfig
 }
 
 func (ac appCreator) appExport(

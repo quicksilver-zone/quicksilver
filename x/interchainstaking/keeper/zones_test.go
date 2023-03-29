@@ -38,11 +38,11 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 }
 
 func TestKeeperWithZonesRoundTrip(t *testing.T) {
-	app := newQuicksilver(t)
+	quicksilver := newQuicksilver(t)
 
 	chainID := "quicksilver-1"
-	kpr := app.InterchainstakingKeeper
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	kpr := quicksilver.InterchainstakingKeeper
+	ctx := quicksilver.NewContext(true, tmproto.Header{Height: quicksilver.LastBlockHeight()})
 
 	// 1. Check for a zone without having stored anything.
 	zone, ok := kpr.GetZone(ctx, chainID)

@@ -23,13 +23,13 @@ type Keeper struct {
 	IBCKeeper *ibckeeper.Keeper
 }
 
-// NewKeeper returns a new instance of zones Keeper
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, ibckeeper *ibckeeper.Keeper) Keeper {
+// NewKeeper returns a new instance of zones Keeper.
+func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, ibcKeeper *ibckeeper.Keeper) Keeper {
 	return Keeper{
 		cdc:       cdc,
 		storeKey:  storeKey,
 		callbacks: make(map[string]types.QueryCallbacks),
-		IBCKeeper: ibckeeper,
+		IBCKeeper: ibcKeeper,
 	}
 }
 
@@ -67,7 +67,7 @@ func (k *Keeper) GetDatapointForID(ctx sdk.Context, id string) (types.DataPoint,
 	return mapping, nil
 }
 
-// IterateDatapoints iterate through datapoints
+// IterateDatapoints iterate through datapoints.
 func (k Keeper) IterateDatapoints(ctx sdk.Context, fn func(index int64, dp types.DataPoint) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -86,18 +86,18 @@ func (k Keeper) IterateDatapoints(ctx sdk.Context, fn func(index int64, dp types
 	}
 }
 
-// DeleteQuery delete datapoint
+// DeleteDatapoint deletes datapoint.
 func (k Keeper) DeleteDatapoint(ctx sdk.Context, id string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixData)
 	store.Delete([]byte(id))
 }
 
-func (k *Keeper) GetDatapoint(ctx sdk.Context, module string, connectionID string, chainID string, queryType string, request []byte) (types.DataPoint, error) {
+func (k *Keeper) GetDatapoint(ctx sdk.Context, module, connectionID, chainID, queryType string, request []byte) (types.DataPoint, error) {
 	id := GenerateQueryHash(connectionID, chainID, queryType, request, module)
 	return k.GetDatapointForID(ctx, id)
 }
 
-func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module string, connectionID string, chainID string, queryType string, request []byte, maxAge uint64) (types.DataPoint, error) {
+func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module, connectionID, chainID, queryType string, request []byte, maxAge uint64) (types.DataPoint, error) {
 	val, err := k.GetDatapoint(ctx, module, connectionID, chainID, queryType, request)
 	if err != nil {
 		// no datapoint
@@ -113,7 +113,17 @@ func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module string, connectio
 	return val, nil
 }
 
-func (k *Keeper) MakeRequest(ctx sdk.Context, connectionID string, chainID string, queryType string, request []byte, period math.Int, module string, callbackID string, ttl uint64) {
+func (k *Keeper) MakeRequest(
+	ctx sdk.Context,
+	connectionID,
+	chainID,
+	queryType string,
+	request []byte,
+	period math.Int,
+	module string,
+	callbackID string,
+	ttl uint64,
+) {
 	k.Logger(ctx).Info(
 		"MakeRequest",
 		"connection_id", connectionID,

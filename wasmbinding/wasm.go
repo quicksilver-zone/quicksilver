@@ -31,9 +31,9 @@ func RegisterCustomPlugins(
 	}
 }
 
-func RegisterStargateQueries(queryRouter baseapp.GRPCQueryRouter, codec codec.Codec) []wasmkeeper.Option {
+func RegisterStargateQueries(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) []wasmkeeper.Option {
 	queryPluginOpt := wasmkeeper.WithQueryPlugins(&wasmkeeper.QueryPlugins{
-		Stargate: StargateQuerier(queryRouter, codec),
+		Stargate: StargateQuerier(queryRouter, cdc),
 	})
 
 	return []wasm.Option{

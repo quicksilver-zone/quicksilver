@@ -33,7 +33,7 @@ func main() {
 		panic(err)
 	}
 
-	if len(dataDir) == 0 {
+	if dataDir == "" {
 		panic("data-dir is required")
 	}
 
@@ -51,7 +51,9 @@ func main() {
 		panic(err)
 	}
 	fileName := fmt.Sprintf("%v/%v-encode", dataDir, chainID)
-	if err = os.WriteFile(fileName, b, 0o777); err != nil { //nolint:gosec
+
+	//nolint:gosec test
+	if err = os.WriteFile(fileName, b, 0o777); err != nil {
 		panic(err)
 	}
 }

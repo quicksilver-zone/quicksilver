@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -23,7 +24,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/test/e2e/initialization"
 )
 
-// The value is returned as a string, so we have to unmarshal twice
+// The value is returned as a string, so we have to unmarshal twice.
 type params struct {
 	Key      string `json:"key"`
 	Subspace string `json:"subspace"`
@@ -35,7 +36,7 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 		return nil, fmt.Errorf("invalid number of parameters, must follow the format of key + value")
 	}
 
-	// add the URL for the given validator ID, and pre-pend to to path.
+	// add the URL for the given validator ID, and pre-pend to path.
 	hostPort, err := n.containerManager.GetHostPort(n.Name, "1317/tcp")
 	require.NoError(n.t, err)
 	endpoint := fmt.Sprintf("http://%s", hostPort)
@@ -43,7 +44,7 @@ func (n *NodeConfig) QueryGRPCGateway(path string, parameters ...string) ([]byte
 
 	var resp *http.Response
 	require.Eventually(n.t, func() bool {
-		req, err := http.NewRequest("GET", fullQueryPath, nil)
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fullQueryPath, http.NoBody)
 		if err != nil {
 			return false
 		}
@@ -194,7 +195,7 @@ func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight 
 
 func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin) {
 	n.LogActionF("submitting text gov proposal")
-	cmd := []string{"quicksilverd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%s\"", text), "--description=\"test text proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
+	cmd := []string{"quicksilverd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%q\"", text), "--description=\"test text proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully submitted text gov proposal")
@@ -226,7 +227,7 @@ func (n *NodeConfig) VoteNoProposal(from string, proposalNumber int) {
 	n.LogActionF("successfully voted no on proposal: %d", proposalNumber)
 }
 
-func (n *NodeConfig) BankSend(amount string, sendAddress string, receiveAddress string) {
+func (n *NodeConfig) BankSend(amount, sendAddress, receiveAddress string) {
 	n.LogActionF("bank sending %s from address %s to %s", amount, sendAddress, receiveAddress)
 	cmd := []string{"quicksilverd", "tx", "bank", "send", sendAddress, receiveAddress, amount, "--from=val"}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
@@ -254,7 +255,7 @@ func (n *NodeConfig) CreateWalletAndFund(walletName string, tokensToFund []strin
 	return n.CreateWalletAndFundFrom(walletName, initialization.ValidatorWalletName, tokensToFund)
 }
 
-func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName string, fundingWalletName string, tokensToFund []string) string {
+func (n *NodeConfig) CreateWalletAndFundFrom(newWalletName, fundingWalletName string, tokensToFund []string) string {
 	n.LogActionF("Sending tokens to %s", newWalletName)
 
 	walletAddr := n.CreateWallet(newWalletName)

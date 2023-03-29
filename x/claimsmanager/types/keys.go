@@ -5,13 +5,13 @@ import (
 )
 
 const (
-	// ModuleName defines the module name
+	// ModuleName defines the module name.
 	ModuleName = "claimsmanager"
-	// StoreKey defines the primary module store key
+	// StoreKey defines the primary module store key.
 	StoreKey = ModuleName
 	// QuerierRoute is the querier route for the claimsmanager store.
 	QuerierRoute = StoreKey
-	// RouterKey is the message route for claimsmanager
+	// RouterKey is the message route for claimsmanager.
 	RouterKey = ModuleName
 )
 
@@ -32,7 +32,7 @@ func GetGenericKeyClaim(key []byte, chainID, address string, module ClaimType, s
 	return append(key, []byte(srcChainID)...)
 }
 
-func GetKeyClaim(chainID string, address string, module ClaimType, srcChainID string) []byte {
+func GetKeyClaim(chainID, address string, module ClaimType, srcChainID string) []byte {
 	return GetGenericKeyClaim(KeyPrefixClaim, chainID, address, module, srcChainID)
 }
 

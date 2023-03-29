@@ -16,7 +16,6 @@ import (
 
 func (s *KeeperTestSuite) Test_msgServer_Claim() {
 	appA := s.GetQuicksilverApp(s.chainA)
-	// appB := suite.GetQuicksilverApp(suite.chainB)
 
 	userAddress := utils.GenerateAccAddressForTest().String()
 	denom := "uatom" // same as test zone setup in keeper_test

@@ -14,7 +14,7 @@ func (c Claim) ValidateBasic() error {
 		errors["UserAddress"] = err
 	}
 
-	if len(c.ChainId) == 0 {
+	if c.ChainId == "" {
 		errors["ChainID"] = ErrUndefinedAttribute
 	}
 

@@ -47,12 +47,12 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
-	app, ok := chain.App.(*app.Quicksilver)
+	quicksilver, ok := chain.App.(*app.Quicksilver)
 	if !ok {
 		panic("not quicksilver app")
 	}
 
-	return app
+	return quicksilver
 }
 
 // SetupTest creates a coordinator with 2 test chains.
@@ -113,12 +113,15 @@ func (s *KeeperTestSuite) getZoneDrop() types.ZoneDrop {
 }
 
 func (s *KeeperTestSuite) compressClaimRecords(crs []types.ClaimRecord) []byte {
+	s.T().Helper()
+
 	bz, err := json.Marshal(&crs)
 	s.Require().NoError(err)
 
 	var buf bytes.Buffer
 	zw := zlib.NewWriter(&buf)
-	zw.Write(bz)
+	_, err = zw.Write(bz)
+	s.Require().NoError(err)
 
 	err = zw.Close()
 	s.Require().NoError(err)
@@ -133,21 +136,21 @@ func (s *KeeperTestSuite) initTestZoneDrop() {
 }
 
 func (s *KeeperTestSuite) fundZoneDrop(chainID string, amount uint64) {
-	app := s.GetQuicksilverApp(s.chainA)
+	quicksilver := s.GetQuicksilverApp(s.chainA)
 	ctx := s.chainA.GetContext()
 	coins := sdk.NewCoins(
 		sdk.NewCoin(
-			app.StakingKeeper.BondDenom(ctx),
+			quicksilver.StakingKeeper.BondDenom(ctx),
 			sdk.NewIntFromUint64(amount),
 		),
 	)
 	// fund zonedrop account
-	zdacc := app.AirdropKeeper.GetZoneDropAccountAddress(chainID)
+	zdacc := quicksilver.AirdropKeeper.GetZoneDropAccountAddress(chainID)
 
-	err := app.MintKeeper.MintCoins(ctx, coins)
+	err := quicksilver.MintKeeper.MintCoins(ctx, coins)
 	s.Require().NoError(err)
 
-	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, zdacc, coins)
+	err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, zdacc, coins)
 	s.Require().NoError(err)
 }
 
