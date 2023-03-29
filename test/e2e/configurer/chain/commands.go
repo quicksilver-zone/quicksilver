@@ -195,7 +195,7 @@ func (n *NodeConfig) SubmitUpgradeProposal(upgradeVersion string, upgradeHeight 
 
 func (n *NodeConfig) SubmitTextProposal(text string, initialDeposit sdk.Coin) {
 	n.LogActionF("submitting text gov proposal")
-	cmd := []string{"quicksilverd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=\"%q\"", text), "--description=\"test text proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
+	cmd := []string{"quicksilverd", "tx", "gov", "submit-proposal", "--type=text", fmt.Sprintf("--title=%q", text), "--description=\"test text proposal\"", "--from=val", fmt.Sprintf("--deposit=%s", initialDeposit)}
 	_, _, err := n.containerManager.ExecTxCmd(n.t, n.chainID, n.Name, cmd)
 	require.NoError(n.t, err)
 	n.LogActionF("successfully submitted text gov proposal")
