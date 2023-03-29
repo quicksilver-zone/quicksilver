@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	fmt "fmt"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 const (
@@ -134,4 +136,39 @@ func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 	}
 
 	return pdi.ValidateBasic()
+}
+
+// UserAllocation is an internal keeper struct to track transient state for
+// rewards distribution. It contains the user address and the coins that are
+// allocated to it.
+type UserAllocation struct {
+	Address string
+	Amount  math.Int
+}
+
+// ZoneScore is an internal struct to track transient state for the calculation
+// of zone scores. It specifically tallies the total zone voting power used in
+// calculations to determine validator voting power percentages;
+type ZoneScore struct {
+	ZoneID           string // chainID
+	TotalVotingPower math.Int
+	ValidatorScores  map[string]*Validator
+}
+
+// Validator is an internal struct to track transient state for the calculation
+// of zone scores. It contains all relevant Validator scoring metrics with a
+// pointer reference to the actual Validator (embedded).
+type Validator struct {
+	PowerPercentage   sdk.Dec
+	PerformanceScore  sdk.Dec
+	DistributionScore sdk.Dec
+
+	*icstypes.Validator
+}
+
+// UserScore is an internal struct to track transient state for rewards
+// distribution. It contains the user address and individual score.
+type UserScore struct {
+	Address string
+	Score   sdk.Dec
 }
