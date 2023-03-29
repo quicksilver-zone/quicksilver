@@ -26,15 +26,15 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type Query struct {
-	ID           string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	ConnectionID string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
-	ChainID      string `protobuf:"bytes,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	Id           string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ConnectionId string `protobuf:"bytes,2,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty"`
+	ChainId      string `protobuf:"bytes,3,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 	QueryType    string `protobuf:"bytes,4,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 	Request      []byte `protobuf:"bytes,5,opt,name=request,proto3" json:"request,omitempty"`
 	// change these to uint64 in v0.5.0
 	Period       github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,6,opt,name=period,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"period"`
 	LastHeight   github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,7,opt,name=last_height,json=lastHeight,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"last_height"`
-	CallbackID   string                                 `protobuf:"bytes,8,opt,name=callback_id,json=callbackId,proto3" json:"callback_id,omitempty"`
+	CallbackId   string                                 `protobuf:"bytes,8,opt,name=callback_id,json=callbackId,proto3" json:"callback_id,omitempty"`
 	Ttl          uint64                                 `protobuf:"varint,9,opt,name=ttl,proto3" json:"ttl,omitempty"`
 	LastEmission github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,10,opt,name=last_emission,json=lastEmission,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"last_emission"`
 }
@@ -74,21 +74,21 @@ var xxx_messageInfo_Query proto.InternalMessageInfo
 
 func (m *Query) GetId() string {
 	if m != nil {
-		return m.ID
+		return m.Id
 	}
 	return ""
 }
 
 func (m *Query) GetConnectionId() string {
 	if m != nil {
-		return m.ConnectionID
+		return m.ConnectionId
 	}
 	return ""
 }
 
 func (m *Query) GetChainId() string {
 	if m != nil {
-		return m.ChainID
+		return m.ChainId
 	}
 	return ""
 }
@@ -109,7 +109,7 @@ func (m *Query) GetRequest() []byte {
 
 func (m *Query) GetCallbackId() string {
 	if m != nil {
-		return m.CallbackID
+		return m.CallbackId
 	}
 	return ""
 }
@@ -255,10 +255,10 @@ func (m *Query) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x48
 	}
-	if len(m.CallbackID) > 0 {
-		i -= len(m.CallbackID)
-		copy(dAtA[i:], m.CallbackID)
-		i = encodeVarintInterchainquery(dAtA, i, uint64(len(m.CallbackID)))
+	if len(m.CallbackId) > 0 {
+		i -= len(m.CallbackId)
+		copy(dAtA[i:], m.CallbackId)
+		i = encodeVarintInterchainquery(dAtA, i, uint64(len(m.CallbackId)))
 		i--
 		dAtA[i] = 0x42
 	}
@@ -296,24 +296,24 @@ func (m *Query) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x22
 	}
-	if len(m.ChainID) > 0 {
-		i -= len(m.ChainID)
-		copy(dAtA[i:], m.ChainID)
-		i = encodeVarintInterchainquery(dAtA, i, uint64(len(m.ChainID)))
+	if len(m.ChainId) > 0 {
+		i -= len(m.ChainId)
+		copy(dAtA[i:], m.ChainId)
+		i = encodeVarintInterchainquery(dAtA, i, uint64(len(m.ChainId)))
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(m.ConnectionID) > 0 {
-		i -= len(m.ConnectionID)
-		copy(dAtA[i:], m.ConnectionID)
-		i = encodeVarintInterchainquery(dAtA, i, uint64(len(m.ConnectionID)))
+	if len(m.ConnectionId) > 0 {
+		i -= len(m.ConnectionId)
+		copy(dAtA[i:], m.ConnectionId)
+		i = encodeVarintInterchainquery(dAtA, i, uint64(len(m.ConnectionId)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.ID) > 0 {
-		i -= len(m.ID)
-		copy(dAtA[i:], m.ID)
-		i = encodeVarintInterchainquery(dAtA, i, uint64(len(m.ID)))
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintInterchainquery(dAtA, i, uint64(len(m.Id)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -394,15 +394,15 @@ func (m *Query) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.ID)
+	l = len(m.Id)
 	if l > 0 {
 		n += 1 + l + sovInterchainquery(uint64(l))
 	}
-	l = len(m.ConnectionID)
+	l = len(m.ConnectionId)
 	if l > 0 {
 		n += 1 + l + sovInterchainquery(uint64(l))
 	}
-	l = len(m.ChainID)
+	l = len(m.ChainId)
 	if l > 0 {
 		n += 1 + l + sovInterchainquery(uint64(l))
 	}
@@ -418,7 +418,7 @@ func (m *Query) Size() (n int) {
 	n += 1 + l + sovInterchainquery(uint64(l))
 	l = m.LastHeight.Size()
 	n += 1 + l + sovInterchainquery(uint64(l))
-	l = len(m.CallbackID)
+	l = len(m.CallbackId)
 	if l > 0 {
 		n += 1 + l + sovInterchainquery(uint64(l))
 	}
@@ -488,7 +488,7 @@ func (m *Query) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -516,11 +516,11 @@ func (m *Query) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ID = string(dAtA[iNdEx:postIndex])
+			m.Id = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -548,11 +548,11 @@ func (m *Query) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ConnectionID = string(dAtA[iNdEx:postIndex])
+			m.ConnectionId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ChainID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ChainId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -580,7 +580,7 @@ func (m *Query) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.ChainID = string(dAtA[iNdEx:postIndex])
+			m.ChainId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
@@ -718,7 +718,7 @@ func (m *Query) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field CallbackID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field CallbackId", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -746,11 +746,11 @@ func (m *Query) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.CallbackID = string(dAtA[iNdEx:postIndex])
+			m.CallbackId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 9:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TTL", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Ttl", wireType)
 			}
 			m.Ttl = 0
 			for shift := uint(0); ; shift += 7 {
@@ -853,7 +853,7 @@ func (m *DataPoint) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ID", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
