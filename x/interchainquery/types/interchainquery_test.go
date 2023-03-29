@@ -28,14 +28,14 @@ func TestQuery_ValidateBasic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			q := Query{
-				ID:           tt.fields.ID,
-				ConnectionID: tt.fields.ConnectionID,
-				ChainID:      tt.fields.ChainID,
+				Id:           tt.fields.ID,
+				ConnectionId: tt.fields.ConnectionID,
+				ChainId:      tt.fields.ChainID,
 				QueryType:    tt.fields.QueryType,
 				Request:      tt.fields.Request,
 				Period:       tt.fields.Period,
 				LastHeight:   tt.fields.LastHeight,
-				CallbackID:   tt.fields.CallbackID,
+				CallbackId:   tt.fields.CallbackID,
 				Ttl:          tt.fields.TTL,
 				LastEmission: tt.fields.LastEmission,
 			}

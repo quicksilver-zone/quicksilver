@@ -465,8 +465,8 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 
 	// remove queries in state
 	k.ICQKeeper.IterateQueries(ctx, func(_ int64, queryInfo icqtypes.Query) (stop bool) {
-		if queryInfo.ChainID == chainID {
-			k.ICQKeeper.DeleteQuery(ctx, queryInfo.ID)
+		if queryInfo.ChainId == chainID {
+			k.ICQKeeper.DeleteQuery(ctx, queryInfo.Id)
 		}
 		return false
 	})

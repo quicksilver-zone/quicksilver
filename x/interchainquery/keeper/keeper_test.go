@@ -72,11 +72,11 @@ func (s *KeeperTestSuite) TestMakeRequest() {
 	id := keeper.GenerateQueryHash(s.path.EndpointB.ConnectionID, s.chainB.ChainID, "cosmos.staking.v1beta1.Query/Validators", bz, "")
 	query, found := s.GetSimApp(s.chainA).InterchainQueryKeeper.GetQuery(s.chainA.GetContext(), id)
 	s.True(found)
-	s.Equal(s.path.EndpointB.ConnectionID, query.ConnectionID)
-	s.Equal(s.chainB.ChainID, query.ChainID)
+	s.Equal(s.path.EndpointB.ConnectionID, query.ConnectionId)
+	s.Equal(s.chainB.ChainID, query.ChainId)
 	s.Equal("cosmos.staking.v1beta1.Query/Validators", query.QueryType)
 	s.Equal(sdk.NewInt(200), query.Period)
-	s.Equal("", query.CallbackID)
+	s.Equal("", query.CallbackId)
 
 	s.GetSimApp(s.chainA).InterchainQueryKeeper.MakeRequest(
 		s.chainA.GetContext(),
@@ -177,7 +177,7 @@ func (s *KeeperTestSuite) TestSubmitQueryResponse() {
 
 		qmsg := icqtypes.MsgSubmitQueryResponse{
 			ChainId:     s.chainB.ChainID,
-			QueryId:     keeper.GenerateQueryHash(tc.query.ConnectionID, tc.query.ChainID, tc.query.QueryType, bz, ""),
+			QueryId:     keeper.GenerateQueryHash(tc.query.ConnectionId, tc.query.ChainId, tc.query.QueryType, bz, ""),
 			Result:      s.GetSimApp(s.chainB).AppCodec().MustMarshalJSON(&qvr),
 			Height:      s.chainB.CurrentHeader.Height,
 			FromAddress: TestOwnerAddress,

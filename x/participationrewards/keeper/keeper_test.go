@@ -21,6 +21,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	ics "github.com/ingenuity-build/quicksilver/x/interchainstaking"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -108,23 +109,27 @@ func (s *KeeperTestSuite) coreTest() {
 	s.setupTestDeposits()
 	s.setupTestIntents()
 
-	err := quicksilver.ParticipationRewardsKeeper.AfterEpochEnd(s.chainA.GetContext(), "epoch", 1)
-	s.Require().NoError(err)
+	quicksilver.EpochsKeeper.AfterEpochEnd(s.chainA.GetContext(), epochtypes.EpochIdentifierEpoch, 1)
 
 	s.setupTestClaims()
 
-	err = quicksilver.ParticipationRewardsKeeper.AfterEpochEnd(s.chainA.GetContext(), "epoch", 2)
-	s.Require().NoError(err)
-
+	quicksilver.EpochsKeeper.AfterEpochEnd(s.chainA.GetContext(), epochtypes.EpochIdentifierEpoch, 2)
 	// Epoch boundary
-	err = quicksilver.ParticipationRewardsKeeper.AfterEpochEnd(s.chainA.GetContext(), "epoch", 3)
-	s.Require().NoError(err)
+	ctx := s.chainA.GetContext()
 
-	_, found := quicksilver.ClaimsManagerKeeper.GetLastEpochClaim(s.chainA.GetContext(), "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
+	quicksilver.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		s.Require().NoError(quicksilver.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+		s.Require().NoError(quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+		return false
+	})
+
+	_, found := quicksilver.ClaimsManagerKeeper.GetLastEpochClaim(ctx, "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
 	s.Require().True(found)
 
+	quicksilver.EpochsKeeper.AfterEpochEnd(s.chainA.GetContext(), epochtypes.EpochIdentifierEpoch, 3)
+
 	// zone for remote chain
-	zone, found := quicksilver.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
 
 	valRewards := make(map[string]sdk.Dec)
@@ -302,10 +307,6 @@ func (s *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountSuffi
 
 	channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(s.chainA.GetContext())
 	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.PortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
-
-	// channel, found := quicksilver.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), portID, channelID)
-	// suite.Require().True(found)
-	// fmt.Printf("DEBUG: channel >>>\n%v\n<<<\n", channel)
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(s.chainA.GetContext(), portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(s.chainA.GetContext(), connectionID, portID, channelID)
@@ -526,7 +527,7 @@ func (s *KeeperTestSuite) setupTestClaims() {
 		"cosmoshub-4",
 		cmtypes.ClaimTypeLiquidToken,
 		"osmosis-1",
-		0,
+		1000,
 	)
 }
 
@@ -540,41 +541,3 @@ func (s *KeeperTestSuite) addClaim(address, chainID string, claimType cmtypes.Cl
 	}
 	s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper.SetClaim(s.chainA.GetContext(), &claim)
 }
-
-/*func (suite *KeeperTestSuite) testReopenChannel(zone ) {
-	quicksilver := suite.GetQuicksilverApp(suite.chainA)
-
-	// connection
-	connectionID, err := quicksilver.InterchainstakingKeeper.GetConnectionForPort(suite.chainA.GetContext(), zone.PerformanceAddress.PortName)
-	suite.Require().NoError(err)
-	fmt.Printf("DEBUG: connectionID %q\n", connectionID)
-
-	// channel
-	channelID, found := quicksilver.ICAControllerKeeper.GetActiveChannelID(suite.chainA.GetContext(), connectionID, zone.PerformanceAddress.PortName)
-	suite.Require().True(found)
-	fmt.Printf("DEBUG: channelID %q\n", channelID)
-	channel, found := quicksilver.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), zone.PerformanceAddress.PortName, channelID)
-	suite.Require().True(found)
-	fmt.Printf("Channel: %v\n", channel)
-
-	// close channel
-	channelCap := suite.chainA.GetChannelCapability(suite.path.EndpointA.ChannelConfig.PortID, suite.path.EndpointA.ChannelID)
-	err = quicksilver.IBCKeeper.ChannelKeeper.ChanCloseInit(suite.chainA.GetContext(), zone.PerformanceAddress.PortName, channelID, channelCap)
-	suite.Require().True(found)
-
-	// quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), zone.PerformanceAddress.PortName, channelID, channeltypes.Channel{State: channeltypes.CLOSED, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: "icahost", ChannelId: channelID}, ConnectionHops: []string{connectionID}})
-	channel, found = quicksilver.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), zone.PerformanceAddress.PortName, channelID)
-	suite.Require().True(found)
-	fmt.Printf("Channel: %v\n", channel)
-
-	// // attempt to reopen channel here
-	// conn, found := quicksilver.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connectionID)
-	// suite.Require().True(found)
-	// fmt.Printf("Connection: %v\n", conn)
-
-	// fmt.Println("Channel Closed...")
-	// msg := channeltypes.NewMsgChannelOpenInit(zone.PerformanceAddress.PortName, icatypes.Version, channeltypes.ORDERED, []string{connectionID}, icatypes.PortID, icatypes.ModuleName)
-	// handler := quicksilver.MsgServiceRouter().Handler(msg)
-	// _, err = handler(suite.chainA.GetContext(), msg)
-	// suite.Require().NoError(err)
-}*/

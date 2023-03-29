@@ -24,7 +24,7 @@ func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 // and re-queries icq for new zone info.
 func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	// every epoch
-	if epochIdentifier == types.EpochIdentifier {
+	if epochIdentifier == epochstypes.EpochIdentifierEpoch {
 		k.Logger(ctx).Info("handling epoch end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 
 		k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {

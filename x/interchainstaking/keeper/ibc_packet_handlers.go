@@ -1012,9 +1012,9 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 }
 
 func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {
-	zone, found := k.GetZone(ctx, query.ChainID)
+	zone, found := k.GetZone(ctx, query.ChainId)
 	if !found {
-		return fmt.Errorf("unable to find zone for %s", query.ChainID)
+		return fmt.Errorf("unable to find zone for %s", query.ChainId)
 	}
 
 	// query all balances as chains can accumulate fees in different denoms.

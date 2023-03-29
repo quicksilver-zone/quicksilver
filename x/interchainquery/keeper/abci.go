@@ -27,14 +27,14 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 		// 	return false
 		// }
 		if queryInfo.LastEmission.IsNil() || queryInfo.LastEmission.IsZero() || queryInfo.LastEmission.Add(queryInfo.Period).Equal(sdk.NewInt(ctx.BlockHeight())) {
-			k.Logger(ctx).Debug("Interchainquery event emitted", "id", queryInfo.ID)
+			k.Logger(ctx).Debug("Interchainquery event emitted", "id", queryInfo.Id)
 			event := sdk.NewEvent(
 				sdk.EventTypeMessage,
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 				sdk.NewAttribute(sdk.AttributeKeyAction, types.AttributeValueQuery),
-				sdk.NewAttribute(types.AttributeKeyQueryID, queryInfo.ID),
-				sdk.NewAttribute(types.AttributeKeyChainID, queryInfo.ChainID),
-				sdk.NewAttribute(types.AttributeKeyConnectionID, queryInfo.ConnectionID),
+				sdk.NewAttribute(types.AttributeKeyQueryID, queryInfo.Id),
+				sdk.NewAttribute(types.AttributeKeyChainID, queryInfo.ChainId),
+				sdk.NewAttribute(types.AttributeKeyConnectionID, queryInfo.ConnectionId),
 				sdk.NewAttribute(types.AttributeKeyType, queryInfo.QueryType),
 				// TODO: add height to request type
 				sdk.NewAttribute(types.AttributeKeyHeight, "0"),

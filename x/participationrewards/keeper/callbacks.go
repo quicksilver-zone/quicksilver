@@ -79,9 +79,9 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	)
 
 	// snapshot obtained and used here
-	userAllocations := k.calcUserValidatorSelectionAllocations(ctx, &zone, *zs)
+	userAllocations := k.CalcUserValidatorSelectionAllocations(ctx, &zone, *zs)
 
-	if err := k.distributeToUsers(ctx, userAllocations); err != nil {
+	if err := k.DistributeToUsers(ctx, userAllocations); err != nil {
 		return err
 	}
 
@@ -141,11 +141,11 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
 func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainID)
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainId)
 	if !ok {
-		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainID)
+		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
 	}
-
+	k.Logger(ctx).Debug("epoch callback called")
 	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
 	connectionData, _ := iConnectionData.(types.ConnectionProtocolData)
 
@@ -162,6 +162,8 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	if err != nil {
 		return err
 	}
+	k.Logger(ctx).Debug("got block response", "block", blockResponse)
+
 	if blockResponse.SdkBlock == nil {
 		// v0.45 and below
 		//nolint:staticcheck // SA1019 ignore this!
@@ -175,8 +177,8 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	// trigger a client update at the epoch boundary
 	k.IcqKeeper.MakeRequest(
 		ctx,
-		query.ConnectionID,
-		query.ChainID,
+		query.ConnectionId,
+		query.ChainId,
 		"ibc.ClientUpdate",
 		heightInBytes,
 		sdk.NewInt(-1),
@@ -185,10 +187,12 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 		0,
 	)
 
+	k.Logger(ctx).Debug("emitted client update", "height", connectionData.LastEpoch)
+
 	data.Data, err = json.Marshal(connectionData)
 	if err != nil {
 		return err
 	}
-	k.SetProtocolData(ctx, query.ChainID, &data)
+	k.SetProtocolData(ctx, query.ChainId, &data)
 	return nil
 }

@@ -10,14 +10,12 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-var epochsDeferred = int64(3)
-
 func (k Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 	return nil
 }
 
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
-	if epochIdentifier == "epoch" {
+func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
+	if epochIdentifier == epochstypes.EpochIdentifierEpoch {
 		k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, data types.ProtocolData) (stop bool) {
 			blockQuery := tmservice.GetLatestBlockRequest{}
 			bz := k.cdc.MustMarshal(&blockQuery)
@@ -70,37 +68,20 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			sub.Hooks(ctx, k)
 		}
 
-		if epochNumber < epochsDeferred {
-			k.Logger(ctx).Info("defer...", "epoch", epochNumber)
-
-			// create snapshot of current intents for the next epoch boundary
-			// requires intents to be set, no intents no snapshot...
-			// further snapshots will be taken during
-			// ValidatorSelectionRewardsCallback;
-			for _, zone := range k.icsKeeper.AllZones(ctx) {
-				zone := zone
-				for _, di := range k.icsKeeper.AllDelegatorIntents(ctx, &zone, false) {
-					k.icsKeeper.SetDelegatorIntent(ctx, &zone, di, true)
-				}
-			}
-
-			return nil
-		}
-
 		tvs, err := k.calcTokenValues(ctx)
 		if err != nil {
 			k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
 			return nil
 		}
 
-		if err := k.allocateZoneRewards(ctx, tvs, *allocation); err != nil {
+		if err := k.AllocateZoneRewards(ctx, tvs, *allocation); err != nil {
 			k.Logger(ctx).Error(err.Error())
 			return err
 		}
 
 		if !allocation.Lockup.IsZero() {
 			// at genesis lockup will be disabled, and enabled when ICS is used.
-			if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
+			if err := k.AllocateLockupRewards(ctx, allocation.Lockup); err != nil {
 				k.Logger(ctx).Error(err.Error())
 				return err
 			}

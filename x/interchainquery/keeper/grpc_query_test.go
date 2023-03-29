@@ -31,9 +31,9 @@ func (s *KeeperTestSuite) TestQueries() {
 	res, err := icqsrvSrv.Queries(sdk.WrapSDKContext(s.chainA.GetContext()), &icqtypes.QueryRequestsRequest{ChainId: s.chainB.ChainID})
 	s.NoError(err)
 	s.Len(res.Queries, 1)
-	s.Equal(s.path.EndpointB.ConnectionID, res.Queries[0].ConnectionID)
-	s.Equal(s.chainB.ChainID, res.Queries[0].ChainID)
+	s.Equal(s.path.EndpointB.ConnectionID, res.Queries[0].ConnectionId)
+	s.Equal(s.chainB.ChainID, res.Queries[0].ChainId)
 	s.Equal("cosmos.staking.v1beta1.Query/Validators", res.Queries[0].QueryType)
 	s.Equal(sdk.NewInt(200), res.Queries[0].Period)
-	s.Equal("", res.Queries[0].CallbackID)
+	s.Equal("", res.Queries[0].CallbackId)
 }

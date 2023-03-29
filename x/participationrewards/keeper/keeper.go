@@ -21,10 +21,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-// userAllocation is an internal keeper struct to track transient state for
+// UserAllocation is an internal keeper struct to track transient state for
 // rewards distribution. It contains the user address and the coins that are
 // allocated to it.
-type userAllocation struct {
+type UserAllocation struct {
 	Address string
 	Amount  math.Int
 }
@@ -121,7 +121,7 @@ func (k Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 	selfConnectionData, err := json.Marshal(types.ConnectionProtocolData{
 		ConnectionID: types.SelfConnection,
 		ChainID:      ctx.ChainID(),
-		LastEpoch:    ctx.BlockHeight() - 1,
+		LastEpoch:    ctx.BlockHeight() - 2, // reason why -2 works here.
 		Prefix:       config.Bech32Prefix,
 	})
 	if err != nil {

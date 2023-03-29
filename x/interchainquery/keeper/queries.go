@@ -28,14 +28,14 @@ func (k Keeper) NewQuery(
 	ttl uint64,
 ) *types.Query {
 	return &types.Query{
-		ID:           GenerateQueryHash(connectionID, chainID, queryType, request, module),
-		ConnectionID: connectionID,
-		ChainID:      chainID,
+		Id:           GenerateQueryHash(connectionID, chainID, queryType, request, module),
+		ConnectionId: connectionID,
+		ChainId:      chainID,
 		QueryType:    queryType,
 		Request:      request,
 		Period:       period,
 		LastHeight:   sdk.ZeroInt(),
-		CallbackID:   callbackID,
+		CallbackId:   callbackID,
 		Ttl:          ttl,
 	}
 }
@@ -56,7 +56,7 @@ func (k Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) {
 func (k Keeper) SetQuery(ctx sdk.Context, query types.Query) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	bz := k.cdc.MustMarshal(&query)
-	store.Set([]byte(query.ID), bz)
+	store.Set([]byte(query.Id), bz)
 }
 
 // DeleteQuery delete query info.
