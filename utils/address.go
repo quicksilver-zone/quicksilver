@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
-func AccAddressFromBech32(address string, checkHRP string) (addr sdk.AccAddress, err error) {
+func AccAddressFromBech32(address, checkHRP string) (addr sdk.AccAddress, err error) {
 	if strings.TrimSpace(address) == "" {
 		return sdk.AccAddress{}, errors.New("empty address string is not allowed")
 	}
@@ -34,7 +34,7 @@ func AccAddressFromBech32(address string, checkHRP string) (addr sdk.AccAddress,
 	return sdk.AccAddress(bz), nil
 }
 
-func ValAddressFromBech32(address string, checkHRP string) (addr sdk.ValAddress, err error) {
+func ValAddressFromBech32(address, checkHRP string) (addr sdk.ValAddress, err error) {
 	if strings.TrimSpace(address) == "" {
 		return sdk.ValAddress{}, errors.New("empty address string is not allowed")
 	}

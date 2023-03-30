@@ -156,7 +156,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 
 // ___________________________________________________________________________________________________
 
-// Hooks wrapper struct for interchainstaking keeper
+// Hooks wrapper struct for interchainstaking keeper.
 type Hooks struct {
 	k *Keeper
 }

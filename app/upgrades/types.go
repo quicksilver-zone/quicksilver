@@ -9,7 +9,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/app/keepers"
 )
 
-// upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch)
+// upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch).
 const (
 	ProductionChainID = "quicksilver-2"
 	InnuendoChainID   = "innuendo-5"

@@ -8,7 +8,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (suite *KeeperTestSuite) TestGetRewardsAllocations() {
+func (s *KeeperTestSuite) TestGetRewardsAllocations() {
 	type args struct {
 		moduleBalance math.Int
 		proportions   types.DistributionProportions
@@ -168,18 +168,18 @@ func (suite *KeeperTestSuite) TestGetRewardsAllocations() {
 		},
 	}
 	for _, tt := range tests {
-		suite.Run(tt.name, func() {
+		s.Run(tt.name, func() {
 			got, err := keeper.GetRewardsAllocations(tt.args.moduleBalance, tt.args.proportions)
 			if tt.wantErr {
-				suite.Require().Error(err)
-				suite.Require().Nil(got)
-				suite.T().Logf("Error: %v", err)
+				s.Require().Error(err)
+				s.Require().Nil(got)
+				s.T().Logf("Error: %v", err)
 				return
 			}
 
-			suite.Require().NoError(err)
-			suite.Require().NotNil(got)
-			suite.Require().Equal(tt.want, got)
+			s.Require().NoError(err)
+			s.Require().NotNil(got)
+			s.Require().Equal(tt.want, got)
 		})
 	}
 }

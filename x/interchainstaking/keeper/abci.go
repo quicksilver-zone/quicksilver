@@ -17,7 +17,7 @@ const blockInterval = 30
 
 type zoneItrFn func(index int64, zone *types.Zone) (stop bool)
 
-// BeginBlocker of interchainstaking module
+// BeginBlocker of interchainstaking module.
 func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 

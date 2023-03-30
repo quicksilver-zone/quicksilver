@@ -27,28 +27,30 @@ import (
 )
 
 func TestHandleMsgTransferGood(t *testing.T) {
-	app, ctx := app.GetAppWithContext(t, true)
-	app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+	quicksilver, ctx := app.GetAppWithContext(t, true)
+	err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+	require.NoError(t, err)
 
 	sender := utils.GenerateAccAddressForTest()
-	senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+	senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
+	require.NoError(t, err)
 
-	txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
-	feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-	txMaccBalance := app.BankKeeper.GetAllBalances(ctx, txMacc)
-	feeMaccBalance := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+	txMacc := quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+	feeMacc := quicksilver.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+	txMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
+	feeMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
 
 	transferMsg := ibctransfertypes.MsgTransfer{
 		SourcePort:    "transfer",
 		SourceChannel: "channel-0",
 		Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
 		Sender:        senderAddr,
-		Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+		Receiver:      quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
 	}
-	require.NoError(t, app.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
+	require.NoError(t, quicksilver.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
 
-	txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
-	feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+	txMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
+	feeMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
 
 	// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
 	require.Equal(t, txMaccBalance.AmountOf("denom").Sub(txMaccBalance2.AmountOf("denom")), sdk.NewInt(100))
@@ -57,19 +59,21 @@ func TestHandleMsgTransferGood(t *testing.T) {
 }
 
 func TestHandleMsgTransferBadType(t *testing.T) {
-	app, ctx := app.GetAppWithContext(t, true)
-	app.BankKeeper.MintCoins(ctx, ibctransfertypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+	quicksilver, ctx := app.GetAppWithContext(t, true)
+	err := quicksilver.BankKeeper.MintCoins(ctx, ibctransfertypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+	require.NoError(t, err)
 
 	transferMsg := banktypes.MsgSend{}
-	require.Error(t, app.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
+	require.Error(t, quicksilver.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
 }
 
 func TestHandleMsgTransferBadRecipient(t *testing.T) {
 	recipient := utils.GenerateAccAddressForTest()
-	app, ctx := app.GetAppWithContext(t, true)
+	quicksilver, ctx := app.GetAppWithContext(t, true)
 
 	sender := utils.GenerateAccAddressForTest()
-	senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+	senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
+	require.NoError(t, err)
 
 	transferMsg := ibctransfertypes.MsgTransfer{
 		SourcePort:    "transfer",
@@ -78,7 +82,7 @@ func TestHandleMsgTransferBadRecipient(t *testing.T) {
 		Sender:        senderAddr,
 		Receiver:      recipient.String(),
 	}
-	require.Error(t, app.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
+	require.Error(t, quicksilver.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
 }
 
 // TODO: add test cases for send.
@@ -391,10 +395,10 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 			s.SetupTest()
 			s.setupTestZones()
 
-			app := s.GetQuicksilverApp(s.chainA)
+			quicksilver := s.GetQuicksilverApp(s.chainA)
 			ctx := s.chainA.GetContext()
 
-			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 			if !found {
 				s.Fail("unable to retrieve zone for test")
 			}
@@ -404,24 +408,24 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			// set up zones
 			for _, record := range records {
-				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
 			}
 
 			for _, delegation := range delegations {
-				app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+				quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
 				val, _ := zone.GetValidatorByValoper(delegation.ValidatorAddress)
 				val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
 				val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
 			}
 
 			for _, redelegation := range redelegations {
-				app.InterchainstakingKeeper.SetRedelegationRecord(ctx, redelegation)
+				quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, redelegation)
 			}
 
-			app.InterchainstakingKeeper.SetZone(ctx, &zone)
+			quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 			// trigger handler
-			err := app.InterchainstakingKeeper.HandleQueuedUnbondings(ctx, &zone, 1)
+			err := quicksilver.InterchainstakingKeeper.HandleQueuedUnbondings(ctx, &zone, 1)
 			if test.expectError {
 				s.Require().Error(err)
 			} else {
@@ -430,17 +434,17 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			for idx, record := range records {
 				// check record with old status is opposite to expectedTransition (if false, this record should exist in status 3)
-				_, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusQueued)
+				_, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusQueued)
 				s.Require().Equal(!test.expectTransition[idx], found)
 				// check record with new status is as per expectedTransition (if false, this record should not exist in status 4)
-				_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusUnbond)
+				_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusUnbond)
 				s.Require().Equal(test.expectTransition[idx], found)
 
 				if test.expectTransition[idx] {
-					actualRecord, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusUnbond)
+					actualRecord, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icskeeper.WithdrawStatusUnbond)
 					s.Require().True(found)
 					for _, unbonding := range actualRecord.Distribution {
-						r, found := app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, unbonding.Valoper, 1)
+						r, found := quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, unbonding.Valoper, 1)
 						fmt.Println(r)
 						s.Require().True(found)
 						s.Require().Contains(r.RelatedTxhash, record.Txhash)
@@ -560,10 +564,10 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 			s.SetupTest()
 			s.setupTestZones()
 
-			app := s.GetQuicksilverApp(s.chainA)
+			quicksilver := s.GetQuicksilverApp(s.chainA)
 			ctx := s.chainA.GetContext()
 
-			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 			if !found {
 				s.Fail("unable to retrieve zone for test")
 			}
@@ -572,29 +576,29 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUser() {
 
 			// set up zones
 			for _, record := range records {
-				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-				err := app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
+				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
 				s.Require().NoError(err)
-				err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
+				err = quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
 				s.Require().NoError(err)
 			}
 
 			// trigger handler
-			err := app.InterchainstakingKeeper.HandleWithdrawForUser(ctx, &zone, &test.message, test.memo)
+			err := quicksilver.InterchainstakingKeeper.HandleWithdrawForUser(ctx, &zone, &test.message, test.memo)
 			if test.err {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 			}
 
-			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
+			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash == test.memo {
 					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
-			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
+			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash != test.memo {
 					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
@@ -673,29 +677,29 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 			s.SetupTest()
 			s.setupTestZones()
 
-			app := s.GetQuicksilverApp(s.chainA)
+			quicksilver := s.GetQuicksilverApp(s.chainA)
 			ctx := s.chainA.GetContext()
 
-			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 			if !found {
 				s.Fail("unable to retrieve zone for test")
 			}
 
 			records := test.records(&zone)
 
-			startBalance := app.BankKeeper.GetAllBalances(ctx, app.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
+			startBalance := quicksilver.BankKeeper.GetAllBalances(ctx, quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
 			// set up zones
 			for _, record := range records {
-				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
-				err := app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
+				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(record.BurnAmount))
 				s.Require().NoError(err)
-				err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
+				err = quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.ModuleName, icstypes.EscrowModuleAccount, sdk.NewCoins(record.BurnAmount))
 				s.Require().NoError(err)
 			}
 
 			// trigger handler
-			for _, msg := range test.message {
-				err := app.InterchainstakingKeeper.HandleWithdrawForUser(ctx, &zone, &msg, test.memo)
+			for i := range test.message {
+				err := quicksilver.InterchainstakingKeeper.HandleWithdrawForUser(ctx, &zone, &test.message[i], test.memo)
 				if test.err {
 					s.Require().Error(err)
 				} else {
@@ -703,21 +707,21 @@ func (s *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 				}
 			}
 
-			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
+			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash == test.memo {
 					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
-			app.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
+			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash != test.memo {
 					s.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
-			postBurnBalance := app.BankKeeper.GetAllBalances(ctx, app.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
+			postBurnBalance := quicksilver.BankKeeper.GetAllBalances(ctx, quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
 			s.Require().Equal(startBalance, postBurnBalance)
 		})
 	}
@@ -727,10 +731,10 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	s.SetupTest()
 	s.setupTestZones()
 
-	app := s.GetQuicksilverApp(s.chainA)
+	quicksilver := s.GetQuicksilverApp(s.chainA)
 	ctx := s.chainA.GetContext()
 
-	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 	if !found {
 		s.Fail("unable to retrieve zone for test")
 	}
@@ -744,10 +748,10 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 		Amount:      1000,
 	}
 
-	app.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
 
 	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: zone.Validators[0].ValoperAddress, ValidatorDstAddress: zone.Validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
-	data, err := icatypes.SerializeCosmosTx(app.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
 	s.Require().NoError(err)
 
 	// validate memo < 256 bytes
@@ -757,18 +761,18 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 		Memo: fmt.Sprintf("rebalance/%d", 1),
 	}
 
-	packet := channeltypes.Packet{Data: app.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
 
 	ackBytes := []byte("{\"error\":\"ABCI code: 32: error handling packet on host chain: see events for details\"}")
 	// call handler
 
-	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
+	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
 	s.Require().True(found)
 
-	err = app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
 	s.Require().NoError(err)
 
-	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
+	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
 	s.Require().False(found)
 }
 
@@ -1139,7 +1143,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						RelatedTxhash: []string{hash2},
 					},
 					// {
-					// 	ChainId:       s.chainB.ChainID,
+					// 	ChainID:       s.chainB.ChainID,
 					// 	EpochNumber:   1,
 					// 	Validator:     zone.Validators[2].ValoperAddress,
 					// 	RelatedTxhash: []string{hash2},
@@ -1207,23 +1211,23 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 			s.SetupTest()
 			s.setupTestZones()
 
-			app := s.GetQuicksilverApp(s.chainA)
+			quicksilver := s.GetQuicksilverApp(s.chainA)
 			ctx := s.chainA.GetContext()
 
-			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 			if !found {
 				s.Fail("unable to retrieve zone for test")
 			}
 
 			for _, wdr := range test.withdrawalRecords(zone) {
-				app.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
+				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
 			}
 
 			for _, ubr := range test.unbondingRecords(zone) {
-				app.InterchainstakingKeeper.SetUnbondingRecord(ctx, ubr)
+				quicksilver.InterchainstakingKeeper.SetUnbondingRecord(ctx, ubr)
 			}
 
-			data, err := icatypes.SerializeCosmosTx(app.InterchainstakingKeeper.GetCodec(), test.msgs(zone))
+			data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), test.msgs(zone))
 			s.Require().NoError(err)
 
 			// validate memo < 256 bytes
@@ -1233,26 +1237,26 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				Memo: fmt.Sprintf("withdrawal/%d", test.epoch),
 			}
 
-			packet := channeltypes.Packet{Data: app.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+			packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
 
 			ackBytes := []byte("{\"error\":\"ABCI code: 32: error handling packet on host chain: see events for details\"}")
 			// call handler
 
 			for _, ubr := range test.unbondingRecords(zone) {
-				_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, ubr.Validator, test.epoch)
+				_, found = quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, ubr.Validator, test.epoch)
 				s.Require().True(found)
 			}
 
-			err = app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+			err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
 			s.Require().NoError(err)
 
 			for _, ubr := range test.unbondingRecords(zone) {
-				_, found = app.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, ubr.Validator, test.epoch)
+				_, found = quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, ubr.Validator, test.epoch)
 				s.Require().False(found)
 			}
 
 			for idx, ewdr := range test.expectedWithdrawalRecords(zone) {
-				wdr, found := app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, ewdr.Txhash, ewdr.Status)
+				wdr, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, ewdr.Txhash, ewdr.Status)
 				s.Require().True(found)
 				s.Require().Equal(ewdr.Amount, wdr.Amount)
 				s.Require().Equal(ewdr.BurnAmount, wdr.BurnAmount)
@@ -1268,10 +1272,10 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	s.SetupTest()
 	s.setupTestZones()
 
-	app := s.GetQuicksilverApp(s.chainA)
+	quicksilver := s.GetQuicksilverApp(s.chainA)
 	ctx := s.chainA.GetContext()
 
-	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 	if !found {
 		s.Fail("unable to retrieve zone for test")
 	}
@@ -1304,16 +1308,16 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 		},
 	}
 	for _, delegation := range delegations {
-		app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
 		val, _ := zone.GetValidatorByValoper(delegation.ValidatorAddress)
 		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
 		val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
 	}
 
-	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	// trigger rebalance
-	err := app.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
+	err := quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
 	s.Require().NoError(err)
 
 	// change intents to trigger redelegations from val[3]
@@ -1326,11 +1330,11 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	zone.AggregateIntent = intents
 
 	// trigger rebalance
-	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
+	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
 	s.Require().NoError(err)
 
 	// mock ack for redelegations
-	app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
+	quicksilver.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
 		if record.EpochNumber == 2 {
 			msg := stakingtypes.MsgBeginRedelegate{
 				DelegatorAddress:    zone.DelegationAddress.Address,
@@ -1338,7 +1342,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 				ValidatorDstAddress: record.Destination,
 				Amount:              sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
 			}
-			err := app.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
+			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
 			if err != nil {
 				return false
 			}
@@ -1347,15 +1351,15 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	})
 
 	// check for redelegations
-	_, present := app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[0].ValoperAddress, 2)
+	_, present := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[0].ValoperAddress, 2)
 	s.Require().True(present)
-	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[1].ValoperAddress, 2)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[1].ValoperAddress, 2)
 	s.Require().True(present)
-	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[2].ValoperAddress, 2)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[2].ValoperAddress, 2)
 	s.Require().True(present)
 
 	// change intents to trigger transitive redelegations which should fail rebalance
-	zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 	intents = icstypes.ValidatorIntents{
 		{ValoperAddress: vals[0].ValoperAddress, Weight: sdk.NewDecWithPrec(1, 1)},
 		{ValoperAddress: vals[1].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
@@ -1365,15 +1369,15 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	zone.AggregateIntent = intents
 
 	// trigger rebalance
-	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
+	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
 	s.Require().NoError(err)
 
 	// check for redelegations originating from val[0], they should not be present
-	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 3)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 3)
 	s.Require().False(present)
-	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[2].ValoperAddress, 3)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[2].ValoperAddress, 3)
 	s.Require().False(present)
-	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[3].ValoperAddress, 3)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[3].ValoperAddress, 3)
 	s.Require().False(present)
 }
 
@@ -1381,10 +1385,10 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	s.SetupTest()
 	s.setupTestZones()
 
-	app := s.GetQuicksilverApp(s.chainA)
+	quicksilver := s.GetQuicksilverApp(s.chainA)
 	ctx := s.chainA.GetContext()
 
-	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 	if !found {
 		s.Fail("unable to retrieve zone for test")
 	}
@@ -1417,32 +1421,32 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 		},
 	}
 	for _, delegation := range delegations {
-		app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
 		val, _ := zone.GetValidatorByValoper(delegation.ValidatorAddress)
 		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
 		val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
 	}
 
-	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	// trigger rebalance
-	err := app.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
+	err := quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
 	s.Require().NoError(err)
 
-	app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) bool {
+	quicksilver.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) bool {
 		if delegation.ValidatorAddress == vals[0].ValoperAddress {
 			delegation.Amount = delegation.Amount.Add(sdk.NewInt64Coin("uatom", 4000))
-			app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
 		}
 		return false
 	})
 
 	// trigger rebalance
-	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
+	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
 	s.Require().NoError(err)
 
 	// mock ack for redelegations
-	app.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
+	quicksilver.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
 		if record.EpochNumber == 2 {
 			msg := stakingtypes.MsgBeginRedelegate{
 				DelegatorAddress:    zone.DelegationAddress.Address,
@@ -1450,7 +1454,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 				ValidatorDstAddress: record.Destination,
 				Amount:              sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
 			}
-			err := app.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
+			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
 			if err != nil {
 				return false
 			}
@@ -1459,55 +1463,59 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	})
 
 	// check for redelegations
-	_, present := app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[2].ValoperAddress, 2)
+	_, present := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[2].ValoperAddress, 2)
 	s.Require().True(present)
-	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[3].ValoperAddress, 2)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[3].ValoperAddress, 2)
 	s.Require().True(present)
 
 	// change validator delegation to trigger transitive redelegations which should fail rebalance
-	app.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) bool {
+	quicksilver.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) bool {
 		if delegation.ValidatorAddress == vals[0].ValoperAddress {
 			delegation.Amount = delegation.Amount.Sub(sdk.NewInt64Coin("uatom", 4000))
-			app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
 		}
 		if delegation.ValidatorAddress == vals[2].ValoperAddress {
 			delegation.Amount = delegation.Amount.Add(sdk.NewInt64Coin("uatom", 4000))
-			app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
 		}
 
 		return false
 	})
 
 	// trigger rebalance
-	err = app.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
+	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
+	s.Require().NoError(err)
 
 	// check for redelegations originating from val[1], they should not be present
-	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[0].ValoperAddress, 3)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[0].ValoperAddress, 3)
 	s.Require().False(present)
-	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[1].ValoperAddress, 3)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[1].ValoperAddress, 3)
 	s.Require().False(present)
-	_, present = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[3].ValoperAddress, 3)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[2].ValoperAddress, vals[3].ValoperAddress, 3)
 	s.Require().False(present)
 }
 
 func (s *KeeperTestSuite) Test_v045Callback() {
 	tests := []struct {
 		name             string
-		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte)
-		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
+		setStatements    func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, []byte)
+		assertStatements func(ctx sdk.Context, quicksilver *app.Quicksilver) bool
 	}{
 		{
 			name: "msg response with some data",
-			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
-				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, []byte) {
+				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				s.Require().NoError(err)
 				sender := utils.GenerateAccAddressForTest()
-				senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				s.Require().NoError(err)
+
 				transferMsg := ibctransfertypes.MsgTransfer{
 					SourcePort:    "transfer",
 					SourceChannel: "channel-0",
 					Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
 					Sender:        senderAddr,
-					Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+					Receiver:      quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
 				}
 				response := ibctransfertypes.MsgTransferResponse{
 					Sequence: 1,
@@ -1516,11 +1524,11 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 				respBytes := icatypes.ModuleCdc.MustMarshal(&response)
 				return []sdk.Msg{&transferMsg}, respBytes
 			},
-			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
-				txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
-				feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-				txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
-				feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				txMacc := quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+				feeMacc := quicksilver.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+				txMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
+				feeMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
 
 				// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
 
@@ -1532,8 +1540,8 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 		},
 		{
 			name: "msg response with nil data",
-			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
-				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, []byte) {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				if !found {
 					s.Fail("unable to retrieve zone for test")
 				}
@@ -1548,8 +1556,8 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 				respBytes := icatypes.ModuleCdc.MustMarshal(&response)
 				return []sdk.Msg{&msgSetWithdrawAddress}, respBytes
 			},
-			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
-				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				if !found {
 					s.Fail("unable to retrieve zone for test")
 				}
@@ -1567,13 +1575,14 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 			s.SetupTest()
 			s.setupTestZones()
 
-			app := s.GetQuicksilverApp(s.chainA)
+			quicksilver := s.GetQuicksilverApp(s.chainA)
 			ctx := s.chainA.GetContext()
 
-			msg, msgResponseBytes := test.setStatements(ctx, app)
+			msg, msgResponseBytes := test.setStatements(ctx, quicksilver)
 
 			txMsgData := &sdk.TxMsgData{
-				Data:         []*sdk.MsgData{{MsgType: "/bob", Data: msgResponseBytes}},
+				// we need to support this older deprecated type
+				Data:         []*sdk.MsgData{{MsgType: "/bob", Data: msgResponseBytes}}, //nolint:staticcheck
 				MsgResponses: []*codectypes.Any{},
 			}
 
@@ -1599,9 +1608,9 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 				Data: packetBytes,
 			}
 
-			s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+			s.Require().NoError(quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
 
-			s.Require().True(test.assertStatements(ctx, app))
+			s.Require().True(test.assertStatements(ctx, quicksilver))
 		})
 	}
 }
@@ -1609,34 +1618,38 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 func (s *KeeperTestSuite) Test_v046Callback() {
 	tests := []struct {
 		name             string
-		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any)
-		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
+		setStatements    func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, *codectypes.Any)
+		assertStatements func(ctx sdk.Context, quicksilver *app.Quicksilver) bool
 	}{
 		{
 			name: "msg response with some data",
-			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
-				app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
+				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				s.Require().NoError(err)
 				sender := utils.GenerateAccAddressForTest()
-				senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
+				s.Require().NoError(err)
+
 				transferMsg := ibctransfertypes.MsgTransfer{
 					SourcePort:    "transfer",
 					SourceChannel: "channel-0",
 					Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
 					Sender:        senderAddr,
-					Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+					Receiver:      quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
 				}
 				response := ibctransfertypes.MsgTransferResponse{
 					Sequence: 1,
 				}
 
-				anyresponse, _ := codectypes.NewAnyWithValue(&response)
-				return []sdk.Msg{&transferMsg}, anyresponse
+				anyResponse, err := codectypes.NewAnyWithValue(&response)
+				s.Require().NoError(err)
+				return []sdk.Msg{&transferMsg}, anyResponse
 			},
-			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
-				txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
-				feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-				txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
-				feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				txMacc := quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+				feeMacc := quicksilver.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+				txMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
+				feeMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
 
 				// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
 
@@ -1648,8 +1661,8 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 		},
 		{
 			name: "msg response with nil data",
-			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
-				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				if !found {
 					s.Fail("unable to retrieve zone for test")
 				}
@@ -1661,11 +1674,12 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 
 				response := distrtypes.MsgSetWithdrawAddressResponse{}
 
-				anyresponse, _ := codectypes.NewAnyWithValue(&response)
-				return []sdk.Msg{&msgSetWithdrawAddress}, anyresponse
+				anyResponse, err := codectypes.NewAnyWithValue(&response)
+				s.Require().NoError(err)
+				return []sdk.Msg{&msgSetWithdrawAddress}, anyResponse
 			},
-			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
-				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				if !found {
 					s.Fail("unable to retrieve zone for test")
 				}
@@ -1683,13 +1697,13 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 			s.SetupTest()
 			s.setupTestZones()
 
-			app := s.GetQuicksilverApp(s.chainA)
+			quicksilver := s.GetQuicksilverApp(s.chainA)
 			ctx := s.chainA.GetContext()
 
-			msg, anyResp := test.setStatements(ctx, app)
+			msg, anyResp := test.setStatements(ctx, quicksilver)
 
 			txMsgData := &sdk.TxMsgData{
-				Data:         []*sdk.MsgData{},
+				Data:         []*sdk.MsgData{}, //nolint:staticcheck
 				MsgResponses: []*codectypes.Any{anyResp},
 			}
 
@@ -1715,9 +1729,9 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 				Data: packetBytes,
 			}
 
-			s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+			s.Require().NoError(quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
 
-			s.Require().True(test.assertStatements(ctx, app))
+			s.Require().True(test.assertStatements(ctx, quicksilver))
 		})
 	}
 }

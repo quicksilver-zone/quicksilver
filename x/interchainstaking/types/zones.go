@@ -83,15 +83,16 @@ COINS:
 	for _, coin := range coins {
 		for _, v := range zoneVals {
 			// if token share, add amount to
-			if strings.HasPrefix(coin.Denom, v) {
-				val, ok := out.GetForValoper(v)
-				if !ok {
-					val = &ValidatorIntent{ValoperAddress: v, Weight: sdk.ZeroDec()}
-				}
-				val.Weight = val.Weight.Add(sdk.NewDecFromInt(coin.Amount))
-				out = out.SetForValoper(v, val)
-				continue COINS
+			if !strings.HasPrefix(coin.Denom, v) {
+				continue
 			}
+			val, ok := out.GetForValoper(v)
+			if !ok {
+				val = &ValidatorIntent{ValoperAddress: v, Weight: sdk.ZeroDec()}
+			}
+			val.Weight = val.Weight.Add(sdk.NewDecFromInt(coin.Amount))
+			out = out.SetForValoper(v, val)
+			continue COINS
 		}
 	}
 
@@ -102,7 +103,7 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 	// should we be return DelegatorIntent here?
 	out := make(ValidatorIntents, 0)
 
-	if len(memo) == 0 {
+	if memo == "" {
 		return out, errors.New("memo length unexpectedly zero")
 	}
 
@@ -203,7 +204,7 @@ func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
 	return filteredIntents
 }
 
-// DefaultAggregateIntents determines the default aggregate intent (for epoch 0)
+// DefaultAggregateIntents determines the default aggregate intent (for epoch 0).
 func (z *Zone) DefaultAggregateIntents() ValidatorIntents {
 	out := make(ValidatorIntents, 0)
 	for _, val := range z.GetValidatorsSorted() {

@@ -29,12 +29,12 @@ func init() {
 }
 
 func GetSimApp(chain *ibctesting.TestChain) *app.Quicksilver {
-	app, ok := chain.App.(*app.Quicksilver)
+	quicksilver, ok := chain.App.(*app.Quicksilver)
 	if !ok {
 		panic("not quicksilver app")
 	}
 
-	return app
+	return quicksilver
 }
 
 func newSimAppPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {

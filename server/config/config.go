@@ -32,7 +32,7 @@ type TLSConfig struct {
 
 // AppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
-func AppConfig(denom string) (string, interface{}) {
+func AppConfig(denom string) (customAppTemplate string, customAppConfig interface{}) {
 	// Optionally allow the chain developer to overwrite the SDK's default
 	// server config.
 	srvCfg := config.DefaultConfig()
@@ -53,12 +53,12 @@ func AppConfig(denom string) (string, interface{}) {
 		srvCfg.MinGasPrices = "0" + denom
 	}
 
-	customAppConfig := Config{
+	customAppConfig = Config{
 		Config: *srvCfg,
 		TLS:    *DefaultTLSConfig(),
 	}
 
-	customAppTemplate := config.DefaultConfigTemplate + DefaultConfigTemplate
+	customAppTemplate = config.DefaultConfigTemplate + DefaultConfigTemplate
 
 	return customAppTemplate, customAppConfig
 }
@@ -71,7 +71,7 @@ func DefaultConfig() *Config {
 	}
 }
 
-// DefaultTLSConfig returns the default TLS configuration
+// DefaultTLSConfig returns the default TLS configuration.
 func DefaultTLSConfig() *TLSConfig {
 	return &TLSConfig{
 		CertificatePath: "",
@@ -118,7 +118,7 @@ func ParseConfig(v *viper.Viper) (*Config, error) {
 	return conf, err
 }
 
-// ValidateBasic returns an error any of the application configuration fields are invalid
+// ValidateBasic returns an error any of the application configuration fields are invalid.
 func (c Config) ValidateBasic() error {
 	if err := c.TLS.Validate(); err != nil {
 		return sdkioerrors.Wrapf(sdkerrors.ErrAppConfig, "invalid tls config value: %s", err.Error())

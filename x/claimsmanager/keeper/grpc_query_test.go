@@ -6,14 +6,14 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
-func (suite *KeeperTestSuite) TestKeeper_Queries() {
-	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
+func (s *KeeperTestSuite) TestKeeper_Queries() {
+	k := s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper
 
 	// now that we have a kepper set the chainID of chainB
-	testClaims[0].ChainId = suite.chainB.ChainID
-	testClaims[1].ChainId = suite.chainB.ChainID
-	testClaims[2].ChainId = suite.chainB.ChainID
-	testClaims[3].ChainId = suite.chainB.ChainID
+	testClaims[0].ChainId = s.chainB.ChainID
+	testClaims[1].ChainId = s.chainB.ChainID
+	testClaims[2].ChainId = s.chainB.ChainID
+	testClaims[3].ChainId = s.chainB.ChainID
 
 	tests := []struct {
 		name         string
@@ -26,7 +26,7 @@ func (suite *KeeperTestSuite) TestKeeper_Queries() {
 			"Claims_chainB",
 			func() {},
 			&types.QueryClaimsRequest{
-				ChainId: suite.chainB.ChainID,
+				ChainId: s.chainB.ChainID,
 			},
 			k.Claims,
 			4,
@@ -52,10 +52,10 @@ func (suite *KeeperTestSuite) TestKeeper_Queries() {
 		{
 			"LastEpochClaims_chainB",
 			func() {
-				k.ArchiveAndGarbageCollectClaims(suite.chainA.GetContext(), suite.chainB.ChainID)
+				k.ArchiveAndGarbageCollectClaims(s.chainA.GetContext(), s.chainB.ChainID)
 			},
 			&types.QueryClaimsRequest{
-				ChainId: suite.chainB.ChainID,
+				ChainId: s.chainB.ChainID,
 			},
 			k.LastEpochClaims,
 			4,
@@ -82,20 +82,20 @@ func (suite *KeeperTestSuite) TestKeeper_Queries() {
 		},
 	}
 
-	k.SetClaim(suite.chainA.GetContext(), &testClaims[0])
-	k.SetClaim(suite.chainA.GetContext(), &testClaims[1])
-	k.SetClaim(suite.chainA.GetContext(), &testClaims[2])
-	k.SetClaim(suite.chainA.GetContext(), &testClaims[3])
-	k.SetClaim(suite.chainA.GetContext(), &testClaims[4])
-	k.SetClaim(suite.chainA.GetContext(), &testClaims[5])
+	k.SetClaim(s.chainA.GetContext(), &testClaims[0])
+	k.SetClaim(s.chainA.GetContext(), &testClaims[1])
+	k.SetClaim(s.chainA.GetContext(), &testClaims[2])
+	k.SetClaim(s.chainA.GetContext(), &testClaims[3])
+	k.SetClaim(s.chainA.GetContext(), &testClaims[4])
+	k.SetClaim(s.chainA.GetContext(), &testClaims[5])
 
 	for _, tt := range tests {
-		suite.Run(tt.name, func() {
+		s.Run(tt.name, func() {
 			tt.malleate()
-			resp, err := tt.queryFn(suite.chainA.GetContext(), tt.req)
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp.Claims)
-			suite.Require().Equal(tt.expectLength, len(resp.Claims))
+			resp, err := tt.queryFn(s.chainA.GetContext(), tt.req)
+			s.Require().NoError(err)
+			s.Require().NotNil(resp.Claims)
+			s.Require().Equal(tt.expectLength, len(resp.Claims))
 		})
 	}
 }

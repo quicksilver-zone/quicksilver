@@ -6,7 +6,7 @@ const (
 )
 
 // internalChain contains the same info as chain, but with the validator structs instead using the internal validator
-// representation, with more derived data
+// representation, with more derived data.
 type internalChain struct {
 	chainMeta ChainMeta
 	nodes     []*internalNode

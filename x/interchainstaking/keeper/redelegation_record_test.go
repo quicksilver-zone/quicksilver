@@ -8,7 +8,7 @@ import (
 )
 
 func (s *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
-	qapp := s.GetQuicksilverApp(s.chainA)
+	quicksilver := s.GetQuicksilverApp(s.chainA)
 	ctx := s.chainA.GetContext()
 
 	testValidatorOne := utils.GenerateAccAddressForTestWithPrefix("cosmosvaloper")
@@ -16,7 +16,7 @@ func (s *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
 
 	s.SetupTest()
 
-	records := qapp.InterchainstakingKeeper.AllRedelegationRecords(ctx)
+	records := quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
 	s.Require().Equal(0, len(records))
 
 	record := types.RedelegationRecord{
@@ -28,26 +28,26 @@ func (s *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
 		CompletionTime: time.Now().Add(time.Hour).UTC(),
 	}
 
-	qapp.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
 
-	records = qapp.InterchainstakingKeeper.AllRedelegationRecords(ctx)
+	records = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
 
 	s.Require().Equal(1, len(records))
 
-	recordFetched, found := qapp.InterchainstakingKeeper.GetRedelegationRecord(ctx, "cosmoshub-4", testValidatorOne, testValidatorTwo, 1)
+	recordFetched, found := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, "cosmoshub-4", testValidatorOne, testValidatorTwo, 1)
 
 	s.Require().True(found)
 	s.Require().Equal(record, recordFetched)
 
-	allRecords := qapp.InterchainstakingKeeper.AllRedelegationRecords(ctx)
+	allRecords := quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
 	s.Require().Equal(1, len(allRecords))
-	allCosmosRecords := qapp.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "cosmoshub-4")
+	allCosmosRecords := quicksilver.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "cosmoshub-4")
 	s.Require().Equal(1, len(allCosmosRecords))
-	allOtherChainRecords := qapp.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "elgafar-1")
+	allOtherChainRecords := quicksilver.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "elgafar-1")
 	s.Require().Equal(0, len(allOtherChainRecords))
 
-	qapp.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, "cosmoshub-4", testValidatorOne, testValidatorTwo, 1)
+	quicksilver.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, "cosmoshub-4", testValidatorOne, testValidatorTwo, 1)
 
-	allCosmosRecords = qapp.InterchainstakingKeeper.AllRedelegationRecords(ctx)
+	allCosmosRecords = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
 	s.Require().Equal(0, len(allCosmosRecords))
 }

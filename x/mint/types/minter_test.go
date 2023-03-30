@@ -15,7 +15,7 @@ import (
 // BenchmarkEpochProvision-4 5000000 220 ns/op
 //
 // using sdk.Dec operations: (current implementation)
-// BenchmarkEpochProvision-4 3000000 429 ns/op
+// BenchmarkEpochProvision-4 3000000 429 ns/op.
 func BenchmarkEpochProvision(b *testing.B) {
 	b.ReportAllocs()
 	minter := types.InitialMinter()
@@ -32,7 +32,7 @@ func BenchmarkEpochProvision(b *testing.B) {
 }
 
 // Next epoch provisions benchmarking
-// BenchmarkNextEpochProvisions-4 5000000 251 ns/op
+// BenchmarkNextEpochProvisions-4 5000000 251 ns/op.
 func BenchmarkNextEpochProvisions(b *testing.B) {
 	b.ReportAllocs()
 	minter := types.InitialMinter()

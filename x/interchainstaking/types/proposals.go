@@ -52,7 +52,7 @@ func (m RegisterZoneProposal) GetTitle() string       { return m.Title }
 func (m RegisterZoneProposal) ProposalRoute() string  { return RouterKey }
 func (m RegisterZoneProposal) ProposalType() string   { return ProposalTypeRegisterZone }
 
-// ValidateBasic runs basic stateless validity checks
+// ValidateBasic runs basic stateless validity checks.
 func (m RegisterZoneProposal) ValidateBasic() error {
 	err := govv1beta1.ValidateAbstract(m)
 	if err != nil {
@@ -95,7 +95,7 @@ func (m RegisterZoneProposal) String() string {
 	return fmt.Sprintf(`Interchain Staking  Zone Registration Proposal:
   Title:                            %s
   Description:                      %s
-  Connection Id:                    %s
+  Connection ID:                    %s
   Base Denom:                       %s
   Local Denom:                      %s
   Return to Sender Enabled:         %t
@@ -136,7 +136,7 @@ func (m UpdateZoneProposal) GetTitle() string       { return m.Title }
 func (m UpdateZoneProposal) ProposalRoute() string  { return RouterKey }
 func (m UpdateZoneProposal) ProposalType() string   { return ProposalTypeUpdateZone }
 
-// ValidateBasic runs basic stateless validity checks
+// ValidateBasic runs basic stateless validity checks.
 func (m UpdateZoneProposal) ValidateBasic() error {
 	return govv1beta1.ValidateAbstract(m)
 }

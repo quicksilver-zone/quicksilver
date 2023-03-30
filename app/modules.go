@@ -106,7 +106,7 @@ var (
 		wasm.AppModuleBasic{},
 	)
 
-	// module account permissions
+	// module account permissions.
 	maccPerms = map[string][]string{
 		authtypes.FeeCollectorName:                 nil,
 		distrtypes.ModuleName:                      nil,
@@ -174,7 +174,7 @@ func appModules(
 }
 
 // simulationModules returns modules for simulation manager
-// define the order of the modules for deterministic simulations
+// define the order of the modules for deterministic simulations.
 func simulationModules(
 	app *Quicksilver,
 	encodingConfig EncodingConfig,
@@ -263,7 +263,7 @@ Interchain Security Requirements:
 thus, staking.EndBlock must be executed before provider.EndBlock;
 - creating a new consumer chain requires the following order,
 CreateChildClient(), staking.EndBlock, provider.EndBlock;
-thus, gov.EndBlock must be executed before staking.EndBlock
+thus, gov.EndBlock must be executed before staking.EndBlock.
 */
 func orderEndBlockers() []string {
 	return []string{

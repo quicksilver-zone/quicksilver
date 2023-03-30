@@ -21,7 +21,7 @@ func (p Proof) ValidateBasic() error {
 		errors["Height"] = ErrNegativeAttribute
 	}
 
-	if len(p.ProofType) == 0 {
+	if p.ProofType == "" {
 		errors["ProofType"] = ErrUndefinedAttribute
 	}
 

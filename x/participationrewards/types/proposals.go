@@ -15,7 +15,7 @@ const (
 
 var _ govv1beta1.Content = &AddProtocolDataProposal{}
 
-func NewAddProtocolDataProposal(title string, description string, datatype string, _ string, key string, data json.RawMessage) *AddProtocolDataProposal {
+func NewAddProtocolDataProposal(title, description, datatype, _, key string, data json.RawMessage) *AddProtocolDataProposal {
 	return &AddProtocolDataProposal{Title: title, Description: description, Type: datatype, Data: data, Key: key}
 }
 
@@ -24,7 +24,7 @@ func (m AddProtocolDataProposal) GetTitle() string       { return m.Title }
 func (m AddProtocolDataProposal) ProposalRoute() string  { return RouterKey }
 func (m AddProtocolDataProposal) ProposalType() string   { return ProposalTypeAddProtocolData }
 
-// ValidateBasic runs basic stateless validity checks
+// ValidateBasic runs basic stateless validity checks.
 func (m AddProtocolDataProposal) ValidateBasic() error {
 	if err := govv1beta1.ValidateAbstract(m); err != nil {
 		return err
@@ -32,11 +32,11 @@ func (m AddProtocolDataProposal) ValidateBasic() error {
 
 	errors := make(map[string]error)
 
-	if len(m.Type) == 0 {
+	if m.Type == "" {
 		errors["Type"] = ErrUndefinedAttribute
 	}
 
-	if len(m.Key) == 0 {
+	if m.Key == "" {
 		errors["Key"] = ErrUndefinedAttribute
 	}
 

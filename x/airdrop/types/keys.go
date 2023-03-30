@@ -5,13 +5,13 @@ import (
 )
 
 const (
-	// ModuleName defines the module name
+	// ModuleName defines the module name.
 	ModuleName = "airdrop"
-	// StoreKey defines the primary module store key
+	// StoreKey defines the primary module store key.
 	StoreKey = ModuleName
-	// QuerierRoute is the querier route for the module
+	// QuerierRoute is the querier route for the module.
 	QuerierRoute = StoreKey
-	// RouterKey is the message route for the module
+	// RouterKey is the message route for the module.
 	RouterKey = ModuleName
 )
 

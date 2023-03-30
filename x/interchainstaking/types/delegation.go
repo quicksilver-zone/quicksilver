@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
-// NewDelegation creates a new delegation object
-func NewDelegation(delegatorAddr string, validatorAddr string, amount sdk.Coin) Delegation {
+// NewDelegation creates a new delegation object.
+func NewDelegation(delegatorAddr, validatorAddr string, amount sdk.Coin) Delegation {
 	return Delegation{
 		DelegationAddress: delegatorAddr,
 		ValidatorAddress:  validatorAddr,
@@ -38,7 +38,7 @@ func MustUnmarshalDelegation(cdc codec.BinaryCodec, value []byte) Delegation {
 	return delegation
 }
 
-// return the delegation
+// UnmarshalDelegation return the delegation.
 func UnmarshalDelegation(cdc codec.BinaryCodec, value []byte) (delegation Delegation, err error) {
 	if len(value) == 0 {
 		return Delegation{}, errors.New("unable to unmarshal zero-length byte slice")

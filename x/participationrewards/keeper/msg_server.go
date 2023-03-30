@@ -46,7 +46,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	if err != nil {
 		k.Logger(ctx).Error("SubmitClaim: error unmarshalling protocol data")
 	}
-	connectionData := iConnectionData.(types.ConnectionProtocolData)
+	connectionData, _ := iConnectionData.(types.ConnectionProtocolData)
 
 	for i, proof := range msg.Proofs {
 		pl := fmt.Sprintf("Proof [%d]", i)
@@ -95,7 +95,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 		// vertifyClaim needs to return the amount!
 		amount, err := mod.ValidateClaim(ctx, k.Keeper, msg)
 		if err != nil {
-			return nil, fmt.Errorf("claim validation failed: %v", err)
+			return nil, fmt.Errorf("claim validation failed: %w", err)
 		}
 		claim := k.icsKeeper.ClaimsManagerKeeper.NewClaim(msg.UserAddress, zone.ChainId, msg.ClaimType, msg.SrcZone, amount)
 		k.icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &claim)

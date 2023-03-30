@@ -4,7 +4,7 @@ func NewGenesisState(params Params, zones []Zone) *GenesisState {
 	return &GenesisState{Params: params, Zones: zones}
 }
 
-// DefaultGenesis returns the default ics genesis state
+// DefaultGenesis returns the default ics genesis state.
 func DefaultGenesis() *GenesisState {
 	zones := []Zone{}
 	return NewGenesisState(DefaultParams(), zones)

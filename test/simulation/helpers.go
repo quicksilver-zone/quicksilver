@@ -22,7 +22,7 @@ import (
 // SetupSimulation creates the config, db (levelDB), temporary directory and logger for
 // the simulation tests. If `FlagEnabledValue` is false it skips the current test.
 // Returns error on an invalid db instantiation or temp dir creation.
-func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) {
+func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) { //nolint:gocritic test util does not need to be simplified
 	if !FlagEnabledValue {
 		return simtypes.Config{}, nil, "", nil, true, nil
 	}
@@ -51,8 +51,8 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string,
 }
 
 // Operations retrieves the simulation params from the provided file path
-// and returns all the modules weighted operations
-func Operations(app *app.Quicksilver, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
+// and returns all the modules weighted operations.
+func Operations(quicksilver *app.Quicksilver, cdc codec.JSONCodec, config simtypes.Config) []simtypes.WeightedOperation {
 	simState := module.SimulationState{
 		AppParams: make(simtypes.AppParams),
 		Cdc:       cdc,
@@ -70,21 +70,21 @@ func Operations(app *app.Quicksilver, cdc codec.JSONCodec, config simtypes.Confi
 		}
 	}
 
-	simState.ParamChanges = app.SimulationManager().GenerateParamChanges(config.Seed)
-	simState.Contents = app.SimulationManager().GetProposalContents(simState)
-	return app.SimulationManager().WeightedOperations(simState)
+	simState.ParamChanges = quicksilver.SimulationManager().GenerateParamChanges(config.Seed)
+	simState.Contents = quicksilver.SimulationManager().GetProposalContents(simState)
+	return quicksilver.SimulationManager().WeightedOperations(simState)
 }
 
 // CheckExportSimulation exports the app state and simulation parameters to JSON
 // if the export paths are defined.
 func CheckExportSimulation(
-	app *app.Quicksilver,
+	quicksilver *app.Quicksilver,
 	config simtypes.Config,
 	params simtypes.Params,
 ) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
-		exported, err := app.ExportAppStateAndValidators(false, nil)
+		exported, err := quicksilver.ExportAppStateAndValidators(false, nil)
 		if err != nil {
 			return err
 		}
@@ -117,7 +117,7 @@ func PrintStats(db dbm.DB) {
 
 // GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on
 // each module store key and the prefix bytes of the KVPair's key.
-func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, kvAs, kvBs []kv.Pair) (log string) {
+func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, kvAs, kvBs []kv.Pair) (simLog string) {
 	for i := 0; i < len(kvAs); i++ {
 		if len(kvAs[i].Value) == 0 && len(kvBs[i].Value) == 0 {
 			// skip if the value doesn't have any bytes
@@ -126,11 +126,11 @@ func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, kvAs, kvBs
 
 		decoder, ok := sdr[storeName]
 		if ok {
-			log += decoder(kvAs[i], kvBs[i])
+			simLog += decoder(kvAs[i], kvBs[i])
 		} else {
-			log += fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", kvAs[i].Key, kvAs[i].Value, kvBs[i].Key, kvBs[i].Value)
+			simLog += fmt.Sprintf("store A %X => %X\nstore B %X => %X\n", kvAs[i].Key, kvAs[i].Value, kvBs[i].Key, kvBs[i].Value)
 		}
 	}
 
-	return log
+	return simLog
 }

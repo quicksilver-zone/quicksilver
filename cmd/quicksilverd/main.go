@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -24,12 +25,10 @@ func main() {
 	rootCmd, _ := NewRootCmd()
 
 	if err := svrcmd.Execute(rootCmd, "QUICKSILVERD", app.DefaultNodeHome); err != nil {
-		switch e := err.(type) {
-		case server.ErrorCode:
-			os.Exit(e.Code)
-
-		default:
-			os.Exit(1)
+		var exitError *server.ErrorCode
+		if errors.As(err, &exitError) {
+			os.Exit(exitError.Code)
 		}
 	}
+	os.Exit(1)
 }

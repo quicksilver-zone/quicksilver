@@ -1,26 +1,27 @@
 package multierror
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
 )
 
 // New returns an error aggregate using the given map.
-func New(errors map[string]error) Errors {
-	return Errors{errors}
+func New(errs map[string]error) MultiError {
+	return MultiError{errs}
 }
 
-// Error represents aggregated errors, contained in a map.
-type Errors struct {
+// MultiError represents aggregated errors, contained in a map.
+type MultiError struct {
 	Errors map[string]error
 }
 
-func (e Errors) Error() string {
+func (e MultiError) Error() string {
 	return e.details(0)
 }
 
-func (e Errors) details(d int) string {
+func (e MultiError) details(d int) string {
 	str := "{"
 	d++
 
@@ -41,12 +42,12 @@ func (e Errors) details(d int) string {
 func indent(k string, v error, d int) string {
 	istr := indentString("  ", d)
 
-	switch err := v.(type) {
-	case Errors:
-		return fmt.Sprintf("\n%v\"%v\": %v", istr, k, err.details(d))
-	default:
-		return fmt.Sprintf("\n%v\"%v\": \"%v\"", istr, k, v)
+	var typeErrors *MultiError
+	if errors.As(v, &typeErrors) {
+		return fmt.Sprintf("\n%v\"%v\": %v", istr, k, typeErrors.details(d))
 	}
+
+	return fmt.Sprintf("\n%v\"%v\": \"%v\"", istr, k, v)
 }
 
 func indentString(indent string, n int) string {

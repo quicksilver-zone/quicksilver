@@ -16,13 +16,13 @@ const (
 	// and the structure of tokenfactory denoms.
 	MaxSubdenomLength = 44
 	MaxHrpLength      = 16
-	// MaxCreatorLength = 59 + MaxHrpLength
+	// MaxCreatorLength = 59 + MaxHrpLength.
 	MaxCreatorLength = 59 + MaxHrpLength
 )
 
 // GetTokenDenom constructs a denom string for tokens created by tokenfactory
-// based on an input creator address and a subdenom
-// The denom constructed is factory/{creator}/{subdenom}
+// based on an input creator address and a subdenom.
+// The denom constructed is factory/{creator}/{subdenom}.
 func GetTokenDenom(creator, subdenom string) (string, error) {
 	if len(subdenom) > MaxSubdenomLength {
 		return "", ErrSubdenomTooLong
@@ -38,9 +38,9 @@ func GetTokenDenom(creator, subdenom string) (string, error) {
 }
 
 // DeconstructDenom takes a token denom string and verifies that it is a valid
-// denom of the tokenfactory module, and is of the form `factory/{creator}/{subdenom}`
-// If valid, it returns the creator address and subdenom
-func DeconstructDenom(denom string) (creator string, subdenom string, err error) {
+// denom of the tokenfactory module, and is of the form `factory/{creator}/{subdenom}`.
+// If valid, it returns the creator address and subdenom.
+func DeconstructDenom(denom string) (creator, subdenom string, err error) {
 	err = sdk.ValidateDenom(denom)
 	if err != nil {
 		return "", "", err
@@ -70,7 +70,7 @@ func DeconstructDenom(denom string) (creator string, subdenom string, err error)
 }
 
 // NewTokenFactoryDenomMintCoinsRestriction creates and returns a BankMintingRestrictionFn that only allows minting of
-// valid tokenfactory denoms
+// valid tokenfactory denoms.
 func NewTokenFactoryDenomMintCoinsRestriction() bankkeeper.MintingRestrictionFn {
 	return func(ctx sdk.Context, coinsToMint sdk.Coins) error {
 		for _, coin := range coinsToMint {

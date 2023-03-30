@@ -39,7 +39,7 @@ type NodeConfig struct {
 }
 
 const (
-	// common
+	// common.
 	QuickDenom          = "uqck"
 	IonDenom            = "uion"
 	StakeDenom          = "stake"
@@ -52,7 +52,7 @@ const (
 	MinGasPrice         = "0.000"
 	IbcSendAmount       = 3300000000
 	ValidatorWalletName = "val"
-	// chainA
+	// chainA.
 	ChainAID      = "quick-test-a"
 	QuickBalanceA = 20000000000000
 	IonBalanceA   = 100000000000
@@ -60,7 +60,7 @@ const (
 	StakeAmountA  = 100000000000
 	UstBalanceA   = 500000000000000
 	LuncBalanceA  = 500000000000000
-	// chainB
+	// chainB.
 	ChainBID          = "quick-test-b"
 	QuickalanceB      = 500000000000
 	IonBalanceB       = 100000000000

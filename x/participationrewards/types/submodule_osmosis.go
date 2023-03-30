@@ -67,11 +67,11 @@ func (opd OsmosisPoolProtocolData) ValidateBasic() error {
 		errors["PoolID"] = ErrUndefinedAttribute
 	}
 
-	if len(opd.PoolName) == 0 {
+	if opd.PoolName == "" {
 		errors["PoolName"] = ErrUndefinedAttribute
 	}
 
-	if len(opd.PoolType) == 0 {
+	if opd.PoolType == "" {
 		errors["PoolType"] = ErrUndefinedAttribute
 	}
 
@@ -79,11 +79,11 @@ func (opd OsmosisPoolProtocolData) ValidateBasic() error {
 	for chainID, denom := range opd.Zones {
 		el := fmt.Sprintf("Zones[%d]", i)
 
-		if len(chainID) == 0 {
+		if chainID == "" {
 			errors[el+" key"] = fmt.Errorf("%w, chainID", ErrUndefinedAttribute)
 		}
 
-		if len(denom) == 0 {
+		if denom == "" {
 			errors[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrUndefinedAttribute)
 		}
 
@@ -112,7 +112,7 @@ type OsmosisParamsProtocolData struct {
 func (oppd OsmosisParamsProtocolData) ValidateBasic() error {
 	errors := make(map[string]error)
 
-	if len(oppd.ChainID) == 0 {
+	if oppd.ChainID == "" {
 		errors["ChainID"] = ErrUndefinedAttribute
 	}
 

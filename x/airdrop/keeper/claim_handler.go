@@ -64,12 +64,12 @@ func (k Keeper) HandleClaim(ctx sdk.Context, cr types.ClaimRecord, action types.
 // # Handlers #
 // ------------
 
-// handleInitial
+// handleInitial.
 func (k Keeper) handleInitial(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
 	return k.completeClaim(ctx, cr, action)
 }
 
-// handleDeposit
+// handleDeposit.
 func (k Keeper) handleDeposit(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, threshold sdk.Dec) (uint64, error) {
 	if err := k.verifyDeposit(ctx, *cr, threshold); err != nil {
 		return 0, err
@@ -78,7 +78,7 @@ func (k Keeper) handleDeposit(ctx sdk.Context, cr *types.ClaimRecord, action typ
 	return k.completeClaim(ctx, cr, action)
 }
 
-// handleBondedDelegation
+// handleBondedDelegation.
 func (k Keeper) handleBondedDelegation(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
 	if err := k.verifyBondedDelegation(ctx, cr.Address); err != nil {
 		return 0, err
@@ -87,7 +87,7 @@ func (k Keeper) handleBondedDelegation(ctx sdk.Context, cr *types.ClaimRecord, a
 	return k.completeClaim(ctx, cr, action)
 }
 
-// handleZoneIntent
+// handleZoneIntent.
 func (k Keeper) handleZoneIntent(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
 	if err := k.verifyZoneIntent(ctx, cr.ChainId, cr.Address); err != nil {
 		return 0, err
@@ -96,7 +96,7 @@ func (k Keeper) handleZoneIntent(ctx sdk.Context, cr *types.ClaimRecord, action 
 	return k.completeClaim(ctx, cr, action)
 }
 
-// handleZoneIntent
+// handleZoneIntent.
 func (k Keeper) handleGovernanceParticipation(ctx sdk.Context, cr *types.ClaimRecord, action types.Action) (uint64, error) {
 	if err := k.verifyGovernanceParticipation(ctx, cr.Address); err != nil {
 		return 0, err
@@ -105,7 +105,7 @@ func (k Keeper) handleGovernanceParticipation(ctx sdk.Context, cr *types.ClaimRe
 	return k.completeClaim(ctx, cr, action)
 }
 
-// handleOsmosisLP
+// handleOsmosisLP.
 func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action types.Action, proofs []*cmtypes.Proof) (uint64, error) {
 	if len(proofs) == 0 {
 		return 0, errors.New("expects at least one LP proof")
@@ -121,7 +121,7 @@ func (k Keeper) handleOsmosisLP(ctx sdk.Context, cr *types.ClaimRecord, action t
 // # Verifiers #
 // -------------
 
-// verifyDeposit
+// verifyDeposit.
 func (k Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold sdk.Dec) error {
 	addr, err := sdk.AccAddressFromBech32(cr.Address)
 	if err != nil {
@@ -155,7 +155,7 @@ func (k Keeper) verifyDeposit(ctx sdk.Context, cr types.ClaimRecord, threshold s
 	return nil
 }
 
-// verifyBondedDelegation indicates if the given address has an active bonded
+// verifyBondedDelegation indicates if the given address has an active bonded.
 // delegation of QCK on the Quicksilver zone.
 func (k Keeper) verifyBondedDelegation(ctx sdk.Context, address string) error {
 	addr, err := sdk.AccAddressFromBech32(address)
@@ -172,7 +172,7 @@ func (k Keeper) verifyBondedDelegation(ctx sdk.Context, address string) error {
 
 // verifyZoneIntent indicates if the given address has intent set for the given
 // zone (chainID).
-func (k Keeper) verifyZoneIntent(ctx sdk.Context, chainID string, address string) error {
+func (k Keeper) verifyZoneIntent(ctx sdk.Context, chainID, address string) error {
 	addr, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
 		return err
@@ -414,7 +414,7 @@ func (k Keeper) sendCoins(ctx sdk.Context, cr types.ClaimRecord, amount uint64) 
 		return sdk.NewCoins(), err
 	}
 
-	if err = k.bankKeeper.SendCoins(ctx, k.GetZoneDropAccountAddress(cr.ChainId), addr, coins); err != nil {
+	if err := k.bankKeeper.SendCoins(ctx, k.GetZoneDropAccountAddress(cr.ChainId), addr, coins); err != nil {
 		return sdk.NewCoins(), err
 	}
 

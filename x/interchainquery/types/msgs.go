@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// interchainquery message types
+// interchainquery message types.
 const (
 	TypeMsgSubmitQueryResponse = "submitqueryresponse"
 )

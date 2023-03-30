@@ -11,7 +11,7 @@ import (
 )
 
 // GetClaimRecord returns the ClaimRecord of the given address for the given zone.
-func (k Keeper) GetClaimRecord(ctx sdk.Context, chainID string, address string) (types.ClaimRecord, error) {
+func (k Keeper) GetClaimRecord(ctx sdk.Context, chainID, address string) (types.ClaimRecord, error) {
 	cr := types.ClaimRecord{}
 
 	addr, err := sdk.AccAddressFromBech32(address)
@@ -44,7 +44,7 @@ func (k Keeper) SetClaimRecord(ctx sdk.Context, cr types.ClaimRecord) error {
 }
 
 // DeleteClaimRecord deletes the airdrop ClaimRecord of the given zone and address.
-func (k Keeper) DeleteClaimRecord(ctx sdk.Context, chainID string, address string) error {
+func (k Keeper) DeleteClaimRecord(ctx sdk.Context, chainID, address string) error {
 	addr, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
 		return err
@@ -121,7 +121,7 @@ func (k Keeper) ClearClaimRecords(ctx sdk.Context, chainID string) {
 
 // GetClaimableAmountForAction returns the amount claimable for the given
 // action, by the given address, against the given zone.
-func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID string, address string, action types.Action) (uint64, error) {
+func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID, address string, action types.Action) (uint64, error) {
 	if !action.InBounds() {
 		return 0, fmt.Errorf("%w, got %d", types.ErrActionOutOfBounds, action)
 	}
@@ -168,7 +168,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID string, add
 
 // GetClaimableAmountForUser returns the amount claimable for the given user
 // against the given zone.
-func (k Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID string, address string) (uint64, error) {
+func (k Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID, address string) (uint64, error) {
 	cr, err := k.GetClaimRecord(ctx, chainID, address)
 	if err != nil {
 		return 0, err
