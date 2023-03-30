@@ -30,29 +30,28 @@ func init() {
 func TestChainInit(t *testing.T) {
 	const id = initialization.ChainAID
 
-	var (
-		nodeConfigs = []*initialization.NodeConfig{
-			{
-				Name:               "0",
-				Pruning:            "default",
-				PruningKeepRecent:  "0",
-				PruningInterval:    "0",
-				SnapshotInterval:   1500,
-				SnapshotKeepRecent: 2,
-				IsValidator:        true,
-			},
-			{
-				Name:               "1",
-				Pruning:            "nothing",
-				PruningKeepRecent:  "0",
-				PruningInterval:    "0",
-				SnapshotInterval:   100,
-				SnapshotKeepRecent: 1,
-				IsValidator:        false,
-			},
-		}
-		dataDir, err = os.MkdirTemp("", "quicksilver-e2e-testnet-test")
-	)
+	nodeConfigs := []*initialization.NodeConfig{
+		{
+			Name:               "0",
+			Pruning:            "default",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   1500,
+			SnapshotKeepRecent: 2,
+			IsValidator:        true,
+		},
+		{
+			Name:               "1",
+			Pruning:            "nothing",
+			PruningKeepRecent:  "0",
+			PruningInterval:    "0",
+			SnapshotInterval:   100,
+			SnapshotKeepRecent: 1,
+			IsValidator:        false,
+		},
+	}
+	dataDir, err := os.MkdirTemp("", "quicksilver-e2e-testnet-test")
+	require.NoError(t, err)
 
 	chain, err := initialization.InitChain(id, dataDir, nodeConfigs, time.Second*3, forkHeight)
 	require.NoError(t, err)
@@ -108,8 +107,10 @@ func TestSingleNodeInit(t *testing.T) {
 			SnapshotKeepRecent: 1,
 			IsValidator:        false,
 		}
-		dataDir, err = os.MkdirTemp("", "quicksilver-e2e-testnet-test")
 	)
+
+	dataDir, err := os.MkdirTemp("", "quicksilver-e2e-testnet-test")
+	require.NoError(t, err)
 
 	// Setup
 	existingChain, err := initialization.InitChain(id, dataDir, existingChainNodeConfigs, time.Second*3, forkHeight)
@@ -121,11 +122,13 @@ func TestSingleNodeInit(t *testing.T) {
 	validateNode(t, id, dataDir, expectedConfig, actualNode)
 }
 
-func validateNode(t *testing.T, chainId string, dataDir string, expectedConfig *initialization.NodeConfig, actualNode *initialization.Node) {
-	require.Equal(t, fmt.Sprintf("%s-node-%s", chainId, expectedConfig.Name), actualNode.Name)
+func validateNode(t *testing.T, chainID, dataDir string, expectedConfig *initialization.NodeConfig, actualNode *initialization.Node) {
+	t.Helper()
+
+	require.Equal(t, fmt.Sprintf("%s-node-%s", chainID, expectedConfig.Name), actualNode.Name)
 	require.Equal(t, expectedConfig.IsValidator, actualNode.IsValidator)
 
-	expectedPath := fmt.Sprintf("%s/%s/%s-node-%s", dataDir, chainId, chainId, expectedConfig.Name)
+	expectedPath := fmt.Sprintf("%s/%s/%s-node-%s", dataDir, chainID, chainID, expectedConfig.Name)
 
 	require.Equal(t, expectedPath, actualNode.ConfigDir)
 

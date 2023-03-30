@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"errors"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -22,7 +24,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 			if err != nil {
 				k.Logger(ctx).Error("Error unmarshalling protocol data")
 			}
-			connectionData := iConnectionData.(types.ConnectionProtocolData)
+			connectionData, _ := iConnectionData.(types.ConnectionProtocolData)
 			if connectionData.ChainID == ctx.ChainID() {
 				return false
 			}
@@ -54,7 +56,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 			k.GetParams(ctx).DistributionProportions,
 		)
 		if err != nil {
-			if err == types.ErrNothingToAllocate {
+			if errors.Is(err, types.ErrNothingToAllocate) {
 				k.Logger(ctx).Info(err.Error())
 			} else {
 				k.Logger(ctx).Error(err.Error())
@@ -78,7 +80,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 		}
 
 		if !allocation.Lockup.IsZero() {
-			// at genesis lockup will be disable, and enabled when ICS is used.
+			// at genesis lockup will be disabled, and enabled when ICS is used.
 			if err := k.AllocateLockupRewards(ctx, allocation.Lockup); err != nil {
 				k.Logger(ctx).Error(err.Error())
 				return err
@@ -90,7 +92,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 
 // ___________________________________________________________________________________________________
 
-// Hooks wrapper struct for incentives keeper
+// Hooks wrapper struct for incentives keeper.
 type Hooks struct {
 	k Keeper
 }
@@ -101,7 +103,7 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-// epochs hooks
+// epochs hooks.
 func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }

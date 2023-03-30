@@ -10,16 +10,16 @@ import (
 )
 
 const (
-	// ModuleName defines the module name
+	// ModuleName defines the module name.
 	ModuleName = "interchainstaking"
 
-	// StoreKey defines the primary module store key
+	// StoreKey defines the primary module store key.
 	StoreKey = ModuleName
 
-	// RouterKey is the message route for slashing
+	// RouterKey is the message route for interchainstaking.
 	RouterKey = ModuleName
 
-	// QuerierRoute defines the module's query routing key
+	// QuerierRoute defines the module's query routing key.
 	QuerierRoute = ModuleName
 
 	PortID = ModuleName
@@ -84,35 +84,35 @@ func ParseStakingDelegationKey(key []byte) (sdk.AccAddress, sdk.ValAddress, erro
 	return delAddr, valAddr, nil
 }
 
-// GetDelegationKey gets the key for delegator bond with validator
-// VALUE: staking/Delegation
+// GetDelegationKey gets the key for delegator bond with validator.
+// VALUE: staking/Delegation.
 func GetDelegationKey(zone *Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetDelegationsKey(zone, delAddr), valAddr.Bytes()...)
 }
 
-// GetDelegationsKey gets the prefix for a delegator for all validators
+// GetDelegationsKey gets the prefix for a delegator for all validators.
 func GetDelegationsKey(zone *Zone, delAddr sdk.AccAddress) []byte {
 	return append(append(KeyPrefixDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
 }
 
-// GetPerformanceDelegationKey gets the key for delegator bond with validator
-// VALUE: staking/Delegation
+// GetPerformanceDelegationKey gets the key for delegator bond with validator.
+// VALUE: staking/Delegation.
 func GetPerformanceDelegationKey(zone *Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
 	return append(GetPerformanceDelegationsKey(zone, delAddr), valAddr.Bytes()...)
 }
 
-// GetPerformanceDelegationsKey gets the prefix for a delegator for all validators
+// GetPerformanceDelegationsKey gets the prefix for a delegator for all validators.
 func GetPerformanceDelegationsKey(zone *Zone, delAddr sdk.AccAddress) []byte {
 	return append(append(KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
 }
 
-func GetReceiptKey(chainID string, txhash string) string {
+func GetReceiptKey(chainID, txhash string) string {
 	return fmt.Sprintf("%s/%s", chainID, txhash)
 }
 
 // GetRedelegationKey gets the redelegation key.
 // Unbondigng records are keyed by chainId, validator and epoch, as they must be unique with regard to this triple.
-func GetRedelegationKey(chainID string, source string, destination string, epochNumber int64) []byte {
+func GetRedelegationKey(chainID, source, destination string, epochNumber int64) []byte {
 	epochBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(epochBytes, uint64(epochNumber))
 	return append(KeyPrefixRedelegationRecord, append(append([]byte(chainID), []byte(source+destination)...), epochBytes...)...)
@@ -128,7 +128,7 @@ func GetWithdrawalKey(chainID string, status int32) []byte {
 
 // GetUnbondingKey gets the unbonding key.
 // unbondigng records are keyed by chainId, validator and epoch, as they must be unique with regard to this triple.
-func GetUnbondingKey(chainID string, validator string, epochNumber int64) []byte {
+func GetUnbondingKey(chainID, validator string, epochNumber int64) []byte {
 	epochBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(epochBytes, uint64(epochNumber))
 	return append(KeyPrefixUnbondingRecord, append(append([]byte(chainID), []byte(validator)...), epochBytes...)...)

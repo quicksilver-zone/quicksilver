@@ -69,7 +69,7 @@ func DetermineAllocationsForRebalancing(
 	currentSum sdkmath.Int,
 	targetAllocations ValidatorIntents,
 	existingRedelegations []RedelegationRecord,
-	log log.Logger,
+	logger log.Logger,
 ) []RebalanceTarget {
 	out := make([]RebalanceTarget, 0)
 	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
@@ -103,8 +103,8 @@ func DetermineAllocationsForRebalancing(
 	// TODO: make these params
 	maxCanRebalanceTotal := currentSum.Sub(sdkmath.NewInt(totalLocked)).Quo(sdk.NewInt(2))
 	maxCanRebalance := sdkmath.MinInt(maxCanRebalanceTotal, currentSum.Quo(sdk.NewInt(7)))
-	if log != nil {
-		log.Debug("Rebalancing", "totalLocked", totalLocked, "lockedPerValidator", lockedPerValidator, "canRebalanceTotal", maxCanRebalanceTotal, "canRebalanceEpoch", maxCanRebalance)
+	if logger != nil {
+		logger.Debug("Rebalancing", "totalLocked", totalLocked, "lockedPerValidator", lockedPerValidator, "canRebalanceTotal", maxCanRebalanceTotal, "canRebalanceEpoch", maxCanRebalance)
 	}
 
 	// deltas are sorted in CalculateDeltas; don't re-sort.
@@ -118,8 +118,8 @@ func DetermineAllocationsForRebalancing(
 		case delta.Weight.IsNegative():
 			if delta.Weight.Abs().GT(sdk.NewDecFromInt(currentAllocations[delta.ValoperAddress].Sub(sdkmath.NewInt(lockedPerValidator[delta.ValoperAddress])))) {
 				delta.Weight = sdk.NewDecFromInt(currentAllocations[delta.ValoperAddress].Sub(sdkmath.NewInt(lockedPerValidator[delta.ValoperAddress]))).Neg()
-				if log != nil {
-					log.Debug("Truncated delta due to locked tokens", "valoper", delta.ValoperAddress, "delta", delta.Weight.Abs())
+				if logger != nil {
+					logger.Debug("Truncated delta due to locked tokens", "valoper", delta.ValoperAddress, "delta", delta.Weight.Abs())
 				}
 			}
 			canRebalanceFrom = canRebalanceFrom.Add(delta.Weight.Abs().TruncateInt())
@@ -129,13 +129,13 @@ func DetermineAllocationsForRebalancing(
 	toRebalance := sdk.MinInt(sdk.MinInt(wantToRebalance, canRebalanceFrom), maxCanRebalance)
 
 	if toRebalance.Equal(sdkmath.ZeroInt()) {
-		if log != nil {
-			log.Debug("No rebalancing this epoch")
+		if logger != nil {
+			logger.Debug("No rebalancing this epoch")
 		}
 		return []RebalanceTarget{}
 	}
-	if log != nil {
-		log.Debug("Will rebalance this epoch", "amount", toRebalance)
+	if logger != nil {
+		logger.Debug("Will rebalance this epoch", "amount", toRebalance)
 	}
 
 	tgtIdx := 0

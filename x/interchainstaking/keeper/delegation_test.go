@@ -15,41 +15,41 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
-	suite.SetupTest()
-	suite.setupTestZones()
+func (s *KeeperTestSuite) TestKeeper_DelegationStore() {
+	s.SetupTest()
+	s.setupTestZones()
 
-	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
-	ctx := suite.chainA.GetContext()
+	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
+	ctx := s.chainA.GetContext()
 
 	// get test zone
-	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.Require().True(found)
+	zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
 	zoneValidatorAddresses := zone.GetValidatorsAddressesAsSlice()
 
 	performanceDelegations := icsKeeper.GetAllPerformanceDelegations(ctx, &zone)
-	suite.Require().Len(performanceDelegations, 4)
+	s.Require().Len(performanceDelegations, 4)
 
 	performanceDelegationPointers := icsKeeper.GetAllPerformanceDelegationsAsPointer(ctx, &zone)
 	for i, pdp := range performanceDelegationPointers {
-		suite.Require().Equal(performanceDelegations[i], *pdp)
+		s.Require().Equal(performanceDelegations[i], *pdp)
 	}
 
 	// update performance delegation
 	updateDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
-	suite.Require().True(found)
-	suite.Require().Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
+	s.Require().True(found)
+	s.Require().Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
 
 	updateDelegation.Amount.Amount = sdkmath.NewInt(10000)
 	icsKeeper.SetPerformanceDelegation(ctx, &zone, updateDelegation)
 
 	updatedDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
-	suite.Require().True(found)
-	suite.Require().Equal(updateDelegation, updatedDelegation)
+	s.Require().True(found)
+	s.Require().Equal(updateDelegation, updatedDelegation)
 
 	// check that there are no delegations
 	delegations := icsKeeper.GetAllDelegations(ctx, &zone)
-	suite.Require().Len(delegations, 0)
+	s.Require().Len(delegations, 0)
 
 	// set delegations
 	icsKeeper.SetDelegation(
@@ -82,20 +82,20 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 
 	// check for delegations set above
 	delegations = icsKeeper.GetAllDelegations(ctx, &zone)
-	suite.Require().Len(delegations, 3)
+	s.Require().Len(delegations, 3)
 
 	// load and match pointers
 	delegationPointers := icsKeeper.GetAllDelegationsAsPointer(ctx, &zone)
 	for i, dp := range delegationPointers {
-		suite.Require().Equal(delegations[i], *dp)
+		s.Require().Equal(delegations[i], *dp)
 	}
 
 	// get delegations for delegation address and match
 	addr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.GetAddress())
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 	dds := icsKeeper.GetDelegatorDelegations(ctx, &zone, addr)
-	suite.Require().Len(dds, 3)
-	suite.Require().Equal(delegations, dds)
+	s.Require().Len(dds, 3)
+	s.Require().Equal(delegations, dds)
 }
 
 type delegationUpdate struct {
@@ -212,7 +212,8 @@ func (s *KeeperTestSuite) TestUpdateDelegation() {
 			}
 
 			for _, update := range tt.updates {
-				app.InterchainstakingKeeper.UpdateDelegationRecordForAddress(ctx, update.delegation.DelegationAddress, update.delegation.ValidatorAddress, update.delegation.Amount, &zone, update.absolute)
+				err := app.InterchainstakingKeeper.UpdateDelegationRecordForAddress(ctx, update.delegation.DelegationAddress, update.delegation.ValidatorAddress, update.delegation.Amount, &zone, update.absolute)
+				s.Require().NoError(err)
 			}
 
 			actual, found := app.InterchainstakingKeeper.GetDelegation(ctx, &zone, tt.expected.DelegationAddress, tt.expected.ValidatorAddress)
@@ -441,7 +442,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			expected: []types.RebalanceTarget{
 				{Amount: sdkmath.NewInt(42), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val2.String()},
+				// {Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val2.String()},
 			},
 			redelegations: []types.RedelegationRecord{},
 		},
@@ -458,8 +459,8 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			expected: []types.RebalanceTarget{
 				{Amount: sdkmath.NewInt(14), Source: val4.String(), Target: val2.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
-				//{Amount: sdkmath.NewInt(5), Source: val4.String(), Target: val3.String()},
+				// {Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
+				// {Amount: sdkmath.NewInt(5), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{},
 		},
@@ -476,8 +477,8 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			expected: []types.RebalanceTarget{
 				{Amount: sdkmath.NewInt(14), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				// {Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
+				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{},
 		},
@@ -493,8 +494,8 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			expected: []types.RebalanceTarget{
 				{Amount: sdkmath.NewInt(14), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				// {Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
+				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 30, CompletionTime: time.Now().Add(time.Hour)},
@@ -512,8 +513,8 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			expected: []types.RebalanceTarget{
 				{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				// {Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
+				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
@@ -531,8 +532,8 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			expected: []types.RebalanceTarget{
 				{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				// {Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
+				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
@@ -550,8 +551,8 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			expected: []types.RebalanceTarget{
 				{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: sdkmath.NewInt(4), Source: val3.String(), Target: val1.String()}, // joe: I would expect this to be included...
-				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				// {Amount: sdkmath.NewInt(4), Source: val3.String(), Target: val1.String()}, // joe: I would expect this to be included...
+				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
@@ -567,10 +568,10 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			},
 			target:   zone2.GetAggregateIntentOrDefault(),
 			expected: []types.RebalanceTarget{
-				//{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
+				// {Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				// {Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
+				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 60, CompletionTime: time.Now().Add(time.Hour)},

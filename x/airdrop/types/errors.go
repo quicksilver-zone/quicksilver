@@ -6,7 +6,7 @@ import (
 	sdkioerrors "cosmossdk.io/errors"
 )
 
-// x/airdrop module sentinel errors
+// x/airdrop module sentinel errors.
 var (
 	ErrZoneDropNotFound     = sdkioerrors.Register(ModuleName, 1, "zone airdrop not found")
 	ErrClaimRecordNotFound  = sdkioerrors.Register(ModuleName, 2, "claim record not found")

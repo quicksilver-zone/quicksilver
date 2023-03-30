@@ -13,7 +13,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 	type fields struct {
 		Title            string
 		Description      string
-		ConnectionId     string
+		ConnectionID     string
 		BaseDenom        string
 		LocalDenom       string
 		AccountPrefix    string
@@ -33,7 +33,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 			fields: fields{
 				Title:            "Enable testzone-1",
 				Description:      "onboard testzone-1",
-				ConnectionId:     "connection-0",
+				ConnectionID:     "connection-0",
 				BaseDenom:        "uatom",
 				LocalDenom:       "uqatom",
 				AccountPrefix:    "cosmos",
@@ -50,7 +50,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 			fields: fields{
 				Title:            "",
 				Description:      "",
-				ConnectionId:     "connection-0",
+				ConnectionID:     "connection-0",
 				BaseDenom:        "uatom",
 				LocalDenom:       "uqatom",
 				AccountPrefix:    "cosmos",
@@ -67,7 +67,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 			fields: fields{
 				Title:            "Enable testzone-1",
 				Description:      "onboard testzone-1",
-				ConnectionId:     "test",
+				ConnectionID:     "test",
 				BaseDenom:        "uatom",
 				LocalDenom:       "uqatom",
 				AccountPrefix:    "cosmos",
@@ -84,7 +84,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 			fields: fields{
 				Title:            "Enable testzone-1",
 				Description:      "onboard testzone-1",
-				ConnectionId:     "connection-0",
+				ConnectionID:     "connection-0",
 				BaseDenom:        "0",
 				LocalDenom:       "uqatom",
 				AccountPrefix:    "cosmos",
@@ -101,7 +101,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 			fields: fields{
 				Title:            "Enable testzone-1",
 				Description:      "onboard testzone-1",
-				ConnectionId:     "connection-0",
+				ConnectionID:     "connection-0",
 				BaseDenom:        "uatom",
 				LocalDenom:       "0",
 				AccountPrefix:    "cosmos",
@@ -118,7 +118,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 			fields: fields{
 				Title:            "Enable testzone-1",
 				Description:      "onboard testzone-1",
-				ConnectionId:     "connection-0",
+				ConnectionID:     "connection-0",
 				BaseDenom:        "uatom",
 				LocalDenom:       "uqatom",
 				AccountPrefix:    "a",
@@ -135,7 +135,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 			fields: fields{
 				Title:            "Enable testzone-1",
 				Description:      "onboard testzone-1",
-				ConnectionId:     "connection-0",
+				ConnectionID:     "connection-0",
 				BaseDenom:        "uatom",
 				LocalDenom:       "uqatom",
 				AccountPrefix:    "cosmos",
@@ -152,7 +152,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 			fields: fields{
 				Title:            "Enable testzone-1",
 				Description:      "onboard testzone-1",
-				ConnectionId:     "connection-0",
+				ConnectionID:     "connection-0",
 				BaseDenom:        "uatom",
 				LocalDenom:       "uqatom",
 				AccountPrefix:    "cosmos",
@@ -170,7 +170,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 			m := types.NewRegisterZoneProposal(
 				tt.fields.Title,
 				tt.fields.Description,
-				tt.fields.ConnectionId,
+				tt.fields.ConnectionID,
 				tt.fields.BaseDenom,
 				tt.fields.LocalDenom,
 				tt.fields.AccountPrefix,
@@ -217,5 +217,5 @@ func BenchmarkUpdateZoneProposalString(b *testing.B) {
 	if sink == nil {
 		b.Fatal("Benchmark did not run")
 	}
-	sink = (interface{})(nil)
+	sink = interface{}(nil)
 }

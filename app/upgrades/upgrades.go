@@ -59,29 +59,29 @@ func NoOpHandler(
 func V010400UpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	keepers *keepers.AppKeepers,
+	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// upgrade zones
-		keepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 			zone.DepositsEnabled = true
 			zone.ReturnToSender = false
 			zone.UnbondingEnabled = false
 			zone.Decimals = 6
-			keepers.InterchainstakingKeeper.SetZone(ctx, zone)
+			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
 			return false
 		})
 
 		// upgrade receipts
-		time := ctx.BlockTime()
-		for _, r := range keepers.InterchainstakingKeeper.AllReceipts(ctx) {
-			r.FirstSeen = &time
-			r.Completed = &time
-			keepers.InterchainstakingKeeper.SetReceipt(ctx, r)
+		blockTime := ctx.BlockTime()
+		for _, r := range appKeepers.InterchainstakingKeeper.AllReceipts(ctx) {
+			r.FirstSeen = &blockTime
+			r.Completed = &blockTime
+			appKeepers.InterchainstakingKeeper.SetReceipt(ctx, r)
 		}
 		if isTestnet(ctx) || isTest(ctx) {
 
-			keepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "uni-5")
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "uni-5")
 
 			// burn uqjunox
 			addr1, err := utils.AccAddressFromBech32("quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq", "quick")
@@ -93,22 +93,22 @@ func V010400UpgradeHandler(
 				return nil, err
 			}
 
-			err = keepers.BankKeeper.SendCoinsFromAccountToModule(ctx, addr1, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
+			err = appKeepers.BankKeeper.SendCoinsFromAccountToModule(ctx, addr1, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
 			if err != nil {
 				return nil, err
 			}
 
-			err = keepers.BankKeeper.SendCoinsFromAccountToModule(ctx, addr2, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
+			err = appKeepers.BankKeeper.SendCoinsFromAccountToModule(ctx, addr2, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(200000000))))
 			if err != nil {
 				return nil, err
 			}
 
-			err = keepers.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.EscrowModuleAccount, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(400000))))
+			err = appKeepers.BankKeeper.SendCoinsFromModuleToModule(ctx, icstypes.EscrowModuleAccount, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(400000))))
 			if err != nil {
 				return nil, err
 			}
 
-			err = keepers.BankKeeper.BurnCoins(ctx, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
+			err = appKeepers.BankKeeper.BurnCoins(ctx, tokenfactorytypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(202000000))))
 			if err != nil {
 				return nil, err
 			}
@@ -120,11 +120,11 @@ func V010400UpgradeHandler(
 func V010400rc6UpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	keepers *keepers.AppKeepers,
+	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) {
-			keepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "regen-redwood-1")
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "regen-redwood-1")
 			// re-register regen-redwood-1 with new connection
 			regenProp := icstypes.NewRegisterZoneProposal("register regen-redwood-1 zone",
 				"register regen-redwood-1  (regen-testnet) zone with multisend and lsm disabled",
@@ -137,38 +137,38 @@ func V010400rc6UpgradeHandler(
 				true,
 				false,
 				6)
-			err := keepers.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, regenProp)
+			err := appKeepers.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, regenProp)
 			if err != nil {
 				return nil, err
 			}
 		}
 
 		// remove expired failed redelegation records
-		keepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(_ int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
+		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(_ int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
 			if record.CompletionTime.Equal(time.Time{}) {
-				keepers.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
+				appKeepers.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
 			}
 			return false
 		})
 
 		// remove and refund failed unbondings
-		keepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+		appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
 			if record.Status == icskeeper.WithdrawStatusUnbond && record.CompletionTime.Equal(time.Time{}) {
 				delegatorAcc, err := utils.AccAddressFromBech32(record.Delegator, "quick")
 				if err != nil {
 					panic(err)
 				}
-				if err = keepers.InterchainstakingKeeper.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.EscrowModuleAccount, delegatorAcc, sdk.NewCoins(record.BurnAmount)); err != nil {
+				if err = appKeepers.InterchainstakingKeeper.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.EscrowModuleAccount, delegatorAcc, sdk.NewCoins(record.BurnAmount)); err != nil {
 					panic(err)
 				}
-				keepers.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
+				appKeepers.InterchainstakingKeeper.DeleteWithdrawalRecord(ctx, record.ChainId, record.Txhash, record.Status)
 			}
 			return false
 		})
 
 		if isTestnet(ctx) || isDevnet(ctx) {
-			keepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo *icstypes.Zone) (stop bool) {
-				keepers.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zoneInfo)
+			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo *icstypes.Zone) (stop bool) {
+				appKeepers.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zoneInfo)
 				return false
 			})
 		}
@@ -180,25 +180,25 @@ func V010400rc6UpgradeHandler(
 func V010400rc8UpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	keepers *keepers.AppKeepers,
+	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		// remove expired failed redelegation records
-		keepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-			keepers.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
+		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+			appKeepers.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
 				if delegation.RedelegationEnd < 0 {
 					delegation.RedelegationEnd = 0
-					keepers.InterchainstakingKeeper.SetDelegation(ctx, zone, delegation)
+					appKeepers.InterchainstakingKeeper.SetDelegation(ctx, zone, delegation)
 				}
 				return false
 			})
 			return false
 		})
 
-		keepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(_ int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
+		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(_ int64, key []byte, record icstypes.RedelegationRecord) (stop bool) {
 			if record.CompletionTime.Unix() <= 0 {
-				keepers.InterchainstakingKeeper.Logger(ctx).Info("Removing delegation record", "chainid", record.ChainId, "source", record.Source, "destination", record.Destination, "epoch", record.EpochNumber)
-				keepers.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("Removing delegation record", "chainid", record.ChainId, "source", record.Source, "destination", record.Destination, "epoch", record.EpochNumber)
+				appKeepers.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
 			}
 			return false
 		})

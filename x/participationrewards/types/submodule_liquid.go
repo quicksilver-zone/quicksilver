@@ -22,7 +22,7 @@ type LiquidAllowedDenomProtocolData struct {
 func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
 	errors := make(map[string]error)
 
-	if len(lpd.ChainID) == 0 {
+	if lpd.ChainID == "" {
 		errors["ChainID"] = ErrUndefinedAttribute
 	}
 
@@ -30,7 +30,7 @@ func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
 		errors["ChainID"] = ErrInvalidChainID
 	}
 
-	if len(lpd.RegisteredZoneChainID) == 0 {
+	if lpd.RegisteredZoneChainID == "" {
 		errors["RegisteredZoneChainID"] = ErrUndefinedAttribute
 	}
 
@@ -38,7 +38,7 @@ func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
 		errors["RegisteredZoneChainID"] = ErrInvalidChainID
 	}
 
-	if len(lpd.QAssetDenom) == 0 {
+	if lpd.QAssetDenom == "" {
 		errors["QAssetDenom"] = ErrUndefinedAttribute
 	}
 

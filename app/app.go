@@ -54,15 +54,15 @@ func Init() {
 }
 
 const (
-	// Name defines the application binary name
+	// Name defines the application binary name.
 	Name = "quicksilverd"
 )
 
 var (
-	// DefaultNodeHome default home directories for the application daemon
+	// DefaultNodeHome default home directories for the application daemon.
 	DefaultNodeHome string
 
-	// module accounts that are allowed to receive tokens
+	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{
 		distrtypes.ModuleName:             true,
 		interchainstakingtypes.ModuleName: true,
@@ -227,16 +227,16 @@ func NewQuicksilver(
 	go func() {
 		// Unfortunately golangci-lint is so pedantic
 		// so we have to ignore this error explicitly.
-		_ = app.tpsCounter.start(context.Background())
+		_ = app.tpsCounter.start(context.Background()) //nolint:errcheck
 	}()
 
 	return app
 }
 
-// Name returns the name of the App
+// Name returns the name of the App.
 func (app *Quicksilver) Name() string { return app.BaseApp.Name() }
 
-// BeginBlocker updates every begin block
+// BeginBlocker updates every begin block.
 func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() == 235001 {
 		zone, found := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
@@ -249,12 +249,12 @@ func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock
 	return app.mm.BeginBlock(ctx, req)
 }
 
-// EndBlocker updates every end block
+// EndBlocker updates every end block.
 func (app *Quicksilver) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
-// We are intentionally decomposing the DeliverTx method so as to calculate the transactions per second.
+// DeliverTx calls BaseApp.DeliverTx and calculates transactions per second.
 func (app *Quicksilver) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
 	defer func() {
 		// TODO: Record the count along with the code and or reason so as to display
@@ -269,7 +269,7 @@ func (app *Quicksilver) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseD
 	return app.BaseApp.DeliverTx(req)
 }
 
-// InitChainer updates at chain initialization
+// InitChainer updates at chain initialization.
 func (app *Quicksilver) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
@@ -279,7 +279,7 @@ func (app *Quicksilver) InitChainer(ctx sdk.Context, req abci.RequestInitChain) 
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
-// LoadHeight loads state at a particular height
+// LoadHeight loads state at a particular height.
 func (app *Quicksilver) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
@@ -321,7 +321,7 @@ func (app *Quicksilver) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns Quicksilver's InterfaceRegistry
+// InterfaceRegistry returns Quicksilver's InterfaceRegistry.
 func (app *Quicksilver) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
 }
@@ -334,7 +334,7 @@ func (app *Quicksilver) GetSubspace(moduleName string) paramstypes.Subspace {
 	return subspace
 }
 
-// SimulationManager implements the SimulationApp interface
+// SimulationManager implements the SimulationApp interface.
 func (app *Quicksilver) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
@@ -400,7 +400,7 @@ func (app *Quicksilver) GetTxConfig() client.TxConfig {
 	return cfg.TxConfig
 }
 
-// GetMaccPerms returns a copy of the module account permissions
+// GetMaccPerms returns a copy of the module account permissions.
 func GetMaccPerms() map[string][]string {
 	dupMaccPerms := make(map[string][]string)
 	for k, v := range maccPerms {
@@ -421,9 +421,9 @@ func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
 	return wasmOpts
 }
 
-const (
+// PROPOSALS
 
-	// PROPOSALS
+const (
 	ProposalsEnabled = "true"
 	// If set to non-empty string it must be comma-separated list of values that are all a subset
 	// of "EnableAllProposals" (takes precedence over ProposalsEnabled)

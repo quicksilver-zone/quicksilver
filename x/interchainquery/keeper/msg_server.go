@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -54,7 +55,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	noDelete := false
 	// execute registered callbacks.
 
-	keys := []string{}
+	keys := make([]string, 0)
 	for k := range k.callbacks {
 		keys = append(keys, k)
 	}
@@ -69,7 +70,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 			callbackExecuted = true
 			if err != nil {
 				// not edge case: proceed with regular error handling!
-				if err != types.ErrSucceededNoDelete {
+				if !errors.Is(err, types.ErrSucceededNoDelete) {
 					k.Logger(ctx).Error("error in callback", "error", err, "msg", msg.QueryId, "result", msg.Result, "type", q.QueryType, "params", q.Request)
 					return nil, err
 				}

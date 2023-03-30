@@ -39,7 +39,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 	return nil
 }
 
-// calculate allocations per user for a given zone, based upon claims submitted and zone
+// CalcUserHoldingsAllocations calculates allocations per user for a given zone, based upon claims submitted and zone.
 func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]types.UserAllocation, math.Int) {
 	k.Logger(ctx).Info("CalcUserHoldingsAllocations", "zone", zone.ChainId, "allocations", zone.HoldingsAllocation)
 

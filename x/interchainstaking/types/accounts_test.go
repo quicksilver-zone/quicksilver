@@ -27,7 +27,7 @@ func TestNewICAAccountBadAddr(t *testing.T) {
 	require.Contains(t, err.Error(), "invalid checksum")
 }
 
-// tests that the balance can be set to a valid coin (good denom + non negative value)
+// TestAccountSetBalanceGood tests that the balance can be set to a valid coin (good denom + non-negative value).
 func TestAccountSetBalanceGood(t *testing.T) {
 	ica := NewICA()
 	err := ica.SetBalance(sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(300))))

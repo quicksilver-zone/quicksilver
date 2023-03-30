@@ -13,7 +13,7 @@ var index embed.FS
 
 // Handler returns a http handler that servers OpenAPI console for an OpenAPI spec at specURL.
 func Handler(title, specURL string) http.HandlerFunc {
-	t, _ := template.ParseFS(index, "index.tpl")
+	t, _ := template.ParseFS(index, "index.tpl") // nolint:errcheck non-critical for docs
 
 	return func(w http.ResponseWriter, req *http.Request) {
 		_ = t.Execute(w, struct {
@@ -22,6 +22,6 @@ func Handler(title, specURL string) http.HandlerFunc {
 		}{
 			title,
 			specURL,
-		})
+		}) //nolint:errcheck non-critical for docs
 	}
 }

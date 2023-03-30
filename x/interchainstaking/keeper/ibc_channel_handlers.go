@@ -10,7 +10,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connectionID string) error {
+func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID string) error {
 	chainID, err := k.GetChainID(ctx, connectionID)
 	if err != nil {
 		ctx.Logger().Error(

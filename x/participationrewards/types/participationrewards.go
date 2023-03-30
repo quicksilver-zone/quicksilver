@@ -59,7 +59,7 @@ func (dp DistributionProportions) Total() sdk.Dec {
 func (kpd KeyedProtocolData) ValidateBasic() error {
 	errors := make(map[string]error)
 
-	if len(kpd.Key) == 0 {
+	if kpd.Key == "" {
 		errors["Key"] = ErrUndefinedAttribute
 	}
 
@@ -83,7 +83,7 @@ func (pd ProtocolData) ValidateBasic() error {
 
 	// type enumerator
 	var te ProtocolDataType
-	if len(pd.Type) == 0 {
+	if pd.Type == "" {
 		errors["Type"] = ErrUndefinedAttribute
 	} else {
 		if tv, exists := ProtocolDataType_value[pd.Type]; !exists {
@@ -109,7 +109,7 @@ func (pd ProtocolData) ValidateBasic() error {
 	return nil
 }
 
-// unmarshal to appropriate concrete type and validate
+// validateProtocolData unmarshals to appropriate concrete type and validate.
 func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 	var pdi ProtocolDataI
 	switch pdt {
@@ -148,7 +148,7 @@ type UserAllocation struct {
 
 // ZoneScore is an internal struct to track transient state for the calculation
 // of zone scores. It specifically tallies the total zone voting power used in
-// calculations to determine validator voting power percentages;
+// calculations to determine validator voting power percentages.
 type ZoneScore struct {
 	ZoneID           string // chainID
 	TotalVotingPower math.Int

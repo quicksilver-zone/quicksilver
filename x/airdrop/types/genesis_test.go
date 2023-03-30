@@ -240,7 +240,6 @@ func TestGenesisState_Validate(t *testing.T) {
 
 			err := gs.Validate()
 			if tt.wantErr {
-				// t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
 				return
 			}

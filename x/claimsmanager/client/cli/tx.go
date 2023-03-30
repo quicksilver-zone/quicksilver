@@ -13,13 +13,11 @@ func GetTxCmd() *cobra.Command {
 	txCmd := &cobra.Command{
 		Use:                        types.ModuleName,
 		Short:                      "ClaimsManager transaction subcommands",
-		Aliases:                    []string{"pr"},
+		Aliases:                    []string{"cm"},
 		DisableFlagParsing:         true,
 		SuggestionsMinimumDistance: 2,
 		RunE:                       client.ValidateCmd,
 	}
-
-	// txCmd.AddCommand(cmd)
 
 	return txCmd
 }

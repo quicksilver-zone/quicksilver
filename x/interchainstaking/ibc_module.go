@@ -20,19 +20,19 @@ import (
 
 var _ porttypes.IBCModule = IBCModule{}
 
-// IBCModule implements the ICS26 interface for interchain accounts controller chains
+// IBCModule implements the ICS26 interface for interchain accounts controller chains.
 type IBCModule struct {
 	keeper keeper.Keeper
 }
 
-// NewIBCModule creates a new IBCModule given the keeper
+// NewIBCModule creates a new IBCModule given the keeper.
 func NewIBCModule(k keeper.Keeper) IBCModule {
 	return IBCModule{
 		keeper: k,
 	}
 }
 
-// OnChanOpenInit implements the IBCModule interface
+// OnChanOpenInit implements the IBCModule interface.
 func (im IBCModule) OnChanOpenInit(
 	ctx sdk.Context,
 	_ channeltypes.Order,
@@ -46,7 +46,7 @@ func (im IBCModule) OnChanOpenInit(
 	return "", im.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
 }
 
-// OnChanOpenTry implements the IBCModule interface
+// OnChanOpenTry implements the IBCModule interface.
 func (im IBCModule) OnChanOpenTry(
 	_ sdk.Context,
 	_ channeltypes.Order,
@@ -60,7 +60,7 @@ func (im IBCModule) OnChanOpenTry(
 	return "", nil
 }
 
-// OnChanOpenAck implements the IBCModule interface
+// OnChanOpenAck implements the IBCModule interface.
 func (im IBCModule) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
@@ -76,7 +76,7 @@ func (im IBCModule) OnChanOpenAck(
 	return im.keeper.HandleChannelOpenAck(ctx, portID, connectionID)
 }
 
-// OnChanOpenConfirm implements the IBCModule interface
+// OnChanOpenConfirm implements the IBCModule interface.
 func (im IBCModule) OnChanOpenConfirm(
 	_ sdk.Context,
 	_,
@@ -85,7 +85,7 @@ func (im IBCModule) OnChanOpenConfirm(
 	return nil
 }
 
-// OnChanCloseInit implements the IBCModule interface
+// OnChanCloseInit implements the IBCModule interface.
 func (im IBCModule) OnChanCloseInit(
 	_ sdk.Context,
 	_,
@@ -94,7 +94,7 @@ func (im IBCModule) OnChanCloseInit(
 	return nil
 }
 
-// OnChanCloseConfirm implements the IBCModule interface
+// OnChanCloseConfirm implements the IBCModule interface.
 func (im IBCModule) OnChanCloseConfirm(
 	_ sdk.Context,
 	_,
@@ -114,7 +114,7 @@ func (im IBCModule) OnRecvPacket(
 	return channeltypes.NewErrorAcknowledgement(errors.New("cannot receive packet via interchain accounts authentication module"))
 }
 
-// OnAcknowledgementPacket implements the IBCModule interface
+// OnAcknowledgementPacket implements the IBCModule interface.
 func (im IBCModule) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -145,7 +145,7 @@ func (im IBCModule) OnTimeoutPacket(
 	return im.keeper.HandleTimeout(ctx, packet)
 }
 
-// NegotiateAppVersion implements the IBCModule interface
+// NegotiateAppVersion implements the IBCModule interface.
 func (im IBCModule) NegotiateAppVersion(
 	_ sdk.Context,
 	_ channeltypes.Order,

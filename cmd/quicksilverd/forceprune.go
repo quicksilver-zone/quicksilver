@@ -166,7 +166,7 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	for i, s := range stateDBKeys {
 		fmt.Println(i, s)
 
-		retainHeight := int64(0)
+		var retainHeight int64
 		if s == keyABCIResponses {
 			retainHeight = currentHeight - minHeight
 		} else {

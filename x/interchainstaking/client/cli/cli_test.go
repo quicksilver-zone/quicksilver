@@ -33,8 +33,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = app.DefaultConfig()
 
-	network, err := network.New(s.T(), s.T().TempDir(), s.cfg)
-	s.network = network
+	net, err := network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+	s.network = net
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -71,11 +72,12 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{
+			runFlags := []string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			}
-			args := append(tt.args, flags...)
 
+			args := tt.args
+			args = append(args, runFlags...)
 			cmd := cli.GetCmdZonesInfos()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -135,11 +137,12 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{
+			runFlags := []string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			}
-			args := append(tt.args, flags...)
 
+			args := tt.args
+			args = append(args, runFlags...)
 			cmd := cli.GetDelegatorIntentCmd()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -320,13 +323,14 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{
+			runFlags := []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=true", flags.FlagDryRun),
 			}
-			args := append(tt.args, flags...)
 
+			args := tt.args
+			args = append(args, runFlags...)
 			cmd := cli.GetSignalIntentTxCmd()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)

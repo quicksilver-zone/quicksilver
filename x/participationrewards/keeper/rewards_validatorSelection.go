@@ -179,7 +179,7 @@ func (k Keeper) CalcOverallScores(
 		"expected", expected,
 	)
 
-	var msgs []sdk.Msg
+	msgs := make([]sdk.Msg, 0)
 	limit := sdk.NewDec(1.0)
 	for _, reward := range rewards {
 		vs, exists := zs.ValidatorScores[reward.ValidatorAddress]
@@ -231,7 +231,6 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 	k.Logger(ctx).Info("calcUserValidatorSelectionAllocations", "zone", zone.ChainId, "scores", zs, "allocation", zone.ValidatorSelectionAllocation)
 
 	userAllocations := make([]types.UserAllocation, 0)
-
 	if zone.ValidatorSelectionAllocation == 0 {
 		k.Logger(ctx).Info("validator selection allocation is zero, nothing to allocate")
 		return userAllocations

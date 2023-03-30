@@ -14,7 +14,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/wasmbinding/bindings"
 )
 
-// StargateQuerier dispatches whitelisted stargate queries
+// StargateQuerier dispatches whitelisted stargate queries.
 func StargateQuerier(queryRouter baseapp.GRPCQueryRouter, cdc codec.Codec) func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 	return func(ctx sdk.Context, request *wasmvmtypes.StargateQuery) ([]byte, error) {
 		protoResponseType, err := GetWhitelistedQuery(request.Path)
@@ -92,7 +92,7 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 	}
 }
 
-// ConvertProtoToJsonMarshal  unmarshals the given bytes into a proto message and then marshals it to json.
+// ConvertProtoToJSONMarshal unmarshals the given bytes into a proto message and then marshals it to json.
 // This is done so that clients calling stargate queries do not need to define their own proto unmarshalers,
 // being able to use response directly by json marshalling, which is supported in cosmwasm.
 func ConvertProtoToJSONMarshal(protoResponseType codec.ProtoMarshaler, bz []byte, cdc codec.Codec) ([]byte, error) {
@@ -112,7 +112,7 @@ func ConvertProtoToJSONMarshal(protoResponseType codec.ProtoMarshaler, bz []byte
 	return bz, nil
 }
 
-// ConvertSdkCoinsToWasmCoins converts sdk type coins to wasm vm type coins
+// ConvertSdkCoinsToWasmCoins converts sdk type coins to wasm vm type coins.
 func ConvertSdkCoinsToWasmCoins(coins []sdk.Coin) wasmvmtypes.Coins {
 	var toSend wasmvmtypes.Coins
 	for _, coin := range coins {
@@ -122,7 +122,7 @@ func ConvertSdkCoinsToWasmCoins(coins []sdk.Coin) wasmvmtypes.Coins {
 	return toSend
 }
 
-// ConvertSdkCoinToWasmCoin converts a sdk type coin to a wasm vm type coin
+// ConvertSdkCoinToWasmCoin converts a sdk type coin to a wasm vm type coin.
 func ConvertSdkCoinToWasmCoin(coin sdk.Coin) wasmvmtypes.Coin {
 	return wasmvmtypes.Coin{
 		Denom: coin.Denom,

@@ -18,7 +18,7 @@ type Keeper struct {
 	hooks    types.EpochHooks
 }
 
-// NewKeeper returns a new instance of epochs Keeper
+// NewKeeper returns a new instance of epochs Keeper.
 func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) Keeper {
 	return Keeper{
 		cdc:      cdc,
@@ -26,7 +26,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) Keeper {
 	}
 }
 
-// SetHooks set the epoch hooks
+// SetHooks set the epoch hooks.
 func (k *Keeper) SetHooks(eh types.EpochHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set epochs hooks twice")

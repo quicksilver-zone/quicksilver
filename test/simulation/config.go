@@ -8,7 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
-// List of available flags for the simulator
+// List of available flags for the simulator.
 var (
 	FlagGenesisFileValue        string
 	FlagParamsFileValue         string
@@ -30,7 +30,7 @@ var (
 	FlagGenesisTimeValue        int64
 )
 
-// GetSimulatorFlags gets the values of all the available simulation flags
+// GetSimulatorFlags gets the values of all the available simulation flags.
 func GetSimulatorFlags() {
 	// config fields
 	flag.StringVar(&FlagGenesisFileValue, "Genesis", "", "custom simulation genesis file; cannot be used with params file")

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/csv"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -140,7 +141,7 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 			for {
 				// Read each record from csv
 				record, err := r.Read()
-				if err == io.EOF {
+				if errors.Is(err, io.EOF) {
 					break
 				}
 
@@ -210,7 +211,6 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 				}
 			}
 
-		OUTER:
 			for idx, claimRecord := range claimRecords {
 				if idx%100 == 0 {
 					fmt.Printf("(%d/%d)...\n", idx, len(claimRecords))
@@ -241,9 +241,8 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 					bankGenState.Balances = append(bankGenState.Balances, balances)
 					bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
 				}
-				continue OUTER
-
 			}
+
 			bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 
 			airdropGenState.ClaimRecords = append(airdropGenState.ClaimRecords, claimRecords...)

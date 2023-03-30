@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -88,7 +89,8 @@ func FuzzZoneInfos(f *testing.F) {
 			// A case already seen.
 			return
 		}
-		_, _ = icsKeeper.Zones(ctx, req)
+		_, err := icsKeeper.Zones(ctx, req)
+		require.NoError(t, err)
 	})
 }
 
@@ -111,7 +113,8 @@ func TestInvalidPaginationForQueryZones(t *testing.T) {
 		return
 	}
 
-	_, _ = icsKeeper.Zones(ctx, req)
+	_, err := icsKeeper.Zones(ctx, req)
+	require.NoError(t, err)
 }
 
 func FuzzValsetCallback(f *testing.F) {
@@ -119,9 +122,9 @@ func FuzzValsetCallback(f *testing.F) {
 	newVal := utils.GenerateValAddressForTest()
 	valSetFuncs := []func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse{
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-			new := in[0]
-			new.OperatorAddress = newVal.String()
-			in = append(in, new)
+			val := in[0]
+			val.OperatorAddress = newVal.String()
+			in = append(in, val)
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
@@ -149,9 +152,9 @@ func FuzzValsetCallback(f *testing.F) {
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-			new := in[0]
-			new.OperatorAddress = newVal.String()
-			in = append(in, new)
+			val := in[0]
+			val.OperatorAddress = newVal.String()
+			in = append(in, val)
 			return stakingtypes.QueryValidatorsResponse{Validators: in}
 		},
 	}
@@ -164,9 +167,9 @@ func FuzzValsetCallback(f *testing.F) {
 	for _, valFunc := range valSetFuncs {
 		// 1.5. Set up a fresh test suite given that valFunc can mutate inputs.
 		chainBVals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetValidators(suite.chainB.GetContext(), 300)
-		query := valFunc(chainBVals)
+		queryRes := valFunc(chainBVals)
 		app := suite.GetQuicksilverApp(suite.chainA)
-		bz, err := app.AppCodec().Marshal(&query)
+		bz, err := app.AppCodec().Marshal(&queryRes)
 		suite.Require().NoError(err)
 		f.Add(bz)
 	}
@@ -174,7 +177,7 @@ func FuzzValsetCallback(f *testing.F) {
 	// 2. Now fuzz.
 	f.Fuzz(func(t *testing.T, args []byte) {
 		suite.SetT(t)
-		suite.FuzzValsetCallback(t, args)
+		suite.FuzzValsetCallback(args)
 	})
 }
 
@@ -193,13 +196,13 @@ func FuzzDelegationsCallback(f *testing.F) {
 	if !ok {
 		f.Fatalf("Could not retrieve zone for chainB: %q", suite.chainB.ChainID)
 	}
-	var queries []*stakingtypes.QueryDelegatorDelegationsRequest
-	for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
+	queries := make([]*stakingtypes.QueryDelegatorDelegationsRequest, 2)
+	for i, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
 		accAddr, err := sdk.AccAddressFromBech32(addr)
 		suite.Require().NoError(err)
-		queries = append(queries, &stakingtypes.QueryDelegatorDelegationsRequest{
+		queries[i] = &stakingtypes.QueryDelegatorDelegationsRequest{
 			DelegatorAddr: accAddr.String(),
-		})
+		}
 	}
 
 	for _, query := range queries {
@@ -210,7 +213,7 @@ func FuzzDelegationsCallback(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, args []byte) {
 		suite.SetT(t)
-		suite.FuzzDelegationsCallback(t, args)
+		suite.FuzzDelegationsCallback(args)
 	})
 }
 
@@ -234,7 +237,7 @@ func FuzzAccountBalanceCallback(f *testing.F) {
 	// 2. Now fuzz.
 	f.Fuzz(func(t *testing.T, respbz []byte) {
 		suite.SetT(t)
-		suite.FuzzAccountBalanceCallback(t, respbz)
+		suite.FuzzAccountBalanceCallback(respbz)
 	})
 }
 
@@ -274,13 +277,13 @@ func FuzzAllBalancesCallback(f *testing.F) {
 	// 3. Now fuzz.
 	f.Fuzz(func(t *testing.T, respbz []byte) {
 		suite.SetT(t)
-		suite.FuzzAllBalancesCallback(t, respbz)
+		suite.FuzzAllBalancesCallback(respbz)
 	})
 }
 
-func (s *FuzzingTestSuite) FuzzAccountBalanceCallback(t *testing.T, respbz []byte) {
+func (s *FuzzingTestSuite) FuzzAccountBalanceCallback(respbz []byte) {
 	if testing.Short() {
-		t.Skip("In -short mode")
+		s.T().Skip("In -short mode")
 	}
 
 	app := s.GetQuicksilverApp(s.chainA)
@@ -297,13 +300,14 @@ func (s *FuzzingTestSuite) FuzzAccountBalanceCallback(t *testing.T, respbz []byt
 		s.Require().NoError(err)
 		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
 
-		_ = keeper.AccountBalanceCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+		err = keeper.AccountBalanceCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+		s.Require().NoError(err)
 	}
 }
 
-func (s *FuzzingTestSuite) FuzzDelegationsCallback(t *testing.T, respbz []byte) {
+func (s *FuzzingTestSuite) FuzzDelegationsCallback(respbz []byte) {
 	if testing.Short() {
-		t.Skip("In -short mode")
+		s.T().Skip("In -short mode")
 	}
 
 	app := s.GetQuicksilverApp(s.chainA)
@@ -311,18 +315,19 @@ func (s *FuzzingTestSuite) FuzzDelegationsCallback(t *testing.T, respbz []byte) 
 	ctx := s.chainA.GetContext()
 
 	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-	query := stakingtypes.QueryDelegatorDelegationsRequest{
+	queryReq := stakingtypes.QueryDelegatorDelegationsRequest{
 		DelegatorAddr: zone.DelegationAddress.Address,
 	}
-	reqbz, err := app.AppCodec().Marshal(&query)
+	reqbz, err := app.AppCodec().Marshal(&queryReq)
 	s.Require().NoError(err)
 
-	_ = keeper.DelegationsCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+	err = keeper.DelegationsCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+	s.Require().NoError(err)
 }
 
-func (s *FuzzingTestSuite) FuzzAllBalancesCallback(t *testing.T, respbz []byte) {
+func (s *FuzzingTestSuite) FuzzAllBalancesCallback(respbz []byte) {
 	if testing.Short() {
-		t.Skip("In -short mode")
+		s.T().Skip("In -short mode")
 	}
 
 	app := s.GetQuicksilverApp(s.chainA)
@@ -331,20 +336,21 @@ func (s *FuzzingTestSuite) FuzzAllBalancesCallback(t *testing.T, respbz []byte) 
 
 	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 
-	query := banktypes.QueryAllBalancesRequest{
+	queryReq := banktypes.QueryAllBalancesRequest{
 		Address: zone.DepositAddress.Address,
 	}
-	reqbz, err := app.AppCodec().Marshal(&query)
+	reqbz, err := app.AppCodec().Marshal(&queryReq)
 	s.Require().NoError(err)
 
 	err = keeper.AllBalancesCallback(&app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
 	s.Require().NoError(err)
 }
 
-func (s *FuzzingTestSuite) FuzzValsetCallback(t *testing.T, args []byte) {
+func (s *FuzzingTestSuite) FuzzValsetCallback(args []byte) {
 	app := s.GetQuicksilverApp(s.chainA)
 	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
 	ctx := s.chainA.GetContext()
 
-	_ = keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: s.chainB.ChainID})
+	err := keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: s.chainB.ChainID})
+	s.Require().NoError(err)
 }

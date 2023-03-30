@@ -9,7 +9,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
-// airdrop message types
+// airdrop message types.
 const (
 	TypeMsgClaim = "claim"
 )
@@ -34,8 +34,8 @@ func (msg MsgClaim) Type() string { return TypeMsgClaim }
 func (msg MsgClaim) ValidateBasic() error {
 	errors := make(map[string]error)
 
-	if len(msg.ChainId) == 0 {
-		errors["ChainId"] = ErrUndefinedAttribute
+	if msg.ChainId == "" {
+		errors["ChainID"] = ErrUndefinedAttribute
 	}
 
 	action := int(msg.Action)

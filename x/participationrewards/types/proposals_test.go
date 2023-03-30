@@ -3,13 +3,12 @@ package types
 import (
 	"bytes"
 	"encoding/json"
-	encoding_json "encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
 
-var validLiquidData string = `{
+var validLiquidData = `{
 	"chainid": "somechain-1",
 	"registeredzonechainid": "someotherchain-1",
 	"ibcdenom": "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
@@ -123,7 +122,7 @@ func TestAddProtocolDataProposal_String(t *testing.T) {
 		Protocol    string
 		Type        string
 		Key         string
-		Data        encoding_json.RawMessage
+		Data        json.RawMessage
 	}
 
 	tt := fields{
@@ -189,5 +188,5 @@ func BenchmarkUpdateZoneProposalString(b *testing.B) {
 	if sink == nil {
 		b.Fatal("Benchmark did not run")
 	}
-	sink = (interface{})(nil)
+	sink = interface{}(nil)
 }

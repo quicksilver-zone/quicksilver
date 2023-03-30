@@ -84,7 +84,7 @@ func RandomSimAccountWithBalance(ctx sdk.Context, r *rand.Rand, accs []simulatio
 
 // Returns (account, randSubsetCoins, found), so if found = false, then no such address exists.
 // randSubsetCoins is a random subset of the provided denoms, if the account is found.
-// TODO: Write unit test
+// TODO: Write unit test.
 func SelAddrWithDenoms(ctx sdk.Context, r *rand.Rand, accs []simulation.Account, denoms []string, bk BankKeeper) (simulation.Account, sdk.Coins, bool) {
 	accHasDenoms := func(acc simulation.Account) bool {
 		for _, denom := range denoms {
@@ -117,7 +117,7 @@ func SelAddrWithDenoms(ctx sdk.Context, r *rand.Rand, accs []simulation.Account,
 // SelAddrWithDenom attempts to find an address with the provided denom. This function
 // returns (account, randSubsetCoins, found), so if found = false, then no such address exists.
 // randSubsetCoins is a random subset of the provided denoms, if the account is found.
-// TODO: Write unit test
+// TODO: Write unit test.
 func SelAddrWithDenom(ctx sdk.Context, r *rand.Rand, accs []simulation.Account, denom string, bk BankKeeper) (simulation.Account, sdk.Coin, bool) {
 	acc, subsetCoins, found := SelAddrWithDenoms(ctx, r, accs, []string{denom}, bk)
 	if !found {
@@ -127,7 +127,7 @@ func SelAddrWithDenom(ctx sdk.Context, r *rand.Rand, accs []simulation.Account, 
 }
 
 // GetRandSubsetOfKDenoms returns a random subset of coins of k unique denoms from the provided account
-// TODO: Write unit test
+// TODO: Write unit test.
 func GetRandSubsetOfKDenoms(ctx sdk.Context, r *rand.Rand, acc simulation.Account, k int, bk BankKeeper) (sdk.Coins, bool) {
 	// get all spendable coins from provided account
 	coins := bk.SpendableCoins(ctx, acc.Address)
@@ -158,7 +158,7 @@ func GetRandSubsetOfKDenoms(ctx sdk.Context, r *rand.Rand, acc simulation.Accoun
 	return subset.Sort(), true
 }
 
-// RandomSimAccountWithKDenoms returns an account that possesses k unique denoms
+// RandomSimAccountWithKDenoms returns an account that possesses k unique denoms.
 func RandomSimAccountWithKDenoms(ctx sdk.Context, r *rand.Rand, accs []simulation.Account, k int, bk BankKeeper) (simulation.Account, bool) {
 	accHasBal := func(acc simulation.Account) bool {
 		return len(bk.SpendableCoins(ctx, acc.Address)) >= k
@@ -166,10 +166,10 @@ func RandomSimAccountWithKDenoms(ctx sdk.Context, r *rand.Rand, accs []simulatio
 	return RandomSimAccountWithConstraint(r, accHasBal, accs)
 }
 
-// RandGeometricCoin uniformly samples a denom from the addr's balances.
+// RandExponentialCoinFromBalance uniformly samples a denom from the addr's balances.
 // Then it samples an Exponentially distributed amount of the addr's coins, with rate = 10.
 // (Meaning that on average it samples 10% of the chosen balance)
-// Pre-condition: Addr must have a spendable balance
+// Pre-condition: Addr must have a spendable balance.
 func RandExponentialCoinFromBalance(ctx sdk.Context, r *rand.Rand, addr sdk.AccAddress, bk BankKeeper) sdk.Coin {
 	balances := bk.SpendableCoins(ctx, addr)
 	if len(balances) == 0 {

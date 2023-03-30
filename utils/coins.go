@@ -14,7 +14,7 @@ func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
 		return "", err
 	}
 
-	if len(denom) == 0 {
+	if denom == "" {
 		return "", fmt.Errorf("key contained no denom")
 	}
 
