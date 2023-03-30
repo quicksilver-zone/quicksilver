@@ -86,7 +86,7 @@ jobs:
           for filename in ${excludelist}; do
             filename=$(echo $filename | sed 's/^./github.com\/ingenuity-build\/quicksilver/g')
             echo "Excluding ${filename} from coverage report..."
-            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage_nogen.txt
+            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
           done  
 
       - name: "Go vulnerability checks"
@@ -97,7 +97,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # needed for private repo
-          files: ./coverage_nogen.txt
+          files: ./coverage.txt
           flags: unittests
           fail_ci_if_error: true
           verbose: true
