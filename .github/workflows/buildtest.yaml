@@ -43,7 +43,7 @@ jobs:
           make install
 
       - name: Archive quicksilver binaries
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/develop'
         uses: actions/upload-artifact@v3
         with:
           name: quicksilverd-${{ matrix.targetos }}-${{ matrix.arch }}
@@ -81,7 +81,6 @@ jobs:
         continue-on-error: true    #temp-till we upgrade to v1.20
         run: make vulncheck
 
-
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v3
         with:
@@ -90,6 +89,7 @@ jobs:
           flags: unittests
           fail_ci_if_error: true
           verbose: true
+
   simulate:
     if: contains(github.event.pull_request.labels.*.name, 'run-sim')
     runs-on: ubuntu-latest
