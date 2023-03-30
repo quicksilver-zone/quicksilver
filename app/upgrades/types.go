@@ -16,11 +16,12 @@ const (
 	DevnetChainID     = "quicktest-1"
 	TestChainID       = "testchain1"
 
-	V010300UpgradeName    = "v1.3.0"
-	V010400UpgradeName    = "v1.4.0"
-	V010400rc6UpgradeName = "v1.4.0-rc6"
-	V010400rc7UpgradeName = "v1.4.0-rc7"
-	V010400rc8UpgradeName = "v1.4.0-rc8"
+	V010300UpgradeName     = "v1.3.0"
+	V010400UpgradeName     = "v1.4.0"
+	V010400rc6UpgradeName  = "v1.4.0-rc6"
+	V010400rc7UpgradeName  = "v1.4.0-rc7"
+	V010400rc8UpgradeName  = "v1.4.0-rc8"
+	V010400rc10UpgradeName = "v1.4.0-rc10"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal
