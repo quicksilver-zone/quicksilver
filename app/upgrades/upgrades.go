@@ -43,6 +43,11 @@ func Upgrades() []Upgrade {
 			CreateUpgradeHandler: V010400rc8UpgradeHandler,
 			StoreUpgrades:        storetypes.StoreUpgrades{},
 		},
+		{
+			UpgradeName:          V010400rc10UpgradeName,
+			CreateUpgradeHandler: NoOpHandler,
+			StoreUpgrades:        storetypes.StoreUpgrades{},
+		},
 	}
 }
 
