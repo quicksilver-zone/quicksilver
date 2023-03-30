@@ -29,8 +29,8 @@ func main() {
 		if errors.As(err, &exitError) {
 			os.Exit(exitError.Code)
 		}
-	
-	    os.Exit(1)
+
+		os.Exit(1)
 	}
 
 	os.Exit(0)
