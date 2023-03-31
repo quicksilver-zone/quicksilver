@@ -1,3 +1,7 @@
+---
+name: Pull Request
+about: Default template for additions or fixes to Quicksilver.
+---
 
 ## 1. Summary
 Fixes # (issue)
@@ -5,7 +9,7 @@ Fixes # (issue)
 
 ## 2.Type of change
 
-Please delete options that are not relevant.
+<!--  Please delete options that are not relevant. -->
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
@@ -32,4 +36,4 @@ Please delete options that are not relevant.
 
 ## 7. Future Work (optional)
 
-<!-- Describe follow up work, if any. -->
+<!-- Describe follow-up work, if any. -->
