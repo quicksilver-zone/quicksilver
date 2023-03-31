@@ -32,7 +32,11 @@ func (m MsgCreateDenom) Type() string  { return TypeMsgCreateDenom }
 func (m MsgCreateDenom) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
+<<<<<<< HEAD
 		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%v)", err)
+=======
+		return sdkioerrors.Wrapf(sdkerrors.ErrInvalidAddress, "Invalid sender address (%s)", err)
+>>>>>>> origin/main
 	}
 
 	_, err = GetTokenDenom(m.Sender, m.Subdenom)

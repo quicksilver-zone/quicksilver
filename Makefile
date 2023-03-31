@@ -484,10 +484,17 @@ format:
 
 mdlint:
 	@echo "--> Running markdown linter"
+<<<<<<< HEAD
 	@$(DOCKER) run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
 
 mdlint-fix:
 	@$(DOCKER)  run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
+=======
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md"
+
+mdlint-fix:
+	@docker run -v $(PWD):/workdir ghcr.io/igorshubovych/markdownlint-cli:latest "**/*.md" --fix
+>>>>>>> origin/main
 
 ###############################################################################
 ###                                Protobuf                                 ###
@@ -523,10 +530,17 @@ proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 
+<<<<<<< HEAD
 TM_URL              	= https://raw.githubusercontent.com/cometbft/cometbft/v0.34.25/proto/tendermint
 GOGO_PROTO_URL      	= https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.9.0
 SDK_PROTO_URL 			= https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.46.8/proto/cosmos
+=======
+TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.26/proto/tendermint
+GOGO_PROTO_URL      	= https://raw.githubusercontent.com/regen-network/protobuf/cosmos
+CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.8.0
+SDK_PROTO_URL 			= https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.46.10/proto/cosmos
+>>>>>>> origin/main
 IBC_PROTO_URL			= https://raw.githubusercontent.com/cosmos/ibc-go/v5.2.0/proto
 
 TM_CRYPTO_TYPES     			= third_party/proto/tendermint/crypto

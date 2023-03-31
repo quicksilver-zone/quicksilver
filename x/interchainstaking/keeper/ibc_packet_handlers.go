@@ -8,9 +8,16 @@ import (
 	"strings"
 	"time"
 
+<<<<<<< HEAD
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+=======
+	"cosmossdk.io/math"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
+
+	"github.com/cosmos/cosmos-sdk/codec"
+>>>>>>> origin/main
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -28,6 +35,34 @@ import (
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
+
+type TypedMsg struct {
+	Msg  sdk.Msg
+	Type string
+}
+
+func DeserializeCosmosTxTyped(cdc codec.BinaryCodec, data []byte) ([]TypedMsg, error) {
+	var cosmosTx icatypes.CosmosTx
+	if err := cdc.Unmarshal(data, &cosmosTx); err != nil {
+		return nil, err
+	}
+
+	msgs := make([]TypedMsg, len(cosmosTx.Messages))
+
+	for i, any := range cosmosTx.Messages {
+		var msg sdk.Msg
+
+		err := cdc.UnpackAny(any, &msg)
+		if err != nil {
+			return nil, err
+		}
+
+		msgs[i] = TypedMsg{Msg: msg, Type: any.TypeUrl}
+
+	}
+
+	return msgs, nil
+}
 
 type TypedMsg struct {
 	Msg  sdk.Msg
@@ -252,9 +287,17 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 					return err
 				}
 			} else {
+<<<<<<< HEAD
 				if err := k.HandleFailedUndelegate(ctx, src, packetData.Memo); err != nil {
 					return err
 				}
+=======
+				k.Logger(ctx).Info("Undelegation callback failed", "memo", packetData.Memo)
+				return nil
+				// if err := k.HandleFailedUndelegate(ctx, src, packetData.Memo); err != nil {
+				// 	return err
+				// }
+>>>>>>> origin/main
 			}
 			continue
 
@@ -622,6 +665,29 @@ func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo 
 	return nil
 }
 
+func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	parts := strings.Split(memo, "/")
+	if len(parts) != 2 || parts[0] != "rebalance" {
+		return errors.New("unexpected epoch rebalance memo format")
+	}
+
+	epochNumber, err := strconv.ParseInt(parts[1], 10, 64)
+	if err != nil {
+		return errors.New("unexpected epoch rebalance memo format (2)")
+	}
+
+	k.Logger(ctx).Error("Received MsgBeginRedelegate acknowledgement error")
+	// first, type assertion. we should have stakingtypes.MsgBeginRedelegate
+	redelegateMsg, ok := msg.(*stakingtypes.MsgBeginRedelegate)
+	if !ok {
+		return errors.New("unable to unmarshal MsgBeginRedelegate")
+	}
+	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
+	k.DeleteRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+	k.Logger(ctx).Error("Cleaning up redelegation record")
+	return nil
+}
+
 func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
 	if completion.IsZero() {
 		return errors.New("invalid zero nil completion time")
@@ -794,7 +860,11 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 	}
 
 	if memo != "rewards" {
+<<<<<<< HEAD
 		receipt, found := k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, memo))
+=======
+		receipt, found := k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, memo))
+>>>>>>> origin/main
 		if !found {
 			return fmt.Errorf("unable to find receipt for hash %s", memo)
 		}

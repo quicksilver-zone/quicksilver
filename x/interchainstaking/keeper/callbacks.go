@@ -7,7 +7,10 @@ import (
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
+<<<<<<< HEAD
 	tmtypes "github.com/cometbft/cometbft/types"
+=======
+>>>>>>> origin/main
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/tx"

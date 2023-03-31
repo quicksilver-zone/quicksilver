@@ -7,13 +7,25 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+<<<<<<< HEAD
 	"strings"
+=======
+	"sort"
+	"strings"
+	"time"
+>>>>>>> origin/main
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+<<<<<<< HEAD
 
+=======
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
+>>>>>>> origin/main
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 type msgServer struct {
@@ -189,6 +201,83 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		sdk.NewEvent(
 			types.EventTypeReopenICA,
 			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
+		),
+	})
+
+	return &types.MsgGovReopenChannelResponse{}, nil
+}
+
+// GovCloseChannel closes an ICA channel.
+func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovCloseChannel) (*types.MsgGovCloseChannelResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+		return &types.MsgGovCloseChannelResponse{},
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	_, cap, err := k.Keeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortId, msg.ChannelId)
+	if err != nil {
+		return &types.MsgGovCloseChannelResponse{}, err
+	}
+
+	if err := k.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, msg.PortId, msg.ChannelId, cap); err != nil {
+		return &types.MsgGovCloseChannelResponse{}, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeReopenICA,
+			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
+			sdk.NewAttribute(types.AttributeKeyChannelID, msg.ChannelId),
+		),
+	})
+
+	return &types.MsgGovCloseChannelResponse{}, nil
+}
+
+// GovReopenChannel reopens an ICA channel.
+func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	// remove leanding prefix icacontroller- if passed in msg
+	portID := strings.ReplaceAll(msg.PortId, "icacontroller-", "")
+
+	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
+	parts := strings.Split(portID, ".")
+
+	if len(parts) != 2 {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format")
+	}
+
+	if _, found := k.GetZone(ctx, parts[0]); !found {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
+	}
+
+	if parts[1] != "delegate" && parts[1] != "deposit" && parts[1] != "performance" && parts[1] != "withdrawal" {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; unexpected account")
+	}
+
+	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
+		return &types.MsgGovReopenChannelResponse{}, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeReopenICA,
+			sdk.NewAttribute(types.AttributeKeyPortID, portID),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
 		),
 	})

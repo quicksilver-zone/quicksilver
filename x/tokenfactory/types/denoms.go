@@ -4,7 +4,11 @@ import (
 	fmt "fmt"
 	"strings"
 
+<<<<<<< HEAD
 	sdkioerrors "cosmossdk.io/errors"
+=======
+	sdkerrors "cosmossdk.io/errors"
+>>>>>>> origin/main
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )

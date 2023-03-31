@@ -204,7 +204,7 @@ func ParseZoneRegistrationProposal(cdc codec.JSONCodec, proposalFile string) (ty
 	return proposal, nil
 }
 
-// GetCmdSubmitRegisterProposal implements the command to submit a register-zone proposal
+// GetCmdSubmitUpdateProposal  implements the command to submit a register-zone proposal
 func GetCmdSubmitUpdateProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-zone [proposal-file]",

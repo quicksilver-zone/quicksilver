@@ -261,8 +261,11 @@ type MsgClient interface {
 	// SignalIntent defines a method for signalling voting intent for one or more
 	// validators.
 	SignalIntent(ctx context.Context, in *MsgSignalIntent, opts ...grpc.CallOption) (*MsgSignalIntentResponse, error)
+<<<<<<< HEAD
 	// SignalIntent defines a method for signalling voting intent for one or more
 	// validators.
+=======
+>>>>>>> origin/main
 	GovCloseChannel(ctx context.Context, in *MsgGovCloseChannel, opts ...grpc.CallOption) (*MsgGovCloseChannelResponse, error)
 	GovReopenChannel(ctx context.Context, in *MsgGovReopenChannel, opts ...grpc.CallOption) (*MsgGovReopenChannelResponse, error)
 }
@@ -319,8 +322,11 @@ type MsgServer interface {
 	// SignalIntent defines a method for signalling voting intent for one or more
 	// validators.
 	SignalIntent(context.Context, *MsgSignalIntent) (*MsgSignalIntentResponse, error)
+<<<<<<< HEAD
 	// SignalIntent defines a method for signalling voting intent for one or more
 	// validators.
+=======
+>>>>>>> origin/main
 	GovCloseChannel(context.Context, *MsgGovCloseChannel) (*MsgGovCloseChannelResponse, error)
 	GovReopenChannel(context.Context, *MsgGovReopenChannel) (*MsgGovReopenChannelResponse, error)
 }
@@ -382,7 +388,11 @@ func _Msg_SignalIntent_Handler(srv any, ctx context.Context, dec func(any) error
 	return interceptor(ctx, in, info, handler)
 }
 
+<<<<<<< HEAD
 func _Msg_GovCloseChannel_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
+=======
+func _Msg_GovCloseChannel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+>>>>>>> origin/main
 	in := new(MsgGovCloseChannel)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -394,13 +404,21 @@ func _Msg_GovCloseChannel_Handler(srv any, ctx context.Context, dec func(any) er
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Msg/GovCloseChannel",
 	}
+<<<<<<< HEAD
 	handler := func(ctx context.Context, req any) (any, error) {
+=======
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+>>>>>>> origin/main
 		return srv.(MsgServer).GovCloseChannel(ctx, req.(*MsgGovCloseChannel))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
+<<<<<<< HEAD
 func _Msg_GovReopenChannel_Handler(srv any, ctx context.Context, dec func(any) error, interceptor grpc.UnaryServerInterceptor) (any, error) {
+=======
+func _Msg_GovReopenChannel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+>>>>>>> origin/main
 	in := new(MsgGovReopenChannel)
 	if err := dec(in); err != nil {
 		return nil, err
@@ -412,7 +430,11 @@ func _Msg_GovReopenChannel_Handler(srv any, ctx context.Context, dec func(any) e
 		Server:     srv,
 		FullMethod: "/quicksilver.interchainstaking.v1.Msg/GovReopenChannel",
 	}
+<<<<<<< HEAD
 	handler := func(ctx context.Context, req any) (any, error) {
+=======
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+>>>>>>> origin/main
 		return srv.(MsgServer).GovReopenChannel(ctx, req.(*MsgGovReopenChannel))
 	}
 	return interceptor(ctx, in, info, handler)

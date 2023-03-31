@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+<<<<<<< HEAD
 	"crypto/sha256"
 	"fmt"
 	"math/rand"
@@ -8,6 +9,12 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+=======
+	"fmt"
+	"testing"
+	"time"
+
+>>>>>>> origin/main
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -15,12 +22,18 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+<<<<<<< HEAD
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 
+=======
+	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+>>>>>>> origin/main
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -748,7 +761,11 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	app.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
 
 	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: zone.Validators[0].ValoperAddress, ValidatorDstAddress: zone.Validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+<<<<<<< HEAD
 	data, err := icatypes.SerializeCosmosTx(app.InterchainstakingKeeper.GetCodec(), []proto.Message{redelegate})
+=======
+	data, err := icatypes.SerializeCosmosTx(app.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
+>>>>>>> origin/main
 	s.Require().NoError(err)
 
 	// validate memo < 256 bytes
@@ -773,6 +790,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	s.Require().False(found)
 }
 
+<<<<<<< HEAD
 func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 	hash1 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x01}))
 	hash2 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x02}))
@@ -1532,6 +1550,52 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 		{
 			name: "msg response with nil data",
 			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]proto.Message, []byte) {
+=======
+func (s *KeeperTestSuite) Test_v045Callback() {
+
+	tests := []struct {
+		name             string
+		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte)
+		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
+	}{{
+		name: "msg response with some data",
+		setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
+			app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+			sender := utils.GenerateAccAddressForTest()
+			senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+			transferMsg := ibctransfertypes.MsgTransfer{
+				SourcePort:    "transfer",
+				SourceChannel: "channel-0",
+				Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
+				Sender:        senderAddr,
+				Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+			}
+			response := ibctransfertypes.MsgTransferResponse{
+				Sequence: 1,
+			}
+
+			respBytes := icatypes.ModuleCdc.MustMarshal(&response)
+			return []sdk.Msg{&transferMsg}, respBytes
+		},
+		assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
+			txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+			feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+			txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
+			feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+			// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
+
+			if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
+				return true
+			}
+			return false
+
+		},
+	},
+		{
+			name: "msg response with nil data",
+			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, []byte) {
+>>>>>>> origin/main
 				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				if !found {
 					s.Fail("unable to retrieve zone for test")
@@ -1545,7 +1609,11 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 				response := distrtypes.MsgSetWithdrawAddressResponse{}
 
 				respBytes := icatypes.ModuleCdc.MustMarshal(&response)
+<<<<<<< HEAD
 				return []proto.Message{&msgSetWithdrawAddress}, respBytes
+=======
+				return []sdk.Msg{&msgSetWithdrawAddress}, respBytes
+>>>>>>> origin/main
 			},
 			assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
 				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
@@ -1557,6 +1625,10 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 					return true
 				}
 				return false
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 			},
 		},
 	}
@@ -1601,15 +1673,24 @@ func (s *KeeperTestSuite) Test_v045Callback() {
 			s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
 
 			s.Require().True(test.assertStatements(ctx, app))
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 		})
 	}
 }
 
 func (s *KeeperTestSuite) Test_v046Callback() {
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 	tests := []struct {
 		name             string
 		setStatements    func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any)
 		assertStatements func(ctx sdk.Context, app *app.Quicksilver) bool
+<<<<<<< HEAD
 	}{
 		{
 			name: "msg response with some data",
@@ -1645,6 +1726,43 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 				return false
 			},
 		},
+=======
+	}{{
+		name: "msg response with some data",
+		setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
+			app.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+			sender := utils.GenerateAccAddressForTest()
+			senderAddr, _ := sdk.Bech32ifyAddressBytes("cosmos", sender)
+			transferMsg := ibctransfertypes.MsgTransfer{
+				SourcePort:    "transfer",
+				SourceChannel: "channel-0",
+				Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
+				Sender:        senderAddr,
+				Receiver:      app.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+			}
+			response := ibctransfertypes.MsgTransferResponse{
+				Sequence: 1,
+			}
+
+			anyresponse, _ := codectypes.NewAnyWithValue(&response)
+			return []sdk.Msg{&transferMsg}, anyresponse
+		},
+		assertStatements: func(ctx sdk.Context, app *app.Quicksilver) bool {
+			txMacc := app.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+			feeMacc := app.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+			txMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, txMacc)
+			feeMaccBalance2 := app.BankKeeper.GetAllBalances(ctx, feeMacc)
+
+			// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
+
+			if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
+				return true
+			}
+			return false
+
+		},
+	},
+>>>>>>> origin/main
 		{
 			name: "msg response with nil data",
 			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
@@ -1673,6 +1791,10 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 					return true
 				}
 				return false
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 			},
 		},
 	}
@@ -1717,6 +1839,10 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 			s.Require().NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
 
 			s.Require().True(test.assertStatements(ctx, app))
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/main
 		})
 	}
 }

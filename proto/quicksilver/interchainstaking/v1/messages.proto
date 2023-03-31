@@ -30,8 +30,11 @@ service Msg {
     };
   };
 
+<<<<<<< HEAD
   // SignalIntent defines a method for signalling voting intent for one or more
   // validators.
+=======
+>>>>>>> origin/main
   rpc GovCloseChannel(MsgGovCloseChannel) returns (MsgGovCloseChannelResponse) {
     option (google.api.http) = {
       post : "/quicksilver/tx/v1/interchainstaking/close_channel"

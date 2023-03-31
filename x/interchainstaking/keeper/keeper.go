@@ -493,9 +493,15 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 
 // redemption rate
 
+<<<<<<< HEAD
 func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
 	delegationsInProcess := sdkmath.ZeroInt()
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
+=======
+func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards math.Int) {
+	delegationsInProcess := sdk.ZeroInt()
+	k.IterateZoneReceipts(ctx, &zone, func(_ int64, receipt types.Receipt) (stop bool) {
+>>>>>>> origin/main
 		if receipt.Completed == nil {
 			for _, coin := range receipt.Amount {
 				delegationsInProcess = delegationsInProcess.Add(coin.Amount) // we cannot simply choose
@@ -507,7 +513,11 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRe
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
+<<<<<<< HEAD
 	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, zone).Amount.Add(epochRewards).Add(delegationsInProcess))
+=======
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards).Add(delegationsInProcess))
+>>>>>>> origin/main
 
 	// soft cap redemption rate, instead of panicking.
 	delta := ratio.Quo(zone.RedemptionRate)
@@ -524,11 +534,28 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRe
 	k.SetZone(ctx, zone)
 }
 
+<<<<<<< HEAD
 func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) {
 	ratio, _ := k.GetRatio(ctx, zone, sdk.ZeroInt())
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
 	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, zone).Amount)
+=======
+func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone types.Zone) {
+	delegationsInProcess := sdk.ZeroInt()
+	k.IterateZoneReceipts(ctx, &zone, func(_ int64, receipt types.Receipt) (stop bool) {
+		if receipt.Completed == nil {
+			for _, coin := range receipt.Amount {
+				delegationsInProcess = delegationsInProcess.Add(coin.Amount) // we cannot simply choose
+			}
+		}
+		return false
+	})
+	ratio, _ := k.GetRatio(ctx, zone, delegationsInProcess)
+	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
+	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(delegationsInProcess))
+>>>>>>> origin/main
 
 	zone.RedemptionRate = ratio
 	k.SetZone(ctx, zone)

@@ -195,7 +195,11 @@ func (msg MsgSignalIntent) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgGovCloseChannel - construct a msg to update signalled intent.
+<<<<<<< HEAD
 func NewMsgGovCloseChannel(channelID, portName string, fromAddress sdk.Address) *MsgGovCloseChannel {
+=======
+func NewMsgGovCloseChannel(channelID string, portName string, fromAddress sdk.Address) *MsgGovCloseChannel {
+>>>>>>> origin/main
 	return &MsgGovCloseChannel{ChannelId: channelID, PortId: portName, Authority: fromAddress.String()}
 }
 
@@ -210,11 +214,19 @@ func (msg MsgGovCloseChannel) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{fromAddress}
 }
 
+<<<<<<< HEAD
 // check channel id is correct format. validate port name?
 func (msg MsgGovCloseChannel) ValidateBasic() error { return nil }
 
 // NewMsgGovReopenChannel - construct a msg to update signalled intent.
 func NewMsgGovReopenChannel(connectionID, portName string, fromAddress sdk.Address) *MsgGovReopenChannel {
+=======
+// ValidateBasic check channel id is correct format. validate port name?
+func (msg MsgGovCloseChannel) ValidateBasic() error { return nil }
+
+// NewMsgGovReopenChannel - construct a msg to update signalled intent.
+func NewMsgGovReopenChannel(connectionID string, portName string, fromAddress sdk.Address) *MsgGovReopenChannel {
+>>>>>>> origin/main
 	return &MsgGovReopenChannel{ConnectionId: connectionID, PortId: portName, Authority: fromAddress.String()}
 }
 
@@ -229,5 +241,9 @@ func (msg MsgGovReopenChannel) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{fromAddress}
 }
 
+<<<<<<< HEAD
 // check channel id is correct format. validate port name?
+=======
+// ValidateBasic check channel id is correct format. validate port name?
+>>>>>>> origin/main
 func (msg MsgGovReopenChannel) ValidateBasic() error { return nil }

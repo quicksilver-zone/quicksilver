@@ -1,8 +1,35 @@
 package app
 
 import (
+<<<<<<< HEAD
 	"testing"
 	"time"
+=======
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	"github.com/ingenuity-build/quicksilver/utils"
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
+	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/stretchr/testify/suite"
+	"testing"
+	"time"
+)
+
+// TODO: this test runs in isolation, but fails as part of `make test`.
+// In the `make test` context, MintCoins() seems to have no effect. Why is this?
+// func TestReplaceZone(t *testing.T) {
+// 	// set up zone drop record and claims.
+// 	app := Setup(false)
+// 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+// 	var err error
+// 	denom := app.StakingKeeper.BondDenom(ctx)
+// 	someCoins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewInt(1000000)))
+// 	// work around airdrop keeper can't mint :)
+>>>>>>> origin/main
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,6 +58,45 @@ func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
 
+<<<<<<< HEAD
+=======
+// 	err = app.AirdropKeeper.SetClaimRecord(ctx, claim1)
+// 	require.NoError(t, err)
+// 	err = app.AirdropKeeper.SetClaimRecord(ctx, claim2)
+// 	require.NoError(t, err)
+// 	claims := app.AirdropKeeper.AllZoneClaimRecords(ctx, "osmotest-4")
+// 	require.Equal(t, 2, len(claims))
+// 	require.True(t, app.AirdropKeeper.GetZoneDropAccountBalance(ctx, "osmotest-4").Amount.Equal(sdk.NewInt(1000000)))
+// 	require.NotPanics(t, func() { ReplaceZoneDropChain(ctx, app, "osmotest-4", "osmo-test-4", ctx.BlockHeader().Time) })
+// 	claimsAfter := app.AirdropKeeper.AllZoneClaimRecords(ctx, "osmotest-4")
+// 	require.Equal(t, 0, len(claimsAfter))
+// 	claimsNew := app.AirdropKeeper.AllZoneClaimRecords(ctx, "osmo-test-4")
+// 	require.Equal(t, 2, len(claimsNew))
+// 	zoneDropsAfter := app.AirdropKeeper.AllZoneDrops(ctx)
+// 	// check we don't suddenly have two airdrops.
+// 	require.Equal(t, 1, len(zoneDropsAfter))
+// 	// check the one aidrop we have has the expected values.
+// 	require.Equal(t, zoneDropsAfter[0].ChainId, "osmo-test-4")
+// 	require.Equal(t, zoneDropsAfter[0].StartTime, ctx.BlockHeader().Time)
+// 	require.False(t, app.AirdropKeeper.GetZoneDropAccountBalance(ctx, "osmotest-4").Amount.Equal(sdk.NewInt(1000000)))
+// 	require.True(t, app.AirdropKeeper.GetZoneDropAccountBalance(ctx, "osmo-test-4").Amount.Equal(sdk.NewInt(1000000)))
+// }
+
+func init() {
+	ibctesting.DefaultTestingAppInit = SetupTestingApp
+}
+
+// TestKeeperTestSuite runs all the tests within this package.
+func TestAppTestSuite(t *testing.T) {
+	suite.Run(t, new(AppTestSuite))
+}
+
+func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
+	path := ibctesting.NewPath(chainA, chainB)
+	path.EndpointA.ChannelConfig.PortID = ibctesting.TransferPort
+	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
+
+>>>>>>> origin/main
 	return path
 }
 
@@ -118,7 +184,11 @@ func (suite *AppTestSuite) initTestZone() {
 	}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
+<<<<<<< HEAD
 	receipt := icstypes.Receipt{
+=======
+	reciept := icstypes.Receipt{
+>>>>>>> origin/main
 		ChainId: "uni-5",
 		Sender:  utils.GenerateAccAddressForTest().String(),
 		Txhash:  "TestDeposit01",
@@ -130,7 +200,11 @@ func (suite *AppTestSuite) initTestZone() {
 		),
 	}
 
+<<<<<<< HEAD
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), receipt)
+=======
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), reciept)
+>>>>>>> origin/main
 
 	ubRecord := icstypes.UnbondingRecord{
 		ChainId:       "uni-5",
@@ -212,6 +286,7 @@ func (suite *AppTestSuite) initTestZone() {
 	}
 }
 
+<<<<<<< HEAD
 func (s *AppTestSuite) TestV010400UpgradeHandler() {
 	app := s.GetQuicksilverApp(s.chainA)
 	handler := upgrades.V010400UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
@@ -345,4 +420,29 @@ func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 	s.Require().Equal(0, len(negRedelEndsAfter))
 	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
 	s.Require().Equal(0, len(redelegations))
+=======
+func (s *AppTestSuite) TestV010207UpgradeHandler() {
+	app := s.GetQuicksilverApp(s.chainA)
+	handler := v010207UpgradeHandler(app)
+	ctx := s.chainA.GetContext()
+
+	expectedVal := sdk.NewDec(50_000_000_000_000).Quo(sdk.NewDec(365))
+	expectedProportions := minttypes.DistributionProportions{
+		Staking:              sdk.NewDecWithPrec(80, 2),
+		PoolIncentives:       sdk.NewDecWithPrec(17, 2),
+		ParticipationRewards: sdk.NewDec(0),
+		CommunityPool:        sdk.NewDecWithPrec(3, 2),
+	}
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.Require().NoError(err)
+
+	// assert EpochProvisions
+	minter := app.MintKeeper.GetMinter(ctx)
+	s.Require().Equal(expectedVal, minter.EpochProvisions)
+
+	// assert DistributionProportions
+	params := app.MintKeeper.GetParams(ctx)
+	s.Require().Equal(expectedProportions, params.DistributionProportions)
+
+>>>>>>> origin/main
 }

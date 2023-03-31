@@ -3,7 +3,10 @@ package types
 const (
 	EventTypeRegisterZone      = "register_zone"
 	EventTypeRedemptionRequest = "request_redemption"
+<<<<<<< HEAD
 	EventTypeSetIntent         = "set_intent"
+=======
+>>>>>>> origin/main
 	EventTypeCloseICA          = "close_ica_channel"
 	EventTypeReopenICA         = "reopen_ica_channel"
 
@@ -13,9 +16,14 @@ const (
 	AttributeKeyBurnAmount       = "burn_amount"
 	AttributeKeyRedeemAmount     = "redeem_amount"
 	AttributeKeySourceAddress    = "source"
+<<<<<<< HEAD
 	AttributeKeyChannelID        = "channel_id"
 	AttributeKeyPortID           = "port_name"
 	AttributeKeyUser             = "user_address"
+=======
+	AttributeKeyPortID           = "port_name"
+	AttributeKeyChannelID        = "channel_id"
+>>>>>>> origin/main
 
 	AttributeValueCategory = ModuleName
 )

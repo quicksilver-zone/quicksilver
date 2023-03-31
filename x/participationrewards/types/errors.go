@@ -1,6 +1,12 @@
 package types
 
+<<<<<<< HEAD
 import sdkioerrors "cosmossdk.io/errors"
+=======
+import (
+	sdkioerrors "cosmossdk.io/errors"
+)
+>>>>>>> origin/main
 
 // x/participationrewards module sentinel errors
 var (

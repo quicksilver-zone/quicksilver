@@ -3,7 +3,11 @@ package types
 import (
 	"fmt"
 
+<<<<<<< HEAD
 	sdkioerrors "cosmossdk.io/errors"
+=======
+	sdkerrors "cosmossdk.io/errors"
+>>>>>>> origin/main
 )
 
 // x/airdrop module sentinel errors
