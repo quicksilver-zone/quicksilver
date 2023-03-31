@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/bytes"
+	"github.com/cometbft/cometbft/p2p"
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/bytes"
-	"github.com/tendermint/tendermint/p2p"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	quicksilver "github.com/ingenuity-build/quicksilver/app"
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"

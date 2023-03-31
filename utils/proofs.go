@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"net/url"
 
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/ibc-go/v6/modules/core/02-client/types"
-	commitmenttypes "github.com/cosmos/ibc-go/v6/modules/core/23-commitment/types"
-	ibcKeeper "github.com/cosmos/ibc-go/v6/modules/core/keeper"
-	tmclienttypes "github.com/cosmos/ibc-go/v6/modules/light-clients/07-tendermint/types"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	commitmenttypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
+	ibcKeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 )

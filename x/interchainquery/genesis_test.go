@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctesting "github.com/cosmos/ibc-go/v6/testing"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app"

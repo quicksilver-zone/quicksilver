@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	db "github.com/cometbft/cometbft-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/gogo/protobuf/proto"

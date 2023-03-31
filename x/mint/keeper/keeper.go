@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/x/mint/types"
 

@@ -4,12 +4,11 @@ go 1.19
 
 require (
 	cosmossdk.io/math v1.0.0-beta.6
-	github.com/CosmWasm/wasmd v0.31.0
+	github.com/CosmWasm/wasmd ab0c9d9
 	github.com/client9/misspell v0.3.4
-	github.com/cometbft/cometbft-db v0.7.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.2
-	github.com/cosmos/cosmos-sdk v0.46.11
-	github.com/cosmos/ibc-go/v6 v6.1.0
+	github.com/cosmos/cosmos-sdk v0.47.1
+	github.com/cosmos/ibc-go/v7 v7.0.0
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.2
 	github.com/golangci/golangci-lint v1.51.2
@@ -23,8 +22,6 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
-	github.com/tendermint/tendermint v0.34.27
-	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
 	go.opencensus.io v0.24.0
 	golang.org/x/exp v0.0.0-20230131160201-f062dba9d201
 	golang.org/x/tools v0.6.0
@@ -331,14 +328,11 @@ require (
 )
 
 replace (
-	// https://github.com/CosmWasm/wasmd/pull/938
-	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.30.1-0.20230320091624-f5072b9b04a6
+
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/iqlusioninc/liquidity-staking-module => github.com/notional-labs/liquidity-staking-module v0.0.3-0.20220914043211-d4675d9af6ae
-	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
-	// pebbledb - https://gist.github.com/faddat/673107b72eccdd869b242338dd17e9d9
-	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.8-0.20230214123107-77c191d0f7ee
+	github.com/iqlusioninc/liquidity-staking-module => github.com/notional-labs/liquidity-staking-module ca00223
+
 )

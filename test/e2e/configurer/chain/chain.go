@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	coretypes "github.com/cometbft/cometbft/rpc/core/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramsutils "github.com/cosmos/cosmos-sdk/x/params/client/utils"
 	"github.com/stretchr/testify/require"
-	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 
 	"github.com/ingenuity-build/quicksilver/test/e2e/configurer/config"
 	"github.com/ingenuity-build/quicksilver/test/e2e/containers"

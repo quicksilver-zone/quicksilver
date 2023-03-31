@@ -10,7 +10,7 @@ import (
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
 	proto "github.com/gogo/protobuf/proto"
-	_ "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	_ "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	math "math"

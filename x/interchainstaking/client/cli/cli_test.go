@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -11,7 +12,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
-	tmcli "github.com/tendermint/tendermint/libs/cli"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/client/cli"

@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	db "github.com/cometbft/cometbft-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	db "github.com/tendermint/tm-db"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	"github.com/gogo/protobuf/proto"
@@ -76,7 +76,7 @@ func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart, keyEnd []byte
 
 	if !iterator.Valid() {
 		var blankValue T
-		return blankValue, errors.New("No values in range")
+		return blankValue, errors.New("no values in range")
 	}
 
 	return parseValue(iterator.Value())

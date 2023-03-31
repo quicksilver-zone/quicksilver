@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/golang/protobuf/proto"
 	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -269,7 +270,7 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 	if zone.PerformanceAddress != nil {
 		k.SetPerformanceDelegation(ctx, zone, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
 		msg := stakingTypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
-		return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "perf/"+validator)
+		return k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "perf/"+validator)
 	}
 	return nil
 }

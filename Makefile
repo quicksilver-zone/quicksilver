@@ -7,7 +7,7 @@ PACKAGES_SIM=github.com/ingenuity-build/quicksilver/test/simulation
 PACKAGES_E2E=$(shell go list ./... | grep '/e2e')
 VERSION=$(shell git describe --tags | head -n1)
 DOCKER_VERSION ?= $(VERSION)
-TMVERSION := $(shell go list -m github.com/tendermint/tendermint | sed 's:.* ::')
+TMVERSION := $(shell go list -m github.com/cometbft/cometbft | sed 's:.* ::')
 COMMIT := $(shell git log -1 --format='%H')
 LEDGER_ENABLED ?= true
 BINDIR ?= $(GOPATH)/bin
@@ -68,7 +68,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=quicksilver \
           -X github.com/cosmos/cosmos-sdk/version.AppName=$(QS_BINARY) \
           -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
           -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-          -X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
+          -X github.com/cometbft/cometbft/version.TMCoreSemVer=$(TMVERSION)
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
@@ -523,7 +523,7 @@ proto-check-breaking:
 	@$(DOCKER_BUF) breaking --against $(HTTPS_GIT)#branch=main
 
 
-TM_URL              	= https://raw.githubusercontent.com/tendermint/tendermint/v0.34.25/proto/tendermint
+TM_URL              	= https://raw.githubusercontent.com/cometbft/cometbft/v0.34.25/proto/tendermint
 GOGO_PROTO_URL      	= https://raw.githubusercontent.com/regen-network/protobuf/cosmos
 CONFIO_URL          	= https://raw.githubusercontent.com/confio/ics23/v0.9.0
 SDK_PROTO_URL 			= https://raw.githubusercontent.com/cosmos/cosmos-sdk/v0.46.8/proto/cosmos
@@ -580,7 +580,7 @@ proto-update-deps:
 ## Importing of tendermint protobuf definitions currently requires the
 ## use of `sed` in order to build properly with cosmos-sdk's proto file layout
 ## (which is the standard Buf.build FILE_LAYOUT)
-## Issue link: https://github.com/tendermint/tendermint/issues/5021
+## Issue link: https://github.com/cometbft/cometbft/issues/5021
 	@mkdir -p $(TM_TYPES)
 	@curl -sSL $(TM_URL)/types/types.proto > $(TM_TYPES)/types.proto
 	@curl -sSL $(TM_URL)/types/params.proto > $(TM_TYPES)/params.proto

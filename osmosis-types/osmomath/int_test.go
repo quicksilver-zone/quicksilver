@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -307,10 +308,10 @@ func (s *intTestSuite) TestEncodingTableInt() {
 }
 
 func (s *intTestSuite) TestEncodingTableUint() {
-	var i sdk.Uint
+	var i math.Uint
 
 	cases := []struct {
-		i      sdk.Uint
+		i      math.Uint
 		jsonBz []byte
 		rawBz  []byte
 	}{
@@ -452,7 +453,7 @@ func (s *intTestSuite) TestEncodingRandom() {
 		n := rand.Uint64()
 		ni := sdk.NewUint(n)
 
-		var ri sdk.Uint
+		var ri math.Uint
 
 		str, err := ni.Marshal()
 		s.Require().Nil(err)

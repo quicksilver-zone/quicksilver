@@ -123,7 +123,6 @@ func NewIntFromString(s string) (res BigInt, ok bool) {
 	}
 	// Check overflow
 	if i.BitLen() > maxBitLen {
-		ok = false
 		return res, false
 	}
 	return BigInt{i}, true

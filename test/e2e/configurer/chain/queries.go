@@ -9,11 +9,11 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	tmabcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govv1types "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/stretchr/testify/require"
-	tmabcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/test/e2e/util"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
