@@ -145,9 +145,6 @@ func v010209UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 		zone.MessagesPerTx = 2
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		if _, err := app.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone); err != nil {
-			panic("unable to emit delegation messages")
-		}
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
 }
