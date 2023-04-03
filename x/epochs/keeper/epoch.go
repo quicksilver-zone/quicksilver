@@ -8,7 +8,7 @@ import (
 )
 
 // GetEpochInfo returns epoch info by identifier.
-func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo {
+func (k *Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo {
 	epoch := types.EpochInfo{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEpoch)
 	bz := store.Get([]byte(identifier))
@@ -21,20 +21,20 @@ func (k Keeper) GetEpochInfo(ctx sdk.Context, identifier string) types.EpochInfo
 }
 
 // SetEpochInfo sets epoch info.
-func (k Keeper) SetEpochInfo(ctx sdk.Context, epoch types.EpochInfo) {
+func (k *Keeper) SetEpochInfo(ctx sdk.Context, epoch types.EpochInfo) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEpoch)
 	bz := k.cdc.MustMarshal(&epoch)
 	store.Set([]byte(epoch.Identifier), bz)
 }
 
 // DeleteEpochInfo deletes epoch info.
-func (k Keeper) DeleteEpochInfo(ctx sdk.Context, identifier string) {
+func (k *Keeper) DeleteEpochInfo(ctx sdk.Context, identifier string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEpoch)
 	store.Delete([]byte(identifier))
 }
 
 // IterateEpochInfo iterates through epochs.
-func (k Keeper) IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo types.EpochInfo) (stop bool)) {
+func (k *Keeper) IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo types.EpochInfo) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixEpoch)
 
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -56,7 +56,7 @@ func (k Keeper) IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInfo
 }
 
 // AllEpochInfos returns every epochInfo in the store.
-func (k Keeper) AllEpochInfos(ctx sdk.Context) []types.EpochInfo {
+func (k *Keeper) AllEpochInfos(ctx sdk.Context) []types.EpochInfo {
 	epochs := []types.EpochInfo{}
 	k.IterateEpochInfo(ctx, func(_ int64, epochInfo types.EpochInfo) (stop bool) {
 		epochs = append(epochs, epochInfo)
