@@ -15,22 +15,22 @@ import (
 )
 
 // Callback wrapper struct for interchainstaking keeper.
-type Callback func(Keeper, sdk.Context, []byte, icqtypes.Query) error
+type Callback func(sdk.Context, *Keeper, []byte, icqtypes.Query) error
 
 type Callbacks struct {
-	k         Keeper
+	k         *Keeper
 	callbacks map[string]Callback
 }
 
 var _ icqtypes.QueryCallbacks = Callbacks{}
 
-func (k Keeper) CallbackHandler() Callbacks {
+func (k *Keeper) CallbackHandler() Callbacks {
 	return Callbacks{k, make(map[string]Callback)}
 }
 
 // Call calls callback handler.
 func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query icqtypes.Query) error {
-	return c.callbacks[id](c.k, ctx, args, query)
+	return c.callbacks[id](ctx, c.k, args, query)
 }
 
 func (c Callbacks) Has(id string) bool {
@@ -54,7 +54,7 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 
 // Callbacks
 
-func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+func ValidatorSelectionRewardsCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
 	delegatorRewards := distrtypes.QueryDelegationTotalRewardsResponse{}
 	err := k.cdc.Unmarshal(response, &delegatorRewards)
 	if err != nil {
@@ -97,7 +97,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	return nil
 }
 
-func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
 	var pd gamm.PoolI
 	if err := k.cdc.UnmarshalInterface(response, &pd); err != nil {
 		return err
@@ -140,7 +140,7 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 }
 
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
-func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtypes.Query) error {
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainId)
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
