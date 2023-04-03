@@ -68,7 +68,7 @@ func (k *Keeper) IterateZoneDrops(ctx sdk.Context, fn func(index int64, zoneInfo
 
 // AllZoneDrops returns all zone airdrops (active, future, expired).
 func (k *Keeper) AllZoneDrops(ctx sdk.Context) []*types.ZoneDrop {
-	zds := []*types.ZoneDrop{}
+	var zds []*types.ZoneDrop
 	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
 		zds = append(zds, &zd)
 		return false
@@ -78,7 +78,7 @@ func (k *Keeper) AllZoneDrops(ctx sdk.Context) []*types.ZoneDrop {
 
 // AllActiveZoneDrops returns all active zone airdrops.
 func (k *Keeper) AllActiveZoneDrops(ctx sdk.Context) []types.ZoneDrop {
-	zds := []types.ZoneDrop{}
+	var zds []types.ZoneDrop
 	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
 		if k.IsActiveZoneDrop(ctx, zd) {
 			zds = append(zds, zd)

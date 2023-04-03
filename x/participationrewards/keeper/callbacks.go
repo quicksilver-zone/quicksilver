@@ -121,7 +121,7 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	if err != nil {
 		return err
 	}
-	pool, ok := ipool.(types.OsmosisPoolProtocolData)
+	pool, ok := ipool.(*types.OsmosisPoolProtocolData)
 	if !ok {
 		return fmt.Errorf("unable to unmarshal protocol data for osmosispools/%d", poolID)
 	}
@@ -147,7 +147,7 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	}
 	k.Logger(ctx).Debug("epoch callback called")
 	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
-	connectionData, _ := iConnectionData.(types.ConnectionProtocolData)
+	connectionData, _ := iConnectionData.(*types.ConnectionProtocolData)
 
 	if err != nil {
 		return err

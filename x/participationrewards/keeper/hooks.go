@@ -24,7 +24,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 			if err != nil {
 				k.Logger(ctx).Error("Error unmarshalling protocol data")
 			}
-			connectionData, _ := iConnectionData.(types.ConnectionProtocolData)
+			connectionData, _ := iConnectionData.(*types.ConnectionProtocolData)
 			if connectionData.ChainID == ctx.ChainID() {
 				return false
 			}

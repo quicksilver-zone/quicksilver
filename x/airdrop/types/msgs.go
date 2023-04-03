@@ -1,7 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
@@ -10,6 +10,7 @@ import (
 )
 
 // airdrop message types.
+
 const (
 	TypeMsgClaim = "claim"
 )
@@ -32,42 +33,42 @@ func (msg MsgClaim) Type() string { return TypeMsgClaim }
 
 // ValidateBasic implements Msg.
 func (msg MsgClaim) ValidateBasic() error {
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 
 	if msg.ChainId == "" {
-		errors["ChainID"] = ErrUndefinedAttribute
+		errs["ChainID"] = ErrUndefinedAttribute
 	}
 
 	action := int(msg.Action)
 	if action < 1 || action >= len(Action_value) {
-		errors["Action"] = fmt.Errorf("%w, got %d", ErrActionOutOfBounds, msg.Action)
+		errs["Action"] = fmt.Errorf("%w, got %d", ErrActionOutOfBounds, msg.Action)
 	}
 
 	if _, err := sdk.AccAddressFromBech32(msg.Address); err != nil {
-		errors["Address"] = err
+		errs["Address"] = err
 	}
 
 	for i, p := range msg.Proofs {
 		pLabel := fmt.Sprintf("Proof [%d]:", i)
 		if len(p.Key) == 0 {
-			errors[pLabel+" Key"] = ErrUndefinedAttribute
+			errs[pLabel+" Key"] = ErrUndefinedAttribute
 		}
 
 		if len(p.Data) == 0 {
-			errors[pLabel+" Data"] = ErrUndefinedAttribute
+			errs[pLabel+" Data"] = ErrUndefinedAttribute
 		}
 
 		if p.ProofOps == nil {
-			errors[pLabel+" ProofOps"] = ErrUndefinedAttribute
+			errs[pLabel+" ProofOps"] = ErrUndefinedAttribute
 		}
 
 		if p.Height < 0 {
-			errors[pLabel+" Height"] = ErrNegativeAttribute
+			errs[pLabel+" Height"] = ErrNegativeAttribute
 		}
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		return multierror.New(errs)
 	}
 
 	return nil

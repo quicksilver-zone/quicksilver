@@ -46,7 +46,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	if err != nil {
 		k.Logger(ctx).Error("SubmitClaim: error unmarshalling protocol data")
 	}
-	connectionData, _ := iConnectionData.(types.ConnectionProtocolData)
+	connectionData, _ := iConnectionData.(*types.ConnectionProtocolData)
 
 	for i, proof := range msg.Proofs {
 		pl := fmt.Sprintf("Proof [%d]", i)

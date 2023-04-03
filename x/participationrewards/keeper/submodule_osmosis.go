@@ -48,7 +48,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 		if err != nil {
 			return false
 		}
-		pool, _ := ipool.(types.OsmosisPoolProtocolData)
+		pool, _ := ipool.(*types.OsmosisPoolProtocolData)
 
 		// update pool datas
 		k.IcqKeeper.MakeRequest(

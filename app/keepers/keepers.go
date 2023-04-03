@@ -111,7 +111,7 @@ type AppKeepers struct {
 	InterchainstakingKeeper    interchainstakingkeeper.Keeper
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
 	ParticipationRewardsKeeper participationrewardskeeper.Keeper
-	AirdropKeeper              airdropkeeper.Keeper
+	AirdropKeeper              *airdropkeeper.Keeper
 	TokenFactoryKeeper         tokenfactorykeeper.Keeper
 
 	// 		IBC keepers

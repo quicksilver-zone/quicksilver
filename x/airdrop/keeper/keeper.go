@@ -46,7 +46,7 @@ func NewKeeper(
 	icqk icqkeeper.Keeper,
 	prk prkeeper.Keeper,
 	pofn utils.ProofOpsFn,
-) Keeper {
+) *Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -56,7 +56,7 @@ func NewKeeper(
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	return &Keeper{
 		cdc:              cdc,
 		storeKey:         key,
 		paramSpace:       ps,

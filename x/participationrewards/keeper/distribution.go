@@ -80,7 +80,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 			errs[idxLabel] = err
 			return true
 		}
-		pool, _ := ipool.(types.OsmosisPoolProtocolData)
+		pool, _ := ipool.(*types.OsmosisPoolProtocolData)
 
 		// pool must be a cosmos pair
 		if len(pool.Zones) != 2 {
