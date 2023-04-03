@@ -1,9 +1,11 @@
-package types
+package types_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 func TestParams_Validate(t *testing.T) {
@@ -21,7 +23,7 @@ func TestParams_Validate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := Params{}
+			p := types.Params{}
 			err := p.Validate()
 			if tt.wantErr {
 				t.Logf("Error:\n%v\n", err)
@@ -35,8 +37,8 @@ func TestParams_Validate(t *testing.T) {
 
 func TestParams(t *testing.T) {
 	// test default params
-	testParams := Params{}
-	defaultParams := DefaultParams()
+	testParams := types.Params{}
+	defaultParams := types.DefaultParams()
 	require.Equal(t, defaultParams, testParams)
 
 	str := `{}
