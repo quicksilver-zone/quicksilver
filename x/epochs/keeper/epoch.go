@@ -57,7 +57,7 @@ func (k *Keeper) IterateEpochInfo(ctx sdk.Context, fn func(index int64, epochInf
 
 // AllEpochInfos returns every epochInfo in the store.
 func (k *Keeper) AllEpochInfos(ctx sdk.Context) []types.EpochInfo {
-	epochs := []types.EpochInfo{}
+	var epochs []types.EpochInfo
 	k.IterateEpochInfo(ctx, func(_ int64, epochInfo types.EpochInfo) (stop bool) {
 		epochs = append(epochs, epochInfo)
 		return false
