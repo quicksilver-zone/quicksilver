@@ -1,5 +1,5 @@
 name: Staticmajor Analysis
-on: [push,workflow_dispatch,pull_request]
+on: [push, pull_request]
 jobs:
   run_staticmajor:
     runs-on: ubuntu-latest
@@ -10,8 +10,8 @@ jobs:
         id: staticmajor
         uses: orijtech/staticmajor-action@main
         with:
-          resleak: true
-          httperroryzer: true
-          structslop: true
-          fuzzy: true
-          generated: false
+          resleak: 'true'
+          httperroryzer: 'true'
+          structslop: 'true'
+          fuzzy: 'true'
+          generated: 'false'
