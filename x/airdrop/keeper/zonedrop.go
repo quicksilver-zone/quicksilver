@@ -8,19 +8,19 @@ import (
 )
 
 // GetZoneDropAccountAddress returns the zone airdrop account address.
-func (k Keeper) GetZoneDropAccountAddress(chainID string) sdk.AccAddress {
+func (k *Keeper) GetZoneDropAccountAddress(chainID string) sdk.AccAddress {
 	name := types.ModuleName + "." + chainID
 	return authtypes.NewModuleAddress(name)
 }
 
 // GetZoneDropAccountBalance gets the zone airdrop account coin balance.
-func (k Keeper) GetZoneDropAccountBalance(ctx sdk.Context, chainID string) sdk.Coin {
+func (k *Keeper) GetZoneDropAccountBalance(ctx sdk.Context, chainID string) sdk.Coin {
 	zonedropAccAddr := k.GetZoneDropAccountAddress(chainID)
 	return k.bankKeeper.GetBalance(ctx, zonedropAccAddr, k.stakingKeeper.BondDenom(ctx))
 }
 
 // GetZoneDrop returns airdrop details for the zone identified by chainID.
-func (k Keeper) GetZoneDrop(ctx sdk.Context, chainID string) (types.ZoneDrop, bool) {
+func (k *Keeper) GetZoneDrop(ctx sdk.Context, chainID string) (types.ZoneDrop, bool) {
 	zd := types.ZoneDrop{}
 	store := ctx.KVStore(k.storeKey)
 	b := store.Get(types.GetKeyZoneDrop(chainID))
@@ -33,20 +33,20 @@ func (k Keeper) GetZoneDrop(ctx sdk.Context, chainID string) (types.ZoneDrop, bo
 }
 
 // SetZoneDrop creates/updates the given zone airdrop (ZoneDrop).
-func (k Keeper) SetZoneDrop(ctx sdk.Context, zd types.ZoneDrop) {
+func (k *Keeper) SetZoneDrop(ctx sdk.Context, zd types.ZoneDrop) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&zd)
 	store.Set(types.GetKeyZoneDrop(zd.ChainId), b)
 }
 
 // DeleteZoneDrop deletes the airdrop of the zone identified by chainID.
-func (k Keeper) DeleteZoneDrop(ctx sdk.Context, chainID string) {
+func (k *Keeper) DeleteZoneDrop(ctx sdk.Context, chainID string) {
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetKeyZoneDrop(chainID))
 }
 
 // IterateZoneDrops iterate through zone airdrops.
-func (k Keeper) IterateZoneDrops(ctx sdk.Context, fn func(index int64, zoneInfo types.ZoneDrop) (stop bool)) {
+func (k *Keeper) IterateZoneDrops(ctx sdk.Context, fn func(index int64, zoneInfo types.ZoneDrop) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixZoneDrop)
@@ -67,7 +67,7 @@ func (k Keeper) IterateZoneDrops(ctx sdk.Context, fn func(index int64, zoneInfo 
 }
 
 // AllZoneDrops returns all zone airdrops (active, future, expired).
-func (k Keeper) AllZoneDrops(ctx sdk.Context) []*types.ZoneDrop {
+func (k *Keeper) AllZoneDrops(ctx sdk.Context) []*types.ZoneDrop {
 	zds := []*types.ZoneDrop{}
 	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
 		zds = append(zds, &zd)
@@ -77,7 +77,7 @@ func (k Keeper) AllZoneDrops(ctx sdk.Context) []*types.ZoneDrop {
 }
 
 // AllActiveZoneDrops returns all active zone airdrops.
-func (k Keeper) AllActiveZoneDrops(ctx sdk.Context) []types.ZoneDrop {
+func (k *Keeper) AllActiveZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 	zds := []types.ZoneDrop{}
 	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
 		if k.IsActiveZoneDrop(ctx, zd) {
@@ -99,7 +99,7 @@ func (k Keeper) AllActiveZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 //
 // isActive:  s <= timenow <= s+D+d
 // notActive: timenow < s || timenow > s+D+d.
-func (k Keeper) IsActiveZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
+func (k *Keeper) IsActiveZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
 	// negated checks here ensure inclusive range
@@ -107,7 +107,7 @@ func (k Keeper) IsActiveZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 }
 
 // AllFutureZoneDrops returns all future zone airdrops.
-func (k Keeper) AllFutureZoneDrops(ctx sdk.Context) []types.ZoneDrop {
+func (k *Keeper) AllFutureZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 	var zds []types.ZoneDrop
 	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
 		if k.IsFutureZoneDrop(ctx, zd) {
@@ -129,14 +129,14 @@ func (k Keeper) AllFutureZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 //
 // isFuture:  timenow < s
 // notFuture: s <= timenow.
-func (k Keeper) IsFutureZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
+func (k *Keeper) IsFutureZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
 	return bt.Before(zd.StartTime)
 }
 
 // AllExpiredZoneDrops returns all expired zone airdrops.
-func (k Keeper) AllExpiredZoneDrops(ctx sdk.Context) []types.ZoneDrop {
+func (k *Keeper) AllExpiredZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 	var zds []types.ZoneDrop
 	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
 		if k.IsExpiredZoneDrop(ctx, zd) {
@@ -158,7 +158,7 @@ func (k Keeper) AllExpiredZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 //
 // isExpired:  timenow > s+D+d
 // notExpired: timenow < s+D+d.
-func (k Keeper) IsExpiredZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
+func (k *Keeper) IsExpiredZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
 	return bt.After(zd.StartTime.Add(zd.Duration).Add(zd.Decay))
@@ -166,7 +166,7 @@ func (k Keeper) IsExpiredZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 
 // UnconcludedAirdrops returns all expired zone airdrops that have not yet been
 // concluded.
-func (k Keeper) UnconcludedAirdrops(ctx sdk.Context) []types.ZoneDrop {
+func (k *Keeper) UnconcludedAirdrops(ctx sdk.Context) []types.ZoneDrop {
 	var zds []types.ZoneDrop
 	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
 		if k.IsExpiredZoneDrop(ctx, zd) {
@@ -181,7 +181,7 @@ func (k Keeper) UnconcludedAirdrops(ctx sdk.Context) []types.ZoneDrop {
 
 // EndZoneDrop concludes a zone airdrop. It deletes all ClaimRecords for the
 // given zone.
-func (k Keeper) EndZoneDrop(ctx sdk.Context, chainID string) error {
+func (k *Keeper) EndZoneDrop(ctx sdk.Context, chainID string) error {
 	if err := k.returnUnclaimedZoneDropTokens(ctx, chainID); err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func (k Keeper) EndZoneDrop(ctx sdk.Context, chainID string) error {
 
 // returnUnclaimedZoneDropTokens returns all unclaimed zone airdrop tokens to
 // the airdrop module account.
-func (k Keeper) returnUnclaimedZoneDropTokens(ctx sdk.Context, chainID string) error {
+func (k *Keeper) returnUnclaimedZoneDropTokens(ctx sdk.Context, chainID string) error {
 	zonedropAccountAddress := k.GetZoneDropAccountAddress(chainID)
 	zonedropAccountBalance := k.GetZoneDropAccountBalance(ctx, chainID)
 	return k.bankKeeper.SendCoinsFromAccountToModule(

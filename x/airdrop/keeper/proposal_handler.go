@@ -87,7 +87,7 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.Register
 	return nil
 }
 
-func (k Keeper) decompress(data []byte) ([]byte, error) {
+func (k *Keeper) decompress(data []byte) ([]byte, error) {
 	// zip reader
 	zr, err := zlib.NewReader(bytes.NewReader(data))
 	if err != nil {
