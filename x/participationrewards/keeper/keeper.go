@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,10 +26,10 @@ import (
 // allocated to it.
 type UserAllocation struct {
 	Address string
-	Amount  math.Int
+	Amount  sdkmath.Int
 }
 
-var _ osmosistypes.ParticipationRewardsKeeper = Keeper{}
+var _ osmosistypes.ParticipationRewardsKeeper = &Keeper{}
 
 type Keeper struct {
 	cdc                  codec.BinaryCodec
@@ -61,7 +61,7 @@ func NewKeeper(
 	feeCollectorName string,
 	proofValidationFn utils.ProofOpsFn,
 	selfProofValidationFn utils.SelfProofOpsFn,
-) Keeper {
+) *Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -71,7 +71,7 @@ func NewKeeper(
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	return &Keeper{
 		cdc:                  cdc,
 		storeKey:             key,
 		paramSpace:           ps,
@@ -92,13 +92,13 @@ func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
 }
 
 // GetParams returns the total set of participationrewards parameters.
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+func (k *Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
 }
 
 // SetParams sets the total set of participationrewards parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
@@ -109,15 +109,15 @@ func (k *Keeper) GetClaimsEnabled(ctx sdk.Context) bool {
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) GetCodec() codec.BinaryCodec {
+func (k *Keeper) GetCodec() codec.BinaryCodec {
 	return k.cdc
 }
 
-func (k Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
+func (k *Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 	selfConnectionData, err := json.Marshal(types.ConnectionProtocolData{
 		ConnectionID: types.SelfConnection,
 		ChainID:      ctx.ChainID(),
@@ -139,7 +139,7 @@ func (k Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 	return nil
 }
 
-func (k Keeper) GetModuleBalance(ctx sdk.Context) math.Int {
+func (k *Keeper) GetModuleBalance(ctx sdk.Context) sdkmath.Int {
 	denom := k.stakingKeeper.BondDenom(ctx)
 	moduleAddress := k.accountKeeper.GetModuleAddress(types.ModuleName)
 	moduleBalance := k.bankKeeper.GetBalance(ctx, moduleAddress, denom)

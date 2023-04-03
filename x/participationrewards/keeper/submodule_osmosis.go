@@ -17,7 +17,7 @@ type OsmosisModule struct{}
 
 var _ Submodule = &OsmosisModule{}
 
-func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
+func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 	// osmosis params
 	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, types.OsmosisParamsKey)
 	if !found {

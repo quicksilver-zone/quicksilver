@@ -9,6 +9,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
+func NewProtocolData(datatype string, data json.RawMessage) *ProtocolData {
+	return &ProtocolData{Type: datatype, Data: data}
+}
+
 func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (ProtocolDataI, error) {
 	switch datatype {
 	case ProtocolDataTypeConnection:

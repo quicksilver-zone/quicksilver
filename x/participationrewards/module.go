@@ -93,11 +93,11 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // AppModule implements the AppModule interface for the participationrewards module.
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
 // NewAppModule return a new AppModule.
-func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, k *keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{
 			cdc: cdc,
@@ -107,7 +107,9 @@ func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 }
 
 // RegisterInvariants registers the participationrewards module invariants.
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	keeper.RegisterInvariants(ir, am.keeper)
+}
 
 // Route returns the message routing key for the participationrewards module.
 func (am AppModule) Route() sdk.Route {

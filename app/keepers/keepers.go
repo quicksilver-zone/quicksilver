@@ -110,7 +110,7 @@ type AppKeepers struct {
 	ClaimsManagerKeeper        claimsmanagerkeeper.Keeper
 	InterchainstakingKeeper    interchainstakingkeeper.Keeper
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
-	ParticipationRewardsKeeper participationrewardskeeper.Keeper
+	ParticipationRewardsKeeper *participationrewardskeeper.Keeper
 	AirdropKeeper              *airdropkeeper.Keeper
 	TokenFactoryKeeper         tokenfactorykeeper.Keeper
 

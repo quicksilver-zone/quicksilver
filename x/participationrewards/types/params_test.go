@@ -22,7 +22,7 @@ func TestParams_Validate(t *testing.T) {
 			fields{},
 			true,
 		},
-		// currently params sturct only contains DistributionProportions,
+		// currently params struct only contains DistributionProportions,
 		// thus its testcases are to provide sufficient coverage.
 		{
 			"valid",

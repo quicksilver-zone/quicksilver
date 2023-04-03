@@ -39,8 +39,8 @@ func (s *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 	s.Require().NoError(err)
 
 	err = keeper.OsmosisPoolUpdateCallback(
-		prk,
 		ctx,
+		prk,
 		resp,
 		query,
 	)
@@ -105,8 +105,8 @@ func (s *KeeperTestSuite) executeValidatorSelectionRewardsCallback(performanceAd
 	s.Require().NoError(err)
 
 	err = keeper.ValidatorSelectionRewardsCallback(
-		prk,
 		ctx,
+		prk,
 		resp,
 		query,
 	)
@@ -138,8 +138,8 @@ func (s *KeeperTestSuite) executeSetEpochBlockCallback() {
 	s.Require().NoError(err)
 
 	err = keeper.SetEpochBlockCallback(
-		prk,
 		ctx,
+		prk,
 		resp,
 		query,
 	)

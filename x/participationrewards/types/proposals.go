@@ -19,13 +19,13 @@ func NewAddProtocolDataProposal(title, description, datatype, _, key string, dat
 	return &AddProtocolDataProposal{Title: title, Description: description, Type: datatype, Data: data, Key: key}
 }
 
-func (m AddProtocolDataProposal) GetDescription() string { return m.Description }
-func (m AddProtocolDataProposal) GetTitle() string       { return m.Title }
-func (m AddProtocolDataProposal) ProposalRoute() string  { return RouterKey }
-func (m AddProtocolDataProposal) ProposalType() string   { return ProposalTypeAddProtocolData }
+func (m *AddProtocolDataProposal) GetDescription() string { return m.Description }
+func (m *AddProtocolDataProposal) GetTitle() string       { return m.Title }
+func (m *AddProtocolDataProposal) ProposalRoute() string  { return RouterKey }
+func (m *AddProtocolDataProposal) ProposalType() string   { return ProposalTypeAddProtocolData }
 
 // ValidateBasic runs basic stateless validity checks.
-func (m AddProtocolDataProposal) ValidateBasic() error {
+func (m *AddProtocolDataProposal) ValidateBasic() error {
 	if err := govv1beta1.ValidateAbstract(m); err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (m AddProtocolDataProposal) ValidateBasic() error {
 }
 
 // String implements the Stringer interface.
-func (m AddProtocolDataProposal) String() string {
+func (m *AddProtocolDataProposal) String() string {
 	return fmt.Sprintf(`Add Protocol Data Proposal:
 Title:			%s
 Description:	%s

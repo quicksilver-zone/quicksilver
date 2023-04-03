@@ -27,7 +27,7 @@ type Keeper struct {
 	govKeeper     govkeeper.Keeper
 	icsKeeper     icskeeper.Keeper
 	icqKeeper     icqkeeper.Keeper
-	prKeeper      prkeeper.Keeper
+	prKeeper      *prkeeper.Keeper
 
 	ValidateProofOps utils.ProofOpsFn
 }
@@ -44,7 +44,7 @@ func NewKeeper(
 	gk govkeeper.Keeper,
 	icsk icskeeper.Keeper,
 	icqk icqkeeper.Keeper,
-	prk prkeeper.Keeper,
+	prk *prkeeper.Keeper,
 	pofn utils.ProofOpsFn,
 ) *Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
