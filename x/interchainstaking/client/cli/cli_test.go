@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -37,7 +35,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	updateGenesisConfigState := func(moduleName string, moduleState proto.Message) {
 		buf, err := s.cfg.Codec.MarshalJSON(moduleState)
-		require.NoError(s.T(), err)
+		s.Require().NoError(err)
 		s.cfg.GenesisState[moduleName] = buf
 	}
 
