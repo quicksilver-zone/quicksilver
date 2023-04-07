@@ -525,6 +525,12 @@ proto-format:
 		bufbuild/buf:$(BUF_VERSION) format -w
 	@echo "✅ Completed protobuf format!"
 
+proto-breaking-check:
+	@echo "🤖 Running protobuf breaking check against develop branch..."
+	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
+		bufbuild/buf:$(BUF_VERSION) breaking --against '.git#branch=develop'
+	@echo "✅ Completed protobuf breaking check!"
+
 proto-setup:
 	@echo "🤖 Setting up protobuf environment..."
 	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
