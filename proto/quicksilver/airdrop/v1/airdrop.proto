@@ -13,29 +13,29 @@ enum Action {
   option (gogoproto.goproto_enum_prefix) = false;
 
   // Undefined action (per protobuf spec)
-  ActionUndefined = 0;
+   ACTION_UNDEFINED = 0;
   // Initial claim action
-  ActionInitialClaim = 1;
+  ACTION_INITIAL_CLAIM = 1;
   // Deposit tier 1 (e.g. > 5% of base_value)
-  ActionDepositT1 = 2;
+  ACTION_DEPOSIT_T1 = 2;
   // Deposit tier 2 (e.g. > 10% of base_value)
-  ActionDepositT2 = 3;
+  ACTION_DEPOSIT_T2 = 3;
   // Deposit tier 3 (e.g. > 15% of base_value)
-  ActionDepositT3 = 4;
+  ACTION_DEPOSIT_T3 = 4;
   // Deposit tier 4 (e.g. > 22% of base_value)
-  ActionDepositT4 = 5;
+  ACTION_DEPOSIT_T4 = 5;
   // Deposit tier 5 (e.g. > 30% of base_value)
-  ActionDepositT5 = 6;
+  ACTION_DEPOSIT_T5 = 6;
   // Active QCK delegation
-  ActionStakeQCK = 7;
+  ACTION_STAKE_QCK = 7;
   // Intent is set
-  ActionSignalIntent = 8;
+  ACTION_SIGNAL_INTENT = 8;
   // Cast governance vote on QS
-  ActionQSGov = 9;
+  ACTION_QS_GOV = 9;
   // Governance By Proxy (GbP): cast vote on remote zone
-  ActionGbP = 10;
+  ACTION_GBP = 10;
   // Provide liquidity on Osmosis
-  ActionOsmosis = 11;
+  ACTION_OSMOSIS = 11;
 }
 
 // Status is used as an enum to denote zone status.
