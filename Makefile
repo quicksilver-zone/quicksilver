@@ -519,10 +519,10 @@ proto-lint:
 	@echo "✅ Completed protobuf linting!"
 
 proto-format:
-	@echo "🤖 Running protobuf linter..."
+	@echo "🤖 Running protobuf format..."
 	@docker run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) lint
-	@echo "✅ Completed protobuf linting!"
+		bufbuild/buf:$(BUF_VERSION) format -w
+	@echo "✅ Completed protobuf formatting!"
 
 proto-setup:
 	@echo "🤖 Setting up protobuf environment..."
