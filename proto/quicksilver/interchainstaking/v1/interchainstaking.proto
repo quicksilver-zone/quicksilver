@@ -111,6 +111,11 @@ message TransferRecord {
   ];
 }
 
+message Validators {
+  string chain_id =1;
+  repeated Validator validators =2;
+}
+
 message Validator {
   string valoper_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
   string commission_rate = 2 [

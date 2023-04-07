@@ -3,6 +3,7 @@ package types
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"sort"
 )
 
 // check to see if two validator instances are equal. Used in testing.
@@ -31,6 +32,46 @@ func (v Validator) SharesToTokens(shares sdk.Dec) math.Int {
 	}
 
 	return sdk.NewDecFromInt(v.VotingPower).Quo(v.DelegatorShares).Mul(shares).TruncateInt()
+}
+
+func (vals Validators) GetValidatorsSorted() []*Validator {
+	sort.SliceStable(vals.Validators, func(i, j int) bool {
+		return vals.Validators[i].ValoperAddress < vals.Validators[j].ValoperAddress
+	})
+	return vals.Validators
+}
+
+func (vals Validators) GetValidatorsAddressesAsSlice() []string {
+	l := make([]string, 0)
+	for _, v := range vals.Validators {
+		l = append(l, v.ValoperAddress)
+	}
+
+	sort.Strings(l)
+
+	return l
+}
+
+func (vals *Validators) GetValidatorByValoper(valoper string) (*Validator, bool) {
+	for _, v := range vals.GetValidatorsSorted() {
+		if v.ValoperAddress == valoper {
+			return v, true
+		}
+	}
+	return nil, false
+}
+
+func (vals Validators) GetBondedValidatorAddressesAsSlice() []string {
+	l := make([]string, 0)
+	for _, v := range vals.Validators {
+		if v.Status == "BOND_STATUS_BONDED" {
+			l = append(l, v.ValoperAddress)
+		}
+	}
+
+	sort.Strings(l)
+
+	return l
 }
 
 func (di DelegatorIntent) AddOrdinal(multiplier sdk.Dec, intents ValidatorIntents) DelegatorIntent {

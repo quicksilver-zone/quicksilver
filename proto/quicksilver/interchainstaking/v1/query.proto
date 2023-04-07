@@ -15,6 +15,10 @@ service Query {
   rpc ZoneInfos(QueryZonesInfoRequest) returns (QueryZonesInfoResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones";
   }
+
+  rpc ZoneValidatorInfos(QueryZoneValidatorsInfoRequest) returns (QueryZoneValidatorsInfoResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/validators";
+  }
   // DepositAccount provides data on the deposit address for a connected zone.
   rpc DepositAccount(QueryDepositAccountForChainRequest)
       returns (QueryDepositAccountForChainResponse) {
@@ -79,6 +83,15 @@ message QueryZonesInfoRequest {
 
 message QueryZonesInfoResponse {
   repeated Zone zones = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryZoneValidatorsInfoRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+}
+
+message QueryZoneValidatorsInfoResponse {
+  Validators validators = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

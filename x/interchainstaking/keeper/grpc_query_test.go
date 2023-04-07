@@ -74,6 +74,68 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorsInfo() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	tests := []struct {
+		name         string
+		malleate     func()
+		req          *icstypes.QueryZoneValidatorsInfoRequest
+		wantErr      bool
+		expectLength int
+	}{
+		{
+			"ZoneValidatorsInfo_No_State",
+			func() {},
+			&icstypes.QueryZoneValidatorsInfoRequest{},
+			false,
+			0,
+		},
+		{
+			"ZoneValidatorsInfo_Nil_Request",
+			func() {},
+			nil,
+			true,
+			0,
+		},
+		{
+			"ZoneValidatorsInfo_Valid_Request",
+			func() {
+				// setup zones
+				suite.setupTestZones()
+			},
+			&icstypes.QueryZoneValidatorsInfoRequest{},
+			false,
+			1,
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.ZoneValidatorInfos(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			suite.Require().Equal(tt.expectLength, len(resp.Validators.Validators))
+
+			vstr, err := json.MarshalIndent(resp, "", "\t")
+			suite.Require().NoError(err)
+
+			suite.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()

@@ -154,7 +154,7 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte, request []byte) error {
+func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals types.Validators, data []byte, request []byte) error {
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
 	if len(data) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (8)")
@@ -197,7 +197,7 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 	}
 
 	for _, validator := range validatorsRes.Validators {
-		val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
+		val, found := vals.GetValidatorByValoper(validator.OperatorAddress)
 		toQuery := false
 		switch {
 		case !found:
@@ -232,11 +232,10 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 	}
 
 	// also do this for Unbonded and Unbonding
-	k.SetZone(ctx, &zoneInfo)
 	return nil
 }
 
-func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
+func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals types.Validators, data []byte) error {
 	validator := stakingTypes.Validator{}
 	if len(data) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (9)")
@@ -247,7 +246,7 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		return err
 	}
 
-	val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
+	val, found := vals.GetValidatorByValoper(validator.OperatorAddress)
 	if !found {
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
@@ -255,7 +254,7 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		if validator.IsJailed() {
 			jailTime = ctx.BlockTime()
 		}
-		zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
+		vals.Validators = append(vals.Validators, &types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
@@ -265,7 +264,7 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 			Jailed:          validator.IsJailed(),
 			JailedSince:     jailTime,
 		})
-		zoneInfo.Validators = zoneInfo.GetValidatorsSorted()
+		vals.Validators = vals.GetValidatorsSorted()
 
 		if err := k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); err != nil {
 			return err
@@ -313,7 +312,7 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		}
 	}
 
-	k.SetZone(ctx, &zoneInfo)
+	k.SetValidators(ctx, vals)
 	return nil
 }
 

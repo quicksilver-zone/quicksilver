@@ -60,7 +60,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 			k.Logger(ctx).Info("Withdrawing rewards")
 
-			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zoneInfo.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zoneInfo.Validators))}}
+			vals, _ := k.GetValidators(ctx, zoneInfo.ChainId)
+			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zoneInfo.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals.Validators))}}
 			bz := k.cdc.MustMarshal(&delegationQuery)
 
 			k.ICQKeeper.MakeRequest(

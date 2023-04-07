@@ -52,6 +52,7 @@ var (
 	KeyPrefixPerformanceDelegation = []byte{0x08}
 	KeyPrefixSnapshotIntent        = []byte{0x09}
 	KeyPrefixRedelegationRecord    = []byte{0x10}
+	KeyPrefixValidatorsInfo        = []byte{0x11}
 )
 
 func KeyPrefix(p string) []byte {

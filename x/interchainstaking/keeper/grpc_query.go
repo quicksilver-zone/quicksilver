@@ -44,6 +44,21 @@ func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (
 	}, nil
 }
 
+func (k Keeper) ZoneValidatorInfos(c context.Context, req *types.QueryZoneValidatorsInfoRequest) (*types.QueryZoneValidatorsInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	validators, found := k.GetValidators(ctx, req.GetChainId())
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no vals found matching %s", req.GetChainId()))
+	}
+
+	return &types.QueryZoneValidatorsInfoResponse{Validators: validators}, nil
+}
+
 // DepositAccount returns the deposit account address for the given zone.
 func (k Keeper) DepositAccount(c context.Context, req *types.QueryDepositAccountForChainRequest) (*types.QueryDepositAccountForChainResponse, error) {
 	if req == nil {

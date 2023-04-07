@@ -39,6 +39,10 @@ func GetPerformanceDelegationsKey(zone *types.Zone, delAddr sdk.AccAddress) []by
 	return append(append(types.KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
 }
 
+func GetZoneValidatorsKey(chainID string) []byte {
+	return append(types.KeyPrefixValidatorsInfo, []byte(chainID)...)
+}
+
 // GetDelegation returns a specific delegation.
 func (k Keeper) GetDelegation(ctx sdk.Context, zone *types.Zone, delegatorAddress string, validatorAddress string) (delegation types.Delegation, found bool) {
 	store := ctx.KVStore(k.storeKey)

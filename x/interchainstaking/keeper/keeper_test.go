@@ -106,8 +106,9 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	for _, val := range suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()) {
 		// refetch the zone for each validator, else we end up with an empty valset each time!
 		zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+		vals, _ := qApp.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID)
 		suite.Require().True(found)
-		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
+		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, vals, app.DefaultConfig().Codec.MustMarshal(&val)))
 	}
 
 	suite.coordinator.CommitNBlocks(suite.chainA, 2)

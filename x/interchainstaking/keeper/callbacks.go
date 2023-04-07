@@ -76,20 +76,28 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 // -----------------------------------
 
 func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetZone(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId()) //can we get rid of this check?
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	return SetValidatorsForZone(&k, ctx, zone, args, query.Request)
+	vals, found := k.GetValidators(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no validators for chain id: %s", query.GetChainId())
+	}
+	return SetValidatorsForZone(&k, ctx, zone, vals, args, query.Request)
 }
 
 func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	k.Logger(ctx).Info("Received provable payload", "data", args)
-	zone, found := k.GetZone(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId()) //can we get rid of this check?
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	return SetValidatorForZone(&k, ctx, zone, args)
+	vals, found := k.GetValidators(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no validators for chain id: %s", query.GetChainId())
+	}
+	return SetValidatorForZone(&k, ctx, zone, vals, args)
 }
 
 func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
