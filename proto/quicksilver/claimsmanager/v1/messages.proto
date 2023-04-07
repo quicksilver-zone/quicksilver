@@ -1,12 +1,6 @@
 syntax = "proto3";
 package quicksilver.claimsmanager.v1;
 
-import "cosmos_proto/cosmos.proto";
-import "gogoproto/gogo.proto";
-import "google/api/annotations.proto";
-import "quicksilver/claimsmanager/v1/claimsmanager.proto";
-import "tendermint/crypto/proof.proto";
-
 option go_package = "github.com/ingenuity-build/quicksilver/x/claimsmanager/types";
 
 // Msg defines the claimsmanager Msg service.

@@ -5,8 +5,6 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "quicksilver/claimsmanager/v1/claimsmanager.proto";
-import "quicksilver/participationrewards/v1/participationrewards.proto";
-import "tendermint/crypto/proof.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
 
