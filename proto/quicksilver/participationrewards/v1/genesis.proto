@@ -8,6 +8,6 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewar
 
 // GenesisState defines the participationrewards module's genesis state.
 message GenesisState {
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
   repeated KeyedProtocolData protocol_data = 2;
 }

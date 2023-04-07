@@ -503,30 +503,31 @@ mdlint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-# TODO: Include formatting and linting via Buf.
+BUF_VERSION=1.15.1
+
 proto-all: proto-gen
 
 proto-gen:
 	@echo "🤖 Generating code from protobuf..."
-	@docker run --rm --volume "$(PWD)":/workspace --workdir /workspace \
+	@$(DOCKER) run --rm --volume "$(PWD)":/workspace --workdir /workspace \
 		quicksilver-proto sh ./proto/generate.sh
 	@echo "✅ Completed code generation!"
 
 proto-lint:
 	@echo "🤖 Running protobuf linter..."
-	@docker run --volume "$(PWD)":/workspace --workdir /workspace \
+	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
 		bufbuild/buf:$(BUF_VERSION) lint
 	@echo "✅ Completed protobuf linting!"
 
 proto-format:
 	@echo "🤖 Running protobuf format..."
-	@docker run --volume "$(PWD)":/workspace --workdir /workspace \
+	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
 		bufbuild/buf:$(BUF_VERSION) format -w
-	@echo "✅ Completed protobuf formatting!"
+	@echo "✅ Completed protobuf format!"
 
 proto-setup:
 	@echo "🤖 Setting up protobuf environment..."
-	@docker build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
+	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
 	@echo "✅ Setup protobuf environment!"
 
 
