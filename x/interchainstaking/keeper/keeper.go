@@ -55,7 +55,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	icacontrollerkeeper icacontrollerkeeper.Keeper,
+	icaControllerKeeper icacontrollerkeeper.Keeper,
 	scopedKeeper *capabilitykeeper.ScopedKeeper,
 	icqKeeper interchainquerykeeper.Keeper,
 	ibcKeeper ibckeeper.Keeper,
@@ -79,7 +79,7 @@ func NewKeeper(
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		scopedKeeper:        scopedKeeper,
-		ICAControllerKeeper: icacontrollerkeeper,
+		ICAControllerKeeper: icaControllerKeeper,
 		ICQKeeper:           icqKeeper,
 		BankKeeper:          bankKeeper,
 		AccountKeeper:       accountKeeper,
@@ -108,12 +108,12 @@ func (k *Keeper) ScopedKeeper() *capabilitykeeper.ScopedKeeper {
 	return k.scopedKeeper
 }
 
-// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback
-func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
-	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
+// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback.
+func (k *Keeper) ClaimCapability(ctx sdk.Context, capability *capabilitytypes.Capability, name string) error {
+	return k.scopedKeeper.ClaimCapability(ctx, capability, name)
 }
 
-func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID string, port string) {
+func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID, port string) {
 	mapping := types.PortConnectionTuple{ConnectionId: connectionID, PortId: port}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
 	bz := k.cdc.MustMarshal(&mapping)
@@ -162,7 +162,7 @@ func (k *Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnection
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, zoneInfo *types.Zone, data []byte, request []byte) error {
+func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, zoneInfo *types.Zone, data, request []byte) error {
 	validatorsRes, err := k.UnmarshalValidatorResponse(data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
@@ -311,13 +311,14 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 		recordSubAmount := sdkmath.ZeroInt()
 		distr := record.Distribution
 		for _, d := range distr {
-			if d.Valoper == valoper {
-				newAmount := sdk.NewDec(int64(d.Amount)).Quo(delta).TruncateInt()
-				thisSubAmount := sdkmath.NewInt(int64(d.Amount)).Sub(newAmount)
-				recordSubAmount = recordSubAmount.Add(thisSubAmount)
-				d.Amount = newAmount.Uint64()
-				k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
+			if d.Valoper != valoper {
+				continue
 			}
+			newAmount := sdk.NewDec(int64(d.Amount)).Quo(delta).TruncateInt()
+			thisSubAmount := sdkmath.NewInt(int64(d.Amount)).Sub(newAmount)
+			recordSubAmount = recordSubAmount.Add(thisSubAmount)
+			d.Amount = newAmount.Uint64()
+			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
 		}
 		record.Distribution = distr
 		record.Amount = record.Amount.Sub(sdk.NewCoin(zone.BaseDenom, recordSubAmount))
@@ -491,9 +492,7 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 	)
 }
 
-// redemption rate
-
-func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
+func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkmath.Int {
 	delegationsInProcess := sdkmath.ZeroInt()
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
 		if receipt.Completed == nil {
@@ -503,6 +502,13 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRe
 		}
 		return false
 	})
+	return delegationsInProcess
+}
+
+// redemption rate
+
+func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
+	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone)
 	ratio, isZero := k.GetRatio(ctx, zone, epochRewards.Add(delegationsInProcess))
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)

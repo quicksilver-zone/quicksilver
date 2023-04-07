@@ -13,21 +13,21 @@ var (
 	user2 = utils.GenerateAccAddressForTest()
 )
 
-func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
-	suite.SetupTest()
-	suite.setupTestZones()
+func (s *KeeperTestSuite) TestKeeper_IntentStore() {
+	s.SetupTest()
+	s.setupTestZones()
 
-	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
-	ctx := suite.chainA.GetContext()
+	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
+	ctx := s.chainA.GetContext()
 
 	// get test zone
-	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.Require().True(found)
+	zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.Require().True(found)
 	zoneValidatorAddresses := zone.GetValidatorsAddressesAsSlice()
 
 	// check that there are no intents
 	intents := icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	suite.Require().Len(intents, 0)
+	s.Require().Len(intents, 0)
 
 	// set intents for testAddress
 	icsKeeper.SetDelegatorIntent(
@@ -109,16 +109,16 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 
 	// check for intents set above
 	intents = icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	suite.Require().Len(intents, 3)
+	s.Require().Len(intents, 3)
 
 	// delete intent for testAddress
 	icsKeeper.DeleteDelegatorIntent(ctx, &zone, testAddress, false)
 
 	// check intents
 	intents = icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	suite.Require().Len(intents, 2)
+	s.Require().Len(intents, 2)
 
-	suite.T().Logf("intents:\n%+v\n", intents)
+	s.T().Logf("intents:\n%+v\n", intents)
 
 	// update intent for user1
 	err := icsKeeper.UpdateDelegatorIntent(
@@ -133,18 +133,18 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 		),
 		"",
 	)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	// load and match pointers
 	intentsPointers := icsKeeper.AllDelegatorIntentsAsPointer(ctx, &zone, false)
 	for i, ip := range intentsPointers {
-		suite.Require().Equal(intents[i], *ip)
+		s.Require().Equal(intents[i], *ip)
 	}
 
-	suite.T().Logf("intents:\n%+v\n", intentsPointers)
+	s.T().Logf("intents:\n%+v\n", intentsPointers)
 }
 
-func (suite *KeeperTestSuite) TestAggregateIntent() {
+func (s *KeeperTestSuite) TestAggregateIntent() {
 	tc := []struct {
 		name     string
 		intents  func(zone icstypes.Zone) []icstypes.DelegatorIntent
@@ -217,8 +217,10 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			name: "two intents; with equal balances, same val, returns default equal weighting",
 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
-				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
-				out = append(out, icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
+				out = append(out,
+					icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}},
+					icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}},
+				)
 				return out
 			},
 			balances: func() map[string]int64 {
@@ -247,8 +249,10 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			name: "two intents; with equal balances, diff val, returns default equal weighting",
 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
-				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
-				out = append(out, icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}})
+				out = append(out,
+					icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}},
+					icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}},
+				)
 				return out
 			},
 			balances: func() map[string]int64 {
@@ -277,8 +281,10 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			name: "two intents; with zer0 balances, diff val, returns default equal weights ",
 			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
-				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.ZeroDec()}}})
-				out = append(out, icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}})
+				out = append(out,
+					icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.ZeroDec()}}},
+					icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}},
+				)
 				return out
 			},
 			balances: func() map[string]int64 {
@@ -306,33 +312,33 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 	}
 
 	for _, tt := range tc {
-		suite.Run(tt.name, func() {
-			suite.SetupTest()
-			suite.setupTestZones()
+		s.Run(tt.name, func() {
+			s.SetupTest()
+			s.setupTestZones()
 
-			qapp := suite.GetQuicksilverApp(suite.chainA)
-			ctx := suite.chainA.GetContext()
-			icsKeeper := qapp.InterchainstakingKeeper
-			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			quicksilver := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+			icsKeeper := quicksilver.InterchainstakingKeeper
+			zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
+			s.Require().True(found)
 
 			// give each user some funds
 			for addrString, balance := range tt.balances() {
-				suite.giveFunds(ctx, zone.LocalDenom, balance, addrString)
+				s.giveFunds(ctx, zone.LocalDenom, balance, addrString)
 			}
 
 			for _, intent := range tt.intents(zone) {
 				icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
 			}
 
-			icsKeeper.AggregateDelegatorIntents(ctx, &zone)
+			_ = icsKeeper.AggregateDelegatorIntents(ctx, &zone)
 
 			// refresh zone to pull new aggregate
-			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
+			s.Require().True(found)
 
 			actual := zone.GetAggregateIntentOrDefault()
-			suite.Require().Equal(tt.expected(zone), actual)
+			s.Require().Equal(tt.expected(zone), actual)
 		})
 	}
 }
@@ -354,7 +360,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 			},
 // 			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
 // 				return map[string]cmtypes.Claim{
-// 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+// 					user1.String(): {UserAddress: user1.String(), ChainID: zone.ChainID, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
 // 				}
 // 			},
 // 			balances: func(denom string) map[string]sdk.Coins { return map[string]sdk.Coins{} },
@@ -374,7 +380,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 			},
 // 			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
 // 				return map[string]cmtypes.Claim{
-// 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+// 					user1.String(): {UserAddress: user1.String(), ChainID: zone.ChainID, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
 // 				}
 // 			},
 // 			balances: func(denom string) map[string]sdk.Coins {
@@ -397,7 +403,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 			},
 // 			claims: func(zone icstypes.Zone) map[string]cmtypes.Claim {
 // 				return map[string]cmtypes.Claim{
-// 					user1.String(): {UserAddress: user1.String(), ChainId: zone.ChainId, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
+// 					user1.String(): {UserAddress: user1.String(), ChainID: zone.ChainID, Module: cmtypes.ClaimTypeLiquidToken, Amount: 1000, SourceChainId: "osmosis-1"},
 // 				}
 // 			},
 // 			balances: func(denom string) map[string]sdk.Coins {
@@ -418,18 +424,18 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 			s.SetupTest()
 // 			s.setupTestZones()
 
-// 			qapp := s.GetQuicksilverApp(s.chainA)
+// 			quicksilver := s.GetQuicksilverApp(s.chainA)
 // 			ctx := s.chainA.GetContext()
-// 			icsKeeper := qapp.InterchainstakingKeeper
+// 			icsKeeper := quicksilver.InterchainstakingKeeper
 // 			zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
 // 			s.Require().True(found)
 
 // 			// give each user some funds
 // 			for addrString, balance := range tt.balances(zone.LocalDenom) {
-// 				qapp.MintKeeper.MintCoins(ctx, balance)
+// 				quicksilver.MintKeeper.MintCoins(ctx, balance)
 // 				addr, err := utils.AccAddressFromBech32(addrString, "")
 // 				s.Require().NoError(err)
-// 				qapp.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, balance)
+// 				quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, balance)
 // 			}
 
 // 			for _, intent := range tt.intents(zone) {
@@ -437,7 +443,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 			}
 
 // 			for _, claim := range tt.claims(zone) {
-// 				qapp.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
+// 				quicksilver.ClaimsManagerKeeper.SetLastEpochClaim(ctx, &claim)
 // 			}
 
 // 			icsKeeper.AggregateDelegatorIntents(ctx, zone)

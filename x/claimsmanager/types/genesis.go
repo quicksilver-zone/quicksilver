@@ -10,14 +10,14 @@ func NewGenesisState(params Params) *GenesisState {
 	return &GenesisState{Params: params}
 }
 
-// DefaultGenesis returns the default ics genesis state
+// DefaultGenesisState returns the default ics genesis state.
 func DefaultGenesisState() *GenesisState {
 	return &GenesisState{
 		Params: DefaultParams(),
 	}
 }
 
-// ValidateGenesis validates the provided genesis state to ensure the
+// Validate validates the provided genesis state to ensure the
 // expected invariants holds.
 func (gs GenesisState) Validate() error {
 	errors := make(map[string]error)

@@ -3,7 +3,7 @@ name: test-e2e
 on:
   push:
     branches:
-      - "main"
+      - "develop"
 jobs:
   e2e:
     runs-on: ubuntu-latest

@@ -12,7 +12,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	// Group epochs queries under a subcommand
 	cmd := &cobra.Command{
@@ -31,7 +31,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdEpochsInfos provide running epochInfos
+// GetCmdEpochsInfos provide running epochInfos.
 func GetCmdEpochsInfos() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "epoch-infos",
@@ -72,7 +72,7 @@ func GetCmdEpochsInfos() *cobra.Command {
 	return cmd
 }
 
-// GetCmdCurrentEpoch provides current epoch by specified identifier
+// GetCmdCurrentEpoch provides current epoch by specified identifier.
 func GetCmdCurrentEpoch() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "current-epoch",

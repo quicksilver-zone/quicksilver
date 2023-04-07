@@ -17,14 +17,14 @@ type EpochHooks interface {
 
 var _ EpochHooks = MultiEpochHooks{}
 
-// combine multiple gamm hooks, all hook functions are run in array sequence
+// MultiEpochHooks combine multiple gamm hooks, all hook functions are run in array sequence.
 type MultiEpochHooks []EpochHooks
 
 func NewMultiEpochHooks(hooks ...EpochHooks) MultiEpochHooks {
 	return hooks
 }
 
-// AfterEpochEnd is called when epoch is going to be ended, epochNumber is the number of epoch that is ending
+// AfterEpochEnd is called when epoch is going to be ended, epochNumber is the number of epoch that is ending.
 func (h MultiEpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	for i := range h {
 		panicCatchingEpochHook(ctx, h[i].AfterEpochEnd, epochIdentifier, epochNumber)
@@ -32,7 +32,7 @@ func (h MultiEpochHooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, 
 	return nil
 }
 
-// BeforeEpochStart is called when epoch is going to be started, epochNumber is the number of epoch that is starting
+// BeforeEpochStart is called when epoch is going to be started, epochNumber is the number of epoch that is starting.
 func (h MultiEpochHooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	for i := range h {
 		panicCatchingEpochHook(ctx, h[i].BeforeEpochStart, epochIdentifier, epochNumber)

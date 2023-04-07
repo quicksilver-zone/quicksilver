@@ -119,7 +119,7 @@ func GetReopenChannelTxCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdSubmitRegisterProposal implements the command to submit a register-zone proposal
+// GetCmdSubmitRegisterProposal implements the command to submit a register-zone proposal.
 func GetCmdSubmitRegisterProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "register-zone [proposal-file]",
@@ -193,7 +193,7 @@ func ParseZoneRegistrationProposal(cdc codec.JSONCodec, proposalFile string) (ty
 		return proposal, err
 	}
 
-	if err = cdc.UnmarshalJSON(contents, &proposal); err != nil {
+	if err := cdc.UnmarshalJSON(contents, &proposal); err != nil {
 		return proposal, err
 	}
 
@@ -204,7 +204,7 @@ func ParseZoneRegistrationProposal(cdc codec.JSONCodec, proposalFile string) (ty
 	return proposal, nil
 }
 
-// GetCmdSubmitRegisterProposal implements the command to submit a register-zone proposal
+// GetCmdSubmitUpdateProposal implements the command to update a register-zone proposal.
 func GetCmdSubmitUpdateProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "update-zone [proposal-file]",
@@ -266,7 +266,7 @@ func ParseZoneUpdateProposal(cdc codec.JSONCodec, proposalFile string) (types.Up
 		return proposal, err
 	}
 
-	if err = cdc.UnmarshalJSON(contents, &proposal); err != nil {
+	if err := cdc.UnmarshalJSON(contents, &proposal); err != nil {
 		return proposal, err
 	}
 

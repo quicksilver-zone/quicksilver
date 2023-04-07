@@ -14,7 +14,7 @@ import (
 
 // Reusable Checks
 
-// CheckBalance Checks the balance of an address
+// CheckBalance Checks the balance of an address.
 func (s *IntegrationTestSuite) CheckBalance(node *chain.NodeConfig, addr, denom string, amount int64) {
 	// check the balance of the contract
 	s.Require().Eventually(func() bool {

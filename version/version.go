@@ -15,7 +15,7 @@ var (
 )
 
 func init() {
-	if len(AppVersion) == 0 {
+	if AppVersion == "" {
 		AppVersion = "dev"
 	}
 

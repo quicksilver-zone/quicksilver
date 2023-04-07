@@ -19,16 +19,18 @@ import (
 	"github.com/ingenuity-build/quicksilver/wasmbinding/bindings"
 )
 
-// we must pay this many uosmo for every pool we create
-var poolFee int64 = 1000000000
+// we must pay this many uosmo for every pool we create.
+var poolFee int64 = 1000000000 //nolint:unused
 
-var defaultFunds = sdk.NewCoins(
+var defaultFunds = sdk.NewCoins( //nolint:unused
 	sdk.NewInt64Coin("qck", 333000000),
 	sdk.NewInt64Coin("umai", 555000000+2*poolFee),
 	sdk.NewInt64Coin("uck", 999000000),
 )
 
 func SetupCustomApp(t *testing.T, addr sdk.AccAddress) (*app.Quicksilver, sdk.Context) {
+	t.Helper()
+
 	quicksilverApp, ctx := CreateTestInput(t)
 	wasmKeeper := quicksilverApp.WasmKeeper
 
@@ -74,6 +76,8 @@ type ChainResponse struct {
 }
 
 func queryCustom(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, contract sdk.AccAddress, request bindings.QuickSilverQuery, response interface{}) {
+	t.Helper()
+
 	msgBz, err := json.Marshal(request)
 	require.NoError(t, err)
 
@@ -95,6 +99,8 @@ func queryCustom(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, co
 }
 
 func storeReflectCode(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksilver, addr sdk.AccAddress) {
+	t.Helper()
+
 	govKeeper := quicksilverApp.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
 	govAddress := govKeeper.GetGovernanceAccount(ctx).GetAddress().String()
@@ -121,6 +127,8 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksi
 }
 
 func instantiateReflectContract(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksilver, funder sdk.AccAddress) sdk.AccAddress {
+	t.Helper()
+
 	initMsgBz := []byte("{}")
 	contractKeeper := keeper.NewDefaultPermissionKeeper(quicksilverApp.WasmKeeper)
 	codeID := uint64(1)
@@ -130,7 +138,9 @@ func instantiateReflectContract(t *testing.T, ctx sdk.Context, quicksilverApp *a
 	return addr
 }
 
-func fundAccount(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, addr sdk.AccAddress, coins sdk.Coins) {
+func fundAccount(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, addr sdk.AccAddress, coins sdk.Coins) { //nolint:unused
+	t.Helper()
+
 	err := FundAccount(
 		quicksilver.BankKeeper,
 		ctx,

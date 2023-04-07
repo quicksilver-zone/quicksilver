@@ -19,7 +19,6 @@ type ImageConfig struct {
 	XCCLookupTag        string
 }
 
-//nolint:deadcode
 const (
 	// Current Git branch quicksilver repo/version. It is meant to be built locally.
 	// It is used when skipping upgrade by setting QUICKSILVER_E2E_SKIP_UPGRADE to true).
@@ -32,23 +31,23 @@ const (
 	// for this functionality to be used.
 	previousVersionQuicksilverRepository = "quicksilverzone/quicksilver"
 	previousVersionQuicksilverTag        = "v1.2.4"
-	// Pre-upgrade repo/tag for quicksilver initialization (this should be one version below upgradeVersion)
+	// Pre-upgrade repo/tag for quicksilver initialization (this should be one version below upgradeVersion).
 	previousVersionInitRepository = "quicksilverzone/quicksilver"
 	previousVersionInitTag        = "v1.2.7"
-	// Hermes repo/version for relayer
+	// Hermes repo/version for relayer.
 	hermesRepository = "quicksilverzone/hermes"
 	hermesTag        = "v1.3.0"
-	// ICQ repo/version for relayer
+	// ICQ repo/version for relayer.
 	icqRepository = "quicksilverzone/interchain-queries"
 	icqTag        = "v0.8.8-beta.1"
-	// xccLookup repo/version
+	// xccLookup repo/version.
 	xccLookupRepository = "shmoopler24/xcclookup"
 	xccLookupTag        = "latest"
 )
 
 // NewImageConfig returns ImageConfig needed for running e2e test.
-// If isUpgrade is true, returns images for running the upgrade
-// If isFork is true, utilizes provided fork height to initiate fork logic
+// If isUpgrade is true, returns images for running the upgrade.
+// If isFork is true, utilizes provided fork height to initiate fork logic.
 func NewImageConfig(isUpgrade, isFork bool) ImageConfig {
 	config := ImageConfig{
 		HermesRepository:    hermesRepository,

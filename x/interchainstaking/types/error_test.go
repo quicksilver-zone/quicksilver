@@ -8,7 +8,7 @@ import (
 )
 
 func TestErrorsDeterminism(t *testing.T) {
-	e := multierror.Errors{
+	e := multierror.MultiError{
 		Errors: map[string]error{
 			"a":    errors.New("a"),
 			"Z":    errors.New("Z"),

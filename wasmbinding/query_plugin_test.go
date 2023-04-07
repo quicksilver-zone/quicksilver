@@ -13,14 +13,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	proto "github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
-
 	"github.com/ingenuity-build/quicksilver/wasmbinding"
+	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
 type StargateTestSuite struct {
@@ -30,16 +29,16 @@ type StargateTestSuite struct {
 	app *app.Quicksilver
 }
 
-func (suite *StargateTestSuite) SetupTest() {
-	suite.app = app.Setup(suite.T(), false)
-	suite.ctx = suite.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quicksilver-1", Time: time.Now().UTC()})
+func (s *StargateTestSuite) SetupTest() {
+	s.app = app.Setup(s.T(), false)
+	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "quicksilver-1", Time: time.Now().UTC()})
 }
 
 func TestStargateTestSuite(t *testing.T) {
 	suite.Run(t, new(StargateTestSuite))
 }
 
-func (suite *StargateTestSuite) TestStargateQuerier() {
+func (s *StargateTestSuite) TestStargateQuerier() {
 	testCases := []struct {
 		name                   string
 		testSetup              func()
@@ -56,7 +55,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			requestData: func() []byte {
 				epochrequest := epochtypes.QueryEpochsInfoRequest{}
 				bz, err := proto.Marshal(&epochrequest)
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 				return bz
 			},
 			responseProtoStruct: &epochtypes.QueryEpochsInfoResponse{},
@@ -78,7 +77,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			requestData: func() []byte {
 				epochrequest := epochtypes.QueryCurrentEpochRequest{}
 				bz, err := proto.Marshal(&epochrequest)
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 				return bz
 			},
 			responseProtoStruct:    &epochtypes.QueryCurrentEpochResponse{},
@@ -108,7 +107,7 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 			requestData: func() []byte {
 				bankrequest := banktypes.QueryAllBalancesRequest{}
 				bz, err := proto.Marshal(&bankrequest)
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 				return bz
 			},
 			responseProtoStruct:  &banktypes.QueryAllBalancesRequest{},
@@ -118,52 +117,52 @@ func (suite *StargateTestSuite) TestStargateQuerier() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
+		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			s.SetupTest()
 			if tc.testSetup != nil {
 				tc.testSetup()
 			}
 
-			stargateQuerier := wasmbinding.StargateQuerier(*suite.app.GRPCQueryRouter(), suite.app.AppCodec())
+			stargateQuerier := wasmbinding.StargateQuerier(*s.app.GRPCQueryRouter(), s.app.AppCodec())
 			stargateRequest := &wasmvmtypes.StargateQuery{
 				Path: tc.path,
 				Data: tc.requestData(),
 			}
-			stargateResponse, err := stargateQuerier(suite.ctx, stargateRequest)
+			stargateResponse, err := stargateQuerier(s.ctx, stargateRequest)
 			if tc.expectedQuerierError {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
 
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			protoResponse, ok := tc.responseProtoStruct.(proto.Message)
-			suite.Require().True(ok)
+			s.Require().True(ok)
 
 			// test correctness by unmarshalling json response into proto struct
-			err = suite.app.AppCodec().UnmarshalJSON(stargateResponse, protoResponse)
+			err = s.app.AppCodec().UnmarshalJSON(stargateResponse, protoResponse)
 			if tc.expectedUnMarshalError {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(protoResponse)
+				s.Require().NoError(err)
+				s.Require().NotNil(protoResponse)
 			}
 
 			if tc.resendRequest {
-				stargateQuerier = wasmbinding.StargateQuerier(*suite.app.GRPCQueryRouter(), suite.app.AppCodec())
+				stargateQuerier = wasmbinding.StargateQuerier(*s.app.GRPCQueryRouter(), s.app.AppCodec())
 				stargateRequest = &wasmvmtypes.StargateQuery{
 					Path: tc.path,
 					Data: tc.requestData(),
 				}
-				resendResponse, err := stargateQuerier(suite.ctx, stargateRequest)
-				suite.Require().NoError(err)
-				suite.Require().Equal(stargateResponse, resendResponse)
+				resendResponse, err := stargateQuerier(s.ctx, stargateRequest)
+				s.Require().NoError(err)
+				s.Require().Equal(stargateResponse, resendResponse)
 			}
 		})
 	}
 }
 
-func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
+func (s *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 	testCases := []struct {
 		name                  string
 		queryPath             string
@@ -194,30 +193,30 @@ func (suite *StargateTestSuite) TestConvertProtoToJsonMarshal() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
+		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			s.SetupTest()
 
 			originalVersionBz, err := hex.DecodeString(tc.originalResponse)
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			jsonMarshalledResponse, err := wasmbinding.ConvertProtoToJSONMarshal(tc.protoResponseStruct, originalVersionBz, suite.app.AppCodec())
+			jsonMarshalledResponse, err := wasmbinding.ConvertProtoToJSONMarshal(tc.protoResponseStruct, originalVersionBz, s.app.AppCodec())
 			if tc.expectedError {
-				suite.Require().Error(err)
+				s.Require().Error(err)
 				return
 			}
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
 			// check response by json marshalling proto response into json response manually
-			jsonMarshalExpectedResponse, err := suite.app.AppCodec().MarshalJSON(tc.expectedProtoResponse)
-			suite.Require().NoError(err)
-			suite.Require().Equal(jsonMarshalledResponse, jsonMarshalExpectedResponse)
+			jsonMarshalExpectedResponse, err := s.app.AppCodec().MarshalJSON(tc.expectedProtoResponse)
+			s.Require().NoError(err)
+			s.Require().Equal(jsonMarshalledResponse, jsonMarshalExpectedResponse)
 		})
 	}
 }
 
 // TestDeterministicJsonMarshal tests that we get deterministic JSON marshalled response upon
 // proto struct update in the state machine.
-func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
+func (s *StargateTestSuite) TestDeterministicJsonMarshal() {
 	testCases := []struct {
 		name                string
 		testSetup           func()
@@ -310,7 +309,7 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 					Address: "cosmos1f8uxultn8sqzhznrsz3q77xwaquhgrsg6jyvfy",
 				}
 				accountResponse, err := codectypes.NewAnyWithValue(&account)
-				suite.Require().NoError(err)
+				s.Require().NoError(err)
 				return &authtypes.QueryAccountResponse{
 					Account: accountResponse,
 				}
@@ -319,30 +318,30 @@ func (suite *StargateTestSuite) TestDeterministicJsonMarshal() {
 	}
 
 	for _, tc := range testCases {
-		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest()
+		s.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			s.SetupTest()
 
 			if tc.testSetup != nil {
 				tc.testSetup()
 			}
 
 			binding, err := wasmbinding.GetWhitelistedQuery(tc.queryPath)
-			suite.Require().Nil(err)
+			s.Require().Nil(err)
 
-			suite.Require().NoError(err)
-			jsonMarshalledOriginalBz, err := wasmbinding.ConvertProtoToJSONMarshal(binding, tc.originalResponsebz, suite.app.AppCodec())
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
+			jsonMarshalledOriginalBz, err := wasmbinding.ConvertProtoToJSONMarshal(binding, tc.originalResponsebz, s.app.AppCodec())
+			s.Require().NoError(err)
 
-			jsonMarshalledUpdatedBz, err := wasmbinding.ConvertProtoToJSONMarshal(binding, tc.updatedResponsebz, suite.app.AppCodec())
-			suite.Require().NoError(err)
+			jsonMarshalledUpdatedBz, err := wasmbinding.ConvertProtoToJSONMarshal(binding, tc.updatedResponsebz, s.app.AppCodec())
+			s.Require().NoError(err)
 
 			// json marshalled bytes should be the same since we use the same proto struct for unmarshalling
-			suite.Require().Equal(jsonMarshalledOriginalBz, jsonMarshalledUpdatedBz)
+			s.Require().Equal(jsonMarshalledOriginalBz, jsonMarshalledUpdatedBz)
 
 			// raw build also make same result
-			jsonMarshalExpectedResponse, err := suite.app.AppCodec().MarshalJSON(tc.expectedProto())
-			suite.Require().NoError(err)
-			suite.Require().Equal(jsonMarshalledUpdatedBz, jsonMarshalExpectedResponse)
+			jsonMarshalExpectedResponse, err := s.app.AppCodec().MarshalJSON(tc.expectedProto())
+			s.Require().NoError(err)
+			s.Require().Equal(jsonMarshalledUpdatedBz, jsonMarshalExpectedResponse)
 		})
 	}
 }

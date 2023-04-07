@@ -25,7 +25,7 @@ const (
 // shamelessly copied from
 // https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang#31832326
 
-// RandStringOfLength generates a random string of a particular length
+// RandStringOfLength generates a random string of a particular length.
 func RandStringOfLength(r *rand.Rand, n int) string {
 	b := make([]byte, n)
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
@@ -44,7 +44,7 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// RandPositiveInt get a rand positive sdk.Int
+// RandPositiveInt get a rand positive sdk.Int.
 func RandPositiveInt(r *rand.Rand, max sdkmath.Int) (sdkmath.Int, error) {
 	if !max.GTE(sdk.OneInt()) {
 		return sdkmath.Int{}, errors.New("max too small")
@@ -55,13 +55,14 @@ func RandPositiveInt(r *rand.Rand, max sdkmath.Int) (sdkmath.Int, error) {
 	return sdk.NewIntFromBigInt(new(big.Int).Rand(r, max.BigInt())).Add(sdkmath.OneInt()), nil
 }
 
-// RandomAmount generates a random amount
+// RandomAmount generates a random amount.
 // Note: The range of RandomAmount includes max, and is, in fact, biased to return max as well as 0.
 func RandomAmount(r *rand.Rand, max sdkmath.Int) sdkmath.Int {
 	randInt := big.NewInt(0)
 
 	switch r.Intn(10) {
 	case 0:
+		// do nothing
 		// randInt = big.NewInt(0)
 	case 1:
 		randInt = max.BigInt()
@@ -79,7 +80,7 @@ func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 
 	switch r.Intn(10) {
 	case 0:
-		// randInt = big.NewInt(0)
+		return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 	case 1:
 		randInt = max.BigInt() // the underlying big int with all precision bits.
 	default: // NOTE: there are 10 total cases.
@@ -89,7 +90,7 @@ func RandomDecAmount(r *rand.Rand, max sdk.Dec) sdk.Dec {
 	return sdk.NewDecFromBigIntWithPrec(randInt, sdk.Precision)
 }
 
-// RandTimestamp generates a random timestamp
+// RandTimestamp generates a random timestamp.
 func RandTimestamp(r *rand.Rand) time.Time {
 	// json.Marshal breaks for timestamps greater with year greater than 9999
 	unixTime := r.Int63n(253373529600)
@@ -101,9 +102,9 @@ func RandIntBetween(r *rand.Rand, min, max int) int {
 	return r.Intn(max-min) + min
 }
 
-// returns random subset of the provided coins
+// RandSubsetCoins returns random subset of the provided coins
 // will return at least one coin unless coins argument is empty or malformed
-// i.e. 0 amt in coins
+// i.e. 0 amt in coins.
 func RandSubsetCoins(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 	if len(coins) == 0 {
 		return sdk.Coins{}
@@ -158,10 +159,10 @@ func RandCoin(r *rand.Rand, coins sdk.Coins) sdk.Coins {
 	return sdk.Coins{sdk.NewCoin(coin.Denom, amt)}
 }
 
-// RandGeometricCoin uniformly samples a denom from the addr's balances.
+// RandExponentialCoin uniformly samples a denom from the addr's balances.
 // Then it samples an Exponentially distributed amount of the addr's coins, with rate = 10.
 // (Meaning that on average it samples 10% of the chosen balance)
-// Pre-condition: Addr must have a spendable balance
+// Pre-condition: Addr must have a spendable balance.
 func RandExponentialCoin(r *rand.Rand, coin sdk.Coin) sdk.Coin {
 	lambda := float64(10)
 	sample := r.ExpFloat64() / lambda

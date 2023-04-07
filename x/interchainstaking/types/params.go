@@ -10,26 +10,26 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Default ics params
+// Default ics params.
 var (
 	DefaultDepositInterval      uint64  = 20
 	DefaultValidatorSetInterval uint64  = 200
 	DefaultCommissionRate       sdk.Dec = sdk.MustNewDecFromStr("0.025")
 	DefaultUnbondingEnabled             = false
 
-	// KeyDepositInterval is store's key for the DepositInterval option
+	// KeyDepositInterval is store's key for the DepositInterval option.
 	KeyDepositInterval = []byte("DepositInterval")
-	// KeyValidatorSetInterval is store's key for the ValidatorSetInterval option
+	// KeyValidatorSetInterval is store's key for the ValidatorSetInterval option.
 	KeyValidatorSetInterval = []byte("ValidatorSetInterval")
-	// KeyCommissionRate is store's key for the CommissionRate option
+	// KeyCommissionRate is store's key for the CommissionRate option.
 	KeyCommissionRate = []byte("CommissionRate")
-	// KeyUnbondingEnabled is a globla flag to indicated whether unbonding txs are permitted
+	// KeyUnbondingEnabled is a global flag to indicated whether unbonding txs are permitted.
 	KeyUnbondingEnabled = []byte("UnbondingEnabled")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
 
-// MustUnmarshalParams unmarshals the current interchainstaking params value from store key or panic
+// MustUnmarshalParams unmarshals the current interchainstaking params value from store key or panic.
 func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	params, err := UnmarshalParams(cdc, value)
 	if err != nil {
@@ -39,20 +39,16 @@ func MustUnmarshalParams(cdc *codec.LegacyAmino, value []byte) Params {
 	return params
 }
 
-// UnmarshalParams unmarshals the current interchainstaking params value from store key
+// UnmarshalParams unmarshals the current interchainstaking params value from store key.
 func UnmarshalParams(cdc *codec.LegacyAmino, value []byte) (params Params, err error) {
 	if len(value) == 0 {
 		return params, errors.New("unable to unmarshal empty byte slice")
 	}
 	err = cdc.Unmarshal(value, &params)
-	if err != nil {
-		return
-	}
-
-	return
+	return params, err
 }
 
-// NewParams creates a new ics Params instance
+// NewParams creates a new ics Params instance.
 func NewParams(
 	depositInterval uint64,
 	valsetInterval uint64,
@@ -67,7 +63,7 @@ func NewParams(
 	}
 }
 
-// DefaultParams default ics params
+// DefaultParams default ics params.
 func DefaultParams() Params {
 	return NewParams(
 		DefaultDepositInterval,
@@ -99,7 +95,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
-// ParamSetPairs implements params.ParamSet
+// ParamSetPairs implements params.ParamSet.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyDepositInterval, &p.DepositInterval, validatePositiveInt),
@@ -118,13 +114,13 @@ func (p ParamsV1) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 func (p Params) String() string {
-	out, _ := yaml.Marshal(p)
+	out, _ := yaml.Marshal(p) //nolint:errcheck not needed
 	return string(out)
 }
 
 // String implements the Stringer interface.
 func (p ParamsV1) String() string {
-	out, _ := yaml.Marshal(p)
+	out, _ := yaml.Marshal(p) //nolint:errcheck not needed
 	return string(out)
 }
 

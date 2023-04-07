@@ -12,7 +12,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for interchainstaking module.
 func GetQueryCmd() *cobra.Command {
 	// Group epochs queries under a subcommand
 	cmd := &cobra.Command{
@@ -33,7 +33,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdZonesInfos provide running epochInfos
+// GetCmdZonesInfos provide running epochInfos.
 func GetCmdZonesInfos() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zones",

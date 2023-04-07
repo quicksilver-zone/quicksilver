@@ -41,12 +41,12 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers a legacy amino codec
+// RegisterLegacyAminoCodec registers a legacy amino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the module's interface types.
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	// RegisterInterfaces registers interfaces and implementations of the interchainstaking module.
 	// (see types/codec.go)
@@ -96,13 +96,13 @@ type AppModule struct {
 	keeper keeper.Keeper
 }
 
-// NewAppModule return a new AppModule
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+// NewAppModule return a new AppModule.
+func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{
 			cdc: cdc,
 		},
-		keeper: keeper,
+		keeper: k,
 	}
 }
 
@@ -170,7 +170,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // GenerateGenesisState creates a randomized GenState of the mint module.
 func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
-	// simulation.RandomizedGenState(simState)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.

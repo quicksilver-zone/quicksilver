@@ -7,7 +7,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
-// GetZoneDropAccount returns the zone airdrop account address.
+// GetZoneDropAccountAddress returns the zone airdrop account address.
 func (k Keeper) GetZoneDropAccountAddress(chainID string) sdk.AccAddress {
 	name := types.ModuleName + "." + chainID
 	return authtypes.NewModuleAddress(name)
@@ -98,7 +98,7 @@ func (k Keeper) AllActiveZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 // d: decay     (time.Duration) ... s+D+d
 //
 // isActive:  s <= timenow <= s+D+d
-// notActive: timenow < s || timenow > s+D+d
+// notActive: timenow < s || timenow > s+D+d.
 func (k Keeper) IsActiveZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
@@ -108,7 +108,7 @@ func (k Keeper) IsActiveZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 
 // AllFutureZoneDrops returns all future zone airdrops.
 func (k Keeper) AllFutureZoneDrops(ctx sdk.Context) []types.ZoneDrop {
-	zds := []types.ZoneDrop{}
+	var zds []types.ZoneDrop
 	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
 		if k.IsFutureZoneDrop(ctx, zd) {
 			zds = append(zds, zd)
@@ -128,7 +128,7 @@ func (k Keeper) AllFutureZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 // d: decay     (time.Duration) ... s+D+d
 //
 // isFuture:  timenow < s
-// notFuture: s <= timenow
+// notFuture: s <= timenow.
 func (k Keeper) IsFutureZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
@@ -137,7 +137,7 @@ func (k Keeper) IsFutureZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 
 // AllExpiredZoneDrops returns all expired zone airdrops.
 func (k Keeper) AllExpiredZoneDrops(ctx sdk.Context) []types.ZoneDrop {
-	zds := []types.ZoneDrop{}
+	var zds []types.ZoneDrop
 	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
 		if k.IsExpiredZoneDrop(ctx, zd) {
 			zds = append(zds, zd)
@@ -157,7 +157,7 @@ func (k Keeper) AllExpiredZoneDrops(ctx sdk.Context) []types.ZoneDrop {
 // d: decay     (time.Duration) ... s+D+d
 //
 // isExpired:  timenow > s+D+d
-// notExpired: timenow < s+D+d
+// notExpired: timenow < s+D+d.
 func (k Keeper) IsExpiredZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 	bt := ctx.BlockTime()
 
@@ -167,7 +167,7 @@ func (k Keeper) IsExpiredZoneDrop(ctx sdk.Context, zd types.ZoneDrop) bool {
 // UnconcludedAirdrops returns all expired zone airdrops that have not yet been
 // concluded.
 func (k Keeper) UnconcludedAirdrops(ctx sdk.Context) []types.ZoneDrop {
-	zds := []types.ZoneDrop{}
+	var zds []types.ZoneDrop
 	k.IterateZoneDrops(ctx, func(_ int64, zd types.ZoneDrop) (stop bool) {
 		if k.IsExpiredZoneDrop(ctx, zd) {
 			if !zd.IsConcluded {

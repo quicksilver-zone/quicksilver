@@ -27,7 +27,7 @@ import (
 
 type Callback func(*Keeper, sdk.Context, []byte, icqtypes.Query) error
 
-// Callbacks wrapper struct for interchainstaking keeper
+// Callbacks wrapper struct for interchainstaking keeper.
 type Callbacks struct {
 	k         *Keeper
 	callbacks map[string]Callback
@@ -39,7 +39,7 @@ func (k *Keeper) CallbackHandler() Callbacks {
 	return Callbacks{k, make(map[string]Callback)}
 }
 
-// callback handler
+// Call calls callback handler.
 func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query icqtypes.Query) error {
 	return c.callbacks[id](c.k, ctx, args, query)
 }
@@ -50,7 +50,7 @@ func (c Callbacks) Has(id string) bool {
 }
 
 func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallbacks {
-	c.callbacks[id] = fn.(Callback)
+	c.callbacks[id], _ = fn.(Callback)
 	return c
 }
 
@@ -244,7 +244,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 }
 
 // pulled directly from ibc-go tm light client
-// checkTrustedHeader checks that consensus state matches trusted fields of Header
+// checkTrustedHeader checks that consensus state matches trusted fields of Header.
 func checkTrustedHeader(header *tmclienttypes.Header, consState *tmclienttypes.ConsensusState) error {
 	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
 	if err != nil {
@@ -266,7 +266,7 @@ func checkTrustedHeader(header *tmclienttypes.Header, consState *tmclienttypes.C
 
 // checkTMStateValidity checks if the Tendermint header is valid.
 // CONTRACT: consState.Height == header.TrustedHeight
-// pulled directly from ibc-go tm light client
+// pulled directly from ibc-go tm light client.
 func checkTMStateValidity(
 	clientState *tmclienttypes.ClientState, consState *tmclienttypes.ConsensusState,
 	header *tmclienttypes.Header, currentTimestamp time.Time,

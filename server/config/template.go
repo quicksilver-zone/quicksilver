@@ -1,6 +1,6 @@
 package config
 
-// DefaultConfigTemplate defines the configuration template
+// DefaultConfigTemplate defines the configuration template.
 const DefaultConfigTemplate = `
 ###############################################################################
 ###                             TLS Configuration                           ###

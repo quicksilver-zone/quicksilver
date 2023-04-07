@@ -12,7 +12,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
-// participationrewars message types
+// participationrewars message types.
 const (
 	TypeMsgSubmitClaim = "submitclaim"
 )
@@ -63,11 +63,11 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 		errors["UserAddress"] = err
 	}
 
-	if len(msg.Zone) == 0 {
+	if msg.Zone == "" {
 		errors["Zone"] = ErrUndefinedAttribute
 	}
 
-	if len(msg.SrcZone) == 0 {
+	if msg.SrcZone == "" {
 		errors["SrcZone"] = ErrUndefinedAttribute
 	}
 

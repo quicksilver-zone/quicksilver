@@ -11,7 +11,7 @@ import (
 
 func TestMsgClaim_ValidateBasic(t *testing.T) {
 	type fields struct {
-		ChainId string
+		ChainID string
 		Action  int64
 		Address string
 		Proofs  []*cmtypes.Proof
@@ -29,7 +29,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_no_zone",
 			fields{
-				ChainId: "",
+				ChainID: "",
 				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 				Proofs:  []*cmtypes.Proof{},
@@ -39,7 +39,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_action_out_of_bounds_low",
 			fields{
-				ChainId: "cosmoshub-4",
+				ChainID: "cosmoshub-4",
 				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 				Proofs:  []*cmtypes.Proof{},
@@ -49,7 +49,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_action_out_of_bounds",
 			fields{
-				ChainId: "cosmoshub-4",
+				ChainID: "cosmoshub-4",
 				Action:  999,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 				Proofs:  []*cmtypes.Proof{},
@@ -59,7 +59,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_address_empty",
 			fields{
-				ChainId: "cosmoshub-4",
+				ChainID: "cosmoshub-4",
 				Action:  0,
 				Address: "",
 				Proofs:  []*cmtypes.Proof{},
@@ -69,7 +69,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_address",
 			fields{
-				ChainId: "cosmoshub-4",
+				ChainID: "cosmoshub-4",
 				Action:  0,
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lkq437x2w",
 				Proofs:  []*cmtypes.Proof{},
@@ -81,7 +81,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		{
 			"invalid_ActionUndefined",
 			fields{
-				ChainId: "cosmoshub-4",
+				ChainID: "cosmoshub-4",
 				Action:  int64(ActionUndefined),
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 				Proofs: []*cmtypes.Proof{
@@ -99,7 +99,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 		{
 			"valid",
 			fields{
-				ChainId: "cosmoshub-4",
+				ChainID: "cosmoshub-4",
 				Action:  int64(ActionInitialClaim),
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 				Proofs: []*cmtypes.Proof{
@@ -118,7 +118,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			msg := MsgClaim{
-				ChainId: tt.fields.ChainId,
+				ChainId: tt.fields.ChainID,
 				Action:  tt.fields.Action,
 				Address: tt.fields.Address,
 				Proofs:  tt.fields.Proofs,

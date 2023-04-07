@@ -72,12 +72,12 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 	// tvs[uatom] = 1.0
 
 	// capture errors from iterator
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, data types.ProtocolData) bool {
 		idxLabel := fmt.Sprintf("index[%d]", idx)
 		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, data.Data)
 		if err != nil {
-			errors[idxLabel] = err
+			errs[idxLabel] = err
 			return true
 		}
 		pool, _ := ipool.(types.OsmosisPoolProtocolData)
@@ -98,7 +98,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 		for chainID, denom := range pool.Zones {
 			zone, ok := k.icsKeeper.GetZone(ctx, chainID)
 			if !ok {
-				errors[idxLabel] = fmt.Errorf("zone not found, %s", chainID)
+				errs[idxLabel] = fmt.Errorf("zone not found, %s", chainID)
 				return true
 			}
 
@@ -114,17 +114,17 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 
 		if isCosmosPair {
 			if pool.PoolData == nil {
-				errors[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
+				errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
 				return true
 			}
 			pool, err := pool.GetPool()
 			if err != nil {
-				errors[idxLabel] = err
+				errs[idxLabel] = err
 				return true
 			}
 			value, err := pool.SpotPrice(ctx, baseIBCDenom, queryIBCDenom)
 			if err != nil {
-				errors[idxLabel] = err
+				errs[idxLabel] = err
 				return true
 			}
 
@@ -134,8 +134,8 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 		return false
 	})
 
-	if len(errors) > 0 {
-		return nil, multierror.New(errors)
+	if len(errs) > 0 {
+		return nil, multierror.New(errs)
 	}
 
 	return tvs, nil
@@ -144,16 +144,16 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 // allocateZoneRewards executes zone based rewards allocation. This entails
 // rewards that are proportionally distributed to zones based on the tvl for
 // each zone relative to the tvl of the QS protocol.
-func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation RewardsAllocation) error {
+func (k Keeper) AllocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation RewardsAllocation) error {
 	k.Logger(ctx).Info("allocateZoneRewards", "token values", tvs, "allocation", allocation)
 
 	if err := k.setZoneAllocations(ctx, tvs, allocation); err != nil {
 		return err
 	}
 
-	k.allocateValidatorSelectionRewards(ctx)
+	k.AllocateValidatorSelectionRewards(ctx)
 
-	return k.allocateHoldingsRewards(ctx)
+	return k.AllocateHoldingsRewards(ctx)
 }
 
 // setZoneAllocations returns the proportional zone rewards allocations as a
@@ -172,7 +172,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 			k.Logger(ctx).Error(fmt.Sprintf("unable to obtain token value for zone %s", zone.ChainId))
 			continue
 		}
-		ztvl := sdk.NewDecFromInt(k.icsKeeper.GetDelegatedAmount(ctx, &zone).Amount).Mul(tv)
+		ztvl := sdk.NewDecFromInt(k.icsKeeper.GetDelegatedAmount(ctx, &zone).Amount.Add(k.icsKeeper.GetDelegationsInProcess(ctx, &zone))).Mul(tv)
 
 		zone.Tvl = ztvl
 		k.icsKeeper.SetZone(ctx, &zone)
@@ -210,7 +210,7 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 }
 
 // distributeToUsers sends the allocated user rewards to the user address.
-func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocation) error {
+func (k Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.UserAllocation) error {
 	k.Logger(ctx).Info("distributeToUsers", "allocations", userAllocations)
 	hasError := false
 
@@ -236,6 +236,8 @@ func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocat
 		if err != nil {
 			k.Logger(ctx).Error("distribute to user", "address", ua.Address, "coins", coins)
 			hasError = true
+		} else {
+			k.Logger(ctx).Info("distribute to user", "address", ua.Address, "coins", coins, "remaining", k.GetModuleBalance(ctx))
 		}
 	}
 

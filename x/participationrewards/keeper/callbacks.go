@@ -14,7 +14,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-// Callbacks wrapper struct for interchainstaking keeper
+// Callback wrapper struct for interchainstaking keeper.
 type Callback func(Keeper, sdk.Context, []byte, icqtypes.Query) error
 
 type Callbacks struct {
@@ -28,7 +28,7 @@ func (k Keeper) CallbackHandler() Callbacks {
 	return Callbacks{k, make(map[string]Callback)}
 }
 
-// callback handler
+// Call calls callback handler.
 func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query icqtypes.Query) error {
 	return c.callbacks[id](c.k, ctx, args, query)
 }
@@ -39,7 +39,7 @@ func (c Callbacks) Has(id string) bool {
 }
 
 func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallbacks {
-	c.callbacks[id] = fn.(Callback)
+	c.callbacks[id], _ = fn.(Callback)
 	return c
 }
 
@@ -79,9 +79,9 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	)
 
 	// snapshot obtained and used here
-	userAllocations := k.calcUserValidatorSelectionAllocations(ctx, &zone, *zs)
+	userAllocations := k.CalcUserValidatorSelectionAllocations(ctx, &zone, *zs)
 
-	if err := k.distributeToUsers(ctx, userAllocations); err != nil {
+	if err := k.DistributeToUsers(ctx, userAllocations); err != nil {
 		return err
 	}
 
@@ -145,9 +145,9 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
 	}
-
+	k.Logger(ctx).Debug("epoch callback called")
 	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
-	connectionData := iConnectionData.(types.ConnectionProtocolData)
+	connectionData, _ := iConnectionData.(types.ConnectionProtocolData)
 
 	if err != nil {
 		return err
@@ -162,6 +162,8 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	if err != nil {
 		return err
 	}
+	k.Logger(ctx).Debug("got block response", "block", blockResponse)
+
 	if blockResponse.SdkBlock == nil {
 		// v0.45 and below
 		//nolint:staticcheck // SA1019 ignore this!
@@ -184,6 +186,8 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 		"",
 		0,
 	)
+
+	k.Logger(ctx).Debug("emitted client update", "height", connectionData.LastEpoch)
 
 	data.Data, err = json.Marshal(connectionData)
 	if err != nil {

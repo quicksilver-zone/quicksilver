@@ -20,7 +20,7 @@ func (k *Keeper) getStoreKey(zone *types.Zone, snapshot bool) []byte {
 	return append(types.KeyPrefixIntent, []byte(zone.ChainId)...)
 }
 
-// GetDelegatorIntent returns intent info by zone and delegator
+// GetDelegatorIntent returns intent info by zone and delegator.
 func (k *Keeper) GetDelegatorIntent(ctx sdk.Context, zone *types.Zone, delegator string, snapshot bool) (types.DelegatorIntent, bool) {
 	intent := types.DelegatorIntent{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
@@ -33,20 +33,20 @@ func (k *Keeper) GetDelegatorIntent(ctx sdk.Context, zone *types.Zone, delegator
 	return intent, true
 }
 
-// SetDelegatorIntent store the delegator intent
+// SetDelegatorIntent store the delegator intent.
 func (k *Keeper) SetDelegatorIntent(ctx sdk.Context, zone *types.Zone, intent types.DelegatorIntent, snapshot bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 	bz := k.cdc.MustMarshal(&intent)
 	store.Set([]byte(intent.Delegator), bz)
 }
 
-// DeleteDelegatorIntent deletes delegator intent
+// DeleteDelegatorIntent deletes delegator intent.
 func (k *Keeper) DeleteDelegatorIntent(ctx sdk.Context, zone *types.Zone, delegator string, snapshot bool) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 	store.Delete([]byte(delegator))
 }
 
-// IterateDelegatorIntents iterate through delegator intents for a given zone
+// IterateDelegatorIntents iterate through delegator intents for a given zone.
 func (k *Keeper) IterateDelegatorIntents(ctx sdk.Context, zone *types.Zone, snapshot bool, fn func(index int64, intent types.DelegatorIntent) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), k.getStoreKey(zone, snapshot))
 
@@ -68,7 +68,7 @@ func (k *Keeper) IterateDelegatorIntents(ctx sdk.Context, zone *types.Zone, snap
 	}
 }
 
-// AllDelegatorIntents returns every intent in the store for the specified zone
+// AllDelegatorIntents returns every intent in the store for the specified zone.
 func (k *Keeper) AllDelegatorIntents(ctx sdk.Context, zone *types.Zone, snapshot bool) []types.DelegatorIntent {
 	var intents []types.DelegatorIntent
 	k.IterateDelegatorIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
@@ -78,7 +78,7 @@ func (k *Keeper) AllDelegatorIntents(ctx sdk.Context, zone *types.Zone, snapshot
 	return intents
 }
 
-// AllDelegatorIntentsAsPointer returns every intent in the store for the specified zone
+// AllDelegatorIntentsAsPointer returns every intent in the store for the specified zone.
 func (k *Keeper) AllDelegatorIntentsAsPointer(ctx sdk.Context, zone *types.Zone, snapshot bool) []*types.DelegatorIntent {
 	var intents []*types.DelegatorIntent
 	k.IterateDelegatorIntents(ctx, zone, snapshot, func(_ int64, intent types.DelegatorIntent) (stop bool) {
@@ -165,7 +165,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 	return nil
 }
 
-// UpdateDelegatorIntent updates
+// UpdateDelegatorIntent updates delegator intents.
 func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress, zone *types.Zone, inAmount sdk.Coins, memo string) error {
 	snapshot := false
 	updateWithCoin := inAmount.IsValid()

@@ -16,7 +16,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// HandleRegisterZoneProposal is a handler for executing a passed community spend proposal
+// HandleRegisterZoneProposal is a handler for executing a passed community spend proposal.
 func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZoneProposal) error {
 	// get chain id from connection
 	chainID, err := k.GetChainID(ctx, p.ConnectionId)
@@ -112,17 +112,21 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	return nil
 }
 
-func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID string, portOwner string) error {
+func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOwner string) error {
 	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionID, portOwner, ""); err != nil { // todo: add version
 		return err
 	}
-	portID, _ := icatypes.NewControllerPortID(portOwner)
+	portID, err := icatypes.NewControllerPortID(portOwner)
+	if err != nil {
+		return err
+	}
+
 	k.SetConnectionForPort(ctx, connectionID, portID)
 
 	return nil
 }
 
-// HandleUpdateZoneProposal is a handler for executing a passed community spend proposal
+// HandleUpdateZoneProposal is a handler for executing a passed community spend proposal.
 func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZoneProposal) error {
 	zone, found := k.GetZone(ctx, p.ChainId)
 	if !found {

@@ -187,7 +187,7 @@ clean:
     artifacts/ \
     tmp-swagger-gen/
 
-all: build vulncheck
+all: build vulncheck vet
 
 build-all: tools build lint test
 
@@ -551,3 +551,9 @@ proto-setup:
 vulncheck: $(BUILDDIR)/
 	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
 	$(BUILDDIR)/govulncheck ./...
+
+vet:
+	@echo "Running vet..."
+	@go vet ./...
+	@echo "Done!"
+

@@ -13,8 +13,8 @@ func (zd ZoneDrop) ValidateBasic() error {
 	errors := make(map[string]error)
 
 	// must be defined
-	if len(zd.ChainId) == 0 {
-		errors["ChainId"] = ErrUndefinedAttribute
+	if zd.ChainId == "" {
+		errors["ChainID"] = ErrUndefinedAttribute
 	}
 
 	// must be greater or equal to 0
@@ -30,7 +30,7 @@ func (zd ZoneDrop) ValidateBasic() error {
 	// must be greater or equal to 0
 	//
 	// - equal will result in a full airdrop reward with immediate cut off on
-	//   expiery;
+	//   expiry;
 	// - greater will result in a proportionally discounted airdrop reward over
 	//   the duration of decay;
 	//
@@ -40,7 +40,7 @@ func (zd ZoneDrop) ValidateBasic() error {
 	}
 
 	// sum of Duration and Decay may not be zero as this will result in
-	// immediate expiery of the zone airdrop
+	// immediate expiry of the zone airdrop
 	if zd.Duration.Microseconds()+zd.Decay.Microseconds() == 0 {
 		if _, exists := errors["Duration"]; !exists {
 			errors["Duration"] = fmt.Errorf("%w, sum of Duration and Decay must not be zero", ErrInvalidDuration)
@@ -85,8 +85,8 @@ func (cr ClaimRecord) ValidateBasic() error {
 	errors := make(map[string]error)
 
 	// must be defined
-	if len(cr.ChainId) == 0 {
-		errors["ChainId"] = ErrUndefinedAttribute
+	if cr.ChainId == "" {
+		errors["ChainID"] = ErrUndefinedAttribute
 	}
 
 	// must be valid bech32

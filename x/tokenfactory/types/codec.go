@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authzcodec "github.com/cosmos/cosmos-sdk/x/authz/codec"
 
-	// this line is used by starport scaffolding # 1
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
@@ -14,7 +13,6 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateDenom{}, "quicksilver/tokenfactory/create-denom", nil)
 	cdc.RegisterConcrete(&MsgMint{}, "quicksilver/tokenfactory/mint", nil)
 	cdc.RegisterConcrete(&MsgBurn{}, "quicksilver/tokenfactory/burn", nil)
-	// cdc.RegisterConcrete(&MsgForceTransfer{}, "quicksilver/tokenfactory/force-transfer", nil)
 	cdc.RegisterConcrete(&MsgChangeAdmin{}, "quicksilver/tokenfactory/change-admin", nil)
 }
 

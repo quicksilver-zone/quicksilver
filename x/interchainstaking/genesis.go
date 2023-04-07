@@ -98,9 +98,11 @@ func ExportDelegatorIntentsPerZone(ctx sdk.Context, k keeper.Keeper) []types.Del
 	delegatorIntentsForZones := make([]types.DelegatorIntentsForZone, 0)
 	k.IterateZones(ctx, func(_ int64, zoneInfo *types.Zone) (stop bool) {
 		// export current epoch intents
-		delegatorIntentsForZones = append(delegatorIntentsForZones, types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zoneInfo, false), Snapshot: false})
-		// export last epoch intents
-		delegatorIntentsForZones = append(delegatorIntentsForZones, types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zoneInfo, true), Snapshot: true})
+		delegatorIntentsForZones = append(delegatorIntentsForZones,
+			types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zoneInfo, false), Snapshot: false},
+			// export last epoch intents
+			types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zoneInfo, true), Snapshot: true},
+		)
 		return false
 	})
 	return delegatorIntentsForZones
