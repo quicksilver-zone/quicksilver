@@ -3,6 +3,8 @@ package interchaintest
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	interchaintest "github.com/strangelove-ventures/ibctest/v5"
 	"github.com/strangelove-ventures/ibctest/v5/chain/cosmos"
@@ -11,7 +13,6 @@ import (
 	"github.com/strangelove-ventures/ibctest/v5/testreporter"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-	"testing"
 )
 
 // TestQuicksilverOsmosisIBCTransfer spins up a Quicksilver and Osmosis network, initializes an IBC connection between them,
