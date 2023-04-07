@@ -336,6 +336,16 @@ test-rpc:
 test-rpc-pending:
 	./scripts/integration-test-all.sh -t "pending" -q 1 -z 1 -s 2 -m "pending" -r "true"
 
+
+vulncheck: $(BUILDDIR)/
+	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
+	$(BUILDDIR)/govulncheck ./...
+
+vet:
+	@echo "Running vet..."
+	@go vet ./...
+	@echo "Done!"
+
 RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
 RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
 RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
@@ -502,17 +512,21 @@ proto-gen:
 		quicksilver-proto sh ./proto/generate.sh
 	@echo "✅ Completed code generation!"
 
+proto-lint:
+	@echo "🤖 Running protobuf linter..."
+	@docker run --volume "$(PWD)":/workspace --workdir /workspace \
+		bufbuild/buf:$(BUF_VERSION) lint
+	@echo "✅ Completed protobuf linting!"
+
+proto-format:
+	@echo "🤖 Running protobuf linter..."
+	@docker run --volume "$(PWD)":/workspace --workdir /workspace \
+		bufbuild/buf:$(BUF_VERSION) lint
+	@echo "✅ Completed protobuf linting!"
+
 proto-setup:
 	@echo "🤖 Setting up protobuf environment..."
 	@docker build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
 	@echo "✅ Setup protobuf environment!"
 
-vulncheck: $(BUILDDIR)/
-	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
-	$(BUILDDIR)/govulncheck ./...
-
-vet:
-	@echo "Running vet..."
-	@go vet ./...
-	@echo "Done!"
 
