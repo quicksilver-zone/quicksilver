@@ -1,5 +1,5 @@
 syntax = "proto3";
-package quicksilver.interchainstaking.v1;
+package quicksilver.participationrewards.v1;
 
 import "gogoproto/gogo.proto";
 
