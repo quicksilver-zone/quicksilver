@@ -3,14 +3,14 @@ package interchaintest
 import (
 	"context"
 	"fmt"
+	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"testing"
 
 	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	interchaintest "github.com/strangelove-ventures/ibctest/v5"
-	"github.com/strangelove-ventures/ibctest/v5/chain/cosmos"
-	"github.com/strangelove-ventures/ibctest/v5/ibc"
-	"github.com/strangelove-ventures/ibctest/v5/test"
-	"github.com/strangelove-ventures/ibctest/v5/testreporter"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
+	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -104,14 +104,14 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, osmosis)
 
 	// Wait a few blocks for relayer to start and for user accounts to be created
-	err = test.WaitForBlocks(ctx, 5, quicksilver, osmosis)
+	err = testutil.WaitForBlocks(ctx, 5, quicksilver, osmosis)
 	require.NoError(t, err)
 
 	// Get our Bech32 encoded user addresses
 	quickUser, osmosisUser := users[0], users[1]
 
-	quickUserAddr := quickUser.Bech32Address(quicksilver.Config().Bech32Prefix)
-	osmosisUserAddr := osmosisUser.Bech32Address(osmosis.Config().Bech32Prefix)
+	quickUserAddr := quickUser.FormattedAddress()
+	osmosisUserAddr := osmosisUser.FormattedAddress()
 
 	// Get original account balances
 	quicksilverOrigBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
@@ -133,14 +133,14 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 	quickChannels, err := r.GetChannels(ctx, eRep, quicksilver.Config().ChainID)
 	require.NoError(t, err)
 
-	transferTx, err := quicksilver.SendIBCTransfer(ctx, quickChannels[0].ChannelID, quickUserAddr, transfer, nil)
+	transferTx, err := quicksilver.SendIBCTransfer(ctx, quickChannels[0].ChannelID, quickUserAddr, transfer, ibc.TransferOptions{})
 	require.NoError(t, err)
 
 	quicksilverHeight, err := quicksilver.Height(ctx)
 	require.NoError(t, err)
 
 	// Poll for the ack to know the transfer was successful
-	_, err = test.PollForAck(ctx, quicksilver, quicksilverHeight, quicksilverHeight+10, transferTx.Packet)
+	_, err = testutil.PollForAck(ctx, quicksilver, quicksilverHeight, quicksilverHeight+10, transferTx.Packet)
 	require.NoError(t, err)
 
 	// Get the IBC denom for uqck on osmosis
@@ -163,14 +163,14 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 		Amount:  transferAmount,
 	}
 
-	transferTx, err = osmosis.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, osmosisUserAddr, transfer, nil)
+	transferTx, err = osmosis.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, osmosisUserAddr, transfer, ibc.TransferOptions{})
 	require.NoError(t, err)
 
 	osmosisHeight, err := osmosis.Height(ctx)
 	require.NoError(t, err)
 
 	// Poll for the ack to know the transfer was successful
-	_, err = test.PollForAck(ctx, osmosis, osmosisHeight, osmosisHeight+10, transferTx.Packet)
+	_, err = testutil.PollForAck(ctx, osmosis, osmosisHeight, osmosisHeight+10, transferTx.Packet)
 	require.NoError(t, err)
 
 	// Assert that the funds are now back on Juno and not on osmosis
