@@ -215,7 +215,7 @@ replace (
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.2 //indirect
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/ingenuity-build => ../../
-	github.com/strangelove-ventures/v5 => github.com/aljo242/interchaintest/v5 v5.0.0-20230403161830-56ef737c0be3
+	github.com/strangelove-ventures/v5 => github.com/aljo242/interchaintest/v5 v5.0.0-20230410151020-d88f43625c6c
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 )
