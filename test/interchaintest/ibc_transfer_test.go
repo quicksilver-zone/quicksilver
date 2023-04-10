@@ -3,14 +3,14 @@ package interchaintest
 import (
 	"context"
 	"fmt"
-	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"testing"
 
 	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
+	"github.com/strangelove-ventures/interchaintest/v5"
 	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v5/ibc"
 	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -25,8 +25,8 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 	t.Parallel()
 
 	// Create chain factory with Quicksilver and osmosis
-	numVals := 1
-	numFullNodes := 1
+	numVals := 3
+	numFullNodes := 3
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{

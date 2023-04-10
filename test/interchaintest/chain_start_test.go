@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	interchaintest "github.com/strangelove-ventures/interchaintest/v5"
+	"github.com/strangelove-ventures/interchaintest/v5"
 	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
 	"github.com/stretchr/testify/require"
@@ -20,8 +20,8 @@ func TestBasicQuicksilverStart(t *testing.T) {
 	t.Parallel()
 
 	// Create chain factory with Quicksilver
-	numVals := 1
-	numFullNodes := 1
+	numVals := 3
+	numFullNodes := 3
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
@@ -57,6 +57,10 @@ func TestBasicQuicksilverStart(t *testing.T) {
 		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
 	})
 	require.NoError(t, err)
+
+	for _, sidecar := range quicksilver.Sidecars {
+		require.NoError(t, sidecar.Running(ctx))
+	}
 
 	t.Cleanup(func() {
 		_ = ic.Close()
