@@ -140,11 +140,15 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone types.Zone, sende
 	intent, found := k.GetIntent(ctx, zone, sender.String(), false)
 	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
 	msgs := make([]*lsmstakingtypes.MsgTokenizeShares, 0)
+	var err error
 	intents := intent.Intents
 	if !found || len(intents) == 0 {
 		// if user has no intent set (this can happen if redeeming tokens that were obtained offchain), use global intent.
 		// Note: this can be improved; user will receive a bunch of tokens.
-		intents = zone.GetAggregateIntentOrDefault()
+		intents, err = k.GetAggregateIntentOrDefault(ctx, &zone)
+		if err != nil {
+			return err
+		}
 	}
 	outstanding := nativeTokens
 	distribution := make(map[string]uint64, 0)
@@ -194,7 +198,10 @@ func (k *Keeper) queueRedemption(
 	distribution := make([]*types.Distribution, 0)
 	outstanding := nativeTokens
 
-	aggregateIntent := zone.GetAggregateIntentOrDefault()
+	aggregateIntent, err := k.GetAggregateIntentOrDefault(ctx, &zone)
+	if err != nil {
+		return err
+	}
 	for _, intent := range aggregateIntent {
 		thisAmount := intent.Weight.MulInt(nativeTokens).TruncateInt()
 		outstanding = outstanding.Sub(thisAmount)
@@ -254,7 +261,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 		return nil, err
 	}
 
-	if err := k.validateIntents(zone, intents); err != nil {
+	if err := k.validateIntents(ctx, zone, intents); err != nil {
 		return nil, err
 	}
 
@@ -280,11 +287,16 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	return &types.MsgSignalIntentResponse{}, nil
 }
 
-func (k msgServer) validateIntents(zone types.Zone, intents []*types.ValidatorIntent) error {
+func (k msgServer) validateIntents(ctx sdk.Context, zone types.Zone, intents []*types.ValidatorIntent) error {
 	errors := make(map[string]error)
 
 	for i, intent := range intents {
-		_, found := zone.GetValidatorByValoper(intent.ValoperAddress)
+		valAddrBytes, err := utils.ValAddressFromBech32(intent.ValoperAddress, zone.AccountPrefix+"valoper")
+		if err != nil {
+			errors[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to decode valoper %s", intent.ValoperAddress)
+			continue
+		}
+		_, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 		if !found {
 			errors[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
 		}

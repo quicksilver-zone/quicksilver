@@ -43,32 +43,6 @@ func (k Keeper) DeleteZone(ctx sdk.Context, chainID string) {
 	store.Delete([]byte(chainID))
 }
 
-// GetValidators returns validators info by chainID
-func (k Keeper) GetValidators(ctx sdk.Context, chainID string) (types.Validators, bool) {
-	vals := types.Validators{}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), GetZoneValidatorsKey(chainID))
-	bz := store.Get([]byte(chainID))
-	if len(bz) == 0 {
-		return vals, false
-	}
-
-	k.cdc.MustUnmarshal(bz, &vals)
-	return vals, true
-}
-
-// SetValidators set validators info
-func (k Keeper) SetValidators(ctx sdk.Context, vals types.Validators) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), GetZoneValidatorsKey(vals.ChainId))
-	bz := k.cdc.MustMarshal(&vals)
-	store.Set(GetZoneValidatorsKey(vals.ChainId), bz)
-}
-
-// DeleteValidators delete validators info
-func (k Keeper) DeleteValidators(ctx sdk.Context, chainID string) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-	store.Delete(GetZoneValidatorsKey(chainID))
-}
-
 // IterateZones iterate through zones
 func (k Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo types.Zone) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)

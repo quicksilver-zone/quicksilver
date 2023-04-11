@@ -76,15 +76,7 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 // -----------------------------------
 
 func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetZone(ctx, query.GetChainId()) //can we get rid of this check?
-	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-	vals, found := k.GetValidators(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no validators for chain id: %s", query.GetChainId())
-	}
-	return SetValidatorsForZone(&k, ctx, zone, vals, args, query.Request)
+	return k.SetValidatorsForZone(ctx, args, query)
 }
 
 func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -93,11 +85,7 @@ func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Qu
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	vals, found := k.GetValidators(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no validators for chain id: %s", query.GetChainId())
-	}
-	return SetValidatorForZone(&k, ctx, zone, vals, args)
+	return k.SetValidatorForZone(ctx, zone, args)
 }
 
 func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
@@ -185,7 +173,12 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		}
 		return nil
 	}
-	val, found := zone.GetValidatorByValoper(delegation.ValidatorAddress)
+
+	valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.AccountPrefix+"valoper")
+	if err != nil {
+		return err
+	}
+	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 	if !found {
 		err := fmt.Errorf("unable to get validator: %s", delegation.ValidatorAddress)
 		k.Logger(ctx).Error(err.Error())

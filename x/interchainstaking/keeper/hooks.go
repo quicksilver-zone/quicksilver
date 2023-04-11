@@ -43,7 +43,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				// the unrelated tasks below.
 			}
 
-			err = k.Rebalance(ctx, zoneInfo, epochNumber)
+			err = k.Rebalance(ctx, &zoneInfo, epochNumber)
 			if err != nil {
 				// we can and need not panic here; logging the error is sufficient.
 				// an error here is not expected, but also not terminal.
@@ -60,8 +60,8 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 			k.Logger(ctx).Info("Withdrawing rewards")
 
-			vals, _ := k.GetValidators(ctx, zoneInfo.ChainId)
-			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zoneInfo.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals.Validators))}}
+			vals := k.GetValidators(ctx, zoneInfo.ChainId)
+			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zoneInfo.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 			bz := k.cdc.MustMarshal(&delegationQuery)
 
 			k.ICQKeeper.MakeRequest(

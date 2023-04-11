@@ -51,10 +51,7 @@ func (k Keeper) ZoneValidatorInfos(c context.Context, req *types.QueryZoneValida
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	validators, found := k.GetValidators(ctx, req.GetChainId())
-	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no vals found matching %s", req.GetChainId()))
-	}
+	validators := k.GetValidators(ctx, req.GetChainId())
 
 	return &types.QueryZoneValidatorsInfoResponse{Validators: validators}, nil
 }
