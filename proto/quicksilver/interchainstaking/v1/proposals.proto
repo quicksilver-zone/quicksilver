@@ -42,7 +42,7 @@ message RegisterZoneProposalWithDeposit {
   string deposit = 9 [(gogoproto.moretags) = "yaml:\"deposit\""];
   bool return_to_sender = 10 [(gogoproto.moretags) = "yaml:\"return_to_sender\""];
   bool deposits_enabled = 11 [(gogoproto.moretags) = "yaml:\"deposits_enabled\""];
-  bool unbonding_enabled = 12 [(gogoproto.moretags) = "yaml:\"deposits_enabled\""];
+  bool unbonding_enabled = 12 [(gogoproto.moretags) = "yaml:\"unbonding_enabled\""];
   int64 decimals = 13 [(gogoproto.moretags) = "yaml:\"decimals\""];
 }
 
