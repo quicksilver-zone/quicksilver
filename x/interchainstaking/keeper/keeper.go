@@ -163,14 +163,14 @@ func (k *Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnection
 //   query type functions, dependent upon callback features / capabilities;
 
 func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, zoneInfo *types.Zone, data, request []byte) error {
-	validatorsRes, err := k.UnmarshalValidatorResponse(data)
+	validatorsRes, err := k.UnmarshalValidatorsResponse(data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
 		return err
 	}
 
 	if validatorsRes.Pagination != nil && !bytes.Equal(validatorsRes.Pagination.NextKey, []byte{}) {
-		validatorsReq, err := k.UnmarshalValidatorRequest(request)
+		validatorsReq, err := k.UnmarshalValidatorsRequest(request)
 		if err != nil {
 			k.Logger(ctx).Error("unable to unmarshal request info for zone", "zone", zoneInfo.ChainId, "err", err)
 			return err
@@ -581,8 +581,8 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber))
 }
 
-// UnmarshalValidatorResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.
-func (k *Keeper) UnmarshalValidatorResponse(data []byte) (stakingtypes.QueryValidatorsResponse, error) {
+// UnmarshalValidatorsResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.
+func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryValidatorsResponse, error) {
 	validatorsRes := stakingtypes.QueryValidatorsResponse{}
 	if len(data) == 0 {
 		return validatorsRes, errors.New("attempted to unmarshal zero length byte slice (8)")
@@ -595,12 +595,9 @@ func (k *Keeper) UnmarshalValidatorResponse(data []byte) (stakingtypes.QueryVali
 	return validatorsRes, nil
 }
 
-// UnmarshalValidatorRequest attempts to umarshal  a byte slice into a QueryValidatorsRequest.
-func (k *Keeper) UnmarshalValidatorRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
+// UnmarshalValidatorsRequest attempts to umarshal  a byte slice into a QueryValidatorsRequest.
+func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
 	validatorsReq := stakingtypes.QueryValidatorsRequest{}
-	if len(data) == 0 {
-		return validatorsReq, errors.New("attempted to unmarshal zero length byte slice (8)")
-	}
 	err := k.cdc.Unmarshal(data, &validatorsReq)
 	if err != nil {
 		return validatorsReq, err
