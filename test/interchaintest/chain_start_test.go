@@ -58,6 +58,8 @@ func TestBasicQuicksilverStart(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	// verify sidecars are running
+	require.Equal(t, 1, len(quicksilver.Sidecars))
 	for _, sidecar := range quicksilver.Sidecars {
 		require.NoError(t, sidecar.Running(ctx))
 	}

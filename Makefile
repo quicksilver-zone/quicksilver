@@ -345,7 +345,7 @@ test-rpc-pending:
 
 # Executes basic chain tests via interchaintest
 ictest-basic:
-	@cd test/interchaintest && go test -race -v -run TestBasic .
+	@cd test/interchaintest && go test -race -v -run TestBasicQuicksilverStart .
 
 # Executes a basic chain upgrade test via interchaintest
 ictest-upgrade:
@@ -356,7 +356,7 @@ ictest-upgrade-local: local-image ictest-upgrade
 
 # Executes IBC tests via interchaintest
 ictest-ibc:
-	@cd test/interchaintest && go test -race -v -run TestQuicksilverGaiaIBCTransfer .
+	@cd test/interchaintest && go test -race -v -run TestQuicksilverOsmosisIBCTransfer .
 
 # Executes all tests via interchaintest after compiling a local image as quicksilver:local
 ictest-all: local-image ictest-basic ictest-upgrade ictest-ibc
@@ -377,6 +377,10 @@ ifeq (,$(shell which heighliner))
 else
 	heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
 endif
+	# install other docker images
+	$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
+	$(DOCKER) image pull quicksilverzone/interchain-queries:v0.8.8-beta1
+
 
 .PHONY: get-heighliner local-image
 

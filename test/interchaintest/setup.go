@@ -16,11 +16,11 @@ var (
 		UidGid:     "1025:1025",
 	}
 
-	XccLookupImage = ibc.DockerImage{
-		Repository: "quicksilverzone/xcclookup",
-		Version:    "v0.4.3",
-		UidGid:     "1026:1026",
-	}
+	//	XccLookupImage = ibc.DockerImage{
+	//		Repository: "quicksilverzone/xcclookup",
+	//		Version:    "v0.4.3",
+	//		UidGid:     "1026:1026",
+	//	}
 
 	ICQImage = ibc.DockerImage{
 		Repository: "quicksilverzone/interchain-queries",
@@ -48,18 +48,18 @@ var (
 				ProcessName:      "icq",
 				Image:            ICQImage,
 				Ports:            []string{"2112"},
-				StartCmd:         nil,
-				PreStart:         false,
-				ValidatorProcess: true,
+				StartCmd:         []string{"interchain-queries", "run", "-d"},
+				PreStart:         true,
+				ValidatorProcess: false,
 			},
-			{
-				ProcessName:      "xcc",
-				Image:            XccLookupImage,
-				Ports:            []string{"3033"},
-				StartCmd:         nil,
-				PreStart:         false,
-				ValidatorProcess: true,
-			},
+			//			{
+			//				ProcessName:      "xcc",
+			//				Image:            XccLookupImage,
+			//				Ports:            []string{"3033"},
+			//				StartCmd:         []string{"xcc", "-a", "serve"},
+			//				PreStart:         true,
+			//				ValidatorProcess: false,
+			//			},
 		},
 	}
 
