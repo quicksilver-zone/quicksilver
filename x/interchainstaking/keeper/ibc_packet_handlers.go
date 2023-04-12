@@ -451,7 +451,10 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 	var msgs []sdk.Msg
 	for _, coin := range msg.Amount {
 		if coin.Denom == zone.BaseDenom {
-			allocations := k.DeterminePlanForDelegation(ctx, zone, msg.Amount)
+			allocations, err := k.DeterminePlanForDelegation(ctx, zone, msg.Amount)
+			if err != nil {
+				return err
+			}
 			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(ctx, zone, allocations)...)
 		} else {
 			msgs = append(msgs, k.PrepareDelegationMessagesForShares(ctx, zone, msg.Amount)...)
@@ -580,7 +583,12 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 			// the amount unbonded is emitted as an event, but not in the response, so we never _know_ this has happened.
 			// as such, if we know the validator has hisotrical slashing, we remove 1 utoken from the distribution for this validator, with
 			// the expectation that clipping will occur. We do not reduce the amount requested to unbond.
-			val, found := zone.GetValidatorByValoper(dist.Valoper)
+			var valAddrBytes []byte
+			valAddrBytes, err = utils.ValAddressFromBech32(dist.Valoper, zone.AccountPrefix+"valoper")
+			if err != nil {
+				return true
+			}
+			val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 			if !found {
 				// something kooky is going on...
 				err = fmt.Errorf("unable to find a validator we expected to exist [%s]", dist.Valoper)

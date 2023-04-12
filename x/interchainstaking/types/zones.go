@@ -20,11 +20,7 @@ func (z Zone) IsDelegateAddress(addr string) bool {
 }
 
 func (z *Zone) GetValidatorByValoper(valoper string) (*Validator, bool) {
-	for _, v := range z.GetValidatorsSorted() {
-		if v.ValoperAddress == valoper {
-			return v, true
-		}
-	}
+	panic("deprecated")
 	return nil, false
 }
 
@@ -140,21 +136,11 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 }
 
 func (z *Zone) GetValidatorsSorted() []*Validator {
-	sort.SliceStable(z.Validators, func(i, j int) bool {
-		return z.Validators[i].ValoperAddress < z.Validators[j].ValoperAddress
-	})
-	return z.Validators
+	panic("deprecated")
 }
 
 func (z Zone) GetValidatorsAddressesAsSlice() []string {
-	l := make([]string, 0)
-	for _, v := range z.Validators {
-		l = append(l, v.ValoperAddress)
-	}
-
-	sort.Strings(l)
-
-	return l
+	panic("deprecated")
 }
 
 func (z Zone) GetBondedValidatorAddressesAsSlice() []string {
@@ -168,38 +154,6 @@ func (z Zone) GetBondedValidatorAddressesAsSlice() []string {
 	sort.Strings(l)
 
 	return l
-}
-
-func (z *Zone) GetAggregateIntentOrDefault() ValidatorIntents {
-	var intents ValidatorIntents
-	var filteredIntents ValidatorIntents
-
-	if len(z.AggregateIntent) == 0 {
-		intents = z.DefaultAggregateIntents()
-	} else {
-		intents = z.AggregateIntent
-	}
-	// filter intents here...
-	// check validators for tombstoned
-	for _, v := range intents {
-		val, found := z.GetValidatorByValoper(v.ValoperAddress)
-		// this case should not happen as we check the validity of a validator entry when intent is set.
-		if !found {
-			continue
-		}
-		// we should never let tombstoned validators into the list, even if they are explicitly selected
-		if val.Tombstoned {
-			continue
-		}
-
-		// we should never let denylist validators into the list, even if they are explicitly selected
-		// if in deny list {
-		// continue
-		// }
-		filteredIntents = append(filteredIntents, v)
-	}
-
-	return filteredIntents
 }
 
 // defaultAggregateIntents determines the default aggregate intent (for epoch 0)

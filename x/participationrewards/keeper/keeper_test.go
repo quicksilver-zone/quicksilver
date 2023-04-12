@@ -22,7 +22,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	ics "github.com/ingenuity-build/quicksilver/x/interchainstaking"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -126,7 +125,7 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.Require().True(found)
 
 	valRewards := make(map[string]sdk.Dec)
-	for _, val := range zone.Validators {
+	for _, val := range qApp.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID) {
 		valRewards[val.ValoperAddress] = sdk.NewDec(100000000)
 	}
 
@@ -140,7 +139,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	testzone := icstypes.Zone{
 		ConnectionId:    suite.path.EndpointA.ConnectionID,
 		ChainId:         suite.chainB.ChainID,
-		AccountPrefix:   "bcosmos",
+		AccountPrefix:   "cosmos",
 		LocalDenom:      "uqatom",
 		BaseDenom:       "uatom",
 		MultiSend:       true,
@@ -152,11 +151,11 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	qApp.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: suite.chainA.GetContext().BlockTime()})
 	suite.Require().NoError(suite.setupChannelForICA(suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
 
+	zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+	suite.Require().True(found)
+
 	for _, val := range suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext()) {
-		// refetch the zone for each validator, else we end up with an empty valset each time!
-		zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-		suite.Require().True(found)
-		suite.Require().NoError(icskeeper.SetValidatorForZone(&qApp.InterchainstakingKeeper, suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
+		suite.Require().NoError(qApp.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), zone, app.DefaultConfig().Codec.MustMarshal(&val)))
 	}
 
 	// cosmos zone
@@ -174,31 +173,34 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		MultiSend:          true,
 		LiquidityModule:    true,
 		PerformanceAddress: performanceAccountCosmos,
-		Validators: []*icstypes.Validator{
-			{
-				ValoperAddress:  "cosmosvaloper1759teakrsvnx7rnur8ezc4qaq8669nhtgukm0x",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-				DelegatorShares: sdk.NewDec(200032604739),
-				VotingPower:     math.NewInt(200032604739),
-				Score:           sdk.ZeroDec(),
-			},
-			{
-				ValoperAddress:  "cosmosvaloper1jtjjyxtqk0fj85ud9cxk368gr8cjdsftvdt5jl",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-				DelegatorShares: sdk.NewDec(200032604734),
-				VotingPower:     math.NewInt(200032604734),
-				Score:           sdk.ZeroDec(),
-			},
-			{
-				ValoperAddress:  "cosmosvaloper1q86m0zq0p52h4puw5pg5xgc3c5e2mq52y6mth0",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-				DelegatorShares: sdk.NewDec(200032604738),
-				VotingPower:     math.NewInt(200032604738),
-				Score:           sdk.ZeroDec(),
-			},
-		},
 	}
 	qApp.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneCosmos)
+	vals := []icstypes.Validator{
+		{
+			ValoperAddress:  "cosmosvaloper1759teakrsvnx7rnur8ezc4qaq8669nhtgukm0x",
+			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+			DelegatorShares: sdk.NewDec(200032604739),
+			VotingPower:     math.NewInt(200032604739),
+			Score:           sdk.ZeroDec(),
+		},
+		{
+			ValoperAddress:  "cosmosvaloper1jtjjyxtqk0fj85ud9cxk368gr8cjdsftvdt5jl",
+			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+			DelegatorShares: sdk.NewDec(200032604734),
+			VotingPower:     math.NewInt(200032604734),
+			Score:           sdk.ZeroDec(),
+		},
+		{
+			ValoperAddress:  "cosmosvaloper1q86m0zq0p52h4puw5pg5xgc3c5e2mq52y6mth0",
+			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+			DelegatorShares: sdk.NewDec(200032604738),
+			VotingPower:     math.NewInt(200032604738),
+			Score:           sdk.ZeroDec(),
+		},
+	}
+	for _, val := range vals {
+		qApp.InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zoneCosmos.ChainId, val)
+	}
 
 	// osmosis zone
 	zoneOsmosis := icstypes.Zone{
@@ -231,10 +233,6 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID string, connectionID st
 
 	channelID := qApp.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(suite.chainA.GetContext())
 	qApp.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.PortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
-
-	// channel, found := qApp.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), portID, channelID)
-	// suite.Require().True(found)
-	// fmt.Printf("DEBUG: channel >>>\n%v\n<<<\n", channel)
 
 	qApp.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), portID, channelID, 1)
 	qApp.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
@@ -400,20 +398,22 @@ func (suite *KeeperTestSuite) setupTestIntents() {
 	zone, found := qApp.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 	suite.Require().True(found)
 
+	vals := qApp.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID)
+
 	suite.addIntent(
 		testAddress,
 		zone,
 		icstypes.ValidatorIntents{
 			{
-				ValoperAddress: zone.Validators[0].ValoperAddress,
+				ValoperAddress: vals[0].ValoperAddress,
 				Weight:         sdk.MustNewDecFromStr("0.3"),
 			},
 			{
-				ValoperAddress: zone.Validators[1].ValoperAddress,
+				ValoperAddress: vals[1].ValoperAddress,
 				Weight:         sdk.MustNewDecFromStr("0.4"),
 			},
 			{
-				ValoperAddress: zone.Validators[2].ValoperAddress,
+				ValoperAddress: vals[2].ValoperAddress,
 				Weight:         sdk.MustNewDecFromStr("0.3"),
 			},
 		},
@@ -457,41 +457,3 @@ func (suite *KeeperTestSuite) addClaim(address string, chainID string, claimType
 	}
 	suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper.SetClaim(suite.chainA.GetContext(), &claim)
 }
-
-/*func (suite *KeeperTestSuite) testReopenChannel(zone ) {
-	qApp := suite.GetQuicksilverApp(suite.chainA)
-
-	// connection
-	connectionID, err := qApp.InterchainstakingKeeper.GetConnectionForPort(suite.chainA.GetContext(), zone.PerformanceAddress.PortName)
-	suite.Require().NoError(err)
-	fmt.Printf("DEBUG: connectionID %q\n", connectionID)
-
-	// channel
-	channelID, found := qApp.ICAControllerKeeper.GetActiveChannelID(suite.chainA.GetContext(), connectionID, zone.PerformanceAddress.PortName)
-	suite.Require().True(found)
-	fmt.Printf("DEBUG: channelID %q\n", channelID)
-	channel, found := qApp.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), zone.PerformanceAddress.PortName, channelID)
-	suite.Require().True(found)
-	fmt.Printf("Channel: %v\n", channel)
-
-	// close channel
-	channelCap := suite.chainA.GetChannelCapability(suite.path.EndpointA.ChannelConfig.PortID, suite.path.EndpointA.ChannelID)
-	err = qApp.IBCKeeper.ChannelKeeper.ChanCloseInit(suite.chainA.GetContext(), zone.PerformanceAddress.PortName, channelID, channelCap)
-	suite.Require().True(found)
-
-	// qApp.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), zone.PerformanceAddress.PortName, channelID, channeltypes.Channel{State: channeltypes.CLOSED, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: "icahost", ChannelId: channelID}, ConnectionHops: []string{connectionID}})
-	channel, found = qApp.IBCKeeper.ChannelKeeper.GetChannel(suite.chainA.GetContext(), zone.PerformanceAddress.PortName, channelID)
-	suite.Require().True(found)
-	fmt.Printf("Channel: %v\n", channel)
-
-	// // attempt to reopen channel here
-	// conn, found := qApp.IBCKeeper.ConnectionKeeper.GetConnection(suite.chainA.GetContext(), connectionID)
-	// suite.Require().True(found)
-	// fmt.Printf("Connection: %v\n", conn)
-
-	// fmt.Println("Channel Closed...")
-	// msg := channeltypes.NewMsgChannelOpenInit(zone.PerformanceAddress.PortName, icatypes.Version, channeltypes.ORDERED, []string{connectionID}, icatypes.PortID, icatypes.ModuleName)
-	// handler := qApp.MsgServiceRouter().Handler(msg)
-	// _, err = handler(suite.chainA.GetContext(), msg)
-	// suite.Require().NoError(err)
-}*/

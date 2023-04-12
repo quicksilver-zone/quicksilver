@@ -28,7 +28,7 @@ message Zone {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  repeated Validator validators = 12;
+  repeated Validator validators = 12; // deprecated, remove in v2.0.0
   repeated ValidatorIntent aggregate_intent = 13
       [ (gogoproto.castrepeated) = "ValidatorIntents" ];
   bool multi_send = 14;
@@ -109,11 +109,6 @@ message TransferRecord {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.nullable) = false
   ];
-}
-
-message Validators {
-  string chain_id =1;
-  repeated Validator validators =2;
 }
 
 message Validator {

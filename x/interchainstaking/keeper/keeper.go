@@ -31,6 +31,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -154,26 +156,26 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals types.Validators, data []byte, request []byte) error {
+func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icqtypes.Query) error {
 	validatorsRes := stakingTypes.QueryValidatorsResponse{}
 	if len(data) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (8)")
 	}
 	err := k.cdc.Unmarshal(data, &validatorsRes)
 	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", icqQuery.ChainId, "err", err)
 		return err
 	}
 
 	if validatorsRes.Pagination != nil && !bytes.Equal(validatorsRes.Pagination.NextKey, []byte{}) {
 		validatorsReq := stakingTypes.QueryValidatorsRequest{Pagination: &query.PageRequest{}}
-		err = k.cdc.Unmarshal(request, &validatorsReq)
+		err = k.cdc.Unmarshal(icqQuery.Request, &validatorsReq)
 		if err != nil {
-			k.Logger(ctx).Error("unable to unmarshal request", "zone", zoneInfo.ChainId, "err", err)
+			k.Logger(ctx).Error("unable to unmarshal request", "zone", icqQuery.ChainId, "err", err)
 			return err
 		}
 		if validatorsReq.Pagination == nil {
-			k.Logger(ctx).Info("unmarshalled a QueryValidatorsRequest with a nil Pagination", "zone", zoneInfo.ChainId)
+			k.Logger(ctx).Info("unmarshalled a QueryValidatorsRequest with a nil Pagination", "zone", icqQuery.ChainId)
 			validatorsReq.Pagination = new(query.PageRequest)
 		}
 		validatorsReq.Pagination.Key = validatorsRes.Pagination.NextKey
@@ -185,8 +187,8 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals 
 
 		k.ICQKeeper.MakeRequest(
 			ctx,
-			zoneInfo.ConnectionId,
-			zoneInfo.ChainId,
+			icqQuery.ConnectionId,
+			icqQuery.ChainId,
 			"cosmos.staking.v1beta1.Query/Validators",
 			bz,
 			sdk.NewInt(-1),
@@ -197,7 +199,11 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals 
 	}
 
 	for _, validator := range validatorsRes.Validators {
-		val, found := vals.GetValidatorByValoper(validator.OperatorAddress)
+		addr, err := utils.ValAddressFromBech32(validator.OperatorAddress, "")
+		if err != nil {
+			return err
+		}
+		val, found := k.GetValidator(ctx, icqQuery.ChainId, addr)
 		toQuery := false
 		switch {
 		case !found:
@@ -215,12 +221,11 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals 
 		}
 
 		if toQuery {
-			_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
 			data := stakingTypes.GetValidatorKey(addr)
 			k.ICQKeeper.MakeRequest(
 				ctx,
-				zoneInfo.ConnectionId,
-				zoneInfo.ChainId,
+				icqQuery.ConnectionId,
+				icqQuery.ChainId,
 				"store/staking/key",
 				data,
 				sdk.NewInt(-1),
@@ -235,7 +240,7 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals 
 	return nil
 }
 
-func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals types.Validators, data []byte) error {
+func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
 	validator := stakingTypes.Validator{}
 	if len(data) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (9)")
@@ -246,7 +251,11 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals t
 		return err
 	}
 
-	val, found := vals.GetValidatorByValoper(validator.OperatorAddress)
+	valAddrBytes, err := utils.ValAddressFromBech32(validator.OperatorAddress, zoneInfo.AccountPrefix+"valoper")
+	if err != nil {
+		return err
+	}
+	val, found := k.GetValidator(ctx, zoneInfo.ChainId, valAddrBytes)
 	if !found {
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
@@ -254,7 +263,7 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals t
 		if validator.IsJailed() {
 			jailTime = ctx.BlockTime()
 		}
-		vals.Validators = append(vals.Validators, &types.Validator{
+		k.SetValidator(ctx, zoneInfo.ChainId, types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
@@ -264,7 +273,6 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals t
 			Jailed:          validator.IsJailed(),
 			JailedSince:     jailTime,
 		})
-		vals.Validators = vals.GetValidatorsSorted()
 
 		if err := k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); err != nil {
 			return err
@@ -305,6 +313,8 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals t
 			val.Status = validator.Status.String()
 		}
 
+		k.SetValidator(ctx, zoneInfo.ChainId, val)
+
 		if _, found := k.GetPerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); !found {
 			if err := k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); err != nil {
 				return err
@@ -312,7 +322,6 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, vals t
 		}
 	}
 
-	k.SetValidators(ctx, vals)
 	return nil
 }
 
@@ -491,9 +500,49 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
 }
 
-func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
-	currentAllocations, currentSum := k.GetDelegationMap(ctx, &zone)
-	targetAllocations := zone.GetAggregateIntentOrDefault()
+func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (types.ValidatorIntents, error) {
+	var intents types.ValidatorIntents
+	var filteredIntents types.ValidatorIntents
+
+	if len(z.AggregateIntent) == 0 {
+		intents = z.DefaultAggregateIntents()
+	} else {
+		intents = z.AggregateIntent
+	}
+	// filter intents here...
+	// check validators for tombstoned
+	for _, v := range intents {
+		valAddrBytes, err := utils.ValAddressFromBech32(v.ValoperAddress, z.AccountPrefix+"valoper")
+		if err != nil {
+			return nil, err
+		}
+		val, found := k.GetValidator(ctx, z.ChainId, valAddrBytes)
+
+		// this case should not happen as we check the validity of a validator entry when intent is set.
+		if !found {
+			continue
+		}
+		// we should never let tombstoned validators into the list, even if they are explicitly selected
+		if val.Tombstoned {
+			continue
+		}
+
+		// we should never let denylist validators into the list, even if they are explicitly selected
+		// if in deny list {
+		// continue
+		// }
+		filteredIntents = append(filteredIntents, v)
+	}
+
+	return filteredIntents, nil
+}
+
+func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64) error {
+	currentAllocations, currentSum := k.GetDelegationMap(ctx, zone)
+	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
+	if err != nil {
+		return err
+	}
 	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId))
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {

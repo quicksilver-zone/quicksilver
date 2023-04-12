@@ -103,7 +103,7 @@ func (k Keeper) getZoneScores(
 func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *zoneScore) error {
 	k.Logger(ctx).Info("calculate distribution scores", "zone", zone.ChainId)
 
-	zoneValidators := zone.GetValidatorsSorted()
+	zoneValidators := k.icsKeeper.GetValidators(ctx, zone.ChainId)
 	if len(zoneValidators) == 0 {
 		return fmt.Errorf("zone %v has no validators", zone.ChainId)
 	}
@@ -116,7 +116,7 @@ func (k Keeper) calcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 		// compute zone total voting power
 		zs.TotalVotingPower = zs.TotalVotingPower.Add(val.VotingPower)
 		if _, exists := zs.ValidatorScores[val.ValoperAddress]; !exists {
-			zs.ValidatorScores[val.ValoperAddress] = &validator{Validator: val}
+			zs.ValidatorScores[val.ValoperAddress] = &validator{Validator: &val}
 		}
 
 		// Set max/min

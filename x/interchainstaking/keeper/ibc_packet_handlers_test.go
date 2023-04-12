@@ -395,10 +395,11 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 			if !found {
 				s.Fail("unable to retrieve zone for test")
 			}
-			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val1, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
-			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val2, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
-			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val3, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
-			zone.Validators = append(zone.Validators, &icstypes.Validator{ValoperAddress: val4, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
+
+			app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{ValoperAddress: val1, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
+			app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{ValoperAddress: val2, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
+			app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{ValoperAddress: val3, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
+			app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{ValoperAddress: val4, VotingPower: sdk.ZeroInt(), DelegatorShares: sdk.ZeroDec()})
 
 			records := test.records(s.chainB.ChainID, zone.AccountPrefix)
 			delegations := test.delegations(s.chainB.ChainID, zone.DelegationAddress.Address, zone.AccountPrefix)
@@ -411,7 +412,9 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			for _, delegation := range delegations {
 				app.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-				val, _ := zone.GetValidatorByValoper(delegation.ValidatorAddress)
+				valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.AccountPrefix+"valoper")
+				s.Require().NoError(err)
+				val, _ := app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
 				val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
 				val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
 			}
@@ -730,18 +733,20 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 		s.Fail("unable to retrieve zone for test")
 	}
 
+	validators := app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+
 	// create redelegation record
 	record := icstypes.RedelegationRecord{
 		ChainId:     s.chainB.ChainID,
 		EpochNumber: 1,
-		Source:      zone.Validators[0].ValoperAddress,
-		Destination: zone.Validators[1].ValoperAddress,
+		Source:      validators[0].ValoperAddress,
+		Destination: validators[1].ValoperAddress,
 		Amount:      1000,
 	}
 
 	app.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
 
-	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: zone.Validators[0].ValoperAddress, ValidatorDstAddress: zone.Validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: validators[0].ValoperAddress, ValidatorDstAddress: validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	data, err := icatypes.SerializeCosmosTx(app.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
 	s.Require().NoError(err)
 
@@ -757,13 +762,13 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	ackBytes := []byte("{\"error\":\"ABCI code: 32: error handling packet on host chain: see events for details\"}")
 	// call handler
 
-	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
+	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, 1)
 	s.Require().True(found)
 
 	err = app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
 	s.Require().NoError(err)
 
-	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
+	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, 1)
 	s.Require().False(found)
 }
 
