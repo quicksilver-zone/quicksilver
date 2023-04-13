@@ -210,8 +210,6 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, zoneInfo *types.Zone, dat
 		}
 	}
 
-	// also do this for Unbonded and Unbonding
-	k.SetZone(ctx, zoneInfo)
 	return nil
 }
 
@@ -577,8 +575,8 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 		k.Logger(ctx).Info("No rebalancing required")
 		return nil
 	}
-	k.Logger(ctx).Debug("Send rebalancing messages", "msgs", msgs)
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber))
+	k.Logger(ctx).Info("Send rebalancing messages", "msgs", msgs)
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber), zone.MessagesPerTx)
 }
 
 // UnmarshalValidatorsResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.

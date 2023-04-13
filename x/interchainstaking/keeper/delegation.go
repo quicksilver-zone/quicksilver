@@ -3,6 +3,8 @@ package keeper
 import (
 	"errors"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -240,7 +242,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	k.SetZone(ctx, zone)
 	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup, "address", delegator)
 
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "")
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "", zone.MessagesPerTx)
 }
 
 func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool) {
@@ -269,7 +271,29 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 	if zone.PerformanceAddress != nil {
 		k.SetPerformanceDelegation(ctx, zone, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
 		msg := stakingTypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
-		return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "perf/"+validator)
+		return k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "perf/"+validator, zone.MessagesPerTx)
 	}
 	return nil
+}
+
+func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone) (int, error) {
+	var err error
+	count := 0
+	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+		if receiptInfo.Completed == nil {
+			sendMsg := banktypes.MsgSend{
+				FromAddress: "",
+				ToAddress:   "",
+				Amount:      receiptInfo.Amount,
+			}
+			err = k.handleSendToDelegate(ctx, zone, &sendMsg, receiptInfo.Txhash)
+			if err != nil {
+				k.Logger(ctx).Error("error in processing pending delegations", "chain", zone.ChainId, "receipt", receiptInfo.Txhash, "error", err)
+				return true
+			}
+			count++
+		}
+		return false
+	})
+	return count, err
 }

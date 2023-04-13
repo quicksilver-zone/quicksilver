@@ -28,6 +28,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	"github.com/ingenuity-build/quicksilver/app"
+	quicksilverconfig "github.com/ingenuity-build/quicksilver/cmd/config"
+	servercfg "github.com/ingenuity-build/quicksilver/server/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -35,10 +38,6 @@ import (
 	tmcli "github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
-
-	"github.com/ingenuity-build/quicksilver/app"
-	quicksilverconfig "github.com/ingenuity-build/quicksilver/cmd/config"
-	servercfg "github.com/ingenuity-build/quicksilver/server/config"
 )
 
 const (
