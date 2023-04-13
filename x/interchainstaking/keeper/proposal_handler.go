@@ -12,7 +12,6 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -188,7 +187,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 				return err
 			}
 			if intVal < 1 {
-				return errors.New("invalid value for messages_per_tx")
+				return fmt.Errorf("invalid value for messages_per_tx: %d", intVal)
 			}
 			zone.MessagesPerTx = int64(intVal)
 

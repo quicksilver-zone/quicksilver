@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	abcitypes "github.com/tendermint/tendermint/abci/types"
-
 	sdkioerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,7 +15,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -33,11 +30,11 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 	memo := txn.Body.Memo
 
 	senderAddress := Unset
-	coins := sdk.Coins{}
+	assets := sdk.Coins{}
 
 	for _, event := range txr.Events {
 		if event.Type == types.TransferPort {
-			attrs := attributesToMap(event.Attributes)
+			attrs := types.AttributesToMap(event.Attributes)
 			sender := attrs["sender"]
 			amount := attrs["amount"]
 			if attrs["recipient"] == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
@@ -50,12 +47,12 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 					return fmt.Errorf("sender mismatch: expected %q, got %q", senderAddress, sender)
 				}
 
-				k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
+				k.Logger(ctx).Info("deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
 				thisCoins, err := sdk.ParseCoinsNormalized(amount)
 				if err != nil {
 					k.Logger(ctx).Error("unable to parse coin", "string", amount)
 				}
-				coins = coins.Add(thisCoins...)
+				assets = assets.Add(thisCoins...)
 			}
 		}
 	}
@@ -71,62 +68,53 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress)
 		return fmt.Errorf("unable to decode sender address. Ignoring. senderAddress=%q", senderAddress)
 	}
+	var senderAccAddress sdk.AccAddress = addressBytes
 
-	if err := zone.ValidateCoinsForZone(coins); err != nil {
-		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before. That is okay, we'll catch it next round!)
+	if err := zone.ValidateCoinsForZone(assets); err != nil {
+		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before.
+		// That is okay, we'll catch it next round!)
 		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
 		return fmt.Errorf("unable to validate coins. Ignoring. senderAddress=%q", senderAddress)
 	}
 
-	var accAddress sdk.AccAddress = addressBytes
+	k.Logger(ctx).Info("found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", senderAccAddress.String(), "chain id", zone.ChainId, "assets", assets, "hash", hash)
 
-	k.Logger(ctx).Info("Found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "sender", senderAddress, "local", accAddress.String(), "chain id", zone.ChainId, "amount", coins, "hash", hash)
-	// create receipt
-
-	if err := k.UpdateDelegatorIntent(ctx, accAddress, zone, coins, memo); err != nil {
-		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
+	// update state
+	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, zone, assets, memo); err != nil {
+		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-	if err := k.MintQAsset(ctx, accAddress, senderAddress, zone, coins); err != nil {
+	if err := k.MintQAsset(ctx, senderAccAddress, senderAddress, zone, assets); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
 
-	if err := k.TransferToDelegate(ctx, zone, coins, hash); err != nil {
+	if err := k.TransferToDelegate(ctx, zone, assets, hash); err != nil {
 		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
 
-	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
-
+	// create receipt
+	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, assets)
 	k.SetReceipt(ctx, *receipt)
 
 	return nil
 }
 
-func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
-	out := make(map[string]string)
-	for _, attr := range attrs {
-		out[string(attr.Key)] = string(attr.Value)
-	}
-	return out
-}
-
-func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, inCoins sdk.Coins) error {
+// MintQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
+func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins) error {
 	if zone.RedemptionRate.IsZero() {
 		return errors.New("zero redemption rate")
 	}
 
-	var err error
-
-	outCoins := sdk.Coins{}
-	for _, inCoin := range inCoins.Sort() {
-		outAmount := sdk.NewDecFromInt(inCoin.Amount).Quo(zone.RedemptionRate).TruncateInt()
-		outCoin := sdk.NewCoin(zone.LocalDenom, outAmount)
-		outCoins = outCoins.Add(outCoin)
+	qAssets := sdk.Coins{}
+	for _, asset := range assets.Sort() {
+		amount := sdk.NewDecFromInt(asset.Amount).Quo(zone.RedemptionRate).TruncateInt()
+		qAssets = qAssets.Add(sdk.NewCoin(zone.LocalDenom, amount))
 	}
-	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", outCoins)
-	err = k.BankKeeper.MintCoins(ctx, types.ModuleName, outCoins)
+
+	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", qAssets)
+	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, qAssets)
 	if err != nil {
 		return err
 	}
@@ -151,7 +139,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 			ctx,
 			srcPort,
 			srcChannel,
-			outCoins[0],
+			qAssets[0],
 			k.AccountKeeper.GetModuleAddress(types.ModuleName),
 			senderAddress,
 			clienttypes.Height{
@@ -161,23 +149,30 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 			uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
 		)
 	} else {
-		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, outCoins)
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
 	}
 
 	if err != nil {
 		return fmt.Errorf("unable to transfer coins: %w", err)
 	}
 
-	k.Logger(ctx).Info("Transferred qAssets to sender", "assets", outCoins, "sender", sender)
+	k.Logger(ctx).Info("Transferred qAssets to sender", "assets", qAssets, "sender", sender)
 	return nil
 }
 
+// TransferToDelegate transfers tokens from the zone deposit account address to the zone delegate account address.
 func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone *types.Zone, coins sdk.Coins, memo string) error {
 	msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
 	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo, zone.MessagesPerTx)
 }
 
+// SubmitTx submits a Tx on behalf of an ICAAccount to a remote chain.
 func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error {
+	// if no messages, do nothing
+	if len(msgs) == 0 {
+		return nil
+	}
+
 	portID := account.GetPortName()
 	connectionID, err := k.GetConnectionForPort(ctx, portID)
 	if err != nil {
