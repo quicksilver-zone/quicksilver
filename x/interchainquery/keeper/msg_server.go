@@ -7,11 +7,13 @@ import (
 	"sort"
 	"strings"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
+
+const OutdatedBlockWindow = 5
 
 type msgServer struct {
 	*Keeper
@@ -41,6 +43,11 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 		k.Logger(ctx).Debug("ignoring duplicate query", "id", q.Id, "type", q.QueryType)
 		// technically this is an error, but will cause the entire tx to fail
 		// if we have one 'bad' message, so we can just no-op here.
+		return &types.MsgSubmitQueryResponseResponse{}, nil
+	}
+
+	if q.LastEmission.Int64() < q.LastHeight.Sub(sdkmath.NewInt(OutdatedBlockWindow)).Int64() {
+		k.Logger(ctx).Debug("blocking outdated query", "id", q.Id, "type", q.QueryType)
 		return &types.MsgSubmitQueryResponseResponse{}, nil
 	}
 
