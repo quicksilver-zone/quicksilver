@@ -3,6 +3,7 @@ package keeper
 import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -11,6 +12,28 @@ func (k Keeper) GetValidators(ctx sdk.Context, chainID string) []types.Validator
 	validators := []types.Validator{}
 	k.IterateValidators(ctx, chainID, func(_ int64, validator types.Validator) (stop bool) {
 		validators = append(validators, validator)
+		return false
+	})
+	return validators
+}
+
+// GetValidatorAddresses returns a slice of validator addresses info by chainID
+func (k Keeper) GetValidatorAddresses(ctx sdk.Context, chainID string) []string {
+	validators := []string{}
+	k.IterateValidators(ctx, chainID, func(_ int64, validator types.Validator) (stop bool) {
+		validators = append(validators, validator.ValoperAddress)
+		return false
+	})
+	return validators
+}
+
+// GetActiveValidators returns validators info by chainID where status = BONDED
+func (k Keeper) GetActiveValidators(ctx sdk.Context, chainID string) []types.Validator {
+	validators := []types.Validator{}
+	k.IterateValidators(ctx, chainID, func(_ int64, validator types.Validator) (stop bool) {
+		if validator.Status == stakingtypes.BondStatusBonded {
+			validators = append(validators, validator)
+		}
 		return false
 	})
 	return validators

@@ -4,12 +4,10 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (z Zone) SupportMultiSend() bool { return z.MultiSend }
@@ -19,11 +17,6 @@ func (z Zone) IsDelegateAddress(addr string) bool {
 	return z.DelegationAddress.Address == addr
 }
 
-func (z *Zone) GetValidatorByValoper(valoper string) (*Validator, bool) {
-	panic("deprecated")
-	return nil, false
-}
-
 func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
 	if z.DelegationAddress == nil {
 		return nil, fmt.Errorf("no delegation account set: %v", z)
@@ -31,8 +24,7 @@ func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
 	return z.DelegationAddress, nil
 }
 
-func (z *Zone) ValidateCoinsForZone(coins sdk.Coins) error {
-	zoneVals := z.GetValidatorsAddressesAsSlice()
+func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals []string) error {
 
 COINS:
 	for _, coin := range coins.Sort() {
@@ -53,9 +45,9 @@ COINS:
 }
 
 // this method exist to make testing easier!
-func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins) DelegatorIntent {
+func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins, vals []string) DelegatorIntent {
 	// coinIntent is ordinal
-	intent = intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount))
+	intent = intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount, vals))
 	return intent
 }
 
@@ -70,10 +62,9 @@ func (z *Zone) UpdateIntentWithMemo(intent DelegatorIntent, memo string, multipl
 	return intent, nil
 }
 
-func (z *Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins) ValidatorIntents {
+func (z *Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins, zoneVals []string) ValidatorIntents {
 	// should we be return DelegatorIntent here?
 	out := make(ValidatorIntents, 0)
-	zoneVals := z.GetValidatorsAddressesAsSlice()
 COINS:
 	for _, coin := range coins {
 		for _, v := range zoneVals {
@@ -141,38 +132,4 @@ func (z *Zone) GetValidatorsSorted() []*Validator {
 
 func (z Zone) GetValidatorsAddressesAsSlice() []string {
 	panic("deprecated")
-}
-
-func (z Zone) GetBondedValidatorAddressesAsSlice() []string {
-	l := make([]string, 0)
-	for _, v := range z.Validators {
-		if v.Status == "BOND_STATUS_BONDED" {
-			l = append(l, v.ValoperAddress)
-		}
-	}
-
-	sort.Strings(l)
-
-	return l
-}
-
-// defaultAggregateIntents determines the default aggregate intent (for epoch 0)
-func (z *Zone) DefaultAggregateIntents() ValidatorIntents {
-	out := make(ValidatorIntents, 0)
-	for _, val := range z.GetValidatorsSorted() {
-		if val.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
-			if !val.Jailed && !val.Tombstoned && val.Status == stakingtypes.BondStatusBonded {
-				out = append(out, &ValidatorIntent{ValoperAddress: val.GetValoperAddress(), Weight: sdk.OneDec()})
-			}
-		}
-	}
-
-	valCount := sdk.NewInt(int64(len(out)))
-
-	// normalise the array (divide everything by length of intent list)
-	for idx, intent := range out.Sort() {
-		out[idx].Weight = intent.Weight.Quo(sdk.NewDecFromInt(valCount))
-	}
-
-	return out
 }

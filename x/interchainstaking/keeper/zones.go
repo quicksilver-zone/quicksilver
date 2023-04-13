@@ -341,13 +341,13 @@ func (k Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone) e
 	delegations := k.GetAllPerformanceDelegations(ctx, &zone)
 	validatorsToDelegate := []string{}
 OUTER:
-	for _, v := range zone.GetBondedValidatorAddressesAsSlice() {
+	for _, v := range k.GetActiveValidators(ctx, zone.ChainId) {
 		for _, d := range delegations {
-			if d.ValidatorAddress == v {
+			if d.ValidatorAddress == v.ValoperAddress {
 				continue OUTER
 			}
 		}
-		validatorsToDelegate = append(validatorsToDelegate, v)
+		validatorsToDelegate = append(validatorsToDelegate, v.ValoperAddress)
 	}
 
 	amount := sdk.NewCoin(zone.BaseDenom, sdk.NewInt(10000))
@@ -385,4 +385,26 @@ OUTER:
 		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx)
 	}
 	return nil
+}
+
+// DefaultAggregateIntents determines the default aggregate intent (for epoch 0)
+func (k *Keeper) DefaultAggregateIntents(ctx sdk.Context, chainID string) types.ValidatorIntents {
+	out := make(types.ValidatorIntents, 0)
+	k.IterateValidators(ctx, chainID, func(index int64, validator types.Validator) (stop bool) {
+		if validator.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
+			if !validator.Jailed && !validator.Tombstoned && validator.Status == stakingtypes.BondStatusBonded {
+				out = append(out, &types.ValidatorIntent{ValoperAddress: validator.GetValoperAddress(), Weight: sdk.OneDec()})
+			}
+		}
+		return false
+	})
+
+	valCount := sdk.NewInt(int64(len(out)))
+
+	// normalise the array (divide everything by length of intent list)
+	for idx, intent := range out.Sort() {
+		out[idx].Weight = intent.Weight.Quo(sdk.NewDecFromInt(valCount))
+	}
+
+	return out
 }

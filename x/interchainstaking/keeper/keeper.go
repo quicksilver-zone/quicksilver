@@ -505,7 +505,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 	var filteredIntents types.ValidatorIntents
 
 	if len(z.AggregateIntent) == 0 {
-		intents = z.DefaultAggregateIntents()
+		intents = k.DefaultAggregateIntents(ctx, z.ChainId)
 	} else {
 		intents = z.AggregateIntent
 	}

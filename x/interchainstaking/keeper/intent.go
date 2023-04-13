@@ -180,7 +180,7 @@ func (k *Keeper) UpdateIntent(ctx sdk.Context, sender sdk.AccAddress, zone types
 	}
 
 	if inAmount.IsValid() {
-		intent = zone.UpdateIntentWithCoins(intent, baseBalance, inAmount)
+		intent = zone.UpdateIntentWithCoins(intent, baseBalance, inAmount, k.GetValidatorAddresses(ctx, zone.ChainId))
 	}
 
 	if len(memo) > 0 {

@@ -941,7 +941,7 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, amount sdk.Coin) (string,
 		return "", err
 	}
 
-	for _, val := range zone.GetValidatorsAddressesAsSlice() {
+	for _, val := range k.GetValidatorAddresses(ctx, zone.ChainId) {
 		if strings.HasPrefix(amount.Denom, val) {
 			// match!
 			return val, nil
