@@ -89,7 +89,13 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			if err != nil {
 				return err
 			}
+
 			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
+
+			if _, err = k.FlushOutstandingDelegations(ctx, &zone); err != nil {
+				k.Logger(ctx).Error("unable to clear outstanding delegations", "error", err)
+			}
+
 		}
 
 	// performance address
