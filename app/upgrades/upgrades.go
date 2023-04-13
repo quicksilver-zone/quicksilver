@@ -22,11 +22,11 @@ func NoOpHandler(
 	}
 }
 
-//func V010400UpgradeHandler(
+// func V010400UpgradeHandler(
 //	mm *module.Manager,
 //	configurator module.Configurator,
 //	appKeepers *keepers.AppKeepers,
-//) upgradetypes.UpgradeHandler {
+// ) upgradetypes.UpgradeHandler {
 //	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //		// upgrade zones
 //		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
@@ -83,11 +83,11 @@ func NoOpHandler(
 //	}
 //}
 //
-//func V010400rc6UpgradeHandler(
+// func V010400rc6UpgradeHandler(
 //	mm *module.Manager,
 //	configurator module.Configurator,
 //	appKeepers *keepers.AppKeepers,
-//) upgradetypes.UpgradeHandler {
+// ) upgradetypes.UpgradeHandler {
 //	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //		if isTestnet(ctx) {
 //			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "regen-redwood-1")
@@ -141,13 +141,13 @@ func NoOpHandler(
 //
 //		return mm.RunMigrations(ctx, configurator, fromVM)
 //	}
-//}
+// }
 //
-//func V010400rc8UpgradeHandler(
+// func V010400rc8UpgradeHandler(
 //	mm *module.Manager,
 //	configurator module.Configurator,
 //	appKeepers *keepers.AppKeepers,
-//) upgradetypes.UpgradeHandler {
+// ) upgradetypes.UpgradeHandler {
 //	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 //		// remove expired failed redelegation records
 //		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
@@ -171,4 +171,4 @@ func NoOpHandler(
 //
 //		return mm.RunMigrations(ctx, configurator, fromVM)
 //	}
-//}
+// }

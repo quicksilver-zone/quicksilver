@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	sdkmath "cosmossdk.io/math"

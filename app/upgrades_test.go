@@ -210,7 +210,7 @@ func (s *AppTestSuite) initTestZone() {
 	}
 }
 
-//func (s *AppTestSuite) TestV010400UpgradeHandler() {
+// func (s *AppTestSuite) TestV010400UpgradeHandler() {
 //	app := s.GetQuicksilverApp(s.chainA)
 //	handler := upgrades.V010400UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 //	ctx := s.chainA.GetContext()
@@ -262,9 +262,9 @@ func (s *AppTestSuite) initTestZone() {
 //
 //	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "uni-5", "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D", icskeeper.WithdrawStatusQueued)
 //	s.Require().False(found)
-//}
+// }
 //
-//func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
+// func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
 //	app := s.GetQuicksilverApp(s.chainA)
 //
 //	handler := upgrades.V010400rc6UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
@@ -278,9 +278,9 @@ func (s *AppTestSuite) initTestZone() {
 //
 //	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
 //	s.Require().Equal(0, len(redelegations))
-//}
+// }
 //
-//func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
+// func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
 //	app := s.GetQuicksilverApp(s.chainA)
 //
 //	handler := upgrades.V010400rc8UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
@@ -343,4 +343,4 @@ func (s *AppTestSuite) initTestZone() {
 //	s.Require().Equal(0, len(negRedelEndsAfter))
 //	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
 //	s.Require().Equal(0, len(redelegations))
-//}
+// }

@@ -3,8 +3,9 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
 	"time"
+
+	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	sdkioerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -86,7 +87,7 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-	if err := k.MintQAsset(ctx, accAddress, senderAddress, zone, coins, false); err != nil {
+	if err := k.MintQAsset(ctx, accAddress, senderAddress, zone, coins); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
@@ -111,7 +112,7 @@ func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
 	return out
 }
 
-func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, inCoins sdk.Coins, returnToSender bool) error {
+func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, inCoins sdk.Coins) error {
 	if zone.RedemptionRate.IsZero() {
 		return errors.New("zero redemption rate")
 	}
@@ -238,7 +239,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 // ---------------------------------------------------------------
 
-func (k Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
+func (k Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
 	t := ctx.BlockTime()
 	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t}
 }
@@ -333,6 +334,6 @@ func (k *Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.Zone, addr sdk.Ac
 	return receipts, nil
 }
 
-func GetReceiptKey(chainID string, txhash string) string {
+func GetReceiptKey(chainID, txhash string) string {
 	return fmt.Sprintf("%s/%s", chainID, txhash)
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func (s *KeeperTestSuite) TestKeeper_DelegationStore() {
@@ -637,7 +636,7 @@ func (s *KeeperTestSuite) TestFlushDelegations() {
 		ctx := s.chainA.GetContext()
 
 		t := time.Now()
-		receipt := icstypes.Receipt{
+		receipt := types.Receipt{
 			ChainId: s.chainB.ChainID,
 			Sender:  utils.GenerateAccAddressForTest().String(),
 			Txhash:  "6F2EEAE407E620C3D8F68C535C899CD7F1BAB1680686DF41C2FC38D139B940E9",

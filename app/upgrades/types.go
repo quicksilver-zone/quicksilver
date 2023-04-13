@@ -39,14 +39,17 @@ type Upgrade struct {
 	StoreUpgrades storetypes.StoreUpgrades
 }
 
+//nolint:all //function useful for writing network specific upgrade handlers
 func isTest(ctx sdk.Context) bool {
 	return ctx.ChainID() == TestChainID
 }
 
+//nolint:all //function useful for writing network specific upgrade handlers
 func isDevnet(ctx sdk.Context) bool {
 	return ctx.ChainID() == DevnetChainID
 }
 
+//nolint:all //function useful for writing network specific upgrade handlers
 func isTestnet(ctx sdk.Context) bool {
 	return ctx.ChainID() == InnuendoChainID
 }
