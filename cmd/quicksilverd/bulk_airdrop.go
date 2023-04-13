@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/csv"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -12,6 +11,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/spf13/cobra"
+
+	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -21,9 +24,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/spf13/cobra"
-
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
 // AddZonedropCmd returns add-zonedrop cobra Command.
@@ -141,7 +141,7 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 			for {
 				// Read each record from csv
 				record, err := r.Read()
-				if errors.Is(err, io.EOF) {
+				if err == io.EOF {
 					break
 				}
 
@@ -211,6 +211,7 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 				}
 			}
 
+		OUTER:
 			for idx, claimRecord := range claimRecords {
 				if idx%100 == 0 {
 					fmt.Printf("(%d/%d)...\n", idx, len(claimRecords))
@@ -241,8 +242,9 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 					bankGenState.Balances = append(bankGenState.Balances, balances)
 					bankGenState.Supply = bankGenState.Supply.Add(balances.Coins...)
 				}
-			}
+				continue OUTER
 
+			}
 			bankGenState.Balances = banktypes.SanitizeGenesisBalances(bankGenState.Balances)
 
 			airdropGenState.ClaimRecords = append(airdropGenState.ClaimRecords, claimRecords...)

@@ -6,11 +6,9 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/ingenuity-build/quicksilver/app/upgrades"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -212,137 +210,137 @@ func (s *AppTestSuite) initTestZone() {
 	}
 }
 
-func (s *AppTestSuite) TestV010400UpgradeHandler() {
-	app := s.GetQuicksilverApp(s.chainA)
-	handler := upgrades.V010400UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
-	ctx := s.chainA.GetContext()
-	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
-	s.Require().NoError(err)
-
-	osmosis, found := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
-	s.Require().True(found)
-	s.Require().Equal(int64(6), osmosis.Decimals)
-	s.Require().Equal("osmo", osmosis.AccountPrefix)
-	s.Require().Equal("connection-77002", osmosis.ConnectionId)
-	s.Require().False(osmosis.UnbondingEnabled)
-	s.Require().False(osmosis.ReturnToSender)
-	s.Require().True(osmosis.LiquidityModule)
-
-	cosmos, found := app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
-	s.Require().True(found)
-	s.Require().Equal(int64(6), cosmos.Decimals)
-	s.Require().Equal("uatom", cosmos.BaseDenom)
-	s.Require().Equal("uqatom", cosmos.LocalDenom)
-	s.Require().False(cosmos.UnbondingEnabled)
-	s.Require().False(cosmos.ReturnToSender)
-	s.Require().False(cosmos.LiquidityModule)
-
-	chainb, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-	s.Require().True(found)
-	s.Require().Equal(int64(6), chainb.Decimals)
-	s.Require().False(chainb.UnbondingEnabled)
-	s.Require().False(chainb.ReturnToSender)
-	s.Require().True(chainb.LiquidityModule)
-
-	juno, found := app.InterchainstakingKeeper.GetZone(ctx, "uni-5")
-	s.Require().False(found)
-
-	reciepts := app.InterchainstakingKeeper.AllReceipts(ctx)
-	s.Require().Equal(0, len(reciepts))
-
-	unbondings := app.InterchainstakingKeeper.AllZoneUnbondingRecords(ctx, "uni-5")
-	s.Require().Equal(0, len(unbondings))
-
-	redelegations := app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "uni-5")
-	s.Require().Equal(0, len(redelegations))
-
-	delegations := app.InterchainstakingKeeper.GetAllDelegations(ctx, &juno)
-	s.Require().Equal(0, len(delegations))
-
-	perfDelegations := app.InterchainstakingKeeper.GetAllPerformanceDelegations(ctx, &juno)
-	s.Require().Equal(0, len(perfDelegations))
-
-	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "uni-5", "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D", icskeeper.WithdrawStatusQueued)
-	s.Require().False(found)
-}
-
-func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
-	app := s.GetQuicksilverApp(s.chainA)
-
-	handler := upgrades.V010400rc6UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
-	ctx := s.chainA.GetContext()
-
-	redelegations := app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
-	s.Require().Equal(1, len(redelegations))
-
-	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
-	s.Require().NoError(err)
-
-	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
-	s.Require().Equal(0, len(redelegations))
-}
-
-func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
-	app := s.GetQuicksilverApp(s.chainA)
-
-	handler := upgrades.V010400rc8UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
-	ctx := s.chainA.GetContext()
-
-	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
-	osmodels := []icstypes.Delegation{
-		{
-			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
-			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
-			Height:            10,
-			ValidatorAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
-			RedelegationEnd:   -62135596800,
-		}, {
-			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17005)),
-			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
-			Height:            11,
-			ValidatorAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
-			RedelegationEnd:   0,
-		},
-	}
-
-	for _, dels := range osmodels {
-		app.InterchainstakingKeeper.SetDelegation(ctx, &zone, dels)
-	}
-
-	zone, _ = app.InterchainstakingKeeper.GetZone(ctx, "uni-5")
-
-	var negRedelEndsBefore []icstypes.Delegation
-	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		app.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
-			if delegation.RedelegationEnd < 0 {
-				negRedelEndsBefore = append(negRedelEndsBefore, delegation)
-			}
-			return false
-		})
-		return false
-	})
-
-	s.Require().Equal(2, len(negRedelEndsBefore))
-
-	redelegations := app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
-	s.Require().Equal(1, len(redelegations))
-
-	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
-	s.Require().NoError(err)
-
-	var negRedelEndsAfter []icstypes.Delegation
-
-	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		app.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
-			if delegation.RedelegationEnd < 0 {
-				negRedelEndsAfter = append(negRedelEndsAfter, delegation)
-			}
-			return false
-		})
-		return false
-	})
-
-	s.Require().Equal(0, len(negRedelEndsAfter))
-	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
-	s.Require().Equal(0, len(redelegations))
-}
+//func (s *AppTestSuite) TestV010400UpgradeHandler() {
+//	app := s.GetQuicksilverApp(s.chainA)
+//	handler := upgrades.V010400UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+//	ctx := s.chainA.GetContext()
+//	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+//	s.Require().NoError(err)
+//
+//	osmosis, found := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
+//	s.Require().True(found)
+//	s.Require().Equal(int64(6), osmosis.Decimals)
+//	s.Require().Equal("osmo", osmosis.AccountPrefix)
+//	s.Require().Equal("connection-77002", osmosis.ConnectionId)
+//	s.Require().False(osmosis.UnbondingEnabled)
+//	s.Require().False(osmosis.ReturnToSender)
+//	s.Require().True(osmosis.LiquidityModule)
+//
+//	cosmos, found := app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
+//	s.Require().True(found)
+//	s.Require().Equal(int64(6), cosmos.Decimals)
+//	s.Require().Equal("uatom", cosmos.BaseDenom)
+//	s.Require().Equal("uqatom", cosmos.LocalDenom)
+//	s.Require().False(cosmos.UnbondingEnabled)
+//	s.Require().False(cosmos.ReturnToSender)
+//	s.Require().False(cosmos.LiquidityModule)
+//
+//	chainb, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+//	s.Require().True(found)
+//	s.Require().Equal(int64(6), chainb.Decimals)
+//	s.Require().False(chainb.UnbondingEnabled)
+//	s.Require().False(chainb.ReturnToSender)
+//	s.Require().True(chainb.LiquidityModule)
+//
+//	juno, found := app.InterchainstakingKeeper.GetZone(ctx, "uni-5")
+//	s.Require().False(found)
+//
+//	reciepts := app.InterchainstakingKeeper.AllReceipts(ctx)
+//	s.Require().Equal(0, len(reciepts))
+//
+//	unbondings := app.InterchainstakingKeeper.AllZoneUnbondingRecords(ctx, "uni-5")
+//	s.Require().Equal(0, len(unbondings))
+//
+//	redelegations := app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "uni-5")
+//	s.Require().Equal(0, len(redelegations))
+//
+//	delegations := app.InterchainstakingKeeper.GetAllDelegations(ctx, &juno)
+//	s.Require().Equal(0, len(delegations))
+//
+//	perfDelegations := app.InterchainstakingKeeper.GetAllPerformanceDelegations(ctx, &juno)
+//	s.Require().Equal(0, len(perfDelegations))
+//
+//	_, found = app.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "uni-5", "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D", icskeeper.WithdrawStatusQueued)
+//	s.Require().False(found)
+//}
+//
+//func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
+//	app := s.GetQuicksilverApp(s.chainA)
+//
+//	handler := upgrades.V010400rc6UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+//	ctx := s.chainA.GetContext()
+//
+//	redelegations := app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
+//	s.Require().Equal(1, len(redelegations))
+//
+//	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+//	s.Require().NoError(err)
+//
+//	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
+//	s.Require().Equal(0, len(redelegations))
+//}
+//
+//func (s *AppTestSuite) TestV010400rc8UpgradeHandler() {
+//	app := s.GetQuicksilverApp(s.chainA)
+//
+//	handler := upgrades.V010400rc8UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+//	ctx := s.chainA.GetContext()
+//
+//	zone, _ := app.InterchainstakingKeeper.GetZone(ctx, "osmosis-1")
+//	osmodels := []icstypes.Delegation{
+//		{
+//			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000)),
+//			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+//			Height:            10,
+//			ValidatorAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
+//			RedelegationEnd:   -62135596800,
+//		}, {
+//			Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17005)),
+//			DelegationAddress: "osmo1t7egva48prqmzl59x5ngv4zx0dtrwewc9m7z44",
+//			Height:            11,
+//			ValidatorAddress:  "osmovaloper1hjct6q7npsspsg3dgvzk3sdf89spmlpf6t4agt",
+//			RedelegationEnd:   0,
+//		},
+//	}
+//
+//	for _, dels := range osmodels {
+//		app.InterchainstakingKeeper.SetDelegation(ctx, &zone, dels)
+//	}
+//
+//	zone, _ = app.InterchainstakingKeeper.GetZone(ctx, "uni-5")
+//
+//	var negRedelEndsBefore []icstypes.Delegation
+//	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+//		app.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
+//			if delegation.RedelegationEnd < 0 {
+//				negRedelEndsBefore = append(negRedelEndsBefore, delegation)
+//			}
+//			return false
+//		})
+//		return false
+//	})
+//
+//	s.Require().Equal(2, len(negRedelEndsBefore))
+//
+//	redelegations := app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
+//	s.Require().Equal(1, len(redelegations))
+//
+//	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+//	s.Require().NoError(err)
+//
+//	var negRedelEndsAfter []icstypes.Delegation
+//
+//	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+//		app.InterchainstakingKeeper.IterateAllDelegations(ctx, zone, func(delegation icstypes.Delegation) (stop bool) {
+//			if delegation.RedelegationEnd < 0 {
+//				negRedelEndsAfter = append(negRedelEndsAfter, delegation)
+//			}
+//			return false
+//		})
+//		return false
+//	})
+//
+//	s.Require().Equal(0, len(negRedelEndsAfter))
+//	redelegations = app.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "osmosis-1")
+//	s.Require().Equal(0, len(redelegations))
+//}

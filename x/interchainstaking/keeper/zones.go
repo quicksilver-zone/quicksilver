@@ -199,7 +199,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DepositAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "")
+		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -207,7 +207,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "")
+		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -216,7 +216,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 	// set withdrawal address for performance address, if it exists
 	if zone.PerformanceAddress != nil && zone.PerformanceAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.PerformanceAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "")
+		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -386,7 +386,7 @@ OUTER:
 	}
 
 	if len(msgs) > 0 {
-		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "")
+		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx)
 	}
 	return nil
 }

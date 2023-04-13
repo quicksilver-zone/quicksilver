@@ -182,6 +182,16 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			}
 			zone.ReturnToSender = boolValue
 
+		case "messages_per_tx":
+			intVal, err := strconv.Atoi(change.Value)
+			if err != nil {
+				return err
+			}
+			if intVal < 1 {
+				return errors.New("invalid value for messages_per_tx")
+			}
+			zone.MessagesPerTx = int64(intVal)
+
 		case "connection_id":
 			if !strings.HasPrefix(change.Value, "connection-") {
 				return errors.New("unexpected connection format")
