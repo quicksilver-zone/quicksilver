@@ -241,8 +241,8 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 
 func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 	type fields struct {
-		PortId       string
-		ConnectionId string
+		PortID       string
+		ConnectionID string
 		FromAddress  string
 	}
 	tests := []struct {
@@ -260,7 +260,7 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 		{
 			"invalid port",
 			fields{
-				PortId: "cat",
+				PortID: "cat",
 			},
 			true,
 			"invalid port format",
@@ -268,7 +268,7 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 		{
 			"invalid account",
 			fields{
-				PortId: "icacontroller-osmosis-4.bad",
+				PortID: "icacontroller-osmosis-4.bad",
 			},
 			true,
 			"invalid port format; unexpected account",
@@ -276,8 +276,8 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 		{
 			"invalid connection; too short",
 			fields{
-				PortId:       "icacontroller-osmosis-4.withdrawal",
-				ConnectionId: "bad-1",
+				PortID:       "icacontroller-osmosis-4.withdrawal",
+				ConnectionID: "bad-1",
 			},
 			true,
 			"invalid connection string; too short",
@@ -285,8 +285,8 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 		{
 			"invalid connection; too short",
 			fields{
-				PortId:       "icacontroller-osmosis-4.withdrawal",
-				ConnectionId: "longenoughbutstillbad-1",
+				PortID:       "icacontroller-osmosis-4.withdrawal",
+				ConnectionID: "longenoughbutstillbad-1",
 			},
 			true,
 			"invalid connection string; incorrect prefix",
@@ -294,8 +294,8 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 		{
 			"valid",
 			fields{
-				PortId:       "icacontroller-osmosis-4.withdrawal",
-				ConnectionId: "connection-1",
+				PortID:       "icacontroller-osmosis-4.withdrawal",
+				ConnectionID: "connection-1",
 			},
 			false,
 			"",
@@ -304,8 +304,8 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			msg := types.MsgGovReopenChannel{
-				PortId:       tt.fields.PortId,
-				ConnectionId: tt.fields.ConnectionId,
+				PortId:       tt.fields.PortID,
+				ConnectionId: tt.fields.ConnectionID,
 				Authority:    tt.fields.FromAddress,
 			}
 			err := msg.ValidateBasic()
