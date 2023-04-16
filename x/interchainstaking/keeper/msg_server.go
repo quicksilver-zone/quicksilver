@@ -171,7 +171,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
 	}
 
-	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, msg.PortId); err != nil {
+	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
 		return &types.MsgGovReopenChannelResponse{}, err
 	}
 
@@ -182,7 +182,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		),
 		sdk.NewEvent(
 			types.EventTypeReopenICA,
-			sdk.NewAttribute(types.AttributeKeyPortID, msg.PortId),
+			sdk.NewAttribute(types.AttributeKeyPortID, portID),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
 		),
 	})
