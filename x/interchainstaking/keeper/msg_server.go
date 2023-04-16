@@ -154,17 +154,11 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// checking msg authority is the gov module address
-	// if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
-	// 	return &types.MsgGovReopenChannelResponse{},
-	// 		govtypes.ErrInvalidSigner.Wrapf(
-	// 			"invalid authority: expected %s, got %s",
-	// 			k.Keeper.GetGovAuthority(ctx), msg.Authority,
-	// 		)
-	// }
+	// remove leading prefix icacontroller- if passed in msg
+	portID := strings.ReplaceAll(msg.PortId, "icacontroller-", "")
 
 	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
-	parts := strings.Split(msg.PortId, ".")
+	parts := strings.Split(portID, ".")
 	if len(parts) != 2 {
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format")
 	}
