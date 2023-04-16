@@ -163,12 +163,12 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format")
 	}
 
-	if _, found := k.GetZone(ctx, parts[0]); !found {
-		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
-	}
-
 	if parts[1] != "delegate" && parts[1] != "deposit" && parts[1] != "performance" && parts[1] != "withdrawal" {
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; unexpected account")
+	}
+
+	if _, found := k.GetZone(ctx, parts[0]); !found {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
 	}
 
 	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, msg.PortId); err != nil {
