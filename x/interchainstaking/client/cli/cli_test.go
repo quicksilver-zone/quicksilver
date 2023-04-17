@@ -8,7 +8,6 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/suite"
 	tmcli "github.com/tendermint/tendermint/libs/cli"
@@ -23,6 +22,7 @@ type IntegrationTestSuite struct {
 
 	cfg     network.Config
 	network *network.Network
+	zones   []types.Zone
 }
 
 func (s *IntegrationTestSuite) SetupSuite() {
@@ -33,9 +33,59 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = app.DefaultConfig()
 
+<<<<<<< HEAD
 	net, err := network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.Require().NoError(err)
 	s.network = net
+=======
+	updateGenesisConfigState := func(moduleName string, moduleState proto.Message) {
+		buf, err := s.cfg.Codec.MarshalJSON(moduleState)
+		s.Require().NoError(err)
+		s.cfg.GenesisState[moduleName] = buf
+	}
+
+	zone := types.Zone{
+		ConnectionId:                 "connection-0",
+		ChainId:                      "cosmoshub-4",
+		DepositAddress:               nil,
+		WithdrawalAddress:            nil,
+		PerformanceAddress:           nil,
+		DelegationAddress:            nil,
+		AccountPrefix:                "cosmos",
+		LocalDenom:                   "uqatom",
+		BaseDenom:                    "uatom",
+		RedemptionRate:               sdk.ZeroDec(),
+		LastRedemptionRate:           sdk.ZeroDec(),
+		Validators:                   nil,
+		AggregateIntent:              types.ValidatorIntents{},
+		MultiSend:                    false,
+		LiquidityModule:              false,
+		WithdrawalWaitgroup:          0,
+		IbcNextValidatorsHash:        nil,
+		ValidatorSelectionAllocation: 0,
+		HoldingsAllocation:           0,
+		LastEpochHeight:              0,
+		Tvl:                          sdk.ZeroDec(),
+		UnbondingPeriod:              0,
+		MessagesPerTx:                0,
+	}
+	zone.Validators = append(zone.Validators,
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+	)
+
+	// setup basic genesis state
+	newGenesis := types.DefaultGenesis()
+	newGenesis.Zones = []types.Zone{zone}
+	updateGenesisConfigState(types.ModuleName, newGenesis)
+	s.zones = []types.Zone{zone}
+
+	n, err := network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.network = n
+>>>>>>> a9ade16 (test: `interchainstaking` zones cli query (#382))
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -53,8 +103,8 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 		name      string
 		args      []string
 		expectErr bool
-		respType  proto.Message
-		expected  proto.Message
+		respType  *types.QueryZonesInfoResponse
+		expected  *types.QueryZonesInfoResponse
 	}{
 		{
 			"valid",
@@ -62,7 +112,7 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 			false,
 			&types.QueryZonesInfoResponse{},
 			&types.QueryZonesInfoResponse{
-				Pagination: &query.PageResponse{},
+				Zones: s.zones,
 			},
 		},
 	}
@@ -86,7 +136,7 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
-				s.Require().Equal(tt.expected.String(), tt.respType.String(), out.String())
+				s.Require().Equal(tt.expected.Zones, tt.respType.Zones, out.String())
 			}
 		})
 	}
