@@ -159,15 +159,20 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 
 	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
 	parts := strings.Split(portID, ".")
-	if len(parts) != 2 {
-		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format")
+
+	// portId and connectionId format validated in validateBasic, so not duplicated here.
+
+	// assert chainId matches connectionId
+	chainID, err := k.GetChainID(ctx, msg.ConnectionId)
+	if err != nil {
+		return nil, fmt.Errorf("unable to obtain chain id: %w", err)
 	}
 
-	if parts[1] != "delegate" && parts[1] != "deposit" && parts[1] != "performance" && parts[1] != "withdrawal" {
-		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; unexpected account")
+	if chainID != parts[0] {
+		return nil, fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", chainID, parts[0])
 	}
 
-	if _, found := k.GetZone(ctx, parts[0]); !found {
+	if _, found := k.GetZone(ctx, chainID); !found {
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
 	}
 
