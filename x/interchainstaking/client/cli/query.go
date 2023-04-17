@@ -25,7 +25,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		GetCmdZonesInfos(),
+		GetCmdZones(),
 		GetDelegatorIntentCmd(),
 		GetDepositAccountCmd(),
 	)
@@ -34,7 +34,7 @@ func GetQueryCmd() *cobra.Command {
 }
 
 // GetCmdZonesInfos provide running epochInfos.
-func GetCmdZonesInfos() *cobra.Command {
+func GetCmdZones() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zones",
 		Short: "Query registered zones ",
@@ -56,7 +56,7 @@ func GetCmdZonesInfos() *cobra.Command {
 				return err
 			}
 
-			req := &types.QueryZonesInfoRequest{
+			req := &types.QueryZonesRequest{
 				Pagination: pageReq,
 			}
 
@@ -74,8 +74,7 @@ func GetCmdZonesInfos() *cobra.Command {
 	return cmd
 }
 
-// GetDelegatorIntentCmd returns the intents of the user for the given chainID
-// (zone).
+// GetDelegatorIntentCmd returns the intents of the user for the given chainID.
 func GetDelegatorIntentCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "intent [chain_id] [delegator_addr]",

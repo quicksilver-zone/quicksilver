@@ -201,11 +201,14 @@ func (k *Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.
 	return msgs
 }
 
-func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) map[string]sdkmath.Int {
+func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]sdkmath.Int, error) {
 	currentAllocations, currentSum, _ := k.GetDelegationMap(ctx, zone)
-	targetAllocations := zone.GetAggregateIntentOrDefault()
+	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
+	if err != nil {
+		return nil, err
+	}
 	allocations := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
-	return allocations
+	return allocations, nil
 }
 
 func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *types.Zone, delegator string, response []byte) error {

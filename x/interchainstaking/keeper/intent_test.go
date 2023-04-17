@@ -21,9 +21,9 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 	ctx := s.chainA.GetContext()
 
 	// get test zone
-	zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
-	zoneValidatorAddresses := zone.GetValidatorsAddressesAsSlice()
+	zoneValidatorAddresses := icsKeeper.GetValidators(ctx, zone.ChainId)
 
 	// check that there are no intents
 	intents := icsKeeper.AllDelegatorIntents(ctx, &zone, false)
@@ -37,19 +37,19 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 			Delegator: testAddress,
 			Intents: icstypes.ValidatorIntents{
 				{
-					ValoperAddress: zoneValidatorAddresses[0],
+					ValoperAddress: zoneValidatorAddresses[0].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[1],
+					ValoperAddress: zoneValidatorAddresses[1].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[2],
+					ValoperAddress: zoneValidatorAddresses[2].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[3],
+					ValoperAddress: zoneValidatorAddresses[3].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 			},
@@ -64,19 +64,19 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 			Delegator: user1.String(),
 			Intents: icstypes.ValidatorIntents{
 				{
-					ValoperAddress: zoneValidatorAddresses[0],
+					ValoperAddress: zoneValidatorAddresses[0].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[1],
+					ValoperAddress: zoneValidatorAddresses[1].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[2],
+					ValoperAddress: zoneValidatorAddresses[2].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[3],
+					ValoperAddress: zoneValidatorAddresses[3].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 			},
@@ -91,15 +91,15 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 			Delegator: user2.String(),
 			Intents: icstypes.ValidatorIntents{
 				{
-					ValoperAddress: zoneValidatorAddresses[0],
+					ValoperAddress: zoneValidatorAddresses[0].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.5"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[1],
+					ValoperAddress: zoneValidatorAddresses[1].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.3"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[2],
+					ValoperAddress: zoneValidatorAddresses[2].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.2"),
 				},
 			},
@@ -337,7 +337,8 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 			zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
 			s.Require().True(found)
 
-			actual := zone.GetAggregateIntentOrDefault()
+			actual, err := icsKeeper.GetAggregateIntentOrDefault(ctx, zone)
+			s.Require().NoError(err)
 			s.Require().Equal(tt.expected(zone), actual)
 		})
 	}

@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/quicksilver/utils"
 	prtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -197,7 +198,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	}
 
 	if updateWithCoin {
-		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount)
+		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount, k.GetValidatorAddresses(ctx, zone.ChainId))
 	}
 
 	if updateWithMemo {
@@ -216,11 +217,16 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	return nil
 }
 
-func (k msgServer) validateValidatorIntents(zone types.Zone, intents []*types.ValidatorIntent) error {
+func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, intents []*types.ValidatorIntent) error {
 	errMap := make(map[string]error)
 
 	for i, intent := range intents {
-		_, found := zone.GetValidatorByValoper(intent.ValoperAddress)
+		var valAddrBytes []byte
+		valAddrBytes, err := utils.ValAddressFromBech32(intent.ValoperAddress, zone.AccountPrefix+"valoper")
+		if err != nil {
+			return err
+		}
+		_, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 		if !found {
 			errMap[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
 		}

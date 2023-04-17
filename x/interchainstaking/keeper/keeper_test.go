@@ -105,12 +105,11 @@ func (s *KeeperTestSuite) setupTestZones() {
 	s.Require().NoError(s.setupChannelForICA(ctx, s.chainB.ChainID, s.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
 	s.Require().NoError(s.setupChannelForICA(ctx, s.chainB.ChainID, s.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
 	s.Require().NoError(s.setupChannelForICA(ctx, s.chainB.ChainID, s.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
+	zone, found = quicksilver.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+	s.Require().True(found)
 
 	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext())
 	for i := range vals {
-		// refetch the zone for each validator, else we end up with an empty valset each time!
-		zone, found := quicksilver.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
-		s.Require().True(found)
 		s.Require().NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(s.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
 	}
 

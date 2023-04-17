@@ -413,7 +413,9 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			for _, delegation := range delegations {
 				quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-				val, _ := zone.GetValidatorByValoper(delegation.ValidatorAddress)
+				valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.AccountPrefix+"valoper")
+				s.Require().NoError(err)
+				val, _ := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
 				val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
 				val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
 			}
@@ -738,19 +740,19 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	if !found {
 		s.Fail("unable to retrieve zone for test")
 	}
-
+	validators := quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
 	// create redelegation record
 	record := icstypes.RedelegationRecord{
 		ChainId:     s.chainB.ChainID,
 		EpochNumber: 1,
-		Source:      zone.Validators[0].ValoperAddress,
-		Destination: zone.Validators[1].ValoperAddress,
+		Source:      validators[0].ValoperAddress,
+		Destination: validators[1].ValoperAddress,
 		Amount:      1000,
 	}
 
 	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
 
-	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: zone.Validators[0].ValoperAddress, ValidatorDstAddress: zone.Validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+	redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: validators[0].ValoperAddress, ValidatorDstAddress: validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redelegate})
 	s.Require().NoError(err)
 
@@ -766,13 +768,13 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	ackBytes := []byte("{\"error\":\"ABCI code: 32: error handling packet on host chain: see events for details\"}")
 	// call handler
 
-	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
+	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, 1)
 	s.Require().True(found)
 
 	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
 	s.Require().NoError(err)
 
-	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, zone.Validators[0].ValoperAddress, zone.Validators[1].ValoperAddress, 1)
+	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, 1)
 	s.Require().False(found)
 }
 
@@ -1309,6 +1311,7 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	}
 	for _, delegation := range delegations {
 		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+	TODO:
 		val, _ := zone.GetValidatorByValoper(delegation.ValidatorAddress)
 		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
 		val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
@@ -1422,7 +1425,9 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	}
 	for _, delegation := range delegations {
 		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-		val, _ := zone.GetValidatorByValoper(delegation.ValidatorAddress)
+		valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.AccountPrefix+"valoper")
+		s.Require().NoError(err)
+		val, _ := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
 		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
 		val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
 	}
