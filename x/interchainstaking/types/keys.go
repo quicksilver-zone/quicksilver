@@ -54,7 +54,9 @@ var (
 	KeyPrefixPerformanceDelegation       = []byte{0x08}
 	KeyPrefixSnapshotIntent              = []byte{0x09}
 	KeyPrefixRequeuedWithdrawalRecordSeq = []byte{0x0a}
-	// fill in missing 0b - 0f before adding 0x11!
+	KeyPrefixAddressZoneMapping          = []byte{0x0b}
+
+	// fill in missing 0c - 0f before adding 0x11!
 	KeyPrefixRedelegationRecord = []byte{0x10}
 )
 
