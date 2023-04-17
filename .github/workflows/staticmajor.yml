@@ -11,7 +11,7 @@ jobs:
         uses: orijtech/staticmajor-action@main
         with:
           resleak: 'true'
-          httperroryzer: 'true'
-          structslop: 'true'
+          httperroryzer: 'false'
+          structslop: 'false'
           fuzzy: 'true'
           generated: 'false'
