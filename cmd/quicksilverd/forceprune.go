@@ -8,13 +8,14 @@ import (
 	"strconv"
 
 	tmdb "github.com/cometbft/cometbft-db"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
+
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	tmstore "github.com/tendermint/tendermint/store"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/tendermint/tendermint/config"
 )
 
@@ -200,6 +201,5 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	}
 
 	fmt.Println("Compacting State Store ...")
-
 	return db.CompactRange(*util.BytesPrefix([]byte{}))
 }

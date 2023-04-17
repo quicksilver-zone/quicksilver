@@ -44,10 +44,11 @@ message Zone {
     (gogoproto.nullable) = false
   ];
   int64 unbonding_period = 22;
-  int64 decimals = 23;
-  bool unbonding_enabled = 24;
-  bool deposits_enabled = 25;
-  bool return_to_sender = 26;
+  int64 messages_per_tx =23;
+  int64 decimals = 24;
+  bool unbonding_enabled = 25;
+  bool deposits_enabled = 26;
+  bool return_to_sender = 27;
 }
 
 message ICAAccount {
