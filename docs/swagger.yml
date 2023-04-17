@@ -2529,6 +2529,9 @@ paths:
                   unbonding_period:
                     type: string
                     format: int64
+                  messages_per_tx:
+                    type: string
+                    format: int64
                   decimals:
                     type: string
                     format: int64
@@ -2805,6 +2808,9 @@ paths:
                     tvl:
                       type: string
                     unbonding_period:
+                      type: string
+                      format: int64
+                    messages_per_tx:
                       type: string
                       format: int64
                     decimals:

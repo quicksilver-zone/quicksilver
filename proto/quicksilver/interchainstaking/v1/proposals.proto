@@ -22,10 +22,11 @@ message RegisterZoneProposal {
       [ (gogoproto.moretags) = "yaml:\"account_prefix\"" ];
   bool multi_send = 7; // deprecated
   bool liquidity_module = 8;
-  bool return_to_sender = 9;
-  bool deposits_enabled = 10;
-  bool unbonding_enabled = 11;
-  int64 decimals = 12;
+  int64 messages_per_tx = 9;
+  bool return_to_sender = 10;
+  bool deposits_enabled = 11;
+  bool unbonding_enabled = 12;
+  int64 decimals = 13;
 }
 
 message RegisterZoneProposalWithDeposit {
@@ -44,13 +45,14 @@ message RegisterZoneProposalWithDeposit {
   bool liquidity_module = 8
       [ (gogoproto.moretags) = "yaml:\"liquidity_module\"" ];
   string deposit = 9 [ (gogoproto.moretags) = "yaml:\"deposit\"" ];
-  bool return_to_sender = 10
+  int64 messages_per_tx = 10;
+  bool return_to_sender = 11
       [ (gogoproto.moretags) = "yaml:\"return_to_sender\"" ];
-  bool deposits_enabled = 11
+  bool deposits_enabled = 12
       [ (gogoproto.moretags) = "yaml:\"deposits_enabled\"" ];
-  bool unbonding_enabled = 12
+  bool unbonding_enabled = 13
       [ (gogoproto.moretags) = "yaml:\"deposits_enabled\"" ];
-  int64 decimals = 13 [ (gogoproto.moretags) = "yaml:\"decimals\"" ];
+  int64 decimals = 14 [ (gogoproto.moretags) = "yaml:\"decimals\"" ];
 }
 
 message UpdateZoneProposal {
