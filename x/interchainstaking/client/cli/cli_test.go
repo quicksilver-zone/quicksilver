@@ -33,11 +33,6 @@ func (s *IntegrationTestSuite) SetupSuite() {
 
 	s.cfg = app.DefaultConfig()
 
-<<<<<<< HEAD
-	net, err := network.New(s.T(), s.T().TempDir(), s.cfg)
-	s.Require().NoError(err)
-	s.network = net
-=======
 	updateGenesisConfigState := func(moduleName string, moduleState proto.Message) {
 		buf, err := s.cfg.Codec.MarshalJSON(moduleState)
 		s.Require().NoError(err)
@@ -70,10 +65,10 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		MessagesPerTx:                0,
 	}
 	zone.Validators = append(zone.Validators,
-		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
-		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
 	)
 
@@ -83,9 +78,9 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	updateGenesisConfigState(types.ModuleName, newGenesis)
 	s.zones = []types.Zone{zone}
 
-	n, err := network.New(s.T(), s.T().TempDir(), s.cfg)
-	s.network = n
->>>>>>> a9ade16 (test: `interchainstaking` zones cli query (#382))
+	net, err := network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+	s.network = net
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -136,10 +131,40 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
-				s.Require().Equal(tt.expected.Zones, tt.respType.Zones, out.String())
+				for i, zone := range tt.respType.Zones {
+					s.Require().True(s.ZonesEqual(tt.expected.Zones[i], zone))
+				}
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) ZonesEqual(zoneA, zoneB types.Zone) bool {
+	s.T().Helper()
+
+	s.Require().Equal(zoneA.BaseDenom, zoneB.BaseDenom)
+	s.Require().Equal(zoneA.AggregateIntent, zoneB.AggregateIntent)
+	s.Require().Equal(zoneA.ChainId, zoneB.ChainId)
+	s.Require().Equal(zoneA.AccountPrefix, zoneB.AccountPrefix)
+	s.Require().Equal(zoneA.DelegationAddress, zoneB.DelegationAddress)
+	s.Require().Equal(zoneA.DepositAddress, zoneB.DepositAddress)
+	s.Require().Equal(zoneA.ConnectionId, zoneB.ConnectionId)
+	s.Require().Equal(zoneA.Decimals, zoneB.Decimals)
+	s.Require().Equal(zoneA.DepositsEnabled, zoneB.DepositsEnabled)
+	s.Require().Equal(zoneA.PerformanceAddress, zoneA.PerformanceAddress)
+	s.Require().Equal(zoneA.WithdrawalWaitgroup, zoneB.WithdrawalWaitgroup)
+	s.Require().Equal(zoneA.WithdrawalAddress, zoneB.WithdrawalAddress)
+	s.Require().Equal(zoneA.HoldingsAllocation, zoneB.HoldingsAllocation)
+	s.Require().Equal(zoneA.RedemptionRate, zoneB.RedemptionRate)
+	s.Require().Equal(zoneA.ReturnToSender, zoneB.ReturnToSender)
+	s.Require().Equal(zoneA.LastEpochHeight, zoneB.LastEpochHeight)
+	s.Require().Equal(zoneA.LiquidityModule, zoneB.LiquidityModule)
+	s.Require().Equal(zoneA.LocalDenom, zoneB.LocalDenom)
+	for i := range zoneA.Validators {
+		s.Require().Equal(zoneA.Validators[i], zoneB.Validators[i])
+	}
+
+	return true
 }
 
 func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
