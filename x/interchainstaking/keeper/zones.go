@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,8 +11,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -67,6 +64,28 @@ func (k *Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo *ty
 	}
 }
 
+// GetAddressZoneMapping returns zone <-> address mapping.
+func (k *Keeper) GetAddressZoneMapping(ctx sdk.Context, address string) (string, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAddressZoneMapping)
+	bz := store.Get([]byte(address))
+	if len(bz) == 0 {
+		return "", false
+	}
+	return string(bz), true
+}
+
+// SetAddressZoneMapping set zone <-> address mapping.
+func (k *Keeper) SetAddressZoneMapping(ctx sdk.Context, address, chainID string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAddressZoneMapping)
+	store.Set([]byte(address), []byte(chainID))
+}
+
+// DeleteAddressZoneMapping delete zone info.
+func (k *Keeper) DeleteAddressZoneMapping(ctx sdk.Context, address string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAddressZoneMapping)
+	store.Delete([]byte(address))
+}
+
 func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
@@ -110,73 +129,39 @@ func (k *Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 	return &zone, nil
 }
 
+func (k *Keeper) GetZoneForAccount(ctx sdk.Context, address string) (zone *types.Zone) {
+	chainID, found := k.GetAddressZoneMapping(ctx, address)
+	if !found {
+		return nil
+	}
+	// doesn't matter if this is _found_ because we are expecting to return nil if not anyway.
+	z, _ := k.GetZone(ctx, chainID)
+	return &z
+}
+
 // GetZoneForDelegateAccount determines the zone for a given address.
 func (k *Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.Zone {
-	var zone *types.Zone
-	k.IterateZones(ctx, func(_ int64, zoneInfo *types.Zone) (stop bool) {
-		if zoneInfo.DelegationAddress != nil && zoneInfo.DelegationAddress.Address == address {
-			zone = zoneInfo
-			return true
-		}
-		return false
-	})
-	return zone
+	z := k.GetZoneForAccount(ctx, address)
+	if z != nil && z.DelegationAddress != nil && address == z.DelegationAddress.Address {
+		return z
+	}
+	return nil
 }
 
 func (k *Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *types.Zone {
-	var zone *types.Zone
-	k.IterateZones(ctx, func(_ int64, zoneInfo *types.Zone) (stop bool) {
-		if zoneInfo.PerformanceAddress != nil && zoneInfo.PerformanceAddress.Address == address {
-			zone = zoneInfo
-			return true
-		}
-		return false
-	})
-	return zone
+	z := k.GetZoneForAccount(ctx, address)
+	if z != nil && z.PerformanceAddress != nil && address == z.PerformanceAddress.Address {
+		return z
+	}
+	return nil
 }
 
 func (k *Keeper) GetZoneForDepositAccount(ctx sdk.Context, address string) *types.Zone {
-	var zone *types.Zone
-	k.IterateZones(ctx, func(_ int64, zoneInfo *types.Zone) (stop bool) {
-		if zoneInfo.DepositAddress != nil && zoneInfo.DepositAddress.Address == address {
-			zone = zoneInfo
-			return true
-		}
-		return false
-	})
-	return zone
-}
-
-func (k *Keeper) EnsureICAsActive(ctx sdk.Context, zone *types.Zone) error {
-	k.Logger(ctx).Info("Ensuring ICAs for zone", "zone", zone.ChainId)
-	if err := k.EnsureICAActive(ctx, zone, zone.DepositAddress); err != nil {
-		return err
+	z := k.GetZoneForAccount(ctx, address)
+	if z != nil && z.DepositAddress != nil && address == z.DepositAddress.Address {
+		return z
 	}
-	if err := k.EnsureICAActive(ctx, zone, zone.DelegationAddress); err != nil {
-		return err
-	}
-	if err := k.EnsureICAActive(ctx, zone, zone.PerformanceAddress); err != nil {
-		return err
-	}
-	return k.EnsureICAActive(ctx, zone, zone.WithdrawalAddress)
-}
-
-func (k *Keeper) EnsureICAActive(ctx sdk.Context, zone *types.Zone, account *types.ICAAccount) error {
-	if account == nil {
-		k.Logger(ctx).Info("Account does not exist")
-		// address has not been set yet. nothing to check.
-		return nil
-	}
-
-	if _, found := k.ICAControllerKeeper.GetOpenActiveChannel(ctx, zone.ConnectionId, account.GetPortName()); found {
-		k.Logger(ctx).Info("Account is active", "account", account.Address)
-		// channel is active. all is well :)
-		return nil
-	}
-
-	// channel is not active; attempt reopen.
-	k.Logger(ctx).Error("channel is inactive. attempting to reopen.", "connection", zone.ConnectionId, "port", account.GetPortName())
-	return k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, strings.TrimPrefix(account.GetPortName(), icatypes.PortPrefix), "")
+	return nil
 }
 
 func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {
@@ -199,7 +184,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DepositAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "")
+		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -207,7 +192,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "")
+		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -216,7 +201,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 	// set withdrawal address for performance address, if it exists
 	if zone.PerformanceAddress != nil && zone.PerformanceAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.PerformanceAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "")
+		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -386,7 +371,7 @@ OUTER:
 	}
 
 	if len(msgs) > 0 {
-		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "")
+		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx)
 	}
 	return nil
 }
