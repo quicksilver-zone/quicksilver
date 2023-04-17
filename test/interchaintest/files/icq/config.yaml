@@ -1,0 +1,34 @@
+default_chain: '$QUICK_E2E_CHAIN_ID'
+chains:
+  '$QUICK_A_E2E_CHAIN_ID':
+    key: default
+    chain-id: '$QUICK_E2E_CHAIN_ID'
+    rpc-addr: 'http://$QUICK_E2E_VAL_HOST:26657'
+    grpc-addr: 'http://$QUICK_E2E_VAL_HOST:9090'
+    account-prefix: quick
+    keyring-backend: test
+    gas-adjustment: 1.2
+    gas-prices: 0.01uqck
+    min-gas-amount: 0
+    key-directory: $HOME/.icq/keys
+    debug: false
+    timeout: 20s
+    block-timeout: 10s
+    output-format: json
+    sign-mode: direct
+  '$QUICK_B_E2E_CHAIN_ID':
+    key: default
+    chain-id: '$OSMO_E2E_CHAIN_ID'
+    rpc-addr: 'http://$OSMO_E2E_VAL_HOST:26657'
+    grpc-addr: 'http://$OSMO_E2E_VAL_HOST:9090'
+    account-prefix: osmo
+    keyring-backend: test
+    gas-adjustment: 1.2
+    gas-prices: 0.01uosmo
+    min-gas-amount: 0
+    key-directory: $HOME/.icq/keys
+    debug: false
+    timeout: 20s
+    block-timeout: 10s
+    output-format: json
+    sign-mode: direct

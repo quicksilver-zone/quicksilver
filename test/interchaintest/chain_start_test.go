@@ -2,6 +2,8 @@ package interchaintest
 
 import (
 	"context"
+	"fmt"
+	"path/filepath"
 	"testing"
 
 	"github.com/strangelove-ventures/interchaintest/v5"
@@ -22,6 +24,9 @@ func TestBasicQuicksilverStart(t *testing.T) {
 	// Create chain factory with Quicksilver
 	numVals := 3
 	numFullNodes := 3
+
+	config, err := createConfig()
+	require.NoError(t, err)
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
@@ -59,10 +64,21 @@ func TestBasicQuicksilverStart(t *testing.T) {
 	require.NoError(t, err)
 
 	// verify sidecars are running
-	require.Equal(t, 1, len(quicksilver.Sidecars))
-	for _, sidecar := range quicksilver.Sidecars {
-		require.NoError(t, sidecar.Running(ctx))
-	}
+	//require.Equal(t, 1, len(quicksilver.Sidecars))
+	//for _, sidecar := range quicksilver.Sidecars {
+	//	require.NoError(t, sidecar.Running(ctx))
+	//}
+
+	icq := quicksilver.Sidecars[0]
+	containerCfg := filepath.Join(icq.HomeDir(), ".icq")
+	err = icq.CopyFile(ctx, filepath.Join(".", "files", "icq", "config.yaml"), containerCfg)
+	require.NoError(t, err)
+
+	stdout, stderr, err := icq.Exec(ctx, []string{"interchain-queries", "run", "--home", containerCfg}, []string{})
+	require.NoError(t, err, string(stderr))
+
+	fmt.Println(string(stdout))
+	fmt.Println(string(stderr))
 
 	t.Cleanup(func() {
 		_ = ic.Close()

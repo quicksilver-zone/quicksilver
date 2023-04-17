@@ -28,6 +28,9 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 	numVals := 3
 	numFullNodes := 3
 
+	config, err := createConfig()
+	require.NoError(t, err)
+
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			Name:          "quicksilver",

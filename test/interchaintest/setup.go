@@ -24,45 +24,48 @@ var (
 
 	ICQImage = ibc.DockerImage{
 		Repository: "quicksilverzone/interchain-queries",
-		Version:    "v0.8.8-beta1",
+		Version:    "latest",
 		UidGid:     "1027:1027",
-	}
-
-	config = ibc.ChainConfig{
-		Type:                "cosmos",
-		Name:                "quicksilver",
-		ChainID:             "quicksilver-2",
-		Images:              []ibc.DockerImage{QuicksilverImage},
-		Bin:                 "quicksilverd",
-		Bech32Prefix:        "quick",
-		Denom:               "uqck",
-		GasPrices:           "0.0uqck",
-		GasAdjustment:       1.1,
-		TrustingPeriod:      "112h",
-		NoHostMount:         false,
-		ModifyGenesis:       nil,
-		ConfigFileOverrides: nil,
-		EncodingConfig:      nil,
-		SidecarConfigs: []ibc.SidecarConfig{
-			{
-				ProcessName:      "icq",
-				Image:            ICQImage,
-				Ports:            []string{"2112"},
-				StartCmd:         []string{"interchain-queries", "run", "-d"},
-				PreStart:         true,
-				ValidatorProcess: false,
-			},
-			//			{
-			//				ProcessName:      "xcc",
-			//				Image:            XccLookupImage,
-			//				Ports:            []string{"3033"},
-			//				StartCmd:         []string{"xcc", "-a", "serve"},
-			//				PreStart:         true,
-			//				ValidatorProcess: false,
-			//			},
-		},
 	}
 
 	pathQuicksilverOsmosis = "quicksilver-osmosis"
 	genesisWalletAmount    = int64(10_000_000)
 )
+
+func createConfig() (ibc.ChainConfig, error) {
+	return ibc.ChainConfig{
+			Type:                "cosmos",
+			Name:                "quicksilver",
+			ChainID:             "quicksilver-2",
+			Images:              []ibc.DockerImage{QuicksilverImage},
+			Bin:                 "quicksilverd",
+			Bech32Prefix:        "quick",
+			Denom:               "uqck",
+			GasPrices:           "0.0uqck",
+			GasAdjustment:       1.1,
+			TrustingPeriod:      "112h",
+			NoHostMount:         false,
+			ModifyGenesis:       nil,
+			ConfigFileOverrides: nil,
+			EncodingConfig:      nil,
+			SidecarConfigs: []ibc.SidecarConfig{
+				{
+					ProcessName:      "icq",
+					Image:            ICQImage,
+					Ports:            []string{"2112"},
+					StartCmd:         []string{},
+					PreStart:         true,
+					ValidatorProcess: false,
+				},
+				//			{
+				//				ProcessName:      "xcc",
+				//				Image:            XccLookupImage,
+				//				Ports:            []string{"3033"},
+				//				StartCmd:         []string{"xcc", "-a", "serve"},
+				//				PreStart:         true,
+				//				ValidatorProcess: false,
+				//			},
+			},
+		},
+		nil
+}
