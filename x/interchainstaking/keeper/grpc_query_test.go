@@ -361,7 +361,7 @@ func (s *KeeperTestSuite) TestKeeper_Delegations() {
 				// TODO: set standardized delegations for keeper_test package
 				delegation := types.Delegation{
 					DelegationAddress: testAddress,
-					ValidatorAddress:  icsKeeper.GetValidators(ctx, s.chainB.ChainID)[0].ValoperAddress[0],
+					ValidatorAddress:  icsKeeper.GetValidators(ctx, s.chainB.ChainID)[0].ValoperAddress,
 					Amount:            sdk.NewCoin("denom", sdk.NewInt(15000)),
 				}
 				icsKeeper.SetDelegation(ctx, &zone, delegation)

@@ -155,7 +155,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		if err != nil {
 			return err
 		}
-		validatorAddress, err := bech32.ConvertAndEncode(zone.GetAccountPrefix()+"valoper", validator)
+		validatorAddress, err := bech32.ConvertAndEncode(zone.GetValoperPrefix(), validator)
 		if err != nil {
 			return err
 		}
@@ -172,7 +172,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		}
 		return nil
 	}
-	valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.AccountPrefix+"valoper")
+	valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
 	}

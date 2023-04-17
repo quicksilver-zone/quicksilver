@@ -14,6 +14,13 @@ func (z Zone) SupportReturnToSender() bool { return z.ReturnToSender }
 func (z Zone) IsUnbondingEnabled() bool    { return z.UnbondingEnabled }
 func (z Zone) SupportLsm() bool            { return z.LiquidityModule }
 
+func (m *Zone) GetValoperPrefix() string {
+	if m != nil {
+		return m.AccountPrefix + "valoper"
+	}
+	return ""
+}
+
 func (z Zone) IsDelegateAddress(addr string) bool {
 	return z.DelegationAddress != nil && z.DelegationAddress.Address == addr
 }

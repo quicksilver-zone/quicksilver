@@ -225,7 +225,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		return err
 	}
 
-	valAddrBytes, err := utils.ValAddressFromBech32(validator.OperatorAddress, zone.AccountPrefix+"valoper")
+	valAddrBytes, err := utils.ValAddressFromBech32(validator.OperatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
 	}
@@ -577,7 +577,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 	// filter intents here...
 	// check validators for tombstoned
 	for _, v := range intents {
-		valAddrBytes, err := utils.ValAddressFromBech32(v.ValoperAddress, z.AccountPrefix+"valoper")
+		valAddrBytes, err := utils.ValAddressFromBech32(v.ValoperAddress, z.GetValoperPrefix())
 		if err != nil {
 			return nil, err
 		}

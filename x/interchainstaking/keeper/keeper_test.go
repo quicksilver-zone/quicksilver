@@ -197,12 +197,12 @@ func (s *KeeperTestSuite) giveFunds(ctx sdk.Context, denom string, amount int64,
 func (s *KeeperTestSuite) TestGetDelegatedAmount() {
 	tc := []struct {
 		name        string
-		delegations func(zone icstypes.Zone) []icstypes.Delegation
+		delegations func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation
 		expected    math.Int
 	}{
 		{
 			name: "empty delegations",
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
 				out := make([]icstypes.Delegation, 0)
 				return out
 			},
@@ -210,8 +210,8 @@ func (s *KeeperTestSuite) TestGetDelegatedAmount() {
 		},
 		{
 			name: "one delegation",
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
-				validators := zone.GetValidatorsAddressesAsSlice()
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
 				out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
 				return out
@@ -220,8 +220,8 @@ func (s *KeeperTestSuite) TestGetDelegatedAmount() {
 		},
 		{
 			name: "multi delegation",
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
-				validators := zone.GetValidatorsAddressesAsSlice()
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
 				out = append(out,
 					icstypes.NewDelegation(zone.DelegationAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))),
@@ -245,7 +245,7 @@ func (s *KeeperTestSuite) TestGetDelegatedAmount() {
 			zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
 			s.Require().True(found)
 
-			for _, delegation := range tt.delegations(zone) {
+			for _, delegation := range tt.delegations(ctx, quicksilver, zone) {
 				icsKeeper.SetDelegation(ctx, &zone, delegation)
 			}
 
@@ -341,18 +341,18 @@ func (s *KeeperTestSuite) TestGetUnbondingAmount() {
 func (s *KeeperTestSuite) TestGetRatio() {
 	tc := []struct {
 		name        string
-		records     func(zone icstypes.Zone) []icstypes.WithdrawalRecord
-		delegations func(zone icstypes.Zone) []icstypes.Delegation
+		records     func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord
+		delegations func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation
 		supply      math.Int
 		expected    sdk.Dec
 	}{
 		{
 			name: "no withdrawals, no unbonding, no supply",
-			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
 				out := make([]icstypes.WithdrawalRecord, 0)
 				return out
 			},
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
 				out := make([]icstypes.Delegation, 0)
 				return out
 			},
@@ -361,12 +361,12 @@ func (s *KeeperTestSuite) TestGetRatio() {
 		},
 		{
 			name: "no withdrawals, one delegation, expect 1.0",
-			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
 				out := make([]icstypes.WithdrawalRecord, 0)
 				return out
 			},
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
-				validators := zone.GetValidatorsAddressesAsSlice()
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
 				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
 				return out
@@ -376,12 +376,12 @@ func (s *KeeperTestSuite) TestGetRatio() {
 		},
 		{
 			name: "one withdrawal, no delegation, expect 1.0",
-			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
 				out := make([]icstypes.WithdrawalRecord, 0)
 				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
 				return out
 			},
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
 				out := make([]icstypes.Delegation, 0)
 				return out
 			},
@@ -390,13 +390,13 @@ func (s *KeeperTestSuite) TestGetRatio() {
 		},
 		{
 			name: "one withdrawals, one delegation, one unbonding, expect 1.0",
-			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
 				out := make([]icstypes.WithdrawalRecord, 0)
 				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
 				return out
 			},
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
-				validators := zone.GetValidatorsAddressesAsSlice()
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
 				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
 				return out
@@ -406,13 +406,13 @@ func (s *KeeperTestSuite) TestGetRatio() {
 		},
 		{
 			name: "one non-unbond withdrawals, one delegation, one unbonding, expect 1.0",
-			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
 				out := make([]icstypes.WithdrawalRecord, 0)
 				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusCompleted, Txhash: utils.GenerateRandomHashAsHex()})
 				return out
 			},
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
-				validators := zone.GetValidatorsAddressesAsSlice()
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
 				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
 				return out
@@ -422,7 +422,7 @@ func (s *KeeperTestSuite) TestGetRatio() {
 		},
 		{
 			name: "multi unbonding withdrawal, delegation, expect 1.0",
-			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
 				out := make([]icstypes.WithdrawalRecord, 0)
 				out = append(out,
 					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()},
@@ -431,8 +431,8 @@ func (s *KeeperTestSuite) TestGetRatio() {
 				)
 				return out
 			},
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
-				validators := zone.GetValidatorsAddressesAsSlice()
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
 				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
 				return out
@@ -442,7 +442,7 @@ func (s *KeeperTestSuite) TestGetRatio() {
 		},
 		{
 			name: "multi unbonding withdrawal, delegation, sub 1.0",
-			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
 				out := make([]icstypes.WithdrawalRecord, 0)
 				out = append(out,
 					icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()},
@@ -450,8 +450,8 @@ func (s *KeeperTestSuite) TestGetRatio() {
 				)
 				return out
 			},
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
-				validators := zone.GetValidatorsAddressesAsSlice()
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
 				out = append(out, icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))
 				return out
@@ -461,13 +461,13 @@ func (s *KeeperTestSuite) TestGetRatio() {
 		},
 		{
 			name: "multi unbonding withdrawal, delegation, gt 1.0",
-			records: func(zone icstypes.Zone) []icstypes.WithdrawalRecord {
+			records: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
 				out := make([]icstypes.WithdrawalRecord, 0)
 				out = append(out, icstypes.WithdrawalRecord{ChainId: zone.ChainId, Delegator: zone.DelegationAddress.Address, Recipient: utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix), Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(3000000))), Status: icskeeper.WithdrawStatusUnbond, Txhash: utils.GenerateRandomHashAsHex()})
 				return out
 			},
-			delegations: func(zone icstypes.Zone) []icstypes.Delegation {
-				validators := zone.GetValidatorsAddressesAsSlice()
+			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				validators := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 				out := make([]icstypes.Delegation, 0)
 				out = append(out,
 					icstypes.NewDelegation(zone.DepositAddress.Address, validators[0], sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))),
@@ -492,11 +492,11 @@ func (s *KeeperTestSuite) TestGetRatio() {
 			zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
 			s.Require().True(found)
 
-			for _, record := range tt.records(zone) {
+			for _, record := range tt.records(ctx, quicksilver, zone) {
 				icsKeeper.SetWithdrawalRecord(ctx, record)
 			}
 
-			for _, delegation := range tt.delegations(zone) {
+			for _, delegation := range tt.delegations(ctx, quicksilver, zone) {
 				icsKeeper.SetDelegation(ctx, &zone, delegation)
 			}
 

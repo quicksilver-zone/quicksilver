@@ -222,7 +222,7 @@ func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, in
 
 	for i, intent := range intents {
 		var valAddrBytes []byte
-		valAddrBytes, err := utils.ValAddressFromBech32(intent.ValoperAddress, zone.AccountPrefix+"valoper")
+		valAddrBytes, err := utils.ValAddressFromBech32(intent.ValoperAddress, zone.GetValoperPrefix())
 		if err != nil {
 			return err
 		}

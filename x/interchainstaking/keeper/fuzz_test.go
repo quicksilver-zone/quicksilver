@@ -34,7 +34,7 @@ func FuzzZoneInfos(f *testing.F) {
 	app := suite.GetQuicksilverApp(suite.chainA)
 	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
 
-	seeds := []*icstypes.QueryZonesInfoRequest{
+	seeds := []*icstypes.QueryZonesRequest{
 		{},
 		nil,
 		{
@@ -79,7 +79,7 @@ func FuzzZoneInfos(f *testing.F) {
 		app := suite.GetQuicksilverApp(suite.chainA)
 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
 
-		req := new(icstypes.QueryZonesInfoRequest)
+		req := new(icstypes.QueryZonesRequest)
 		if err := app.AppCodec().Unmarshal(reqBz, req); err != nil {
 			// Do nothing with an invalid ZonesInfoRequest.
 			return
@@ -107,7 +107,7 @@ func TestInvalidPaginationForQueryZones(t *testing.T) {
 	ctx := suite.chainA.GetContext()
 
 	reqBz := []byte("\n\t\n\x03000 0(0")
-	req := new(icstypes.QueryZonesInfoRequest)
+	req := new(icstypes.QueryZonesRequest)
 	if err := app.AppCodec().Unmarshal(reqBz, req); err != nil {
 		// Do nothing with an invalid ZonesInfoRequest.
 		return

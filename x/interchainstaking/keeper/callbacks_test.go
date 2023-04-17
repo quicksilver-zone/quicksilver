@@ -422,7 +422,7 @@ func (s *KeeperTestSuite) TestHandleValidatorCallback() {
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
 			s.True(found)
 
-			valAddrBytes, err := utils.ValAddressFromBech32(test.expected.ValoperAddress, zone.AccountPrefix+"valoper")
+			valAddrBytes, err := utils.ValAddressFromBech32(test.expected.ValoperAddress, zone.GetValoperPrefix())
 			s.Require().NoError(err)
 			val, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
 			s.True(found)

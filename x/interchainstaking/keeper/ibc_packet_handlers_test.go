@@ -413,7 +413,7 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			for _, delegation := range delegations {
 				quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-				valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.AccountPrefix+"valoper")
+				valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 				s.Require().NoError(err)
 				val, _ := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
 				val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
@@ -1311,8 +1311,9 @@ func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	}
 	for _, delegation := range delegations {
 		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-	TODO:
-		val, _ := zone.GetValidatorByValoper(delegation.ValidatorAddress)
+		addressBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
+		s.Require().NoError(err)
+		val, _ := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, addressBytes)
 		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
 		val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
 	}
@@ -1425,9 +1426,12 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	}
 	for _, delegation := range delegations {
 		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-		valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.AccountPrefix+"valoper")
+		valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 		s.Require().NoError(err)
-		val, _ := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+
+		val, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+		s.Require().NoError(err)
+		s.Require().True(found)
 		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
 		val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
 	}
