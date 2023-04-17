@@ -15,6 +15,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/ingenuity-build/quicksilver/app"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -73,20 +74,22 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	chainIDPrefix := "quicksilver-"
 	indexToZone := make(map[int64]types.Zone, nzones)
 	for i := 0; i < nzones; i++ {
-		chainID := fmt.Sprintf("%s-%d", chainIDPrefix, i)
+		chainID := fmt.Sprintf("%s%d", chainIDPrefix, i)
+		delegationAddr := utils.GenerateAccAddressForTestWithPrefix("cosmos")
 		zone := types.Zone{
 			ConnectionId: "conn-test",
 			ChainId:      chainID,
 			LocalDenom:   "qck",
 			BaseDenom:    "qck",
 			DelegationAddress: &types.ICAAccount{
-				Address: "cosmos1ssrxxe4xsls57ehrkswlkhlkcverf0p0fpgyhzqw0hfdqj92ynxsw29r6e",
+				Address: delegationAddr,
 				Balance: sdk.NewCoins(
 					sdk.NewCoin("qck", sdk.NewInt(100)),
 					sdk.NewCoin("uqck", sdk.NewInt(700000)),
 				),
 			},
 		}
+		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainId)
 		kpr.SetZone(ctx, &zone)
 		gotZone, ok := kpr.GetZone(ctx, chainID)
 		require.True(t, ok, "expected to retrieve the correct zone")
@@ -132,6 +135,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 			sdk.NewCoin("uqck", sdk.NewInt(900000)),
 		),
 	}
+	kpr.SetAddressZoneMapping(ctx, "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", perfAcctZone.ChainId)
 	kpr.SetZone(ctx, &perfAcctZone)
 	gotPerfAcctZone := kpr.GetZoneForPerformanceAccount(ctx, perfAcctZone.PerformanceAddress.Address)
 	require.Equal(t, &perfAcctZone, gotPerfAcctZone, "expecting a match in performance accounts")
@@ -152,10 +156,11 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	// 7.2. Set some delegations.
 	del1 := types.Delegation{
 		Amount:            sdk.NewCoin(firstZone.BaseDenom, sdk.NewInt(17000)),
-		DelegationAddress: "cosmos1ssrxxe4xsls57ehrkswlkhlkcverf0p0fpgyhzqw0hfdqj92ynxsw29r6e",
+		DelegationAddress: firstZone.DelegationAddress.Address,
 		Height:            10,
 		ValidatorAddress:  "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
 	}
+
 	kpr.SetDelegation(ctx, &firstZone, del1)
 
 	// 7.3. Retrieve the delegation now, it should be set.

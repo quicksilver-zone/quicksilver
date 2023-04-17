@@ -20,10 +20,11 @@ message RegisterZoneProposal {
   string account_prefix = 6 [(gogoproto.moretags) = "yaml:\"account_prefix\""];
   bool multi_send = 7; // deprecated
   bool liquidity_module = 8;
-  bool return_to_sender = 9;
-  bool deposits_enabled = 10;
-  bool unbonding_enabled = 11;
-  int64 decimals = 12;
+  int64 messages_per_tx = 9;
+  bool return_to_sender = 10;
+  bool deposits_enabled = 11;
+  bool unbonding_enabled = 12;
+  int64 decimals = 13;
 }
 
 message RegisterZoneProposalWithDeposit {
@@ -32,7 +33,6 @@ message RegisterZoneProposalWithDeposit {
 
   string title = 1 [(gogoproto.moretags) = "yaml:\"title\""];
   string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
-
   string connection_id = 3 [(gogoproto.moretags) = "yaml:\"connection_id\""];
   string base_denom = 4 [(gogoproto.moretags) = "yaml:\"base_denom\""];
   string local_denom = 5 [(gogoproto.moretags) = "yaml:\"local_denom\""];
@@ -40,10 +40,11 @@ message RegisterZoneProposalWithDeposit {
   bool multi_send = 7 [(gogoproto.moretags) = "yaml:\"multi_send\""];
   bool liquidity_module = 8 [(gogoproto.moretags) = "yaml:\"liquidity_module\""];
   string deposit = 9 [(gogoproto.moretags) = "yaml:\"deposit\""];
-  bool return_to_sender = 10 [(gogoproto.moretags) = "yaml:\"return_to_sender\""];
-  bool deposits_enabled = 11 [(gogoproto.moretags) = "yaml:\"deposits_enabled\""];
-  bool unbonding_enabled = 12 [(gogoproto.moretags) = "yaml:\"unbonding_enabled\""];
-  int64 decimals = 13 [(gogoproto.moretags) = "yaml:\"decimals\""];
+  int64 messages_per_tx = 10;
+  bool return_to_sender = 11 [(gogoproto.moretags) = "yaml:\"return_to_sender\""];
+  bool deposits_enabled = 12 [(gogoproto.moretags) = "yaml:\"deposits_enabled\""];
+  bool unbonding_enabled = 13 [(gogoproto.moretags) = "yaml:\"deposits_enabled\""];
+  int64 decimals = 14 [(gogoproto.moretags) = "yaml:\"decimals\""];
 }
 
 message UpdateZoneProposal {

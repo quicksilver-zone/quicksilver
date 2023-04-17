@@ -238,3 +238,84 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
+	type fields struct {
+		PortID       string
+		ConnectionID string
+		FromAddress  string
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		wantErr  bool
+		errorMsg string
+	}{
+		{
+			"blank",
+			fields{},
+			true,
+			"invalid port format",
+		},
+		{
+			"invalid port",
+			fields{
+				PortID: "cat",
+			},
+			true,
+			"invalid port format",
+		},
+		{
+			"invalid account",
+			fields{
+				PortID: "icacontroller-osmosis-4.bad",
+			},
+			true,
+			"invalid port format; unexpected account",
+		},
+		{
+			"invalid connection; too short",
+			fields{
+				PortID:       "icacontroller-osmosis-4.withdrawal",
+				ConnectionID: "bad-1",
+			},
+			true,
+			"invalid connection string; too short",
+		},
+		{
+			"invalid connection; too short",
+			fields{
+				PortID:       "icacontroller-osmosis-4.withdrawal",
+				ConnectionID: "longenoughbutstillbad-1",
+			},
+			true,
+			"invalid connection string; incorrect prefix",
+		},
+		{
+			"valid",
+			fields{
+				PortID:       "icacontroller-osmosis-4.withdrawal",
+				ConnectionID: "connection-1",
+			},
+			false,
+			"",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgGovReopenChannel{
+				PortId:       tt.fields.PortID,
+				ConnectionId: tt.fields.ConnectionID,
+				Authority:    tt.fields.FromAddress,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				require.ErrorContains(t, err, tt.errorMsg)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
