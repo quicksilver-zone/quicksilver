@@ -626,3 +626,36 @@ func (s *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 		s.Require().Len(allDelegations2, 0)
 	})
 }
+
+func (s *KeeperTestSuite) TestFlushDelegations() {
+	s.Run("flush delegations", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		ctx := s.chainA.GetContext()
+
+		t := time.Now()
+		receipt := types.Receipt{
+			ChainId: s.chainB.ChainID,
+			Sender:  utils.GenerateAccAddressForTest().String(),
+			Txhash:  "6F2EEAE407E620C3D8F68C535C899CD7F1BAB1680686DF41C2FC38D139B940E9",
+			Amount: sdk.NewCoins(
+				sdk.NewCoin(
+					"ujuno",
+					sdk.NewIntFromUint64(2000000),
+				),
+			),
+			FirstSeen: &t,
+		}
+
+		app.InterchainstakingKeeper.SetReceipt(ctx, receipt)
+
+		zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Require().True(found)
+
+		count, err := app.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone)
+		s.Require().NoError(err)
+		s.Require().Equal(1, count)
+	})
+}

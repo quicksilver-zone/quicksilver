@@ -15,13 +15,13 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 const (
 	Unset           = "unset"
 	ICAMsgChunkSize = 5
+	ICATimeout      = time.Hour * 6
 )
 
 func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone *types.Zone) error {
@@ -163,11 +163,11 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 // TransferToDelegate transfers tokens from the zone deposit account address to the zone delegate account address.
 func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone *types.Zone, coins sdk.Coins, memo string) error {
 	msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
-	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo)
+	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo, zone.MessagesPerTx)
 }
 
 // SubmitTx submits a Tx on behalf of an ICAAccount to a remote chain.
-func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string) error {
+func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error {
 	// if no messages, do nothing
 	if len(msgs) == 0 {
 		return nil
@@ -188,8 +188,12 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		return sdkioerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	chunkSize := ICAMsgChunkSize
-	timeoutTimestamp := uint64(ctx.BlockTime().Add(24 * time.Hour).UnixNano())
+	chunkSize := int(messagesPerTx)
+	if chunkSize < 1 {
+		chunkSize = ICAMsgChunkSize
+	}
+
+	timeoutTimestamp := uint64(ctx.BlockTime().Add(ICATimeout).UnixNano())
 
 	for {
 		// if no messages, no chunks!
@@ -201,7 +205,10 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		if len(msgs) < chunkSize {
 			chunkSize = len(msgs)
 		}
+
+		// remove chunk from original msg slice
 		msgsChunk := msgs[0:chunkSize]
+		msgs = msgs[chunkSize:]
 
 		// build and submit message for this chunk
 		data, err := icatypes.SerializeCosmosTx(k.cdc, msgsChunk)
@@ -220,9 +227,6 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		if err != nil {
 			return err
 		}
-
-		// remove chunk from original msg slice
-		msgs = msgs[chunkSize:]
 	}
 
 	return nil
@@ -230,7 +234,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 // ---------------------------------------------------------------
 
-func (k *Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
+func (k Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
 	t := ctx.BlockTime()
 	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t}
 }
@@ -323,4 +327,8 @@ func (k *Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.Zone, addr sdk.Ac
 	})
 
 	return receipts, nil
+}
+
+func GetReceiptKey(chainID, txhash string) string {
+	return fmt.Sprintf("%s/%s", chainID, txhash)
 }
