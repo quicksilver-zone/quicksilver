@@ -14,7 +14,7 @@ func (z Zone) SupportMultiSend() bool { return z.MultiSend }
 func (z Zone) SupportLsm() bool       { return z.LiquidityModule }
 
 func (z Zone) IsDelegateAddress(addr string) bool {
-	return z.DelegationAddress.Address == addr
+	return z.DelegationAddress != nil && z.DelegationAddress.Address == addr
 }
 
 func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
@@ -124,12 +124,4 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 		out = out.SetForValoper(valAddr, val)
 	}
 	return out, nil
-}
-
-func (z *Zone) GetValidatorsSorted() []*Validator {
-	panic("deprecated")
-}
-
-func (z Zone) GetValidatorsAddressesAsSlice() []string {
-	panic("deprecated")
 }

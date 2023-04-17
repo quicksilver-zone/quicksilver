@@ -272,14 +272,15 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 
-				zone, _ := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
-				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), icstypes.RedelegationRecord{
+				ctx := s.chainA.GetContext()
+				zoneVals := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, s.chainB.ChainID)
+				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(ctx, icstypes.RedelegationRecord{
 					ChainId:        s.chainB.ChainID,
 					EpochNumber:    1,
-					Source:         zone.GetValidatorsAddressesAsSlice()[0],
-					Destination:    zone.GetValidatorsAddressesAsSlice()[1],
+					Source:         zoneVals[0],
+					Destination:    zoneVals[1],
 					Amount:         3000000,
-					CompletionTime: time.Time(s.chainA.GetContext().BlockTime().Add(time.Hour)),
+					CompletionTime: time.Time(ctx.BlockTime().Add(time.Hour)),
 				})
 			},
 			"",
@@ -346,8 +347,8 @@ func (s *KeeperTestSuite) TestRequestRedemption() {
 			zone.LiquidityModule = true
 			s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
 
+			validators := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, s.chainB.ChainID)
 			for _, delegation := range func(zone icstypes.Zone) []icstypes.Delegation {
-				validators := zone.GetValidatorsAddressesAsSlice()
 				out := make([]icstypes.Delegation, 0)
 				for _, valoper := range validators {
 					out = append(out, icstypes.NewDelegation(zone.DelegationAddress.Address, valoper, sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000))))

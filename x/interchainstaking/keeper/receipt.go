@@ -71,7 +71,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 		return fmt.Errorf("unable to decode sender address. Ignoring. senderAddress=%q", senderAddress)
 	}
 
-	if err := zone.ValidateCoinsForZone(coins); err != nil {
+	if err := zone.ValidateCoinsForZone(coins, k.GetValidatorAddresses(ctx, zone.ChainId)); err != nil {
 		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before. That is okay, we'll catch it next round!)
 		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
 		return fmt.Errorf("unable to validate coins. Ignoring. senderAddress=%q", senderAddress)
