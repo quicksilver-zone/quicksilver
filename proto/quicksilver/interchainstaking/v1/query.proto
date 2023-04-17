@@ -11,13 +11,13 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/
 
 // Query defines the gRPC querier service.
 service Query {
-  // ZoneInfos provides meta data on connected zones.
-  rpc ZoneInfos(QueryZonesInfoRequest) returns (QueryZonesInfoResponse) {
+  // Zones provides meta data on connected zones.
+  rpc Zones(QueryZonesRequest) returns (QueryZonesResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones";
   }
 
-  rpc ZoneValidatorInfos(QueryZoneValidatorsInfoRequest)
-      returns (QueryZoneValidatorsInfoResponse) {
+  rpc ZoneValidators(QueryZoneValidatorsRequest)
+      returns (QueryZoneValidatorsResponse) {
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/validators";
   }
@@ -78,20 +78,22 @@ service Query {
   }
 }
 
-message QueryZonesInfoRequest {
+message QueryZonesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-message QueryZonesInfoResponse {
+message QueryZonesResponse {
   repeated Zone zones = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-message QueryZoneValidatorsInfoRequest {
-  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+message QueryZoneValidatorsRequest {
+  string chain_id = 1;
+  string status = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
-message QueryZoneValidatorsInfoResponse {
+message QueryZoneValidatorsResponse {
   repeated Validator validators = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

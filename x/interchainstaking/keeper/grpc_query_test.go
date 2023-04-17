@@ -19,14 +19,14 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryZonesInfoRequest
+		req          *icstypes.QueryZonesRequest
 		wantErr      bool
 		expectLength int
 	}{
 		{
 			"ZoneInfos_No_State",
 			func() {},
-			&icstypes.QueryZonesInfoRequest{},
+			&icstypes.QueryZonesRequest{},
 			false,
 			0,
 		},
@@ -43,7 +43,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryZonesInfoRequest{},
+			&icstypes.QueryZonesRequest{},
 			false,
 			1,
 		},
@@ -53,7 +53,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
-			resp, err := icsKeeper.ZoneInfos(
+			resp, err := icsKeeper.Zones(
 				ctx,
 				tt.req,
 			)
@@ -74,21 +74,21 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneInfos() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorsInfo() {
+func (suite *KeeperTestSuite) TestKeeper_ZoneValidators() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()
 
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryZoneValidatorsInfoRequest
+		req          *icstypes.QueryZoneValidatorsRequest
 		wantErr      bool
 		expectLength int
 	}{
 		{
 			"ZoneValidatorsInfo_No_State",
 			func() {},
-			&icstypes.QueryZoneValidatorsInfoRequest{},
+			&icstypes.QueryZoneValidatorsRequest{},
 			false,
 			0,
 		},
@@ -105,7 +105,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorsInfo() {
 				// setup zones
 				suite.setupTestZones()
 			},
-			&icstypes.QueryZoneValidatorsInfoRequest{},
+			&icstypes.QueryZoneValidatorsRequest{},
 			false,
 			4,
 		},
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidatorsInfo() {
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			tt.malleate()
-			resp, err := icsKeeper.ZoneValidatorInfos(
+			resp, err := icsKeeper.ZoneValidators(
 				ctx,
 				tt.req,
 			)

@@ -25,7 +25,7 @@ func GetQueryCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		GetCmdZonesInfos(),
+		GetCmdZones(),
 		GetDelegatorIntentCmd(),
 		GetDepositAccountCmd(),
 	)
@@ -33,8 +33,8 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdZonesInfos provide running epochInfos
-func GetCmdZonesInfos() *cobra.Command {
+// GetCmdZones provide running epochInfos
+func GetCmdZones() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "zones",
 		Short: "Query registered zones ",
@@ -56,11 +56,11 @@ func GetCmdZonesInfos() *cobra.Command {
 				return err
 			}
 
-			req := &types.QueryZonesInfoRequest{
+			req := &types.QueryZonesRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.ZoneInfos(cmd.Context(), req)
+			res, err := queryClient.Zones(cmd.Context(), req)
 			if err != nil {
 				return err
 			}
@@ -111,8 +111,7 @@ func GetDelegatorIntentCmd() *cobra.Command {
 	return cmd
 }
 
-// GetDepositAccountCmd returns the deposit account for the given chainID
-// (zone).
+// GetDepositAccountCmd returns the deposit account for the given chainID..
 func GetDepositAccountCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deposit-account [chain_id]",

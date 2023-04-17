@@ -34,6 +34,8 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	s.cfg = app.DefaultConfig()
 
 	network, err := network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+
 	s.network = network
 
 	_, err = s.network.WaitForHeight(1)
@@ -45,7 +47,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
+func (s *IntegrationTestSuite) TestGetCmdZones() {
 	val := s.network.Validators[0]
 
 	tests := []struct {
@@ -59,8 +61,8 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 			"valid",
 			[]string{},
 			false,
-			&types.QueryZonesInfoResponse{},
-			&types.QueryZonesInfoResponse{
+			&types.QueryZonesResponse{},
+			&types.QueryZonesResponse{
 				Pagination: &query.PageResponse{},
 			},
 		},
@@ -76,7 +78,7 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 			}
 			args := append(tt.args, flags...)
 
-			cmd := cli.GetCmdZonesInfos()
+			cmd := cli.GetCmdZones()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 			if tt.expectErr {
@@ -154,7 +156,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 	}
 }
 
-/*func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
+func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
 	val := s.network.Validators[0]
 
 	tests := []struct {
@@ -185,13 +187,13 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			&types.QueryDepositAccountForChainResponse{},
 			&types.QueryDepositAccountForChainResponse{},
 		},
-		{
-			"valid",
-			[]string{s.cfg.ChainID},
-			false,
-			&types.QueryDepositAccountForChainResponse{},
-			&types.QueryDepositAccountForChainResponse{},
-		},
+		// {
+		// 	"valid",
+		// 	[]string{s.cfg.ChainID},
+		// 	false,
+		// 	&types.QueryDepositAccountForChainResponse{},
+		// 	&types.QueryDepositAccountForChainResponse{},
+		// },
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -216,7 +218,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			}
 		})
 	}
-}*/
+}
 
 func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 	val := s.network.Validators[0]

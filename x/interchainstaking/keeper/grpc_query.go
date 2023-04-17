@@ -16,7 +16,7 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // ZoneInfos returns information about registered zones.
-func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (*types.QueryZonesInfoResponse, error) {
+func (k Keeper) Zones(c context.Context, req *types.QueryZonesRequest) (*types.QueryZonesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -38,22 +38,38 @@ func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryZonesInfoResponse{
+	return &types.QueryZonesResponse{
 		Zones:      zones,
 		Pagination: pageRes,
 	}, nil
 }
 
-func (k Keeper) ZoneValidatorInfos(c context.Context, req *types.QueryZoneValidatorsInfoRequest) (*types.QueryZoneValidatorsInfoResponse, error) {
+func (k Keeper) ZoneValidators(c context.Context, req *types.QueryZoneValidatorsRequest) (*types.QueryZoneValidatorsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	validators := k.GetValidators(ctx, req.GetChainId())
+	var validators []types.Validator
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), GetZoneValidatorsKey(req.ChainId))
 
-	return &types.QueryZoneValidatorsInfoResponse{Validators: validators}, nil
+	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
+		var validator types.Validator
+		if err := k.cdc.Unmarshal(value, &validator); err != nil {
+			return err
+		}
+
+		if req.Status == "" || req.Status == validator.Status {
+			validators = append(validators, validator)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryZoneValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
 }
 
 // DepositAccount returns the deposit account address for the given zone.
