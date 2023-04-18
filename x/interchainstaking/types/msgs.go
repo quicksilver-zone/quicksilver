@@ -230,4 +230,24 @@ func (msg MsgGovReopenChannel) GetSigners() []sdk.AccAddress {
 }
 
 // check channel id is correct format. validate port name?
-func (msg MsgGovReopenChannel) ValidateBasic() error { return nil }
+func (msg MsgGovReopenChannel) ValidateBasic() error {
+	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
+	parts := strings.Split(msg.PortId, ".")
+	if len(parts) != 2 {
+		return errors.New("invalid port format")
+	}
+
+	if parts[1] != "delegate" && parts[1] != "deposit" && parts[1] != "performance" && parts[1] != "withdrawal" {
+		return errors.New("invalid port format; unexpected account")
+	}
+
+	if len(msg.ConnectionId) < 12 {
+		return errors.New("invalid connection string; too short")
+	}
+
+	if msg.ConnectionId[0:11] != "connection-" {
+		return errors.New("invalid connection string; incorrect prefix")
+	}
+
+	return nil
+}
