@@ -24,7 +24,7 @@ var (
 
 	ICQImage = ibc.DockerImage{
 		Repository: "quicksilverzone/interchain-queries",
-		Version:    "latest",
+		Version:    "e2e",
 		UidGid:     "1027:1027",
 	}
 
@@ -53,7 +53,7 @@ func createConfig() (ibc.ChainConfig, error) {
 					ProcessName:      "icq",
 					Image:            ICQImage,
 					Ports:            []string{"2112"},
-					StartCmd:         []string{},
+					StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
 					PreStart:         true,
 					ValidatorProcess: false,
 				},

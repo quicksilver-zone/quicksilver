@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	"github.com/strangelove-ventures/interchaintest/v5"
 	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v5/ibc"
@@ -15,9 +14,8 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// TestQuicksilverOsmosisIBCTransfer spins up a Quicksilver and Osmosis network, initializes an IBC connection between them,
-// and sends an ICS20 token transfer from Quicksilver->Osmosis and then back from Osmosis->Quicksilver.
-func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
+// TestInterchainStaking TODO
+func TestInterchainStaking(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
@@ -115,74 +113,78 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 
 	quickUserAddr := quickUser.FormattedAddress()
 	osmosisUserAddr := osmosisUser.FormattedAddress()
+	_ = quickUserAddr
+	_ = osmosisUserAddr
 
-	// Get original account balances
-	quicksilverOrigBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
+	RunICQ(t, ctx, quicksilver, osmosis)
+}
+
+func RunICQ(t *testing.T, ctx context.Context, quicksilver, osmosis *cosmos.CosmosChain) {
+	t.Helper()
+
+	icq := quicksilver.Sidecars[0]
+	err := icq.StopContainer(ctx)
 	require.NoError(t, err)
-	require.Equal(t, genesisWalletAmount, quicksilverOrigBal)
+	require.Error(t, icq.Running(ctx))
 
-	osmosisOrigBal, err := osmosis.GetBalance(ctx, osmosisUserAddr, osmosis.Config().Denom)
+	containerCfg := "config.yaml"
+
+	file := fmt.Sprintf(`default_chain: '%s'
+chains:
+  '%s':
+    key: default
+    chain-id: '%s'
+    rpc-addr: '%s'
+    grpc-addr: '%s'
+    account-prefix: quick
+    keyring-backend: test
+    gas-adjustment: 1.2
+    gas-prices: 0.01uqck
+    min-gas-amount: 0
+    key-directory: %s/.icq/keys
+    debug: false
+    timeout: 20s
+    block-timeout: 10s
+    output-format: json
+    sign-mode: direct
+  '%s':
+    key: default
+    chain-id: '%s'
+    rpc-addr: '%s'
+    grpc-addr: '%s'
+    account-prefix: osmo
+    keyring-backend: test
+    gas-adjustment: 1.2
+    gas-prices: 0.01uosmo
+    min-gas-amount: 0
+    key-directory: %s/.icq/keys
+    debug: false
+    timeout: 20s
+    block-timeout: 10s
+    output-format: json
+    sign-mode: direct
+`,
+		quicksilver.Config().ChainID,
+		quicksilver.Config().ChainID,
+		quicksilver.Config().ChainID,
+		quicksilver.GetRPCAddress(),
+		quicksilver.GetGRPCAddress(),
+		icq.HomeDir(),
+		osmosis.Config().ChainID,
+		osmosis.Config().ChainID,
+		osmosis.GetRPCAddress(),
+		osmosis.GetGRPCAddress(),
+		icq.HomeDir(),
+	)
+
+	err = icq.WriteFile(ctx, []byte(file), containerCfg)
 	require.NoError(t, err)
-	require.Equal(t, genesisWalletAmount, osmosisOrigBal)
-
-	// Compose an IBC transfer and send from Quicksilver -> osmosis
-	const transferAmount = int64(1_000)
-	transfer := ibc.WalletAmount{
-		Address: osmosisUserAddr,
-		Denom:   quicksilver.Config().Denom,
-		Amount:  transferAmount,
-	}
-
-	quickChannels, err := r.GetChannels(ctx, eRep, quicksilver.Config().ChainID)
+	_, err = icq.ReadFile(ctx, containerCfg)
 	require.NoError(t, err)
 
-	transferTx, err := quicksilver.SendIBCTransfer(ctx, quickChannels[0].ChannelID, quickUserAddr, transfer, ibc.TransferOptions{})
+	err = icq.StartContainer(ctx)
 	require.NoError(t, err)
 
-	quicksilverHeight, err := quicksilver.Height(ctx)
+	err = icq.Running(ctx)
 	require.NoError(t, err)
-
-	// Poll for the ack to know the transfer was successful
-	_, err = testutil.PollForAck(ctx, quicksilver, quicksilverHeight, quicksilverHeight+10, transferTx.Packet)
-	require.NoError(t, err)
-
-	// Get the IBC denom for uqck on osmosis
-	quicksilverTokenDenom := transfertypes.GetPrefixedDenom(quickChannels[0].Counterparty.PortID, quickChannels[0].Counterparty.ChannelID, quicksilver.Config().Denom)
-	quicksilverIBCDenom := transfertypes.ParseDenomTrace(quicksilverTokenDenom).IBCDenom()
-
-	// Assert that the funds are no longer present in user acc on Juno and are in the user acc on osmosis
-	quicksilverUpdateBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
-	require.NoError(t, err)
-	require.Equal(t, quicksilverOrigBal-transferAmount, quicksilverUpdateBal)
-
-	osmosisUpdateBal, err := osmosis.GetBalance(ctx, osmosisUserAddr, quicksilverIBCDenom)
-	require.NoError(t, err)
-	require.Equal(t, transferAmount, osmosisUpdateBal)
-
-	// Compose an IBC transfer and send from osmosis -> Juno
-	transfer = ibc.WalletAmount{
-		Address: quickUserAddr,
-		Denom:   quicksilverIBCDenom,
-		Amount:  transferAmount,
-	}
-
-	transferTx, err = osmosis.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, osmosisUserAddr, transfer, ibc.TransferOptions{})
-	require.NoError(t, err)
-
-	osmosisHeight, err := osmosis.Height(ctx)
-	require.NoError(t, err)
-
-	// Poll for the ack to know the transfer was successful
-	_, err = testutil.PollForAck(ctx, osmosis, osmosisHeight, osmosisHeight+10, transferTx.Packet)
-	require.NoError(t, err)
-
-	// Assert that the funds are now back on Juno and not on osmosis
-	quicksilverUpdateBal, err = quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
-	require.NoError(t, err)
-	require.Equal(t, quicksilverOrigBal, quicksilverUpdateBal)
-
-	osmosisUpdateBal, err = osmosis.GetBalance(ctx, osmosisUserAddr, quicksilverIBCDenom)
-	require.NoError(t, err)
-	require.Equal(t, int64(0), osmosisUpdateBal)
-
 }

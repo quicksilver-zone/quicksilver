@@ -354,12 +354,16 @@ ictest-upgrade:
 # Executes a basic chain upgrade locally via interchaintest after compiling a local image as quicksilver:local
 ictest-upgrade-local: local-image ictest-upgrade
 
-# Executes IBC tests via interchaintest
+# Executes IBC Transfer tests via interchaintest
 ictest-ibc:
 	@cd test/interchaintest && go test -race -v -run TestQuicksilverOsmosisIBCTransfer .
 
+# Executes TestInterchainStaking tests via interchaintest
+ictest-interchainstaking:
+	@cd test/interchaintest && go test -race -v -run TestInterchainStaking .
+
 # Executes all tests via interchaintest after compiling a local image as quicksilver:local
-ictest-all: local-image ictest-basic ictest-upgrade ictest-ibc
+ictest-all: local-image ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
 
 .PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all
 
@@ -379,7 +383,7 @@ else
 endif
 	# install other docker images
 	$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
-	$(DOCKER) image pull quicksilverzone/interchain-queries:v0.8.8-beta1
+	$(DOCKER) image pull quicksilverzone/interchain-queries:e2e
 
 
 .PHONY: get-heighliner local-image
