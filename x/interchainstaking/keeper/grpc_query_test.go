@@ -9,7 +9,6 @@ import (
 
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func (s *KeeperTestSuite) TestKeeper_Zones() {
@@ -74,21 +73,21 @@ func (s *KeeperTestSuite) TestKeeper_Zones() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestKeeper_ZoneValidators() {
-	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
-	ctx := suite.chainA.GetContext()
+func (s *KeeperTestSuite) TestKeeper_ZoneValidators() {
+	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
+	ctx := s.chainA.GetContext()
 
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *icstypes.QueryZoneValidatorsRequest
+		req          *types.QueryZoneValidatorsRequest
 		wantErr      bool
 		expectLength int
 	}{
 		{
 			"ZoneValidatorsInfo_No_State",
 			func() {},
-			&icstypes.QueryZoneValidatorsRequest{},
+			&types.QueryZoneValidatorsRequest{},
 			false,
 			0,
 		},
@@ -103,9 +102,9 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidators() {
 			"ZoneValidatorsInfo_Valid_Request",
 			func() {
 				// setup zones
-				suite.setupTestZones()
+				s.setupTestZones()
 			},
-			&icstypes.QueryZoneValidatorsRequest{},
+			&types.QueryZoneValidatorsRequest{},
 			false,
 			4,
 		},
@@ -113,25 +112,25 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidators() {
 
 	// run tests:
 	for _, tt := range tests {
-		suite.Run(tt.name, func() {
+		s.Run(tt.name, func() {
 			tt.malleate()
 			resp, err := icsKeeper.ZoneValidators(
 				ctx,
 				tt.req,
 			)
 			if tt.wantErr {
-				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				s.T().Logf("Error:\n%v\n", err)
+				s.Require().Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Validators))
+			s.Require().NoError(err)
+			s.Require().NotNil(resp)
+			s.Require().Equal(tt.expectLength, len(resp.Validators))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 
-			suite.T().Logf("Response:\n%s\n", vstr)
+			s.T().Logf("Response:\n%s\n", vstr)
 		})
 	}
 }

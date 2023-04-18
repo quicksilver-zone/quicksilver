@@ -493,7 +493,7 @@ func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) (float64, e
 	return math.Sqrt(psqrtf), nil
 }
 
-// DefaultAggregateIntents determines the default aggregate intent (for epoch 0)
+// DefaultAggregateIntents determines the default aggregate intent (for epoch 0).
 func (k *Keeper) DefaultAggregateIntents(ctx sdk.Context, chainID string) types.ValidatorIntents {
 	out := make(types.ValidatorIntents, 0)
 	k.IterateValidators(ctx, chainID, func(index int64, validator types.Validator) (stop bool) {

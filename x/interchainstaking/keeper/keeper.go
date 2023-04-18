@@ -24,8 +24,9 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/tendermint/tendermint/libs/log"
+
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -237,7 +238,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		if validator.IsJailed() {
 			jailTime = ctx.BlockTime()
 		}
-		k.SetValidator(ctx, zone.ChainId, types.Validator{
+		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
@@ -246,7 +247,9 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			Status:          validator.Status.String(),
 			Jailed:          validator.IsJailed(),
 			JailedSince:     jailTime,
-		})
+		}); err != nil {
+			return err
+		}
 
 		if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 			return err
@@ -300,7 +303,9 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			val.Status = validator.Status.String()
 		}
 
-		k.SetValidator(ctx, zone.ChainId, val)
+		if err := k.SetValidator(ctx, zone.ChainId, val); err != nil {
+			return err
+		}
 
 		if _, found := k.GetPerformanceDelegation(ctx, zone, validator.OperatorAddress); !found {
 			if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {

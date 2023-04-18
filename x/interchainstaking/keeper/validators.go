@@ -4,10 +4,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// GetValidators returns validators info by chainID
+// GetValidators returns validators by chainID.
 func (k Keeper) GetValidators(ctx sdk.Context, chainID string) []types.Validator {
 	validators := []types.Validator{}
 	k.IterateValidators(ctx, chainID, func(_ int64, validator types.Validator) (stop bool) {
@@ -17,7 +18,7 @@ func (k Keeper) GetValidators(ctx sdk.Context, chainID string) []types.Validator
 	return validators
 }
 
-// GetValidatorAddresses returns a slice of validator addresses info by chainID
+// GetValidatorAddresses returns a slice of validator addresses by chainID.
 func (k Keeper) GetValidatorAddresses(ctx sdk.Context, chainID string) []string {
 	validators := []string{}
 	k.IterateValidators(ctx, chainID, func(_ int64, validator types.Validator) (stop bool) {
@@ -27,7 +28,7 @@ func (k Keeper) GetValidatorAddresses(ctx sdk.Context, chainID string) []string 
 	return validators
 }
 
-// GetActiveValidators returns validators info by chainID where status = BONDED
+// GetActiveValidators returns validators by chainID where status = BONDED.
 func (k Keeper) GetActiveValidators(ctx sdk.Context, chainID string) []types.Validator {
 	validators := []types.Validator{}
 	k.IterateValidators(ctx, chainID, func(_ int64, validator types.Validator) (stop bool) {
@@ -39,7 +40,7 @@ func (k Keeper) GetActiveValidators(ctx sdk.Context, chainID string) []types.Val
 	return validators
 }
 
-// GetValidators returns validators info by chainID
+// GetValidators returns validators by chainID.
 func (k Keeper) GetValidator(ctx sdk.Context, chainID string, address []byte) (types.Validator, bool) {
 	val := types.Validator{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(chainID))
@@ -52,7 +53,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, chainID string, address []byte) (t
 	return val, true
 }
 
-// SetValidators set validators info
+// SetValidators set validators.
 func (k Keeper) SetValidator(ctx sdk.Context, chainID string, val types.Validator) error {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(chainID))
 	bz := k.cdc.MustMarshal(&val)
@@ -64,13 +65,13 @@ func (k Keeper) SetValidator(ctx sdk.Context, chainID string, val types.Validato
 	return nil
 }
 
-// DeleteValidators delete validators info
+// DeleteValidators delete validators.
 func (k Keeper) DeleteValidator(ctx sdk.Context, chainID string, address []byte) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(chainID))
 	store.Delete(address)
 }
 
-// IterateZones iterate through zones
+// IterateZones iterates through zones.
 func (k Keeper) IterateValidators(ctx sdk.Context, chainID string, fn func(index int64, validator types.Validator) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
 
