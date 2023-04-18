@@ -83,25 +83,25 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	// and determine min/max voting power for zone
 	max := sdk.NewInt(0)
 	min := sdk.NewInt(999999999999999999)
-	for _, val := range zoneValidators {
-		v := val
-		if v.VotingPower.IsNegative() {
-			return fmt.Errorf("unexpected negative voting power for %s", v.ValoperAddress)
+	for _, zoneVal := range zoneValidators {
+		val := zoneVal
+		if val.VotingPower.IsNegative() {
+			return fmt.Errorf("unexpected negative voting power for %s", val.ValoperAddress)
 		}
 		// compute zone total voting power
-		zs.TotalVotingPower = zs.TotalVotingPower.Add(v.VotingPower)
-		if _, exists := zs.ValidatorScores[v.ValoperAddress]; !exists {
-			zs.ValidatorScores[v.ValoperAddress] = &types.Validator{Validator: &v}
+		zs.TotalVotingPower = zs.TotalVotingPower.Add(val.VotingPower)
+		if _, exists := zs.ValidatorScores[val.ValoperAddress]; !exists {
+			zs.ValidatorScores[val.ValoperAddress] = &types.Validator{Validator: &val}
 		}
 
 		// Set max/min
-		if max.LT(v.VotingPower) {
-			max = v.VotingPower
-			k.Logger(ctx).Info("new power max", "max", max, "validator", v.ValoperAddress)
+		if max.LT(val.VotingPower) {
+			max = val.VotingPower
+			k.Logger(ctx).Info("new power max", "max", max, "validator", val.ValoperAddress)
 		}
-		if min.GT(v.VotingPower) {
-			min = v.VotingPower
-			k.Logger(ctx).Info("new power min", "min", min, "validator", v.ValoperAddress)
+		if min.GT(val.VotingPower) {
+			min = val.VotingPower
+			k.Logger(ctx).Info("new power min", "min", min, "validator", val.ValoperAddress)
 		}
 	}
 
