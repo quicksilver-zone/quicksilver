@@ -12,6 +12,7 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 

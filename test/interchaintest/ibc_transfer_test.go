@@ -184,5 +184,4 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 	osmosisUpdateBal, err = osmosis.GetBalance(ctx, osmosisUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
 	require.Equal(t, int64(0), osmosisUpdateBal)
-
 }
