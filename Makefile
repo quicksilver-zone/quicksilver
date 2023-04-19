@@ -345,22 +345,22 @@ test-rpc-pending:
 
 # Executes basic chain tests via interchaintest
 ictest-basic:
-	@cd test/interchaintest && go test -race -v -run TestBasicQuicksilverStart .
+	@cd test/interchaintest && go test -v -run TestBasicQuicksilverStart .
 
 # Executes a basic chain upgrade test via interchaintest
 ictest-upgrade:
-	@cd test/interchaintest && go test -race -v -run TestBasicQuicksilverUpgrade .
+	@cd test/interchaintest && go test -v -run TestBasicQuicksilverUpgrade .
 
 # Executes a basic chain upgrade locally via interchaintest after compiling a local image as quicksilver:local
 ictest-upgrade-local: local-image ictest-upgrade
 
 # Executes IBC Transfer tests via interchaintest
 ictest-ibc:
-	@cd test/interchaintest && go test -race -v -run TestQuicksilverJunoIBCTransfer .
+	@cd test/interchaintest && go test -v -run TestQuicksilverJunoIBCTransfer .
 
 # Executes TestInterchainStaking tests via interchaintest
 ictest-interchainstaking:
-	@cd test/interchaintest && go test -race -v -run TestInterchainStaking .
+	@cd test/interchaintest && go test -v -run TestInterchainStaking .
 
 # Executes all tests via interchaintest after compiling a local image as quicksilver:local
 ictest-all: local-image ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking

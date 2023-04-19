@@ -116,16 +116,26 @@ func TestInterchainStaking(t *testing.T) {
 	_ = quickUserAddr
 	_ = junoUserAddr
 
-	RunICQ(t, ctx, quicksilver, juno)
+	runSidecars(t, ctx, quicksilver, juno)
 }
 
-func RunICQ(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
+func runSidecars(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
 	t.Helper()
 
-	icq := quicksilver.Sidecars[0]
-	err := icq.StopContainer(ctx)
-	require.NoError(t, err)
-	require.Error(t, icq.Running(ctx))
+	runICQ(t, ctx, quicksilver, juno)
+	// runXCC(t, ctx, quicksilver, juno)
+}
+
+func runICQ(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
+	t.Helper()
+
+	var icq *cosmos.SidecarProcess
+	for _, sidecar := range quicksilver.Sidecars {
+		if sidecar.ProcessName == "icq" {
+			icq = sidecar
+		}
+	}
+	require.NotNil(t, icq)
 
 	containerCfg := "config.yaml"
 
@@ -177,7 +187,7 @@ chains:
 		icq.HomeDir(),
 	)
 
-	err = icq.WriteFile(ctx, []byte(file), containerCfg)
+	err := icq.WriteFile(ctx, []byte(file), containerCfg)
 	require.NoError(t, err)
 	_, err = icq.ReadFile(ctx, containerCfg)
 	require.NoError(t, err)
@@ -186,5 +196,40 @@ chains:
 	require.NoError(t, err)
 
 	err = icq.Running(ctx)
+	require.NoError(t, err)
+}
+
+func runXCC(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
+	t.Helper()
+
+	var xcc *cosmos.SidecarProcess
+	for _, sidecar := range quicksilver.Sidecars {
+		if sidecar.ProcessName == "xcc" {
+			xcc = sidecar
+		}
+	}
+	require.NotNil(t, xcc)
+
+	containerCfg := "config.yaml"
+
+	file := fmt.Sprintf(`source_chain: '%s'
+chains:
+  quick-1: '%s'
+  juno-1: '%s'
+`,
+		quicksilver.Config().ChainID,
+		quicksilver.GetRPCAddress(),
+		juno.GetRPCAddress(),
+	)
+
+	err := xcc.WriteFile(ctx, []byte(file), containerCfg)
+	require.NoError(t, err)
+	_, err = xcc.ReadFile(ctx, containerCfg)
+	require.NoError(t, err)
+
+	err = xcc.StartContainer(ctx)
+	require.NoError(t, err)
+
+	err = xcc.Running(ctx)
 	require.NoError(t, err)
 }
