@@ -356,7 +356,7 @@ ictest-upgrade-local: local-image ictest-upgrade
 
 # Executes IBC Transfer tests via interchaintest
 ictest-ibc:
-	@cd test/interchaintest && go test -race -v -run TestQuicksilverOsmosisIBCTransfer .
+	@cd test/interchaintest && go test -race -v -run TestQuicksilverJunoIBCTransfer .
 
 # Executes TestInterchainStaking tests via interchaintest
 ictest-interchainstaking:

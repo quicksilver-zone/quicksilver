@@ -22,7 +22,7 @@ func TestInterchainStaking(t *testing.T) {
 
 	t.Parallel()
 
-	// Create chain factory with Quicksilver and osmosis
+	// Create chain factory with Quicksilver and Juno
 	numVals := 3
 	numFullNodes := 3
 
@@ -37,8 +37,8 @@ func TestInterchainStaking(t *testing.T) {
 			NumFullNodes:  &numFullNodes,
 		},
 		{
-			Name:          "osmosis",
-			Version:       "v12.0.0",
+			Name:          "juno",
+			Version:       "v14.1.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
 			//ChainConfig: ibc.ChainConfig{
@@ -51,7 +51,7 @@ func TestInterchainStaking(t *testing.T) {
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
-	quicksilver, osmosis := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
+	quicksilver, juno := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
 	// Create relayer factory to utilize the go-relayer
 	client, network := interchaintest.DockerSetup(t)
@@ -61,13 +61,13 @@ func TestInterchainStaking(t *testing.T) {
 	// Create a new Interchain object which describes the chains, relayers, and IBC connections we want to use
 	ic := interchaintest.NewInterchain().
 		AddChain(quicksilver).
-		AddChain(osmosis).
+		AddChain(juno).
 		AddRelayer(r, "rly").
 		AddLink(interchaintest.InterchainLink{
 			Chain1:  quicksilver,
-			Chain2:  osmosis,
+			Chain2:  juno,
 			Relayer: r,
-			Path:    pathQuicksilverOsmosis,
+			Path:    pathQuicksilverJuno,
 		})
 
 	rep := testreporter.NewNopReporter()
@@ -91,7 +91,7 @@ func TestInterchainStaking(t *testing.T) {
 	})
 
 	// Start the relayer
-	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverOsmosis))
+	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverJuno))
 	t.Cleanup(
 		func() {
 			err := r.StopRelayer(ctx, eRep)
@@ -102,24 +102,24 @@ func TestInterchainStaking(t *testing.T) {
 	)
 
 	// Create some user accounts on both chains
-	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, osmosis)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, juno)
 
 	// Wait a few blocks for relayer to start and for user accounts to be created
-	err = testutil.WaitForBlocks(ctx, 5, quicksilver, osmosis)
+	err = testutil.WaitForBlocks(ctx, 5, quicksilver, juno)
 	require.NoError(t, err)
 
 	// Get our Bech32 encoded user addresses
-	quickUser, osmosisUser := users[0], users[1]
+	quickUser, junoUser := users[0], users[1]
 
 	quickUserAddr := quickUser.FormattedAddress()
-	osmosisUserAddr := osmosisUser.FormattedAddress()
+	junoUserAddr := junoUser.FormattedAddress()
 	_ = quickUserAddr
-	_ = osmosisUserAddr
+	_ = junoUserAddr
 
-	RunICQ(t, ctx, quicksilver, osmosis)
+	RunICQ(t, ctx, quicksilver, juno)
 }
 
-func RunICQ(t *testing.T, ctx context.Context, quicksilver, osmosis *cosmos.CosmosChain) {
+func RunICQ(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
 	t.Helper()
 
 	icq := quicksilver.Sidecars[0]
@@ -170,10 +170,10 @@ chains:
 		quicksilver.GetRPCAddress(),
 		quicksilver.GetGRPCAddress(),
 		icq.HomeDir(),
-		osmosis.Config().ChainID,
-		osmosis.Config().ChainID,
-		osmosis.GetRPCAddress(),
-		osmosis.GetGRPCAddress(),
+		juno.Config().ChainID,
+		juno.Config().ChainID,
+		juno.GetRPCAddress(),
+		juno.GetGRPCAddress(),
 		icq.HomeDir(),
 	)
 

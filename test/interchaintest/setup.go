@@ -28,8 +28,8 @@ var (
 		UidGid:     "1027:1027",
 	}
 
-	pathQuicksilverOsmosis = "quicksilver-osmosis"
-	genesisWalletAmount    = int64(10_000_000)
+	pathQuicksilverJuno = "quicksilver-juno"
+	genesisWalletAmount = int64(10_000_000)
 )
 
 func createConfig() (ibc.ChainConfig, error) {

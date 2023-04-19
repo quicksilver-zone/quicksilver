@@ -15,16 +15,16 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-// TestQuicksilverOsmosisIBCTransfer spins up a Quicksilver and Osmosis network, initializes an IBC connection between them,
-// and sends an ICS20 token transfer from Quicksilver->Osmosis and then back from Osmosis->Quicksilver.
-func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
+// TestQuicksilverJunoIBCTransfer spins up a Quicksilver and Juno network, initializes an IBC connection between them,
+// and sends an ICS20 token transfer from Quicksilver->Juno and then back from Juno->Quicksilver.
+func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
 
 	t.Parallel()
 
-	// Create chain factory with Quicksilver and osmosis
+	// Create chain factory with Quicksilver and Juno
 	numVals := 3
 	numFullNodes := 3
 
@@ -39,8 +39,8 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 			NumFullNodes:  &numFullNodes,
 		},
 		{
-			Name:          "osmosis",
-			Version:       "v12.0.0",
+			Name:          "juno",
+			Version:       "v14.1.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
 			//ChainConfig: ibc.ChainConfig{
@@ -53,7 +53,7 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
-	quicksilver, osmosis := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
+	quicksilver, juno := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
 	// Create relayer factory to utilize the go-relayer
 	client, network := interchaintest.DockerSetup(t)
@@ -63,13 +63,13 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 	// Create a new Interchain object which describes the chains, relayers, and IBC connections we want to use
 	ic := interchaintest.NewInterchain().
 		AddChain(quicksilver).
-		AddChain(osmosis).
+		AddChain(juno).
 		AddRelayer(r, "rly").
 		AddLink(interchaintest.InterchainLink{
 			Chain1:  quicksilver,
-			Chain2:  osmosis,
+			Chain2:  juno,
 			Relayer: r,
-			Path:    pathQuicksilverOsmosis,
+			Path:    pathQuicksilverJuno,
 		})
 
 	rep := testreporter.NewNopReporter()
@@ -93,7 +93,7 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 	})
 
 	// Start the relayer
-	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverOsmosis))
+	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverJuno))
 	t.Cleanup(
 		func() {
 			err := r.StopRelayer(ctx, eRep)
@@ -104,31 +104,31 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 	)
 
 	// Create some user accounts on both chains
-	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, osmosis)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, juno)
 
 	// Wait a few blocks for relayer to start and for user accounts to be created
-	err = testutil.WaitForBlocks(ctx, 5, quicksilver, osmosis)
+	err = testutil.WaitForBlocks(ctx, 5, quicksilver, juno)
 	require.NoError(t, err)
 
 	// Get our Bech32 encoded user addresses
-	quickUser, osmosisUser := users[0], users[1]
+	quickUser, junoUser := users[0], users[1]
 
 	quickUserAddr := quickUser.FormattedAddress()
-	osmosisUserAddr := osmosisUser.FormattedAddress()
+	junoUserAddr := junoUser.FormattedAddress()
 
 	// Get original account balances
 	quicksilverOrigBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, genesisWalletAmount, quicksilverOrigBal)
 
-	osmosisOrigBal, err := osmosis.GetBalance(ctx, osmosisUserAddr, osmosis.Config().Denom)
+	junoOrigBal, err := juno.GetBalance(ctx, junoUserAddr, juno.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, genesisWalletAmount, osmosisOrigBal)
+	require.Equal(t, genesisWalletAmount, junoOrigBal)
 
-	// Compose an IBC transfer and send from Quicksilver -> osmosis
+	// Compose an IBC transfer and send from Quicksilver -> Juno
 	const transferAmount = int64(1_000)
 	transfer := ibc.WalletAmount{
-		Address: osmosisUserAddr,
+		Address: junoUserAddr,
 		Denom:   quicksilver.Config().Denom,
 		Amount:  transferAmount,
 	}
@@ -146,42 +146,42 @@ func TestQuicksilverOsmosisIBCTransfer(t *testing.T) {
 	_, err = testutil.PollForAck(ctx, quicksilver, quicksilverHeight, quicksilverHeight+10, transferTx.Packet)
 	require.NoError(t, err)
 
-	// Get the IBC denom for uqck on osmosis
+	// Get the IBC denom for uqck on Juno
 	quicksilverTokenDenom := transfertypes.GetPrefixedDenom(quickChannels[0].Counterparty.PortID, quickChannels[0].Counterparty.ChannelID, quicksilver.Config().Denom)
 	quicksilverIBCDenom := transfertypes.ParseDenomTrace(quicksilverTokenDenom).IBCDenom()
 
-	// Assert that the funds are no longer present in user acc on Juno and are in the user acc on osmosis
+	// Assert that the funds are no longer present in user acc on Juno and are in the user acc on Juno
 	quicksilverUpdateBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, quicksilverOrigBal-transferAmount, quicksilverUpdateBal)
 
-	osmosisUpdateBal, err := osmosis.GetBalance(ctx, osmosisUserAddr, quicksilverIBCDenom)
+	junoUpdateBal, err := juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
-	require.Equal(t, transferAmount, osmosisUpdateBal)
+	require.Equal(t, transferAmount, junoUpdateBal)
 
-	// Compose an IBC transfer and send from osmosis -> Juno
+	// Compose an IBC transfer and send from Quicksilver -> Juno
 	transfer = ibc.WalletAmount{
 		Address: quickUserAddr,
 		Denom:   quicksilverIBCDenom,
 		Amount:  transferAmount,
 	}
 
-	transferTx, err = osmosis.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, osmosisUserAddr, transfer, ibc.TransferOptions{})
+	transferTx, err = juno.SendIBCTransfer(ctx, quickChannels[0].Counterparty.ChannelID, junoUserAddr, transfer, ibc.TransferOptions{})
 	require.NoError(t, err)
 
-	osmosisHeight, err := osmosis.Height(ctx)
+	junoHeight, err := juno.Height(ctx)
 	require.NoError(t, err)
 
 	// Poll for the ack to know the transfer was successful
-	_, err = testutil.PollForAck(ctx, osmosis, osmosisHeight, osmosisHeight+10, transferTx.Packet)
+	_, err = testutil.PollForAck(ctx, juno, junoHeight, junoHeight+10, transferTx.Packet)
 	require.NoError(t, err)
 
-	// Assert that the funds are now back on Juno and not on osmosis
+	// Assert that the funds are now back on Juno and not on Juno
 	quicksilverUpdateBal, err = quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, quicksilverOrigBal, quicksilverUpdateBal)
 
-	osmosisUpdateBal, err = osmosis.GetBalance(ctx, osmosisUserAddr, quicksilverIBCDenom)
+	junoUpdateBal, err = juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
-	require.Equal(t, int64(0), osmosisUpdateBal)
+	require.Equal(t, int64(0), junoUpdateBal)
 }
