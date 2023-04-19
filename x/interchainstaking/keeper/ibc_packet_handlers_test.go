@@ -1451,7 +1451,6 @@ func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
 	val3 := icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
-	
 	delegations := []icstypes.Delegation{
 		{
 			DelegationAddress: zone.DelegationAddress.Address,
