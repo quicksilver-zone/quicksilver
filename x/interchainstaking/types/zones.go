@@ -14,9 +14,9 @@ func (z Zone) SupportReturnToSender() bool { return z.ReturnToSender }
 func (z Zone) IsUnbondingEnabled() bool    { return z.UnbondingEnabled }
 func (z Zone) SupportLsm() bool            { return z.LiquidityModule }
 
-func (m *Zone) GetValoperPrefix() string {
-	if m != nil {
-		return m.AccountPrefix + "valoper"
+func (z *Zone) GetValoperPrefix() string {
+	if z != nil {
+		return z.AccountPrefix + "valoper"
 	}
 	return ""
 }
@@ -33,7 +33,6 @@ func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
 }
 
 func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals []string) error {
-
 COINS:
 	for _, coin := range coins.Sort() {
 		if coin.Denom == z.BaseDenom {

@@ -202,14 +202,9 @@ func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{
-				//fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			}
-			args := append(tt.args, flags...)
-
 			cmd := cli.GetDepositAccountCmd()
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
 			if tt.expectErr {
 				s.Require().Error(err)
 			} else {
