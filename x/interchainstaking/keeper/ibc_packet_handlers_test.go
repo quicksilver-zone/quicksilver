@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -1294,240 +1295,269 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 	}
 }
 
-// func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
-//	s.SetupTest()
-//	s.setupTestZones()
-//
-//	quicksilver := s.GetQuicksilverApp(s.chainA)
-//	ctx := s.chainA.GetContext()
-//
-//	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-//	if !found {
-//		s.Fail("unable to retrieve zone for test")
-//	}
-//	vals := quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
-//
-//	delegations := []icstypes.Delegation{
-//		{
-//			DelegationAddress: zone.DelegationAddress.Address,
-//			ValidatorAddress:  vals[0].ValoperAddress,
-//			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
-//			RedelegationEnd:   0,
-//		},
-//		{
-//			DelegationAddress: zone.DelegationAddress.Address,
-//			ValidatorAddress:  vals[1].ValoperAddress,
-//			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
-//			RedelegationEnd:   0,
-//		},
-//		{
-//			DelegationAddress: zone.DelegationAddress.Address,
-//			ValidatorAddress:  vals[2].ValoperAddress,
-//			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
-//			RedelegationEnd:   0,
-//		},
-//		{
-//			DelegationAddress: zone.DelegationAddress.Address,
-//			ValidatorAddress:  vals[3].ValoperAddress,
-//			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
-//			RedelegationEnd:   0,
-//		},
-//	}
-//	for _, delegation := range delegations {
-//		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-//		addressBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
-//		s.Require().NoError(err)
-//		val, _ := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, addressBytes)
-//		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
-//		val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
-//	}
-//
-//	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
-//
-//	// trigger rebalance
-//	err := quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
-//	s.Require().NoError(err)
-//
-//	// change intents to trigger redelegations from val[3]
-//	intents := icstypes.ValidatorIntents{
-//		{ValoperAddress: vals[0].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
-//		{ValoperAddress: vals[1].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
-//		{ValoperAddress: vals[2].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
-//		{ValoperAddress: vals[3].ValoperAddress, Weight: sdk.NewDecWithPrec(1, 1)},
-//	}
-//	zone.AggregateIntent = intents
-//
-//	// trigger rebalance
-//	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
-//	s.Require().NoError(err)
-//
-//	// mock ack for redelegations
-//	quicksilver.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
-//		if record.EpochNumber == 2 {
-//			msg := stakingtypes.MsgBeginRedelegate{
-//				DelegatorAddress:    zone.DelegationAddress.Address,
-//				ValidatorSrcAddress: record.Source,
-//				ValidatorDstAddress: record.Destination,
-//				Amount:              sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
-//			}
-//			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
-//			if err != nil {
-//				return false
-//			}
-//		}
-//		return false
-//	})
-//
-//	// check for redelegations
-//	_, present := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[0].ValoperAddress, 2)
-//	s.Require().True(present)
-//	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[1].ValoperAddress, 2)
-//	s.Require().True(present)
-//	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[2].ValoperAddress, 2)
-//	s.Require().True(present)
-//
-//	// change intents to trigger transitive redelegations which should fail rebalance
-//	zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-//	intents = icstypes.ValidatorIntents{
-//		{ValoperAddress: vals[0].ValoperAddress, Weight: sdk.NewDecWithPrec(1, 1)},
-//		{ValoperAddress: vals[1].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
-//		{ValoperAddress: vals[2].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
-//		{ValoperAddress: vals[3].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
-//	}
-//	zone.AggregateIntent = intents
-//
-//	// trigger rebalance
-//	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
-//	s.Require().NoError(err)
-//
-//	// check for redelegations originating from val[0], they should not be present
-//	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 3)
-//	s.Require().False(present)
-//	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[2].ValoperAddress, 3)
-//	s.Require().False(present)
-//	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[3].ValoperAddress, 3)
-//	s.Require().False(present)
-//}
-//
-// func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
-//	s.SetupTest()
-//	s.setupTestZones()
-//
-//	quicksilver := s.GetQuicksilverApp(s.chainA)
-//	ctx := s.chainA.GetContext()
-//
-//	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-//	if !found {
-//		s.Fail("unable to retrieve zone for test")
-//	}
-//	vals := quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
-//
-//	delegations := []icstypes.Delegation{
-//		{
-//			DelegationAddress: zone.DelegationAddress.Address,
-//			ValidatorAddress:  vals[0].ValoperAddress,
-//			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
-//			RedelegationEnd:   0,
-//		},
-//		{
-//			DelegationAddress: zone.DelegationAddress.Address,
-//			ValidatorAddress:  vals[1].ValoperAddress,
-//			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
-//			RedelegationEnd:   0,
-//		},
-//		{
-//			DelegationAddress: zone.DelegationAddress.Address,
-//			ValidatorAddress:  vals[2].ValoperAddress,
-//			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
-//			RedelegationEnd:   0,
-//		},
-//		{
-//			DelegationAddress: zone.DelegationAddress.Address,
-//			ValidatorAddress:  vals[3].ValoperAddress,
-//			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
-//			RedelegationEnd:   0,
-//		},
-//	}
-//	for _, delegation := range delegations {
-//		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-//		valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
-//		s.Require().NoError(err)
-//
-//		val, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
-//		s.Require().NoError(err)
-//		s.Require().True(found)
-//		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
-//		val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
-//
-//	}
-//
-//	// trigger rebalance
-//	err := quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
-//	s.Require().NoError(err)
-//
-//	quicksilver.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) bool {
-//		if delegation.ValidatorAddress == vals[0].ValoperAddress {
-//			delegation.Amount = delegation.Amount.Add(sdk.NewInt64Coin("uatom", 4000))
-//			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-//		}
-//		return false
-//	})
-//
-//	// trigger rebalance
-//	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
-//	s.Require().NoError(err)
-//
-//	// mock ack for redelegations
-//	quicksilver.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
-//		fmt.Println(record)
-//		fmt.Println("##")
-//		if record.EpochNumber == 2 {
-//			msg := stakingtypes.MsgBeginRedelegate{
-//				DelegatorAddress:    zone.DelegationAddress.Address,
-//				ValidatorSrcAddress: record.Source,
-//				ValidatorDstAddress: record.Destination,
-//				Amount:              sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
-//			}
-//			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
-//			if err != nil {
-//				return false
-//			}
-//		}
-//		return false
-//	})
-//
-//	// check for redelegations
-//	_, present := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 2)
-//	s.Require().True(present)
-//	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[3].ValoperAddress, 2)
-//	s.Require().True(present)
-//
-//	// change validator delegation to trigger transitive redelegations which should fail rebalance
-//	quicksilver.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) bool {
-//		if delegation.ValidatorAddress == vals[0].ValoperAddress {
-//			delegation.Amount = delegation.Amount.Sub(sdk.NewInt64Coin("uatom", 4000))
-//			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-//		}
-//		if delegation.ValidatorAddress == vals[2].ValoperAddress {
-//			delegation.Amount = delegation.Amount.Add(sdk.NewInt64Coin("uatom", 4000))
-//			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-//		}
-//
-//		return false
-//	})
-//
-//	// trigger rebalance
-//	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
-//	s.Require().NoError(err)
-//
-//	// check for redelegations originating from val[1], they should not be present
-//	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[1].ValoperAddress, vals[0].ValoperAddress, 3)
-//	s.Require().False(present)
-//	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[1].ValoperAddress, vals[1].ValoperAddress, 3)
-//	s.Require().False(present)
-//	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[1].ValoperAddress, vals[3].ValoperAddress, 3)
-//	s.Require().False(present)
-//}
+func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	quicksilver := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+
+	if !found {
+		s.Fail("unable to retrieve zone for test")
+	}
+	vals := quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+	for _, val := range vals {
+		valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "cosmosvaloper")
+		quicksilver.InterchainstakingKeeper.DeleteValidator(ctx, zone.ChainId, valoper)
+	}
+
+	val0 := icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
+	val1 := icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
+	val2 := icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
+	val3 := icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
+
+	vals = quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+
+	delegations := []icstypes.Delegation{
+		{
+			DelegationAddress: zone.DelegationAddress.Address,
+			ValidatorAddress:  vals[0].ValoperAddress,
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
+			RedelegationEnd:   0,
+		},
+		{
+			DelegationAddress: zone.DelegationAddress.Address,
+			ValidatorAddress:  vals[1].ValoperAddress,
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
+			RedelegationEnd:   0,
+		},
+		{
+			DelegationAddress: zone.DelegationAddress.Address,
+			ValidatorAddress:  vals[2].ValoperAddress,
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
+			RedelegationEnd:   0,
+		},
+		{
+			DelegationAddress: zone.DelegationAddress.Address,
+			ValidatorAddress:  vals[3].ValoperAddress,
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
+			RedelegationEnd:   0,
+		},
+	}
+	for _, delegation := range delegations {
+		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+		addressBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
+		s.Require().NoError(err)
+		val, _ := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, addressBytes)
+		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
+		val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
+	}
+
+	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	// trigger rebalance
+	err := quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
+	s.Require().NoError(err)
+
+	// change intents to trigger redelegations from val[3]
+	intents := icstypes.ValidatorIntents{
+		{ValoperAddress: vals[0].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
+		{ValoperAddress: vals[1].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
+		{ValoperAddress: vals[2].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
+		{ValoperAddress: vals[3].ValoperAddress, Weight: sdk.NewDecWithPrec(1, 1)},
+	}
+	zone.AggregateIntent = intents
+
+	// trigger rebalance
+	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
+	s.Require().NoError(err)
+
+	// mock ack for redelegations
+	quicksilver.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
+		if record.EpochNumber == 2 {
+			msg := stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    zone.DelegationAddress.Address,
+				ValidatorSrcAddress: record.Source,
+				ValidatorDstAddress: record.Destination,
+				Amount:              sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
+			}
+			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
+			if err != nil {
+				return false
+			}
+		}
+		return false
+	})
+
+	// check for redelegations
+	_, present := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[0].ValoperAddress, 2)
+	s.Require().True(present)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[1].ValoperAddress, 2)
+	s.Require().True(present)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[3].ValoperAddress, vals[2].ValoperAddress, 2)
+	s.Require().True(present)
+
+	// change intents to trigger transitive redelegations which should fail rebalance
+	zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	intents = icstypes.ValidatorIntents{
+		{ValoperAddress: vals[0].ValoperAddress, Weight: sdk.NewDecWithPrec(1, 1)},
+		{ValoperAddress: vals[1].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
+		{ValoperAddress: vals[2].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
+		{ValoperAddress: vals[3].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
+	}
+	zone.AggregateIntent = intents
+
+	// trigger rebalance
+	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
+	s.Require().NoError(err)
+
+	// check for redelegations originating from val[0], they should not be present
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[1].ValoperAddress, 3)
+	s.Require().False(present)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[2].ValoperAddress, 3)
+	s.Require().False(present)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, vals[0].ValoperAddress, vals[3].ValoperAddress, 3)
+	s.Require().False(present)
+}
+
+func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	quicksilver := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	if !found {
+		s.Fail("unable to retrieve zone for test")
+	}
+	vals := quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+	for _, val := range vals {
+		valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "cosmosvaloper")
+		quicksilver.InterchainstakingKeeper.DeleteValidator(ctx, zone.ChainId, valoper)
+	}
+
+	val0 := icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
+	val1 := icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
+	val2 := icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
+	val3 := icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
+	
+	delegations := []icstypes.Delegation{
+		{
+			DelegationAddress: zone.DelegationAddress.Address,
+			ValidatorAddress:  val0.ValoperAddress,
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
+			RedelegationEnd:   0,
+		},
+		{
+			DelegationAddress: zone.DelegationAddress.Address,
+			ValidatorAddress:  val1.ValoperAddress,
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
+			RedelegationEnd:   0,
+		},
+		{
+			DelegationAddress: zone.DelegationAddress.Address,
+			ValidatorAddress:  val2.ValoperAddress,
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
+			RedelegationEnd:   0,
+		},
+		{
+			DelegationAddress: zone.DelegationAddress.Address,
+			ValidatorAddress:  val3.ValoperAddress,
+			Amount:            sdk.NewCoin("uatom", sdk.NewInt(1000)),
+			RedelegationEnd:   0,
+		},
+	}
+	for _, delegation := range delegations {
+		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+		valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
+		s.Require().NoError(err)
+
+		val, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+		s.Require().NoError(err)
+		s.Require().True(found)
+		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
+		val.DelegatorShares = val.DelegatorShares.Add(sdk.NewDecFromInt(delegation.Amount.Amount))
+
+	}
+
+	// trigger rebalance
+	err := quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
+	s.Require().NoError(err)
+
+	quicksilver.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) bool {
+		if delegation.ValidatorAddress == val0.ValoperAddress {
+			delegation.Amount = delegation.Amount.Add(sdk.NewInt64Coin("uatom", 4000))
+			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+		}
+		return false
+	})
+
+	// trigger rebalance
+	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 2)
+	s.Require().NoError(err)
+
+	// mock ack for redelegations
+	quicksilver.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
+		fmt.Println(record)
+		fmt.Println("##")
+		if record.EpochNumber == 2 {
+			msg := stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    zone.DelegationAddress.Address,
+				ValidatorSrcAddress: record.Source,
+				ValidatorDstAddress: record.Destination,
+				Amount:              sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
+			}
+			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
+			if err != nil {
+				return false
+			}
+		}
+		return false
+	})
+
+	// check for redelegations
+	_, present := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, val0.ValoperAddress, val1.ValoperAddress, 2)
+	s.Require().False(present)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, val0.ValoperAddress, val2.ValoperAddress, 2)
+	s.Require().False(present)
+
+	// change validator delegation to trigger transitive redelegations which should fail rebalance
+	quicksilver.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) bool {
+		if delegation.ValidatorAddress == val0.ValoperAddress {
+			delegation.Amount = delegation.Amount.Sub(sdk.NewInt64Coin("uatom", 4000))
+			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+		}
+		if delegation.ValidatorAddress == val1.ValoperAddress {
+			delegation.Amount = delegation.Amount.Add(sdk.NewInt64Coin("uatom", 4000))
+			quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+		}
+
+		return false
+	})
+
+	// trigger rebalance
+	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 3)
+	s.Require().NoError(err)
+
+	// check for redelegations originating from val[1], they should not be present
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, val1.ValoperAddress, val0.ValoperAddress, 3)
+	s.Require().False(present)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, val1.ValoperAddress, val1.ValoperAddress, 3)
+	s.Require().False(present)
+	_, present = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, val1.ValoperAddress, val3.ValoperAddress, 3)
+	s.Require().False(present)
+}
 
 func (s *KeeperTestSuite) Test_v045Callback() {
 	tests := []struct {
