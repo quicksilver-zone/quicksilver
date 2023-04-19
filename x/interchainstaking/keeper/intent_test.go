@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -165,7 +164,7 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
-				return out
+				return out.Sort()
 			},
 		},
 		{
@@ -182,7 +181,7 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
-				return out
+				return out.Sort()
 			},
 		},
 		{
@@ -210,7 +209,8 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
-				return out
+
+				return out.Sort()
 			},
 		},
 		{
@@ -242,7 +242,7 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
-				return out
+				return out.Sort()
 			},
 		},
 		{
@@ -275,7 +275,7 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
-				return out
+				return out.Sort()
 			},
 		},
 		{
@@ -307,7 +307,7 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
-				return out
+				return out.Sort()
 			},
 		},
 	}
