@@ -3,7 +3,6 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -34,6 +33,7 @@ func (s *KeeperTestSuite) TestStoreGetDeleteValidator() {
 			DelegatorShares: sdk.NewDec(1000.0),
 			VotingPower:     sdk.NewInt(1000),
 			Status:          stakingtypes.BondStatusBonded,
+			Score:           sdk.NewDec(0),
 		}
 		app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newValidator)
 
@@ -48,6 +48,6 @@ func (s *KeeperTestSuite) TestStoreGetDeleteValidator() {
 		app.InterchainstakingKeeper.DeleteValidator(ctx, zone.ChainId, valAddrBytes)
 
 		count3 := len(app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId))
-		s.Require().Len(count3, count)
+		s.Require().Equal(count, count3)
 	})
 }

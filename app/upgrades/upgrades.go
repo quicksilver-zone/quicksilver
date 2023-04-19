@@ -4,8 +4,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	"github.com/ingenuity-build/quicksilver/app/keepers"
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func Upgrades() []Upgrade {
@@ -18,6 +18,38 @@ func NoOpHandler(
 	_ *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010402rc1UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) {
+			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo *types.Zone) (stop bool) {
+				for _, val := range zoneInfo.Validators {
+					newVal := types.Validator{
+						ValoperAddress:  val.ValoperAddress,
+						CommissionRate:  val.CommissionRate,
+						DelegatorShares: val.DelegatorShares,
+						VotingPower:     val.VotingPower,
+						Score:           val.Score,
+						Status:          val.Status,
+						Jailed:          val.Jailed,
+						Tombstoned:      val.Tombstoned,
+						JailedSince:     val.JailedSince,
+					}
+					appKeepers.InterchainstakingKeeper.SetValidator(ctx, zoneInfo.ChainId, newVal)
+				}
+				zoneInfo.Validators = nil
+				appKeepers.InterchainstakingKeeper.SetZone(ctx, zoneInfo)
+				return false
+			})
+		}
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
