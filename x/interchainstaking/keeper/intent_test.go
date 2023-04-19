@@ -209,8 +209,8 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
-				return out.Sort()
 
+				return out.Sort()
 			},
 		},
 		{

@@ -42,7 +42,10 @@ func V010402rc1UpgradeHandler(
 						Tombstoned:      val.Tombstoned,
 						JailedSince:     val.JailedSince,
 					}
-					appKeepers.InterchainstakingKeeper.SetValidator(ctx, zoneInfo.ChainId, newVal)
+					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zoneInfo.ChainId, newVal)
+					if err != nil {
+						panic(err)
+					}
 				}
 				zoneInfo.Validators = nil
 				appKeepers.InterchainstakingKeeper.SetZone(ctx, zoneInfo)

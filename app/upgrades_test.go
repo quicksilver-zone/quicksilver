@@ -219,52 +219,45 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 	ctx := s.chainA.GetContext()
 	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo *icstypes.Zone) (stop bool) {
 		if zoneInfo.ChainId == "uni-5" {
+
 			zoneInfo.Validators = []*icstypes.Validator{
-				{"junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn",
-					sdk.MustNewDecFromStr("0.2"),
-					sdk.NewDec(2000),
-					sdk.NewInt(2000),
-					sdk.NewDec(0),
-					stakingtypes.BondStatusBonded,
-					false,
-					false,
-					time.Time{},
+				{
+					ValoperAddress:  "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn",
+					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
+					DelegatorShares: sdk.NewDec(2000),
+					VotingPower:     sdk.NewInt(2000),
+					Score:           sdk.NewDec(0),
+					Status:          stakingtypes.BondStatusBonded,
 				},
-				{"junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed",
-					sdk.MustNewDecFromStr("0.2"),
-					sdk.NewDec(2000),
-					sdk.NewInt(3000),
-					sdk.NewDec(0),
-					stakingtypes.BondStatusBonded,
-					false,
-					false,
-					time.Time{},
+
+				{
+					ValoperAddress:  "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed",
+					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
+					DelegatorShares: sdk.NewDec(2000),
+					VotingPower:     sdk.NewInt(3000),
+					Score:           sdk.NewDec(0),
+					Status:          stakingtypes.BondStatusBonded,
 				},
 			}
-
 			app.InterchainstakingKeeper.SetZone(ctx, zoneInfo)
 		}
 		if zoneInfo.ChainId == "osmosis-1" {
 			zoneInfo.Validators = []*icstypes.Validator{
-				{"osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
-					sdk.MustNewDecFromStr("0.2"),
-					sdk.NewDec(2000),
-					sdk.NewInt(2000),
-					sdk.NewDec(0),
-					stakingtypes.BondStatusBonded,
-					false,
-					false,
-					time.Time{},
+				{
+					ValoperAddress:  "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
+					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
+					DelegatorShares: sdk.NewDec(2000),
+					VotingPower:     sdk.NewInt(2000),
+					Score:           sdk.NewDec(0),
+					Status:          stakingtypes.BondStatusBonded,
 				},
-				{"osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
-					sdk.MustNewDecFromStr("0.2"),
-					sdk.NewDec(2000),
-					sdk.NewInt(3000),
-					sdk.NewDec(0),
-					stakingtypes.BondStatusBonded,
-					false,
-					false,
-					time.Time{},
+				{
+					ValoperAddress:  "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
+					CommissionRate:  sdk.MustNewDecFromStr("0.2"),
+					DelegatorShares: sdk.NewDec(2000),
+					VotingPower:     sdk.NewInt(3000),
+					Score:           sdk.NewDec(0),
+					Status:          stakingtypes.BondStatusBonded,
 				},
 			}
 
@@ -299,9 +292,9 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 			_, found = app.InterchainstakingKeeper.GetValidator(ctx, zoneInfo.ChainId, valAddrBytes2)
 			s.Require().True(found)
 		}
+
 		return false
 	})
-
 }
 
 // func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {

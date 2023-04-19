@@ -137,8 +137,8 @@ func (s *KeeperTestSuite) TestHandleQueuedUnbondings() {
 		{
 			name: "valid",
 			records: func(ctx sdk.Context, qs *app.Quicksilver, zone *icstypes.Zone) []icstypes.WithdrawalRecord {
-
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+
 				return []icstypes.WithdrawalRecord{
 					{
 						ChainId:   zone.ChainId,
@@ -1294,7 +1294,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 	}
 }
 
-//func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
+// func (s *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 //	s.SetupTest()
 //	s.setupTestZones()
 //
@@ -1409,7 +1409,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 //	s.Require().False(present)
 //}
 //
-//func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
+// func (s *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 //	s.SetupTest()
 //	s.setupTestZones()
 //
