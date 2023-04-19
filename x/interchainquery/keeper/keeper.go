@@ -162,12 +162,12 @@ func (k *Keeper) MakeRequest(
 
 // Heights
 
-func (k *Keeper) SetLatestHeight(ctx sdk.Context, chainId string, height uint64) {
+func (k *Keeper) SetLatestHeight(ctx sdk.Context, chainID string, height uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLatestHeight)
-	store.Set([]byte(chainId), sdk.Uint64ToBigEndian(height))
+	store.Set([]byte(chainID), sdk.Uint64ToBigEndian(height))
 }
 
-func (k *Keeper) GetLatestHeight(ctx sdk.Context, chainId string) uint64 {
+func (k *Keeper) GetLatestHeight(ctx sdk.Context, chainID string) uint64 {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLatestHeight)
-	return sdk.BigEndianToUint64(store.Get([]byte(chainId)))
+	return sdk.BigEndianToUint64(store.Get([]byte(chainID)))
 }
