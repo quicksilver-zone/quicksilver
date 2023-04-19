@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/rand"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -220,4 +221,13 @@ func newSimAppPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	path.EndpointB.ChannelConfig.PortID = ibctesting.TransferPort
 
 	return path
+}
+
+func (s *KeeperTestSuite) TestLatestHeight() {
+	height := rand.Uint64()
+	chainID := "test"
+
+	s.GetSimApp(s.chainA).InterchainQueryKeeper.SetLatestHeight(s.chainA.GetContext(), chainID, height)
+	got := s.GetSimApp(s.chainA).InterchainQueryKeeper.GetLatestHeight(s.chainA.GetContext(), chainID)
+	s.Require().Equal(height, got)
 }
