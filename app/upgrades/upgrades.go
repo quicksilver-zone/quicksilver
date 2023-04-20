@@ -9,7 +9,9 @@ import (
 )
 
 func Upgrades() []Upgrade {
-	return []Upgrade{}
+	return []Upgrade{
+		{UpgradeName: V010402rc1UpgradeName, CreateUpgradeHandler: V010402rc1UpgradeHandler},
+	}
 }
 
 func NoOpHandler(
