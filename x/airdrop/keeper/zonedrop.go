@@ -46,7 +46,7 @@ func (k Keeper) DeleteZoneDrop(ctx sdk.Context, chainID string) {
 }
 
 // IterateZoneDrops iterate through zone airdrops.
-func (k Keeper) IterateZoneDrops(ctx sdk.Context, fn func(index int64, zoneInfo types.ZoneDrop) (stop bool)) {
+func (k Keeper) IterateZoneDrops(ctx sdk.Context, fn func(index int64, zoneDrop types.ZoneDrop) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixZoneDrop)

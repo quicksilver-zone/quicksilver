@@ -43,7 +43,7 @@ func (k *Keeper) DeleteZone(ctx sdk.Context, chainID string) {
 }
 
 // IterateZones iterate through zones.
-func (k *Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo *types.Zone) (stop bool)) {
+func (k *Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zone *types.Zone) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -107,8 +107,8 @@ func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 // AllZones returns every Zone in the store.
 func (k *Keeper) AllZones(ctx sdk.Context) []types.Zone {
 	var zones []types.Zone
-	k.IterateZones(ctx, func(_ int64, zoneInfo *types.Zone) (stop bool) {
-		zones = append(zones, *zoneInfo)
+	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
+		zones = append(zones, *zone)
 		return false
 	})
 	return zones

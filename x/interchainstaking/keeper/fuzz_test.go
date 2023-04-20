@@ -20,7 +20,7 @@ type FuzzingTestSuite struct {
 	KeeperTestSuite
 }
 
-func FuzzZoneInfos(f *testing.F) {
+func FuzzZones(f *testing.F) {
 	if testing.Short() {
 		f.Skip("In -short mode")
 	}

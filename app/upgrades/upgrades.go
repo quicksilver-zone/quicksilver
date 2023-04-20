@@ -30,8 +30,8 @@ func V010402rc1UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) || isTest(ctx) {
-			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo *types.Zone) (stop bool) {
-				for _, val := range zoneInfo.Validators {
+			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+				for _, val := range zone.Validators {
 					newVal := types.Validator{
 						ValoperAddress:  val.ValoperAddress,
 						CommissionRate:  val.CommissionRate,
@@ -43,13 +43,13 @@ func V010402rc1UpgradeHandler(
 						Tombstoned:      val.Tombstoned,
 						JailedSince:     val.JailedSince,
 					}
-					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zoneInfo.ChainId, newVal)
+					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newVal)
 					if err != nil {
 						panic(err)
 					}
 				}
-				zoneInfo.Validators = nil
-				appKeepers.InterchainstakingKeeper.SetZone(ctx, zoneInfo)
+				zone.Validators = nil
+				appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
 				return false
 			})
 		}
@@ -169,8 +169,8 @@ func V010402rc1UpgradeHandler(
 //		})
 //
 //		if isTestnet(ctx) || isDevnet(ctx) {
-//			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo *icstypes.Zone) (stop bool) {
-//				appKeepers.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zoneInfo)
+//			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+//				appKeepers.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zone)
 //				return false
 //			})
 //		}
