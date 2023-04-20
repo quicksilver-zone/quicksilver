@@ -8,4 +8,5 @@ Versions of Golang, Cosmos SDK and Tendermint used by ibc-go in the currently ac
 
 | Go   | Quicksilver | Cosmos SDK | Comet-BFT |
 |------|-------------|------------|-----------|
-| 1.20 | v1.2.9      | v0.46.11   | v0.34.27  |
+| 1.20 | v1.4.x      | v0.46.11   | v0.34.27  |
+| 1.19 | v1.2.9      | v0.46.11   | v0.34.27  |
