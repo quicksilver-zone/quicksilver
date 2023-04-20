@@ -341,11 +341,11 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 }
 
 func (k *Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
-	return func(index int64, zoneInfo *types.Zone) (stop bool) {
-		if zoneInfo.DepositAddress != nil {
-			if !zoneInfo.DepositAddress.Balance.Empty() {
-				k.Logger(ctx).Debug("balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
-				k.EmitDepositIntervalQuery(ctx, zoneInfo)
+	return func(index int64, zone *types.Zone) (stop bool) {
+		if zone.DepositAddress != nil {
+			if !zone.DepositAddress.Balance.Empty() {
+				k.Logger(ctx).Debug("balance is non zero", "balance", zone.DepositAddress.Balance)
+				k.EmitDepositIntervalQuery(ctx, zone)
 
 			}
 		} else {
