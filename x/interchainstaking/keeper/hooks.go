@@ -5,7 +5,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -23,6 +22,15 @@ func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 //
 // and re-queries icq for new zone info.
 func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	// every day
+	if epochIdentifier == epochstypes.EpochIdentifierDay {
+		k.Logger(ctx).Info("handling day end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
+		k.Logger(ctx).Debug("flushing outstanding delegations for the day")
+		err := k.FlushOutstandingDelegationsForAllZones(ctx)
+		if err != nil {
+			return err
+		}
+	}
 	// every epoch
 	if epochIdentifier == epochstypes.EpochIdentifierEpoch {
 		k.Logger(ctx).Info("handling epoch end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
