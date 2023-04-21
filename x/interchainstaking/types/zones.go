@@ -102,7 +102,7 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 
 	memoBytes, err := base64.StdEncoding.DecodeString(memo)
 	if err != nil {
-		return out, fmt.Errorf("unable to determine intent from memo: Failed to decode base64 message: %s", err.Error())
+		return out, fmt.Errorf("unable to determine intent from memo: Failed to decode base64 message: %w", err)
 	}
 
 	if len(memoBytes)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
