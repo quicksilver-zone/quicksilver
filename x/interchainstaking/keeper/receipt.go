@@ -330,6 +330,17 @@ func (k *Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.Zone, addr sdk.Ac
 	return receipts, nil
 }
 
+func (k *Keeper) SetReceiptsCompleted(ctx sdk.Context, zone *types.Zone, qualifyingTime, completionTime time.Time) {
+	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+		if receiptInfo.FirstSeen.Before(qualifyingTime) {
+			receiptInfo.Completed = &completionTime
+			k.SetReceipt(ctx, receiptInfo)
+
+		}
+		return false
+	})
+}
+
 func GetReceiptKey(chainID, txhash string) string {
 	return fmt.Sprintf("%s/%s", chainID, txhash)
 }
