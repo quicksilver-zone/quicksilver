@@ -35,6 +35,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			addressBytes, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
 			if err != nil {
 				k.Logger(ctx).Error("cannot decode bech32 delegation addr")
+				return false
 			}
 
 			k.ICQKeeper.MakeRequest(
