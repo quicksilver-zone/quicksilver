@@ -12,16 +12,11 @@ import (
 // upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch).
 const (
 	ProductionChainID = "quicksilver-2"
-	InnuendoChainID   = "innuendo-5"
+	RhyeChainID       = "rhye-1"
 	DevnetChainID     = "quicktest-1"
 	TestChainID       = "testchain1"
 
-	V010300UpgradeName     = "v1.3.0"
-	V010400UpgradeName     = "v1.4.0"
-	V010400rc6UpgradeName  = "v1.4.0-rc6"
-	V010400rc7UpgradeName  = "v1.4.0-rc7"
-	V010400rc8UpgradeName  = "v1.4.0-rc8"
-	V010400rc10UpgradeName = "v1.4.0-rc10"
+	V010402rc1UpgradeName = "v1.4.2-rc1"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal
@@ -51,7 +46,7 @@ func isDevnet(ctx sdk.Context) bool {
 
 //nolint:all //function useful for writing network specific upgrade handlers
 func isTestnet(ctx sdk.Context) bool {
-	return ctx.ChainID() == InnuendoChainID
+	return ctx.ChainID() == RhyeChainID
 }
 
 //nolint:all //function useful for writing network specific upgrade handlers

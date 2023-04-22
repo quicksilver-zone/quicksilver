@@ -12,6 +12,7 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -91,7 +92,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingTypes.QueryValidatorsRequest{}
-	err = k.EmitValSetQuery(ctx, zone, query, sdkmath.NewInt(period))
+	err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 	if err != nil {
 		return err
 	}
@@ -251,7 +252,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 
 			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 			query := stakingTypes.QueryValidatorsRequest{}
-			err := k.EmitValSetQuery(ctx, &zone, query, sdkmath.NewInt(period))
+			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 			if err != nil {
 				return err
 			}

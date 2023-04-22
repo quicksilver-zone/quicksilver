@@ -1,6 +1,6 @@
 module github.com/ingenuity-build/quicksilver
 
-go 1.19
+go 1.20
 
 require (
 	cosmossdk.io/math v1.0.0-beta.4

@@ -133,7 +133,7 @@ func (s *KeeperTestSuite) coreTest() {
 	s.Require().True(found)
 
 	valRewards := make(map[string]sdk.Dec)
-	for _, val := range zone.Validators {
+	for _, val := range quicksilver.InterchainstakingKeeper.GetValidators(s.chainA.GetContext(), s.chainB.ChainID) {
 		valRewards[val.ValoperAddress] = sdk.NewDec(100000000)
 	}
 
@@ -147,7 +147,7 @@ func (s *KeeperTestSuite) setupTestZones() {
 	testzone := icstypes.Zone{
 		ConnectionId:     s.path.EndpointA.ConnectionID,
 		ChainId:          s.chainB.ChainID,
-		AccountPrefix:    "bcosmos",
+		AccountPrefix:    "cosmos",
 		LocalDenom:       "uqatom",
 		BaseDenom:        "uatom",
 		ReturnToSender:   false,
@@ -176,17 +176,10 @@ func (s *KeeperTestSuite) setupTestZones() {
 	s.Require().NoError(s.setupChannelForICA(s.chainB.ChainID, s.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
 
 	vals := s.GetQuicksilverApp(s.chainB).StakingKeeper.GetBondedValidatorsByPower(s.chainB.GetContext())
-	for i := range vals {
-		// refetch the zone for each validator, else we end up with an empty valset each time!
-		zone, found := quicksilver.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
-		s.Require().True(found)
-		s.Require().NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(s.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
-	}
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+	s.Require().True(found)
 
-	vals = s.GetQuicksilverApp(s.chainA).StakingKeeper.GetBondedValidatorsByPower(s.chainA.GetContext())
 	for i := range vals {
-		zone, found := quicksilver.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainA.ChainID)
-		s.Require().True(found)
 		s.Require().NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(s.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
 	}
 
@@ -249,31 +242,34 @@ func (s *KeeperTestSuite) setupTestZones() {
 		ReturnToSender:     false,
 		LiquidityModule:    true,
 		PerformanceAddress: performanceAccountCosmos,
-		Validators: []*icstypes.Validator{
-			{
-				ValoperAddress:  "cosmosvaloper1759teakrsvnx7rnur8ezc4qaq8669nhtgukm0x",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-				DelegatorShares: sdk.NewDec(200032604739),
-				VotingPower:     math.NewInt(200032604739),
-				Score:           sdk.ZeroDec(),
-			},
-			{
-				ValoperAddress:  "cosmosvaloper1jtjjyxtqk0fj85ud9cxk368gr8cjdsftvdt5jl",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-				DelegatorShares: sdk.NewDec(200032604734),
-				VotingPower:     math.NewInt(200032604734),
-				Score:           sdk.ZeroDec(),
-			},
-			{
-				ValoperAddress:  "cosmosvaloper1q86m0zq0p52h4puw5pg5xgc3c5e2mq52y6mth0",
-				CommissionRate:  sdk.MustNewDecFromStr("0.1"),
-				DelegatorShares: sdk.NewDec(200032604738),
-				VotingPower:     math.NewInt(200032604738),
-				Score:           sdk.ZeroDec(),
-			},
-		},
 	}
 	quicksilver.InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zoneCosmos)
+	cosmosVals := []icstypes.Validator{
+		{
+			ValoperAddress:  "cosmosvaloper1759teakrsvnx7rnur8ezc4qaq8669nhtgukm0x",
+			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+			DelegatorShares: sdk.NewDec(200032604739),
+			VotingPower:     math.NewInt(200032604739),
+			Score:           sdk.ZeroDec(),
+		},
+		{
+			ValoperAddress:  "cosmosvaloper1jtjjyxtqk0fj85ud9cxk368gr8cjdsftvdt5jl",
+			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+			DelegatorShares: sdk.NewDec(200032604734),
+			VotingPower:     math.NewInt(200032604734),
+			Score:           sdk.ZeroDec(),
+		},
+		{
+			ValoperAddress:  "cosmosvaloper1q86m0zq0p52h4puw5pg5xgc3c5e2mq52y6mth0",
+			CommissionRate:  sdk.MustNewDecFromStr("0.1"),
+			DelegatorShares: sdk.NewDec(200032604738),
+			VotingPower:     math.NewInt(200032604738),
+			Score:           sdk.ZeroDec(),
+		},
+	}
+	for _, cosmosVal := range cosmosVals {
+		quicksilver.InterchainstakingKeeper.SetValidator(s.chainA.GetContext(), zoneCosmos.ChainId, cosmosVal)
+	}
 
 	// osmosis zone
 	zoneOsmosis := icstypes.Zone{
@@ -483,21 +479,22 @@ func (s *KeeperTestSuite) setupTestIntents() {
 	// chainB
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
 	s.Require().True(found)
+	vals := quicksilver.InterchainstakingKeeper.GetValidators(s.chainA.GetContext(), s.chainB.ChainID)
 
 	s.addIntent(
 		testAddress,
 		zone,
 		icstypes.ValidatorIntents{
 			{
-				ValoperAddress: zone.Validators[0].ValoperAddress,
+				ValoperAddress: vals[0].ValoperAddress,
 				Weight:         sdk.MustNewDecFromStr("0.3"),
 			},
 			{
-				ValoperAddress: zone.Validators[1].ValoperAddress,
+				ValoperAddress: vals[1].ValoperAddress,
 				Weight:         sdk.MustNewDecFromStr("0.4"),
 			},
 			{
-				ValoperAddress: zone.Validators[2].ValoperAddress,
+				ValoperAddress: vals[2].ValoperAddress,
 				Weight:         sdk.MustNewDecFromStr("0.3"),
 			},
 		},

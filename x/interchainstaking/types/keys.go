@@ -55,8 +55,9 @@ var (
 	KeyPrefixSnapshotIntent              = []byte{0x09}
 	KeyPrefixRequeuedWithdrawalRecordSeq = []byte{0x0a}
 	KeyPrefixAddressZoneMapping          = []byte{0x0b}
+	KeyPrefixValidatorsInfo              = []byte{0x0c}
 
-	// fill in missing 0c - 0f before adding 0x11!
+	// fill in missing 0d - 0f before adding 0x11!
 	KeyPrefixRedelegationRecord = []byte{0x10}
 )
 
@@ -129,9 +130,14 @@ func GetWithdrawalKey(chainID string, status int32) []byte {
 }
 
 // GetUnbondingKey gets the unbonding key.
-// unbondigng records are keyed by chainId, validator and epoch, as they must be unique with regard to this triple.
+// unbonding records are keyed by chainId, validator and epoch, as they must be unique with regard to this triple.
 func GetUnbondingKey(chainID, validator string, epochNumber int64) []byte {
 	epochBytes := make([]byte, 8)
 	binary.BigEndian.PutUint64(epochBytes, uint64(epochNumber))
 	return append(KeyPrefixUnbondingRecord, append(append([]byte(chainID), []byte(validator)...), epochBytes...)...)
+}
+
+// GetZoneValidatorsKey gets the validators key prefix for a given chain.
+func GetZoneValidatorsKey(chainID string) []byte {
+	return append(KeyPrefixValidatorsInfo, []byte(chainID)...)
 }
