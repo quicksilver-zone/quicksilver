@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ## Build Image
-FROM golang:1.19-alpine3.17 AS builder
+FROM golang:1.20-alpine3.17 AS builder
 
 ARG E2E_SCRIPT_NAME
 
