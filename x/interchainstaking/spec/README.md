@@ -487,8 +487,8 @@ N/A
 
 ```protobuf
 service Query {
-  // ZoneInfos provides meta data on connected zones.
-  rpc ZoneInfos(QueryZonesInfoRequest) returns (QueryZonesInfoResponse) {
+  // Zones provides meta data on connected zones.
+  rpc Zones(QueryZonesRequest) returns (QueryZoneResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones";
   }
   // DepositAccount provides data on the deposit address for a connected zone.

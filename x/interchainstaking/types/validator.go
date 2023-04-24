@@ -3,7 +3,13 @@ package types
 import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
+
+func (v Validator) GetAddressBytes() ([]byte, error) {
+	_, addr, err := bech32.DecodeAndConvert(v.ValoperAddress)
+	return addr, err
+}
 
 // check to see if two validator instances are equal. Used in testing.
 // func (v Validator) IsEqual(other Validator) bool {

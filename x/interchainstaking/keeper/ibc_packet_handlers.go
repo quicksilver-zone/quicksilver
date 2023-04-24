@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -410,7 +411,10 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 	var msgs []sdk.Msg
 	for _, coin := range msg.Amount {
 		if coin.Denom == zone.BaseDenom {
-			allocations := k.DeterminePlanForDelegation(ctx, zone, msg.Amount)
+			allocations, err := k.DeterminePlanForDelegation(ctx, zone, msg.Amount)
+			if err != nil {
+				return err
+			}
 			msgs = append(msgs, k.PrepareDelegationMessagesForCoins(zone, allocations)...)
 		} else {
 			msgs = append(msgs, k.PrepareDelegationMessagesForShares(zone, msg.Amount)...)
@@ -484,7 +488,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
-	return k.EmitValSetQuery(ctx, zone, query, sdkmath.NewInt(period))
+	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 }
 
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
@@ -763,7 +767,7 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensforShares")
 		return errors.New("unable to cast source message to MsgRedeemTokensforShares")
 	}
-	validatorAddress, err := k.GetValidatorForToken(ctx, redeemMsg.DelegatorAddress, redeemMsg.Amount)
+	validatorAddress, err := k.GetValidatorForToken(ctx, redeemMsg.Amount)
 	if err != nil {
 		return err
 	}
@@ -789,7 +793,16 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
 	}
 
-	if memo != "rewards" {
+	switch {
+	case memo == "rewards":
+	case strings.HasPrefix(memo, "batch"):
+		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
+		if err != nil {
+			return err
+		}
+		k.Logger(ctx).Debug("outstanding delegations ack-received")
+		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime())
+	default:
 		receipt, found := k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, memo))
 		if !found {
 			return fmt.Errorf("unable to find receipt for hash %s", memo)
@@ -797,7 +810,9 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		t := ctx.BlockTime()
 		receipt.Completed = &t
 		k.SetReceipt(ctx, receipt)
+
 	}
+
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
 }
 
@@ -834,8 +849,7 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 	return nil
 }
 
-// TODO: this should be part of Keeper, but part of zone. Refactor me.
-func (k *Keeper) GetValidatorForToken(ctx sdk.Context, _ string, amount sdk.Coin) (string, error) {
+func (k *Keeper) GetValidatorForToken(ctx sdk.Context, amount sdk.Coin) (string, error) {
 	zone, err := k.GetZoneFromContext(ctx)
 	if err != nil {
 		err = fmt.Errorf("3: %w", err)
@@ -843,7 +857,7 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, _ string, amount sdk.Coin
 		return "", err
 	}
 
-	for _, val := range zone.GetValidatorsAddressesAsSlice() {
+	for _, val := range k.GetValidatorAddresses(ctx, zone.ChainId) {
 		if strings.HasPrefix(amount.Denom, val) {
 			// match!
 			return val, nil
@@ -952,7 +966,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
-	err := k.EmitValSetQuery(ctx, zone, query, sdkmath.NewInt(period))
+	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 	if err != nil {
 		return err
 	}
