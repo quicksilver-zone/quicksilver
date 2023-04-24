@@ -6,10 +6,13 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/ingenuity-build/quicksilver/app/keepers"
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func Upgrades() []Upgrade {
-	return []Upgrade{}
+	return []Upgrade{
+		{UpgradeName: V010402rc1UpgradeName, CreateUpgradeHandler: V010402rc1UpgradeHandler},
+	}
 }
 
 func NoOpHandler(
@@ -18,6 +21,41 @@ func NoOpHandler(
 	_ *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010402rc1UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) {
+			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+				for _, val := range zone.Validators {
+					newVal := types.Validator{
+						ValoperAddress:  val.ValoperAddress,
+						CommissionRate:  val.CommissionRate,
+						DelegatorShares: val.DelegatorShares,
+						VotingPower:     val.VotingPower,
+						Score:           val.Score,
+						Status:          val.Status,
+						Jailed:          val.Jailed,
+						Tombstoned:      val.Tombstoned,
+						JailedSince:     val.JailedSince,
+					}
+					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newVal)
+					if err != nil {
+						panic(err)
+					}
+				}
+				zone.Validators = nil
+				appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
+				return false
+			})
+		}
+
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
@@ -133,8 +171,8 @@ func NoOpHandler(
 //		})
 //
 //		if isTestnet(ctx) || isDevnet(ctx) {
-//			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zoneInfo *icstypes.Zone) (stop bool) {
-//				appKeepers.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zoneInfo)
+//			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+//				appKeepers.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zone)
 //				return false
 //			})
 //		}

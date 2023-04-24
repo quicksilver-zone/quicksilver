@@ -12,14 +12,20 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/
 // Query defines the gRPC querier service.
 service Query {
   // Zones provides meta data on connected zones.
-  rpc Zones(QueryZonesInfoRequest) returns (QueryZonesInfoResponse) {
+  rpc Zones(QueryZonesRequest) returns (QueryZonesResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones";
   }
 
   // Zone provides meta data on a specific zone.
-  rpc Zone(QueryZoneInfoRequest) returns (QueryZoneInfoResponse) {
+  rpc Zone(QueryZoneRequest) returns (QueryZoneResponse) {
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zone/{chain_id}";
+  }
+
+  rpc ZoneValidators(QueryZoneValidatorsRequest)
+      returns (QueryZoneValidatorsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/interchainstaking/v1/zones/{chain_id}/validators";
   }
 
   // DepositAccount provides data on the deposit address for a connected zone.
@@ -89,23 +95,34 @@ message Statistics {
   string distance_to_target = 7;
 }
 
-message QueryZonesInfoRequest {
+message QueryZonesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-message QueryZonesInfoResponse {
+message QueryZonesResponse {
   repeated Zone zones = 1 [ (gogoproto.nullable) = false ];
   repeated Statistics stats = 2;
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
 
-message QueryZoneInfoRequest {
+message QueryZoneRequest {
   string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
 }
 
-message QueryZoneInfoResponse {
+message QueryZoneResponse {
   Zone zone = 1 [ (gogoproto.nullable) = false ];
   Statistics stats = 2;
+}
+
+message QueryZoneValidatorsRequest {
+  string chain_id = 1;
+  string status = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+message QueryZoneValidatorsResponse {
+  repeated Validator validators = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryDepositAccountForChainRequest is the request type for the

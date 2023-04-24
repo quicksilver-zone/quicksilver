@@ -11,38 +11,38 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (s *KeeperTestSuite) TestKeeper_ZoneInfos() {
+func (s *KeeperTestSuite) TestKeeper_Zones() {
 	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
 	ctx := s.chainA.GetContext()
 
 	tests := []struct {
 		name         string
 		malleate     func()
-		req          *types.QueryZonesInfoRequest
+		req          *types.QueryZonesRequest
 		wantErr      bool
 		expectLength int
 	}{
 		{
-			"ZoneInfos_No_State",
+			"Zones_No_State",
 			func() {},
-			&types.QueryZonesInfoRequest{},
+			&types.QueryZonesRequest{},
 			false,
 			0,
 		},
 		{
-			"ZoneInfos_Nil_Request",
+			"Zones_Nil_Request",
 			func() {},
 			nil,
 			true,
 			0,
 		},
 		{
-			"ZoneInfos_Valid_Request",
+			"Zones_Valid_Request",
 			func() {
 				// setup zones
 				s.setupTestZones()
 			},
-			&types.QueryZonesInfoRequest{},
+			&types.QueryZonesRequest{},
 			false,
 			1,
 		},
@@ -64,6 +64,68 @@ func (s *KeeperTestSuite) TestKeeper_ZoneInfos() {
 			s.Require().NoError(err)
 			s.Require().NotNil(resp)
 			s.Require().Equal(tt.expectLength, len(resp.Zones))
+
+			vstr, err := json.MarshalIndent(resp, "", "\t")
+			s.Require().NoError(err)
+
+			s.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestKeeper_ZoneValidators() {
+	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
+	ctx := s.chainA.GetContext()
+
+	tests := []struct {
+		name         string
+		malleate     func()
+		req          *types.QueryZoneValidatorsRequest
+		wantErr      bool
+		expectLength int
+	}{
+		{
+			"ZoneValidatorsInfo_No_State",
+			func() {},
+			&types.QueryZoneValidatorsRequest{},
+			false,
+			0,
+		},
+		{
+			"ZoneValidatorsInfo_Nil_Request",
+			func() {},
+			nil,
+			true,
+			0,
+		},
+		{
+			"ZoneValidatorsInfo_Valid_Request",
+			func() {
+				// setup zones
+				s.setupTestZones()
+			},
+			&types.QueryZoneValidatorsRequest{},
+			false,
+			4,
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.ZoneValidators(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr {
+				s.T().Logf("Error:\n%v\n", err)
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+			s.Require().NotNil(resp)
+			s.Require().Equal(tt.expectLength, len(resp.Validators))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
 			s.Require().NoError(err)
@@ -205,7 +267,7 @@ func (s *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 						Delegator: testAddress,
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
-								ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0],
+								ValoperAddress: icsKeeper.GetValidators(ctx, s.chainB.ChainID)[0].ValoperAddress,
 								Weight:         sdk.OneDec(),
 							},
 						},
@@ -295,10 +357,10 @@ func (s *KeeperTestSuite) TestKeeper_Delegations() {
 				s.Require().True(found)
 
 				// set delegation
-				// TODO: set standardized delegatyions for keeper_test package
+				// TODO: set standardized delegations for keeper_test package
 				delegation := types.Delegation{
 					DelegationAddress: testAddress,
-					ValidatorAddress:  zone.GetValidatorsAddressesAsSlice()[0],
+					ValidatorAddress:  icsKeeper.GetValidators(ctx, s.chainB.ChainID)[0].ValoperAddress,
 					Amount:            sdk.NewCoin("denom", sdk.NewInt(15000)),
 				}
 				icsKeeper.SetDelegation(ctx, &zone, delegation)
@@ -474,11 +536,11 @@ func (s *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 
 				distribution := []*types.Distribution{
 					{
-						Valoper: zone.GetValidatorsAddressesAsSlice()[0],
+						Valoper: icsKeeper.GetValidators(ctx, s.chainB.ChainID)[0].ValoperAddress,
 						Amount:  10000000,
 					},
 					{
-						Valoper: zone.GetValidatorsAddressesAsSlice()[1],
+						Valoper: icsKeeper.GetValidators(ctx, s.chainB.ChainID)[1].ValoperAddress,
 						Amount:  20000000,
 					},
 				}
@@ -567,11 +629,11 @@ func (s *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 
 				distribution := []*types.Distribution{
 					{
-						Valoper: zone.GetValidatorsAddressesAsSlice()[0],
+						Valoper: icsKeeper.GetValidators(ctx, s.chainB.ChainID)[0].ValoperAddress,
 						Amount:  10000000,
 					},
 					{
-						Valoper: zone.GetValidatorsAddressesAsSlice()[1],
+						Valoper: icsKeeper.GetValidators(ctx, s.chainB.ChainID)[1].ValoperAddress,
 						Amount:  20000000,
 					},
 				}
@@ -660,7 +722,7 @@ func (s *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 					types.UnbondingRecord{
 						ChainId:       zone.ChainId,
 						EpochNumber:   1,
-						Validator:     zone.GetValidatorsAddressesAsSlice()[0],
+						Validator:     icsKeeper.GetValidators(ctx, s.chainB.ChainID)[0].ValoperAddress,
 						RelatedTxhash: []string{"ABC012"},
 					},
 				)
@@ -735,8 +797,8 @@ func (s *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 					types.RedelegationRecord{
 						ChainId:     zone.ChainId,
 						EpochNumber: 1,
-						Source:      zone.GetValidatorsAddressesAsSlice()[1],
-						Destination: zone.GetValidatorsAddressesAsSlice()[0],
+						Source:      icsKeeper.GetValidators(ctx, s.chainB.ChainID)[1].ValoperAddress,
+						Destination: icsKeeper.GetValidators(ctx, s.chainB.ChainID)[0].ValoperAddress,
 						Amount:      10000000,
 					})
 			},

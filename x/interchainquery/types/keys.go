@@ -16,11 +16,13 @@ const (
 
 // prefix bytes for the interchainquery persistent store.
 const (
-	prefixData  = iota + 1
-	prefixQuery = iota + 1
+	prefixData         = iota + 1
+	prefixQuery        = iota + 1
+	prefixLatestHeight = iota + 1
 )
 
 var (
-	KeyPrefixData  = []byte{prefixData}
-	KeyPrefixQuery = []byte{prefixQuery}
+	KeyPrefixData         = []byte{prefixData}
+	KeyPrefixQuery        = []byte{prefixQuery}
+	KeyPrefixLatestHeight = []byte{prefixLatestHeight}
 )
