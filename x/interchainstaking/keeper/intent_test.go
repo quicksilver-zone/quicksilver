@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -21,9 +22,9 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 	ctx := s.chainA.GetContext()
 
 	// get test zone
-	zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
 	s.Require().True(found)
-	zoneValidatorAddresses := zone.GetValidatorsAddressesAsSlice()
+	zoneValidatorAddresses := icsKeeper.GetValidators(ctx, zone.ChainId)
 
 	// check that there are no intents
 	intents := icsKeeper.AllDelegatorIntents(ctx, &zone, false)
@@ -37,19 +38,19 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 			Delegator: testAddress,
 			Intents: icstypes.ValidatorIntents{
 				{
-					ValoperAddress: zoneValidatorAddresses[0],
+					ValoperAddress: zoneValidatorAddresses[0].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[1],
+					ValoperAddress: zoneValidatorAddresses[1].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[2],
+					ValoperAddress: zoneValidatorAddresses[2].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[3],
+					ValoperAddress: zoneValidatorAddresses[3].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 			},
@@ -64,19 +65,19 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 			Delegator: user1.String(),
 			Intents: icstypes.ValidatorIntents{
 				{
-					ValoperAddress: zoneValidatorAddresses[0],
+					ValoperAddress: zoneValidatorAddresses[0].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[1],
+					ValoperAddress: zoneValidatorAddresses[1].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[2],
+					ValoperAddress: zoneValidatorAddresses[2].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[3],
+					ValoperAddress: zoneValidatorAddresses[3].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.25"),
 				},
 			},
@@ -91,15 +92,15 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 			Delegator: user2.String(),
 			Intents: icstypes.ValidatorIntents{
 				{
-					ValoperAddress: zoneValidatorAddresses[0],
+					ValoperAddress: zoneValidatorAddresses[0].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.5"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[1],
+					ValoperAddress: zoneValidatorAddresses[1].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.3"),
 				},
 				{
-					ValoperAddress: zoneValidatorAddresses[2],
+					ValoperAddress: zoneValidatorAddresses[2].ValoperAddress,
 					Weight:         sdk.MustNewDecFromStr("0.2"),
 				},
 			},
@@ -147,21 +148,21 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 func (s *KeeperTestSuite) TestAggregateIntent() {
 	tc := []struct {
 		name     string
-		intents  func(zone icstypes.Zone) []icstypes.DelegatorIntent
+		intents  func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent
 		balances func() map[string]int64
-		expected func(zone icstypes.Zone) icstypes.ValidatorIntents
+		expected func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents
 	}{
 		{
 			name: "empty intents; returns equal weighting",
-			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
+			intents: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				return out
 			},
 			balances: func() map[string]int64 { return map[string]int64{} },
-			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
-				for _, val := range zone.GetValidatorsAddressesAsSlice() {
+				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
 				return out.Sort()
@@ -169,16 +170,16 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 		},
 		{
 			name: "single intent; zero balance, returns default equal weighting",
-			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
+			intents: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
-				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
+				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)[0], Weight: sdk.OneDec()}}})
 				return out
 			},
 			balances: func() map[string]int64 { return map[string]int64{} },
-			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
-				for _, val := range zone.GetValidatorsAddressesAsSlice() {
+				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
 				return out.Sort()
@@ -187,9 +188,9 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 		{
 			// name: "single intent; with balance, returns single weighting",
 			name: "single intent; with balance, returns default equal weighting",
-			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
+			intents: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
-				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}})
+				out = append(out, icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)[0], Weight: sdk.OneDec()}}})
 				return out
 			},
 			balances: func() map[string]int64 {
@@ -203,23 +204,24 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 
 			// 	return out.Sort()
 			// },
-			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
-				for _, val := range zone.GetValidatorsAddressesAsSlice() {
+				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
+
 				return out.Sort()
 			},
 		},
 		{
 			// name: "two intents; with equal balances, same val, single weighting",
 			name: "two intents; with equal balances, same val, returns default equal weighting",
-			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
+			intents: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				out = append(out,
-					icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}},
-					icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}},
+					icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)[0], Weight: sdk.OneDec()}}},
+					icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)[0], Weight: sdk.OneDec()}}},
 				)
 				return out
 			},
@@ -235,10 +237,10 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 
 			// 	return out.Sort()
 			// },
-			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
-				for _, val := range zone.GetValidatorsAddressesAsSlice() {
+				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
 				return out.Sort()
@@ -247,11 +249,11 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 		{
 			// name: "two intents; with equal balances, diff val, equal weighting",
 			name: "two intents; with equal balances, diff val, returns default equal weighting",
-			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
+			intents: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				out = append(out,
-					icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.OneDec()}}},
-					icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}},
+					icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)[0], Weight: sdk.OneDec()}}},
+					icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)[1], Weight: sdk.OneDec()}}},
 				)
 				return out
 			},
@@ -268,10 +270,10 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 
 			// 	return out.Sort()
 			// },
-			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
-				for _, val := range zone.GetValidatorsAddressesAsSlice() {
+				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
 				return out.Sort()
@@ -279,11 +281,11 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 		},
 		{
 			name: "two intents; with zer0 balances, diff val, returns default equal weights ",
-			intents: func(zone icstypes.Zone) []icstypes.DelegatorIntent {
+			intents: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent {
 				out := make([]icstypes.DelegatorIntent, 0)
 				out = append(out,
-					icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[0], Weight: sdk.ZeroDec()}}},
-					icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: zone.GetValidatorsAddressesAsSlice()[1], Weight: sdk.OneDec()}}},
+					icstypes.DelegatorIntent{Delegator: user1.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)[0], Weight: sdk.ZeroDec()}}},
+					icstypes.DelegatorIntent{Delegator: user2.String(), Intents: icstypes.ValidatorIntents{&icstypes.ValidatorIntent{ValoperAddress: qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)[1], Weight: sdk.OneDec()}}},
 				)
 				return out
 			},
@@ -300,10 +302,10 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 
 			// 	return out.Sort()
 			// },
-			expected: func(zone icstypes.Zone) icstypes.ValidatorIntents {
+			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.ValidatorIntents {
 				// four delegators each at 25%
 				out := icstypes.ValidatorIntents{}
-				for _, val := range zone.GetValidatorsAddressesAsSlice() {
+				for _, val := range qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId) {
 					out = append(out, &icstypes.ValidatorIntent{ValoperAddress: val, Weight: sdk.OneDec().Quo(sdk.NewDec(4))})
 				}
 				return out.Sort()
@@ -327,7 +329,7 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 				s.giveFunds(ctx, zone.LocalDenom, balance, addrString)
 			}
 
-			for _, intent := range tt.intents(zone) {
+			for _, intent := range tt.intents(ctx, quicksilver, zone) {
 				icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
 			}
 
@@ -337,8 +339,9 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 			zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
 			s.Require().True(found)
 
-			actual := zone.GetAggregateIntentOrDefault()
-			s.Require().Equal(tt.expected(zone), actual)
+			actual, err := icsKeeper.GetAggregateIntentOrDefault(ctx, &zone)
+			s.Require().NoError(err)
+			s.Require().Equal(tt.expected(ctx, quicksilver, zone), actual)
 		})
 	}
 }
@@ -455,5 +458,106 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 // 			actual := zone.GetAggregateIntentOrDefault()
 // 			s.Require().Equal(tt.expected(zone), actual)
 // 		})
+// 	}
+// }
+
+// TODO: convert to keeper tests
+
+// func TestDefaultIntent(t *testing.T) {
+// 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+// 	zone.Validators = append(zone.Validators,
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 	)
+
+// 	out := zone.DefaultAggregateIntents()
+// 	require.Equal(t, len(out), 5)
+// 	for _, v := range out {
+// 		if !v.Weight.Equal(sdk.NewDecWithPrec(2, 1)) {
+// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(2, 1), v.Weight)
+// 		}
+// 	}
+// }
+
+// func TestDefaultIntentWithJailed(t *testing.T) {
+// 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+// 	zone.Validators = append(zone.Validators,
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded, Jailed: true},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 	)
+
+// 	out := zone.DefaultAggregateIntents()
+// 	require.Equal(t, len(out), 4)
+
+// 	for _, v := range out {
+// 		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
+// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
+// 		}
+// 	}
+// }
+
+// func TestDefaultIntentWithTombstoned(t *testing.T) {
+// 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+// 	zone.Validators = append(zone.Validators,
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded, Tombstoned: true},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 	)
+
+// 	out := zone.DefaultAggregateIntents()
+// 	require.Equal(t, len(out), 4)
+
+// 	for _, v := range out {
+// 		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
+// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
+// 		}
+// 	}
+// }
+
+// func TestDefaultIntentWithCommission100(t *testing.T) {
+// 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+// 	zone.Validators = append(zone.Validators,
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 	)
+
+// 	out := zone.DefaultAggregateIntents()
+// 	require.Equal(t, len(out), 4)
+
+// 	for _, v := range out {
+// 		if !v.Weight.Equal(sdk.NewDecWithPrec(25, 2)) {
+// 			t.Errorf("Expected %v, got %v", sdk.NewDecWithPrec(25, 2), v.Weight)
+// 		}
+// 	}
+// }
+
+// func TestDefaultIntentWithOneUnbondedOneUnbonding(t *testing.T) {
+// 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+// 	zone.Validators = append(zone.Validators,
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusUnbonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusUnbonding},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
+// 	)
+
+// 	out := zone.DefaultAggregateIntents()
+// 	require.Equal(t, len(out), 3)
+
+// 	for _, v := range out {
+// 		if !v.Weight.Equal(sdk.OneDec().Quo(sdk.NewDec(3))) {
+// 			t.Errorf("Expected %v, got %v", sdk.OneDec().Quo(sdk.NewDec(3)), v.Weight)
+// 		}
 // 	}
 // }
