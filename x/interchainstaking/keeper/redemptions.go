@@ -20,11 +20,15 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	intent, found := k.GetDelegatorIntent(ctx, zone, sender.String(), false)
 	// msgs is slice of MsgTokenizeShares, so we can handle dust allocation later.
 	msgs := make([]*lsmstakingtypes.MsgTokenizeShares, 0)
+	var err error
 	intents := intent.Intents
 	if !found || len(intents) == 0 {
 		// if user has no intent set (this can happen if redeeming tokens that were obtained offchain), use global intent.
 		// Note: this can be improved; user will receive a bunch of tokens.
-		intents = zone.GetAggregateIntentOrDefault()
+		intents, err = k.GetAggregateIntentOrDefault(ctx, zone)
+		if err != nil {
+			return err
+		}
 	}
 	outstanding := nativeTokens
 	distribution := make(map[string]uint64, 0)
@@ -153,7 +157,10 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return nil
 	}
 
-	allocationsMap := k.DeterminePlanForUndelegation(ctx, zone, sdk.NewCoins(totalToWithdraw))
+	allocationsMap, err := k.DeterminePlanForUndelegation(ctx, zone, sdk.NewCoins(totalToWithdraw))
+	if err != nil {
+		return err
+	}
 	valopers := utils.Keys(allocationsMap)
 	vidx := 0
 	v := valopers[vidx]
@@ -250,10 +257,13 @@ func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error 
 	return err
 }
 
-func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) map[string]math.Int {
+func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]math.Int, error) {
 	currentAllocations, currentSum, _ := k.GetDelegationMap(ctx, zone)
 	availablePerValidator, _ := k.GetUnlockedTokensForZone(ctx, zone)
-	targetAllocations := zone.GetAggregateIntentOrDefault()
+	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
+	if err != nil {
+		return nil, err
+	}
 	allocations := types.DetermineAllocationsForUndelegation(currentAllocations, currentSum, targetAllocations, availablePerValidator, amount)
-	return allocations
+	return allocations, nil
 }
