@@ -16,7 +16,7 @@ import (
 var _ types.QueryServer = &Keeper{}
 
 // Zones returns information about registered zones.
-func (k *Keeper) Zones(c context.Context, req *types.QueryZonesInfoRequest) (*types.QueryZonesInfoResponse, error) {
+func (k *Keeper) Zones(c context.Context, req *types.QueryZonesRequest) (*types.QueryZonesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -33,14 +33,18 @@ func (k *Keeper) Zones(c context.Context, req *types.QueryZonesInfoRequest) (*ty
 			return err
 		}
 		zones = append(zones, zone)
-		stats = append(stats, k.CollectStatsForZone(ctx, &zone))
+		zoneStats, err := k.CollectStatsForZone(ctx, &zone)
+		if err != nil {
+			return err
+		}
+		stats = append(stats, zoneStats)
 		return nil
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryZonesInfoResponse{
+	return &types.QueryZonesResponse{
 		Zones:      zones,
 		Stats:      stats,
 		Pagination: pageRes,
@@ -48,7 +52,7 @@ func (k *Keeper) Zones(c context.Context, req *types.QueryZonesInfoRequest) (*ty
 }
 
 // Zone returns information about registered zones.
-func (k *Keeper) Zone(c context.Context, req *types.QueryZoneInfoRequest) (*types.QueryZoneInfoResponse, error) {
+func (k *Keeper) Zone(c context.Context, req *types.QueryZoneRequest) (*types.QueryZoneResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -60,10 +64,43 @@ func (k *Keeper) Zone(c context.Context, req *types.QueryZoneInfoRequest) (*type
 		return nil, fmt.Errorf("no zone found for chain id %s", req.ChainId)
 	}
 
-	return &types.QueryZoneInfoResponse{
+	zoneStats, err := k.CollectStatsForZone(ctx, &zone)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryZoneResponse{
 		Zone:  zone,
-		Stats: k.CollectStatsForZone(ctx, &zone),
+		Stats: zoneStats,
 	}, nil
+}
+
+func (k Keeper) ZoneValidators(c context.Context, req *types.QueryZoneValidatorsRequest) (*types.QueryZoneValidatorsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var validators []types.Validator
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(req.ChainId))
+
+	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
+		var validator types.Validator
+		if err := k.cdc.Unmarshal(value, &validator); err != nil {
+			return err
+		}
+
+		if req.Status == "" || req.Status == validator.Status {
+			validators = append(validators, validator)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryZoneValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
 }
 
 // DepositAccount returns the deposit account address for the given zone.

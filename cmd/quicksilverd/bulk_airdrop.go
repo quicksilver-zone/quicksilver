@@ -21,8 +21,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	"github.com/spf13/cobra"
+
+	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
 // AddZonedropCmd returns add-zonedrop cobra Command.
