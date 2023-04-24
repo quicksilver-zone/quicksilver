@@ -66,7 +66,8 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("deposittx", Callback(DepositTxCallback)).
 		AddCallback("perfbalance", Callback(PerfBalanceCallback)).
 		AddCallback("accountbalance", Callback(AccountBalanceCallback)).
-		AddCallback("allbalances", Callback(AllBalancesCallback))
+		AddCallback("allbalances", Callback(AllBalancesCallback)).
+		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback))
 
 	return a.(Callbacks)
 }
@@ -76,15 +77,11 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 // -----------------------------------
 
 func ValsetCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetZone(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-	return k.SetValidatorsForZone(ctx, &zone, args, query.Request)
+	return k.SetValidatorsForZone(ctx, args, query)
 }
 
 func ValidatorCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetZone(ctx, query.GetChainId())
+	zone, found := k.GetZone(ctx, query.GetChainId()) // cant we get rid of this check?
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
@@ -159,7 +156,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		if err != nil {
 			return err
 		}
-		validatorAddress, err := bech32.ConvertAndEncode(zone.GetAccountPrefix()+"valoper", validator)
+		validatorAddress, err := bech32.ConvertAndEncode(zone.GetValoperPrefix(), validator)
 		if err != nil {
 			return err
 		}
@@ -176,7 +173,11 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		}
 		return nil
 	}
-	val, found := zone.GetValidatorByValoper(delegation.ValidatorAddress)
+	valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
+	if err != nil {
+		return err
+	}
+	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 	if !found {
 		err := fmt.Errorf("unable to get validator: %s", delegation.ValidatorAddress)
 		k.Logger(ctx).Error(err.Error())
@@ -473,6 +474,53 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 	}
 
 	return k.SetAccountBalanceForDenom(ctx, &zone, address, coin)
+}
+
+// DelegationAccountBalanceCallback is a callback handler for Balance queries.
+func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetZone(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+	// strip the BalancesPrefix from the request key, as AddressFromBalancesStore expects this to be removed
+	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
+	// but lets us be safe here :)
+	if len(query.Request) < 2 {
+		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainId, "error", "request length is too short")
+		return errors.New("account balance icq request must always have a length of at least 2 bytes")
+	}
+	balancesStore := query.Request[1:]
+	accAddr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	if err != nil {
+		return err
+	}
+
+	coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, args, denom)
+	if err != nil {
+		return err
+	}
+
+	if coin.Denom != denom {
+		return fmt.Errorf("received coin denom %s does not match requested denom %s", coin.Denom, denom)
+	}
+
+	// Ensure that the coin is valid.
+	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/80
+	if err := coin.Validate(); err != nil {
+		k.Logger(ctx).Debug("invalid coin for zone", "zone", zone.ChainId, "err", err)
+		return err
+	}
+	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
+	if err != nil {
+		return err
+	}
+
+	if zone.DelegationAddress == nil || address != zone.DelegationAddress.Address {
+		k.Logger(ctx).Debug("delegation address does not match ")
+		return err
+	}
+
+	return k.FlushOutstandingDelegations(ctx, &zone, coin)
 }
 
 func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {

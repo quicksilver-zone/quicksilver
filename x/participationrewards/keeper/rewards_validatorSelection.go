@@ -74,7 +74,7 @@ func (k Keeper) getZoneScores(
 func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *types.ZoneScore) error {
 	k.Logger(ctx).Info("calculate distribution scores", "zone", zone.ChainId)
 
-	zoneValidators := zone.GetValidatorsSorted()
+	zoneValidators := k.icsKeeper.GetValidators(ctx, zone.ChainId)
 	if len(zoneValidators) == 0 {
 		return fmt.Errorf("zone %v has no validators", zone.ChainId)
 	}
@@ -83,14 +83,15 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 	// and determine min/max voting power for zone
 	max := sdk.NewInt(0)
 	min := sdk.NewInt(999999999999999999)
-	for _, val := range zoneValidators {
+	for _, zoneVal := range zoneValidators {
+		val := zoneVal
 		if val.VotingPower.IsNegative() {
 			return fmt.Errorf("unexpected negative voting power for %s", val.ValoperAddress)
 		}
 		// compute zone total voting power
 		zs.TotalVotingPower = zs.TotalVotingPower.Add(val.VotingPower)
 		if _, exists := zs.ValidatorScores[val.ValoperAddress]; !exists {
-			zs.ValidatorScores[val.ValoperAddress] = &types.Validator{Validator: val}
+			zs.ValidatorScores[val.ValoperAddress] = &types.Validator{Validator: &val}
 		}
 
 		// Set max/min

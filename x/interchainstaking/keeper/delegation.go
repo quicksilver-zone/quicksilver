@@ -2,12 +2,12 @@ package keeper
 
 import (
 	"errors"
-
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"fmt"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -201,11 +201,14 @@ func (k *Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.
 	return msgs
 }
 
-func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) map[string]sdkmath.Int {
+func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]sdkmath.Int, error) {
 	currentAllocations, currentSum, _ := k.GetDelegationMap(ctx, zone)
-	targetAllocations := zone.GetAggregateIntentOrDefault()
+	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
+	if err != nil {
+		return nil, err
+	}
 	allocations := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
-	return allocations
+	return allocations, nil
 }
 
 func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *types.Zone, delegator string, response []byte) error {
@@ -276,24 +279,29 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 	return nil
 }
 
-func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone) (int, error) {
-	var err error
-	count := 0
+func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, delAddrBalance sdk.Coin) error {
+	var amount sdk.Coins
+	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
+
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-		if receiptInfo.Completed == nil {
-			sendMsg := banktypes.MsgSend{
-				FromAddress: "",
-				ToAddress:   "",
-				Amount:      receiptInfo.Amount,
-			}
-			err = k.handleSendToDelegate(ctx, zone, &sendMsg, receiptInfo.Txhash)
-			if err != nil {
-				k.Logger(ctx).Error("error in processing pending delegations", "chain", zone.ChainId, "receipt", receiptInfo.Txhash, "error", err)
-				return true
-			}
-			count++
+		if receiptInfo.FirstSeen.After(exclusionTime) && receiptInfo.Completed == nil {
+			amount = amount.Add(receiptInfo.Amount...)
 		}
 		return false
 	})
-	return count, err
+
+	coins := sdk.NewCoins(delAddrBalance).Sub(amount...)
+
+	if coins.IsAnyNegative() || coins.IsZero() {
+		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
+		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
+		return nil
+	}
+
+	sendMsg := banktypes.MsgSend{
+		FromAddress: "",
+		ToAddress:   "",
+		Amount:      coins,
+	}
+	return k.handleSendToDelegate(ctx, zone, &sendMsg, fmt.Sprintf("batch/%d", exclusionTime.Unix()))
 }

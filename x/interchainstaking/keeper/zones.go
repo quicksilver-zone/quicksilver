@@ -43,7 +43,7 @@ func (k *Keeper) DeleteZone(ctx sdk.Context, chainID string) {
 }
 
 // IterateZones iterate through zones.
-func (k *Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo *types.Zone) (stop bool)) {
+func (k *Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zone *types.Zone) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -107,8 +107,8 @@ func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 // AllZones returns every Zone in the store.
 func (k *Keeper) AllZones(ctx sdk.Context) []types.Zone {
 	var zones []types.Zone
-	k.IterateZones(ctx, func(_ int64, zoneInfo *types.Zone) (stop bool) {
-		zones = append(zones, *zoneInfo)
+	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
+		zones = append(zones, *zone)
 		return false
 	})
 	return zones
@@ -329,13 +329,13 @@ func (k *Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone) 
 	delegations := k.GetAllPerformanceDelegations(ctx, &zone)
 	validatorsToDelegate := []string{}
 OUTER:
-	for _, v := range zone.GetBondedValidatorAddressesAsSlice() {
+	for _, v := range k.GetActiveValidators(ctx, zone.ChainId) {
 		for _, d := range delegations {
-			if d.ValidatorAddress == v {
+			if d.ValidatorAddress == v.ValoperAddress {
 				continue OUTER
 			}
 		}
-		validatorsToDelegate = append(validatorsToDelegate, v)
+		validatorsToDelegate = append(validatorsToDelegate, v.ValoperAddress)
 	}
 
 	amount := sdk.NewCoin(zone.BaseDenom, sdk.NewInt(10000))
@@ -376,7 +376,7 @@ OUTER:
 	return nil
 }
 
-func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) *types.Statistics {
+func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.Statistics, error) {
 	out := &types.Statistics{}
 	out.ChainId = zone.ChainId
 	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
@@ -393,8 +393,12 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) *types.S
 		return false
 	})
 	out.Supply = k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.Int64()
-	out.DistanceToTarget = fmt.Sprintf("%f", k.DistanceToTarget(ctx, zone))
-	return out
+	distance, err := k.DistanceToTarget(ctx, zone)
+	if err != nil {
+		return nil, err
+	}
+	out.DistanceToTarget = fmt.Sprintf("%f", distance)
+	return out, nil
 }
 
 func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string) {
@@ -467,9 +471,12 @@ func (k *Keeper) CurrentDelegationsAsIntent(ctx sdk.Context, zone *types.Zone) t
 	return intents.Normalize()
 }
 
-func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) float64 {
+func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) (float64, error) {
 	current := k.CurrentDelegationsAsIntent(ctx, zone)
-	target := zone.GetAggregateIntentOrDefault()
+	target, err := k.GetAggregateIntentOrDefault(ctx, zone)
+	if err != nil {
+		return 0, err
+	}
 	preSqRt := sdk.ZeroDec()
 
 	for _, valoper := range zone.Validators {
@@ -483,5 +490,27 @@ func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) float64 {
 	if err != nil {
 		panic("this value should never be greater than 64-bit dec!")
 	}
-	return math.Sqrt(psqrtf)
+	return math.Sqrt(psqrtf), nil
+}
+
+// DefaultAggregateIntents determines the default aggregate intent (for epoch 0).
+func (k *Keeper) DefaultAggregateIntents(ctx sdk.Context, chainID string) types.ValidatorIntents {
+	out := make(types.ValidatorIntents, 0)
+	k.IterateValidators(ctx, chainID, func(index int64, validator types.Validator) (stop bool) {
+		if validator.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
+			if !validator.Jailed && !validator.Tombstoned && validator.Status == stakingtypes.BondStatusBonded {
+				out = append(out, &types.ValidatorIntent{ValoperAddress: validator.GetValoperAddress(), Weight: sdk.OneDec()})
+			}
+		}
+		return false
+	})
+
+	valCount := sdk.NewInt(int64(len(out)))
+
+	// normalise the array (divide everything by length of intent list)
+	for idx, intent := range out.Sort() {
+		out[idx].Weight = intent.Weight.Quo(sdk.NewDecFromInt(valCount))
+	}
+
+	return out
 }
