@@ -98,8 +98,8 @@ func (s *IntegrationTestSuite) TestGetCmdZones() {
 		name      string
 		args      []string
 		expectErr bool
-		respType  *types.QueryZonesInfoResponse
-		expected  *types.QueryZonesInfoResponse
+		respType  *types.QueryZonesResponse
+		expected  *types.QueryZonesResponse
 	}{
 		{
 			"valid",
