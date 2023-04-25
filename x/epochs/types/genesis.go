@@ -33,7 +33,7 @@ func DefaultGenesis() *GenesisState {
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
-func (gs GenesisState) Validate() error {
+func (gs *GenesisState) Validate() error {
 	epochIdentifiers := map[string]bool{}
 	for i, epoch := range gs.Epochs {
 		if epoch.Identifier == "" {

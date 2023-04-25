@@ -278,7 +278,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.DistrKeeper,
-		appKeepers.EpochsKeeper,
+		&appKeepers.EpochsKeeper,
 		authtypes.FeeCollectorName,
 	)
 

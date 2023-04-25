@@ -31,7 +31,7 @@ func (s *KeeperTestSuite) DoSetupTest(t *testing.T) {
 	s.ctx = s.app.BaseApp.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(s.ctx, s.app.InterfaceRegistry())
-	types.RegisterQueryServer(queryHelper, s.app.EpochsKeeper)
+	types.RegisterQueryServer(queryHelper, &s.app.EpochsKeeper)
 	s.queryClient = types.NewQueryClient(queryHelper)
 }
 
