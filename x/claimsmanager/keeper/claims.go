@@ -157,7 +157,7 @@ func (k Keeper) IterateLastEpochUserClaims(ctx sdk.Context, chainID, address str
 	}
 }
 
-// IterateLastEpochUserClaims iterates through zone claims from last epoch for a given user.
+// IterateAllLastEpochClaims iterates through zone claims from last epoch for a given user.
 func (k Keeper) IterateAllLastEpochClaims(ctx sdk.Context, fn func(index int64, key []byte, data types.Claim) (stop bool)) {
 	// noop
 	if fn == nil {
@@ -205,7 +205,7 @@ func (k Keeper) IterateAllClaims(ctx sdk.Context, fn func(index int64, key []byt
 
 // AllClaims returns a slice containing all claims from the store.
 func (k Keeper) AllClaims(ctx sdk.Context) []*types.Claim {
-	claims := []*types.Claim{}
+	var claims []*types.Claim
 
 	store := ctx.KVStore(k.storeKey)
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixClaim)
@@ -222,7 +222,7 @@ func (k Keeper) AllClaims(ctx sdk.Context) []*types.Claim {
 }
 
 func (k Keeper) AllZoneClaims(ctx sdk.Context, chainID string) []*types.Claim {
-	claims := []*types.Claim{}
+	var claims []*types.Claim
 	k.IterateClaims(ctx, chainID, func(_ int64, claim types.Claim) (stop bool) {
 		claims = append(claims, &claim)
 		return false
@@ -231,7 +231,7 @@ func (k Keeper) AllZoneClaims(ctx sdk.Context, chainID string) []*types.Claim {
 }
 
 func (k Keeper) AllZoneUserClaims(ctx sdk.Context, chainID, address string) []*types.Claim {
-	claims := []*types.Claim{}
+	var claims []*types.Claim
 	k.IterateUserClaims(ctx, chainID, address, func(_ int64, claim types.Claim) (stop bool) {
 		claims = append(claims, &claim)
 		return false
@@ -240,7 +240,7 @@ func (k Keeper) AllZoneUserClaims(ctx sdk.Context, chainID, address string) []*t
 }
 
 func (k Keeper) AllZoneLastEpochClaims(ctx sdk.Context, chainID string) []*types.Claim {
-	claims := []*types.Claim{}
+	var claims []*types.Claim
 	k.IterateLastEpochClaims(ctx, chainID, func(_ int64, claim types.Claim) (stop bool) {
 		claims = append(claims, &claim)
 		return false
@@ -249,7 +249,7 @@ func (k Keeper) AllZoneLastEpochClaims(ctx sdk.Context, chainID string) []*types
 }
 
 func (k Keeper) AllZoneLastEpochUserClaims(ctx sdk.Context, chainID, address string) []*types.Claim {
-	claims := []*types.Claim{}
+	var claims []*types.Claim
 	k.IterateLastEpochUserClaims(ctx, chainID, address, func(_ int64, claim types.Claim) (stop bool) {
 		claims = append(claims, &claim)
 		return false

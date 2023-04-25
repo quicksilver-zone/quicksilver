@@ -11,8 +11,6 @@ const (
 	StoreKey = ModuleName
 	// QuerierRoute is the querier route for the claimsmanager store.
 	QuerierRoute = StoreKey
-	// RouterKey is the message route for claimsmanager.
-	RouterKey = ModuleName
 )
 
 var (
