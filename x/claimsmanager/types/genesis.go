@@ -1,7 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
@@ -19,22 +19,22 @@ func DefaultGenesisState() *GenesisState {
 
 // Validate validates the provided genesis state to ensure the
 // expected invariants holds.
-func (gs GenesisState) Validate() error {
-	errors := make(map[string]error)
+func (gs *GenesisState) Validate() error {
+	errs := make(map[string]error)
 
 	if err := gs.Params.Validate(); err != nil {
-		errors["Params"] = err
+		errs["Params"] = err
 	}
 
 	for i, claim := range gs.Claims {
 		if err := claim.ValidateBasic(); err != nil {
 			el := fmt.Sprintf("Claim[%d]", i)
-			errors[el] = err
+			errs[el] = err
 		}
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		return multierror.New(errs)
 	}
 
 	return nil
