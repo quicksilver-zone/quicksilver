@@ -19,31 +19,31 @@ type LiquidAllowedDenomProtocolData struct {
 	QAssetDenom string
 }
 
-func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
-	errors := make(map[string]error)
+func (lpd *LiquidAllowedDenomProtocolData) ValidateBasic() error {
+	errs := make(map[string]error)
 
 	if lpd.ChainID == "" {
-		errors["ChainID"] = ErrUndefinedAttribute
+		errs["ChainID"] = ErrUndefinedAttribute
 	}
 
 	if len(strings.Split(lpd.ChainID, "-")) < 2 {
-		errors["ChainID"] = ErrInvalidChainID
+		errs["ChainID"] = ErrInvalidChainID
 	}
 
 	if lpd.RegisteredZoneChainID == "" {
-		errors["RegisteredZoneChainID"] = ErrUndefinedAttribute
+		errs["RegisteredZoneChainID"] = ErrUndefinedAttribute
 	}
 
 	if len(strings.Split(lpd.RegisteredZoneChainID, "-")) < 2 {
-		errors["RegisteredZoneChainID"] = ErrInvalidChainID
+		errs["RegisteredZoneChainID"] = ErrInvalidChainID
 	}
 
 	if lpd.QAssetDenom == "" {
-		errors["QAssetDenom"] = ErrUndefinedAttribute
+		errs["QAssetDenom"] = ErrUndefinedAttribute
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		return multierror.New(errs)
 	}
 
 	return nil

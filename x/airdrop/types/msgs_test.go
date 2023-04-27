@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
+	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
@@ -82,7 +83,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 			"invalid_ActionUndefined",
 			fields{
 				ChainID: "cosmoshub-4",
-				Action:  int64(ActionUndefined),
+				Action:  int64(types.ActionUndefined),
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 				Proofs: []*cmtypes.Proof{
 					{
@@ -100,7 +101,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 			"valid",
 			fields{
 				ChainID: "cosmoshub-4",
-				Action:  int64(ActionInitialClaim),
+				Action:  int64(types.ActionInitialClaim),
 				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
 				Proofs: []*cmtypes.Proof{
 					{
@@ -117,7 +118,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := MsgClaim{
+			msg := types.MsgClaim{
 				ChainId: tt.fields.ChainID,
 				Action:  tt.fields.Action,
 				Address: tt.fields.Address,

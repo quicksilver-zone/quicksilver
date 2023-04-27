@@ -1,53 +1,53 @@
-package types
+package types_test
 
 import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func TestGenesisState(t *testing.T) {
 	// test default genesis state
-	testGenesisState := GenesisState{
-		Params{
-			DistributionProportions: DistributionProportions{
+	testGenesisState := types.GenesisState{
+		Params: types.Params{
+			DistributionProportions: types.DistributionProportions{
 				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.34"),
 				HoldingsAllocation:           sdk.MustNewDecFromStr("0.33"),
 				LockupAllocation:             sdk.MustNewDecFromStr("0.33"),
 			},
 		},
-		nil,
 	}
-	defaultGenesisState := DefaultGenesisState()
+	defaultGenesisState := types.DefaultGenesisState()
 	require.Equal(t, *defaultGenesisState, testGenesisState)
 	// test new genesis state
-	newGenesisState := NewGenesisState(
-		Params{
-			DistributionProportions: DistributionProportions{
+	newGenesisState := types.NewGenesisState(
+		types.Params{
+			DistributionProportions: types.DistributionProportions{
 				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
 				HoldingsAllocation:           sdk.MustNewDecFromStr("0.3"),
 				LockupAllocation:             sdk.MustNewDecFromStr("0.2"),
 			},
 		},
 	)
-	testGenesisState = GenesisState{
-		Params{
-			DistributionProportions: DistributionProportions{
+	testGenesisState = types.GenesisState{
+		Params: types.Params{
+			DistributionProportions: types.DistributionProportions{
 				ValidatorSelectionAllocation: sdk.MustNewDecFromStr("0.5"),
 				HoldingsAllocation:           sdk.MustNewDecFromStr("0.3"),
 				LockupAllocation:             sdk.MustNewDecFromStr("0.2"),
 			},
 		},
-		nil,
 	}
 	require.Equal(t, *newGenesisState, testGenesisState)
 }
 
 func TestGenesisState_Validate(t *testing.T) {
 	type fields struct {
-		Params       Params
-		ProtocolData []*KeyedProtocolData
+		Params       types.Params
+		ProtocolData []*types.KeyedProtocolData
 	}
 	tests := []struct {
 		name    string
@@ -62,11 +62,11 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			"invalid_protocolData",
 			fields{
-				Params: DefaultParams(),
-				ProtocolData: []*KeyedProtocolData{
+				Params: types.DefaultParams(),
+				ProtocolData: []*types.KeyedProtocolData{
 					{
 						"liquid",
-						&ProtocolData{
+						&types.ProtocolData{
 							Type: "liquidtoken",
 							Data: []byte("{}"),
 						},
@@ -78,12 +78,12 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			"valid_protocolData",
 			fields{
-				Params: DefaultParams(),
-				ProtocolData: []*KeyedProtocolData{
+				Params: types.DefaultParams(),
+				ProtocolData: []*types.KeyedProtocolData{
 					{
 						"liquid",
-						&ProtocolData{
-							Type: ProtocolDataType_name[int32(ProtocolDataTypeLiquidToken)],
+						&types.ProtocolData{
+							Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)],
 							Data: []byte(validLiquidData),
 						},
 					},
@@ -94,7 +94,7 @@ func TestGenesisState_Validate(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gs := GenesisState{
+			gs := types.GenesisState{
 				Params:       tt.fields.Params,
 				ProtocolData: tt.fields.ProtocolData,
 			}

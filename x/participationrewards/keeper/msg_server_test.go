@@ -368,7 +368,7 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 					RegisteredZoneChainID: s.chainB.ChainID,
 				})
 				s.Require().NoError(err)
-				pd := keeper.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)], blob)
+				pd := types.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)], blob)
 
 				appA.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("%s/uqatom", s.chainA.ChainID), pd)
 			},
