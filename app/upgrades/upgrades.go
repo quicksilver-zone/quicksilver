@@ -12,6 +12,7 @@ import (
 func Upgrades() []Upgrade {
 	return []Upgrade{
 		{UpgradeName: V010402rc1UpgradeName, CreateUpgradeHandler: V010402rc1UpgradeHandler},
+		{UpgradeName: V010402rc2UpgradeName, CreateUpgradeHandler: NoOpHandler},
 	}
 }
 
