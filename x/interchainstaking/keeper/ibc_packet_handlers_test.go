@@ -17,11 +17,12 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	"github.com/stretchr/testify/require"
+
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestHandleMsgTransferGood(t *testing.T) {
@@ -793,7 +794,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 	hash3 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x03}))
 	delegator1 := utils.GenerateAccAddressForTest().String()
 	delegator2 := utils.GenerateAccAddressForTest().String()
-	
+
 	tests := []struct {
 		name                      string
 		epoch                     int64
@@ -1108,7 +1109,7 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 			},
 		},
 		// TODO: fix this test
-		// { 
+		// {
 		//	name:  "2 wdr, random_rr, 1 vals, 1k; 2 vals; 123 + 456 ",
 		//	epoch: 1,
 		//	withdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
