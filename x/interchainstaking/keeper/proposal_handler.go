@@ -63,6 +63,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		DepositsEnabled:    p.DepositsEnabled,
 		Decimals:           p.Decimals,
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
+		MessagesPerTx:      int64(p.MessagesPerTx),
 	}
 	k.SetZone(ctx, zone)
 
@@ -191,6 +192,9 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 				return fmt.Errorf("invalid value for messages_per_tx: %d", intVal)
 			}
 			zone.MessagesPerTx = int64(intVal)
+
+		case "account_prefix":
+			zone.AccountPrefix = change.Value
 
 		case "connection_id":
 			if !strings.HasPrefix(change.Value, "connection-") {
