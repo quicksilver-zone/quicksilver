@@ -17,6 +17,7 @@ const (
 	TestChainID       = "testchain1"
 
 	V010402rc1UpgradeName = "v1.4.2-rc1"
+	V010402rc2UpgradeName = "v1.4.2-rc2"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal
