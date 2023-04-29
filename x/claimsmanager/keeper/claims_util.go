@@ -4,8 +4,8 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"sort"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	"sort"
 )
 
 // CalcUserHoldingsAllocations calculates allocations per user for a given zone, based upon claims submitted and zone.
