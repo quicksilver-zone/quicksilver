@@ -28,6 +28,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	clmutil "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 )
 
 type TypedMsg struct {
@@ -914,7 +915,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 			delete(delMap, delegationRecord.Delegation.ValidatorAddress)
 		}
 	}
-	for _, existingValAddr := range utils.Keys(delMap) {
+	for _, existingValAddr := range clmutil.Keys(delMap) {
 		existingDelegation := delMap[existingValAddr]
 		_, valAddr, err := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
 		if err != nil {

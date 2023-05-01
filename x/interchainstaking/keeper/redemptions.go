@@ -11,8 +11,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	clmutil "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 )
 
 // processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.
@@ -46,7 +46,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 
 	distribution[intents[0].ValoperAddress] += outstanding.Uint64()
 
-	for _, valoper := range utils.Keys(distribution) {
+	for _, valoper := range clmutil.Keys(distribution) {
 		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
 			DelegatorAddress:    zone.DelegationAddress.Address,
 			ValidatorAddress:    valoper,
@@ -161,11 +161,11 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 	if err != nil {
 		return err
 	}
-	valopers := utils.Keys(allocationsMap)
+	valopers := clmutil.Keys(allocationsMap)
 	vidx := 0
 	v := valopers[vidx]
 WITHDRAWAL:
-	for _, hash := range utils.Keys(txCoinMap) {
+	for _, hash := range clmutil.Keys(txCoinMap) {
 		for {
 			if txCoinMap[hash].Amount.IsZero() {
 				continue WITHDRAWAL
@@ -215,7 +215,7 @@ WITHDRAWAL:
 		}
 	}
 
-	for _, hash := range utils.Keys(txDistrsMap) {
+	for _, hash := range clmutil.Keys(txDistrsMap) {
 		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, WithdrawStatusQueued)
 		if !found {
 			return errors.New("unable to find withdrawal record")
@@ -230,7 +230,7 @@ WITHDRAWAL:
 	}
 
 	var msgs []sdk.Msg
-	for _, valoper := range utils.Keys(valOutCoinsMap) {
+	for _, valoper := range clmutil.Keys(valOutCoinsMap) {
 		if !valOutCoinsMap[valoper].Amount.IsZero() {
 			sort.Strings(txHashes[valoper])
 			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashes[valoper]})
