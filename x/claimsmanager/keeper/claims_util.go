@@ -10,8 +10,8 @@ import (
 )
 
 // CalcUserHoldingsAllocations calculates allocations per user for a given zone, based upon claims submitted and zone.
-func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone cmtypes.CustomeZone) ([]cmtypes.UserAllocation, math.Int) {
-	k.Logger(ctx).Info("CalcUserHoldingsAllocations", "zone", zone.ChainId, "allocations", zone.HoldingsAllocation)
+func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone cmtypes.CustomZone) ([]cmtypes.UserAllocation, math.Int) {
+	k.Logger(ctx).Info("CalcUserHoldingsAllocations", "zone", zone.ChainID, "allocations", zone.HoldingsAllocation)
 
 	userAllocations := make([]cmtypes.UserAllocation, 0)
 	supply := k.bankKeeper.GetSupply(ctx, zone.LocalDenom)
@@ -25,7 +25,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone cmtypes.Custom
 	zoneAmount := math.ZeroInt()
 	userAmountsMap := make(map[string]math.Int)
 
-	k.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
+	k.IterateClaims(ctx, zone.ChainID, func(_ int64, claim cmtypes.Claim) (stop bool) {
 		amount := math.NewIntFromUint64(claim.Amount)
 		k.Logger(ctx).Info(
 			"claim",
@@ -48,14 +48,14 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone cmtypes.Custom
 	})
 
 	if zoneAmount.IsZero() {
-		k.Logger(ctx).Info("zero claims for zone", "zone", zone.ChainId)
+		k.Logger(ctx).Info("zero claims for zone", "zone", zone.ChainID)
 		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation)
 	}
 
 	zoneAllocation := math.NewIntFromUint64(zone.HoldingsAllocation)
 	tokensPerAsset := sdk.NewDecFromInt(zoneAllocation).Quo(sdk.NewDecFromInt(supply.Amount))
 
-	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset)
+	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainID, "tpa", tokensPerAsset)
 
 	for _, address := range Keys(userAmountsMap) {
 		amount := userAmountsMap[address]

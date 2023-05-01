@@ -14,12 +14,12 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		k.Logger(ctx).Info("zones", "zone", zone.ChainId)
 
-		customeZone := cmtypes.CustomeZone{
-			ChainId:            zone.ChainId,
+		customZone := cmtypes.CustomZone{
+			ChainID:            zone.ChainId,
 			HoldingsAllocation: zone.HoldingsAllocation,
 			LocalDenom:         zone.LocalDenom,
 		}
-		userAllocations, remaining := k.icsKeeper.ClaimsManagerKeeper.CalcUserHoldingsAllocations(ctx, customeZone)
+		userAllocations, remaining := k.icsKeeper.ClaimsManagerKeeper.CalcUserHoldingsAllocations(ctx, customZone)
 
 		if err := k.DistributeToUsers(ctx, userAllocations); err != nil {
 			k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)

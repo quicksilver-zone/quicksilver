@@ -39,8 +39,8 @@ type UserAllocation struct {
 	Amount  math.Int
 }
 
-type CustomeZone struct {
-	ChainId            string
+type CustomZone struct {
+	ChainID            string
 	HoldingsAllocation uint64
 	LocalDenom         string
 }
