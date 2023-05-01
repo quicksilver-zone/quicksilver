@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
 func TestGetKeyZoneDrop(t *testing.T) {
@@ -29,7 +31,7 @@ func TestGetKeyZoneDrop(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GetKeyZoneDrop(tt.args.chainID)
+			got := types.GetKeyZoneDrop(tt.args.chainID)
 			if !reflect.DeepEqual(got, tt.want) {
 				err := fmt.Errorf("GetKeyZoneDrop() = %v, want %v", got, tt.want)
 				require.NoError(t, err)
@@ -63,7 +65,7 @@ func TestGetKeyClaimRecord(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GetKeyClaimRecord(tt.args.chainID, tt.args.addr)
+			got := types.GetKeyClaimRecord(tt.args.chainID, tt.args.addr)
 			if !reflect.DeepEqual(got, tt.want) {
 				err := fmt.Errorf("GetKeyClaimRecord() = %v, want %v", got, tt.want)
 				// t.Logf("Error:\n%v\n", err)
@@ -94,7 +96,7 @@ func TestGetPrefixClaimRecord(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := GetPrefixClaimRecord(tt.args.chainID)
+			got := types.GetPrefixClaimRecord(tt.args.chainID)
 			if !reflect.DeepEqual(got, tt.want) {
 				err := fmt.Errorf("GetPrefixClaimRecord() = %v, want %v", got, tt.want)
 				// t.Logf("Error:\n%v\n", err)

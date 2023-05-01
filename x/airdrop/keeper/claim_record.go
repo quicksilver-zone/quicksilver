@@ -11,7 +11,7 @@ import (
 )
 
 // GetClaimRecord returns the ClaimRecord of the given address for the given zone.
-func (k Keeper) GetClaimRecord(ctx sdk.Context, chainID, address string) (types.ClaimRecord, error) {
+func (k *Keeper) GetClaimRecord(ctx sdk.Context, chainID, address string) (types.ClaimRecord, error) {
 	cr := types.ClaimRecord{}
 
 	addr, err := sdk.AccAddressFromBech32(address)
@@ -30,7 +30,7 @@ func (k Keeper) GetClaimRecord(ctx sdk.Context, chainID, address string) (types.
 }
 
 // SetClaimRecord creates/updates the given airdrop ClaimRecord.
-func (k Keeper) SetClaimRecord(ctx sdk.Context, cr types.ClaimRecord) error {
+func (k *Keeper) SetClaimRecord(ctx sdk.Context, cr types.ClaimRecord) error {
 	_, addr, err := bech32.DecodeAndConvert(cr.Address)
 	if err != nil {
 		return err
@@ -44,7 +44,7 @@ func (k Keeper) SetClaimRecord(ctx sdk.Context, cr types.ClaimRecord) error {
 }
 
 // DeleteClaimRecord deletes the airdrop ClaimRecord of the given zone and address.
-func (k Keeper) DeleteClaimRecord(ctx sdk.Context, chainID, address string) error {
+func (k *Keeper) DeleteClaimRecord(ctx sdk.Context, chainID, address string) error {
 	addr, err := sdk.AccAddressFromBech32(address)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (k Keeper) DeleteClaimRecord(ctx sdk.Context, chainID, address string) erro
 }
 
 // IterateClaimRecords iterate through zone airdrop ClaimRecords.
-func (k Keeper) IterateClaimRecords(ctx sdk.Context, chainID string, fn func(index int64, cr types.ClaimRecord) (stop bool)) {
+func (k *Keeper) IterateClaimRecords(ctx sdk.Context, chainID string, fn func(index int64, cr types.ClaimRecord) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainID))
@@ -78,8 +78,8 @@ func (k Keeper) IterateClaimRecords(ctx sdk.Context, chainID string, fn func(ind
 }
 
 // AllClaimRecords returns all the claim records.
-func (k Keeper) AllClaimRecords(ctx sdk.Context) []*types.ClaimRecord {
-	crs := []*types.ClaimRecord{}
+func (k *Keeper) AllClaimRecords(ctx sdk.Context) []*types.ClaimRecord {
+	var crs []*types.ClaimRecord
 
 	store := ctx.KVStore(k.storeKey)
 
@@ -97,8 +97,8 @@ func (k Keeper) AllClaimRecords(ctx sdk.Context) []*types.ClaimRecord {
 }
 
 // AllZoneClaimRecords returns all the claim records of the given zone.
-func (k Keeper) AllZoneClaimRecords(ctx sdk.Context, chainID string) []*types.ClaimRecord {
-	crs := []*types.ClaimRecord{}
+func (k *Keeper) AllZoneClaimRecords(ctx sdk.Context, chainID string) []*types.ClaimRecord {
+	var crs []*types.ClaimRecord
 	k.IterateClaimRecords(ctx, chainID, func(_ int64, cr types.ClaimRecord) (stop bool) {
 		crs = append(crs, &cr)
 		return false
@@ -107,7 +107,7 @@ func (k Keeper) AllZoneClaimRecords(ctx sdk.Context, chainID string) []*types.Cl
 }
 
 // ClearClaimRecords deletes all the claim records of the given zone.
-func (k Keeper) ClearClaimRecords(ctx sdk.Context, chainID string) {
+func (k *Keeper) ClearClaimRecords(ctx sdk.Context, chainID string) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaimRecord(chainID))
@@ -121,7 +121,7 @@ func (k Keeper) ClearClaimRecords(ctx sdk.Context, chainID string) {
 
 // GetClaimableAmountForAction returns the amount claimable for the given
 // action, by the given address, against the given zone.
-func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID, address string, action types.Action) (uint64, error) {
+func (k *Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID, address string, action types.Action) (uint64, error) {
 	if !action.InBounds() {
 		return 0, fmt.Errorf("%w, got %d", types.ErrActionOutOfBounds, action)
 	}
@@ -168,7 +168,7 @@ func (k Keeper) GetClaimableAmountForAction(ctx sdk.Context, chainID, address st
 
 // GetClaimableAmountForUser returns the amount claimable for the given user
 // against the given zone.
-func (k Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID, address string) (uint64, error) {
+func (k *Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID, address string) (uint64, error) {
 	cr, err := k.GetClaimRecord(ctx, chainID, address)
 	if err != nil {
 		return 0, err
@@ -199,7 +199,7 @@ func (k Keeper) GetClaimableAmountForUser(ctx sdk.Context, chainID, address stri
 // Claim executes an airdrop claim for the given address on the given action
 // against the given zone (chainID). It returns the claim amount or an error
 // on failure.
-func (k Keeper) Claim(
+func (k *Keeper) Claim(
 	ctx sdk.Context,
 	chainID string,
 	action types.Action,

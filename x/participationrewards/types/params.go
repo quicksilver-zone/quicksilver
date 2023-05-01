@@ -1,7 +1,7 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -83,19 +83,19 @@ func validateBoolean(i interface{}) error {
 	return nil
 }
 
-// validate params.
-func (p Params) Validate() error {
+// Validate performs stateless validity checks on params.
+func (p *Params) Validate() error {
 	return validateDistributionProportions(p.DistributionProportions)
 }
 
 // String implements the Stringer interface.
-func (p Params) String() string {
+func (p *Params) String() string {
 	out, _ := yaml.Marshal(p)
 	return string(out)
 }
 
 // String implements the Stringer interface.
-func (p ParamsV1) String() string {
+func (p *ParamsV1) String() string {
 	out, err := yaml.Marshal(p)
 	if err != nil {
 		panic(err)

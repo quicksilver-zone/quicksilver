@@ -10,11 +10,11 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (k Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
+func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 	return nil
 }
 
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
+func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
 	if epochIdentifier == epochstypes.EpochIdentifierEpoch {
 		k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, data types.ProtocolData) (stop bool) {
 			blockQuery := tmservice.GetLatestBlockRequest{}
@@ -24,7 +24,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 			if err != nil {
 				k.Logger(ctx).Error("Error unmarshalling protocol data")
 			}
-			connectionData, _ := iConnectionData.(types.ConnectionProtocolData)
+			connectionData, _ := iConnectionData.(*types.ConnectionProtocolData)
 			if connectionData.ChainID == ctx.ChainID() {
 				return false
 			}
@@ -51,7 +51,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 
 		k.Logger(ctx).Info("distribute participation rewards...")
 
-		allocation, err := GetRewardsAllocations(
+		allocation, err := types.GetRewardsAllocations(
 			k.GetModuleBalance(ctx),
 			k.GetParams(ctx).DistributionProportions,
 		)
@@ -94,16 +94,17 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) 
 
 // Hooks wrapper struct for incentives keeper.
 type Hooks struct {
-	k Keeper
+	k *Keeper
 }
 
 var _ epochstypes.EpochHooks = Hooks{}
 
-func (k Keeper) Hooks() Hooks {
+func (k *Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
 // epochs hooks.
+
 func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }

@@ -27,7 +27,7 @@ type Keeper struct {
 	govKeeper     govkeeper.Keeper
 	icsKeeper     icskeeper.Keeper
 	icqKeeper     icqkeeper.Keeper
-	prKeeper      prkeeper.Keeper
+	prKeeper      *prkeeper.Keeper
 
 	ValidateProofOps utils.ProofOpsFn
 }
@@ -44,9 +44,9 @@ func NewKeeper(
 	gk govkeeper.Keeper,
 	icsk icskeeper.Keeper,
 	icqk icqkeeper.Keeper,
-	prk prkeeper.Keeper,
+	prk *prkeeper.Keeper,
 	pofn utils.ProofOpsFn,
-) Keeper {
+) *Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -56,7 +56,7 @@ func NewKeeper(
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	return &Keeper{
 		cdc:              cdc,
 		storeKey:         key,
 		paramSpace:       ps,
@@ -72,44 +72,44 @@ func NewKeeper(
 }
 
 // GetParams returns the total set of participationrewards parameters.
-func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
+func (k *Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
 }
 
 // SetParams sets the total set of participationrewards parameters.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // GetModuleAccountAddress gets the airdrop module account address.
-func (k Keeper) GetModuleAccountAddress(_ sdk.Context) sdk.AccAddress {
+func (k *Keeper) GetModuleAccountAddress(_ sdk.Context) sdk.AccAddress {
 	return k.accountKeeper.GetModuleAddress(types.ModuleName)
 }
 
 // GetModuleAccountBalance gets the airdrop module account coin balance.
-func (k Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
+func (k *Keeper) GetModuleAccountBalance(ctx sdk.Context) sdk.Coin {
 	moduleAccAddr := k.GetModuleAccountAddress(ctx)
 	return k.bankKeeper.GetBalance(ctx, moduleAccAddr, k.stakingKeeper.BondDenom(ctx))
 }
 
-func (k Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amount sdk.Coins) error {
+func (k *Keeper) SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amount sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, senderModule, recipientModule, amount)
 }
 
-func (k Keeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAccount sdk.AccAddress, amount sdk.Coins) error {
+func (k *Keeper) SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAccount sdk.AccAddress, amount sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, senderModule, recipientAccount, amount)
 }
 
-func (k Keeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAccount sdk.AccAddress, recipientModule string, amount sdk.Coins) error {
+func (k *Keeper) SendCoinsFromAccountToModule(ctx sdk.Context, senderAccount sdk.AccAddress, recipientModule string, amount sdk.Coins) error {
 	return k.bankKeeper.SendCoinsFromAccountToModule(ctx, senderAccount, recipientModule, amount)
 }
 
-func (k Keeper) BondDenom(ctx sdk.Context) string {
+func (k *Keeper) BondDenom(ctx sdk.Context) string {
 	return k.stakingKeeper.BondDenom(ctx)
 }

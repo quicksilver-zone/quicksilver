@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
@@ -13,43 +12,9 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-type RewardsAllocation struct {
-	ValidatorSelection math.Int
-	Holdings           math.Int
-	Lockup             math.Int
-}
-
 type tokenValues map[string]sdk.Dec
 
-// GetRewardsAllocations returns an instance of rewardsAllocation with values
-// set according to the given moduleBalance and distribution proportions.
-func GetRewardsAllocations(moduleBalance math.Int, proportions types.DistributionProportions) (*RewardsAllocation, error) {
-	if moduleBalance.IsNil() || moduleBalance.IsZero() {
-		return nil, types.ErrNothingToAllocate
-	}
-
-	if sum := proportions.Total(); !sum.Equal(sdk.OneDec()) {
-		return nil, fmt.Errorf("%w: got %v", types.ErrInvalidTotalProportions, sum)
-	}
-
-	var allocation RewardsAllocation
-
-	// split participation rewards allocations
-	allocation.ValidatorSelection = sdk.NewDecFromInt(moduleBalance).Mul(proportions.ValidatorSelectionAllocation).TruncateInt()
-	allocation.Holdings = sdk.NewDecFromInt(moduleBalance).Mul(proportions.HoldingsAllocation).TruncateInt()
-	allocation.Lockup = sdk.NewDecFromInt(moduleBalance).Mul(proportions.LockupAllocation).TruncateInt()
-
-	// use sum to check total distribution to collect and allocate dust
-	sum := allocation.Lockup.Add(allocation.ValidatorSelection).Add(allocation.Holdings)
-	dust := moduleBalance.Sub(sum)
-
-	// Add dust to validator choice allocation (favors decentralization)
-	allocation.ValidatorSelection = allocation.ValidatorSelection.Add(dust)
-
-	return &allocation, nil
-}
-
-func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
+func (k *Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 	k.Logger(ctx).Info("calcTokenValues")
 
 	tvs := make(map[string]sdk.Dec)
@@ -80,7 +45,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 			errs[idxLabel] = err
 			return true
 		}
-		pool, _ := ipool.(types.OsmosisPoolProtocolData)
+		pool, _ := ipool.(*types.OsmosisPoolProtocolData)
 
 		// pool must be a cosmos pair
 		if len(pool.Zones) != 2 {
@@ -141,10 +106,10 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 	return tvs, nil
 }
 
-// allocateZoneRewards executes zone based rewards allocation. This entails
+// AllocateZoneRewards executes zone based rewards allocation. This entails
 // rewards that are proportionally distributed to zones based on the tvl for
 // each zone relative to the tvl of the QS protocol.
-func (k Keeper) AllocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation RewardsAllocation) error {
+func (k *Keeper) AllocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation types.RewardsAllocation) error {
 	k.Logger(ctx).Info("allocateZoneRewards", "token values", tvs, "allocation", allocation)
 
 	if err := k.setZoneAllocations(ctx, tvs, allocation); err != nil {
@@ -158,10 +123,10 @@ func (k Keeper) AllocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation
 
 // setZoneAllocations returns the proportional zone rewards allocations as a
 // map indexed by the zone id.
-func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation RewardsAllocation) error {
+func (k *Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation types.RewardsAllocation) error {
 	k.Logger(ctx).Info("setZoneAllocations", "allocation", allocation)
 
-	otvl := sdk.NewDec(0)
+	otvl := sdk.ZeroDec()
 	// pass 1: iterate zones - set tvl & calc overall tvl
 	for _, zone := range k.icsKeeper.AllZones(ctx) {
 		// explicit memory referencing
@@ -209,8 +174,8 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 	return nil
 }
 
-// distributeToUsers sends the allocated user rewards to the user address.
-func (k Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.UserAllocation) error {
+// DistributeToUsers sends the allocated user rewards to the user address.
+func (k *Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.UserAllocation) error {
 	k.Logger(ctx).Info("distributeToUsers", "allocations", userAllocations)
 	hasError := false
 

@@ -12,7 +12,7 @@ import (
 // InitGenesis initializes the airdrop module's state from a provided genesis
 // state.
 // This function will panic on failure.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 
 	sum := uint64(0)
@@ -63,7 +63,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 }
 
 // ExportGenesis returns the capability module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 	params := k.GetParams(ctx)
 	zoneDrops := k.AllZoneDrops(ctx)
 	claimRecords := k.AllClaimRecords(ctx)
