@@ -11,8 +11,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	clmutil "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 // processRedemptionForLsm will determine based on user intent, the tokens to return to the user, generate Redeem message and send them.

@@ -32,10 +32,10 @@ func NewKeeper(
 	ibcKeeper ibckeeper.Keeper,
 ) Keeper {
 	return Keeper{
-		cdc:       cdc,
-		storeKey:  key,
+		cdc:        cdc,
+		storeKey:   key,
 		bankKeeper: bankKeeper,
-		IBCKeeper: ibcKeeper,
+		IBCKeeper:  ibcKeeper,
 	}
 }
 

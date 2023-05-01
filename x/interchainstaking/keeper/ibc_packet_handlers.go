@@ -26,9 +26,9 @@ import (
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	clmutil "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	clmutil "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 )
 
 type TypedMsg struct {

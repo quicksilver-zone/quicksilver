@@ -15,9 +15,9 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 		k.Logger(ctx).Info("zones", "zone", zone.ChainId)
 
 		customeZone := cmtypes.CustomeZone{
-			ChainId: zone.ChainId,
+			ChainId:            zone.ChainId,
 			HoldingsAllocation: zone.HoldingsAllocation,
-			LocalDenom: zone.LocalDenom,
+			LocalDenom:         zone.LocalDenom,
 		}
 		userAllocations, remaining := k.icsKeeper.ClaimsManagerKeeper.CalcUserHoldingsAllocations(ctx, customeZone)
 

@@ -7,9 +7,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	claimtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	claimtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 // AllocateValidatorSelectionRewards utilizes IBC to query the performance

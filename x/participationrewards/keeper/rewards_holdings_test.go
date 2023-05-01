@@ -140,9 +140,9 @@ func (s *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 			s.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
 
 			customeZone := cmtypes.CustomeZone{
-				ChainId: zone.ChainId,
+				ChainId:            zone.ChainId,
 				HoldingsAllocation: zone.HoldingsAllocation,
-				LocalDenom: zone.LocalDenom,
+				LocalDenom:         zone.LocalDenom,
 			}
 
 			allocations, remainder := appA.ClaimsManagerKeeper.CalcUserHoldingsAllocations(ctx, customeZone)

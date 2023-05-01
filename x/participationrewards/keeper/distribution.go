@@ -8,9 +8,9 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
+	claimtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	claimtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 type tokenValues map[string]sdk.Dec

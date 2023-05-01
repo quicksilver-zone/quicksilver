@@ -10,7 +10,6 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	clmutil "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
-
 )
 
 // CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
