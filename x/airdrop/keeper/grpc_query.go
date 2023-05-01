@@ -12,10 +12,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = &Keeper{}
 
 // Params returns params of the airdrop module.
-func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k *Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	params := k.GetParams(ctx)
 
@@ -23,7 +23,7 @@ func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.Q
 }
 
 // ZoneDrop returns the details of the specified zone airdrop.
-func (k Keeper) ZoneDrop(c context.Context, req *types.QueryZoneDropRequest) (*types.QueryZoneDropResponse, error) {
+func (k *Keeper) ZoneDrop(c context.Context, req *types.QueryZoneDropRequest) (*types.QueryZoneDropResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	zd, ok := k.GetZoneDrop(ctx, req.ChainId)
@@ -35,7 +35,7 @@ func (k Keeper) ZoneDrop(c context.Context, req *types.QueryZoneDropRequest) (*t
 }
 
 // AccountBalance returns the airdrop module account balance of the specified zone.
-func (k Keeper) AccountBalance(c context.Context, req *types.QueryAccountBalanceRequest) (*types.QueryAccountBalanceResponse, error) {
+func (k *Keeper) AccountBalance(c context.Context, req *types.QueryAccountBalanceRequest) (*types.QueryAccountBalanceResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	ab := k.GetZoneDropAccountBalance(ctx, req.ChainId)
@@ -46,7 +46,7 @@ func (k Keeper) AccountBalance(c context.Context, req *types.QueryAccountBalance
 }
 
 // ZoneDrops returns all zone airdrops of the specified status.
-func (k Keeper) ZoneDrops(c context.Context, req *types.QueryZoneDropsRequest) (*types.QueryZoneDropsResponse, error) {
+func (k *Keeper) ZoneDrops(c context.Context, req *types.QueryZoneDropsRequest) (*types.QueryZoneDropsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var zds []types.ZoneDrop
@@ -88,7 +88,7 @@ func (k Keeper) ZoneDrops(c context.Context, req *types.QueryZoneDropsRequest) (
 }
 
 // ClaimRecord returns the claim record that corresponds to the given zone and address.
-func (k Keeper) ClaimRecord(c context.Context, req *types.QueryClaimRecordRequest) (*types.QueryClaimRecordResponse, error) {
+func (k *Keeper) ClaimRecord(c context.Context, req *types.QueryClaimRecordRequest) (*types.QueryClaimRecordResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	cr, err := k.GetClaimRecord(ctx, req.ChainId, req.Address)
@@ -100,7 +100,7 @@ func (k Keeper) ClaimRecord(c context.Context, req *types.QueryClaimRecordReques
 }
 
 // ClaimRecords returns all the claim records of the given zone.
-func (k Keeper) ClaimRecords(c context.Context, req *types.QueryClaimRecordsRequest) (*types.QueryClaimRecordsResponse, error) {
+func (k *Keeper) ClaimRecords(c context.Context, req *types.QueryClaimRecordsRequest) (*types.QueryClaimRecordsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var crs []types.ClaimRecord

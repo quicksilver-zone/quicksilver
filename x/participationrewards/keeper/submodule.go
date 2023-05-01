@@ -9,7 +9,7 @@ import (
 // Submodule defines the interface for for tracking off-chain qAssets with
 // regards to participation rewards claims.
 type Submodule interface {
-	Hooks(ctx sdk.Context, keeper Keeper)
+	Hooks(ctx sdk.Context, keeper *Keeper)
 	IsActive() bool
 	IsReady() bool
 	ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error)

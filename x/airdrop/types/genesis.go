@@ -26,7 +26,7 @@ func DefaultGenesisState() *GenesisState {
 
 // Validate validates the provided genesis state to ensure the
 // expected invariants hold.
-func (gs GenesisState) Validate() error {
+func (gs *GenesisState) Validate() error {
 	if err := gs.Params.Validate(); err != nil {
 		return err
 	}
