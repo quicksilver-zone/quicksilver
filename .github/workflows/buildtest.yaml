@@ -4,7 +4,13 @@ name: build and test
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
-on: [pull_request, workflow_dispatch]
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - "develop"
+      - "main"
 
 # This workflow makes x86_64 for windows, and linux.
 
