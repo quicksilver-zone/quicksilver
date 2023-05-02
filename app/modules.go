@@ -45,6 +45,8 @@ import (
 	ibc "github.com/cosmos/ibc-go/v5/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v5/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v5/router"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
@@ -94,6 +96,7 @@ var (
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
+		packetforward.AppModuleBasic{},
 		ica.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		claimsmanager.AppModuleBasic{},
@@ -122,6 +125,7 @@ var (
 		interchainquerytypes.ModuleName:            nil,
 		participationrewardstypes.ModuleName:       nil,
 		airdroptypes.ModuleName:                    nil,
+		packetforwardtypes.ModuleName:              nil,
 		wasm.ModuleName:                            {authtypes.Burner},
 		tokenfactorytypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
 	}
@@ -159,6 +163,7 @@ func appModules(
 		// ibc modules
 		ibc.NewAppModule(app.IBCKeeper),
 		app.TransferModule,
+		app.PacketForwardModule,
 		app.ICAModule,
 		// Quicksilver app modules
 		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, app.BankKeeper),
@@ -240,6 +245,7 @@ func orderBeginBlockers() []string {
 		// no-op modules
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		packetforwardtypes.ModuleName,
 		claimsmanagertypes.ModuleName,
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
@@ -277,6 +283,7 @@ func orderEndBlockers() []string {
 		ibchost.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
+		packetforwardtypes.ModuleName,
 		capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
@@ -325,6 +332,7 @@ func orderInitBlockers() []string {
 		ibctransfertypes.ModuleName,
 		authz.ModuleName,
 		feegrant.ModuleName,
+		packetforwardtypes.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
