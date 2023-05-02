@@ -1,11 +1,9 @@
 syntax = "proto3";
 package quicksilver.participationrewards.v1;
 
-import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "tendermint/crypto/proof.proto";
-import "quicksilver/participationrewards/v1/participationrewards.proto";
 import "quicksilver/claimsmanager/v1/claimsmanager.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
@@ -14,10 +12,10 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewar
 service Msg {
   rpc SubmitClaim(MsgSubmitClaim) returns (MsgSubmitClaimResponse) {
     option (google.api.http) = {
-      post : "/quicksilver/tx/v1/participationrewards/claim"
-      body : "*"
+      post: "/quicksilver/tx/v1/participationrewards/claim"
+      body: "*"
     };
-  };
+  }
 }
 
 // MsgSubmitClaim represents a message type for submitting a participation
@@ -26,14 +24,15 @@ message MsgSubmitClaim {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string user_address = 1 [ json_name = "user_address", (cosmos_proto.scalar) = "cosmos.AddressString" ];
-  string zone = 2 [ json_name = "zone" ];
-  string src_zone = 3 [ json_name = "src_zone" ];
-  quicksilver.claimsmanager.v1.ClaimType claim_type = 4 [ json_name = "claim_type" ];
-  repeated quicksilver.claimsmanager.v1.Proof proofs = 5 [ json_name = "proofs" ];
+  string user_address = 1 [
+    json_name = "user_address",
+    (cosmos_proto.scalar) = "cosmos.AddressString"
+  ];
+  string zone = 2 [json_name = "zone"];
+  string src_zone = 3 [json_name = "src_zone"];
+  quicksilver.claimsmanager.v1.ClaimType claim_type = 4 [json_name = "claim_type"];
+  repeated quicksilver.claimsmanager.v1.Proof proofs = 5 [json_name = "proofs"];
 }
 
 // MsgSubmitClaimResponse defines the MsgSubmitClaim response type.
 message MsgSubmitClaimResponse {}
-
-

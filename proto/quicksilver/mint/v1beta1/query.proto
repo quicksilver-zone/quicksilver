@@ -15,8 +15,7 @@ service Query {
   }
 
   // EpochProvisions current minting epoch provisions value.
-  rpc EpochProvisions(QueryEpochProvisionsRequest)
-      returns (QueryEpochProvisionsResponse) {
+  rpc EpochProvisions(QueryEpochProvisionsRequest) returns (QueryEpochProvisionsResponse) {
     option (google.api.http).get = "/quicksilver/mint/v1beta1/epoch_provisions";
   }
 }
@@ -27,7 +26,7 @@ message QueryParamsRequest {}
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryParamsResponse {
   // params defines the parameters of the module.
-  Params params = 1 [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryEpochProvisionsRequest is the request type for the
