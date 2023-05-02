@@ -7,11 +7,10 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/ingenuity-build/quicksilver/utils"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-
 	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func (s *KeeperTestSuite) Test_msgServer_Claim() {

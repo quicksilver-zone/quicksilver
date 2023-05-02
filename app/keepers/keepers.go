@@ -537,6 +537,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.InterchainQueryKeeper,
 		appKeepers.ParticipationRewardsKeeper,
 		proofOpsFn,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	// airdropModule := airdrop.NewAppModule(appCodec, appKeepers.AirdropKeeper)
 

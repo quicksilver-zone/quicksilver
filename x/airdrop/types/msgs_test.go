@@ -3,9 +3,11 @@ package types_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
@@ -37,6 +39,7 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 			},
 			true,
 		},
+
 		{
 			"invalid_action_out_of_bounds_low",
 			fields{
@@ -123,6 +126,91 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 				Action:  tt.fields.Action,
 				Address: tt.fields.Address,
 				Proofs:  tt.fields.Proofs,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgIncentivePoolSpendValidateBasic(t *testing.T) {
+	type fields struct {
+		Authority string
+		ToAddress string
+		Amount    sdk.Coins
+	}
+
+	validTestCoins := sdk.NewCoins(sdk.NewCoin("test", sdk.NewIntFromUint64(10000)))
+	addr1 := utils.GenerateAccAddressForTest().String()
+	addr2 := utils.GenerateAccAddressForTest().String()
+
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			"blank",
+			fields{},
+			true,
+		},
+		{
+			"invalid authority",
+			fields{
+				Authority: "invalid",
+				ToAddress: addr2,
+				Amount:    validTestCoins,
+			},
+			true,
+		},
+		{
+			"invalid to address",
+			fields{
+				Authority: addr1,
+				ToAddress: "invalid",
+				Amount:    validTestCoins,
+			},
+			true,
+		},
+		{
+			"invalid equal addresses",
+			fields{
+				Authority: addr1,
+				ToAddress: addr1,
+				Amount:    validTestCoins,
+			},
+			true,
+		},
+		{
+			"invalid amount",
+			fields{
+				Authority: addr1,
+				ToAddress: addr2,
+				Amount:    sdk.Coins{},
+			},
+			true,
+		},
+		{
+			"valid",
+			fields{
+				Authority: addr1,
+				ToAddress: addr2,
+				Amount:    validTestCoins,
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgIncentivePoolSpend{
+				Authority: tt.fields.Authority,
+				ToAddress: tt.fields.ToAddress,
+				Amount:    tt.fields.Amount,
 			}
 			err := msg.ValidateBasic()
 			if tt.wantErr {

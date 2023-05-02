@@ -30,6 +30,10 @@ type Keeper struct {
 	prKeeper      *prkeeper.Keeper
 
 	ValidateProofOps utils.ProofOpsFn
+
+	// the address capable of executing authority-scoped messages (ex. params, props). Typically, this
+	// should be the x/gov module account.
+	authority string
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -46,6 +50,7 @@ func NewKeeper(
 	icqk icqkeeper.Keeper,
 	prk *prkeeper.Keeper,
 	pofn utils.ProofOpsFn,
+	authority string,
 ) *Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -68,16 +73,22 @@ func NewKeeper(
 		icqKeeper:        icqk,
 		prKeeper:         prk,
 		ValidateProofOps: pofn,
+		authority:        authority,
 	}
 }
 
-// GetParams returns the total set of participationrewards parameters.
+// GetAuthority returns the x/airdrop module's authority.
+func (k *Keeper) GetAuthority() string {
+	return k.authority
+}
+
+// GetParams returns the total set of airdrop parameters.
 func (k *Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 	k.paramSpace.GetParamSet(ctx, &params)
 	return params
 }
 
-// SetParams sets the total set of participationrewards parameters.
+// SetParams sets the total set of airdrop parameters.
 func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
 }
