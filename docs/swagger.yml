@@ -138,7 +138,7 @@ paths:
           schema:
             type: object
             properties:
-              from_address:
+              authority:
                 type: string
               to_address:
                 type: string
