@@ -18,7 +18,7 @@ jobs:
     name: build quicksilver
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: '1.19.6'
         env:
@@ -52,7 +52,7 @@ jobs:
     name: test quicksilver
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v4
         with:
           go-version: '1.19.6'
         env:
@@ -87,5 +87,3 @@ jobs:
           flags: unittests
           fail_ci_if_error: true
           verbose: true
-
-
