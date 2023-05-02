@@ -53,6 +53,9 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v5/router"
+	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v5/router/keeper"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
@@ -119,10 +122,12 @@ type AppKeepers struct {
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
+	PacketForwardKeeper *packetforwardkeeper.Keeper
 
 	// Modules
-	ICAModule      ica.AppModule
-	TransferModule transfer.AppModule
+	ICAModule           ica.AppModule
+	TransferModule      transfer.AppModule
+	PacketForwardModule packetforward.AppModule
 
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
@@ -311,12 +316,24 @@ func (appKeepers *AppKeepers) InitKeepers(
 		scopedIBCKeeper,
 	)
 
+	// RouterKeeper must be created before TransferKeeper
+	appKeepers.PacketForwardKeeper = packetforwardkeeper.NewKeeper(
+		appCodec,
+		appKeepers.keys[packetforwardtypes.StoreKey],
+		appKeepers.GetSubspace(packetforwardtypes.ModuleName),
+		appKeepers.TransferKeeper,
+		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.DistrKeeper,
+		appKeepers.BankKeeper,
+		appKeepers.IBCKeeper.ChannelKeeper,
+	)
+
 	// Create Transfer Keepers
 	appKeepers.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[ibctransfertypes.StoreKey],
 		appKeepers.GetSubspace(ibctransfertypes.ModuleName),
-		appKeepers.IBCKeeper.ChannelKeeper,
+		appKeepers.PacketForwardKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
@@ -324,8 +341,9 @@ func (appKeepers *AppKeepers) InitKeepers(
 		scopedTransferKeeper,
 	)
 
+	appKeepers.PacketForwardKeeper.SetTransferKeeper(appKeepers.TransferKeeper)
 	appKeepers.TransferModule = transfer.NewAppModule(appKeepers.TransferKeeper)
-	transferIBCModule := transfer.NewIBCModule(appKeepers.TransferKeeper)
+	appKeepers.PacketForwardModule = packetforward.NewAppModule(appKeepers.PacketForwardKeeper)
 
 	// ICA Keepers
 	appKeepers.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
@@ -447,10 +465,20 @@ func (appKeepers *AppKeepers) InitKeepers(
 
 	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, appKeepers.ICAControllerKeeper)
 
+	var ibcStack porttypes.IBCModule
+	ibcStack = transfer.NewIBCModule(appKeepers.TransferKeeper)
+	ibcStack = packetforward.NewIBCMiddleware(
+		ibcStack,
+		appKeepers.PacketForwardKeeper,
+		0,
+		packetforwardkeeper.DefaultForwardTransferPacketTimeoutTimestamp,
+		packetforwardkeeper.DefaultRefundTransferPacketTimeoutTimestamp,
+	)
+
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
-		AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
+		AddRoute(ibctransfertypes.ModuleName, ibcStack).
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper)).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
@@ -538,6 +566,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
 	paramsKeeper.Subspace(icahosttypes.SubModuleName)
 	paramsKeeper.Subspace(ibchost.ModuleName)
+	paramsKeeper.Subspace(packetforwardtypes.ModuleName).WithKeyTable(packetforwardtypes.ParamKeyTable())
 	// quicksilver subspaces
 	paramsKeeper.Subspace(claimsmanagertypes.ModuleName)
 	paramsKeeper.Subspace(minttypes.ModuleName)

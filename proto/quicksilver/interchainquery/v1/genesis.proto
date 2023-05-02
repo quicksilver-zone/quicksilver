@@ -2,16 +2,13 @@ syntax = "proto3";
 package quicksilver.interchainquery.v1;
 
 import "gogoproto/gogo.proto";
-
 import "quicksilver/interchainquery/v1/interchainquery.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainquery/types";
-
-
 
 // GenesisState defines the epochs module's genesis state.
 message GenesisState {
   option (gogoproto.goproto_getters) = false;
 
-  repeated Query queries = 1 [ (gogoproto.nullable) = false ];
+  repeated Query queries = 1 [(gogoproto.nullable) = false];
 }

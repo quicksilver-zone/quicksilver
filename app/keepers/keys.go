@@ -20,6 +20,7 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
 
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
@@ -52,6 +53,7 @@ func KVStoreKeys() []string {
 		ibctransfertypes.StoreKey,
 		icacontrollertypes.StoreKey,
 		icahosttypes.StoreKey,
+		packetforwardtypes.StoreKey,
 		// quicksilver keys
 		minttypes.StoreKey,
 		claimsmanagertypes.StoreKey,

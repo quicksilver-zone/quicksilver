@@ -336,6 +336,16 @@ test-rpc:
 test-rpc-pending:
 	./scripts/integration-test-all.sh -t "pending" -q 1 -z 1 -s 2 -m "pending" -r "true"
 
+
+vulncheck: $(BUILDDIR)/
+	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
+	$(BUILDDIR)/govulncheck ./...
+
+vet:
+	@echo "Running vet..."
+	@go vet ./...
+	@echo "Done!"
+
 RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
 RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
 RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
@@ -493,26 +503,37 @@ mdlint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-# TODO: Include formatting and linting via Buf.
+BUF_VERSION=1.15.1
+
 proto-all: proto-gen
 
 proto-gen:
 	@echo "🤖 Generating code from protobuf..."
-	@docker run --rm --volume "$(PWD)":/workspace --workdir /workspace \
+	@$(DOCKER) run --rm --volume "$(PWD)":/workspace --workdir /workspace \
 		quicksilver-proto sh ./proto/generate.sh
 	@echo "✅ Completed code generation!"
 
+proto-lint:
+	@echo "🤖 Running protobuf linter..."
+	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
+		bufbuild/buf:$(BUF_VERSION) lint
+	@echo "✅ Completed protobuf linting!"
+
+proto-format:
+	@echo "🤖 Running protobuf format..."
+	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
+		bufbuild/buf:$(BUF_VERSION) format -w
+	@echo "✅ Completed protobuf format!"
+
+proto-breaking-check:
+	@echo "🤖 Running protobuf breaking check against develop branch..."
+	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
+		bufbuild/buf:$(BUF_VERSION) breaking --against '.git#branch=develop'
+	@echo "✅ Completed protobuf breaking check!"
+
 proto-setup:
 	@echo "🤖 Setting up protobuf environment..."
-	@docker build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
+	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
 	@echo "✅ Setup protobuf environment!"
 
-vulncheck: $(BUILDDIR)/
-	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
-	$(BUILDDIR)/govulncheck ./...
-
-vet:
-	@echo "Running vet..."
-	@go vet ./...
-	@echo "Done!"
 

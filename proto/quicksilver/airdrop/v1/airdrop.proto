@@ -1,10 +1,10 @@
 syntax = "proto3";
 package quicksilver.airdrop.v1;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 

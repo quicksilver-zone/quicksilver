@@ -14,6 +14,6 @@ message RegisterZoneDropProposal {
   string title = 1;
   string description = 2;
 
-  ZoneDrop zone_drop = 3 [ (gogoproto.moretags) = "yaml:\"zone_drop\"" ];
-  bytes claim_records = 4 [ (gogoproto.moretags) = "yaml:\"claim_records\"" ];
+  ZoneDrop zone_drop = 3 [(gogoproto.moretags) = "yaml:\"zone_drop\""];
+  bytes claim_records = 4 [(gogoproto.moretags) = "yaml:\"claim_records\""];
 }

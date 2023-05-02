@@ -1,9 +1,7 @@
 syntax = "proto3";
-package quicksilver.interchainstaking.v1;
+package quicksilver.participationrewards.v1;
 
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
-import "google/api/annotations.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
 
@@ -15,12 +13,12 @@ message AddProtocolDataProposal {
   string title = 1;
   string description = 2;
 
-  string type = 4 [ (gogoproto.moretags) = "yaml:\"type\"" ];
+  string type = 4 [(gogoproto.moretags) = "yaml:\"type\""];
   string data = 5 [
     (gogoproto.moretags) = "yaml:\"data\"",
     (gogoproto.casttype) = "encoding/json.RawMessage"
   ];
-  string key = 6 [ (gogoproto.moretags) = "yaml:\"key\"" ];
+  string key = 6 [(gogoproto.moretags) = "yaml:\"key\""];
 }
 
 message AddProtocolDataProposalWithDeposit {
@@ -30,12 +28,12 @@ message AddProtocolDataProposalWithDeposit {
   string title = 1;
   string description = 2;
 
-  string protocol = 3 [ (gogoproto.moretags) = "yaml:\"protocol\"" ];
-  string type = 4 [ (gogoproto.moretags) = "yaml:\"type\"" ];
-  string key = 5 [ (gogoproto.moretags) = "yaml:\"key\"" ];
+  string protocol = 3 [(gogoproto.moretags) = "yaml:\"protocol\""];
+  string type = 4 [(gogoproto.moretags) = "yaml:\"type\""];
+  string key = 5 [(gogoproto.moretags) = "yaml:\"key\""];
   bytes data = 6 [
     (gogoproto.moretags) = "yaml:\"data\"",
     (gogoproto.casttype) = "encoding/json.RawMessage"
   ];
-  string deposit = 7 [ (gogoproto.moretags) = "yaml:\"deposit\"" ];
+  string deposit = 7 [(gogoproto.moretags) = "yaml:\"deposit\""];
 }
