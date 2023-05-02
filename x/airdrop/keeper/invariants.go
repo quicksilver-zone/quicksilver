@@ -11,19 +11,19 @@ const (
 )
 
 // RegisterInvariants registers all airdrop invariants.
-func RegisterInvariants(ir sdk.InvariantRegistry, k Keeper) {
+func RegisterInvariants(ir sdk.InvariantRegistry, k *Keeper) {
 	ir.RegisterRoute(types.ModuleName, claimRecordInvariantName, ClaimRecordInvariant(k))
 }
 
 // AllInvariants runs all invariants of the module.
-func AllInvariants(k Keeper) sdk.Invariant {
+func AllInvariants(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		msg, broke := ClaimRecordInvariant(k)(ctx)
 		return msg, broke
 	}
 }
 
-func ClaimRecordInvariant(k Keeper) sdk.Invariant {
+func ClaimRecordInvariant(k *Keeper) sdk.Invariant {
 	return func(ctx sdk.Context) (string, bool) {
 		crs := k.AllClaimRecords(ctx)
 		for _, cr := range crs {

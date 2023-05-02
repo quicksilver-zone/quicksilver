@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"fmt"
@@ -7,10 +7,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	crypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
@@ -86,7 +87,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := MsgSubmitClaim{
+			msg := types.MsgSubmitClaim{
 				UserAddress: tt.fields.UserAddress,
 				Zone:        tt.fields.Zone,
 				SrcZone:     tt.fields.SrcZone,
@@ -134,7 +135,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			msg := MsgSubmitClaim{
+			msg := types.MsgSubmitClaim{
 				UserAddress: tt.fields.UserAddress,
 				Zone:        tt.fields.Zone,
 				ClaimType:   tt.fields.ClaimType,
@@ -160,11 +161,11 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *MsgSubmitClaim
+		want *types.MsgSubmitClaim
 	}{
 		{
-			"test",
-			args{
+			name: "test",
+			args: args{
 				userAddress,
 				"osmosis-1",
 				"juno",
@@ -179,12 +180,12 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 					},
 				},
 			},
-			&MsgSubmitClaim{
-				userAddress.String(),
-				"juno",
-				"osmosis-1",
-				cmtypes.ClaimTypeOsmosisPool,
-				[]*cmtypes.Proof{
+			want: &types.MsgSubmitClaim{
+				UserAddress: userAddress.String(),
+				Zone:        "juno",
+				SrcZone:     "osmosis-1",
+				ClaimType:   cmtypes.ClaimTypeOsmosisPool,
+				Proofs: []*cmtypes.Proof{
 					{
 						Key:       []byte{1, 2, 3, 4, 5},
 						Data:      []byte{0, 0, 1, 1, 2, 3, 4, 5},
@@ -198,7 +199,7 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewMsgSubmitClaim(tt.args.userAddress, tt.args.srcZone, tt.args.zone, tt.args.claimType, tt.args.proofs); !reflect.DeepEqual(got, tt.want) {
+			if got := types.NewMsgSubmitClaim(tt.args.userAddress, tt.args.srcZone, tt.args.zone, tt.args.claimType, tt.args.proofs); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewMsgSubmitClaim() = %v, want %v", got, tt.want)
 			}
 		})

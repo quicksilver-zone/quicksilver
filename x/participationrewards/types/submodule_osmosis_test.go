@@ -1,9 +1,11 @@
-package types
+package types_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func TestOsmosisParamsProtocolData_ValidateBasic(t *testing.T) {
@@ -30,7 +32,7 @@ func TestOsmosisParamsProtocolData_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			oppd := OsmosisParamsProtocolData{
+			oppd := types.OsmosisParamsProtocolData{
 				ChainID: tt.fields.ChainID,
 			}
 			err := oppd.ValidateBasic()

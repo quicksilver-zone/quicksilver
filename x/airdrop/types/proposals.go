@@ -14,10 +14,10 @@ const (
 
 var _ govv1beta1.Content = &RegisterZoneDropProposal{}
 
-func (m RegisterZoneDropProposal) GetDescription() string { return m.Description }
-func (m RegisterZoneDropProposal) GetTitle() string       { return m.Title }
-func (m RegisterZoneDropProposal) ProposalRoute() string  { return RouterKey }
-func (m RegisterZoneDropProposal) ProposalType() string   { return ProposalTypeRegisterZoneDrop }
+func (m *RegisterZoneDropProposal) GetDescription() string { return m.Description }
+func (m *RegisterZoneDropProposal) GetTitle() string       { return m.Title }
+func (m *RegisterZoneDropProposal) ProposalRoute() string  { return RouterKey }
+func (m *RegisterZoneDropProposal) ProposalType() string   { return ProposalTypeRegisterZoneDrop }
 
 // ValidateBasic runs basic stateless validity checks.
 //
@@ -27,7 +27,7 @@ func (m RegisterZoneDropProposal) ProposalType() string   { return ProposalTypeR
 // HandleRegisterZoneDropProposal does validation checks as ZoneDrop is related
 // to ClaimRecords. ClaimRecords are in compressed []byte slice format and
 // must be decompressed in order to be validated.
-func (m RegisterZoneDropProposal) ValidateBasic() error {
+func (m *RegisterZoneDropProposal) ValidateBasic() error {
 	if err := govv1beta1.ValidateAbstract(m); err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (m RegisterZoneDropProposal) ValidateBasic() error {
 }
 
 // String implements the Stringer interface.
-func (m RegisterZoneDropProposal) String() string {
+func (m *RegisterZoneDropProposal) String() string {
 	var b strings.Builder
 
 	b.WriteString("Airdrop - ZoneDrop Registration Proposal:\n")

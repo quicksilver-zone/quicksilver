@@ -39,14 +39,14 @@ func (s *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 	s.Require().NoError(err)
 
 	err = keeper.OsmosisPoolUpdateCallback(
-		prk,
 		ctx,
+		prk,
 		resp,
 		query,
 	)
 	s.Require().NoError(err)
 
-	want := types.OsmosisPoolProtocolData{
+	want := &types.OsmosisPoolProtocolData{
 		PoolID:      1,
 		PoolName:    "atom/osmo",
 		LastUpdated: ctx.BlockTime(),
@@ -63,7 +63,7 @@ func (s *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 
 	ioppd, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, pd.Data)
 	s.Require().NoError(err)
-	oppd := ioppd.(types.OsmosisPoolProtocolData)
+	oppd := ioppd.(*types.OsmosisPoolProtocolData)
 	s.Require().Equal(want, oppd)
 }
 
@@ -105,8 +105,8 @@ func (s *KeeperTestSuite) executeValidatorSelectionRewardsCallback(performanceAd
 	s.Require().NoError(err)
 
 	err = keeper.ValidatorSelectionRewardsCallback(
-		prk,
 		ctx,
+		prk,
 		resp,
 		query,
 	)
@@ -138,8 +138,8 @@ func (s *KeeperTestSuite) executeSetEpochBlockCallback() {
 	s.Require().NoError(err)
 
 	err = keeper.SetEpochBlockCallback(
-		prk,
 		ctx,
+		prk,
 		resp,
 		query,
 	)

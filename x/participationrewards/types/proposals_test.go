@@ -1,4 +1,4 @@
-package types
+package types_test
 
 import (
 	"bytes"
@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 var validLiquidData = `{
@@ -97,7 +99,7 @@ func TestAddProtocolDataProposal_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := AddProtocolDataProposal{
+			m := types.AddProtocolDataProposal{
 				Title:       tt.fields.Title,
 				Description: tt.fields.Description,
 				Type:        tt.fields.Type,
@@ -148,7 +150,7 @@ Key:			liquid
 `
 
 	t.Run("stringer", func(t *testing.T) {
-		m := AddProtocolDataProposal{
+		m := types.AddProtocolDataProposal{
 			Title:       tt.Title,
 			Description: tt.Description,
 			Type:        tt.Type,
@@ -163,7 +165,7 @@ Key:			liquid
 var sink interface{}
 
 func BenchmarkUpdateZoneProposalString(b *testing.B) {
-	adp := &AddProtocolDataProposal{
+	adp := &types.AddProtocolDataProposal{
 		Title:       "Testing right here",
 		Description: "Testing description",
 		Key:         "This is my key",

@@ -1,12 +1,9 @@
 package keeper
 
 import (
-	"bytes"
-	"compress/zlib"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -16,7 +13,7 @@ import (
 type ClaimRecords []types.ClaimRecord
 
 // HandleRegisterZoneDropProposal is a handler for executing a passed airdrop proposal.
-func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.RegisterZoneDropProposal) error {
+func HandleRegisterZoneDropProposal(ctx sdk.Context, k *Keeper, p *types.RegisterZoneDropProposal) error {
 	if err := p.ValidateBasic(); err != nil {
 		return err
 	}
@@ -31,7 +28,7 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.Register
 	}
 
 	// decompress claim records
-	crsb, err := k.decompress(p.ClaimRecords)
+	crsb, err := types.Decompress(p.ClaimRecords)
 	if err != nil {
 		return err
 	}
@@ -85,15 +82,4 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k Keeper, p *types.Register
 	})
 
 	return nil
-}
-
-func (k Keeper) decompress(data []byte) ([]byte, error) {
-	// zip reader
-	zr, err := zlib.NewReader(bytes.NewReader(data))
-	if err != nil {
-		return nil, err
-	}
-	defer zr.Close()
-
-	return io.ReadAll(zr)
 }
