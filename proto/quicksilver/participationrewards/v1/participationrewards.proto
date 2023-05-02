@@ -1,8 +1,8 @@
 syntax = "proto3";
 package quicksilver.participationrewards.v1;
 
-import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
 
@@ -35,8 +35,7 @@ message Params_v1 {
 
   // distribution_proportions defines the proportions of the minted
   // participation rewards;
-  DistributionProportions distribution_proportions = 1
-      [ (gogoproto.nullable) = false ];
+  DistributionProportions distribution_proportions = 1 [(gogoproto.nullable) = false];
 }
 
 // Params holds parameters for the participationrewards module.
@@ -46,8 +45,7 @@ message Params {
 
   // distribution_proportions defines the proportions of the minted
   // participation rewards;
-  DistributionProportions distribution_proportions = 1
-      [ (gogoproto.nullable) = false ];
+  DistributionProportions distribution_proportions = 1 [(gogoproto.nullable) = false];
   bool claims_enabled = 2;
 }
 
@@ -55,11 +53,12 @@ message KeyedProtocolData {
   string key = 1;
   ProtocolData protocol_data = 2;
 }
+
 // Protocol Data is an arbitrary data type held against a given zone for the
 // determination of rewards.
 message ProtocolData {
   string type = 1;
-  bytes data = 2 [ (gogoproto.casttype) = "encoding/json.RawMessage" ];
+  bytes data = 2 [(gogoproto.casttype) = "encoding/json.RawMessage"];
 }
 
 enum ProtocolDataType {

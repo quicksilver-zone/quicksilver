@@ -1,12 +1,9 @@
 syntax = "proto3";
 package quicksilver.mint.v1beta1;
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/mint/types";
-
 import "gogoproto/gogo.proto";
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/any.proto";
-import "google/protobuf/duration.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/mint/types";
 
 // Minter represents the minting state.
 message Minter {
@@ -62,11 +59,9 @@ message Params {
     (gogoproto.nullable) = false
   ];
   // mint epoch identifier
-  string epoch_identifier = 3
-      [ (gogoproto.moretags) = "yaml:\"epoch_identifier\"" ];
+  string epoch_identifier = 3 [(gogoproto.moretags) = "yaml:\"epoch_identifier\""];
   // number of epochs take to reduce rewards
-  int64 reduction_period_in_epochs = 4
-      [ (gogoproto.moretags) = "yaml:\"reduction_period_in_epochs\"" ];
+  int64 reduction_period_in_epochs = 4 [(gogoproto.moretags) = "yaml:\"reduction_period_in_epochs\""];
   // reduction multiplier to execute on each period
   string reduction_factor = 5 [
     (gogoproto.moretags) = "yaml:\"reduction_factor\"",
@@ -74,11 +69,8 @@ message Params {
     (gogoproto.nullable) = false
   ];
   // distribution_proportions defines the proportion of the minted denom
-  DistributionProportions distribution_proportions = 6
-      [ (gogoproto.nullable) = false ];
+  DistributionProportions distribution_proportions = 6 [(gogoproto.nullable) = false];
 
   // start epoch to distribute minting rewards
-  int64 minting_rewards_distribution_start_epoch = 7
-      [ (gogoproto.moretags) =
-            "yaml:\"minting_rewards_distribution_start_epoch\"" ];
+  int64 minting_rewards_distribution_start_epoch = 7 [(gogoproto.moretags) = "yaml:\"minting_rewards_distribution_start_epoch\""];
 }
