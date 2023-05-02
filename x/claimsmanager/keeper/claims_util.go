@@ -1,11 +1,10 @@
 package keeper
 
 import (
-	"sort"
-
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	cmutils "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
@@ -57,7 +56,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone cmtypes.Custom
 
 	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainID, "tpa", tokensPerAsset)
 
-	for _, address := range Keys(userAmountsMap) {
+	for _, address := range cmutils.Keys(userAmountsMap) {
 		amount := userAmountsMap[address]
 		userAllocation := sdk.NewDecFromInt(amount).Mul(tokensPerAsset).TruncateInt()
 		allocation := cmtypes.UserAllocation{
@@ -72,16 +71,4 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone cmtypes.Custom
 	}
 
 	return userAllocations, zoneAllocation
-}
-
-func Keys[V interface{}](in map[string]V) []string {
-	out := make([]string, 0)
-
-	for k := range in {
-		out = append(out, k)
-	}
-
-	sort.Strings(out)
-
-	return out
 }

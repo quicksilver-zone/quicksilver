@@ -26,7 +26,7 @@ import (
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
-	cmutil "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
+	cmutils "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper/utils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -915,7 +915,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 			delete(delMap, delegationRecord.Delegation.ValidatorAddress)
 		}
 	}
-	for _, existingValAddr := range cmutil.Keys(delMap) {
+	for _, existingValAddr := range cmutils.Keys(delMap) {
 		existingDelegation := delMap[existingValAddr]
 		_, valAddr, err := bech32.DecodeAndConvert(existingDelegation.ValidatorAddress)
 		if err != nil {
