@@ -60,203 +60,203 @@ type Zone struct {
 	ReturnToSender               bool                                   `protobuf:"varint,27,opt,name=return_to_sender,json=returnToSender,proto3" json:"return_to_sender,omitempty"`
 }
 
-func (z *Zone) Reset()         { *z = Zone{} }
-func (z *Zone) String() string { return proto.CompactTextString(z) }
+func (m *Zone) Reset()         { *m = Zone{} }
+func (m *Zone) String() string { return proto.CompactTextString(m) }
 func (*Zone) ProtoMessage()    {}
 func (*Zone) Descriptor() ([]byte, []int) {
 	return fileDescriptor_0d755cfd37ef9fee, []int{0}
 }
-func (z *Zone) XXX_Unmarshal(b []byte) error {
-	return z.Unmarshal(b)
+func (m *Zone) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
 }
-func (z *Zone) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *Zone) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Zone.Marshal(b, z, deterministic)
+		return xxx_messageInfo_Zone.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := z.MarshalToSizedBuffer(b)
+		n, err := m.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
 		return b[:n], nil
 	}
 }
-func (z *Zone) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Zone.Merge(z, src)
+func (m *Zone) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Zone.Merge(m, src)
 }
-func (z *Zone) XXX_Size() int {
-	return z.Size()
+func (m *Zone) XXX_Size() int {
+	return m.Size()
 }
-func (z *Zone) XXX_DiscardUnknown() {
-	xxx_messageInfo_Zone.DiscardUnknown(z)
+func (m *Zone) XXX_DiscardUnknown() {
+	xxx_messageInfo_Zone.DiscardUnknown(m)
 }
 
 var xxx_messageInfo_Zone proto.InternalMessageInfo
 
-func (z *Zone) GetConnectionId() string {
-	if z != nil {
-		return z.ConnectionId
+func (m *Zone) GetConnectionId() string {
+	if m != nil {
+		return m.ConnectionId
 	}
 	return ""
 }
 
-func (z *Zone) GetChainId() string {
-	if z != nil {
-		return z.ChainId
+func (m *Zone) GetChainId() string {
+	if m != nil {
+		return m.ChainId
 	}
 	return ""
 }
 
-func (z *Zone) GetDepositAddress() *ICAAccount {
-	if z != nil {
-		return z.DepositAddress
+func (m *Zone) GetDepositAddress() *ICAAccount {
+	if m != nil {
+		return m.DepositAddress
 	}
 	return nil
 }
 
-func (z *Zone) GetWithdrawalAddress() *ICAAccount {
-	if z != nil {
-		return z.WithdrawalAddress
+func (m *Zone) GetWithdrawalAddress() *ICAAccount {
+	if m != nil {
+		return m.WithdrawalAddress
 	}
 	return nil
 }
 
-func (z *Zone) GetPerformanceAddress() *ICAAccount {
-	if z != nil {
-		return z.PerformanceAddress
+func (m *Zone) GetPerformanceAddress() *ICAAccount {
+	if m != nil {
+		return m.PerformanceAddress
 	}
 	return nil
 }
 
-func (z *Zone) GetDelegationAddress() *ICAAccount {
-	if z != nil {
-		return z.DelegationAddress
+func (m *Zone) GetDelegationAddress() *ICAAccount {
+	if m != nil {
+		return m.DelegationAddress
 	}
 	return nil
 }
 
-func (z *Zone) GetAccountPrefix() string {
-	if z != nil {
-		return z.AccountPrefix
+func (m *Zone) GetAccountPrefix() string {
+	if m != nil {
+		return m.AccountPrefix
 	}
 	return ""
 }
 
-func (z *Zone) GetLocalDenom() string {
-	if z != nil {
-		return z.LocalDenom
+func (m *Zone) GetLocalDenom() string {
+	if m != nil {
+		return m.LocalDenom
 	}
 	return ""
 }
 
-func (z *Zone) GetBaseDenom() string {
-	if z != nil {
-		return z.BaseDenom
+func (m *Zone) GetBaseDenom() string {
+	if m != nil {
+		return m.BaseDenom
 	}
 	return ""
 }
 
-func (z *Zone) GetValidators() []*Validator {
-	if z != nil {
-		return z.Validators
+func (m *Zone) GetValidators() []*Validator {
+	if m != nil {
+		return m.Validators
 	}
 	return nil
 }
 
-func (z *Zone) GetAggregateIntent() ValidatorIntents {
-	if z != nil {
-		return z.AggregateIntent
+func (m *Zone) GetAggregateIntent() ValidatorIntents {
+	if m != nil {
+		return m.AggregateIntent
 	}
 	return nil
 }
 
-func (z *Zone) GetMultiSend() bool {
-	if z != nil {
-		return z.MultiSend
+func (m *Zone) GetMultiSend() bool {
+	if m != nil {
+		return m.MultiSend
 	}
 	return false
 }
 
-func (z *Zone) GetLiquidityModule() bool {
-	if z != nil {
-		return z.LiquidityModule
+func (m *Zone) GetLiquidityModule() bool {
+	if m != nil {
+		return m.LiquidityModule
 	}
 	return false
 }
 
-func (z *Zone) GetWithdrawalWaitgroup() uint32 {
-	if z != nil {
-		return z.WithdrawalWaitgroup
+func (m *Zone) GetWithdrawalWaitgroup() uint32 {
+	if m != nil {
+		return m.WithdrawalWaitgroup
 	}
 	return 0
 }
 
-func (z *Zone) GetIbcNextValidatorsHash() []byte {
-	if z != nil {
-		return z.IbcNextValidatorsHash
+func (m *Zone) GetIbcNextValidatorsHash() []byte {
+	if m != nil {
+		return m.IbcNextValidatorsHash
 	}
 	return nil
 }
 
-func (z *Zone) GetValidatorSelectionAllocation() uint64 {
-	if z != nil {
-		return z.ValidatorSelectionAllocation
+func (m *Zone) GetValidatorSelectionAllocation() uint64 {
+	if m != nil {
+		return m.ValidatorSelectionAllocation
 	}
 	return 0
 }
 
-func (z *Zone) GetHoldingsAllocation() uint64 {
-	if z != nil {
-		return z.HoldingsAllocation
+func (m *Zone) GetHoldingsAllocation() uint64 {
+	if m != nil {
+		return m.HoldingsAllocation
 	}
 	return 0
 }
 
-func (z *Zone) GetLastEpochHeight() int64 {
-	if z != nil {
-		return z.LastEpochHeight
+func (m *Zone) GetLastEpochHeight() int64 {
+	if m != nil {
+		return m.LastEpochHeight
 	}
 	return 0
 }
 
-func (z *Zone) GetUnbondingPeriod() int64 {
-	if z != nil {
-		return z.UnbondingPeriod
+func (m *Zone) GetUnbondingPeriod() int64 {
+	if m != nil {
+		return m.UnbondingPeriod
 	}
 	return 0
 }
 
-func (z *Zone) GetMessagesPerTx() int64 {
-	if z != nil {
-		return z.MessagesPerTx
+func (m *Zone) GetMessagesPerTx() int64 {
+	if m != nil {
+		return m.MessagesPerTx
 	}
 	return 0
 }
 
-func (z *Zone) GetDecimals() int64 {
-	if z != nil {
-		return z.Decimals
+func (m *Zone) GetDecimals() int64 {
+	if m != nil {
+		return m.Decimals
 	}
 	return 0
 }
 
-func (z *Zone) GetUnbondingEnabled() bool {
-	if z != nil {
-		return z.UnbondingEnabled
+func (m *Zone) GetUnbondingEnabled() bool {
+	if m != nil {
+		return m.UnbondingEnabled
 	}
 	return false
 }
 
-func (z *Zone) GetDepositsEnabled() bool {
-	if z != nil {
-		return z.DepositsEnabled
+func (m *Zone) GetDepositsEnabled() bool {
+	if m != nil {
+		return m.DepositsEnabled
 	}
 	return false
 }
 
-func (z *Zone) GetReturnToSender() bool {
-	if z != nil {
-		return z.ReturnToSender
+func (m *Zone) GetReturnToSender() bool {
+	if m != nil {
+		return m.ReturnToSender
 	}
 	return false
 }
@@ -1221,29 +1221,29 @@ var fileDescriptor_0d755cfd37ef9fee = []byte{
 	0xff, 0xe3, 0x92, 0xc6, 0x6b, 0x0a, 0x15, 0x00, 0x00,
 }
 
-func (z *Zone) Marshal() (dAtA []byte, err error) {
-	size := z.Size()
+func (m *Zone) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
 	dAtA = make([]byte, size)
-	n, err := z.MarshalToSizedBuffer(dAtA[:size])
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
 	return dAtA[:n], nil
 }
 
-func (z *Zone) MarshalTo(dAtA []byte) (int, error) {
-	size := z.Size()
-	return z.MarshalToSizedBuffer(dAtA[:size])
+func (m *Zone) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if z.ReturnToSender {
+	if m.ReturnToSender {
 		i--
-		if z.ReturnToSender {
+		if m.ReturnToSender {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -1253,9 +1253,9 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xd8
 	}
-	if z.DepositsEnabled {
+	if m.DepositsEnabled {
 		i--
-		if z.DepositsEnabled {
+		if m.DepositsEnabled {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -1265,9 +1265,9 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xd0
 	}
-	if z.UnbondingEnabled {
+	if m.UnbondingEnabled {
 		i--
-		if z.UnbondingEnabled {
+		if m.UnbondingEnabled {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -1277,31 +1277,31 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0xc8
 	}
-	if z.Decimals != 0 {
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(z.Decimals))
+	if m.Decimals != 0 {
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(m.Decimals))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0xc0
 	}
-	if z.MessagesPerTx != 0 {
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(z.MessagesPerTx))
+	if m.MessagesPerTx != 0 {
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(m.MessagesPerTx))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0xb8
 	}
-	if z.UnbondingPeriod != 0 {
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(z.UnbondingPeriod))
+	if m.UnbondingPeriod != 0 {
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(m.UnbondingPeriod))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0xb0
 	}
 	{
-		size := z.Tvl.Size()
+		size := m.Tvl.Size()
 		i -= size
-		if _, err := z.Tvl.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.Tvl.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintInterchainstaking(dAtA, i, uint64(size))
@@ -1310,46 +1310,46 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	dAtA[i] = 0x1
 	i--
 	dAtA[i] = 0xaa
-	if z.LastEpochHeight != 0 {
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(z.LastEpochHeight))
+	if m.LastEpochHeight != 0 {
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(m.LastEpochHeight))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0xa0
 	}
-	if z.HoldingsAllocation != 0 {
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(z.HoldingsAllocation))
+	if m.HoldingsAllocation != 0 {
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(m.HoldingsAllocation))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0x98
 	}
-	if z.ValidatorSelectionAllocation != 0 {
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(z.ValidatorSelectionAllocation))
+	if m.ValidatorSelectionAllocation != 0 {
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(m.ValidatorSelectionAllocation))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0x90
 	}
-	if len(z.IbcNextValidatorsHash) > 0 {
-		i -= len(z.IbcNextValidatorsHash)
-		copy(dAtA[i:], z.IbcNextValidatorsHash)
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(z.IbcNextValidatorsHash)))
+	if len(m.IbcNextValidatorsHash) > 0 {
+		i -= len(m.IbcNextValidatorsHash)
+		copy(dAtA[i:], m.IbcNextValidatorsHash)
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(m.IbcNextValidatorsHash)))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0x8a
 	}
-	if z.WithdrawalWaitgroup != 0 {
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(z.WithdrawalWaitgroup))
+	if m.WithdrawalWaitgroup != 0 {
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(m.WithdrawalWaitgroup))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0x80
 	}
-	if z.LiquidityModule {
+	if m.LiquidityModule {
 		i--
-		if z.LiquidityModule {
+		if m.LiquidityModule {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -1357,9 +1357,9 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x78
 	}
-	if z.MultiSend {
+	if m.MultiSend {
 		i--
-		if z.MultiSend {
+		if m.MultiSend {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -1367,10 +1367,10 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x70
 	}
-	if len(z.AggregateIntent) > 0 {
-		for iNdEx := len(z.AggregateIntent) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.AggregateIntent) > 0 {
+		for iNdEx := len(m.AggregateIntent) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := z.AggregateIntent[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.AggregateIntent[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1381,10 +1381,10 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0x6a
 		}
 	}
-	if len(z.Validators) > 0 {
-		for iNdEx := len(z.Validators) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.Validators) > 0 {
+		for iNdEx := len(m.Validators) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := z.Validators[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.Validators[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1396,9 +1396,9 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		}
 	}
 	{
-		size := z.LastRedemptionRate.Size()
+		size := m.LastRedemptionRate.Size()
 		i -= size
-		if _, err := z.LastRedemptionRate.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.LastRedemptionRate.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintInterchainstaking(dAtA, i, uint64(size))
@@ -1406,39 +1406,39 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i--
 	dAtA[i] = 0x5a
 	{
-		size := z.RedemptionRate.Size()
+		size := m.RedemptionRate.Size()
 		i -= size
-		if _, err := z.RedemptionRate.MarshalTo(dAtA[i:]); err != nil {
+		if _, err := m.RedemptionRate.MarshalTo(dAtA[i:]); err != nil {
 			return 0, err
 		}
 		i = encodeVarintInterchainstaking(dAtA, i, uint64(size))
 	}
 	i--
 	dAtA[i] = 0x52
-	if len(z.BaseDenom) > 0 {
-		i -= len(z.BaseDenom)
-		copy(dAtA[i:], z.BaseDenom)
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(z.BaseDenom)))
+	if len(m.BaseDenom) > 0 {
+		i -= len(m.BaseDenom)
+		copy(dAtA[i:], m.BaseDenom)
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(m.BaseDenom)))
 		i--
 		dAtA[i] = 0x4a
 	}
-	if len(z.LocalDenom) > 0 {
-		i -= len(z.LocalDenom)
-		copy(dAtA[i:], z.LocalDenom)
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(z.LocalDenom)))
+	if len(m.LocalDenom) > 0 {
+		i -= len(m.LocalDenom)
+		copy(dAtA[i:], m.LocalDenom)
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(m.LocalDenom)))
 		i--
 		dAtA[i] = 0x42
 	}
-	if len(z.AccountPrefix) > 0 {
-		i -= len(z.AccountPrefix)
-		copy(dAtA[i:], z.AccountPrefix)
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(z.AccountPrefix)))
+	if len(m.AccountPrefix) > 0 {
+		i -= len(m.AccountPrefix)
+		copy(dAtA[i:], m.AccountPrefix)
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(m.AccountPrefix)))
 		i--
 		dAtA[i] = 0x3a
 	}
-	if z.DelegationAddress != nil {
+	if m.DelegationAddress != nil {
 		{
-			size, err := z.DelegationAddress.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.DelegationAddress.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1448,9 +1448,9 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x32
 	}
-	if z.PerformanceAddress != nil {
+	if m.PerformanceAddress != nil {
 		{
-			size, err := z.PerformanceAddress.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.PerformanceAddress.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1460,9 +1460,9 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x2a
 	}
-	if z.WithdrawalAddress != nil {
+	if m.WithdrawalAddress != nil {
 		{
-			size, err := z.WithdrawalAddress.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.WithdrawalAddress.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1472,9 +1472,9 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x22
 	}
-	if z.DepositAddress != nil {
+	if m.DepositAddress != nil {
 		{
-			size, err := z.DepositAddress.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.DepositAddress.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -1484,17 +1484,17 @@ func (z *Zone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x1a
 	}
-	if len(z.ChainId) > 0 {
-		i -= len(z.ChainId)
-		copy(dAtA[i:], z.ChainId)
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(z.ChainId)))
+	if len(m.ChainId) > 0 {
+		i -= len(m.ChainId)
+		copy(dAtA[i:], m.ChainId)
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(m.ChainId)))
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(z.ConnectionId) > 0 {
-		i -= len(z.ConnectionId)
-		copy(dAtA[i:], z.ConnectionId)
-		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(z.ConnectionId)))
+	if len(m.ConnectionId) > 0 {
+		i -= len(m.ConnectionId)
+		copy(dAtA[i:], m.ConnectionId)
+		i = encodeVarintInterchainstaking(dAtA, i, uint64(len(m.ConnectionId)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -2243,104 +2243,104 @@ func encodeVarintInterchainstaking(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (z *Zone) Size() (n int) {
-	if z == nil {
+func (m *Zone) Size() (n int) {
+	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(z.ConnectionId)
+	l = len(m.ConnectionId)
 	if l > 0 {
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
-	l = len(z.ChainId)
+	l = len(m.ChainId)
 	if l > 0 {
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
-	if z.DepositAddress != nil {
-		l = z.DepositAddress.Size()
+	if m.DepositAddress != nil {
+		l = m.DepositAddress.Size()
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
-	if z.WithdrawalAddress != nil {
-		l = z.WithdrawalAddress.Size()
+	if m.WithdrawalAddress != nil {
+		l = m.WithdrawalAddress.Size()
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
-	if z.PerformanceAddress != nil {
-		l = z.PerformanceAddress.Size()
+	if m.PerformanceAddress != nil {
+		l = m.PerformanceAddress.Size()
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
-	if z.DelegationAddress != nil {
-		l = z.DelegationAddress.Size()
+	if m.DelegationAddress != nil {
+		l = m.DelegationAddress.Size()
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
-	l = len(z.AccountPrefix)
+	l = len(m.AccountPrefix)
 	if l > 0 {
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
-	l = len(z.LocalDenom)
+	l = len(m.LocalDenom)
 	if l > 0 {
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
-	l = len(z.BaseDenom)
+	l = len(m.BaseDenom)
 	if l > 0 {
 		n += 1 + l + sovInterchainstaking(uint64(l))
 	}
-	l = z.RedemptionRate.Size()
+	l = m.RedemptionRate.Size()
 	n += 1 + l + sovInterchainstaking(uint64(l))
-	l = z.LastRedemptionRate.Size()
+	l = m.LastRedemptionRate.Size()
 	n += 1 + l + sovInterchainstaking(uint64(l))
-	if len(z.Validators) > 0 {
-		for _, e := range z.Validators {
+	if len(m.Validators) > 0 {
+		for _, e := range m.Validators {
 			l = e.Size()
 			n += 1 + l + sovInterchainstaking(uint64(l))
 		}
 	}
-	if len(z.AggregateIntent) > 0 {
-		for _, e := range z.AggregateIntent {
+	if len(m.AggregateIntent) > 0 {
+		for _, e := range m.AggregateIntent {
 			l = e.Size()
 			n += 1 + l + sovInterchainstaking(uint64(l))
 		}
 	}
-	if z.MultiSend {
+	if m.MultiSend {
 		n += 2
 	}
-	if z.LiquidityModule {
+	if m.LiquidityModule {
 		n += 2
 	}
-	if z.WithdrawalWaitgroup != 0 {
-		n += 2 + sovInterchainstaking(uint64(z.WithdrawalWaitgroup))
+	if m.WithdrawalWaitgroup != 0 {
+		n += 2 + sovInterchainstaking(uint64(m.WithdrawalWaitgroup))
 	}
-	l = len(z.IbcNextValidatorsHash)
+	l = len(m.IbcNextValidatorsHash)
 	if l > 0 {
 		n += 2 + l + sovInterchainstaking(uint64(l))
 	}
-	if z.ValidatorSelectionAllocation != 0 {
-		n += 2 + sovInterchainstaking(uint64(z.ValidatorSelectionAllocation))
+	if m.ValidatorSelectionAllocation != 0 {
+		n += 2 + sovInterchainstaking(uint64(m.ValidatorSelectionAllocation))
 	}
-	if z.HoldingsAllocation != 0 {
-		n += 2 + sovInterchainstaking(uint64(z.HoldingsAllocation))
+	if m.HoldingsAllocation != 0 {
+		n += 2 + sovInterchainstaking(uint64(m.HoldingsAllocation))
 	}
-	if z.LastEpochHeight != 0 {
-		n += 2 + sovInterchainstaking(uint64(z.LastEpochHeight))
+	if m.LastEpochHeight != 0 {
+		n += 2 + sovInterchainstaking(uint64(m.LastEpochHeight))
 	}
-	l = z.Tvl.Size()
+	l = m.Tvl.Size()
 	n += 2 + l + sovInterchainstaking(uint64(l))
-	if z.UnbondingPeriod != 0 {
-		n += 2 + sovInterchainstaking(uint64(z.UnbondingPeriod))
+	if m.UnbondingPeriod != 0 {
+		n += 2 + sovInterchainstaking(uint64(m.UnbondingPeriod))
 	}
-	if z.MessagesPerTx != 0 {
-		n += 2 + sovInterchainstaking(uint64(z.MessagesPerTx))
+	if m.MessagesPerTx != 0 {
+		n += 2 + sovInterchainstaking(uint64(m.MessagesPerTx))
 	}
-	if z.Decimals != 0 {
-		n += 2 + sovInterchainstaking(uint64(z.Decimals))
+	if m.Decimals != 0 {
+		n += 2 + sovInterchainstaking(uint64(m.Decimals))
 	}
-	if z.UnbondingEnabled {
+	if m.UnbondingEnabled {
 		n += 3
 	}
-	if z.DepositsEnabled {
+	if m.DepositsEnabled {
 		n += 3
 	}
-	if z.ReturnToSender {
+	if m.ReturnToSender {
 		n += 3
 	}
 	return n
@@ -2663,7 +2663,7 @@ func sovInterchainstaking(x uint64) (n int) {
 func sozInterchainstaking(x uint64) (n int) {
 	return sovInterchainstaking(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (z *Zone) Unmarshal(dAtA []byte) error {
+func (m *Zone) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2722,7 +2722,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			z.ConnectionId = string(dAtA[iNdEx:postIndex])
+			m.ConnectionId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -2754,7 +2754,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			z.ChainId = string(dAtA[iNdEx:postIndex])
+			m.ChainId = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
@@ -2785,10 +2785,10 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if z.DepositAddress == nil {
-				z.DepositAddress = &ICAAccount{}
+			if m.DepositAddress == nil {
+				m.DepositAddress = &ICAAccount{}
 			}
-			if err := z.DepositAddress.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.DepositAddress.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2821,10 +2821,10 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if z.WithdrawalAddress == nil {
-				z.WithdrawalAddress = &ICAAccount{}
+			if m.WithdrawalAddress == nil {
+				m.WithdrawalAddress = &ICAAccount{}
 			}
-			if err := z.WithdrawalAddress.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.WithdrawalAddress.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2857,10 +2857,10 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if z.PerformanceAddress == nil {
-				z.PerformanceAddress = &ICAAccount{}
+			if m.PerformanceAddress == nil {
+				m.PerformanceAddress = &ICAAccount{}
 			}
-			if err := z.PerformanceAddress.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.PerformanceAddress.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2893,10 +2893,10 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if z.DelegationAddress == nil {
-				z.DelegationAddress = &ICAAccount{}
+			if m.DelegationAddress == nil {
+				m.DelegationAddress = &ICAAccount{}
 			}
-			if err := z.DelegationAddress.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.DelegationAddress.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -2930,7 +2930,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			z.AccountPrefix = string(dAtA[iNdEx:postIndex])
+			m.AccountPrefix = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 8:
 			if wireType != 2 {
@@ -2962,7 +2962,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			z.LocalDenom = string(dAtA[iNdEx:postIndex])
+			m.LocalDenom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 9:
 			if wireType != 2 {
@@ -2994,7 +2994,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			z.BaseDenom = string(dAtA[iNdEx:postIndex])
+			m.BaseDenom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 10:
 			if wireType != 2 {
@@ -3026,7 +3026,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := z.RedemptionRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.RedemptionRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3060,7 +3060,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := z.LastRedemptionRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.LastRedemptionRate.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3093,8 +3093,8 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			z.Validators = append(z.Validators, &Validator{})
-			if err := z.Validators[len(z.Validators)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.Validators = append(m.Validators, &Validator{})
+			if err := m.Validators[len(m.Validators)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3127,8 +3127,8 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			z.AggregateIntent = append(z.AggregateIntent, &ValidatorIntent{})
-			if err := z.AggregateIntent[len(z.AggregateIntent)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.AggregateIntent = append(m.AggregateIntent, &ValidatorIntent{})
+			if err := m.AggregateIntent[len(m.AggregateIntent)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3151,7 +3151,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			z.MultiSend = bool(v != 0)
+			m.MultiSend = bool(v != 0)
 		case 15:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LiquidityModule", wireType)
@@ -3171,12 +3171,12 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			z.LiquidityModule = bool(v != 0)
+			m.LiquidityModule = bool(v != 0)
 		case 16:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field WithdrawalWaitgroup", wireType)
 			}
-			z.WithdrawalWaitgroup = 0
+			m.WithdrawalWaitgroup = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowInterchainstaking
@@ -3186,7 +3186,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				z.WithdrawalWaitgroup |= uint32(b&0x7F) << shift
+				m.WithdrawalWaitgroup |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3220,16 +3220,16 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			z.IbcNextValidatorsHash = append(z.IbcNextValidatorsHash[:0], dAtA[iNdEx:postIndex]...)
-			if z.IbcNextValidatorsHash == nil {
-				z.IbcNextValidatorsHash = []byte{}
+			m.IbcNextValidatorsHash = append(m.IbcNextValidatorsHash[:0], dAtA[iNdEx:postIndex]...)
+			if m.IbcNextValidatorsHash == nil {
+				m.IbcNextValidatorsHash = []byte{}
 			}
 			iNdEx = postIndex
 		case 18:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorSelectionAllocation", wireType)
 			}
-			z.ValidatorSelectionAllocation = 0
+			m.ValidatorSelectionAllocation = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowInterchainstaking
@@ -3239,7 +3239,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				z.ValidatorSelectionAllocation |= uint64(b&0x7F) << shift
+				m.ValidatorSelectionAllocation |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3248,7 +3248,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field HoldingsAllocation", wireType)
 			}
-			z.HoldingsAllocation = 0
+			m.HoldingsAllocation = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowInterchainstaking
@@ -3258,7 +3258,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				z.HoldingsAllocation |= uint64(b&0x7F) << shift
+				m.HoldingsAllocation |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3267,7 +3267,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field LastEpochHeight", wireType)
 			}
-			z.LastEpochHeight = 0
+			m.LastEpochHeight = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowInterchainstaking
@@ -3277,7 +3277,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				z.LastEpochHeight |= int64(b&0x7F) << shift
+				m.LastEpochHeight |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3312,7 +3312,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := z.Tvl.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Tvl.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -3320,7 +3320,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field UnbondingPeriod", wireType)
 			}
-			z.UnbondingPeriod = 0
+			m.UnbondingPeriod = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowInterchainstaking
@@ -3330,7 +3330,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				z.UnbondingPeriod |= int64(b&0x7F) << shift
+				m.UnbondingPeriod |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3339,7 +3339,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MessagesPerTx", wireType)
 			}
-			z.MessagesPerTx = 0
+			m.MessagesPerTx = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowInterchainstaking
@@ -3349,7 +3349,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				z.MessagesPerTx |= int64(b&0x7F) << shift
+				m.MessagesPerTx |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3358,7 +3358,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Decimals", wireType)
 			}
-			z.Decimals = 0
+			m.Decimals = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowInterchainstaking
@@ -3368,7 +3368,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				z.Decimals |= int64(b&0x7F) << shift
+				m.Decimals |= int64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -3392,7 +3392,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			z.UnbondingEnabled = bool(v != 0)
+			m.UnbondingEnabled = bool(v != 0)
 		case 26:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DepositsEnabled", wireType)
@@ -3412,7 +3412,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			z.DepositsEnabled = bool(v != 0)
+			m.DepositsEnabled = bool(v != 0)
 		case 27:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field ReturnToSender", wireType)
@@ -3432,7 +3432,7 @@ func (z *Zone) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
-			z.ReturnToSender = bool(v != 0)
+			m.ReturnToSender = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipInterchainstaking(dAtA[iNdEx:])
