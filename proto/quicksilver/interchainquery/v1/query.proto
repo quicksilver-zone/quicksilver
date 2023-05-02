@@ -1,14 +1,14 @@
 syntax = "proto3";
 package quicksilver.interchainquery.v1;
 
+import "cosmos/base/abci/v1beta1/abci.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/tx/v1beta1/tx.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
-import "quicksilver/interchainquery/v1/interchainquery.proto";
-import "cosmos/base/query/v1beta1/pagination.proto";
-import "cosmos/base/abci/v1beta1/abci.proto";
-import "cosmos/tx/v1beta1/tx.proto";
-import "tendermint/types/types.proto";
 import "ibc/lightclients/tendermint/v1/tendermint.proto";
+import "quicksilver/interchainquery/v1/interchainquery.proto";
+import "tendermint/types/types.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainquery/types";
 
@@ -16,8 +16,7 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/interchainquery/ty
 service QuerySrvr {
   // Params returns the total set of minting parameters.
   rpc Queries(QueryRequestsRequest) returns (QueryRequestsResponse) {
-    option (google.api.http).get =
-        "/quicksilver/interchainquery/v1/queries/{chain_id}";
+    option (google.api.http).get = "/quicksilver/interchainquery/v1/queries/{chain_id}";
   }
 }
 
@@ -30,8 +29,7 @@ message QueryRequestsRequest {
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryRequestsResponse {
   // params defines the parameters of the module.
-  repeated quicksilver.interchainquery.v1.Query queries = 1
-      [ (gogoproto.nullable) = false ];
+  repeated quicksilver.interchainquery.v1.Query queries = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 

@@ -2,7 +2,6 @@ syntax = "proto3";
 package quicksilver.airdrop.v1;
 
 import "gogoproto/gogo.proto";
-import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 

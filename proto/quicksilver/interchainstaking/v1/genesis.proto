@@ -1,10 +1,8 @@
 syntax = "proto3";
 package quicksilver.interchainstaking.v1;
 
-import "gogoproto/gogo.proto";
 import "cosmos_proto/cosmos.proto";
-import "cosmos/base/v1beta1/coin.proto";
-import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
 import "quicksilver/interchainstaking/v1/interchainstaking.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
@@ -49,16 +47,12 @@ message DelegatorIntentsForZone {
 
 // GenesisState defines the interchainstaking module's genesis state.
 message GenesisState {
-  Params params = 1 [ (gogoproto.nullable) = false ];
-  repeated Zone zones = 2 [ (gogoproto.nullable) = false ];
-  repeated Receipt receipts = 3 [ (gogoproto.nullable) = false ];
-  repeated DelegationsForZone delegations = 4 [ (gogoproto.nullable) = false ];
-  repeated DelegationsForZone performance_delegations = 5
-      [ (gogoproto.nullable) = false ];
-  repeated DelegatorIntentsForZone delegator_intents = 6
-      [ (gogoproto.nullable) = false ];
-  repeated PortConnectionTuple port_connections = 7
-      [ (gogoproto.nullable) = false ];
-  repeated WithdrawalRecord withdrawal_records = 8
-      [ (gogoproto.nullable) = false ];
+  Params params = 1 [(gogoproto.nullable) = false];
+  repeated Zone zones = 2 [(gogoproto.nullable) = false];
+  repeated Receipt receipts = 3 [(gogoproto.nullable) = false];
+  repeated DelegationsForZone delegations = 4 [(gogoproto.nullable) = false];
+  repeated DelegationsForZone performance_delegations = 5 [(gogoproto.nullable) = false];
+  repeated DelegatorIntentsForZone delegator_intents = 6 [(gogoproto.nullable) = false];
+  repeated PortConnectionTuple port_connections = 7 [(gogoproto.nullable) = false];
+  repeated WithdrawalRecord withdrawal_records = 8 [(gogoproto.nullable) = false];
 }
