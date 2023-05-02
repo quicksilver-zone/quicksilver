@@ -1,8 +1,10 @@
 package types
 
 import (
-	sdkioerrors "cosmossdk.io/errors"
 	"fmt"
+
+	sdkioerrors "cosmossdk.io/errors"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -107,14 +109,18 @@ func (msg MsgIncentivePoolSpend) Type() string { return TypeMsgClaim }
 
 // ValidateBasic implements Msg.
 func (msg MsgIncentivePoolSpend) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	from, err := sdk.AccAddressFromBech32(msg.Authority)
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
 	}
 
-	_, err = sdk.AccAddressFromBech32(msg.ToAddress)
+	to, err := sdk.AccAddressFromBech32(msg.ToAddress)
 	if err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
+	}
+
+	if from.Equals(to) {
+		return sdkerrors.ErrInvalidAddress.Wrapf("to and from addresses equaul: %s", err)
 	}
 
 	if !msg.Amount.IsValid() {
