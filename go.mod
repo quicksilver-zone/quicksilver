@@ -22,6 +22,7 @@ require (
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
+	github.com/strangelove-ventures/packet-forward-middleware/v5 v5.1.2
 	github.com/stretchr/testify v1.8.2
 	github.com/tendermint/tendermint v0.34.27
 	github.com/tendermint/tm-db v0.6.8-0.20220506192307-f628bb5dc95b
@@ -34,6 +35,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.5.0
 )
+
+require github.com/iancoleman/orderedmap v0.2.0 // indirect
 
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
