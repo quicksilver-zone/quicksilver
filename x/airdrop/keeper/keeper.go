@@ -31,7 +31,7 @@ type Keeper struct {
 
 	ValidateProofOps utils.ProofOpsFn
 
-	// the address capable of executing a gov message. Typically, this
+	// the address capable of executing authority-scoped messages (ex. params, props). Typically, this
 	// should be the x/gov module account.
 	authority string
 }
