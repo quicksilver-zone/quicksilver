@@ -59,6 +59,9 @@ func (k msgServer) IncentivePoolSpend(goCtx context.Context, msg *types.MsgIncen
 	}
 
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, to, msg.Amount)
+	if err != nil {
+		return nil, err
+	}
 
 	defer func() {
 		for _, a := range msg.Amount {
