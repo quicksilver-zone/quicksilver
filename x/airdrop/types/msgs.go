@@ -120,7 +120,7 @@ func (msg MsgIncentivePoolSpend) ValidateBasic() error {
 	}
 
 	if from.Equals(to) {
-		return sdkerrors.ErrInvalidAddress.Wrapf("to and from addresses equaul: %s", err)
+		return sdkerrors.ErrInvalidAddress.Wrapf("to and from addresses equal: %s", err)
 	}
 
 	if !msg.Amount.IsValid() {
