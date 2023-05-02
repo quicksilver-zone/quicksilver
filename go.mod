@@ -39,6 +39,8 @@ require (
 	mvdan.cc/gofumpt v0.5.0
 )
 
+require github.com/iancoleman/orderedmap v0.2.0 // indirect
+
 require (
 	4d63.com/gocheckcompilerdirectives v1.2.1 // indirect
 	4d63.com/gochecknoglobals v0.2.1 // indirect
