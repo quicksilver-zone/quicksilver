@@ -18,6 +18,8 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	IsSendEnabledCoins(ctx sdk.Context, coins ...sdk.Coin) error
+	BlockedAddr(addr sdk.AccAddress) bool
 }
 
 // StakingKeeper defines the contract for staking APIs.
