@@ -76,7 +76,7 @@ func V010402rc3UpgradeHandler(
 			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "osmo-test-5")
 			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
 			if !exists {
-				panic(fmt.Errorf("protocolDataNotFound"))
+				panic("connection protocol data type not found")
 			}
 
 			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rege-redwood-1")))
