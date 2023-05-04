@@ -1,8 +1,6 @@
 package upgrades
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -73,17 +71,17 @@ func V010402rc3UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) || isTest(ctx) {
-			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "osmo-test-5")
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, OsmosisTestnetChainID)
 			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
 			if !exists {
 				panic("connection protocol data type not found")
 			}
 
 			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rege-redwood-1")))
-			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, "osmo-test-5")
+			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, OsmosisTestnetChainID)
 			for _, val := range vals {
 				valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")
-				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, "osmo-test-5", valoper)
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, OsmosisTestnetChainID, valoper)
 			}
 		}
 
