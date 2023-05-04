@@ -6,10 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	"github.com/ingenuity-build/quicksilver/app/keepers"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	types2 "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func Upgrades() []Upgrade {
@@ -64,6 +65,7 @@ func V010402rc1UpgradeHandler(
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
+
 func V010402rc3UpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -72,12 +74,12 @@ func V010402rc3UpgradeHandler(
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) || isTest(ctx) {
 			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "osmo-test-5")
-			pdType, exists := types2.ProtocolDataType_value["ProtocolDataTypeConnection"]
+			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
 			if !exists {
 				panic(fmt.Errorf("protocolDataNotFound"))
 			}
 
-			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(types2.GetProtocolDataKey(types2.ProtocolDataType(pdType), "rege-redwood-1")))
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rege-redwood-1")))
 			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, "osmo-test-5")
 			for _, val := range vals {
 				valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")

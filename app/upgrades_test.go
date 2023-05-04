@@ -9,13 +9,14 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/ingenuity-build/quicksilver/app/upgrades"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	types2 "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-	"github.com/stretchr/testify/suite"
 )
 
 func init() {
@@ -303,12 +304,15 @@ func (s *AppTestSuite) TestV010402rc3UpgradeHandler() {
 
 	handler := upgrades.V010402rc3UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
-	pdType, exists := types2.ProtocolDataType_value["ProtocolDataTypeConnection"]
+	pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
 	s.Require().True(exists)
-	prData := types2.ProtocolData{Type: "ProtocolDataTypeConnection",
+
+	prData := prtypes.ProtocolData{
+		Type: "ProtocolDataTypeConnection",
 		Data: []byte(`{"ConnectionID":"connection-2","ChainID":"regen-redwood-1","Prefix":"regen"}`),
 	}
-	app.ParticipationRewardsKeeper.SetProtocolData(ctx, string(types2.GetProtocolDataKey(types2.ProtocolDataType(pdType), "rege-redwood-1")), &prData)
+
+	app.ParticipationRewardsKeeper.SetProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rege-redwood-1")), &prData)
 	val0 := icstypes.Validator{ValoperAddress: "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
 	app.InterchainstakingKeeper.SetValidator(ctx, "osmo-test-5", val0)
 	val1 := icstypes.Validator{ValoperAddress: "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
@@ -321,7 +325,7 @@ func (s *AppTestSuite) TestV010402rc3UpgradeHandler() {
 
 	_, found := app.InterchainstakingKeeper.GetZone(ctx, "osmo-test-5")
 	s.Require().False(found)
-	_, found = app.ParticipationRewardsKeeper.GetProtocolData(ctx, types2.ProtocolDataType(pdType), "rege-redwood-1")
+	_, found = app.ParticipationRewardsKeeper.GetProtocolData(ctx, prtypes.ProtocolDataType(pdType), "rege-redwood-1")
 	s.Require().False(found)
 
 	vals = app.InterchainstakingKeeper.GetValidators(ctx, "osmo-test-5")
