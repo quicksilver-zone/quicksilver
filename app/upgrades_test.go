@@ -15,6 +15,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
@@ -99,7 +100,7 @@ func (s *AppTestSuite) initTestZone() {
 	// osmosis zone
 	zone = icstypes.Zone{
 		ConnectionId:    "connection-77002",
-		ChainId:         "osmosis-1",
+		ChainId:         upgrades.OsmosisTestnetChainID,
 		AccountPrefix:   "osmo",
 		LocalDenom:      "uqosmo",
 		BaseDenom:       "uosmo",
@@ -152,7 +153,7 @@ func (s *AppTestSuite) initTestZone() {
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), rdRecord)
 
 	rdRecord = icstypes.RedelegationRecord{
-		ChainId:        "osmosis-1",
+		ChainId:        upgrades.OsmosisTestnetChainID,
 		EpochNumber:    1,
 		Source:         "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
 		Destination:    "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
@@ -296,6 +297,39 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 
 		return false
 	})
+}
+
+func (s *AppTestSuite) TestV010402rc3UpgradeHandler() {
+	app := s.GetQuicksilverApp(s.chainA)
+
+	handler := upgrades.V010402rc3UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	ctx := s.chainA.GetContext()
+	pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
+	s.Require().True(exists)
+
+	prData := prtypes.ProtocolData{
+		Type: "ProtocolDataTypeConnection",
+		Data: []byte(`{"ConnectionID":"connection-2","ChainID":"regen-redwood-1","Prefix":"regen"}`),
+	}
+
+	app.ParticipationRewardsKeeper.SetProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rege-redwood-1")), &prData)
+	val0 := icstypes.Validator{ValoperAddress: "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val0)
+	val1 := icstypes.Validator{ValoperAddress: "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val1)
+	vals := app.InterchainstakingKeeper.GetValidators(ctx, upgrades.OsmosisTestnetChainID)
+	s.Require().Equal(2, len(vals))
+
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.Require().NoError(err)
+
+	_, found := app.InterchainstakingKeeper.GetZone(ctx, upgrades.OsmosisTestnetChainID)
+	s.Require().False(found)
+	_, found = app.ParticipationRewardsKeeper.GetProtocolData(ctx, prtypes.ProtocolDataType(pdType), "rege-redwood-1")
+	s.Require().False(found)
+
+	vals = app.InterchainstakingKeeper.GetValidators(ctx, upgrades.OsmosisTestnetChainID)
+	s.Require().Equal(0, len(vals))
 }
 
 // func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
