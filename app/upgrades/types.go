@@ -5,7 +5,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	"github.com/ingenuity-build/quicksilver/app/keepers"
 )
 
@@ -18,6 +17,7 @@ const (
 
 	V010402rc1UpgradeName = "v1.4.2-rc1"
 	V010402rc2UpgradeName = "v1.4.2-rc2"
+	V010402rc3UpgradeName = "v1.4.2-rc3"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal
