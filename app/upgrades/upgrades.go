@@ -6,13 +6,16 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/ingenuity-build/quicksilver/app/keepers"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func Upgrades() []Upgrade {
 	return []Upgrade{
 		{UpgradeName: V010402rc1UpgradeName, CreateUpgradeHandler: V010402rc1UpgradeHandler},
 		{UpgradeName: V010402rc2UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010402rc3UpgradeName, CreateUpgradeHandler: V010402rc3UpgradeHandler},
 	}
 }
 
@@ -55,6 +58,31 @@ func V010402rc1UpgradeHandler(
 				appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
 				return false
 			})
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010402rc3UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) {
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, OsmosisTestnetChainID)
+			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
+			if !exists {
+				panic("connection protocol data type not found")
+			}
+
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rege-redwood-1")))
+			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, OsmosisTestnetChainID)
+			for _, val := range vals {
+				valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, OsmosisTestnetChainID, valoper)
+			}
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
