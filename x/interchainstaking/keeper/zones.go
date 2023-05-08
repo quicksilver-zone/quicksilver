@@ -14,7 +14,7 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 )
 
 // GetZone returns zone info by chainID

@@ -4,8 +4,8 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	"github.com/ingenuity-build/quicksilver/utils"

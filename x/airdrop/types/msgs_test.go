@@ -3,8 +3,8 @@ package types
 import (
 	"testing"
 
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )

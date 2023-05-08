@@ -5,9 +5,9 @@ import (
 	"reflect"
 	"testing"
 
+	crypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	crypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
