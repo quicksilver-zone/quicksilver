@@ -15,7 +15,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	dbm "github.com/cometbft/cometbft-db"
-	purningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
+	purningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 )
 
 func DefaultConfig() network.Config {

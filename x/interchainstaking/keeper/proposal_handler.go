@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/types"
+	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )

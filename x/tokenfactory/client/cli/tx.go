@@ -47,7 +47,7 @@ func NewCreateDenomCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 			msg := types.NewMsgCreateDenom(
 				clientCtx.GetFromAddress().String(),
@@ -74,7 +74,7 @@ func NewMintCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 			amount, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
@@ -106,7 +106,10 @@ func NewBurnCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			amount, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
@@ -172,7 +175,7 @@ func NewChangeAdminCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
 
 			msg := types.NewMsgChangeAdmin(
 				clientCtx.GetFromAddress().String(),
