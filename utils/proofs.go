@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"net/url"
 
+	"cosmossdk.io/api/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	commitmenttypes "github.com/cosmos/ibc-go/v5/modules/core/23-commitment/types"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-
-	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	commitmenttypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
+	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	"github.com/tendermint/spm/ibckeeper"
 )
 
 type ProofOpsFn func(ctx sdk.Context, ibcKeeper *ibckeeper.Keeper, connectionID, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error

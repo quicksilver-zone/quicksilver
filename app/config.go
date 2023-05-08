@@ -15,7 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	dbm "github.com/tendermint/tm-db"
+
+	dbm "github.com/cometbft/cometbft-db"
+	purningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 )
 
 func DefaultConfig() network.Config {
