@@ -6,14 +6,15 @@ import (
 	"testing"
 	"time"
 
+<<<<<<< HEAD
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/stretchr/testify/require"
-
+=======
 	sdk "github.com/cosmos/cosmos-sdk/types"
+>>>>>>> origin/develop
+	"github.com/stretchr/testify/require"
 
 	simapp "github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -33,7 +34,7 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to marshal protocol data: %v", err)
 	}
-	protocolData := keeper.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)], bz)
+	protocolData := types.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)], bz)
 
 	app.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("%d", pool.PoolID), protocolData)
 

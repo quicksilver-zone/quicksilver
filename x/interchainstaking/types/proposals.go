@@ -19,8 +19,34 @@ var (
 	_ govv1beta1.Content = &UpdateZoneProposal{}
 )
 
-func NewRegisterZoneProposal(title string, description string, connectionID string, baseDenom string, localDenom string, accountPrefix string, multiSend bool, liquidityModule bool) *RegisterZoneProposal {
-	return &RegisterZoneProposal{Title: title, Description: description, ConnectionId: connectionID, BaseDenom: baseDenom, LocalDenom: localDenom, AccountPrefix: accountPrefix, MultiSend: multiSend, LiquidityModule: liquidityModule}
+func NewRegisterZoneProposal(
+	title string,
+	description string,
+	connectionID string,
+	baseDenom string,
+	localDenom string,
+	accountPrefix string,
+	returnToSender bool,
+	unbonding bool,
+	deposits bool,
+	liquidityModule bool,
+	decimals int64,
+	messagePerTx int64,
+) *RegisterZoneProposal {
+	return &RegisterZoneProposal{
+		Title:            title,
+		Description:      description,
+		ConnectionId:     connectionID,
+		BaseDenom:        baseDenom,
+		LocalDenom:       localDenom,
+		AccountPrefix:    accountPrefix,
+		ReturnToSender:   returnToSender,
+		UnbondingEnabled: unbonding,
+		DepositsEnabled:  deposits,
+		LiquidityModule:  liquidityModule,
+		Decimals:         decimals,
+		MessagesPerTx:    messagePerTx,
+	}
 }
 
 func (m RegisterZoneProposal) GetDescription() string { return m.Description }
@@ -28,7 +54,7 @@ func (m RegisterZoneProposal) GetTitle() string       { return m.Title }
 func (m RegisterZoneProposal) ProposalRoute() string  { return RouterKey }
 func (m RegisterZoneProposal) ProposalType() string   { return ProposalTypeRegisterZone }
 
-// ValidateBasic runs basic stateless validity checks
+// ValidateBasic runs basic stateless validity checks.
 func (m RegisterZoneProposal) ValidateBasic() error {
 	err := govv1beta1.ValidateAbstract(m)
 	if err != nil {
@@ -36,11 +62,15 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 	}
 
 	// check valid connection id
+<<<<<<< HEAD
 	if len(m.ConnectionId) < 12 {
 		return fmt.Errorf("invalid length connection string: %s", m.ConnectionId)
 	}
 
 	if m.ConnectionId[0:11] != "connection-" {
+=======
+	if len(m.ConnectionId) < 12 || m.ConnectionId[0:11] != "connection-" {
+>>>>>>> origin/develop
 		return fmt.Errorf("invalid connection string: %s", m.ConnectionId)
 	}
 
@@ -67,6 +97,11 @@ func (m RegisterZoneProposal) ValidateBasic() error {
 	if m.LiquidityModule {
 		return errors.New("liquidity module is unsupported")
 	}
+
+	if m.Decimals == 0 {
+		return errors.New("decimals field is mandatory")
+	}
+
 	return nil
 }
 
@@ -75,17 +110,46 @@ func (m RegisterZoneProposal) String() string {
 	return fmt.Sprintf(`Interchain Staking  Zone Registration Proposal:
   Title:                            %s
   Description:                      %s
-  Connection Id:                    %s
+  Connection ID:                    %s
   Base Denom:                       %s
   Local Denom:                      %s
-  Multi Send Enabled:               %t
+  Return to Sender Enabled:         %t
+  Unbonding Enabled:                %t
+  Deposits Enabled: 				%t	
   Liquidity Staking Module Enabled: %t
   Messages per Tx:                  %d
+<<<<<<< HEAD
 `, m.Title, m.Description, m.ConnectionId, m.BaseDenom, m.LocalDenom, m.MultiSend, m.LiquidityModule, m.MessagesPerTx)
+=======
+  Decimals:                         %d
+`,
+		m.Title,
+		m.Description,
+		m.ConnectionId,
+		m.BaseDenom,
+		m.LocalDenom,
+		m.ReturnToSender,
+		m.UnbondingEnabled,
+		m.DepositsEnabled,
+		m.LiquidityModule,
+		m.MessagesPerTx,
+		m.Decimals,
+	)
+>>>>>>> origin/develop
 }
 
-func NewUpdateZoneProposal(title string, description string, chainID string, changes []*UpdateZoneValue) *UpdateZoneProposal {
-	return &UpdateZoneProposal{Title: title, Description: description, ChainId: chainID, Changes: changes}
+func NewUpdateZoneProposal(
+	title string,
+	description string,
+	chainID string,
+	changes []*UpdateZoneValue,
+) *UpdateZoneProposal {
+	return &UpdateZoneProposal{
+		Title:       title,
+		Description: description,
+		ChainId:     chainID,
+		Changes:     changes,
+	}
 }
 
 func (m UpdateZoneProposal) GetDescription() string { return m.Description }
@@ -93,7 +157,7 @@ func (m UpdateZoneProposal) GetTitle() string       { return m.Title }
 func (m UpdateZoneProposal) ProposalRoute() string  { return RouterKey }
 func (m UpdateZoneProposal) ProposalType() string   { return ProposalTypeUpdateZone }
 
-// ValidateBasic runs basic stateless validity checks
+// ValidateBasic runs basic stateless validity checks.
 func (m UpdateZoneProposal) ValidateBasic() error {
 	return govv1beta1.ValidateAbstract(m)
 }

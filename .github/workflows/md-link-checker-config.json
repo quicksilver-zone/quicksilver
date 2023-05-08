@@ -1,0 +1,13 @@
+{
+  "ignorePatterns": [
+    {
+      "_comment": "fill out if we need to ignore"
+    }
+  ],
+  "baseUrl": "https://docs.quicksilver.zone/",
+  "projectBaseUrl": "https://docs.quicksilver.zone/",
+  "timeout": "20s",
+  "retryOn429": true,
+  "retryCount": 5,
+  "fallbackRetryDelay": "30s"
+}

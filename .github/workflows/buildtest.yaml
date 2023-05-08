@@ -1,10 +1,16 @@
 # This is a basic workflow that is manually triggered
 
-name: compile quicksilver
+name: build and test
 
 # Controls when the action will run. Workflow runs when manually triggered using the UI
 # or API.
-on: [push, pull_request, workflow_dispatch]
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - "develop"
+      - "main"
 
 # This workflow makes x86_64 for windows, and linux.
 
@@ -12,15 +18,22 @@ jobs:
   build:
     strategy:
       matrix:
-        targetos: [linux, windows]
         arch: [amd64]
+        targetos: [linux, windows, darwin]
+        include:
+          - targetos: darwin
+            arch: arm64
     runs-on: ubuntu-latest
     name: build quicksilver
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
+<<<<<<< HEAD
           go-version: '1.19.6'
+=======
+          go-version: '1.20.3'
+>>>>>>> origin/develop
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
@@ -40,7 +53,7 @@ jobs:
           make install
 
       - name: Archive quicksilver binaries
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/develop'
         uses: actions/upload-artifact@v3
         with:
           name: quicksilverd-${{ matrix.targetos }}-${{ matrix.arch }}
@@ -54,7 +67,11 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v4
         with:
+<<<<<<< HEAD
           go-version: '1.19.6'
+=======
+          go-version: '1.20.3'
+>>>>>>> origin/develop
         env:
           GOOS: ${{ matrix.targetos }}
           GOARCH: ${{ matrix.arch }}
@@ -72,10 +89,26 @@ jobs:
       - name: test quicksilver
         run: |
           make test-unit-cover
-          cat coverage.txt | grep .pb.go -v | grep .pb.gw.go -v | grep osmosis-types -v > coverage_nogen.txt
+
+      - name: filter out DONTCOVER
+        run: |
+          excludelist="$(find ./ -type f -name '*.go' | xargs grep -l 'DONTCOVER')"
+          excludelist+=" $(find ./ -type f -name '*.pb.go')"
+          excludelist+=" $(find ./ -type f -name '*.pb.gw.go')"
+          excludelist+=" $(find ./ -type f -path './test/*.go')"
+          excludelist+=" $(find ./ -type f -path './osmosis-types/*.go')"
+          for filename in ${excludelist}; do
+            filename=$(echo $filename | sed 's/^./github.com\/ingenuity-build\/quicksilver/g')
+            echo "Excluding ${filename} from coverage report..."
+            sed -i.bak "/$(echo $filename | sed 's/\//\\\//g')/d" coverage.txt
+          done  
 
       - name: "Go vulnerability checks"
+<<<<<<< HEAD
         continue-on-error: true    #temp-till we upgrade to v1.20
+=======
+        continue-on-error: false    #temp-till we upgrade to v1.20
+>>>>>>> origin/develop
         run: make vulncheck
 
 
@@ -83,7 +116,34 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }} # needed for private repo
+<<<<<<< HEAD
           files: ./coverage_nogen.txt
           flags: unittests
           fail_ci_if_error: true
           verbose: true
+=======
+          files: ./coverage.txt
+          flags: unittests
+          fail_ci_if_error: true
+          verbose: true
+
+  simulate:
+    if: contains(github.event.pull_request.labels.*.name, 'run-sim')
+    runs-on: ubuntu-latest
+    name: simulate quicksilver
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20.3'
+      - name: Run simulation tests
+        run: make test-sim-ci
+>>>>>>> origin/develop

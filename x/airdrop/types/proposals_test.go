@@ -1,18 +1,20 @@
-package types
+package types_test
 
 import (
 	"testing"
-	time "time"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
 func TestRegisterZoneDropProposal_ValidateBasic(t *testing.T) {
 	type fields struct {
 		Title        string
 		Description  string
-		ZoneDrop     *ZoneDrop
+		ZoneDrop     *types.ZoneDrop
 		ClaimRecords []byte
 	}
 	tests := []struct {
@@ -40,7 +42,7 @@ func TestRegisterZoneDropProposal_ValidateBasic(t *testing.T) {
 			fields{
 				Title:        "Flashdrop",
 				Description:  "An airdrop that is valid for one hour only",
-				ZoneDrop:     &ZoneDrop{},
+				ZoneDrop:     &types.ZoneDrop{},
 				ClaimRecords: []byte{},
 			},
 			true,
@@ -52,7 +54,7 @@ func TestRegisterZoneDropProposal_ValidateBasic(t *testing.T) {
 			fields{
 				Title:       "Flashdrop",
 				Description: "An airdrop that is valid for one hour only",
-				ZoneDrop: &ZoneDrop{
+				ZoneDrop: &types.ZoneDrop{
 					ChainId:    "test-1",
 					StartTime:  time.Now().Add(-time.Hour),
 					Duration:   time.Hour,
@@ -73,7 +75,7 @@ func TestRegisterZoneDropProposal_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := RegisterZoneDropProposal{
+			m := types.RegisterZoneDropProposal{
 				Title:        tt.fields.Title,
 				Description:  tt.fields.Description,
 				ZoneDrop:     tt.fields.ZoneDrop,

@@ -11,6 +11,11 @@ import (
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/stableswap"
 )
 
+const (
+	PoolTypeBalancer   = "balancer"
+	PoolTypeStableSwap = "stableswap"
+)
+
 // OsmosisPoolProtocolData defines protocol state to track qAssets locked in
 // Osmosis pools.
 type OsmosisPoolProtocolData struct {
@@ -24,7 +29,7 @@ type OsmosisPoolProtocolData struct {
 
 func (opd *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
 	switch opd.PoolType {
-	case "balancer":
+	case PoolTypeBalancer:
 		var poolData balancer.Pool
 		if len(opd.PoolData) > 0 {
 			err := json.Unmarshal(opd.PoolData, &poolData)
@@ -34,7 +39,7 @@ func (opd *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
 		}
 		return &poolData, nil
 
-	case "stableswap":
+	case PoolTypeStableSwap:
 		var poolData stableswap.Pool
 		if len(opd.PoolData) > 0 {
 			err := json.Unmarshal(opd.PoolData, &poolData)
@@ -60,42 +65,42 @@ func (opd *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
 
 // ValidateBasic satisfies ProtocolDataI and validates basic stateless data.
 // LastUpdated and PoolData requires stateful access of keeper to validate.
-func (opd OsmosisPoolProtocolData) ValidateBasic() error {
-	errors := make(map[string]error)
+func (opd *OsmosisPoolProtocolData) ValidateBasic() error {
+	errs := make(map[string]error)
 
 	if opd.PoolID == 0 {
-		errors["PoolID"] = ErrUndefinedAttribute
+		errs["PoolID"] = ErrUndefinedAttribute
 	}
 
-	if len(opd.PoolName) == 0 {
-		errors["PoolName"] = ErrUndefinedAttribute
+	if opd.PoolName == "" {
+		errs["PoolName"] = ErrUndefinedAttribute
 	}
 
-	if len(opd.PoolType) == 0 {
-		errors["PoolType"] = ErrUndefinedAttribute
+	if opd.PoolType == "" {
+		errs["PoolType"] = ErrUndefinedAttribute
 	}
 
 	i := 0
 	for chainID, denom := range opd.Zones {
 		el := fmt.Sprintf("Zones[%d]", i)
 
-		if len(chainID) == 0 {
-			errors[el+" key"] = fmt.Errorf("%w, chainID", ErrUndefinedAttribute)
+		if chainID == "" {
+			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrUndefinedAttribute)
 		}
 
-		if len(denom) == 0 {
-			errors[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrUndefinedAttribute)
+		if denom == "" {
+			errs[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrUndefinedAttribute)
 		}
 
 		i++
 	}
 
 	if i == 0 {
-		errors["Zones"] = ErrUndefinedAttribute
+		errs["Zones"] = ErrUndefinedAttribute
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		return multierror.New(errs)
 	}
 
 	return nil
@@ -109,15 +114,15 @@ type OsmosisParamsProtocolData struct {
 
 // ValidateBasic satisfies ProtocolDataI and validates basic stateless data.
 // LastUpdated and PoolData requires stateful access of keeper to validate.
-func (oppd OsmosisParamsProtocolData) ValidateBasic() error {
-	errors := make(map[string]error)
+func (oppd *OsmosisParamsProtocolData) ValidateBasic() error {
+	errs := make(map[string]error)
 
-	if len(oppd.ChainID) == 0 {
-		errors["ChainID"] = ErrUndefinedAttribute
+	if oppd.ChainID == "" {
+		errs["ChainID"] = ErrUndefinedAttribute
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		return multierror.New(errs)
 	}
 
 	return nil

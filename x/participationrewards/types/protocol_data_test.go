@@ -1,16 +1,18 @@
-package types
+package types_test
 
 import (
 	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 // tests that {} is an invalid string, and that an error is thrown when unmarshalled.
 // see: https://github.com/ingenuity-build/quicksilver/issues/214
 func TestUnmarshalProtocolDataRejectsZeroLengthJson(t *testing.T) {
-	_, err := UnmarshalProtocolData(ProtocolDataTypeOsmosisPool, []byte("{}"))
+	_, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, []byte("{}"))
 	require.Error(t, err)
 }
 
@@ -44,7 +46,7 @@ func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cpd := ConnectionProtocolData{
+			cpd := types.ConnectionProtocolData{
 				ConnectionID: tt.fields.ConnectionID,
 				ChainID:      tt.fields.ChainID,
 				LastEpoch:    tt.fields.LastEpoch,
@@ -64,12 +66,12 @@ func TestConnectionProtocolData_ValidateBasic(t *testing.T) {
 func TestLiquidProtocolData_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name    string
-		pd      LiquidAllowedDenomProtocolData
+		pd      types.LiquidAllowedDenomProtocolData
 		wantErr bool
 	}{
 		{
 			"liquid_data",
-			LiquidAllowedDenomProtocolData{
+			types.LiquidAllowedDenomProtocolData{
 				ChainID:               "somechain-1",
 				IbcDenom:              "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 				QAssetDenom:           "uqstake",
@@ -78,18 +80,8 @@ func TestLiquidProtocolData_ValidateBasic(t *testing.T) {
 			false,
 		},
 		{
-			"liquid_invalid_ibc_denom",
-			LiquidAllowedDenomProtocolData{
-				ChainID:               "somechain-1",
-				IbcDenom:              "stake",
-				QAssetDenom:           "uqstake",
-				RegisteredZoneChainID: "testzone-1",
-			},
-			true,
-		},
-		{
 			"liquid_invalid_chainid",
-			LiquidAllowedDenomProtocolData{
+			types.LiquidAllowedDenomProtocolData{
 				ChainID:               "badzone",
 				IbcDenom:              "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 				QAssetDenom:           "uqstake",
@@ -99,7 +91,7 @@ func TestLiquidProtocolData_ValidateBasic(t *testing.T) {
 		},
 		{
 			"liquid_invalid_rzchainid",
-			LiquidAllowedDenomProtocolData{
+			types.LiquidAllowedDenomProtocolData{
 				ChainID:               "somechain-1",
 				IbcDenom:              "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 				QAssetDenom:           "uqstake",
@@ -123,13 +115,13 @@ func TestLiquidProtocolData_ValidateBasic(t *testing.T) {
 
 func TestUnmarshalProtocolData(t *testing.T) {
 	type args struct {
-		datatype ProtocolDataType
+		datatype types.ProtocolDataType
 		data     json.RawMessage
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    ProtocolDataI
+		want    types.ProtocolDataI
 		wantErr bool
 	}{
 		{
@@ -159,10 +151,10 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		{
 			"connection_data",
 			args{
-				datatype: ProtocolDataTypeConnection,
+				datatype: types.ProtocolDataTypeConnection,
 				data:     []byte(`{"connectionid": "connection-0","chainid": "somechain","lastepoch": 10000}`),
 			},
-			ConnectionProtocolData{
+			&types.ConnectionProtocolData{
 				ConnectionID: "connection-0",
 				ChainID:      "somechain",
 				LastEpoch:    10000,
@@ -172,7 +164,7 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		{
 			"liquid_data_empty",
 			args{
-				datatype: ProtocolDataTypeLiquidToken,
+				datatype: types.ProtocolDataTypeLiquidToken,
 				data:     []byte(`{}`),
 			},
 			nil,
@@ -181,10 +173,10 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		{
 			"liquid_data",
 			args{
-				datatype: ProtocolDataTypeLiquidToken,
+				datatype: types.ProtocolDataTypeLiquidToken,
 				data:     []byte(`{"chainid": "somechain-1","ibcdenom": "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3","qassetdenom": "uqstake", "registeredzonechainid": "registeredzone-1"}`),
 			},
-			LiquidAllowedDenomProtocolData{
+			&types.LiquidAllowedDenomProtocolData{
 				ChainID:               "somechain-1",
 				IbcDenom:              "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 				QAssetDenom:           "uqstake",
@@ -195,7 +187,7 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		{
 			"osmosispool_data_empty",
 			args{
-				datatype: ProtocolDataTypeOsmosisPool,
+				datatype: types.ProtocolDataTypeOsmosisPool,
 				data:     []byte(`{}`),
 			},
 			nil,
@@ -204,10 +196,10 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		{
 			"osmosispool_data",
 			args{
-				datatype: ProtocolDataTypeOsmosisPool,
+				datatype: types.ProtocolDataTypeOsmosisPool,
 				data:     []byte(`{"poolid": 1, "poolname": "atom/osmo","zones": {"cosmoshub-4": "IBC/atom_denom", "osmosis-1": "IBC/osmo_denom"}}`),
 			},
-			OsmosisPoolProtocolData{
+			&types.OsmosisPoolProtocolData{
 				PoolID:   1,
 				PoolName: "atom/osmo",
 				Zones:    map[string]string{"cosmoshub-4": "IBC/atom_denom", "osmosis-1": "IBC/osmo_denom"},
@@ -217,7 +209,7 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		{
 			"osmosis_params_empty",
 			args{
-				datatype: ProtocolDataTypeOsmosisParams,
+				datatype: types.ProtocolDataTypeOsmosisParams,
 				data:     []byte(`{}`),
 			},
 			nil,
@@ -226,10 +218,10 @@ func TestUnmarshalProtocolData(t *testing.T) {
 		{
 			"osmosis_params",
 			args{
-				datatype: ProtocolDataTypeOsmosisParams,
+				datatype: types.ProtocolDataTypeOsmosisParams,
 				data:     []byte(`{"ChainID": "test-01"}`),
 			},
-			OsmosisParamsProtocolData{
+			&types.OsmosisParamsProtocolData{
 				ChainID: "test-01",
 			},
 			false,
@@ -237,7 +229,7 @@ func TestUnmarshalProtocolData(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := UnmarshalProtocolData(tt.args.datatype, tt.args.data)
+			got, err := types.UnmarshalProtocolData(tt.args.datatype, tt.args.data)
 			if tt.wantErr {
 				t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)

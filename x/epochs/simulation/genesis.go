@@ -12,7 +12,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
-// RandomizedGenState generates a random GenesisState for mint
+// RandomizedGenState generates a random GenesisState for mint.
 func RandomizedGenState(simState *module.SimulationState) {
 	epochs := []types.EpochInfo{
 		{
@@ -41,7 +41,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		panic(err)
 	}
 
-	// TODO: Do some randomization later
 	fmt.Printf("Selected deterministically generated epoch parameters:\n%s\n", bz)
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(epochGenesis)
 }

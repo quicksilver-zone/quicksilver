@@ -10,6 +10,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
+<<<<<<< HEAD
 // NewHandler returns a handler for participationrewards module messages
 func NewHandler(k keeper.Keeper) sdk.Handler {
 	msgServer := keeper.NewMsgServerImpl(k)
@@ -29,6 +30,9 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 }
 
 func NewProposalHandler(k keeper.Keeper) govv1beta1.Handler {
+=======
+func NewProposalHandler(k *keeper.Keeper) govv1beta1.Handler {
+>>>>>>> origin/develop
 	return func(ctx sdk.Context, content govv1beta1.Content) error {
 		switch c := content.(type) {
 		case *types.AddProtocolDataProposal:

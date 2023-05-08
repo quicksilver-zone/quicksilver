@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,7 +12,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
-// participationrewars message types
+// participationrewars message types.
 const (
 	TypeMsgSubmitClaim = "submitclaim"
 )
@@ -62,11 +63,11 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 		errors["UserAddress"] = err
 	}
 
-	if len(msg.Zone) == 0 {
+	if msg.Zone == "" {
 		errors["Zone"] = ErrUndefinedAttribute
 	}
 
-	if len(msg.SrcZone) == 0 {
+	if msg.SrcZone == "" {
 		errors["SrcZone"] = ErrUndefinedAttribute
 	}
 
@@ -81,10 +82,16 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 
 	if len(msg.Proofs) > 0 {
 		for i, p := range msg.Proofs {
-			pLabel := fmt.Sprintf("Proof [%d]:", i)
-			if err := p.ValidateBasic(); err != nil {
-				errors[pLabel] = err
+			err := p.ValidateBasic()
+			if err == nil {
+				return nil
 			}
+
+			pLabel := fmt.Sprintf("Proof [%s]", hex.EncodeToString(p.Key))
+			if _, ok := errors[pLabel]; ok {
+				pLabel += fmt.Sprintf("-%d", i)
+			}
+			errors[pLabel+":"] = err
 		}
 	}
 

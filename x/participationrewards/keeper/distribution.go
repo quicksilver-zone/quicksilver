@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
@@ -13,52 +12,18 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-type RewardsAllocation struct {
-	ValidatorSelection math.Int
-	Holdings           math.Int
-	Lockup             math.Int
-}
-
 type tokenValues map[string]sdk.Dec
 
-// GetRewardsAllocations returns an instance of rewardsAllocation with values
-// set according to the given moduleBalance and distribution proportions.
-func GetRewardsAllocations(moduleBalance math.Int, proportions types.DistributionProportions) (*RewardsAllocation, error) {
-	if moduleBalance.IsNil() || moduleBalance.IsZero() {
-		return nil, types.ErrNothingToAllocate
-	}
-
-	if sum := proportions.Total(); !sum.Equal(sdk.OneDec()) {
-		return nil, fmt.Errorf("%w: got %v", types.ErrInvalidTotalProportions, sum)
-	}
-
-	var allocation RewardsAllocation
-
-	// split participation rewards allocations
-	allocation.ValidatorSelection = sdk.NewDecFromInt(moduleBalance).Mul(proportions.ValidatorSelectionAllocation).TruncateInt()
-	allocation.Holdings = sdk.NewDecFromInt(moduleBalance).Mul(proportions.HoldingsAllocation).TruncateInt()
-	allocation.Lockup = sdk.NewDecFromInt(moduleBalance).Mul(proportions.LockupAllocation).TruncateInt()
-
-	// use sum to check total distribution to collect and allocate dust
-	sum := allocation.Lockup.Add(allocation.ValidatorSelection).Add(allocation.Holdings)
-	dust := moduleBalance.Sub(sum)
-
-	// Add dust to validator choice allocation (favors decentralization)
-	allocation.ValidatorSelection = allocation.ValidatorSelection.Add(dust)
-
-	return &allocation, nil
-}
-
-func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
+func (k *Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 	k.Logger(ctx).Info("calcTokenValues")
 
 	tvs := make(map[string]sdk.Dec)
 
 	// get base zone (Cosmos)
 	var cosmosZone *icstypes.Zone
-	k.icsKeeper.IterateZones(ctx, func(_ int64, zone icstypes.Zone) (stop bool) {
+	k.icsKeeper.IterateZones(ctx, func(_ int64, zone *icstypes.Zone) (stop bool) {
 		if zone.AccountPrefix == "cosmos" {
-			cosmosZone = &zone
+			cosmosZone = zone
 			return true
 		}
 		return false
@@ -72,15 +37,15 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 	// tvs[uatom] = 1.0
 
 	// capture errors from iterator
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, data types.ProtocolData) bool {
 		idxLabel := fmt.Sprintf("index[%d]", idx)
 		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, data.Data)
 		if err != nil {
-			errors[idxLabel] = err
+			errs[idxLabel] = err
 			return true
 		}
-		pool, _ := ipool.(types.OsmosisPoolProtocolData)
+		pool, _ := ipool.(*types.OsmosisPoolProtocolData)
 
 		// pool must be a cosmos pair
 		if len(pool.Zones) != 2 {
@@ -98,7 +63,7 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 		for chainID, denom := range pool.Zones {
 			zone, ok := k.icsKeeper.GetZone(ctx, chainID)
 			if !ok {
-				errors[idxLabel] = fmt.Errorf("zone not found, %s", chainID)
+				errs[idxLabel] = fmt.Errorf("zone not found, %s", chainID)
 				return true
 			}
 
@@ -114,17 +79,17 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 
 		if isCosmosPair {
 			if pool.PoolData == nil {
-				errors[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
+				errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
 				return true
 			}
 			pool, err := pool.GetPool()
 			if err != nil {
-				errors[idxLabel] = err
+				errs[idxLabel] = err
 				return true
 			}
 			value, err := pool.SpotPrice(ctx, baseIBCDenom, queryIBCDenom)
 			if err != nil {
-				errors[idxLabel] = err
+				errs[idxLabel] = err
 				return true
 			}
 
@@ -134,34 +99,38 @@ func (k Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 		return false
 	})
 
-	if len(errors) > 0 {
-		return nil, multierror.New(errors)
+	if len(errs) > 0 {
+		return nil, multierror.New(errs)
 	}
 
 	return tvs, nil
 }
 
-// allocateZoneRewards executes zone based rewards allocation. This entails
+// AllocateZoneRewards executes zone based rewards allocation. This entails
 // rewards that are proportionally distributed to zones based on the tvl for
 // each zone relative to the tvl of the QS protocol.
-func (k Keeper) allocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation RewardsAllocation) error {
+func (k *Keeper) AllocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation types.RewardsAllocation) error {
 	k.Logger(ctx).Info("allocateZoneRewards", "token values", tvs, "allocation", allocation)
 
 	if err := k.setZoneAllocations(ctx, tvs, allocation); err != nil {
 		return err
 	}
 
-	k.allocateValidatorSelectionRewards(ctx)
+	k.AllocateValidatorSelectionRewards(ctx)
 
+<<<<<<< HEAD
 	return k.allocateHoldingsRewards(ctx)
+=======
+	return k.AllocateHoldingsRewards(ctx)
+>>>>>>> origin/develop
 }
 
 // setZoneAllocations returns the proportional zone rewards allocations as a
 // map indexed by the zone id.
-func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation RewardsAllocation) error {
+func (k *Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation types.RewardsAllocation) error {
 	k.Logger(ctx).Info("setZoneAllocations", "allocation", allocation)
 
-	otvl := sdk.NewDec(0)
+	otvl := sdk.ZeroDec()
 	// pass 1: iterate zones - set tvl & calc overall tvl
 	for _, zone := range k.icsKeeper.AllZones(ctx) {
 		// explicit memory referencing
@@ -169,10 +138,10 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 
 		tv, exists := tvs[zone.BaseDenom]
 		if !exists {
-			err := fmt.Errorf("unable to obtain token value for zone %s", zone.ChainId)
-			return err
+			k.Logger(ctx).Error(fmt.Sprintf("unable to obtain token value for zone %s", zone.ChainId))
+			continue
 		}
-		ztvl := sdk.NewDecFromInt(k.icsKeeper.GetDelegatedAmount(ctx, &zone).Amount).Mul(tv)
+		ztvl := sdk.NewDecFromInt(k.icsKeeper.GetDelegatedAmount(ctx, &zone).Amount.Add(k.icsKeeper.GetDelegationsInProcess(ctx, &zone))).Mul(tv)
 
 		zone.Tvl = ztvl
 		k.icsKeeper.SetZone(ctx, &zone)
@@ -209,8 +178,8 @@ func (k Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation 
 	return nil
 }
 
-// distributeToUsers sends the allocated user rewards to the user address.
-func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocation) error {
+// DistributeToUsers sends the allocated user rewards to the user address.
+func (k *Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.UserAllocation) error {
 	k.Logger(ctx).Info("distributeToUsers", "allocations", userAllocations)
 	hasError := false
 
@@ -236,6 +205,8 @@ func (k Keeper) distributeToUsers(ctx sdk.Context, userAllocations []userAllocat
 		if err != nil {
 			k.Logger(ctx).Error("distribute to user", "address", ua.Address, "coins", coins)
 			hasError = true
+		} else {
+			k.Logger(ctx).Info("distribute to user", "address", ua.Address, "coins", coins, "remaining", k.GetModuleBalance(ctx))
 		}
 	}
 

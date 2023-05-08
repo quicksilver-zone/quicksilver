@@ -47,48 +47,48 @@ type KeeperTestSuite struct {
 }
 
 func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
-	app, ok := chain.App.(*app.Quicksilver)
+	quicksilver, ok := chain.App.(*app.Quicksilver)
 	if !ok {
 		panic("not quicksilver app")
 	}
 
-	return app
+	return quicksilver
 }
 
 // SetupTest creates a coordinator with 2 test chains.
-func (suite *KeeperTestSuite) SetupTest() {
-	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)         // initializes 2 test chains
-	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1)) // convenience and readability
-	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2)) // convenience and readability
+func (s *KeeperTestSuite) SetupTest() {
+	s.coordinator = ibctesting.NewCoordinator(s.T(), 2)         // initializes 2 test chains
+	s.chainA = s.coordinator.GetChain(ibctesting.GetChainID(1)) // convenience and readability
+	s.chainB = s.coordinator.GetChain(ibctesting.GetChainID(2)) // convenience and readability
 
-	suite.path = newQuicksilverPath(suite.chainA, suite.chainB)
-	suite.coordinator.SetupConnections(suite.path)
+	s.path = newQuicksilverPath(s.chainA, s.chainB)
+	s.coordinator.SetupConnections(s.path)
 
-	suite.coordinator.CurrentTime = time.Now().UTC()
-	suite.coordinator.UpdateTime()
+	s.coordinator.CurrentTime = time.Now().UTC()
+	s.coordinator.UpdateTime()
 
-	suite.initTestZone()
+	s.initTestZone()
 
-	suite.coordinator.CommitNBlocks(suite.chainA, 10)
-	suite.coordinator.CommitNBlocks(suite.chainB, 10)
+	s.coordinator.CommitNBlocks(s.chainA, 10)
+	s.coordinator.CommitNBlocks(s.chainB, 10)
 }
 
-func (suite *KeeperTestSuite) initTestZone() {
+func (s *KeeperTestSuite) initTestZone() {
 	// test zone
 	zone := icstypes.Zone{
-		ConnectionId:  suite.path.EndpointB.ConnectionID,
-		ChainId:       suite.chainB.ChainID,
+		ConnectionId:  s.path.EndpointB.ConnectionID,
+		ChainId:       s.chainB.ChainID,
 		AccountPrefix: "cosmos",
 		LocalDenom:    "uqatom",
 		BaseDenom:     "uatom",
 	}
 
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 }
 
-func (suite *KeeperTestSuite) getZoneDrop() types.ZoneDrop {
+func (s *KeeperTestSuite) getZoneDrop() types.ZoneDrop {
 	zd := types.ZoneDrop{
-		ChainId:    suite.chainB.ChainID,
+		ChainId:    s.chainB.ChainID,
 		StartTime:  time.Now().Add(-5 * time.Minute),
 		Duration:   time.Hour,
 		Decay:      30 * time.Minute,
@@ -112,49 +112,52 @@ func (suite *KeeperTestSuite) getZoneDrop() types.ZoneDrop {
 	return zd
 }
 
-func (suite *KeeperTestSuite) compressClaimRecords(crs []types.ClaimRecord) []byte {
+func (s *KeeperTestSuite) compressClaimRecords(crs []types.ClaimRecord) []byte {
+	s.T().Helper()
+
 	bz, err := json.Marshal(&crs)
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	var buf bytes.Buffer
 	zw := zlib.NewWriter(&buf)
-	zw.Write(bz)
+	_, err = zw.Write(bz)
+	s.Require().NoError(err)
 
 	err = zw.Close()
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 
 	return buf.Bytes()
 }
 
-func (suite *KeeperTestSuite) initTestZoneDrop() {
-	zd := suite.getZoneDrop()
-	suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.SetZoneDrop(suite.chainA.GetContext(), zd)
-	suite.fundZoneDrop(zd.ChainId, zd.Allocation)
+func (s *KeeperTestSuite) initTestZoneDrop() {
+	zd := s.getZoneDrop()
+	s.GetQuicksilverApp(s.chainA).AirdropKeeper.SetZoneDrop(s.chainA.GetContext(), zd)
+	s.fundZoneDrop(zd.ChainId, zd.Allocation)
 }
 
-func (suite *KeeperTestSuite) fundZoneDrop(chainID string, amount uint64) {
-	app := suite.GetQuicksilverApp(suite.chainA)
-	ctx := suite.chainA.GetContext()
+func (s *KeeperTestSuite) fundZoneDrop(chainID string, amount uint64) {
+	quicksilver := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
 	coins := sdk.NewCoins(
 		sdk.NewCoin(
-			app.StakingKeeper.BondDenom(ctx),
+			quicksilver.StakingKeeper.BondDenom(ctx),
 			sdk.NewIntFromUint64(amount),
 		),
 	)
 	// fund zonedrop account
-	zdacc := app.AirdropKeeper.GetZoneDropAccountAddress(chainID)
+	zdacc := quicksilver.AirdropKeeper.GetZoneDropAccountAddress(chainID)
 
-	err := app.MintKeeper.MintCoins(ctx, coins)
-	suite.Require().NoError(err)
+	err := quicksilver.MintKeeper.MintCoins(ctx, coins)
+	s.Require().NoError(err)
 
-	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, zdacc, coins)
-	suite.Require().NoError(err)
+	err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, zdacc, coins)
+	s.Require().NoError(err)
 }
 
-func (suite *KeeperTestSuite) setClaimRecord(cr types.ClaimRecord) {
-	err := suite.GetQuicksilverApp(suite.chainA).AirdropKeeper.SetClaimRecord(suite.chainA.GetContext(), cr)
+func (s *KeeperTestSuite) setClaimRecord(cr types.ClaimRecord) {
+	err := s.GetQuicksilverApp(s.chainA).AirdropKeeper.SetClaimRecord(s.chainA.GetContext(), cr)
 	if err != nil {
-		suite.T().Logf("setClaimRecord error: %v", err)
+		s.T().Logf("setClaimRecord error: %v", err)
 	}
-	suite.Require().NoError(err)
+	s.Require().NoError(err)
 }

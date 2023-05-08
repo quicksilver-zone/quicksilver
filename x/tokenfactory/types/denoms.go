@@ -4,7 +4,11 @@ import (
 	fmt "fmt"
 	"strings"
 
+<<<<<<< HEAD
 	sdkerrors "cosmossdk.io/errors"
+=======
+	sdkioerrors "cosmossdk.io/errors"
+>>>>>>> origin/develop
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
@@ -16,13 +20,13 @@ const (
 	// and the structure of tokenfactory denoms.
 	MaxSubdenomLength = 44
 	MaxHrpLength      = 16
-	// MaxCreatorLength = 59 + MaxHrpLength
+	// MaxCreatorLength = 59 + MaxHrpLength.
 	MaxCreatorLength = 59 + MaxHrpLength
 )
 
 // GetTokenDenom constructs a denom string for tokens created by tokenfactory
-// based on an input creator address and a subdenom
-// The denom constructed is factory/{creator}/{subdenom}
+// based on an input creator address and a subdenom.
+// The denom constructed is factory/{creator}/{subdenom}.
 func GetTokenDenom(creator, subdenom string) (string, error) {
 	if len(subdenom) > MaxSubdenomLength {
 		return "", ErrSubdenomTooLong
@@ -38,9 +42,9 @@ func GetTokenDenom(creator, subdenom string) (string, error) {
 }
 
 // DeconstructDenom takes a token denom string and verifies that it is a valid
-// denom of the tokenfactory module, and is of the form `factory/{creator}/{subdenom}`
-// If valid, it returns the creator address and subdenom
-func DeconstructDenom(denom string) (creator string, subdenom string, err error) {
+// denom of the tokenfactory module, and is of the form `factory/{creator}/{subdenom}`.
+// If valid, it returns the creator address and subdenom.
+func DeconstructDenom(denom string) (creator, subdenom string, err error) {
 	err = sdk.ValidateDenom(denom)
 	if err != nil {
 		return "", "", err
@@ -48,17 +52,17 @@ func DeconstructDenom(denom string) (creator string, subdenom string, err error)
 
 	strParts := strings.Split(denom, "/")
 	if len(strParts) < 3 {
-		return "", "", sdkerrors.Wrapf(ErrInvalidDenom, "not enough parts of denom %s", denom)
+		return "", "", sdkioerrors.Wrapf(ErrInvalidDenom, "not enough parts of denom %s", denom)
 	}
 
 	if strParts[0] != ModuleDenomPrefix {
-		return "", "", sdkerrors.Wrapf(ErrInvalidDenom, "denom prefix is incorrect. Is: %s.  Should be: %s", strParts[0], ModuleDenomPrefix)
+		return "", "", sdkioerrors.Wrapf(ErrInvalidDenom, "denom prefix is incorrect. Is: %s.  Should be: %s", strParts[0], ModuleDenomPrefix)
 	}
 
 	creator = strParts[1]
 	creatorAddr, err := sdk.AccAddressFromBech32(creator)
 	if err != nil {
-		return "", "", sdkerrors.Wrapf(ErrInvalidDenom, "Invalid creator address (%s)", err)
+		return "", "", sdkioerrors.Wrapf(ErrInvalidDenom, "Invalid creator address (%s)", err)
 	}
 
 	// Handle the case where a denom has a slash in its subdenom. For example,
@@ -70,7 +74,7 @@ func DeconstructDenom(denom string) (creator string, subdenom string, err error)
 }
 
 // NewTokenFactoryDenomMintCoinsRestriction creates and returns a BankMintingRestrictionFn that only allows minting of
-// valid tokenfactory denoms
+// valid tokenfactory denoms.
 func NewTokenFactoryDenomMintCoinsRestriction() bankkeeper.MintingRestrictionFn {
 	return func(ctx sdk.Context, coinsToMint sdk.Coins) error {
 		for _, coin := range coinsToMint {

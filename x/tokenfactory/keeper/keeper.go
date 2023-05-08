@@ -3,17 +3,25 @@ package keeper
 import (
 	"fmt"
 
+<<<<<<< HEAD
 	"github.com/cometbft/cometbft/libs/log"
 
+=======
+>>>>>>> origin/develop
 	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+<<<<<<< HEAD
 
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 
+=======
+	sdk "github.com/cosmos/cosmos-sdk/types"
+>>>>>>> origin/develop
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/cometbft/cometbft/libs/log"
+
+	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 type (
@@ -28,7 +36,7 @@ type (
 	}
 )
 
-// NewKeeper returns a new instance of the x/tokenfactory keeper
+// NewKeeper returns a new instance of the x/tokenfactory keeper.
 func NewKeeper(
 	storeKey storetypes.StoreKey,
 	paramSpace paramtypes.Subspace,
@@ -50,24 +58,24 @@ func NewKeeper(
 	}
 }
 
-// Logger returns a logger for the x/tokenfactory module
+// Logger returns a logger for the x/tokenfactory module.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GetDenomPrefixStore returns the substore for a specific denom
+// GetDenomPrefixStore returns the substore for a specific denom.
 func (k Keeper) GetDenomPrefixStore(ctx sdk.Context, denom string) sdk.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetDenomPrefixStore(denom))
 }
 
-// GetCreatorPrefixStore returns the substore for a specific creator address
+// GetCreatorPrefixStore returns the substore for a specific creator address.
 func (k Keeper) GetCreatorPrefixStore(ctx sdk.Context, creator string) sdk.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetCreatorPrefix(creator))
 }
 
-// GetCreatorsPrefixStore returns the substore that contains a list of creators
+// GetCreatorsPrefixStore returns the substore that contains a list of creators.
 func (k Keeper) GetCreatorsPrefixStore(ctx sdk.Context) sdk.KVStore {
 	store := ctx.KVStore(k.storeKey)
 	return prefix.NewStore(store, types.GetCreatorsPrefix())

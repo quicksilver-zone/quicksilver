@@ -10,8 +10,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
-// BeginBlocker of epochs module
-func (k Keeper) BeginBlocker(ctx sdk.Context) {
+// BeginBlocker of epochs module.
+func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	logger := k.Logger(ctx)
 	k.IterateEpochInfo(ctx, func(_ int64, epochInfo types.EpochInfo) (stop bool) {

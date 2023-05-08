@@ -4,10 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+<<<<<<< HEAD
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
+=======
+	"math/rand"
+>>>>>>> origin/develop
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,17 +19,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/x/mint/client/cli"
 	"github.com/ingenuity-build/quicksilver/x/mint/keeper"
-
+	"github.com/ingenuity-build/quicksilver/x/mint/simulation"
 	"github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
-	// _ module.AppModuleSimulation = AppModule{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic defines the basic application module used by the mint module.
@@ -47,17 +54,22 @@ func (b AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 // DefaultGenesis returns default genesis state as raw bytes for the mint
 // module.
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesisState())
+	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
 // ValidateGenesis performs genesis state validation for the mint module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
+<<<<<<< HEAD
 	var data types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &data); err != nil {
+=======
+	var gs types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &gs); err != nil {
+>>>>>>> origin/develop
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
 	}
 
-	return types.ValidateGenesis(data)
+	return gs.Validate()
 }
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the mint module.
@@ -87,10 +99,10 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
+func NewAppModule(cdc codec.Codec, k keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{cdc: cdc},
-		keeper:         keeper,
+		keeper:         k,
 		authKeeper:     ak,
 		bankKeeper:     bk,
 	}
@@ -109,6 +121,16 @@ func (AppModule) QuerierRoute() string {
 	return types.QuerierRoute
 }
 
+<<<<<<< HEAD
+=======
+// LegacyQuerierHandler returns the x/mint module's sdk.Querier.
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
+		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
+	}
+}
+
+>>>>>>> origin/develop
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -142,14 +164,17 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 	return []abci.ValidatorUpdate{}
 }
 
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+
 // ___________________________________________________________________________
 
 // AppModuleSimulation functions
 
 // GenerateGenesisState creates a randomized GenState of the mint module.
-// func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-// 	simulation.RandomizedGenState(simState)
-// }
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
 
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
@@ -157,19 +182,16 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 }
 
 // RandomizedParams creates randomized mint param changes for the simulator.
-// func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.ParamChange {
-// 	return simulation.ParamChanges(r)
-// }
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return nil
+}
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
-// func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
-// 	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
-// }
+func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
+	sdr[types.StoreKey] = simulation.NewDecodeStore(am.cdc)
+}
 
 // WeightedOperations doesn't return any mint module operation.
 func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil
 }
-
-// ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }

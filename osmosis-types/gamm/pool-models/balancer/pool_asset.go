@@ -7,6 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -75,7 +76,7 @@ func validateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 	}
 
 	if len(assets) > 8 {
-		return sdkerrors.Wrapf(gamm.ErrTooManyPoolAssets, "%d", len(assets))
+		return sdkioerrors.Wrapf(gamm.ErrTooManyPoolAssets, "%d", len(assets))
 	}
 
 	assetExistsMap := map[string]bool{}
@@ -86,10 +87,10 @@ func validateUserSpecifiedPoolAssets(assets []PoolAsset) error {
 		}
 
 		if !asset.Token.IsValid() || !asset.Token.IsPositive() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
+			return sdkioerrors.Wrap(sdkerrors.ErrInvalidCoins, asset.Token.String())
 		}
 		if _, exists := assetExistsMap[asset.Token.Denom]; exists {
-			return sdkerrors.Wrapf(gamm.ErrTooFewPoolAssets, "pool asset %s already exists", asset.Token.Denom)
+			return sdkioerrors.Wrapf(gamm.ErrTooFewPoolAssets, "pool asset %s already exists", asset.Token.Denom)
 		}
 		assetExistsMap[asset.Token.Denom] = true
 	}

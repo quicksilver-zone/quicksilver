@@ -14,7 +14,7 @@ const (
 	RetryInterval = 25
 )
 
-// EndBlocker of interchainquery module
+// EndBlocker of interchainquery module.
 func (k Keeper) EndBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	_ = k.Logger(ctx)
@@ -22,12 +22,12 @@ func (k Keeper) EndBlocker(ctx sdk.Context) {
 	// emit events for periodic queries
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {
 		// if queryInfo.QueryType == "ibc.ClientUpdate" && queryInfo.LastEmission.AddRaw(1000).LTE(sdk.NewInt(ctx.BlockHeight())) {
-		// 	k.DeleteQuery(ctx, queryInfo.Id)
+		// 	k.DeleteQuery(ctx, queryInfo.ID)
 		// 	k.Logger(ctx).Error("Deleting stale query")
 		// 	return false
 		// }
 		if queryInfo.LastEmission.IsNil() || queryInfo.LastEmission.IsZero() || queryInfo.LastEmission.Add(queryInfo.Period).Equal(sdk.NewInt(ctx.BlockHeight())) {
-			k.Logger(ctx).Info("Interchainquery event emitted", "id", queryInfo.Id)
+			k.Logger(ctx).Debug("Interchainquery event emitted", "id", queryInfo.Id)
 			event := sdk.NewEvent(
 				sdk.EventTypeMessage,
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),

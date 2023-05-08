@@ -6,24 +6,25 @@ import (
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
-func (c Claim) ValidateBasic() error {
-	errors := make(map[string]error)
+// ValidateBasic performs stateless validation of a Claim.
+func (c *Claim) ValidateBasic() error {
+	errs := make(map[string]error)
 
 	_, err := sdk.AccAddressFromBech32(c.UserAddress)
 	if err != nil {
-		errors["UserAddress"] = err
+		errs["UserAddress"] = err
 	}
 
-	if len(c.ChainId) == 0 {
-		errors["ChainId"] = ErrUndefinedAttribute
+	if c.ChainId == "" {
+		errs["ChainID"] = ErrUndefinedAttribute
 	}
 
 	if c.Amount <= 0 {
-		errors["Amount"] = ErrNotPositive
+		errs["Amount"] = ErrNotPositive
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		return multierror.New(errs)
 	}
 
 	return nil

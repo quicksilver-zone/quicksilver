@@ -18,7 +18,7 @@ type Keeper struct {
 	hooks    types.EpochHooks
 }
 
-// NewKeeper returns a new instance of epochs Keeper
+// NewKeeper returns a new instance of epochs Keeper.
 func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) Keeper {
 	return Keeper{
 		cdc:      cdc,
@@ -26,7 +26,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey) Keeper {
 	}
 }
 
-// SetHooks set the epoch hooks
+// SetHooks set the epoch hooks.
 func (k *Keeper) SetHooks(eh types.EpochHooks) *Keeper {
 	if k.hooks != nil {
 		panic("cannot set epochs hooks twice")
@@ -38,6 +38,6 @@ func (k *Keeper) SetHooks(eh types.EpochHooks) *Keeper {
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }

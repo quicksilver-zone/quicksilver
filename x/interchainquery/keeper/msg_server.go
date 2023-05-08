@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -29,15 +30,23 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	q, found := k.GetQuery(ctx, msg.QueryId)
 
 	if !found {
-		k.Logger(ctx).Info("query not found", "QueryID", msg.QueryId)
+		k.Logger(ctx).Debug("query not found", "QueryID", msg.QueryId)
 
+		return &types.MsgSubmitQueryResponseResponse{}, nil
+	}
+
+	latest := k.GetLatestHeight(ctx, msg.ChainId)
+	if latest > uint64(msg.Height) && q.QueryType != "tendermint.Tx" && q.QueryType != "ibc.ClientUpdate" {
+		k.Logger(ctx).Error("ignoring stale query result", "id", q.Id, "type", q.QueryType, "latestHeight", latest, "msgHeight", msg.Height)
+		// technically this is an error, but will cause the entire tx to fail
+		// if we have one 'bad' message, so we can just no-op here.
 		return &types.MsgSubmitQueryResponseResponse{}, nil
 	}
 
 	// check if query was previously processed
 	// - indicated by query.LastHeight matching current Block Height;
 	if q.LastHeight.Int64() == ctx.BlockHeader().Height {
-		k.Logger(ctx).Info("ignoring duplicate query", "id", q.Id, "type", q.QueryType)
+		k.Logger(ctx).Debug("ignoring duplicate query", "id", q.Id, "type", q.QueryType)
 		// technically this is an error, but will cause the entire tx to fail
 		// if we have one 'bad' message, so we can just no-op here.
 		return &types.MsgSubmitQueryResponseResponse{}, nil
@@ -54,7 +63,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 	noDelete := false
 	// execute registered callbacks.
 
-	keys := []string{}
+	keys := make([]string, 0)
 	for k := range k.callbacks {
 		keys = append(keys, k)
 	}
@@ -69,7 +78,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 			callbackExecuted = true
 			if err != nil {
 				// not edge case: proceed with regular error handling!
-				if err != types.ErrSucceededNoDelete {
+				if !errors.Is(err, types.ErrSucceededNoDelete) {
 					k.Logger(ctx).Error("error in callback", "error", err, "msg", msg.QueryId, "result", msg.Result, "type", q.QueryType, "params", q.Request)
 					return nil, err
 				}
@@ -81,6 +90,8 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 			break
 		}
 	}
+
+	k.SetLatestHeight(ctx, msg.ChainId, uint64(msg.Height))
 
 	if !callbackExecuted && q.CallbackId != "" {
 		k.Logger(ctx).Error("callback expected but not found", "callbackId", q.CallbackId, "msg", msg.QueryId, "type", q.QueryType)

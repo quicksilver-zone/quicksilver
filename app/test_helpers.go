@@ -1,5 +1,7 @@
 package app
 
+// DONTCOVER
+
 import (
 	"encoding/json"
 	"testing"
@@ -26,9 +28,13 @@ import (
 	dbm "github.com/cometbft/cometbft-db"
 )
 
-type GenesisState map[string]json.RawMessage
-
+// EmptyAppOptions is a stub implementing AppOptions.
 type EmptyAppOptions struct{}
+
+// Get implements AppOptions.
+func (ao EmptyAppOptions) Get(_ string) interface{} {
+	return nil
+}
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // Quicksilver testing.
@@ -51,8 +57,11 @@ var DefaultConsensusParams = &tmproto.ConsensusParams{
 
 // Setup initializes a new Quicksilver. A Nop logger is set in Quicksilver.
 func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
+	t.Helper()
+
 	privVal := mock.NewPV()
-	pubKey, _ := privVal.GetPubKey()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
 
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
@@ -81,13 +90,13 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		5,
 		MakeEncodingConfig(),
 		wasm.EnableAllProposals,
-		simapp.EmptyAppOptions{},
-		GetWasmOpts(simapp.EmptyAppOptions{}),
+		EmptyAppOptions{},
+		GetWasmOpts(EmptyAppOptions{}),
 		false,
 	)
 
 	genesisState := NewDefaultGenesisState()
-	genesisState = genesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
+	genesisState = GenesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	if !isCheckTx {
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
@@ -110,13 +119,15 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 }
 
 func GetAppWithContext(t *testing.T, init bool) (*Quicksilver, sdk.Context) {
+	t.Helper()
+
 	app := Setup(t, !init)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{Height: 1, ChainID: "mercury-1", Time: time.Now().UTC()})
 	return app, ctx
 }
 
-// SetupTestingApp initializes the IBC-go testing application
-func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
+// SetupTestingApp initializes the IBC-go testing application.
+func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]json.RawMessage) {
 	db := dbm.NewMemDB()
 	app := NewQuicksilver(
 		log.NewNopLogger(),
@@ -128,18 +139,21 @@ func SetupTestingApp() (ibctesting.TestingApp, map[string]json.RawMessage) {
 		5,
 		MakeEncodingConfig(),
 		wasm.EnableAllProposals,
-		simapp.EmptyAppOptions{},
-		GetWasmOpts(simapp.EmptyAppOptions{}),
+		EmptyAppOptions{},
+		GetWasmOpts(EmptyAppOptions{}),
 		true, // set mock state to true
 	)
 	return app, NewDefaultGenesisState()
 }
 
-func genesisStateWithValSet(t *testing.T,
+// GenesisStateWithValSet creates a quicksilver genesis state with the given validator set.
+func GenesisStateWithValSet(t *testing.T,
 	app *Quicksilver, genesisState GenesisState,
 	valSet *tmtypes.ValidatorSet, genAccs []authtypes.GenesisAccount,
 	balances ...banktypes.Balance,
 ) GenesisState {
+	t.Helper()
+
 	// set genesis accounts
 	authGenesis := authtypes.NewGenesisState(authtypes.DefaultParams(), genAccs)
 	genesisState[authtypes.ModuleName] = app.AppCodec().MustMarshalJSON(authGenesis)

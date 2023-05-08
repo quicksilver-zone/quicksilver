@@ -98,7 +98,7 @@ services:
       - osmosisd
       - start
   hermes:
-    image: quicksilverzone/hermes:v1.0.0
+    image: quicksilverzone/hermes:v1.4.0
     hostname: hermes
     volumes:
       - ./data/hermes:/hermes/.hermes
@@ -110,7 +110,7 @@ services:
       context: .
       dockerfile: Dockerfile.hermes
   icq:
-    image: quicksilverzone/interchain-queries:v0.6.2
+    image: quicksilverzone/interchain-queries:v0.8.7
     volumes:
       - ./data/icq:/icq/.icq
     command:

@@ -9,7 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+<<<<<<< HEAD
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
@@ -20,6 +22,8 @@ import (
 	"github.com/spf13/cast"
 
 	"cosmossdk.io/simapp"
+=======
+>>>>>>> origin/develop
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -29,27 +33,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+<<<<<<< HEAD
 	"github.com/cosmos/cosmos-sdk/store/streaming"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+=======
+	"cosmossdk.io/simapp"
+>>>>>>> origin/develop
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	"github.com/cosmos/cosmos-sdk/x/authz"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
-	"github.com/cosmos/cosmos-sdk/x/bank"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
+<<<<<<< HEAD
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -119,37 +116,24 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
+=======
+	"github.com/cosmos/cosmos-sdk/x/crisis"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/spf13/cast"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmos "github.com/cometbft/cometbft/libs/os"
+	dbm "github.com/cometbft/cometbft-db"
+>>>>>>> origin/develop
 
-	"github.com/ingenuity-build/quicksilver/x/claimsmanager"
-	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
-	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-
-	"github.com/ingenuity-build/quicksilver/x/epochs"
-	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
-	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
-
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking"
-	interchainstakingclient "github.com/ingenuity-build/quicksilver/x/interchainstaking/client"
-	interchainstakingkeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-
-	"github.com/ingenuity-build/quicksilver/x/interchainquery"
-	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-
-	"github.com/ingenuity-build/quicksilver/x/participationrewards"
-	participationrewardsclient "github.com/ingenuity-build/quicksilver/x/participationrewards/client"
-	participationrewardskeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
-	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-
-	"github.com/ingenuity-build/quicksilver/x/airdrop"
-	airdropkeeper "github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
+	"github.com/ingenuity-build/quicksilver/app/keepers"
+	"github.com/ingenuity-build/quicksilver/docs"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
-
-	tokenfactorykeeper "github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-
-	"github.com/CosmWasm/wasmd/x/wasm"
+	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func Init() {
@@ -161,14 +145,15 @@ func Init() {
 }
 
 const (
-	// Name defines the application binary name
+	// Name defines the application binary name.
 	Name = "quicksilverd"
 )
 
 var (
-	// DefaultNodeHome default home directories for the application daemon
+	// DefaultNodeHome default home directories for the application daemon.
 	DefaultNodeHome string
 
+<<<<<<< HEAD
 	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
 	// and genesis verification.
@@ -229,6 +214,9 @@ var (
 	}
 
 	// module accounts that are allowed to receive tokens
+=======
+	// module accounts that are allowed to receive tokens.
+>>>>>>> origin/develop
 	allowedReceivingModAcc = map[string]bool{
 		distrtypes.ModuleName:             true,
 		interchainstakingtypes.ModuleName: true,
@@ -244,11 +232,19 @@ var (
 // Quicksilver implements an extended ABCI application.
 type Quicksilver struct {
 	*baseapp.BaseApp
+<<<<<<< HEAD
 	legacyAmino       *codec.LegacyAmino
+=======
+	keepers.AppKeepers
+
+	// encoding
+	cdc               *codec.LegacyAmino
+>>>>>>> origin/develop
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
 
+<<<<<<< HEAD
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
 	tkeys   map[string]*storetypes.TransientStoreKey
@@ -292,6 +288,9 @@ type Quicksilver struct {
 
 	WasmKeeper       wasm.Keeper
 	scopedWasmKeeper capabilitykeeper.ScopedKeeper //nolint:unused //TODO: we can use this for testing
+=======
+	invCheckPeriod uint
+>>>>>>> origin/develop
 
 	// the module manager
 	ModuleManager *module.Manager
@@ -340,6 +339,7 @@ func NewQuicksilver(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
+<<<<<<< HEAD
 	keys := sdk.NewKVStoreKeys(
 		// SDK keys
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey,
@@ -371,12 +371,15 @@ func NewQuicksilver(
 		os.Exit(1)
 	}
 
+=======
+>>>>>>> origin/develop
 	app := &Quicksilver{
 		BaseApp:           bApp,
 		legacyAmino:       legacyAmino,
 		appCodec:          appCodec,
 		txConfig:          txConfig,
 		interfaceRegistry: interfaceRegistry,
+<<<<<<< HEAD
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
@@ -550,302 +553,66 @@ func NewQuicksilver(
 	app.ParticipationRewardsKeeper.SetEpochsKeeper(app.EpochsKeeper)
 
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
-	wasmDir := filepath.Join(homePath, "data")
+=======
+		invCheckPeriod:    invCheckPeriod,
+	}
 
+>>>>>>> origin/develop
+	wasmDir := filepath.Join(homePath, "data")
 	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
 	if err != nil {
 		panic("error while reading wasm config: " + err.Error())
 	}
 
-	// The last arguments can contain custom message handlers, and custom query handlers,
-	// if we want to allow any custom callbacks
-	supportedFeatures := "iterator,staking,stargate,osmosis"
-	wasmOpts = append(wasmbinding.RegisterCustomPlugins(&app.BankKeeper, app.TokenFactoryKeeper), wasmOpts...)
-	wasmOpts = append(wasmbinding.RegisterStargateQueries(*bApp.GRPCQueryRouter(), appCodec), wasmOpts...)
-
-	app.WasmKeeper = wasm.NewKeeper(
+	app.AppKeepers = keepers.NewAppKeepers(
 		appCodec,
-		keys[wasm.StoreKey],
-		app.GetSubspace(wasm.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		app.DistrKeeper,
-		app.IBCKeeper.ChannelKeeper,
-		&app.IBCKeeper.PortKeeper,
-		scopedWasmKeeper,
-		app.TransferKeeper,
-		app.MsgServiceRouter(),
-		app.GRPCQueryRouter(),
+		bApp,
+		cdc,
+		maccPerms,
+		app.BlockedAddrs(),
+		skipUpgradeHeights,
+		mock,
+		homePath,
+		invCheckPeriod,
+		appOpts,
 		wasmDir,
 		wasmConfig,
-		supportedFeatures,
-		wasmOpts...,
+		enabledProposals,
+		wasmOpts,
 	)
-
-	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, app.ICAControllerKeeper)
-	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
-
-	// Create static IBC router, add transfer route, then set and seal it
-	ibcRouter := porttypes.NewRouter()
-	ibcRouter.
-		AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
-		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper)).
-		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
-		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(interchainstakingtypes.ModuleName, icaControllerIBCModule)
-	app.IBCKeeper.SetRouter(ibcRouter)
-
-	// create evidence keeper with router
-	evidenceKeeper := evidencekeeper.NewKeeper(
-		appCodec, keys[evidencetypes.StoreKey], &app.StakingKeeper, app.SlashingKeeper,
-	)
-	// If evidence needs to be handled for the app, set routes in router here and seal
-	app.EvidenceKeeper = *evidenceKeeper
-
-	govConfig := govtypes.DefaultConfig()
-
-	// register the proposal types
-	govRouter := govv1beta1.NewRouter()
-
-	// The gov proposal types can be individually enabled
-	if len(enabledProposals) != 0 {
-		govRouter.AddRoute(wasm.RouterKey, wasm.NewWasmProposalHandler(app.WasmKeeper, enabledProposals))
-	}
-
-	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper)).
-		AddRoute(distrtypes.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)).
-		AddRoute(ibchost.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.IBCKeeper.ClientKeeper)).
-		AddRoute(interchainstakingtypes.RouterKey, interchainstaking.NewProposalHandler(app.InterchainstakingKeeper)).
-		AddRoute(participationrewardstypes.RouterKey, participationrewards.NewProposalHandler(app.ParticipationRewardsKeeper))
-	// add custom proposal routes here.
-
-	app.GovKeeper = govkeeper.NewKeeper(
-		appCodec, keys[govtypes.StoreKey], app.GetSubspace(govtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
-		&stakingKeeper, govRouter, app.MsgServiceRouter(), govConfig,
-	)
-
-	app.AirdropKeeper = airdropkeeper.NewKeeper(
-		appCodec,
-		keys[airdroptypes.StoreKey],
-		app.GetSubspace(airdroptypes.ModuleName),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		app.GovKeeper,
-		app.InterchainstakingKeeper,
-		app.InterchainQueryKeeper,
-		app.ParticipationRewardsKeeper,
-		proofOpsFn,
-	)
-	airdropModule := airdrop.NewAppModule(appCodec, app.AirdropKeeper)
 
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
+	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
 
-	// NOTE: Any module instantiated in the module manager that is later modified
-	// must be passed by reference here.
-	app.mm = module.NewManager(
-		// SDK app modules
-		genutil.NewAppModule(
-			app.AccountKeeper, app.StakingKeeper, app.BaseApp.DeliverTx,
-			encodingConfig.TxConfig,
-		),
-		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
-		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
-		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-		crisis.NewAppModule(&app.CrisisKeeper, skipGenesisInvariants),
-		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-		mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, app.BankKeeper),
-		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-		upgrade.NewAppModule(app.UpgradeKeeper),
-		evidence.NewAppModule(app.EvidenceKeeper),
-		params.NewAppModule(app.ParamsKeeper),
-		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-		// ibc modules
-		ibc.NewAppModule(app.IBCKeeper),
-		transferModule,
-		icaModule,
-		// Quicksilver app modules
-		claimsmanagerModule,
-		epochs.NewAppModule(appCodec, app.EpochsKeeper),
-		interchainstakingModule,
-		interchainQueryModule,
-		participationrewardsModule,
-		airdropModule,
-		tokenfactory.NewAppModule(*app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
-		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-	)
-
-	// During begin block slashing happens after distr.BeginBlocker so that
-	// there is nothing left over in the validator fee pool, so as to keep the
-	// CanWithdrawInvariant invariant.
-	// NOTE: upgrade module must go first to handle software upgrades.
-	// NOTE: staking module is required if HistoricalEntries param > 0.
-	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
-	app.mm.SetOrderBeginBlockers(
-		upgradetypes.ModuleName,
-		capabilitytypes.ModuleName,
-		// Note: epochs' begin should be "real" start of epochs, we keep epochs beginblock at the beginning
-		epochstypes.ModuleName,
-		distrtypes.ModuleName,
-		minttypes.ModuleName,
-		slashingtypes.ModuleName,
-		evidencetypes.ModuleName,
-		stakingtypes.ModuleName,
-		ibchost.ModuleName,
-		interchainstakingtypes.ModuleName,
-		interchainquerytypes.ModuleName, // check ordering here.
-		// no-op modules
-		ibctransfertypes.ModuleName,
-		icatypes.ModuleName,
-		claimsmanagertypes.ModuleName,
-		participationrewardstypes.ModuleName,
-		airdroptypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		govtypes.ModuleName,
-		crisistypes.ModuleName,
-		genutiltypes.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
-		paramstypes.ModuleName,
-		vestingtypes.ModuleName,
-		tokenfactorytypes.ModuleName,
-		wasm.ModuleName,
-	)
-
-	// NOTE: fee market module must go last in order to retrieve the block gas used.
-	app.mm.SetOrderEndBlockers(
-		crisistypes.ModuleName,
-		govtypes.ModuleName,
-		stakingtypes.ModuleName,
-		// Note: epochs' endblock should be "real" end of epochs, we keep epochs endblock at the end
-		interchainquerytypes.ModuleName,
-		epochstypes.ModuleName,
-		// no-op modules
-		ibchost.ModuleName,
-		ibctransfertypes.ModuleName,
-		icatypes.ModuleName,
-		capabilitytypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		distrtypes.ModuleName,
-		slashingtypes.ModuleName,
-		minttypes.ModuleName,
-		genutiltypes.ModuleName,
-		evidencetypes.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
-		paramstypes.ModuleName,
-		upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
-		claimsmanagertypes.ModuleName,
-		interchainstakingtypes.ModuleName,
-		participationrewardstypes.ModuleName,
-		airdroptypes.ModuleName,
-		tokenfactorytypes.ModuleName,
-		wasm.ModuleName,
-		// currently no-op.
-	)
-
-	// NOTE: The genutils module must occur after staking so that pools are
-	// properly initialized with tokens from genesis accounts.
-	// NOTE: Capability module must occur first so that it can initialize any capabilities
-	// so that other modules that want to create or claim capabilities afterwards in InitChain
-	// can do so safely.
-	app.mm.SetOrderInitGenesis(
-		// SDK modules
-		capabilitytypes.ModuleName,
-		authtypes.ModuleName,
-		banktypes.ModuleName,
-		distrtypes.ModuleName,
-		stakingtypes.ModuleName,
-		slashingtypes.ModuleName,
-		govtypes.ModuleName,
-		minttypes.ModuleName,
-		ibchost.ModuleName,
-		genutiltypes.ModuleName,
-		evidencetypes.ModuleName,
-		ibctransfertypes.ModuleName,
-		authz.ModuleName,
-		feegrant.ModuleName,
-		paramstypes.ModuleName,
-		upgradetypes.ModuleName,
-		vestingtypes.ModuleName,
-		icatypes.ModuleName,
-		// Quicksilver modules
-		epochstypes.ModuleName,
-		claimsmanagertypes.ModuleName,
-		interchainstakingtypes.ModuleName,
-		interchainquerytypes.ModuleName,
-		participationrewardstypes.ModuleName,
-		airdroptypes.ModuleName,
-		tokenfactorytypes.ModuleName,
-		// wasmd
-		wasm.ModuleName,
-		// NOTE: crisis module must go at the end to check for invariants on each module
-		crisistypes.ModuleName,
-	)
+	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
+	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
+	app.mm.SetOrderInitGenesis(orderInitBlockers()...)
 
 	app.mm.RegisterInvariants(&app.CrisisKeeper)
 	app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	// handle upgrades here
-	setUpgradeHandlers(app)
-
 	app.mm.RegisterServices(app.configurator)
 
 	// // add test gRPC service for testing gRPC queries in isolation
 	// // testdata.RegisterTestServiceServer(app.GRPCQueryRouter(), testdata.TestServiceImpl{})
 
-	// // create the simulation manager and define the order of the modules for deterministic simulations
-
-	// // NOTE: this is not required apps that don't use the simulator for fuzz testing
-	// // transactions
-	// app.sm = module.NewSimulationManager(
-	// 	auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts),
-	// 	bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper),
-	// 	capability.NewAppModule(appCodec, *app.CapabilityKeeper),
-	// 	gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper),
-	// 	mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper),
-	// 	staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper),
-	// 	distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-	// 	slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper),
-	// 	params.NewAppModule(app.ParamsKeeper),
-	// 	evidence.NewAppModule(app.EvidenceKeeper),
-	// 	feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
-	// 	authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
-	// 	// ibc modules
-	// 	ibc.NewAppModule(app.IBCKeeper),
-	// 	transferModule,
-	// 	//icaModule,
-	// 	// Quicksilver app modules
-	// 	epochs.NewAppModule(appCodec, app.EpochsKeeper),
-	// 	interchainstakingModule,
-	// )
-
-	// app.sm.RegisterStoreDecoders()
+	// create the simulation manager and define the order of the modules for deterministic simulations
+	//
+	// NOTE: this is not required apps that don't use the simulator for fuzz testing
+	// transactions
+	app.sm = module.NewSimulationManager(simulationModules(app, encodingConfig)...)
+	app.sm.RegisterStoreDecoders()
 
 	// initialize stores
-	app.MountKVStores(keys)
-	app.MountTransientStores(tkeys)
-	app.MountMemoryStores(memKeys)
+	app.MountKVStores(app.GetKVStoreKey())
+	app.MountTransientStores(app.GetTransientStoreKey())
+	app.MountMemoryStores(app.GetMemoryStoreKey())
 
 	// initialize BaseApp
-	app.SetInitChainer(app.InitChainer)
-	app.SetBeginBlocker(app.BeginBlocker)
-
 	options := HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{
 			AccountKeeper:   app.AccountKeeper,
@@ -855,12 +622,18 @@ func NewQuicksilver(
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
 		WasmConfig:        wasmConfig,
-		TxCounterStoreKey: keys[wasm.StoreKey],
+		TxCounterStoreKey: app.GetKey(wasm.StoreKey),
 		IBCKeeper:         app.IBCKeeper,
 	}
 
+	app.SetInitChainer(app.InitChainer)
+	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetAnteHandler(NewAnteHandler(options))
 	app.SetEndBlocker(app.EndBlocker)
+
+	// handle upgrades here
+	app.setUpgradeHandlers()
+	app.setUpgradeStoreLoaders()
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
@@ -868,44 +641,39 @@ func NewQuicksilver(
 		}
 	}
 
-	app.ScopedIBCKeeper = scopedIBCKeeper
-	app.ScopedTransferKeeper = scopedTransferKeeper
-	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
-	app.ScopedICAHostKeeper = scopedICAHostKeeper
-
 	// Finally start the tpsCounter.
 	app.tpsCounter = newTPSCounter(logger)
 	go func() {
 		// Unfortunately golangci-lint is so pedantic
 		// so we have to ignore this error explicitly.
-		_ = app.tpsCounter.start(context.Background())
+		_ = app.tpsCounter.start(context.Background()) //nolint:errcheck
 	}()
 
 	return app
 }
 
-// Name returns the name of the App
+// Name returns the name of the App.
 func (app *Quicksilver) Name() string { return app.BaseApp.Name() }
 
-// BeginBlocker updates every begin block
+// BeginBlocker updates every begin block.
 func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
 	if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() == 235001 {
 		zone, found := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
 		if !found {
 			panic("ERROR: unable to find expected stargaze-1 zone")
 		}
-		app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zone)
+		app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 	}
 
 	return app.mm.BeginBlock(ctx, req)
 }
 
-// EndBlocker updates every end block
+// EndBlocker updates every end block.
 func (app *Quicksilver) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
 	return app.mm.EndBlock(ctx, req)
 }
 
-// We are intentionally decomposing the DeliverTx method so as to calculate the transactions per second.
+// DeliverTx calls BaseApp.DeliverTx and calculates transactions per second.
 func (app *Quicksilver) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseDeliverTx) {
 	defer func() {
 		// TODO: Record the count along with the code and or reason so as to display
@@ -920,9 +688,9 @@ func (app *Quicksilver) DeliverTx(req abci.RequestDeliverTx) (res abci.ResponseD
 	return app.BaseApp.DeliverTx(req)
 }
 
-// InitChainer updates at chain initialization
+// InitChainer updates at chain initialization.
 func (app *Quicksilver) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
-	var genesisState simapp.GenesisState
+	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
@@ -930,7 +698,7 @@ func (app *Quicksilver) InitChainer(ctx sdk.Context, req abci.RequestInitChain) 
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
-// LoadHeight loads state at a particular height
+// LoadHeight loads state at a particular height.
 func (app *Quicksilver) LoadHeight(height int64) error {
 	return app.LoadVersion(height)
 }
@@ -972,30 +740,9 @@ func (app *Quicksilver) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-// InterfaceRegistry returns Quicksilver's InterfaceRegistry
+// InterfaceRegistry returns Quicksilver's InterfaceRegistry.
 func (app *Quicksilver) InterfaceRegistry() types.InterfaceRegistry {
 	return app.interfaceRegistry
-}
-
-// GetKey returns the KVStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *Quicksilver) GetKey(storeKey string) *storetypes.KVStoreKey {
-	return app.keys[storeKey]
-}
-
-// GetTKey returns the TransientStoreKey for the provided store key.
-//
-// NOTE: This is solely to be used for testing purposes.
-func (app *Quicksilver) GetTKey(storeKey string) *storetypes.TransientStoreKey {
-	return app.tkeys[storeKey]
-}
-
-// GetMemKey returns the MemStoreKey for the provided mem key.
-//
-// NOTE: This is solely used for testing purposes.
-func (app *Quicksilver) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
-	return app.memKeys[storeKey]
 }
 
 // GetSubspace returns a param subspace for a given module name.
@@ -1006,7 +753,7 @@ func (app *Quicksilver) GetSubspace(moduleName string) paramstypes.Subspace {
 	return subspace
 }
 
-// SimulationManager implements the SimulationApp interface
+// SimulationManager implements the SimulationApp interface.
 func (app *Quicksilver) SimulationManager() *module.SimulationManager {
 	return app.sm
 }
@@ -1023,9 +770,10 @@ func (app *Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.A
 
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
-	// register swagger API from root so that other applications can override easily
+	// register swagger API
 	if apiConfig.Swagger {
-		RegisterSwaggerAPI(clientCtx, apiSvr.Router)
+		apiSvr.Router.Handle("/swagger.yml", http.FileServer(http.FS(docs.Swagger)))
+		apiSvr.Router.HandleFunc("/", docs.Handler(Name, "/swagger.yml"))
 	}
 }
 
@@ -1071,18 +819,7 @@ func (app *Quicksilver) GetTxConfig() client.TxConfig {
 	return cfg.TxConfig
 }
 
-// RegisterSwaggerAPI registers swagger route with API Server
-func RegisterSwaggerAPI(_ client.Context, rtr *mux.Router) {
-	statikFS, err := fs.New()
-	if err != nil {
-		panic(err)
-	}
-
-	staticServer := http.FileServer(statikFS)
-	rtr.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", staticServer))
-}
-
-// GetMaccPerms returns a copy of the module account permissions
+// GetMaccPerms returns a copy of the module account permissions.
 func GetMaccPerms() map[string][]string {
 	dupMaccPerms := make(map[string][]string)
 	for k, v := range maccPerms {
@@ -1090,39 +827,6 @@ func GetMaccPerms() map[string][]string {
 	}
 
 	return dupMaccPerms
-}
-
-// initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(
-	appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey,
-) paramskeeper.Keeper {
-	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
-
-	// SDK subspaces
-	paramsKeeper.Subspace(authtypes.ModuleName)
-	paramsKeeper.Subspace(banktypes.ModuleName)
-	paramsKeeper.Subspace(stakingtypes.ModuleName)
-	paramsKeeper.Subspace(distrtypes.ModuleName)
-	paramsKeeper.Subspace(minttypes.ModuleName)
-	paramsKeeper.Subspace(slashingtypes.ModuleName)
-	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable())
-	paramsKeeper.Subspace(crisistypes.ModuleName)
-	// ibc subspaces
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)
-	paramsKeeper.Subspace(icahosttypes.SubModuleName)
-	paramsKeeper.Subspace(ibchost.ModuleName)
-	// quicksilver subspaces
-	paramsKeeper.Subspace(claimsmanagertypes.ModuleName)
-	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
-	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
-	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
-	paramsKeeper.Subspace(airdroptypes.ModuleName)
-	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
-	// wasm subspace
-	paramsKeeper.Subspace(wasm.ModuleName)
-
-	return paramsKeeper
 }
 
 func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
@@ -1136,9 +840,9 @@ func GetWasmOpts(appOpts servertypes.AppOptions) []wasm.Option {
 	return wasmOpts
 }
 
-const (
+// PROPOSALS
 
-	// PROPOSALS
+const (
 	ProposalsEnabled = "true"
 	// If set to non-empty string it must be comma-separated list of values that are all a subset
 	// of "EnableAllProposals" (takes precedence over ProposalsEnabled)

@@ -10,11 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	// "github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
-// GetTxCmd returns the transaction commands for this module
+// GetTxCmd returns the transaction commands for this module.
 func GetTxCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:                        types.ModuleName,
@@ -35,7 +34,7 @@ func GetTxCmd() *cobra.Command {
 	return cmd
 }
 
-// NewCreateDenomCmd broadcast MsgCreateDenom
+// NewCreateDenomCmd broadcast MsgCreateDenom.
 func NewCreateDenomCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create-denom [subdenom] [flags]",
@@ -62,7 +61,7 @@ func NewCreateDenomCmd() *cobra.Command {
 	return cmd
 }
 
-// NewMintCmd broadcast MsgMint
+// NewMintCmd broadcast MsgMint.
 func NewMintCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mint [amount] [flags]",
@@ -94,7 +93,7 @@ func NewMintCmd() *cobra.Command {
 	return cmd
 }
 
-// NewBurnCmd broadcast MsgBurn
+// NewBurnCmd broadcast MsgBurn.
 func NewBurnCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "burn [amount] [flags]",
@@ -163,7 +162,7 @@ func NewBurnCmd() *cobra.Command {
 // 	return cmd
 // }
 
-// NewChangeAdminCmd broadcast MsgChangeAdmin
+// NewChangeAdminCmd broadcast MsgChangeAdmin.
 func NewChangeAdminCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "change-admin [denom] [new-admin-address] [flags]",

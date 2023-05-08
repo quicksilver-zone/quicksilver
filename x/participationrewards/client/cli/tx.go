@@ -63,7 +63,7 @@ func GetSubmitClaimTxCmd() *cobra.Command {
 
 			var proofs []*cmtypes.Proof
 
-			if err = json.Unmarshal(contents, &proofs); err != nil {
+			if err := json.Unmarshal(contents, &proofs); err != nil {
 				return err
 			}
 
@@ -78,7 +78,7 @@ func GetSubmitClaimTxCmd() *cobra.Command {
 	return cmd
 }
 
-// GetCmdAddProtocolDataProposal implements the command to submit a add protocol data proposal
+// GetCmdAddProtocolDataProposal implements the command to submit a add protocol data proposal.
 func GetCmdAddProtocolDataProposal() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "add-protocol-data [proposal-file]",
@@ -146,7 +146,7 @@ func ParseAddProtocolDataProposal(cdc codec.JSONCodec, proposalFile string) (typ
 		return proposal, err
 	}
 
-	if err = cdc.UnmarshalJSON(contents, &proposal); err != nil {
+	if err := cdc.UnmarshalJSON(contents, &proposal); err != nil {
 		return proposal, err
 	}
 

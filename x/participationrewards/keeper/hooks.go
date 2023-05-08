@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"errors"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -8,13 +10,18 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
+<<<<<<< HEAD
 var epochsDeferred = int64(3)
 
 func (k Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) {
+=======
+func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
+	return nil
+>>>>>>> origin/develop
 }
 
-func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	if epochIdentifier == "epoch" {
+func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
+	if epochIdentifier == epochstypes.EpochIdentifierEpoch {
 		k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, data types.ProtocolData) (stop bool) {
 			blockQuery := tmservice.GetLatestBlockRequest{}
 			bz := k.cdc.MustMarshal(&blockQuery)
@@ -23,7 +30,10 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			if err != nil {
 				k.Logger(ctx).Error("Error unmarshalling protocol data")
 			}
-			connectionData := iConnectionData.(types.ConnectionProtocolData)
+			connectionData, _ := iConnectionData.(*types.ConnectionProtocolData)
+			if connectionData.ChainID == ctx.ChainID() {
+				return false
+			}
 
 			k.icsKeeper.ICQKeeper.MakeRequest(
 				ctx,
@@ -39,14 +49,20 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			return false
 		})
 
+		k.Logger(ctx).Info("setting self connection data...")
+		err := k.UpdateSelfConnectionData(ctx)
+		if err != nil {
+			panic(err)
+		}
+
 		k.Logger(ctx).Info("distribute participation rewards...")
 
-		allocation, err := GetRewardsAllocations(
+		allocation, err := types.GetRewardsAllocations(
 			k.GetModuleBalance(ctx),
 			k.GetParams(ctx).DistributionProportions,
 		)
 		if err != nil {
-			if err == types.ErrNothingToAllocate {
+			if errors.Is(err, types.ErrNothingToAllocate) {
 				k.Logger(ctx).Info(err.Error())
 			} else {
 				k.Logger(ctx).Error(err.Error())
@@ -58,65 +74,56 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 			sub.Hooks(ctx, k)
 		}
 
-		if epochNumber < epochsDeferred {
-			k.Logger(ctx).Info("defer...", "epoch", epochNumber)
-
-			// create snapshot of current intents for the next epoch boundary
-			// requires intents to be set, no intents no snapshot...
-			// further snapshots will be taken during
-			// ValidatorSelectionRewardsCallback;
-			for _, zone := range k.icsKeeper.AllZones(ctx) {
-				zone := zone
-				for _, di := range k.icsKeeper.AllIntents(ctx, zone, false) {
-					k.icsKeeper.SetIntent(ctx, zone, di, true)
-				}
-			}
-
-			return
-		}
-
 		tvs, err := k.calcTokenValues(ctx)
 		if err != nil {
 			k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
-			return
+			return nil
 		}
 
+<<<<<<< HEAD
 		if allocation == nil {
 			// if allocation is unset, then return early to avoid panic
 			return
 		}
 
 		if err := k.allocateZoneRewards(ctx, tvs, *allocation); err != nil {
+=======
+		if err := k.AllocateZoneRewards(ctx, tvs, *allocation); err != nil {
+>>>>>>> origin/develop
 			k.Logger(ctx).Error(err.Error())
+			return err
 		}
 
 		if !allocation.Lockup.IsZero() {
-			// at genesis lockup will be disable, and enabled when ICS is used.
-			if err := k.allocateLockupRewards(ctx, allocation.Lockup); err != nil {
+			// at genesis lockup will be disabled, and enabled when ICS is used.
+			if err := k.AllocateLockupRewards(ctx, allocation.Lockup); err != nil {
 				k.Logger(ctx).Error(err.Error())
+				return err
 			}
 		}
 	}
+	return nil
 }
 
 // ___________________________________________________________________________________________________
 
-// Hooks wrapper struct for incentives keeper
+// Hooks wrapper struct for incentives keeper.
 type Hooks struct {
-	k Keeper
+	k *Keeper
 }
 
 var _ epochstypes.EpochHooks = Hooks{}
 
-func (k Keeper) Hooks() Hooks {
+func (k *Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-// epochs hooks
-func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
+// epochs hooks.
+
+func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.BeforeEpochStart(ctx, epochIdentifier, epochNumber)
 }
 
-func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
-	h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
+	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }

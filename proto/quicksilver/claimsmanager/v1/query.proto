@@ -1,10 +1,10 @@
 syntax = "proto3";
 package quicksilver.claimsmanager.v1;
 
-import "gogoproto/gogo.proto";
-import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
 import "quicksilver/claimsmanager/v1/claimsmanager.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/claimsmanager/types";
@@ -34,13 +34,13 @@ service Query {
 
 // QueryClaimsRequest is the request type for the Query/Claims RPC method.
 message QueryClaimsRequest {
-  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
-  string address = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
+  string address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
 // QueryClaimsResponse is the response type for the Query/Claims RPC method.
 message QueryClaimsResponse {
-  repeated Claim claims = 1 [ (gogoproto.nullable) = false ];
+  repeated Claim claims = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

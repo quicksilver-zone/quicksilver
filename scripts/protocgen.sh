@@ -19,4 +19,4 @@ cd ..
 cp -r github.com/ingenuity-build/quicksilver/* ./
 rm -rf github.com
 
-go mod tidy -compat=1.17
+go mod tidy -compat=1.20

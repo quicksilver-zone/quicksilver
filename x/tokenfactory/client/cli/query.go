@@ -3,20 +3,14 @@ package cli
 import (
 	"fmt"
 
-	// "strings"
-
-	"github.com/spf13/cobra"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-
-	// "github.com/cosmos/cosmos-sdk/client/flags"
-	// sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/spf13/cobra"
 
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
-// GetQueryCmd returns the cli query commands for this module
+// GetQueryCmd returns the cli query commands for this module.
 func GetQueryCmd() *cobra.Command {
 	// Group tokenfactory queries under a subcommand
 	cmd := &cobra.Command{
@@ -36,7 +30,7 @@ func GetQueryCmd() *cobra.Command {
 	return cmd
 }
 
-// GetParams returns the params for the module
+// GetParams returns the params for the module.
 func GetParams() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "params [flags]",
@@ -63,7 +57,7 @@ func GetParams() *cobra.Command {
 	return cmd
 }
 
-// GetCmdDenomAuthorityMetadata returns the authority metadata for a queried denom
+// GetCmdDenomAuthorityMetadata returns the authority metadata for a queried denom.
 func GetCmdDenomAuthorityMetadata() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "denom-authority-metadata [denom] [flags]",
@@ -92,7 +86,7 @@ func GetCmdDenomAuthorityMetadata() *cobra.Command {
 	return cmd
 }
 
-// GetCmdDenomsFromCreator a command to get a list of all tokens created by a specific creator address
+// GetCmdDenomsFromCreator a command to get a list of all tokens created by a specific creator address.
 func GetCmdDenomsFromCreator() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "denoms-from-creator [creator address] [flags]",

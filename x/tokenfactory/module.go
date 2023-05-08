@@ -1,5 +1,5 @@
 /*
-The tokenfactory module allows any account to create a new token with
+Package tokenfactory allows any account to create a new token with
 the name `factory/{creator address}/{subdenom}`.
 
 - Mint and burn user denom to and form any account
@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,17 +20,20 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/client/cli"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
+	"github.com/ingenuity-build/quicksilver/x/tokenfactory/simulation"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -52,7 +56,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterCodec(cdc)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the module's interface types.
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 }
@@ -74,7 +78,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)) //nolint:errcheck
+	_ = types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 }
 
 // GetTxCmd returns the x/tokenfactory module's root tx command.
@@ -101,15 +105,15 @@ type AppModule struct {
 }
 
 func NewAppModule(
-	keeper keeper.Keeper,
-	accountKeeper types.AccountKeeper,
-	bankKeeper types.BankKeeper,
+	k keeper.Keeper,
+	ak types.AccountKeeper,
+	bk types.BankKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(),
-		keeper:         keeper,
-		accountKeeper:  accountKeeper,
-		bankKeeper:     bankKeeper,
+		keeper:         k,
+		accountKeeper:  ak,
+		bankKeeper:     bk,
 	}
 }
 
@@ -121,6 +125,14 @@ func (am AppModule) Name() string {
 // QuerierRoute returns the x/tokenfactory module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
+<<<<<<< HEAD
+=======
+// LegacyQuerierHandler returns the x/tokenfactory module's Querier.
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+	return nil
+}
+
+>>>>>>> origin/develop
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -149,9 +161,6 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 	return cdc.MustMarshalJSON(genState)
 }
 
-// ConsensusVersion implements ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }
-
 // BeginBlock executes all ABCI BeginBlock logic respective to the tokenfactory module.
 func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 
@@ -159,4 +168,37 @@ func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
 // returns no validator updates.
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
+}
+
+// ConsensusVersion implements ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// ___________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the mint module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+	return nil
+}
+
+// RandomizedParams creates randomized mint param changes for the simulator.
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return []simtypes.ParamChange{}
+}
+
+// RegisterStoreDecoder registers a decoder for mint module's types.
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+}
+
+// WeightedOperations doesn't return any mint module operation.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(
+		simState.AppParams, simState.Cdc, am.accountKeeper, am.bankKeeper, am.keeper,
+	)
 }

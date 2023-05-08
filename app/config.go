@@ -1,5 +1,7 @@
 package app
 
+// DONTCOVER
+
 import (
 	"fmt"
 	"time"
@@ -9,13 +11,18 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	purningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+<<<<<<< HEAD
 
 	dbm "github.com/cometbft/cometbft-db"
 	purningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+=======
+	dbm "github.com/cometbft/cometbft-db"
+>>>>>>> origin/develop
 )
 
 func DefaultConfig() network.Config {
@@ -55,8 +62,8 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			0,
 			encCfg,
 			wasm.EnableAllProposals,
-			simapp.EmptyAppOptions{},
-			GetWasmOpts(simapp.EmptyAppOptions{}),
+			EmptyAppOptions{},
+			GetWasmOpts(EmptyAppOptions{}),
 			false,
 			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),

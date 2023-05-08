@@ -13,7 +13,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
-// interchainstaking message types
+// interchainstaking message types.
 const (
 	TypeMsgRequestRedemption = "requestredemption"
 	TypeMsgSignalIntent      = "signalintent"
@@ -39,23 +39,30 @@ func (msg MsgRequestRedemption) Type() string { return TypeMsgRequestRedemption 
 
 // ValidateBasic Implements Msg.
 func (msg MsgRequestRedemption) ValidateBasic() error {
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 
 	// check from address
 	_, err := sdk.AccAddressFromBech32(msg.FromAddress)
 	if err != nil {
-		errors["FromAddress"] = err
+		errs["FromAddress"] = err
 	}
 
 	// check coin
 	if msg.Value.IsNil() || msg.Value.Amount.IsNil() {
-		errors["Value"] = ErrCoinAmountNil
+		errs["Value"] = ErrCoinAmountNil
 	} else if err = msg.Value.Validate(); err != nil {
-		errors["Value"] = err
+		errs["Value"] = err
+	} else if msg.Value.IsZero() {
+		errs["Value"] = errors.New("cannot redeem zero-value coins")
 	}
 
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	// validate recipient address
+	if msg.DestinationAddress == "" {
+		errs["DestinationAddress"] = errors.New("recipient address not provided")
+	}
+
+	if len(errs) > 0 {
+		return multierror.New(errs)
 	}
 
 	return nil
@@ -125,7 +132,7 @@ func IntentsFromString(input string) ([]*ValidatorIntent, error) {
 }
 
 // NewMsgSignalIntent - construct a msg to update signalled intent.
-func NewMsgSignalIntent(chainID string, intents string, fromAddress sdk.Address) *MsgSignalIntent {
+func NewMsgSignalIntent(chainID, intents string, fromAddress sdk.Address) *MsgSignalIntent {
 	return &MsgSignalIntent{ChainId: chainID, Intents: intents, FromAddress: fromAddress.String()}
 }
 
@@ -143,7 +150,7 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 	}
 
 	if msg.ChainId == "" {
-		errm["ChainId"] = errors.New("undefined")
+		errm["ChainID"] = errors.New("undefined")
 	}
 
 	wantSum := sdk.OneDec()
@@ -188,7 +195,11 @@ func (msg MsgSignalIntent) GetSigners() []sdk.AccAddress {
 }
 
 // NewMsgGovCloseChannel - construct a msg to update signalled intent.
+<<<<<<< HEAD
 func NewMsgGovCloseChannel(channelID string, portName string, fromAddress sdk.Address) *MsgGovCloseChannel {
+=======
+func NewMsgGovCloseChannel(channelID, portName string, fromAddress sdk.Address) *MsgGovCloseChannel {
+>>>>>>> origin/develop
 	return &MsgGovCloseChannel{ChannelId: channelID, PortId: portName, Authority: fromAddress.String()}
 }
 
@@ -203,11 +214,19 @@ func (msg MsgGovCloseChannel) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{fromAddress}
 }
 
+<<<<<<< HEAD
 // ValidateBasic check channel id is correct format. validate port name?
 func (msg MsgGovCloseChannel) ValidateBasic() error { return nil }
 
 // NewMsgGovReopenChannel - construct a msg to update signalled intent.
 func NewMsgGovReopenChannel(connectionID string, portName string, fromAddress sdk.Address) *MsgGovReopenChannel {
+=======
+// check channel id is correct format. validate port name?
+func (msg MsgGovCloseChannel) ValidateBasic() error { return nil }
+
+// NewMsgGovReopenChannel - construct a msg to update signalled intent.
+func NewMsgGovReopenChannel(connectionID, portName string, fromAddress sdk.Address) *MsgGovReopenChannel {
+>>>>>>> origin/develop
 	return &MsgGovReopenChannel{ConnectionId: connectionID, PortId: portName, Authority: fromAddress.String()}
 }
 
@@ -222,5 +241,30 @@ func (msg MsgGovReopenChannel) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{fromAddress}
 }
 
+<<<<<<< HEAD
 // ValidateBasic check channel id is correct format. validate port name?
 func (msg MsgGovReopenChannel) ValidateBasic() error { return nil }
+=======
+// check channel id is correct format. validate port name?
+func (msg MsgGovReopenChannel) ValidateBasic() error {
+	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
+	parts := strings.Split(msg.PortId, ".")
+	if len(parts) != 2 {
+		return errors.New("invalid port format")
+	}
+
+	if parts[1] != "delegate" && parts[1] != "deposit" && parts[1] != "performance" && parts[1] != "withdrawal" {
+		return errors.New("invalid port format; unexpected account")
+	}
+
+	if len(msg.ConnectionId) < 12 {
+		return errors.New("invalid connection string; too short")
+	}
+
+	if msg.ConnectionId[0:11] != "connection-" {
+		return errors.New("invalid connection string; incorrect prefix")
+	}
+
+	return nil
+}
+>>>>>>> origin/develop

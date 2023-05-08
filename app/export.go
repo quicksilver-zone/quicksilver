@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"log"
 
+<<<<<<< HEAD
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+=======
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+>>>>>>> origin/develop
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,7 +38,15 @@ func (app *Quicksilver) ExportAppStateAndValidators(forZeroHeight bool, jailAllo
 		return servertypes.ExportedApp{}, err
 	}
 
+<<<<<<< HEAD
 	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
+=======
+	validators, err := staking.WriteValidators(ctx, *app.StakingKeeper)
+	if err != nil {
+		return servertypes.ExportedApp{}, err
+	}
+
+>>>>>>> origin/develop
 	return servertypes.ExportedApp{
 		AppState:        appState,
 		Validators:      validators,
@@ -43,11 +55,16 @@ func (app *Quicksilver) ExportAppStateAndValidators(forZeroHeight bool, jailAllo
 	}, err
 }
 
-// prepare for fresh start at zero height
+// prepForZeroHeightGenesis prepares for fresh start at zero height
 // NOTE zero height genesis is a temporary feature which will be deprecated
+<<<<<<< HEAD
 //
 //	in favour of export at a block height
 func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) {
+=======
+// in favor of export at a block height.
+func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) error {
+>>>>>>> origin/develop
 	applyAllowedAddrs := false
 
 	// check if there is a allowed address list
@@ -72,7 +89,7 @@ func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAdd
 
 	// withdraw all validator commission
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator())
+		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator()) //nolint
 		return false
 	})
 
@@ -89,6 +106,13 @@ func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAdd
 		if _, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr); err != nil {
 			panic(err)
 		}
+<<<<<<< HEAD
+=======
+		_, err = app.DistrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr)
+		if err != nil {
+			return err
+		}
+>>>>>>> origin/develop
 	}
 
 	// clear validator slash events

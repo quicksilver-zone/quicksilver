@@ -3,9 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -18,6 +18,23 @@ var (
 	v3   = utils.GenerateValAddressForTest().String()
 	v4   = utils.GenerateValAddressForTest().String()
 )
+
+func TestSharesToTokens(t *testing.T) {
+	val := types.Validator{
+		ValoperAddress:  v1,
+		DelegatorShares: sdk.NewDecWithPrec(12345, 3),
+		VotingPower:     sdkmath.NewInt(10),
+	}
+	require.Equal(t, sdkmath.NewInt(81), val.SharesToTokens(sdk.NewDec(100)))
+
+	nilSharesVal := types.Validator{}
+	require.Equal(t, sdkmath.ZeroInt(), nilSharesVal.SharesToTokens(sdk.NewDec(100)))
+
+	nolSharesVal := types.Validator{
+		DelegatorShares: sdk.ZeroDec(),
+	}
+	require.Equal(t, sdkmath.ZeroInt(), nolSharesVal.SharesToTokens(sdk.NewDec(100)))
+}
 
 func TestNormalizeIntentWithZeroLength(t *testing.T) {
 	di := types.DelegatorIntent{Delegator: acc1, Intents: []*types.ValidatorIntent{}}
@@ -90,16 +107,23 @@ func TestOrdinalizeIntentWithNonEqualIntents(t *testing.T) {
 }
 
 func TestAddOrdinal(t *testing.T) {
-	di := types.DelegatorIntent{Delegator: utils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
-		{ValoperAddress: v1, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
-		{ValoperAddress: v2, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
-		{ValoperAddress: v3, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
-	}}
+	di := types.DelegatorIntent{
+		Delegator: utils.GenerateAccAddressForTest().String(),
+		Intents: []*types.ValidatorIntent{
+			{ValoperAddress: v1, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
+			{ValoperAddress: v2, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
+			{ValoperAddress: v3, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
+		},
+	}
 
 	newIntents := types.ValidatorIntents{
 		{ValoperAddress: v1, Weight: sdk.NewDec(1000)},
 		{ValoperAddress: v2, Weight: sdk.NewDec(2000)},
 	}
+
+	// do nothing for no validator intents
+	modified := di.AddOrdinal(sdk.NewDec(600), types.ValidatorIntents{})
+	require.Equal(t, di, modified)
 
 	di = di.AddOrdinal(sdk.NewDec(6000), newIntents)
 

@@ -7,7 +7,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
-// GetAuthorityMetadata returns the authority metadata for a specific denom
+// GetAuthorityMetadata returns the authority metadata for a specific denom.
 func (k Keeper) GetAuthorityMetadata(ctx sdk.Context, denom string) (types.DenomAuthorityMetadata, error) {
 	bz := k.GetDenomPrefixStore(ctx, denom).Get([]byte(types.DenomAuthorityMetadataKey))
 
@@ -19,7 +19,7 @@ func (k Keeper) GetAuthorityMetadata(ctx sdk.Context, denom string) (types.Denom
 	return metadata, nil
 }
 
-// setAuthorityMetadata stores authority metadata for a specific denom
+// setAuthorityMetadata stores authority metadata for a specific denom.
 func (k Keeper) setAuthorityMetadata(ctx sdk.Context, denom string, metadata types.DenomAuthorityMetadata) error {
 	err := metadata.Validate()
 	if err != nil {
@@ -37,7 +37,7 @@ func (k Keeper) setAuthorityMetadata(ctx sdk.Context, denom string, metadata typ
 	return nil
 }
 
-func (k Keeper) setAdmin(ctx sdk.Context, denom string, admin string) error {
+func (k Keeper) setAdmin(ctx sdk.Context, denom, admin string) error {
 	metadata, err := k.GetAuthorityMetadata(ctx, denom)
 	if err != nil {
 		return err

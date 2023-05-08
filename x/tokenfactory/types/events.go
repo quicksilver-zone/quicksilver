@@ -1,7 +1,7 @@
 package types
 
 // event types
-//
+
 //nolint:gosec
 const (
 	AttributeAmount              = "amount"

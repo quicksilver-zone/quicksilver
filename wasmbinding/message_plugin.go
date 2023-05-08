@@ -10,12 +10,11 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/ingenuity-build/quicksilver/wasmbinding/bindings"
-
 	tokenfactorykeeper "github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
-// CustomMessageDecorator returns decorator for custom CosmWasm bindings messages
+// CustomMessageDecorator returns decorator for custom CosmWasm bindings messages.
 func CustomMessageDecorator(bank *bankkeeper.BaseKeeper, tokenFactory *tokenfactorykeeper.Keeper) func(wasmkeeper.Messenger) wasmkeeper.Messenger {
 	return func(old wasmkeeper.Messenger) wasmkeeper.Messenger {
 		return &CustomMessenger{
@@ -59,7 +58,7 @@ func (m *CustomMessenger) DispatchMsg(ctx sdk.Context, contractAddr sdk.AccAddre
 	return m.wrapped.DispatchMsg(ctx, contractAddr, contractIBCPortID, msg)
 }
 
-// createDenom creates a new token denom
+// createDenom creates a new token denom.
 func (m *CustomMessenger) createDenom(ctx sdk.Context, contractAddr sdk.AccAddress, createDenom *bindings.CreateDenom) ([]sdk.Event, [][]byte, error) {
 	err := PerformCreateDenom(m.tokenFactory, ctx, contractAddr, createDenom)
 	if err != nil {
@@ -114,7 +113,7 @@ func PerformMint(f *tokenfactorykeeper.Keeper, b *bankkeeper.BaseKeeper, ctx sdk
 
 	coin := sdk.Coin{Denom: mint.Denom, Amount: mint.Amount}
 	sdkMsg := tokenfactorytypes.NewMsgMint(contractAddr.String(), coin)
-	if err = sdkMsg.ValidateBasic(); err != nil {
+	if err := sdkMsg.ValidateBasic(); err != nil {
 		return err
 	}
 
@@ -196,8 +195,8 @@ func PerformBurn(f *tokenfactorykeeper.Keeper, ctx sdk.Context, contractAddr sdk
 	return nil
 }
 
-// GetFullDenom is a function, not method, so the message_plugin can use it
-func GetFullDenom(contract string, subDenom string) (string, error) {
+// GetFullDenom is a function, not method, so the message_plugin can use it.
+func GetFullDenom(contract, subDenom string) (string, error) {
 	// Address validation
 	if _, err := parseAddress(contract); err != nil {
 		return "", err

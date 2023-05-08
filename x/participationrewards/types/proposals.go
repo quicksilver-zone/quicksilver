@@ -15,28 +15,32 @@ const (
 
 var _ govv1beta1.Content = &AddProtocolDataProposal{}
 
+<<<<<<< HEAD
 func NewAddProtocolDataProposal(title, description, datatype, key string, data json.RawMessage) *AddProtocolDataProposal {
+=======
+func NewAddProtocolDataProposal(title, description, datatype, _, key string, data json.RawMessage) *AddProtocolDataProposal {
+>>>>>>> origin/develop
 	return &AddProtocolDataProposal{Title: title, Description: description, Type: datatype, Data: data, Key: key}
 }
 
-func (m AddProtocolDataProposal) GetDescription() string { return m.Description }
-func (m AddProtocolDataProposal) GetTitle() string       { return m.Title }
-func (m AddProtocolDataProposal) ProposalRoute() string  { return RouterKey }
-func (m AddProtocolDataProposal) ProposalType() string   { return ProposalTypeAddProtocolData }
+func (m *AddProtocolDataProposal) GetDescription() string { return m.Description }
+func (m *AddProtocolDataProposal) GetTitle() string       { return m.Title }
+func (m *AddProtocolDataProposal) ProposalRoute() string  { return RouterKey }
+func (m *AddProtocolDataProposal) ProposalType() string   { return ProposalTypeAddProtocolData }
 
-// ValidateBasic runs basic stateless validity checks
-func (m AddProtocolDataProposal) ValidateBasic() error {
+// ValidateBasic runs basic stateless validity checks.
+func (m *AddProtocolDataProposal) ValidateBasic() error {
 	if err := govv1beta1.ValidateAbstract(m); err != nil {
 		return err
 	}
 
 	errors := make(map[string]error)
 
-	if len(m.Type) == 0 {
+	if m.Type == "" {
 		errors["Type"] = ErrUndefinedAttribute
 	}
 
-	if len(m.Key) == 0 {
+	if m.Key == "" {
 		errors["Key"] = ErrUndefinedAttribute
 	}
 
@@ -52,7 +56,7 @@ func (m AddProtocolDataProposal) ValidateBasic() error {
 }
 
 // String implements the Stringer interface.
-func (m AddProtocolDataProposal) String() string {
+func (m *AddProtocolDataProposal) String() string {
 	return fmt.Sprintf(`Add Protocol Data Proposal:
 Title:			%s
 Description:	%s

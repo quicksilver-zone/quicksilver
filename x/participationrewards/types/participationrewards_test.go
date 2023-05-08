@@ -1,10 +1,12 @@
-package types
+package types_test
 
 import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func TestDistributionProportions_ValidateBasic(t *testing.T) {
@@ -53,7 +55,7 @@ func TestDistributionProportions_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			dp := DistributionProportions{
+			dp := types.DistributionProportions{
 				ValidatorSelectionAllocation: tt.fields.ValidatorSelectionAllocation,
 				HoldingsAllocation:           tt.fields.HoldingsAllocation,
 				LockupAllocation:             tt.fields.LockupAllocation,
@@ -92,7 +94,7 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 }`
 	type fields struct {
 		Key          string
-		ProtocolData *ProtocolData
+		ProtocolData *types.ProtocolData
 	}
 	tests := []struct {
 		name    string
@@ -108,7 +110,7 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			"blank_pd",
 			fields{
 				"somekey",
-				&ProtocolData{},
+				&types.ProtocolData{},
 			},
 			true,
 		},
@@ -116,8 +118,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			"pd_osmosis_nil_data",
 			fields{
 				"osmosispools/1",
-				&ProtocolData{
-					Type: ProtocolDataType_name[int32(ProtocolDataTypeOsmosisPool)],
+				&types.ProtocolData{
+					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)],
 					Data: nil,
 				},
 			},
@@ -127,8 +129,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			"pd_osmosis_empty_data",
 			fields{
 				"osmosispools/1",
-				&ProtocolData{
-					Type: ProtocolDataType_name[int32(ProtocolDataTypeOsmosisPool)],
+				&types.ProtocolData{
+					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)],
 					Data: []byte("{}"),
 				},
 			},
@@ -138,8 +140,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			"pd_osmosis_invalid",
 			fields{
 				"osmosispools/1",
-				&ProtocolData{
-					Type: ProtocolDataType_name[int32(ProtocolDataTypeOsmosisPool)],
+				&types.ProtocolData{
+					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)],
 					Data: []byte(invalidOsmosisData),
 				},
 			},
@@ -149,8 +151,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			"pd_osmosis_valid",
 			fields{
 				"osmosispools/1",
-				&ProtocolData{
-					Type: ProtocolDataType_name[int32(ProtocolDataTypeOsmosisPool)],
+				&types.ProtocolData{
+					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)],
 					Data: []byte(validOsmosisData),
 				},
 			},
@@ -160,8 +162,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			"pd_liquid_invalid",
 			fields{
 				"liquid",
-				&ProtocolData{
-					Type: ProtocolDataType_name[int32(ProtocolDataTypeLiquidToken)],
+				&types.ProtocolData{
+					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)],
 					Data: []byte("{}"),
 				},
 			},
@@ -171,8 +173,8 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			"pd_liquid_valid",
 			fields{
 				"liquid",
-				&ProtocolData{
-					Type: ProtocolDataType_name[int32(ProtocolDataTypeLiquidToken)],
+				&types.ProtocolData{
+					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)],
 					Data: []byte(validLiquidData),
 				},
 			},
@@ -182,7 +184,7 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 			"pd_unknown",
 			fields{
 				"unknown",
-				&ProtocolData{
+				&types.ProtocolData{
 					Type: "unknown",
 					Data: []byte("{}"),
 				},
@@ -192,7 +194,7 @@ func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			kpd := KeyedProtocolData{
+			kpd := types.KeyedProtocolData{
 				Key:          tt.fields.Key,
 				ProtocolData: tt.fields.ProtocolData,
 			}

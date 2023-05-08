@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -15,7 +16,11 @@ type LiquidTokensModule struct{}
 
 var _ Submodule = &LiquidTokensModule{}
 
+<<<<<<< HEAD
 func (m *LiquidTokensModule) Hooks(_ sdk.Context, _ Keeper) {
+=======
+func (m *LiquidTokensModule) Hooks(_ sdk.Context, _ *Keeper) {
+>>>>>>> origin/develop
 }
 
 func (m *LiquidTokensModule) IsActive() bool {
@@ -65,14 +70,12 @@ func (m *LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *type
 			return 0, err
 		}
 		if denomData.QAssetDenom == zone.LocalDenom && denomData.IbcDenom == denom {
-			coin := sdk.Coin{}
-			err = k.cdc.Unmarshal(proof.Data, &coin)
+			coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, proof.Data, denomData.IbcDenom)
 			if err != nil {
 				return 0, err
 			}
 			amount += coin.Amount.Uint64()
 		}
-
 	}
 	return amount, nil
 }

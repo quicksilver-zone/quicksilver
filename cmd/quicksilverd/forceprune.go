@@ -15,8 +15,14 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
+<<<<<<< HEAD
 
 	"github.com/cometbft/cometbft/config"
+=======
+	tmstore "github.com/cometbft/cometbft/store"
+
+	"github.com/cometbft/cometbft/config"
+>>>>>>> origin/develop
 )
 
 const (
@@ -167,7 +173,7 @@ func forcepruneStateStore(dbPath string, startHeight, currentHeight, minHeight, 
 	for i, s := range stateDBKeys {
 		fmt.Println(i, s)
 
-		retainHeight := int64(0)
+		var retainHeight int64
 		if s == keyABCIResponses {
 			retainHeight = currentHeight - minHeight
 		} else {

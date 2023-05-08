@@ -1,10 +1,14 @@
 package types
 
+<<<<<<< HEAD
 import (
 	sdkioerrors "cosmossdk.io/errors"
 )
+=======
+import sdkioerrors "cosmossdk.io/errors"
+>>>>>>> origin/develop
 
-// x/participationrewards module sentinel errors
+// x/participationrewards module sentinel errors.
 var (
 	ErrUndefinedAttribute            = sdkioerrors.Register(ModuleName, 1, "expected attribute not defined")
 	ErrNegativeAttribute             = sdkioerrors.Register(ModuleName, 2, "expected attribute must not be negative")

@@ -7,19 +7,19 @@ protocol.
 
 ## Contents
 
-1. [Concepts](#Concepts)
-1. [State](#State)
-1. [Messages](#Messages)
-1. [Transactions](#Transactions)
-1. [Proposals](#Proposals)
-1. [Events](#Events)
-1. [Hooks](#Hooks)
-1. [Queries](#Queries)
-1. [Keepers](#Keepers)
-1. [Parameters](#Parameters)
-1. [Begin Block](#Begin-Block)
-1. [After Epoch End](#After-Epoch-End)
-1. [IBC](#IBC)
+1. [Concepts](#concepts)
+1. [State](#state)
+1. [Messages](#messages)
+1. [Transactions](#transactions)
+1. [Proposals](#proposals)
+1. [Events](#events)
+1. [Hooks](#hooks)
+1. [Queries](#queries)
+1. [Keepers](#keepers)
+1. [Parameters](#parameters)
+1. [Begin Block](#begin-block)
+1. [After Epoch End](#after-epoch-end)
+1. [IBC](#ibc)
 
 ## Concepts
 
@@ -104,37 +104,37 @@ type Zone struct {
 }
 ```
 
-* **ConnectionId** - remote zone connection identifier;
-* **ChainId** - remote zone identifier;
-* **DepositAddress** - remote zone deposit address;
-* **WithdrawalAddress** - remote zone withdrawal address;
-* **PerformanceAddress** - remote zone performance address (each validator gets
+- **ConnectionId** - remote zone connection identifier;
+- **ChainId** - remote zone identifier;
+- **DepositAddress** - remote zone deposit address;
+- **WithdrawalAddress** - remote zone withdrawal address;
+- **PerformanceAddress** - remote zone performance address (each validator gets
   an exact equal delegation from this account to measure performance);
-* **DelegationAddresses** - remote zone delegation addresses to represent
+- **DelegationAddresses** - remote zone delegation addresses to represent
   granular voting power;
-* **AccountPrefix** - remote zone account address prefix;
-* **LocalDenom** - protocol denomination (qAsset), e.g. uqatom;
-* **BaseDenom** - remote zone denomination (uStake), e.g. uatom;
-* **RedemptionRate** - redemption rate between protocol qAsset and native
+- **AccountPrefix** - remote zone account address prefix;
+- **LocalDenom** - protocol denomination (qAsset), e.g. uqatom;
+- **BaseDenom** - remote zone denomination (uStake), e.g. uatom;
+- **RedemptionRate** - redemption rate between protocol qAsset and native
   remote asset;
-* **LastRedemptionRate** - redemption rate as at previous epoch boundary
+- **LastRedemptionRate** - redemption rate as at previous epoch boundary
   (used to prevent epoch boundary gaming);
-* **Validators** - list of validators on the remote zone;
-* **AggregateIntent** - the aggregated delegation intent of the protocol for
+- **Validators** - list of validators on the remote zone;
+- **AggregateIntent** - the aggregated delegation intent of the protocol for
   this remote zone. The map key is the corresponding validator address
   contained in the `ValidatorIntent`;
-* **MultiSend** - multisend support on remote zone;
-* **LiquidityModule** - liquidity module enabled on remote zone;
-* **WithdrawalWaitgroup** - tally of pending withdrawal transactions;
-* **IbcNextValidatorHash** - 
-* **ValidatorSelectionAllocation** - proportional zone rewards allocation for
+- **MultiSend** - multisend support on remote zone; deprecated;
+- **LiquidityModule** - liquidity module enabled on remote zone;
+- **WithdrawalWaitgroup** - tally of pending withdrawal transactions;
+- **IbcNextValidatorHash** -
+- **ValidatorSelectionAllocation** - proportional zone rewards allocation for
   validator selection;
-* **HoldingsAllocation** - proportional zone rewards allocation for asset
+- **HoldingsAllocation** - proportional zone rewards allocation for asset
   holdings;
-* **LastEpochHeight** - the height of this chain at the last Quicksilver epoch
+- **LastEpochHeight** - the height of this chain at the last Quicksilver epoch
   boundary;
-* **Tvl** - the Total Value Locked for this zone (in terms of Atom value);
-* **UnbondingPeriod** - this zone's unbonding period;
+- **Tvl** - the Total Value Locked for this zone (in terms of Atom value);
+- **UnbondingPeriod** - this zone's unbonding period;
 
 ### ICAAccount
 
@@ -152,11 +152,11 @@ type ICAAccount struct {
 }
 ```
 
-* **Address** - the account address on the remote zone;
-* **Balance** - the account balance on the remote zone;
-* **PortName** - the port name to access the remote zone;
-* **WithdrawalAddress** - the address withdrawals are sent to for this account;
-* **BalanceWaitgroup** - the tally of pending balance query transactions sent
+- **Address** - the account address on the remote zone;
+- **Balance** - the account balance on the remote zone;
+- **PortName** - the port name to access the remote zone;
+- **WithdrawalAddress** - the address withdrawals are sent to for this account;
+- **BalanceWaitgroup** - the tally of pending balance query transactions sent
   to the remote zone;
 
 ### Distribution
@@ -236,15 +236,15 @@ type Validator struct {
 }
 ```
 
-* **ValoperAddress** - the validator address;
-* **CommissionRate** - the validator commission rate;
-* **DelegatorShares** - 
-* **VotingPower** - the validator voting power on the remote zone;
-* **Score** - the validator Quicksilver protocol overall score;
-* **Status** - 
-* **Jailed** - is this validator currently jailed;
-* **Tombstoned** - is this validator tombstoned;
-* **JailedSince** - blocktime timestamp when this validator was jailed;
+- **ValoperAddress** - the validator address;
+- **CommissionRate** - the validator commission rate;
+- **DelegatorShares** -
+- **VotingPower** - the validator voting power on the remote zone;
+- **Score** - the validator Quicksilver protocol overall score;
+- **Status** -
+- **Jailed** - is this validator currently jailed;
+- **Tombstoned** - is this validator tombstoned;
+- **JailedSince** - blocktime timestamp when this validator was jailed;
 
 ### ValidatorIntent
 
@@ -258,8 +258,8 @@ type ValidatorIntent struct {
 }
 ```
 
-* **ValoperAddress** - the remote zone validator address;
-* **Weight** - the weight of intended delegation to this validator;
+- **ValoperAddress** - the remote zone validator address;
+- **Weight** - the weight of intended delegation to this validator;
 
 ### DelegatorIntent
 
@@ -273,8 +273,8 @@ type DelegatorIntent struct {
 }
 ```
 
-* **Delegator** - the delegation account address on the remote zone;
-* **Intents** - the delegation intents to individual validators on the remote
+- **Delegator** - the delegation account address on the remote zone;
+- **Intents** - the delegation intents to individual validators on the remote
   zone;
 
 ### Delegation
@@ -292,11 +292,11 @@ type Delegation struct {
 }
 ```
 
-* **DelegationAddress** - the delegator address on the remote zone;
-* **ValidatorAddress** - the validator address on the remote zone;
-* **Amount** - the amount delegated;
-* **Height** - the block height at which the delegation occured;
-* **RedelegationEnd** - ;
+- **DelegationAddress** - the delegator address on the remote zone;
+- **ValidatorAddress** - the validator address on the remote zone;
+- **Amount** - the amount delegated;
+- **Height** - the block height at which the delegation occured;
+- **RedelegationEnd** - ;
 
 ### PortConnectionTuple
 
@@ -358,9 +358,9 @@ type MsgRequestRedemption struct {
 }
 ```
 
-* **Value** - qAsset as standard cosmos sdk cli coin string, {amount}{denomination};
-* **DestinationAddress** - standard cosmos sdk bech32 address string;
-* **FromAddress** - standard cosmos sdk bech32 address string;
+- **Value** - qAsset as standard cosmos sdk cli coin string, {amount}{denomination};
+- **DestinationAddress** - standard cosmos sdk bech32 address string;
+- **FromAddress** - standard cosmos sdk bech32 address string;
 
 **Transaction**: [`redeem`](#redeem)
 
@@ -378,9 +378,9 @@ type MsgSignalIntent struct {
 }
 ```
 
-* **ChainId** - zone identifier string;
-* **Intents** - list of validator intents according to weight;
-* **FromAddress** - standard cosmos sdk bech32 address string;
+- **ChainId** - zone identifier string;
+- **Intents** - list of validator intents according to weight;
+- **FromAddress** - standard cosmos sdk bech32 address string;
 
 **Transaction**: [`signal-intent`](#signal-intent)
 
@@ -446,10 +446,12 @@ file, e.g.
   "title": "Enable liquidity module for cosmoshub-4",
   "description": "Update cosmoshub-4 to enable liquidity module",
   "chain_id": "cosmoshub-4",
-  "changes": [{
+  "changes": [
+    {
       "key": "liquidity_module",
-      "value": "true",
-  }],
+      "value": "true"
+    }
+  ],
   "deposit": "512000000uqck"
 }
 ```
@@ -461,7 +463,7 @@ Events emitted by module for tracking messages and index transactions;
 ### RegisterZone
 
 | Type          | Attribute Key | Attribute Value   |
-|:--------------|:--------------|:------------------|
+| :------------ | :------------ | :---------------- |
 | message       | module        | interchainstaking |
 | register_zone | connection_id | {connection_id}   |
 | register_zone | chain_id      | {chain_id}        |
@@ -469,7 +471,7 @@ Events emitted by module for tracking messages and index transactions;
 ### MsgClaim
 
 | Type               | Attribute Key | Attribute Value   |
-|:-------------------|:--------------|:------------------|
+| :----------------- | :------------ | :---------------- |
 | message            | module        | interchainstaking |
 | request_redemption | burn_amount   | {burn_amount}     |
 | request_redemption | redeem_amount | {redeem_amount}   |
@@ -485,8 +487,8 @@ N/A
 
 ```protobuf
 service Query {
-  // ZoneInfos provides meta data on connected zones.
-  rpc ZoneInfos(QueryZonesInfoRequest) returns (QueryZonesInfoResponse) {
+  // Zones provides meta data on connected zones.
+  rpc Zones(QueryZonesRequest) returns (QueryZoneResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones";
   }
   // DepositAccount provides data on the deposit address for a connected zone.
@@ -515,7 +517,7 @@ service Query {
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/receipts";
   }
- 
+
   // WithdrawalRecords provides data on the active withdrawals.
   rpc ZoneWithdrawalRecords(QueryWithdrawalRecordsRequest)
       returns (QueryWithdrawalRecordsResponse) {
@@ -671,26 +673,25 @@ Query deposit account address for a given chain.
 
 ## Keepers
 
-https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper
+<https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper>
 
 ## Parameters
 
 Module parameters:
 
-| Key                      | Type    | Default |
-|:-------------------------|:--------|:--------|
-| deposit_interval         | uint64  | 20      |
-| validatorset_interval    | uint64  | 200     |
-| commission_rate          | sdk.Dec | "0.025" |
-| unbonding_enabled        | bool    | false   |
-
+| Key                   | Type    | Default |
+| :-------------------- | :------ | :------ |
+| deposit_interval      | uint64  | 20      |
+| validatorset_interval | uint64  | 200     |
+| commission_rate       | sdk.Dec | "0.025" |
+| unbonding_enabled     | bool    | false   |
 
 Description of parameters:
 
-* `deposit_interval` - monitoring and handling interval of registered zones' deposit accounts;
-* `validatorset_interval` - monitoring and updating interval of registered zones' validator sets;
-* `commission_rate` - default commission rate for Quicksilver validators;
-* `unbonding_enabled` - flag to indicate if unbondings are enabled for the Quicksilver protocol;
+- `deposit_interval` - monitoring and handling interval of registered zones' deposit accounts;
+- `validatorset_interval` - monitoring and updating interval of registered zones' validator sets;
+- `commission_rate` - default commission rate for Quicksilver validators;
+- `unbonding_enabled` - flag to indicate if unbondings are enabled for the Quicksilver protocol;
 
 ## Begin Block
 
@@ -701,20 +702,21 @@ status has changed, requery the validator set and update zone state.
 
 The following is performed at the end of every epoch for each registered zone:
 
-* Aggregate Intents:
+- Aggregate Intents:
   1. Iterate through all stored instances of `DelegatorIntent` for each zone
      and obtain the **delegator account balance**;
   2. Compute the **base balance** using the account balance and `RedpemtionRate`;
   3. Ordinalize the delegator's validator intents by `Weight`;
   4. Set the zone `AggregateIntent` and update zone state;
-* Query delegator delegations for each zone and update delegation records:
+- Query delegator delegations for each zone and update delegation records:
   1. Query delegator delegations `cosmos.staking.v1beta1.Query/DelegatorDelegations`;
   2. For each response (per delegator `DelegationsCallback`), verify every
      delegation record (via IBC `DelegationCallback`) and update delegation
      record accordingly (add, update or remove);
   3. Update validator set;
   4. Update zone;
-* Withdraw delegation rewards for each zone and distribute:
+- Withdraw delegation rewards for each zone and distribute:
+
   1. Query delegator rewards `cosmos.distribution.v1beta1.Query/DelegationTotalRewards`;
   2. For each response (per delegator `RewardsCallback`), send withdrawal
      messages for each of its validator delegations and add tally to
@@ -737,8 +739,8 @@ Triggered at the end of every epoch if delegator accounts have accrued rewards.
 Collects rewards to zone withdrawal account `WithdrawalAddress` and distributes
 rewards once all delegator rewards withdrawals have been acknowledged.
 
-* **Endpoint:** `/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward`
-* **Handler:** `HandleWithdrawRewards`
+- **Endpoint:** `/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward`
+- **Handler:** `HandleWithdrawRewards`
 
 #### MsgRedeemTokensforShares
 
@@ -746,17 +748,17 @@ Triggered during execution of `Delegate` for delegation allocations that are
 not in the zone `BaseDenom`. During callback the relevant delegation record is
 updated.
 
-* **Endpoint:** `/cosmos.staking.v1beta1.MsgRedeemTokensforShares`
-* **Handler:** `HandleRedeemTokens`
+- **Endpoint:** `/cosmos.staking.v1beta1.MsgRedeemTokensforShares`
+- **Handler:** `HandleRedeemTokens`
 
 #### MsgTokenizeShares
 
 Triggered by `RequestRedemption` when a user redeems qAssets. Withdrawal
 records are set or updated accordingly.  
-See [MsgRequestRedemption](#MsgRequestRedemption).
+See [MsgRequestRedemption](#msgrequestredemption).
 
-* **Endpoint:** `/cosmos.staking.v1beta1.MsgTokenizeShares`
-* **Handler:** `HandleTokenizedShares`
+- **Endpoint:** `/cosmos.staking.v1beta1.MsgTokenizeShares`
+- **Handler:** `HandleTokenizedShares`
 
 #### MsgDelegate
 
@@ -764,23 +766,23 @@ Triggered by `Delegate` whenever delagtions are made by the protocol to zone
 validators. `HandleDelegate` distinguishes `DelegationAddresses` and updates
 delegation records for these delegation accounts.
 
-* **Endpoint:** `/cosmos.staking.v1beta1.MsgDelegate`
-* **Handler:** `HandleDelegate`
+- **Endpoint:** `/cosmos.staking.v1beta1.MsgDelegate`
+- **Handler:** `HandleDelegate`
 
 #### MsgBeginRedelegate
 
 Triggered at the end of every epoch during `Rebalance`.
 
-* **Endpoint:** `/cosmos.staking.v1beta1.MsgBeginRedelegate`
-* **Handler:** `HandleBeginRedelegate`
+- **Endpoint:** `/cosmos.staking.v1beta1.MsgBeginRedelegate`
+- **Handler:** `HandleBeginRedelegate`
 
 #### MsgSend
 
 Triggered by `TransferToDelegate` during `HandleReceiptTransaction`.  
-See [Deposit Interval](#Deposit-Interval).
+See [Deposit Interval](#deposit-interval).
 
-* **Endpoint:** `/cosmos.bank.v1beta1.MsgSend`
-* **Handler:** `HandleCompleteSend`
+- **Endpoint:** `/cosmos.bank.v1beta1.MsgSend`
+- **Handler:** `HandleCompleteSend`
 
 `HandleCompleteSend` executes one of the following options based on the
 `FromAddress` and `ToAddress` of the msg:
@@ -792,13 +794,6 @@ See [Deposit Interval](#Deposit-Interval).
 3. **Delegate amount according to delegation plan.**  
    (If `FromAddress` is `DepositAddress` and `ToAddress` is one of zone's `DelegationAddresses`);
 
-#### MsgMultiSend
-
-Not sent?
-
-* **Endpoint:** `/cosmos.bank.v1beta1.MsgMultiSend`
-* **Handler:** `HandleCompleteMultiSend`
-
 #### MsgSetWithdrawAddress
 
 Triggered during zone initialization for every `DelegationAddresses` and
@@ -808,18 +803,18 @@ be impossible as the rewards amount will only be known at the time the msg is
 triggered, and not at the time it was executed by the remote zone (due to network
 latency and different zone block times, etc).
 
-* **Endpoint:** `/cosmos.distribution.v1beta1.MsgSetWithdrawAddress`
-* **Handler:** `HandleUpdatedWithdrawAddress`
+- **Endpoint:** `/cosmos.distribution.v1beta1.MsgSetWithdrawAddress`
+- **Handler:** `HandleUpdatedWithdrawAddress`
 
 #### MsgTransfer
 
 Triggered by `DistributeRewardsFromWithdrawAccount` to distribute rewards
 across the zone delegation accounts and collect fees to the module fee account.
 The `RedemptionRate` is updated accordingly.  
-See [WithdrawalAddress Balances](#WithdrawalAddress-Balances).
+See [WithdrawalAddress Balances](#withdrawaladdress-balances).
 
-* **Endpoint:** `/ibc.applications.transfer.v1.MsgTransfer`
-* **Handler:** `HandleMsgTransfer`
+- **Endpoint:** `/ibc.applications.transfer.v1.MsgTransfer`
+- **Handler:** `HandleMsgTransfer`
 
 ### Queries, Requests & Callbacks
 
@@ -832,32 +827,32 @@ For every registered zone a periodic `AllBalances` query is run against the
 update the individual account balances `AccountBalanceCallback`, trigger the
 `depositInterval` and finally update the zone state.
 
-* **Query:** `cosmos.bank.v1beta1.Query/AllBalances`
-* **Callback:** `AllBalancesCallback`
+- **Query:** `cosmos.bank.v1beta1.Query/AllBalances`
+- **Callback:** `AllBalancesCallback`
 
 #### Delegator Delegations
 
 Query delegator delegations for each zone and update delegation records.  
-See [After Epoch End](#After-Epoch-End).
+See [After Epoch End](#after-epoch-end).
 
-* **Query:** `cosmos.staking.v1beta1.Query/DelegatorDelegations`
-* **Callback:** `DelegationsCallback`
+- **Query:** `cosmos.staking.v1beta1.Query/DelegatorDelegations`
+- **Callback:** `DelegationsCallback`
 
 #### Delegate Total Rewards
 
 Withdraw delegation rewards for each zone and distribute.  
-See [After Epoch End](#After-Epoch-End).
+See [After Epoch End](#after-epoch-end).
 
-* **Query:** `cosmos.distribution.v1beta1.Query/DelegationTotalRewards`
-* **Callback:** `RewardsCallback`
+- **Query:** `cosmos.distribution.v1beta1.Query/DelegationTotalRewards`
+- **Callback:** `RewardsCallback`
 
 #### WithdrawalAddress Balances
 
 Triggered by `HandleWithdrawRewards`.  
-See [MsgWithdrawDelegatorReward](#MsgWithdrawDelegatorReward).
+See [MsgWithdrawDelegatorReward](#msgwithdrawdelegatorreward).
 
-* **Query:** `cosmos.bank.v1beta1.Query/AllBalances`
-* **Callback:** `DistributeRewardsFromWithdrawAccount`
+- **Query:** `cosmos.bank.v1beta1.Query/AllBalances`
+- **Callback:** `DistributeRewardsFromWithdrawAccount`
 
 #### Deposit Interval
 
@@ -868,8 +863,8 @@ qAssets minted and transferred to the sender (`MintQAsset`). A delegation
 plan is computed (`DeterminePlanForDelegation`) and then executed
 (`TransferToDelegate`). Successfully executed receipts are recorded to state.
 
-* **Query:** `cosmos.tx.v1beta1.Service/GetTxsEvent`
-* **Callback:** `DepositIntervalCallback`
+- **Query:** `cosmos.tx.v1beta1.Service/GetTxsEvent`
+- **Callback:** `DepositIntervalCallback`
 
 #### Performance Balance Query
 
@@ -878,8 +873,8 @@ Triggered at zone registration when the zone performance account
 until sufficient funds are available to execute the performance delegations.  
 See [x/participationrewards/spec](../../participationrewards/spec/README.md).
 
-* **Query:** `cosmos.bank.v1beta1.Query/AllBalances`
-* **Callback:** `PerfBalanceCallback`
+- **Query:** `cosmos.bank.v1beta1.Query/AllBalances`
+- **Callback:** `PerfBalanceCallback`
 
 #### Validator Set Query
 
@@ -887,5 +882,5 @@ An essential query to ensure that the registred zone state accurately reflects
 the validator set of the remote zone for bonded, unbonded and unbonding
 validators.
 
-* **Query:** `cosmos.staking.v1beta1.Query/Validators`
-* **Callback:** `ValsetCallback`
+- **Query:** `cosmos.staking.v1beta1.Query/Validators`
+- **Callback:** `ValsetCallback`

@@ -27,7 +27,7 @@ func TestNewICAAccountBadAddr(t *testing.T) {
 	require.Contains(t, err.Error(), "invalid checksum")
 }
 
-// test that the balance can be set to a valid coin (good denom + non negative value)
+// TestAccountSetBalanceGood tests that the balance can be set to a valid coin (good denom + non-negative value).
 func TestAccountSetBalanceGood(t *testing.T) {
 	ica := NewICA()
 	err := ica.SetBalance(sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(300))))
@@ -35,19 +35,19 @@ func TestAccountSetBalanceGood(t *testing.T) {
 	require.True(t, ica.Balance.AmountOf("uqck").Equal(sdk.NewInt(300)))
 }
 
-// test that the balance panics when set to an invalid denomination.
+// tests that the balance panics when set to an invalid denomination.
 func TestAccountSetBalanceBadDenom(t *testing.T) {
 	ica := NewICA()
 	require.PanicsWithError(t, "invalid denom: _fail", func() { ica.SetBalance(sdk.NewCoins(sdk.NewCoin("_fail", sdk.NewInt(300)))) })
 }
 
-// test that the balance panics when set to a negative number.
+// tests that the balance panics when set to a negative number.
 func TestAccountSetBalanceNegativeAmount(t *testing.T) {
 	ica := NewICA()
 	require.PanicsWithError(t, "negative coin amount: -300", func() { ica.SetBalance(sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(-300)))) })
 }
 
-// test that the balance panics when set to a negative number.
+// tests that the balance panics when set to a negative number.
 func TestAccountSetBalanceNonSortedCoins(t *testing.T) {
 	ica := NewICA()
 	nonSortedCoins := sdk.Coins{
@@ -97,7 +97,7 @@ func TestAccountSetWithdrawalAddress(t *testing.T) {
 	}
 }
 
-// test balance waitground increments and decrements as expected and errors on negative wg value.
+// tests balance waitgroup increments and decrements as expected and errors on negative wg value.
 func TestIncrementDecrementWg(t *testing.T) {
 	ica := NewICA()
 	oldWg := ica.BalanceWaitgroup

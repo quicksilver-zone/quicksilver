@@ -3,7 +3,7 @@ package types_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
@@ -52,7 +52,7 @@ func TestIntentsFromString(t *testing.T) {
 	require.NotNil(t, err, "expecting a non-nil error")
 	require.Contains(t, err.Error(), "invalid intents string")
 
-	fromAddr := (sdk.AccAddress)([]byte{0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc})
+	fromAddr := sdk.AccAddress([]byte{0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc})
 	sigIntent := types.NewMsgSignalIntent("quicksilver", intents, fromAddr)
 	err = sigIntent.ValidateBasic()
 	if err != nil {
@@ -90,7 +90,7 @@ func TestIntentsFromStringInvalidValoperAddressesFailsOnValidate(t *testing.T) {
 	intents := "1.7cosmosvaloper1sjllsnramtg7ewxqwwrwjxfgc4n4ef9u2lcnp0,-0.5cosmosvaloper156g8f9837p7d4c46p8yt3rlals9c5vuurfrrzf"
 
 	sigIntent := types.NewMsgSignalIntent("", intents,
-		(sdk.AccAddress)([]byte{0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc}))
+		sdk.AccAddress([]byte{0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc}))
 	sigIntent.FromAddress = "abcdefghi"
 	err = sigIntent.ValidateBasic()
 	require.NotNil(t, err, "expecting a non-nil error")
@@ -100,7 +100,7 @@ func TestIntentsFromStringInvalidValoperAddressesFailsOnValidate(t *testing.T) {
 
 func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
 	type fields struct {
-		ChainId     string
+		ChainID     string
 		Intents     string
 		FromAddress string
 	}
@@ -118,7 +118,7 @@ func TestMsgSignalIntent_ValidateBasic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			msg := types.MsgSignalIntent{
-				ChainId:     tt.fields.ChainId,
+				ChainId:     tt.fields.ChainID,
 				Intents:     tt.fields.Intents,
 				FromAddress: tt.fields.FromAddress,
 			}
@@ -161,23 +161,59 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"valid_zero",
+			"invalid_nil_destination_address",
 			fields{
 				Value: sdk.Coin{
 					Denom:  "stake",
-					Amount: math.ZeroInt(),
+					Amount: sdkmath.OneInt(),
+				},
+				DestinationAddress: "",
+				FromAddress:        utils.GenerateAccAddressForTest().String(),
+			},
+			true,
+		},
+		{
+			"invalid_nil_from_address",
+			fields{
+				Value: sdk.Coin{
+					Denom:  "stake",
+					Amount: sdkmath.OneInt(),
+				},
+				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				FromAddress:        "",
+			},
+			true,
+		},
+		{
+			"invalid_zero",
+			fields{
+				Value: sdk.Coin{
+					Denom:  "stake",
+					Amount: sdkmath.ZeroInt(),
 				},
 				DestinationAddress: utils.GenerateAccAddressForTest().String(),
 				FromAddress:        utils.GenerateAccAddressForTest().String(),
 			},
-			false,
+			true,
+		},
+		{
+			"invalid_negative",
+			fields{
+				Value: sdk.Coin{
+					Denom:  "stake",
+					Amount: sdkmath.NewInt(-1),
+				},
+				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				FromAddress:        utils.GenerateAccAddressForTest().String(),
+			},
+			true,
 		},
 		{
 			"valid_value",
 			fields{
 				Value: sdk.Coin{
 					Denom:  "stake",
-					Amount: math.ZeroInt(),
+					Amount: sdkmath.OneInt(),
 				},
 				DestinationAddress: utils.GenerateAccAddressForTest().String(),
 				FromAddress:        utils.GenerateAccAddressForTest().String(),
@@ -196,6 +232,87 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 			if tt.wantErr {
 				t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
+	type fields struct {
+		PortID       string
+		ConnectionID string
+		FromAddress  string
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		wantErr  bool
+		errorMsg string
+	}{
+		{
+			"blank",
+			fields{},
+			true,
+			"invalid port format",
+		},
+		{
+			"invalid port",
+			fields{
+				PortID: "cat",
+			},
+			true,
+			"invalid port format",
+		},
+		{
+			"invalid account",
+			fields{
+				PortID: "icacontroller-osmosis-4.bad",
+			},
+			true,
+			"invalid port format; unexpected account",
+		},
+		{
+			"invalid connection; too short",
+			fields{
+				PortID:       "icacontroller-osmosis-4.withdrawal",
+				ConnectionID: "bad-1",
+			},
+			true,
+			"invalid connection string; too short",
+		},
+		{
+			"invalid connection; too short",
+			fields{
+				PortID:       "icacontroller-osmosis-4.withdrawal",
+				ConnectionID: "longenoughbutstillbad-1",
+			},
+			true,
+			"invalid connection string; incorrect prefix",
+		},
+		{
+			"valid",
+			fields{
+				PortID:       "icacontroller-osmosis-4.withdrawal",
+				ConnectionID: "connection-1",
+			},
+			false,
+			"",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgGovReopenChannel{
+				PortId:       tt.fields.PortID,
+				ConnectionId: tt.fields.ConnectionID,
+				Authority:    tt.fields.FromAddress,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				require.ErrorContains(t, err, tt.errorMsg)
 				return
 			}
 			require.NoError(t, err)

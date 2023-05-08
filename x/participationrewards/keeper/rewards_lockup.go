@@ -7,7 +7,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (k Keeper) allocateLockupRewards(ctx sdk.Context, allocation math.Int) error {
+func (k Keeper) AllocateLockupRewards(ctx sdk.Context, allocation math.Int) error {
 	k.Logger(ctx).Info("allocateLockupRewards", "allocation", allocation)
 
 	// allocate staking incentives into fee collector account to be moved to on next begin blocker by staking module
@@ -17,6 +17,9 @@ func (k Keeper) allocateLockupRewards(ctx sdk.Context, allocation math.Int) erro
 			allocation,
 		),
 	)
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/develop
 	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, k.feeCollectorName, coins)
 }

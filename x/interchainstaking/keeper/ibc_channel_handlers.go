@@ -10,7 +10,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connectionID string) error {
+func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID string) error {
 	chainID, err := k.GetChainID(ctx, connectionID)
 	if err != nil {
 		ctx.Logger().Error(
@@ -51,6 +51,8 @@ func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connectionI
 				return err
 			}
 
+			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
+
 			balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
 			bz, err := k.GetCodec().Marshal(&balanceQuery)
 			if err != nil {
@@ -77,6 +79,7 @@ func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connectionI
 			if err != nil {
 				return err
 			}
+			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
 		}
 
 	// delegation addresses
@@ -86,9 +89,14 @@ func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connectionI
 			if err != nil {
 				return err
 			}
+<<<<<<< HEAD
 			if _, err = k.FlushOutstandingDelegations(ctx, &zone); err != nil {
 				k.Logger(ctx).Error("unable to clear outstanding delegations", "error", err)
 			}
+=======
+
+			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
+>>>>>>> origin/develop
 		}
 
 	// performance address
@@ -99,6 +107,7 @@ func (k Keeper) HandleChannelOpenAck(ctx sdk.Context, portID string, connectionI
 			if err != nil {
 				return err
 			}
+			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
 		}
 
 		// emit this periodic query the first time, but not subsequently.

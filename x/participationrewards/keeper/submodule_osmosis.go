@@ -17,7 +17,7 @@ type OsmosisModule struct{}
 
 var _ Submodule = &OsmosisModule{}
 
-func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
+func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 	// osmosis params
 	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, types.OsmosisParamsKey)
 	if !found {
@@ -48,7 +48,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k Keeper) {
 		if err != nil {
 			return false
 		}
-		pool, _ := ipool.(types.OsmosisPoolProtocolData)
+		pool, _ := ipool.(*types.OsmosisPoolProtocolData)
 
 		// update pool datas
 		k.IcqKeeper.MakeRequest(
@@ -97,8 +97,8 @@ func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 			return 0, err
 		}
 
-		if sdkAmount.IsNegative() {
-			return 0, errors.New("unexpected negative amount")
+		if sdkAmount.IsNil() || sdkAmount.IsNegative() {
+			return 0, errors.New("unexpected amount")
 		}
 		amount += sdkAmount.Uint64()
 	}

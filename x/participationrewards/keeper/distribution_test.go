@@ -1,4 +1,5 @@
 package keeper_test
+<<<<<<< HEAD
 
 import (
 	"cosmossdk.io/math"
@@ -183,3 +184,5 @@ func (suite *KeeperTestSuite) TestGetRewardsAllocations() {
 		})
 	}
 }
+=======
+>>>>>>> origin/develop

@@ -4,41 +4,58 @@ import (
 	"bytes"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+<<<<<<< HEAD
 	tmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+=======
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	tmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+>>>>>>> origin/develop
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-type zoneItrFn func(index int64, zoneInfo types.Zone) (stop bool)
+const blockInterval = 30
 
-// BeginBlocker of interchainstaking module
-func (k Keeper) BeginBlocker(ctx sdk.Context) {
+type zoneItrFn func(index int64, zone *types.Zone) (stop bool)
+
+// BeginBlocker of interchainstaking module.
+func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+<<<<<<< HEAD
 	if ctx.BlockHeight()%30 == 0 {
+=======
+
+	if ctx.BlockHeight()%blockInterval == 0 {
+>>>>>>> origin/develop
 		if err := k.GCCompletedRedelegations(ctx); err != nil {
 			k.Logger(ctx).Error("error in GCCompletedRedelegations", "error", err)
 		}
 	}
-	k.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
+	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
 		if ctx.BlockHeight()%30 == 0 {
 			// for the tasks below, we cannot panic in begin blocker; as this will crash the chain.
-			// and as failing here is not terminal we panicking is not necessary, but we should log
+			// and as failing here is not terminal panicking is not necessary, but we should log
 			// as an error. we don't return on failure here as we still want to attempt the unrelated
 			// tasks below.
+<<<<<<< HEAD
+=======
+			// commenting this out until we can revisit. in its current state it causes more issues than it fixes.
+>>>>>>> origin/develop
 
-			if err := k.EnsureWithdrawalAddresses(ctx, &zone); err != nil {
-				k.Logger(ctx).Error("error in EnsureWithdrawalAddresses", "error", err)
+			if err := k.EnsureWithdrawalAddresses(ctx, zone); err != nil {
+				k.Logger(ctx).Error("error in EnsureWithdrawalAddresses", "error", err.Error())
 			}
-			if err := k.HandleMaturedUnbondings(ctx, &zone); err != nil {
-				k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err)
+			if err := k.HandleMaturedUnbondings(ctx, zone); err != nil {
+				k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err.Error())
 			}
-			if err := k.GCCompletedUnbondings(ctx, &zone); err != nil {
-				k.Logger(ctx).Error("error in GCCompletedUnbondings", "error", err)
+			if err := k.GCCompletedUnbondings(ctx, zone); err != nil {
+				k.Logger(ctx).Error("error in GCCompletedUnbondings", "error", err.Error())
 			}
-
 		}
+
 		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
 		if found {
 			consState, found := k.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(ctx, connection.GetClientID())
@@ -48,15 +65,17 @@ func (k Keeper) BeginBlocker(ctx sdk.Context) {
 					if len(zone.IbcNextValidatorsHash) == 0 || !bytes.Equal(zone.IbcNextValidatorsHash, tmConsState.NextValidatorsHash.Bytes()) {
 						k.Logger(ctx).Info("IBC ValSet has changed; requerying valset")
 						// trigger valset update.
-						err := k.EmitValsetRequery(ctx, zone.ConnectionId, zone.ChainId)
+						period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+						query := stakingTypes.QueryValidatorsRequest{}
+						err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
 						if err != nil {
-							k.Logger(ctx).Error("unable to trigger valset update query", "error", err)
+							k.Logger(ctx).Error("unable to trigger valset update query", "error", err.Error())
 							// failing to emit the valset update is not terminal but constitutes
 							// an error, as if this starts happening frequent it is something
 							// we should investigate.
 						}
 						zone.IbcNextValidatorsHash = tmConsState.NextValidatorsHash.Bytes()
-						k.SetZone(ctx, &zone)
+						k.SetZone(ctx, zone)
 					}
 				}
 			}

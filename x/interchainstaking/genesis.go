@@ -49,7 +49,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic("unable to find zone for delegation")
 		}
 		for _, delegatorIntent := range delegatorIntentsForZone.DelegationIntent {
-			k.SetIntent(ctx, zone, *delegatorIntent, false)
+			k.SetDelegatorIntent(ctx, &zone, *delegatorIntent, false)
 		}
 	}
 
@@ -78,8 +78,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 func ExportDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegationsForZone {
 	delegationsForZones := make([]types.DelegationsForZone, 0)
-	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
-		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zoneInfo.ChainId, Delegations: k.GetAllDelegationsAsPointer(ctx, &zoneInfo)})
+	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
+		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainId, Delegations: k.GetAllDelegationsAsPointer(ctx, zone)})
 		return false
 	})
 	return delegationsForZones
@@ -87,8 +87,8 @@ func ExportDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.Delegati
 
 func ExportPerformanceDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegationsForZone {
 	delegationsForZones := make([]types.DelegationsForZone, 0)
-	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
-		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zoneInfo.ChainId, Delegations: k.GetAllPerformanceDelegationsAsPointer(ctx, &zoneInfo)})
+	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
+		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainId, Delegations: k.GetAllPerformanceDelegationsAsPointer(ctx, zone)})
 		return false
 	})
 	return delegationsForZones
@@ -96,11 +96,13 @@ func ExportPerformanceDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []typ
 
 func ExportDelegatorIntentsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegatorIntentsForZone {
 	delegatorIntentsForZones := make([]types.DelegatorIntentsForZone, 0)
-	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
+	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
 		// export current epoch intents
-		delegatorIntentsForZones = append(delegatorIntentsForZones, types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllIntentsAsPointer(ctx, zoneInfo, false), Snapshot: false})
-		// export last epoch intents
-		delegatorIntentsForZones = append(delegatorIntentsForZones, types.DelegatorIntentsForZone{ChainId: zoneInfo.ChainId, DelegationIntent: k.AllIntentsAsPointer(ctx, zoneInfo, true), Snapshot: true})
+		delegatorIntentsForZones = append(delegatorIntentsForZones,
+			types.DelegatorIntentsForZone{ChainId: zone.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zone, false), Snapshot: false},
+			// export last epoch intents
+			types.DelegatorIntentsForZone{ChainId: zone.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zone, true), Snapshot: true},
+		)
 		return false
 	})
 	return delegatorIntentsForZones

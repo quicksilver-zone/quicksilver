@@ -1,0 +1,17 @@
+name: check markdown links
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # run once a week
+
+jobs:
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3.1.0
+      - uses: gaurav-nelson/github-action-markdown-link-check@1.0.13
+        if: env.GIT_DIFF
+        with:
+          folder-path: "."
+          use-verbose-mode: 'yes'
+          config-file: '.github/workflows/md-link-checker-config.json'

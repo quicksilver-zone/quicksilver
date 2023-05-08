@@ -8,36 +8,42 @@ import (
 
 	"cosmossdk.io/simapp"
 	"github.com/CosmWasm/wasmd/x/wasm"
+<<<<<<< HEAD
 	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+=======
+>>>>>>> origin/develop
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
 
 	"github.com/ingenuity-build/quicksilver/app"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func newQuicksilver(t *testing.T) *app.Quicksilver {
+	t.Helper()
+
 	return app.NewQuicksilver(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
 		io.Discard,
 		true,
 		wasm.EnableAllProposals,
-		simapp.EmptyAppOptions{},
-		app.GetWasmOpts(simapp.EmptyAppOptions{}),
+		app.EmptyAppOptions{},
+		app.GetWasmOpts(app.EmptyAppOptions{}),
 		true,
 	)
 }
 
 func TestKeeperWithZonesRoundTrip(t *testing.T) {
-	app := newQuicksilver(t)
+	quicksilver := newQuicksilver(t)
 
 	chainID := "quicksilver-1"
-	kpr := app.InterchainstakingKeeper
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	kpr := quicksilver.InterchainstakingKeeper
+	ctx := quicksilver.NewContext(true, tmproto.Header{Height: quicksilver.LastBlockHeight()})
 
 	// 1. Check for a zone without having stored anything.
 	zone, ok := kpr.GetZone(ctx, chainID)
@@ -68,20 +74,22 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	chainIDPrefix := "quicksilver-"
 	indexToZone := make(map[int64]types.Zone, nzones)
 	for i := 0; i < nzones; i++ {
-		chainID := fmt.Sprintf("%s-%d", chainIDPrefix, i)
+		chainID := fmt.Sprintf("%s%d", chainIDPrefix, i)
+		delegationAddr := utils.GenerateAccAddressForTestWithPrefix("cosmos")
 		zone := types.Zone{
 			ConnectionId: "conn-test",
 			ChainId:      chainID,
 			LocalDenom:   "qck",
 			BaseDenom:    "qck",
 			DelegationAddress: &types.ICAAccount{
-				Address: "cosmos1ssrxxe4xsls57ehrkswlkhlkcverf0p0fpgyhzqw0hfdqj92ynxsw29r6e",
+				Address: delegationAddr,
 				Balance: sdk.NewCoins(
 					sdk.NewCoin("qck", sdk.NewInt(100)),
 					sdk.NewCoin("uqck", sdk.NewInt(700000)),
 				),
 			},
 		}
+		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainId)
 		kpr.SetZone(ctx, &zone)
 		gotZone, ok := kpr.GetZone(ctx, chainID)
 		require.True(t, ok, "expected to retrieve the correct zone")
@@ -95,8 +103,8 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 
 	// 5.1. Invoke Iterate on zones.
 	gotZonesMapping := make(map[int64]types.Zone, nzones)
-	kpr.IterateZones(ctx, func(index int64, zone types.Zone) bool {
-		gotZonesMapping[index] = zone
+	kpr.IterateZones(ctx, func(index int64, zone *types.Zone) bool {
+		gotZonesMapping[index] = *zone
 		return false
 	})
 
@@ -127,6 +135,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 			sdk.NewCoin("uqck", sdk.NewInt(900000)),
 		),
 	}
+	kpr.SetAddressZoneMapping(ctx, "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", perfAcctZone.ChainId)
 	kpr.SetZone(ctx, &perfAcctZone)
 	gotPerfAcctZone := kpr.GetZoneForPerformanceAccount(ctx, perfAcctZone.PerformanceAddress.Address)
 	require.Equal(t, &perfAcctZone, gotPerfAcctZone, "expecting a match in performance accounts")
@@ -147,10 +156,11 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	// 7.2. Set some delegations.
 	del1 := types.Delegation{
 		Amount:            sdk.NewCoin(firstZone.BaseDenom, sdk.NewInt(17000)),
-		DelegationAddress: "cosmos1ssrxxe4xsls57ehrkswlkhlkcverf0p0fpgyhzqw0hfdqj92ynxsw29r6e",
+		DelegationAddress: firstZone.DelegationAddress.Address,
 		Height:            10,
 		ValidatorAddress:  "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
 	}
+
 	kpr.SetDelegation(ctx, &firstZone, del1)
 
 	// 7.3. Retrieve the delegation now, it should be set.
@@ -164,3 +174,121 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	require.NotNil(t, zone4Del, "expecting a non-nil zone back")
 	require.Equal(t, &firstZone, zone4Del, "expectign equivalent zones")
 }
+
+// TODO: convert to keeper tests
+
+/*func TestZone_GetBondedValidatorAddressesAsSlice(t *testing.T) {
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusUnbonded,
+	},
+		&types.Validator{
+			ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf",
+			CommissionRate: sdk.MustNewDecFromStr("0.2"),
+			VotingPower:    sdk.NewInt(2000),
+			Status:         stakingtypes.BondStatusUnbonded,
+		},
+		&types.Validator{
+			ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+			CommissionRate: sdk.MustNewDecFromStr("0.2"),
+			VotingPower:    sdk.NewInt(2000),
+			Status:         stakingtypes.BondStatusBonded,
+		},
+		&types.Validator{
+			ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
+			CommissionRate: sdk.MustNewDecFromStr("0.2"),
+			VotingPower:    sdk.NewInt(2000),
+			Status:         stakingtypes.BondStatusBonded,
+		},
+		&types.Validator{
+			ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+			CommissionRate: sdk.MustNewDecFromStr("0.2"),
+			VotingPower:    sdk.NewInt(2000),
+			Status:         stakingtypes.BondStatusBonded,
+		},
+		&types.Validator{
+			ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
+			CommissionRate: sdk.MustNewDecFromStr("0.2"),
+			VotingPower:    sdk.NewInt(2000),
+			Status:         stakingtypes.BondStatusBonded,
+		},
+	)
+
+	// sorted list
+	expected := []string{
+		"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+		"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
+		"cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
+		"cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+	}
+	require.Equal(t, expected, zone.GetBondedValidatorAddressesAsSlice())
+}
+
+func TestZone_GetAggregateIntentOrDefault(t *testing.T) {
+	// empty
+	zone := types.Zone{}
+	require.Equal(t, types.ValidatorIntents(nil), zone.GetAggregateIntentOrDefault())
+
+	zone = types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone.Validators = append(zone.Validators, &types.Validator{
+		ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
+		CommissionRate: sdk.MustNewDecFromStr("0.2"),
+		VotingPower:    sdk.NewInt(2000),
+		Status:         stakingtypes.BondStatusUnbonded,
+	},
+		&types.Validator{
+			ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf",
+			CommissionRate: sdk.MustNewDecFromStr("0.2"),
+			VotingPower:    sdk.NewInt(2000),
+			Status:         stakingtypes.BondStatusUnbonded,
+		},
+		&types.Validator{
+			ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+			CommissionRate: sdk.MustNewDecFromStr("0.2"),
+			VotingPower:    sdk.NewInt(3000),
+			Status:         stakingtypes.BondStatusBonded,
+		},
+		&types.Validator{
+			ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
+			CommissionRate: sdk.MustNewDecFromStr("0.2"),
+			VotingPower:    sdk.NewInt(2000),
+			Status:         stakingtypes.BondStatusBonded,
+		},
+		&types.Validator{
+			ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+			CommissionRate: sdk.MustNewDecFromStr("0.2"),
+			VotingPower:    sdk.NewInt(2000),
+			Status:         stakingtypes.BondStatusBonded,
+		},
+		&types.Validator{
+			ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
+			CommissionRate: sdk.MustNewDecFromStr("0.2"),
+			VotingPower:    sdk.NewInt(2000),
+			Status:         stakingtypes.BondStatusBonded,
+		},
+	)
+
+	expected := types.ValidatorIntents{
+		&types.ValidatorIntent{
+			ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy",
+			Weight:         sdk.NewDecWithPrec(25, 2),
+		},
+		&types.ValidatorIntent{
+			ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll",
+			Weight:         sdk.NewDecWithPrec(25, 2),
+		},
+		&types.ValidatorIntent{
+			ValoperAddress: "cosmosvaloper1qaa9zej9a0ge3ugpx3pxyx602lxh3ztqgfnp42",
+			Weight:         sdk.NewDecWithPrec(25, 2),
+		},
+		&types.ValidatorIntent{
+			ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7",
+			Weight:         sdk.NewDecWithPrec(25, 2),
+		},
+	}
+	actual := zone.GetAggregateIntentOrDefault()
+	require.Equal(t, expected, actual)
+}*/

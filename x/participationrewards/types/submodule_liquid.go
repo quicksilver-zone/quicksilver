@@ -19,35 +19,31 @@ type LiquidAllowedDenomProtocolData struct {
 	QAssetDenom string
 }
 
-func (lpd LiquidAllowedDenomProtocolData) ValidateBasic() error {
-	errors := make(map[string]error)
+func (lpd *LiquidAllowedDenomProtocolData) ValidateBasic() error {
+	errs := make(map[string]error)
 
-	if len(lpd.ChainID) == 0 {
-		errors["ChainID"] = ErrUndefinedAttribute
+	if lpd.ChainID == "" {
+		errs["ChainID"] = ErrUndefinedAttribute
 	}
 
 	if len(strings.Split(lpd.ChainID, "-")) < 2 {
-		errors["ChainID"] = ErrInvalidChainID
+		errs["ChainID"] = ErrInvalidChainID
 	}
 
-	if len(lpd.RegisteredZoneChainID) == 0 {
-		errors["RegisteredZoneChainID"] = ErrUndefinedAttribute
+	if lpd.RegisteredZoneChainID == "" {
+		errs["RegisteredZoneChainID"] = ErrUndefinedAttribute
 	}
 
 	if len(strings.Split(lpd.RegisteredZoneChainID, "-")) < 2 {
-		errors["RegisteredZoneChainID"] = ErrInvalidChainID
+		errs["RegisteredZoneChainID"] = ErrInvalidChainID
 	}
 
-	if len(lpd.IbcDenom) < 5 || lpd.IbcDenom[:4] != "ibc/" {
-		errors["IbcDenom"] = ErrInvalidAssetName
+	if lpd.QAssetDenom == "" {
+		errs["QAssetDenom"] = ErrUndefinedAttribute
 	}
 
-	if len(lpd.QAssetDenom) == 0 {
-		errors["QAssetDenom"] = ErrUndefinedAttribute
-	}
-
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		return multierror.New(errs)
 	}
 
 	return nil

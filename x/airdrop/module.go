@@ -4,18 +4,27 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+<<<<<<< HEAD
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+=======
+	"math/rand"
+>>>>>>> origin/develop
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop/client/cli"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
@@ -23,15 +32,16 @@ import (
 )
 
 var (
-	_ module.AppModuleBasic = AppModuleBasic{}
-	_ module.AppModule      = AppModule{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
 // AppModuleBasic
 // ----------------------------------------------------------------------------
 
-// AppModuleBasic implements the AppModuleBasic interface for the capability module.
+// AppModuleBasic implements the AppModuleBasic interface for the airdrop module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
@@ -41,12 +51,12 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers a legacy amino codec
+// RegisterLegacyAminoCodec registers a legacy amino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the module's interface types.
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	// RegisterInterfaces registers interfaces and implementations of the bank module.
 	types.RegisterInterfaces(reg)
@@ -72,8 +82,8 @@ func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 // This function will panic on failure.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, m *runtime.ServeMux) {
+	err := types.RegisterQueryHandlerClient(context.Background(), m, types.NewQueryClient(clientCtx))
 	if err != nil {
 		panic(err)
 	}
@@ -96,16 +106,16 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // AppModule implements the AppModule interface for the airdrop module.
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
-// NewAppModule return a new AppModule
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+// NewAppModule return a new AppModule.
+func NewAppModule(cdc codec.Codec, k *keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: AppModuleBasic{
 			cdc: cdc,
 		},
-		keeper: keeper,
+		keeper: k,
 	}
 }
 
@@ -168,3 +178,30 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// ___________________________________________________________________________
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the mint module.
+func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+	return nil
+}
+
+// RandomizedParams creates randomized mint param changes for the simulator.
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return []simtypes.ParamChange{}
+}
+
+// RegisterStoreDecoder registers a decoder for mint module's types.
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+}
+
+// WeightedOperations doesn't return any mint module operation.
+func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return nil
+}

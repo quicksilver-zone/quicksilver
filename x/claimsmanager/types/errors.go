@@ -1,12 +1,12 @@
 package types
 
 import (
-	fmt "fmt"
+	"fmt"
 
 	sdkioerrors "cosmossdk.io/errors"
 )
 
-// x/claimsmanager module sentinel errors
+// x/claimsmanager module sentinel errors.
 var (
 	ErrUndefinedAttribute   = sdkioerrors.Register(ModuleName, 1, "expected attribute not defined")
 	ErrNegativeAttribute    = sdkioerrors.Register(ModuleName, 2, "expected attribute must not be negative")

@@ -14,23 +14,23 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-// Callbacks wrapper struct for interchainstaking keeper
-type Callback func(Keeper, sdk.Context, []byte, icqtypes.Query) error
+// Callback wrapper struct for interchainstaking keeper.
+type Callback func(sdk.Context, *Keeper, []byte, icqtypes.Query) error
 
 type Callbacks struct {
-	k         Keeper
+	k         *Keeper
 	callbacks map[string]Callback
 }
 
 var _ icqtypes.QueryCallbacks = Callbacks{}
 
-func (k Keeper) CallbackHandler() Callbacks {
+func (k *Keeper) CallbackHandler() Callbacks {
 	return Callbacks{k, make(map[string]Callback)}
 }
 
-// callback handler
+// Call calls callback handler.
 func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query icqtypes.Query) error {
-	return c.callbacks[id](c.k, ctx, args, query)
+	return c.callbacks[id](ctx, c.k, args, query)
 }
 
 func (c Callbacks) Has(id string) bool {
@@ -39,7 +39,7 @@ func (c Callbacks) Has(id string) bool {
 }
 
 func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallbacks {
-	c.callbacks[id] = fn.(Callback)
+	c.callbacks[id], _ = fn.(Callback)
 	return c
 }
 
@@ -54,7 +54,7 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 
 // Callbacks
 
-func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+func ValidatorSelectionRewardsCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
 	delegatorRewards := distrtypes.QueryDelegationTotalRewardsResponse{}
 	err := k.cdc.Unmarshal(response, &delegatorRewards)
 	if err != nil {
@@ -79,15 +79,15 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	)
 
 	// snapshot obtained and used here
-	userAllocations := k.calcUserValidatorSelectionAllocations(ctx, zone, *zs)
+	userAllocations := k.CalcUserValidatorSelectionAllocations(ctx, &zone, *zs)
 
-	if err := k.distributeToUsers(ctx, userAllocations); err != nil {
+	if err := k.DistributeToUsers(ctx, userAllocations); err != nil {
 		return err
 	}
 
 	// create snapshot of current intents for next epoch boundary
-	for _, di := range k.icsKeeper.AllIntents(ctx, zone, false) {
-		k.icsKeeper.SetIntent(ctx, zone, di, true)
+	for _, di := range k.icsKeeper.AllDelegatorIntents(ctx, &zone, false) {
+		k.icsKeeper.SetDelegatorIntent(ctx, &zone, di, true)
 	}
 
 	// set zone ValidatorSelectionAllocation to zero
@@ -97,7 +97,7 @@ func ValidatorSelectionRewardsCallback(k Keeper, ctx sdk.Context, response []byt
 	return nil
 }
 
-func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
 	var pd gamm.PoolI
 	if err := k.cdc.UnmarshalInterface(response, &pd); err != nil {
 		return err
@@ -121,7 +121,7 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 	if err != nil {
 		return err
 	}
-	pool, ok := ipool.(types.OsmosisPoolProtocolData)
+	pool, ok := ipool.(*types.OsmosisPoolProtocolData)
 	if !ok {
 		return fmt.Errorf("unable to unmarshal protocol data for osmosispools/%d", poolID)
 	}
@@ -140,14 +140,14 @@ func OsmosisPoolUpdateCallback(k Keeper, ctx sdk.Context, response []byte, query
 }
 
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
-func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtypes.Query) error {
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainId)
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for connection/%s", query.ChainId)
 	}
-
+	k.Logger(ctx).Debug("epoch callback called")
 	iConnectionData, err := types.UnmarshalProtocolData(types.ProtocolDataTypeConnection, data.Data)
-	connectionData := iConnectionData.(types.ConnectionProtocolData)
+	connectionData, _ := iConnectionData.(*types.ConnectionProtocolData)
 
 	if err != nil {
 		return err
@@ -162,6 +162,8 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 	if err != nil {
 		return err
 	}
+	k.Logger(ctx).Debug("got block response", "block", blockResponse)
+
 	if blockResponse.SdkBlock == nil {
 		// v0.45 and below
 		//nolint:staticcheck // SA1019 ignore this!
@@ -184,6 +186,8 @@ func SetEpochBlockCallback(k Keeper, ctx sdk.Context, args []byte, query icqtype
 		"",
 		0,
 	)
+
+	k.Logger(ctx).Debug("emitted client update", "height", connectionData.LastEpoch)
 
 	data.Data, err = json.Marshal(connectionData)
 	if err != nil {

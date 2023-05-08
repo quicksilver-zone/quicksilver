@@ -65,10 +65,17 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		MessagesPerTx:                0,
 	}
 	zone.Validators = append(zone.Validators,
+<<<<<<< HEAD
 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
 		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+=======
+		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
+>>>>>>> origin/develop
 		&types.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
 	)
 
@@ -78,8 +85,14 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	updateGenesisConfigState(types.ModuleName, newGenesis)
 	s.zones = []types.Zone{zone}
 
+<<<<<<< HEAD
 	n, err := network.New(s.T(), s.T().TempDir(), s.cfg)
 	s.network = n
+=======
+	net, err := network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
+	s.network = net
+>>>>>>> origin/develop
 
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
@@ -90,22 +103,32 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	s.network.Cleanup()
 }
 
-func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
+func (s *IntegrationTestSuite) TestGetCmdZones() {
 	val := s.network.Validators[0]
 
 	tests := []struct {
 		name      string
 		args      []string
 		expectErr bool
+<<<<<<< HEAD
 		respType  *types.QueryZonesInfoResponse
 		expected  *types.QueryZonesInfoResponse
+=======
+		respType  *types.QueryZonesResponse
+		expected  *types.QueryZonesResponse
+>>>>>>> origin/develop
 	}{
 		{
 			"valid",
 			[]string{},
 			false,
+<<<<<<< HEAD
 			&types.QueryZonesInfoResponse{},
 			&types.QueryZonesInfoResponse{
+=======
+			&types.QueryZonesResponse{},
+			&types.QueryZonesResponse{
+>>>>>>> origin/develop
 				Zones: s.zones,
 			},
 		},
@@ -116,12 +139,13 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{
+			runFlags := []string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			}
-			args := append(tt.args, flags...)
 
-			cmd := cli.GetCmdZonesInfos()
+			args := tt.args
+			args = append(args, runFlags...)
+			cmd := cli.GetCmdZones()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
 			if tt.expectErr {
@@ -129,10 +153,44 @@ func (s *IntegrationTestSuite) TestGetCmdZonesInfos() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().NoError(clientCtx.Codec.UnmarshalJSON(out.Bytes(), tt.respType), out.String())
+<<<<<<< HEAD
 				s.Require().Equal(tt.expected.Zones, tt.respType.Zones, out.String())
+=======
+				for i, zone := range tt.respType.Zones {
+					s.Require().True(s.ZonesEqual(tt.expected.Zones[i], zone))
+				}
+>>>>>>> origin/develop
 			}
 		})
 	}
+}
+
+func (s *IntegrationTestSuite) ZonesEqual(zoneA, zoneB types.Zone) bool {
+	s.T().Helper()
+
+	s.Require().Equal(zoneA.BaseDenom, zoneB.BaseDenom)
+	s.Require().Equal(zoneA.AggregateIntent, zoneB.AggregateIntent)
+	s.Require().Equal(zoneA.ChainId, zoneB.ChainId)
+	s.Require().Equal(zoneA.AccountPrefix, zoneB.AccountPrefix)
+	s.Require().Equal(zoneA.DelegationAddress, zoneB.DelegationAddress)
+	s.Require().Equal(zoneA.DepositAddress, zoneB.DepositAddress)
+	s.Require().Equal(zoneA.ConnectionId, zoneB.ConnectionId)
+	s.Require().Equal(zoneA.Decimals, zoneB.Decimals)
+	s.Require().Equal(zoneA.DepositsEnabled, zoneB.DepositsEnabled)
+	s.Require().Equal(zoneA.PerformanceAddress, zoneA.PerformanceAddress)
+	s.Require().Equal(zoneA.WithdrawalWaitgroup, zoneB.WithdrawalWaitgroup)
+	s.Require().Equal(zoneA.WithdrawalAddress, zoneB.WithdrawalAddress)
+	s.Require().Equal(zoneA.HoldingsAllocation, zoneB.HoldingsAllocation)
+	s.Require().Equal(zoneA.RedemptionRate, zoneB.RedemptionRate)
+	s.Require().Equal(zoneA.ReturnToSender, zoneB.ReturnToSender)
+	s.Require().Equal(zoneA.LastEpochHeight, zoneB.LastEpochHeight)
+	s.Require().Equal(zoneA.LiquidityModule, zoneB.LiquidityModule)
+	s.Require().Equal(zoneA.LocalDenom, zoneB.LocalDenom)
+	for i := range zoneA.Validators {
+		s.Require().Equal(zoneA.Validators[i], zoneB.Validators[i])
+	}
+
+	return true
 }
 
 func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
@@ -180,11 +238,12 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{
+			runFlags := []string{
 				fmt.Sprintf("--%s=json", tmcli.OutputFlag),
 			}
-			args := append(tt.args, flags...)
 
+			args := tt.args
+			args = append(args, runFlags...)
 			cmd := cli.GetDelegatorIntentCmd()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
@@ -199,7 +258,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 	}
 }
 
-/*func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
+func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
 	val := s.network.Validators[0]
 
 	tests := []struct {
@@ -230,13 +289,13 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			&types.QueryDepositAccountForChainResponse{},
 			&types.QueryDepositAccountForChainResponse{},
 		},
-		{
+		/*{
 			"valid",
 			[]string{s.cfg.ChainID},
 			false,
 			&types.QueryDepositAccountForChainResponse{},
 			&types.QueryDepositAccountForChainResponse{},
-		},
+		},*/
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -244,14 +303,9 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{
-				//fmt.Sprintf("--%s=json", tmcli.OutputFlag),
-			}
-			args := append(tt.args, flags...)
-
 			cmd := cli.GetDepositAccountCmd()
 
-			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)
+			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tt.args)
 			if tt.expectErr {
 				s.Require().Error(err)
 			} else {
@@ -261,7 +315,7 @@ func (s *IntegrationTestSuite) TestGetDelegatorIntentCmd() {
 			}
 		})
 	}
-}*/
+}
 
 func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 	val := s.network.Validators[0]
@@ -365,13 +419,14 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 		s.Run(tt.name, func() {
 			clientCtx := val.ClientCtx
 
-			flags := []string{
+			runFlags := []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=true", flags.FlagDryRun),
 			}
-			args := append(tt.args, flags...)
 
+			args := tt.args
+			args = append(args, runFlags...)
 			cmd := cli.GetSignalIntentTxCmd()
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, args)

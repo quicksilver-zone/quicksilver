@@ -12,10 +12,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = &Keeper{}
 
-// EpochInfos provide running epochInfos
-func (k Keeper) EpochInfos(c context.Context, req *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
+// EpochInfos provide running epochInfos.
+func (k *Keeper) EpochInfos(c context.Context, req *types.QueryEpochsInfoRequest) (*types.QueryEpochsInfoResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -43,8 +43,8 @@ func (k Keeper) EpochInfos(c context.Context, req *types.QueryEpochsInfoRequest)
 	}, nil
 }
 
-// CurrentEpoch provides current epoch of specified identifier
-func (k Keeper) CurrentEpoch(c context.Context, req *types.QueryCurrentEpochRequest) (*types.QueryCurrentEpochResponse, error) {
+// CurrentEpoch provides current epoch of specified identifier.
+func (k *Keeper) CurrentEpoch(c context.Context, req *types.QueryCurrentEpochRequest) (*types.QueryCurrentEpochResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

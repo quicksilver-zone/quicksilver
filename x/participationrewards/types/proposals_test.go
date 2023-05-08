@@ -1,15 +1,16 @@
-package types
+package types_test
 
 import (
 	"bytes"
 	"encoding/json"
-	encoding_json "encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-var validLiquidData string = `{
+var validLiquidData = `{
 	"chainid": "somechain-1",
 	"registeredzonechainid": "someotherchain-1",
 	"ibcdenom": "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
@@ -98,7 +99,7 @@ func TestAddProtocolDataProposal_ValidateBasic(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := AddProtocolDataProposal{
+			m := types.AddProtocolDataProposal{
 				Title:       tt.fields.Title,
 				Description: tt.fields.Description,
 				Type:        tt.fields.Type,
@@ -123,7 +124,7 @@ func TestAddProtocolDataProposal_String(t *testing.T) {
 		Protocol    string
 		Type        string
 		Key         string
-		Data        encoding_json.RawMessage
+		Data        json.RawMessage
 	}
 
 	tt := fields{
@@ -149,7 +150,7 @@ Key:			liquid
 `
 
 	t.Run("stringer", func(t *testing.T) {
-		m := AddProtocolDataProposal{
+		m := types.AddProtocolDataProposal{
 			Title:       tt.Title,
 			Description: tt.Description,
 			Type:        tt.Type,
@@ -164,7 +165,7 @@ Key:			liquid
 var sink interface{}
 
 func BenchmarkUpdateZoneProposalString(b *testing.B) {
-	adp := &AddProtocolDataProposal{
+	adp := &types.AddProtocolDataProposal{
 		Title:       "Testing right here",
 		Description: "Testing description",
 		Key:         "This is my key",
@@ -189,5 +190,5 @@ func BenchmarkUpdateZoneProposalString(b *testing.B) {
 	if sink == nil {
 		b.Fatal("Benchmark did not run")
 	}
-	sink = (interface{})(nil)
+	sink = interface{}(nil)
 }

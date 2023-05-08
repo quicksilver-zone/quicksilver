@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+<<<<<<< HEAD
 
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 )
@@ -28,7 +29,27 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010204UpgradeName, v010204UpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010207UpgradeName, v010207UpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010209UpgradeName, v010209UpgradeHandler(app))
+=======
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
+	"github.com/ingenuity-build/quicksilver/app/upgrades"
+)
+
+func (app *Quicksilver) setUpgradeHandlers() {
+	for _, upgrade := range upgrades.Upgrades() {
+		app.UpgradeKeeper.SetUpgradeHandler(
+			upgrade.UpgradeName,
+			upgrade.CreateUpgradeHandler(
+				app.mm,
+				app.configurator,
+				&app.AppKeepers,
+			),
+		)
+	}
+}
+>>>>>>> origin/develop
+
+func (app *Quicksilver) setUpgradeStoreLoaders() {
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
 	// This will read that value, and execute the preparations for the upgrade.
@@ -49,6 +70,12 @@ func setUpgradeHandlers(app *Quicksilver) {
 	// 	storeUpgrades = &storetypes.StoreUpgrades{
 	// 		Added: []string{claimsmanagertypes.ModuleName},
 	// 	}
+
+	case upgrades.V010402rc3UpgradeName:
+
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{packetforwardtypes.ModuleName},
+		}
 	default:
 		// no-op
 	}

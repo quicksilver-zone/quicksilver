@@ -4,37 +4,49 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"sort"
 	"time"
 
+<<<<<<< HEAD
 	"cosmossdk.io/math"
 	"github.com/cometbft/cometbft/libs/log"
+=======
+	sdkmath "cosmossdk.io/math"
+>>>>>>> origin/develop
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	authKeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+<<<<<<< HEAD
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
+=======
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	"github.com/cometbft/cometbft/libs/log"
+
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+
+>>>>>>> origin/develop
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
 	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 )
 
 // Keeper of this module maintains collections of registered zones.
@@ -44,8 +56,8 @@ type Keeper struct {
 	scopedKeeper        *capabilitykeeper.ScopedKeeper
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICQKeeper           interchainquerykeeper.Keeper
-	AccountKeeper       authKeeper.AccountKeeper
-	BankKeeper          bankkeeper.Keeper
+	AccountKeeper       types.AccountKeeper
+	BankKeeper          types.BankKeeper
 	IBCKeeper           ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
@@ -54,7 +66,19 @@ type Keeper struct {
 
 // NewKeeper returns a new instance of zones Keeper.
 // This function will panic on failure.
-func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper authKeeper.AccountKeeper, bankKeeper bankkeeper.Keeper, icacontrollerkeeper icacontrollerkeeper.Keeper, scopedKeeper *capabilitykeeper.ScopedKeeper, icqKeeper interchainquerykeeper.Keeper, ibcKeeper ibckeeper.Keeper, transferKeeper ibctransferkeeper.Keeper, claimsManagerKeeper claimsmanagerkeeper.Keeper, ps paramtypes.Subspace) Keeper {
+func NewKeeper(
+	cdc codec.Codec,
+	storeKey storetypes.StoreKey,
+	accountKeeper types.AccountKeeper,
+	bankKeeper types.BankKeeper,
+	icaControllerKeeper icacontrollerkeeper.Keeper,
+	scopedKeeper *capabilitykeeper.ScopedKeeper,
+	icqKeeper interchainquerykeeper.Keeper,
+	ibcKeeper ibckeeper.Keeper,
+	transferKeeper ibctransferkeeper.Keeper,
+	claimsManagerKeeper claimsmanagerkeeper.Keeper,
+	ps paramtypes.Subspace,
+) Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -71,7 +95,7 @@ func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, accountKeeper auth
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		scopedKeeper:        scopedKeeper,
-		ICAControllerKeeper: icacontrollerkeeper,
+		ICAControllerKeeper: icaControllerKeeper,
 		ICQKeeper:           icqKeeper,
 		BankKeeper:          bankKeeper,
 		AccountKeeper:       accountKeeper,
@@ -88,11 +112,11 @@ func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
 }
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) GetCodec() codec.Codec {
+func (k *Keeper) GetCodec() codec.Codec {
 	return k.cdc
 }
 
@@ -100,12 +124,12 @@ func (k *Keeper) ScopedKeeper() *capabilitykeeper.ScopedKeeper {
 	return k.scopedKeeper
 }
 
-// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback
-func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capability, name string) error {
-	return k.scopedKeeper.ClaimCapability(ctx, cap, name)
+// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback.
+func (k *Keeper) ClaimCapability(ctx sdk.Context, capability *capabilitytypes.Capability, name string) error {
+	return k.scopedKeeper.ClaimCapability(ctx, capability, name)
 }
 
-func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID string, port string) {
+func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID, port string) {
 	mapping := types.PortConnectionTuple{ConnectionId: connectionID, PortId: port}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortMapping)
 	bz := k.cdc.MustMarshal(&mapping)
@@ -125,7 +149,7 @@ func (k *Keeper) GetConnectionForPort(ctx sdk.Context, port string) (string, err
 }
 
 // IteratePortConnections iterates through all of the delegations.
-func (k Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortConnectionTuple) (stop bool)) {
+func (k *Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortConnectionTuple) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
 	iterator := sdk.KVStorePrefixIterator(store, types.KeyPrefixPortMapping)
@@ -141,7 +165,7 @@ func (k Keeper) IteratePortConnections(ctx sdk.Context, cb func(pc types.PortCon
 }
 
 // AllPortConnections returns all delegations used during genesis dump.
-func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionTuple) {
+func (k *Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionTuple) {
 	k.IteratePortConnections(ctx, func(pc types.PortConnectionTuple) bool {
 		pcs = append(pcs, pc)
 		return false
@@ -154,100 +178,73 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 // * some of these functions (or portions thereof) may be changed to single
 //   query type functions, dependent upon callback features / capabilities;
 
-func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte, request []byte) error {
-	validatorsRes := stakingTypes.QueryValidatorsResponse{}
-	if len(data) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (8)")
-	}
-	err := k.cdc.Unmarshal(data, &validatorsRes)
+func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icqtypes.Query) error {
+	validatorsRes, err := k.UnmarshalValidatorsResponse(data)
 	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", zoneInfo.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal validators info for zone", "zone", icqQuery.ChainId, "err", err)
 		return err
 	}
 
 	if validatorsRes.Pagination != nil && !bytes.Equal(validatorsRes.Pagination.NextKey, []byte{}) {
-		validatorsReq := stakingTypes.QueryValidatorsRequest{Pagination: &query.PageRequest{}}
-		err = k.cdc.Unmarshal(request, &validatorsReq)
+		validatorsReq, err := k.UnmarshalValidatorsRequest(icqQuery.Request)
 		if err != nil {
-			k.Logger(ctx).Error("unable to unmarshal request", "zone", zoneInfo.ChainId, "err", err)
+			k.Logger(ctx).Error("unable to unmarshal request info for zone", "zone", icqQuery.ChainId, "err", err)
 			return err
 		}
+
 		if validatorsReq.Pagination == nil {
-			k.Logger(ctx).Info("unmarshalled a QueryValidatorsRequest with a nil Pagination", "zone", zoneInfo.ChainId)
 			validatorsReq.Pagination = new(query.PageRequest)
 		}
 		validatorsReq.Pagination.Key = validatorsRes.Pagination.NextKey
-		bz, err := k.cdc.Marshal(&validatorsReq)
+		k.Logger(ctx).Debug("Found pagination nextKey in valset; resubmitting...")
+		err = k.EmitValSetQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validatorsReq, sdkmath.NewInt(-1))
 		if err != nil {
-			return errors.New("failed to marshal valset pagination request")
+			return nil
 		}
-		k.Logger(ctx).Info("Found pagination nextKey in valset; resubmitting...")
-
-		k.ICQKeeper.MakeRequest(
-			ctx,
-			zoneInfo.ConnectionId,
-			zoneInfo.ChainId,
-			"cosmos.staking.v1beta1.Query/Validators",
-			bz,
-			sdk.NewInt(-1),
-			types.ModuleName,
-			"valset",
-			0,
-		)
 	}
 
 	for _, validator := range validatorsRes.Validators {
-		val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
+		addr, err := utils.ValAddressFromBech32(validator.OperatorAddress, "")
+		if err != nil {
+			return err
+		}
+		val, found := k.GetValidator(ctx, icqQuery.ChainId, addr)
 		toQuery := false
 		switch {
 		case !found:
-			k.Logger(ctx).Info("Unable to find validator - fetching proof...", "valoper", validator.OperatorAddress)
+			k.Logger(ctx).Debug("Unable to find validator - fetching proof...", "valoper", validator.OperatorAddress)
 			toQuery = true
 		case !val.CommissionRate.Equal(validator.GetCommission()):
-			k.Logger(ctx).Info("Validator commission change; fetching proof", "valoper", validator.OperatorAddress, "from", val.CommissionRate, "to", validator.GetCommission())
+			k.Logger(ctx).Debug("Validator commission change; fetching proof", "valoper", validator.OperatorAddress, "from", val.CommissionRate, "to", validator.GetCommission())
 			toQuery = true
 		case !val.VotingPower.Equal(validator.Tokens):
-			k.Logger(ctx).Info("Validator voting power change; fetching proof", "valoper", validator.OperatorAddress, "from", val.VotingPower, "to", validator.Tokens)
+			k.Logger(ctx).Debug("Validator voting power change; fetching proof", "valoper", validator.OperatorAddress, "from", val.VotingPower, "to", validator.Tokens)
 			toQuery = true
 		case !val.DelegatorShares.Equal(validator.DelegatorShares):
-			k.Logger(ctx).Info("Validator shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.DelegatorShares, "to", validator.DelegatorShares)
+			k.Logger(ctx).Debug("Validator shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.DelegatorShares, "to", validator.DelegatorShares)
 			toQuery = true
 		}
 
 		if toQuery {
-			_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
-			data := stakingTypes.GetValidatorKey(addr)
-			k.ICQKeeper.MakeRequest(
-				ctx,
-				zoneInfo.ConnectionId,
-				zoneInfo.ChainId,
-				"store/staking/key",
-				data,
-				sdk.NewInt(-1),
-				types.ModuleName,
-				"validator",
-				0,
-			)
+			k.EmitValidatorQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validator)
 		}
 	}
 
-	// also do this for Unbonded and Unbonding
-	k.SetZone(ctx, &zoneInfo)
 	return nil
 }
 
-func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
-	validator := stakingTypes.Validator{}
-	if len(data) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (9)")
-	}
-	err := k.cdc.Unmarshal(data, &validator)
+func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []byte) error {
+	validator, err := k.UnmarshalValidator(data)
 	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zoneInfo.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zone.ChainId, "err", err)
 		return err
 	}
 
-	val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
+	valAddrBytes, err := utils.ValAddressFromBech32(validator.OperatorAddress, zone.GetValoperPrefix())
+	if err != nil {
+		return err
+	}
+	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 	if !found {
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
@@ -255,7 +252,7 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		if validator.IsJailed() {
 			jailTime = ctx.BlockTime()
 		}
-		zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
+		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
@@ -264,35 +261,34 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 			Status:          validator.Status.String(),
 			Jailed:          validator.IsJailed(),
 			JailedSince:     jailTime,
-		})
-		zoneInfo.Validators = zoneInfo.GetValidatorsSorted()
+		}); err != nil {
+			return err
+		}
 
-		if err := k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); err != nil {
+		if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 			return err
 		}
 
 	} else {
-
-		if !val.CommissionRate.Equal(validator.GetCommission()) {
-			k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
-			val.CommissionRate = validator.GetCommission()
-		}
-
-		if !val.VotingPower.Equal(validator.Tokens) {
-			k.Logger(ctx).Info("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens)
-			val.VotingPower = validator.Tokens
-		}
-
-		if !val.DelegatorShares.Equal(validator.DelegatorShares) {
-			k.Logger(ctx).Info("Validator delegator shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.DelegatorShares, "newShares", validator.DelegatorShares)
-			val.DelegatorShares = validator.DelegatorShares
-		}
-
 		if !val.Jailed && validator.IsJailed() {
 			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress)
 
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
+			if !val.VotingPower.IsPositive() {
+				return errors.New("existing voting power must be greater than zero")
+			}
+			if !validator.Tokens.IsPositive() {
+				return errors.New("incoming voting power must be greater than zero")
+			}
+			// determine difference between previous vp/shares ratio and new ratio.
+			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
+			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+			delta := newRatio.Quo(prevRatio)
+			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
+			if err != nil {
+				return err
+			}
 		} else if val.Jailed && !validator.IsJailed() {
 			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
 
@@ -300,31 +296,70 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 			val.JailedSince = time.Time{}
 		}
 
+		if !val.CommissionRate.Equal(validator.GetCommission()) {
+			k.Logger(ctx).Debug("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
+			val.CommissionRate = validator.GetCommission()
+		}
+
+		if !val.VotingPower.Equal(validator.Tokens) {
+			k.Logger(ctx).Debug("Validator voting power change; updating", "valoper", validator.OperatorAddress, "oldPower", val.VotingPower, "newPower", validator.Tokens)
+			val.VotingPower = validator.Tokens
+		}
+
+		if !val.DelegatorShares.Equal(validator.DelegatorShares) {
+			k.Logger(ctx).Debug("Validator delegator shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.DelegatorShares, "newShares", validator.DelegatorShares)
+			val.DelegatorShares = validator.DelegatorShares
+		}
+
 		if val.Status != validator.Status.String() {
-			k.Logger(ctx).Info("Transitioning validator status", "valoper", validator.OperatorAddress, "previous", val.Status, "current", validator.Status.String())
+			k.Logger(ctx).Debug("Transitioning validator status", "valoper", validator.OperatorAddress, "previous", val.Status, "current", validator.Status.String())
 
 			val.Status = validator.Status.String()
 		}
 
-		if _, found := k.GetPerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); !found {
-			if err := k.MakePerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); err != nil {
+		if err := k.SetValidator(ctx, zone.ChainId, val); err != nil {
+			return err
+		}
+
+		if _, found := k.GetPerformanceDelegation(ctx, zone, validator.OperatorAddress); !found {
+			if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 				return err
 			}
 		}
 	}
 
-	k.SetZone(ctx, &zoneInfo)
 	return nil
 }
 
-func (k Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
-	return func(index int64, zoneInfo types.Zone) (stop bool) {
-		if zoneInfo.DepositAddress != nil {
-			if !zoneInfo.DepositAddress.Balance.Empty() {
-				k.Logger(ctx).Info("balance is non zero", "balance", zoneInfo.DepositAddress.Balance)
+func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
+	var err error
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
+		recordSubAmount := sdkmath.ZeroInt()
+		distr := record.Distribution
+		for _, d := range distr {
+			if d.Valoper != valoper {
+				continue
+			}
+			newAmount := sdk.NewDec(int64(d.Amount)).Quo(delta).TruncateInt()
+			thisSubAmount := sdkmath.NewInt(int64(d.Amount)).Sub(newAmount)
+			recordSubAmount = recordSubAmount.Add(thisSubAmount)
+			d.Amount = newAmount.Uint64()
+			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
+		}
+		record.Distribution = distr
+		record.Amount = record.Amount.Sub(sdk.NewCoin(zone.BaseDenom, recordSubAmount))
+		k.SetWithdrawalRecord(ctx, record)
+		return false
+	})
+	return err
+}
 
-				req := tx.GetTxsEventRequest{Events: []string{"transfer.recipient='" + zoneInfo.DepositAddress.GetAddress() + "'"}, OrderBy: tx.OrderBy_ORDER_BY_DESC, Pagination: &query.PageRequest{Limit: types.TxRetrieveCount}}
-				k.ICQKeeper.MakeRequest(ctx, zoneInfo.ConnectionId, zoneInfo.ChainId, "cosmos.tx.v1beta1.Service/GetTxsEvent", k.cdc.MustMarshal(&req), sdk.NewInt(-1), types.ModuleName, "depositinterval", 0)
+func (k *Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
+	return func(index int64, zone *types.Zone) (stop bool) {
+		if zone.DepositAddress != nil {
+			if !zone.DepositAddress.Balance.Empty() {
+				k.Logger(ctx).Debug("balance is non zero", "balance", zone.DepositAddress.Balance)
+				k.EmitDepositIntervalQuery(ctx, zone)
 
 			}
 		} else {
@@ -353,7 +388,7 @@ func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdk.Dec {
 }
 
 // MigrateParams fetches params, adds ClaimsEnabled field and re-sets params.
-func (k Keeper) MigrateParams(ctx sdk.Context) {
+func (k *Keeper) MigrateParams(ctx sdk.Context) {
 	params := types.Params{}
 	params.DepositInterval = k.GetParam(ctx, types.KeyDepositInterval)
 	params.CommissionRate = k.GetCommissionRate(ctx)
@@ -363,17 +398,17 @@ func (k Keeper) MigrateParams(ctx sdk.Context) {
 	k.paramStore.SetParamSet(ctx, &params)
 }
 
-func (k Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
+func (k *Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
 	k.paramStore.GetParamSet(clientCtx, &params)
 	return params
 }
 
 // SetParams sets the distribution parameters to the param space.
-func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
+func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramStore.SetParamSet(ctx, &params)
 }
 
-func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
+func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
 	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 	if !found {
 		return "", fmt.Errorf("invalid connection id, \"%s\" not found", connectionID)
@@ -390,7 +425,7 @@ func (k Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error)
 	return client.ChainId, nil
 }
 
-func (k Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
+func (k *Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
 	connectionID := ctx.Context().Value(utils.ContextKey("connectionID"))
 	if connectionID == nil {
 		return "", errors.New("connectionID not in context")
@@ -399,7 +434,7 @@ func (k Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
 	return k.GetChainID(ctx, connectionID.(string))
 }
 
-func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
+func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
 	_, addr, err := bech32.DecodeAndConvert(zone.PerformanceAddress.Address)
 	if err != nil {
 		return err
@@ -422,8 +457,83 @@ func (k Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) e
 	return nil
 }
 
+func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, chainID string, validatorsReq stakingtypes.QueryValidatorsRequest, period sdkmath.Int) error {
+	bz, err := k.cdc.Marshal(&validatorsReq)
+	if err != nil {
+		return errors.New("failed to marshal valset pagination request")
+	}
+
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		connectionID,
+		chainID,
+		"cosmos.staking.v1beta1.Query/Validators",
+		bz,
+		period,
+		types.ModuleName,
+		"valset",
+		0,
+	)
+
+	return nil
+}
+
+func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) {
+	_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
+	data := stakingtypes.GetValidatorKey(addr)
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		connectionID,
+		chainID,
+		"store/staking/key",
+		data,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"validator",
+		0,
+	)
+}
+
+func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
+	req := tx.GetTxsEventRequest{
+		Events: []string{
+			"transfer.recipient='" + zone.DepositAddress.GetAddress() + "'",
+		},
+		OrderBy: tx.OrderBy_ORDER_BY_DESC,
+		Pagination: &query.PageRequest{
+			Limit: types.TxRetrieveCount,
+		},
+	}
+
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		zone.ConnectionId,
+		zone.ChainId,
+		"cosmos.tx.v1beta1.Service/GetTxsEvent",
+		k.cdc.MustMarshal(&req),
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"depositinterval",
+		0,
+	)
+}
+
+func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkmath.Int {
+	delegationsInProcess := sdkmath.ZeroInt()
+	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
+		if receipt.Completed == nil {
+			for _, coin := range receipt.Amount {
+				delegationsInProcess = delegationsInProcess.Add(coin.Amount) // we cannot simply choose
+			}
+		}
+		return false
+	})
+	return delegationsInProcess
+}
+
 // redemption rate
 
+<<<<<<< HEAD
 func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRewards math.Int) {
 	delegationsInProcess := sdk.ZeroInt()
 	k.IterateZoneReceipts(ctx, &zone, func(_ int64, receipt types.Receipt) (stop bool) {
@@ -434,11 +544,19 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRew
 		}
 		return false
 	})
+=======
+func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
+	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone)
+>>>>>>> origin/develop
 	ratio, isZero := k.GetRatio(ctx, zone, epochRewards.Add(delegationsInProcess))
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
+<<<<<<< HEAD
 	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(epochRewards).Add(delegationsInProcess))
+=======
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, zone).Amount.Add(epochRewards).Add(delegationsInProcess))
+>>>>>>> origin/develop
 
 	// soft cap redemption rate, instead of panicking.
 	delta := ratio.Quo(zone.RedemptionRate)
@@ -452,9 +570,10 @@ func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone types.Zone, epochRew
 
 	zone.LastRedemptionRate = zone.RedemptionRate
 	zone.RedemptionRate = ratio
-	k.SetZone(ctx, &zone)
+	k.SetZone(ctx, zone)
 }
 
+<<<<<<< HEAD
 func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone types.Zone) {
 	delegationsInProcess := sdk.ZeroInt()
 	k.IterateZoneReceipts(ctx, &zone, func(_ int64, receipt types.Receipt) (stop bool) {
@@ -469,15 +588,22 @@ func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone types.Zone) {
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
 	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
 	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, &zone).Amount.Add(delegationsInProcess))
+=======
+func (k *Keeper) OverrideRedemptionRateNoCap(ctx sdk.Context, zone *types.Zone) {
+	ratio, _ := k.GetRatio(ctx, zone, sdk.ZeroInt())
+	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
+	k.Logger(ctx).Info("Current redemption rate", "rate", zone.RedemptionRate)
+	k.Logger(ctx).Info("New redemption rate", "rate", ratio, "supply", k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount, "lv", k.GetDelegatedAmount(ctx, zone).Amount)
+>>>>>>> origin/develop
 
 	zone.RedemptionRate = ratio
-	k.SetZone(ctx, &zone)
+	k.SetZone(ctx, zone)
 }
 
-func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.Int) (sdk.Dec, bool) {
+func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) (sdk.Dec, bool) {
 	// native asset amount
-	nativeAssetAmount := k.GetDelegatedAmount(ctx, &zone).Amount
-	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, &zone).Amount
+	nativeAssetAmount := k.GetDelegatedAmount(ctx, zone).Amount
+	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, zone).Amount
 
 	// qAsset amount
 	qAssetAmount := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
@@ -492,13 +618,53 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
 }
 
-func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
-	currentAllocations, currentSum := k.GetDelegationMap(ctx, &zone)
-	targetAllocations := zone.GetAggregateIntentOrDefault()
-	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId))
+func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (types.ValidatorIntents, error) {
+	var intents types.ValidatorIntents
+	var filteredIntents types.ValidatorIntents
+
+	if len(z.AggregateIntent) == 0 {
+		intents = k.DefaultAggregateIntents(ctx, z.ChainId)
+	} else {
+		intents = z.AggregateIntent
+	}
+	// filter intents here...
+	// check validators for tombstoned
+	for _, v := range intents {
+		valAddrBytes, err := utils.ValAddressFromBech32(v.ValoperAddress, z.GetValoperPrefix())
+		if err != nil {
+			return nil, err
+		}
+		val, found := k.GetValidator(ctx, z.ChainId, valAddrBytes)
+
+		// this case should not happen as we check the validity of a validator entry when intent is set.
+		if !found {
+			continue
+		}
+		// we should never let tombstoned validators into the list, even if they are explicitly selected
+		if val.Tombstoned {
+			continue
+		}
+
+		// we should never let denylist validators into the list, even if they are explicitly selected
+		// if in deny list {
+		// continue
+		// }
+		filteredIntents = append(filteredIntents, v)
+	}
+
+	return filteredIntents, nil
+}
+
+func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64) error {
+	currentAllocations, currentSum, currentLocked := k.GetDelegationMap(ctx, zone)
+	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
+	if err != nil {
+		return err
+	}
+	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId), k.Logger(ctx))
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
-		msgs = append(msgs, &stakingTypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
+		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
 		k.SetRedelegationRecord(ctx, types.RedelegationRecord{
 			ChainId:     zone.ChainId,
 			EpochNumber: epochNumber,
@@ -515,30 +681,29 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) 
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber), zone.MessagesPerTx)
 }
 
-type RebalanceTarget struct {
-	Amount math.Int
-	Source string
-	Target string
-}
-
-func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents, existingRedelegations []types.RedelegationRecord) []RebalanceTarget {
-	out := make([]RebalanceTarget, 0)
-	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
-
-	wantToRebalance := sdk.ZeroInt()
-	canRebalanceFrom := sdk.ZeroInt()
-
-	totalLocked := int64(0)
-	lockedPerValidator := map[string]int64{}
-	for _, redelegation := range existingRedelegations {
-		totalLocked += redelegation.Amount
-		thisLocked, found := lockedPerValidator[redelegation.Destination]
-		if !found {
-			thisLocked = 0
-		}
-		lockedPerValidator[redelegation.Destination] = thisLocked + redelegation.Amount
+// UnmarshalValidatorsResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.
+func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryValidatorsResponse, error) {
+	validatorsRes := stakingtypes.QueryValidatorsResponse{}
+	if len(data) == 0 {
+		return validatorsRes, errors.New("attempted to unmarshal zero length byte slice (8)")
+	}
+	err := k.cdc.Unmarshal(data, &validatorsRes)
+	if err != nil {
+		return validatorsRes, err
 	}
 
+	return validatorsRes, nil
+}
+
+// UnmarshalValidatorsRequest attempts to umarshal  a byte slice into a QueryValidatorsRequest.
+func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
+	validatorsReq := stakingtypes.QueryValidatorsRequest{}
+	err := k.cdc.Unmarshal(data, &validatorsReq)
+	if err != nil {
+		return validatorsReq, err
+	}
+
+<<<<<<< HEAD
 	fmt.Println("Total locked (per-validator)", totalLocked, lockedPerValidator)
 
 	// TODO: make this a param
@@ -634,4 +799,21 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 	})
 
 	return out
+=======
+	return validatorsReq, nil
+}
+
+// UnmarshalValidator attempts to umarshal  a byte slice into a Validator.
+func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error) {
+	validator := stakingtypes.Validator{}
+	if len(data) == 0 {
+		return validator, errors.New("attempted to unmarshal zero length byte slice (9)")
+	}
+	err := k.cdc.Unmarshal(data, &validator)
+	if err != nil {
+		return validator, err
+	}
+
+	return validator, nil
+>>>>>>> origin/develop
 }

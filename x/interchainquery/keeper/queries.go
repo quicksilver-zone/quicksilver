@@ -17,11 +17,35 @@ func GenerateQueryHash(connectionID, chainID, queryType string, request []byte, 
 
 // ----------------------------------------------------------------
 
+<<<<<<< HEAD
 func (k Keeper) NewQuery(module, connectionID, chainID, queryType string, request []byte, period math.Int, callbackID string, ttl uint64) *types.Query {
 	return &types.Query{Id: GenerateQueryHash(connectionID, chainID, queryType, request, module), ConnectionId: connectionID, ChainId: chainID, QueryType: queryType, Request: request, Period: period, LastHeight: sdk.ZeroInt(), CallbackId: callbackID, Ttl: ttl}
+=======
+func (k Keeper) NewQuery(
+	module,
+	connectionID,
+	chainID,
+	queryType string,
+	request []byte,
+	period math.Int,
+	callbackID string,
+	ttl uint64,
+) *types.Query {
+	return &types.Query{
+		Id:           GenerateQueryHash(connectionID, chainID, queryType, request, module),
+		ConnectionId: connectionID,
+		ChainId:      chainID,
+		QueryType:    queryType,
+		Request:      request,
+		Period:       period,
+		LastHeight:   sdk.ZeroInt(),
+		CallbackId:   callbackID,
+		Ttl:          ttl,
+	}
+>>>>>>> origin/develop
 }
 
-// GetQuery returns query
+// GetQuery returns query.
 func (k Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) {
 	query := types.Query{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
@@ -33,20 +57,20 @@ func (k Keeper) GetQuery(ctx sdk.Context, id string) (types.Query, bool) {
 	return query, true
 }
 
-// SetQuery set query info
+// SetQuery set query info.
 func (k Keeper) SetQuery(ctx sdk.Context, query types.Query) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	bz := k.cdc.MustMarshal(&query)
 	store.Set([]byte(query.Id), bz)
 }
 
-// DeleteQuery delete query info
+// DeleteQuery delete query info.
 func (k Keeper) DeleteQuery(ctx sdk.Context, id string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	store.Delete([]byte(id))
 }
 
-// IterateQueries iterate through queries
+// IterateQueries iterate through queries.
 func (k Keeper) IterateQueries(ctx sdk.Context, fn func(index int64, queryInfo types.Query) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixQuery)
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -65,7 +89,7 @@ func (k Keeper) IterateQueries(ctx sdk.Context, fn func(index int64, queryInfo t
 	}
 }
 
-// AllQueries returns every queryInfo in the store
+// AllQueries returns every queryInfo in the store.
 func (k Keeper) AllQueries(ctx sdk.Context) []types.Query {
 	queries := []types.Query{}
 	k.IterateQueries(ctx, func(_ int64, queryInfo types.Query) (stop bool) {

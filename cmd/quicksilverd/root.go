@@ -10,12 +10,15 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+<<<<<<< HEAD
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
 	tmcfg "github.com/cometbft/cometbft/config"
+=======
+>>>>>>> origin/develop
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -24,12 +27,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/snapshots"
+	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+<<<<<<< HEAD
 
 	servercfg "github.com/ingenuity-build/quicksilver/server/config"
 
@@ -44,11 +50,30 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+=======
+	"github.com/cosmos/cosmos-sdk/x/crisis"
+	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/spf13/cast"
+	"github.com/spf13/cobra"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/cometbft/cometbft/libs/log"
+	dbm "github.com/cometbft/cometbft-db"
+
+	"github.com/ingenuity-build/quicksilver/app"
+	quicksilverconfig "github.com/ingenuity-build/quicksilver/cmd/config"
+	servercfg "github.com/ingenuity-build/quicksilver/server/config"
+>>>>>>> origin/develop
 )
 
 const (
 	EnvPrefix = "QUICK"
 )
+
+type appCreator struct {
+	encCfg app.EncodingConfig
+}
 
 // NewRootCmd creates a new root command for quicksilverd. It is called once in the
 // main function.
@@ -279,10 +304,6 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	crisis.AddModuleInitFlags(startCmd)
 }
 
-type appCreator struct {
-	encCfg app.EncodingConfig
-}
-
 func (ac appCreator) appExport(
 	logger log.Logger,
 	db dbm.DB,
@@ -303,7 +324,7 @@ func (ac appCreator) appExport(
 	}
 	var emptyWasmOpts []wasm.Option
 
-	gaiaApp := app.NewQuicksilver(
+	qsApp := app.NewQuicksilver(
 		logger,
 		db,
 		traceStore,
@@ -319,10 +340,10 @@ func (ac appCreator) appExport(
 	)
 
 	if height != -1 {
-		if err := gaiaApp.LoadHeight(height); err != nil {
+		if err := qsApp.LoadHeight(height); err != nil {
 			return servertypes.ExportedApp{}, err
 		}
 	}
 
-	return gaiaApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
+	return qsApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs)
 }

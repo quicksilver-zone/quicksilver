@@ -13,10 +13,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-var _ types.QueryServer = Keeper{}
+var _ types.QueryServer = &Keeper{}
 
-// ZoneInfos returns information about registered zones.
-func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (*types.QueryZonesInfoResponse, error) {
+// Zones returns information about registered zones.
+func (k *Keeper) Zones(c context.Context, req *types.QueryZonesRequest) (*types.QueryZonesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -24,6 +24,7 @@ func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (
 	ctx := sdk.UnwrapSDKContext(c)
 
 	var zones []types.Zone
+	var stats []*types.Statistics
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
 	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
@@ -32,20 +33,78 @@ func (k Keeper) ZoneInfos(c context.Context, req *types.QueryZonesInfoRequest) (
 			return err
 		}
 		zones = append(zones, zone)
+		zoneStats, err := k.CollectStatsForZone(ctx, &zone)
+		if err != nil {
+			return err
+		}
+		stats = append(stats, zoneStats)
 		return nil
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryZonesInfoResponse{
+	return &types.QueryZonesResponse{
 		Zones:      zones,
+		Stats:      stats,
 		Pagination: pageRes,
 	}, nil
 }
 
+// Zone returns information about registered zones.
+func (k *Keeper) Zone(c context.Context, req *types.QueryZoneRequest) (*types.QueryZoneResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	zone, found := k.GetZone(ctx, req.ChainId)
+	if !found {
+		return nil, fmt.Errorf("no zone found for chain id %s", req.ChainId)
+	}
+
+	zoneStats, err := k.CollectStatsForZone(ctx, &zone)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryZoneResponse{
+		Zone:  zone,
+		Stats: zoneStats,
+	}, nil
+}
+
+func (k Keeper) ZoneValidators(c context.Context, req *types.QueryZoneValidatorsRequest) (*types.QueryZoneValidatorsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var validators []types.Validator
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(req.ChainId))
+
+	pageRes, err := query.Paginate(store, req.Pagination, func(_, value []byte) error {
+		var validator types.Validator
+		if err := k.cdc.Unmarshal(value, &validator); err != nil {
+			return err
+		}
+
+		if req.Status == "" || req.Status == validator.Status {
+			validators = append(validators, validator)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryZoneValidatorsResponse{Validators: validators, Pagination: pageRes}, nil
+}
+
 // DepositAccount returns the deposit account address for the given zone.
-func (k Keeper) DepositAccount(c context.Context, req *types.QueryDepositAccountForChainRequest) (*types.QueryDepositAccountForChainResponse, error) {
+func (k *Keeper) DepositAccount(c context.Context, req *types.QueryDepositAccountForChainRequest) (*types.QueryDepositAccountForChainResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -67,7 +126,7 @@ func (k Keeper) DepositAccount(c context.Context, req *types.QueryDepositAccount
 }
 
 // DelegatorIntent returns information about the delegation intent of the caller for the given zone.
-func (k Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorIntentRequest) (*types.QueryDelegatorIntentResponse, error) {
+func (k *Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorIntentRequest) (*types.QueryDelegatorIntentResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -80,13 +139,13 @@ func (k Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorInte
 	}
 
 	// we can ignore bool (found) as it always returns true
-	// - see comment in GetIntent
-	intent, _ := k.GetIntent(ctx, zone, req.DelegatorAddress, false)
+	// - see comment in GetDelegatorIntent
+	intent, _ := k.GetDelegatorIntent(ctx, &zone, req.DelegatorAddress, false)
 
 	return &types.QueryDelegatorIntentResponse{Intent: &intent}, nil
 }
 
-func (k Keeper) Delegations(c context.Context, req *types.QueryDelegationsRequest) (*types.QueryDelegationsResponse, error) {
+func (k *Keeper) Delegations(c context.Context, req *types.QueryDelegationsRequest) (*types.QueryDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -110,7 +169,8 @@ func (k Keeper) Delegations(c context.Context, req *types.QueryDelegationsReques
 	return &types.QueryDelegationsResponse{Delegations: delegations, Tvl: sum}, nil
 }
 
-func (k Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*types.QueryReceiptsResponse, error) {
+func (k *Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*types.QueryReceiptsResponse, error) {
+	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -132,7 +192,7 @@ func (k Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*t
 	return &types.QueryReceiptsResponse{Receipts: receipts}, nil
 }
 
-func (k Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -156,7 +216,7 @@ func (k Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdra
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
 
-func (k Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+func (k *Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -164,12 +224,12 @@ func (k Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalR
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	withdrawalrecords := k.AllWithdrawalRecords(ctx)
+	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
 
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
 
-func (k Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRecordsRequest) (*types.QueryUnbondingRecordsResponse, error) {
+func (k *Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRecordsRequest) (*types.QueryUnbondingRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -177,12 +237,12 @@ func (k Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRec
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	unbondings := k.AllUnbondingRecords(ctx)
+	unbondings := k.AllZoneUnbondingRecords(ctx, req.ChainId)
 
 	return &types.QueryUnbondingRecordsResponse{Unbondings: unbondings}, nil
 }
 
-func (k Keeper) RedelegationRecords(c context.Context, req *types.QueryRedelegationRecordsRequest) (*types.QueryRedelegationRecordsResponse, error) {
+func (k *Keeper) RedelegationRecords(c context.Context, req *types.QueryRedelegationRecordsRequest) (*types.QueryRedelegationRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -190,7 +250,7 @@ func (k Keeper) RedelegationRecords(c context.Context, req *types.QueryRedelegat
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	redelegations := k.AllRedelegationRecords(ctx)
+	redelegations := k.ZoneRedelegationRecords(ctx, req.ChainId)
 
 	return &types.QueryRedelegationRecordsResponse{Redelegations: redelegations}, nil
 }

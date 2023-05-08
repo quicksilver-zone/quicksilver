@@ -6,27 +6,27 @@ import (
 )
 
 const (
-	// Bech32Prefix defines the Bech32 prefix used for EthAccounts
+	// Bech32Prefix defines the Bech32 prefix used for EthAccounts.
 	Bech32Prefix = "quick"
 
-	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address.
 	Bech32PrefixAccAddr = Bech32Prefix
-	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
+	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key.
 	Bech32PrefixAccPub = Bech32Prefix + sdk.PrefixPublic
-	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
+	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address.
 	Bech32PrefixValAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator
-	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
+	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key.
 	Bech32PrefixValPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
-	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
+	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address.
 	Bech32PrefixConsAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus
-	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
+	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key.
 	Bech32PrefixConsPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
 )
 
 const (
 	// DisplayDenom defines the denomination displayed to users in client applications.
 	DisplayDenom = "Quicksilver"
-	// BaseDenom defines to the default denomination used in Quicksilver (staking, EVN, governance, etc)
+	// BaseDenom defines to the default denomination used in Quicksilver (staking, EVN, governance, etc).
 	BaseDenom = "qck"
 )
 
@@ -57,4 +57,12 @@ func RegisterDenoms() {
 // SetWasmConfig sets the wasm config .
 func SetWasmConfig(config *sdk.Config) {
 	config.SetAddressVerifier(wasmtypes.VerifyAddressLen())
+}
+
+func SetupConfig() {
+	config := sdk.GetConfig()
+	SetBech32Prefixes(config)
+	SetBip44CoinType(config)
+	SetWasmConfig(config)
+	config.Seal()
 }

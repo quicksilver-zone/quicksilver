@@ -7,8 +7,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
-	appA := suite.GetQuicksilverApp(suite.chainA)
+func (s *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
+	appA := s.GetQuicksilverApp(s.chainA)
 
 	prop := types.AddProtocolDataProposal{}
 	tests := []struct {
@@ -78,7 +78,7 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 		{
 			"valid_prop",
 			func() {
-				connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d, \"prefix\": \"cosmos\"}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)
+				connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d, \"prefix\": \"cosmos\"}", s.path.EndpointB.ConnectionID, s.chainB.ChainID, 0)
 
 				prop = types.AddProtocolDataProposal{
 					Title:       "Add connection protocol for test chain B",
@@ -92,17 +92,17 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 		},
 	}
 	for _, tt := range tests {
-		suite.Run(tt.name, func() {
+		s.Run(tt.name, func() {
 			tt.malleate()
 			k := appA.ParticipationRewardsKeeper
-			err := keeper.HandleAddProtocolDataProposal(suite.chainA.GetContext(), k, &prop)
+			err := keeper.HandleAddProtocolDataProposal(s.chainA.GetContext(), k, &prop)
 			if tt.wantErr {
-				suite.Require().Error(err)
-				suite.T().Logf("Error: %v", err)
+				s.Require().Error(err)
+				s.T().Logf("Error: %v", err)
 				return
 			}
 
-			suite.Require().NoError(err)
+			s.Require().NoError(err)
 		})
 	}
 }

@@ -104,7 +104,7 @@ func (k Keeper) GetMinter(ctx sdk.Context) (minter types.Minter) {
 	}
 
 	k.cdc.MustUnmarshal(b, &minter)
-	return
+	return minter
 }
 
 // set the minter.
@@ -157,7 +157,11 @@ func (k Keeper) DistributeMintedCoin(ctx sdk.Context, mintedCoin sdk.Coin) error
 		return err
 	}
 
+<<<<<<< HEAD
 	// allocate pool allocation ratio to pool-incentives module account account
+=======
+	// allocate pool allocation ratio to pool-incentives module  account
+>>>>>>> origin/develop
 	poolIncentivesCoins := sdk.NewCoins(k.GetProportions(mintedCoin, proportions.PoolIncentives))
 	// temporary until we have incentives pool sorted :)
 

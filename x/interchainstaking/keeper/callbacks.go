@@ -7,7 +7,10 @@ import (
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
+<<<<<<< HEAD
 	tmtypes "github.com/cometbft/cometbft/types"
+=======
+>>>>>>> origin/develop
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/tx"
@@ -25,21 +28,21 @@ import (
 
 // ___________________________________________________________________________________________________
 
-// Callbacks wrapper struct for interchainstaking keeper
-type Callback func(Keeper, sdk.Context, []byte, icqtypes.Query) error
+type Callback func(*Keeper, sdk.Context, []byte, icqtypes.Query) error
 
+// Callbacks wrapper struct for interchainstaking keeper.
 type Callbacks struct {
-	k         Keeper
+	k         *Keeper
 	callbacks map[string]Callback
 }
 
 var _ icqtypes.QueryCallbacks = Callbacks{}
 
-func (k Keeper) CallbackHandler() Callbacks {
+func (k *Keeper) CallbackHandler() Callbacks {
 	return Callbacks{k, make(map[string]Callback)}
 }
 
-// callback handler
+// Call calls callback handler.
 func (c Callbacks) Call(ctx sdk.Context, id string, args []byte, query icqtypes.Query) error {
 	return c.callbacks[id](c.k, ctx, args, query)
 }
@@ -50,7 +53,7 @@ func (c Callbacks) Has(id string) bool {
 }
 
 func (c Callbacks) AddCallback(id string, fn interface{}) icqtypes.QueryCallbacks {
-	c.callbacks[id] = fn.(Callback)
+	c.callbacks[id], _ = fn.(Callback)
 	return c
 }
 
@@ -63,10 +66,11 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("delegation", Callback(DelegationCallback)).
 		AddCallback("distributerewards", Callback(DistributeRewardsFromWithdrawAccount)).
 		AddCallback("depositinterval", Callback(DepositIntervalCallback)).
-		AddCallback("deposittx", Callback(DepositTx)).
+		AddCallback("deposittx", Callback(DepositTxCallback)).
 		AddCallback("perfbalance", Callback(PerfBalanceCallback)).
 		AddCallback("accountbalance", Callback(AccountBalanceCallback)).
-		AddCallback("allbalances", Callback(AllBalancesCallback))
+		AddCallback("allbalances", Callback(AllBalancesCallback)).
+		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback))
 
 	return a.(Callbacks)
 }
@@ -75,30 +79,25 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 // Callback Handlers
 // -----------------------------------
 
-func ValsetCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetZone(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-	return SetValidatorsForZone(&k, ctx, zone, args, query.Request)
+func ValsetCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	return k.SetValidatorsForZone(ctx, args, query)
 }
 
-func ValidatorCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	k.Logger(ctx).Info("Received provable payload", "data", args)
-	zone, found := k.GetZone(ctx, query.GetChainId())
+func ValidatorCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetZone(ctx, query.GetChainId()) // cant we get rid of this check?
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
-	return SetValidatorForZone(&k, ctx, zone, args)
+	return k.SetValidatorForZone(ctx, &zone, args)
 }
 
-func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	k.Logger(ctx).Info("rewards callback", "zone", query.ChainId)
+	k.Logger(ctx).Debug("rewards callback", "zone", query.ChainId)
 
 	// unmarshal request payload
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
@@ -114,12 +113,12 @@ func RewardsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Quer
 	// (initially incremented in AfterEpochEnd)
 	zone.WithdrawalWaitgroup--
 
-	k.Logger(ctx).Info("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
+	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
 
 	return k.WithdrawDelegationRewardsForResponse(ctx, &zone, rewardsQuery.DelegatorAddress, args)
 }
 
-func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -134,12 +133,12 @@ func DelegationsCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	k.Logger(ctx).Info("Delegations callback triggered", "chain", zone.ChainId)
+	k.Logger(ctx).Debug("Delegations callback triggered", "chain", zone.ChainId)
 
 	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
 }
 
-func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -152,7 +151,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
-	k.Logger(ctx).Info("Delegation callback", "delegation", delegation, "chain", zone.ChainId)
+	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", zone.ChainId)
 
 	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
 		// delegation never gets removed, even with zero shares.
@@ -160,7 +159,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		if err != nil {
 			return err
 		}
-		validatorAddress, err := bech32.ConvertAndEncode(zone.GetAccountPrefix()+"valoper", validator)
+		validatorAddress, err := bech32.ConvertAndEncode(zone.GetValoperPrefix(), validator)
 		if err != nil {
 			return err
 		}
@@ -177,7 +176,11 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		}
 		return nil
 	}
-	val, found := zone.GetValidatorByValoper(delegation.ValidatorAddress)
+	valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
+	if err != nil {
+		return err
+	}
+	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 	if !found {
 		err := fmt.Errorf("unable to get validator: %s", delegation.ValidatorAddress)
 		k.Logger(ctx).Error(err.Error())
@@ -187,7 +190,7 @@ func DelegationCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	return k.UpdateDelegationRecordForAddress(ctx, delegation.DelegatorAddress, delegation.ValidatorAddress, sdk.NewCoin(zone.BaseDenom, val.SharesToTokens(delegation.Shares)), &zone, true)
 }
 
-func PerfBalanceCallback(k Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
+func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqtypes.Query) error {
 	// update account balance first.
 	if err := AccountBalanceCallback(k, ctx, response, query); err != nil {
 		return err
@@ -207,13 +210,17 @@ func PerfBalanceCallback(k Keeper, ctx sdk.Context, response []byte, query icqty
 	return nil
 }
 
-func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	k.Logger(ctx).Info("Deposit interval callback", "zone", zone.ChainId)
+	if !zone.DepositsEnabled {
+		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
+	}
+
+	k.Logger(ctx).Debug("Deposit interval callback", "zone", zone.ChainId)
 
 	txs := tx.GetTxsEventResponse{}
 
@@ -229,18 +236,19 @@ func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqty
 	for _, txn := range txs.TxResponses {
 		req := tx.GetTxRequest{Hash: txn.TxHash}
 		hashBytes := k.cdc.MustMarshal(&req)
-		_, found = k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, txn.TxHash))
+		_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, txn.TxHash))
 		if found {
-			k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
+			k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
 			continue
 		}
+		k.Logger(ctx).Info("Found previously unhandled tx. Processing.", "txhash", txn.TxHash)
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}
 	return nil
 }
 
 // pulled directly from ibc-go tm light client
-// checkTrustedHeader checks that consensus state matches trusted fields of Header
+// checkTrustedHeader checks that consensus state matches trusted fields of Header.
 func checkTrustedHeader(header *tmclienttypes.Header, consState *tmclienttypes.ConsensusState) error {
 	tmTrustedValidators, err := tmtypes.ValidatorSetFromProto(header.TrustedValidators)
 	if err != nil {
@@ -260,10 +268,10 @@ func checkTrustedHeader(header *tmclienttypes.Header, consState *tmclienttypes.C
 	return nil
 }
 
-// pulled directly from ibc-go tm light client
-// checkValidity checks if the Tendermint header is valid.
+// checkTMStateValidity checks if the Tendermint header is valid.
 // CONTRACT: consState.Height == header.TrustedHeight
-func checkValidity(
+// pulled directly from ibc-go tm light client.
+func checkTMStateValidity(
 	clientState *tmclienttypes.ClientState, consState *tmclienttypes.ConsensusState,
 	header *tmclienttypes.Header, currentTimestamp time.Time,
 ) error {
@@ -343,40 +351,19 @@ func checkValidity(
 	return nil
 }
 
-func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	zone, found := k.GetZone(ctx, query.GetChainId())
-	if !found {
-		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
-	}
-
-	k.Logger(ctx).Info("DepositTx callback", "zone", zone.ChainId)
-
-	res := icqtypes.GetTxWithProofResponse{}
-	if len(args) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (6)")
-	}
-	err := k.cdc.Unmarshal(args, &res)
-	if err != nil {
-		return err
-	}
-
-	_, found = k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, res.GetTxResponse().TxHash))
-	if found {
-		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", res.GetTxResponse().TxHash)
-		return nil
-	}
-
-	// validate proof
+// CheckTMHeaderForZone verifies the Tendermint consensus and client states for a given zone. Returns error if unable
+// to verify.
+func (k *Keeper) CheckTMHeaderForZone(ctx sdk.Context, zone *types.Zone, res icqtypes.GetTxWithProofResponse) error {
 	connection, _ := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
-
 	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
 	if !found {
 		return errors.New("unable to fetch client state")
 	}
-
-	/** we can call ClientKeeper.CheckHeaderAndUpdateState() here, but this causes state changes inside the IBCKeeper which feels bad.
-	  so instead we copy the above two functions wholesale from ibc-go (this sucks too, but with predicatable behaviour) and validate
-	  the inbound header manually. */
+	/*
+	   We can call ClientKeeper.CheckHeaderAndUpdateState() here, but this causes state changes inside the IBCKeeper
+	   which feels bad. so instead we copy the above two functions wholesale from ibc-go (this sucks too, but with
+	   predictable behaviour) and validate the inbound header manually.
+	*/
 	consensusState, found := k.IBCKeeper.ClientKeeper.GetClientConsensusState(ctx, connection.ClientId, res.Header.TrustedHeight)
 	if !found {
 		return fmt.Errorf("unable to fetch consensus state for trusted height: %s", res.Header.TrustedHeight.String())
@@ -392,9 +379,9 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return errors.New("unable to marshal consensus state")
 	}
 
-	err = checkValidity(tmclientState, tmconsensusState, res.GetHeader(), ctx.BlockHeader().Time)
+	// validate tendermint statefor
+	err := checkTMStateValidity(tmclientState, tmconsensusState, res.GetHeader(), ctx.BlockHeader().Time)
 	if err != nil {
-		k.Logger(ctx).Info("unable to validate header", "header", res.Header)
 		return fmt.Errorf("unable to validate header; %w", err)
 	}
 
@@ -407,11 +394,50 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return fmt.Errorf("unable to validate proof: %w", err)
 	}
 
-	return k.HandleReceiptTransaction(ctx, res.GetTxResponse(), res.GetTx(), zone)
+	return nil
+}
+
+// DepositTxCallback is a callback that verifies client chain state validity, gets Tx receipt and calls
+// HandleReceiptForTransaction.
+func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	// check validity
+	if len(args) == 0 {
+		return errors.New("attempted to unmarshal zero length byte slice (6)")
+	}
+
+	zone, found := k.GetZone(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+
+	if !zone.DepositsEnabled {
+		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
+	}
+
+	k.Logger(ctx).Debug("DepositTx callback", "zone", zone.ChainId)
+
+	res := icqtypes.GetTxWithProofResponse{}
+	err := k.cdc.Unmarshal(args, &res)
+	if err != nil {
+		return err
+	}
+
+	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, res.GetTxResponse().TxHash))
+	if found {
+		k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", res.GetTxResponse().TxHash)
+		return nil
+	}
+
+	err = k.CheckTMHeaderForZone(ctx, &zone, res)
+	if err != nil {
+		return fmt.Errorf("unable  to verify proof: %w", err)
+	}
+
+	return k.HandleReceiptForTransaction(ctx, res.GetTxResponse(), res.GetTx(), &zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.
-func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
@@ -450,10 +476,57 @@ func AccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, query icqtyp
 		return err
 	}
 
-	return SetAccountBalanceForDenom(k, ctx, zone, address, coin)
+	return k.SetAccountBalanceForDenom(ctx, &zone, address, coin)
 }
 
-func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+// DelegationAccountBalanceCallback is a callback handler for Balance queries.
+func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetZone(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
+	}
+	// strip the BalancesPrefix from the request key, as AddressFromBalancesStore expects this to be removed
+	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
+	// but lets us be safe here :)
+	if len(query.Request) < 2 {
+		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainId, "error", "request length is too short")
+		return errors.New("account balance icq request must always have a length of at least 2 bytes")
+	}
+	balancesStore := query.Request[1:]
+	accAddr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	if err != nil {
+		return err
+	}
+
+	coin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, args, denom)
+	if err != nil {
+		return err
+	}
+
+	if coin.Denom != denom {
+		return fmt.Errorf("received coin denom %s does not match requested denom %s", coin.Denom, denom)
+	}
+
+	// Ensure that the coin is valid.
+	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/80
+	if err := coin.Validate(); err != nil {
+		k.Logger(ctx).Debug("invalid coin for zone", "zone", zone.ChainId, "err", err)
+		return err
+	}
+	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
+	if err != nil {
+		return err
+	}
+
+	if zone.DelegationAddress == nil || address != zone.DelegationAddress.Address {
+		k.Logger(ctx).Debug("delegation address does not match ")
+		return err
+	}
+
+	return k.FlushOutstandingDelegations(ctx, &zone, coin)
+}
+
+func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	// this shouldn't happen because query.Request comes from Quicksilver
 	if len(query.Request) == 0 {
@@ -469,7 +542,7 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	k.Logger(ctx).Info("AllBalances callback", "chain", zone.ChainId)
+	k.Logger(ctx).Debug("AllBalances callback", "chain", zone.ChainId)
 
 	switch {
 	case zone.DepositAddress != nil && balanceQuery.Address == zone.DepositAddress.Address:

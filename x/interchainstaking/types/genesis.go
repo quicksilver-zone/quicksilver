@@ -4,7 +4,7 @@ func NewGenesisState(params Params, zones []Zone) *GenesisState {
 	return &GenesisState{Params: params, Zones: zones}
 }
 
-// DefaultGenesis returns the default ics genesis state
+// DefaultGenesis returns the default ics genesis state.
 func DefaultGenesis() *GenesisState {
 	zones := []Zone{}
 	return NewGenesisState(DefaultParams(), zones)
@@ -14,5 +14,5 @@ func DefaultGenesis() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	// TODO: validate genesis state.
-	return validateParams(gs.Params)
+	return gs.Params.Validate()
 }

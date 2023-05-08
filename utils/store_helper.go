@@ -22,7 +22,7 @@ func GatherAllKeysFromStore(storeObj store.KVStore) []string {
 	return keys
 }
 
-func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, parseValue func([]byte) (T, error)) ([]T, error) {
+func GatherValuesFromStore[T any](storeObj store.KVStore, keyStart, keyEnd []byte, parseValue func([]byte) (T, error)) ([]T, error) {
 	iterator := storeObj.Iterator(keyStart, keyEnd)
 	defer iterator.Close()
 	return gatherValuesFromIteratorWithStop(iterator, parseValue, noStopFn)
@@ -42,7 +42,7 @@ func GetValuesUntilDerivedStop[T any](storeObj store.KVStore, keyStart []byte, s
 	return GetIterValuesWithStop(storeObj, keyStart, keyEnd, false, stopFn, parseValue)
 }
 
-func makeIterator(storeObj store.KVStore, keyStart []byte, keyEnd []byte, reverse bool) store.Iterator {
+func makeIterator(storeObj store.KVStore, keyStart, keyEnd []byte, reverse bool) store.Iterator {
 	if reverse {
 		return storeObj.ReverseIterator(keyStart, keyEnd)
 	}
@@ -70,7 +70,7 @@ func GetFirstValueAfterPrefixInclusive[T any](storeObj store.KVStore, keyStart [
 	return GetFirstValueInRange(storeObj, keyStart, []byte{0xff}, false, parseValue)
 }
 
-func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart []byte, keyEnd []byte, reverseIterate bool, parseValue func([]byte) (T, error)) (T, error) {
+func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart, keyEnd []byte, reverseIterate bool, parseValue func([]byte) (T, error)) (T, error) {
 	iterator := makeIterator(storeObj, keyStart, keyEnd, reverseIterate)
 	defer iterator.Close()
 
@@ -114,8 +114,8 @@ func MustSet(storeObj store.KVStore, key []byte, value proto.Message) {
 
 // MustGet gets key from store by mutating result
 // Panics on any error.
-func MustGet(store store.KVStore, key []byte, result proto.Message) {
-	b := store.Get(key)
+func MustGet(storeObj store.KVStore, key []byte, result proto.Message) {
+	b := storeObj.Get(key)
 	if b == nil {
 		panic(fmt.Errorf("getting at key (%v) should not have been nil", key))
 	}
@@ -125,15 +125,15 @@ func MustGet(store store.KVStore, key []byte, result proto.Message) {
 }
 
 // MustSetDec sets dec value to store at key. Panics on any error.
-func MustSetDec(store store.KVStore, key []byte, value sdk.Dec) {
-	MustSet(store, key, &sdk.DecProto{
+func MustSetDec(storeObj store.KVStore, key []byte, value sdk.Dec) {
+	MustSet(storeObj, key, &sdk.DecProto{
 		Dec: value,
 	})
 }
 
 // MustGetDec gets dec value from store at key. Panics on any error.
-func MustGetDec(store store.KVStore, key []byte) sdk.Dec {
+func MustGetDec(storeObj store.KVStore, key []byte) sdk.Dec {
 	result := &sdk.DecProto{}
-	MustGet(store, key, result)
+	MustGet(storeObj, key, result)
 	return result.Dec
 }

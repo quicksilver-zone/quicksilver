@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+<<<<<<< HEAD
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/gorilla/mux"
@@ -13,34 +14,40 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 
+=======
+>>>>>>> origin/develop
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/spf13/cobra"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/client/cli"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-
-	// "github.com/ingenuity-build/quicksilver/x/interchainstaking/simulation"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleBasic      = AppModuleBasic{}
+	_ module.AppModule           = AppModule{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
 // AppModuleBasic
 // ----------------------------------------------------------------------------
 
-// AppModuleBasic implements the AppModuleBasic interface for the capability module.
+// AppModuleBasic implements the AppModuleBasic interface for the interchainstaking module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
 
-// NewAppModuleBasic return a new AppModuleBasic
+// NewAppModuleBasic return a new AppModuleBasic.
 func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
 	return AppModuleBasic{cdc: cdc}
 }
@@ -50,12 +57,12 @@ func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
 
-// RegisterLegacyAminoCodec registers a legacy amino codec
+// RegisterLegacyAminoCodec registers a legacy amino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	types.RegisterLegacyAminoCodec(cdc)
 }
 
-// RegisterInterfaces registers the module's interface types
+// RegisterInterfaces registers the module's interface types.
 func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	// RegisterInterfaces registers interfaces and implementations of the interchainstaking module.
 	// (see types/codec.go)
@@ -81,8 +88,8 @@ func (AppModuleBasic) RegisterRESTRoutes(_ client.Context, _ *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 // This function will panic on failure.
-func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, serveMux *runtime.ServeMux) {
+	err := types.RegisterQueryHandlerClient(context.Background(), serveMux, types.NewQueryClient(clientCtx))
 	if err != nil {
 		panic(err)
 	}
@@ -102,17 +109,17 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // AppModule
 // ----------------------------------------------------------------------------
 
-// AppModule implements the AppModule interface for the capability module.
+// AppModule implements the AppModule interface for the interchainstaking module.
 type AppModule struct {
 	AppModuleBasic
 	keeper keeper.Keeper
 }
 
-// NewAppModule return a new AppModule
-func NewAppModule(cdc codec.Codec, keeper keeper.Keeper) AppModule {
+// NewAppModule return a new AppModule.
+func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
-		keeper:         keeper,
+		keeper:         k,
 	}
 }
 
@@ -121,9 +128,25 @@ func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
 
+<<<<<<< HEAD
 // QuerierRoute returns the capability module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
+=======
+// Route returns the capability module's message routing key.
+func (am AppModule) Route() sdk.Route {
+	return sdk.Route{}
+}
+
+// QuerierRoute returns the capability module's query routing key.
+func (AppModule) QuerierRoute() string { return types.QuerierRoute }
+
+// LegacyQuerierHandler returns the capability module's Querier.
+func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+	return nil
+}
+
+>>>>>>> origin/develop
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -131,7 +154,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	// WILL NOT expose gRPC services, and that QueryServer WILL expose gRPC
 	// services;
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
+	types.RegisterQueryServer(cfg.QueryServer(), &am.keeper)
 }
 
 // RegisterInvariants registers the capability module's invariants.
@@ -165,28 +188,49 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 	return []abci.ValidatorUpdate{}
 }
 
+// ConsensusVersion implements AppModule/ConsensusVersion.
+func (AppModule) ConsensusVersion() uint64 { return 1 }
+
 // ___________________________________________________________________________
 
 // AppModuleSimulation functions
 
+<<<<<<< HEAD
 // GenerateGenesisState creates a randomized GenState of the pool-incentives module.
 func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
 	// simulation.RandomizedGenState(simState)
+=======
+// GenerateGenesisState creates a randomized GenState of the interchainstaking module.
+func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
+>>>>>>> origin/develop
 }
 
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
+<<<<<<< HEAD
 	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
+=======
+	return nil
+}
+
+// RandomizedParams creates randomized pool-incentives param changes for the simulator.
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
+	return nil
+}
+
+// RegisterStoreDecoder registers a decoder for supply module's types.
+>>>>>>> origin/develop
 func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+<<<<<<< HEAD
 	return nil // TODO
+=======
+	return nil // TODO add
+>>>>>>> origin/develop
 }
-
-// ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 1 }

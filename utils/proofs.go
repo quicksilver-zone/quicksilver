@@ -7,15 +7,37 @@ import (
 
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+<<<<<<< HEAD
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	commitmenttypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
 	ibcKeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+=======
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	commitmenttypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+
+	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
+>>>>>>> origin/develop
 )
 
-type ProofOpsFn func(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error
+type ProofOpsFn func(ctx sdk.Context, ibcKeeper *ibckeeper.Keeper, connectionID, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error
 
-func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID string, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error {
+type SelfProofOpsFn func(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keeper, consensusStateKey, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error
+
+func ValidateProofOps(
+	ctx sdk.Context,
+	ibcKeeper *ibckeeper.Keeper,
+	connectionID,
+	chainID string,
+	height int64,
+	module string,
+	key,
+	data []byte,
+	proofOps *crypto.ProofOps,
+) error {
 	if proofOps == nil {
 		return errors.New("unable to validate proof. No proof submitted")
 	}
@@ -60,6 +82,48 @@ func ValidateProofOps(ctx sdk.Context, ibcKeeper *ibcKeeper.Keeper, connectionID
 	return nil
 }
 
+<<<<<<< HEAD
 func MockProofOps(_ sdk.Context, _ *ibcKeeper.Keeper, _ string, _ string, _ int64, _ string, _ []byte, _ []byte, _ *crypto.ProofOps) error {
+=======
+func ValidateSelfProofOps(ctx sdk.Context, claimsKeeper claimsmanagerkeeper.Keeper, consensusStateKey, module string, key, data []byte, proofOps *crypto.ProofOps) error {
+	if proofOps == nil {
+		return errors.New("unable to validate proof. No proof submitted")
+	}
+
+	consensusState, found := claimsKeeper.GetSelfConsensusState(ctx, consensusStateKey)
+	if !found {
+		return errors.New("unable to lookup self-consensus state")
+	}
+
+	proofSpecs := commitmenttypes.GetSDKSpecs()
+
+	path := commitmenttypes.NewMerklePath([]string{module, url.PathEscape(string(key))}...)
+
+	merkleProof, err := commitmenttypes.ConvertProofs(proofOps)
+	if err != nil {
+		return errors.New("error converting proofs")
+	}
+
+	if len(data) != 0 {
+		// if we got a non-nil response, verify inclusion proof.
+		if err := merkleProof.VerifyMembership(proofSpecs, consensusState.GetRoot(), path, data); err != nil {
+			return fmt.Errorf("unable to verify inclusion proof: %w", err)
+		}
+		return nil
+
+	}
+	// if we got a nil response, verify non inclusion proof.
+	if err := merkleProof.VerifyNonMembership(proofSpecs, consensusState.GetRoot(), path); err != nil {
+		return fmt.Errorf("unable to verify non-inclusion proof: %w", err)
+	}
+	return nil
+}
+
+func MockSelfProofOps(_ sdk.Context, _ claimsmanagerkeeper.Keeper, _, _ string, _, _ []byte, _ *crypto.ProofOps) error {
+	return nil
+}
+
+func MockProofOps(_ sdk.Context, _ *ibckeeper.Keeper, _, _ string, _ int64, _ string, _, _ []byte, _ *crypto.ProofOps) error {
+>>>>>>> origin/develop
 	return nil
 }

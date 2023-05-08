@@ -1,4 +1,4 @@
-package types // noalias
+package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +11,7 @@ type AccountKeeper interface {
 	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
+
 	SetModuleAccount(sdk.Context, types.ModuleAccountI)
 	GetModuleAccount(ctx sdk.Context, moduleName string) types.ModuleAccountI
 }
@@ -22,6 +23,7 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
+	GetSupply(ctx sdk.Context, denom string) sdk.Coin
 }
 
 // StakingKeeper defines the contract for staking APIs.

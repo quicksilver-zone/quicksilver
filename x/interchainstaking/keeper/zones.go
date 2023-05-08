@@ -3,7 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"strings"
+	"math"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,13 +12,17 @@ import (
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+<<<<<<< HEAD
 
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+=======
+>>>>>>> origin/develop
 )
 
-// GetZone returns zone info by chainID
-func (k Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
+// GetZone returns zone info by chainID.
+func (k *Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
 	zone := types.Zone{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := store.Get([]byte(chainID))
@@ -30,21 +34,21 @@ func (k Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
 	return zone, true
 }
 
-// SetZone set zone info
-func (k Keeper) SetZone(ctx sdk.Context, zone *types.Zone) {
+// SetZone set zone info.
+func (k *Keeper) SetZone(ctx sdk.Context, zone *types.Zone) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := k.cdc.MustMarshal(zone)
 	store.Set([]byte(zone.ChainId), bz)
 }
 
-// DeleteZone delete zone info
-func (k Keeper) DeleteZone(ctx sdk.Context, chainID string) {
+// DeleteZone delete zone info.
+func (k *Keeper) DeleteZone(ctx sdk.Context, chainID string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	store.Delete([]byte(chainID))
 }
 
-// IterateZones iterate through zones
-func (k Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo types.Zone) (stop bool)) {
+// IterateZones iterate through zones.
+func (k *Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zone *types.Zone) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -56,7 +60,7 @@ func (k Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo type
 		zone := types.Zone{}
 		k.cdc.MustUnmarshal(iterator.Value(), &zone)
 
-		stop := fn(i, zone)
+		stop := fn(i, &zone)
 
 		if stop {
 			break
@@ -65,7 +69,29 @@ func (k Keeper) IterateZones(ctx sdk.Context, fn func(index int64, zoneInfo type
 	}
 }
 
-func (k Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+// GetAddressZoneMapping returns zone <-> address mapping.
+func (k *Keeper) GetAddressZoneMapping(ctx sdk.Context, address string) (string, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAddressZoneMapping)
+	bz := store.Get([]byte(address))
+	if len(bz) == 0 {
+		return "", false
+	}
+	return string(bz), true
+}
+
+// SetAddressZoneMapping set zone <-> address mapping.
+func (k *Keeper) SetAddressZoneMapping(ctx sdk.Context, address, chainID string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAddressZoneMapping)
+	store.Set([]byte(address), []byte(chainID))
+}
+
+// DeleteAddressZoneMapping delete zone info.
+func (k *Keeper) DeleteAddressZoneMapping(ctx sdk.Context, address string) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixAddressZoneMapping)
+	store.Delete([]byte(address))
+}
+
+func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
 		out = out.Add(delegation.Amount)
@@ -74,7 +100,7 @@ func (k Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	return out
 }
 
-func (k Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
+func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
 		out = out.Add(wr.Amount[0])
@@ -83,18 +109,18 @@ func (k Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	return out
 }
 
-// AllZonesInfos returns every zoneInfo in the store
-func (k Keeper) AllZones(ctx sdk.Context) []types.Zone {
-	zones := []types.Zone{}
-	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
-		zones = append(zones, zoneInfo)
+// AllZones returns every Zone in the store.
+func (k *Keeper) AllZones(ctx sdk.Context) []types.Zone {
+	var zones []types.Zone
+	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
+		zones = append(zones, *zone)
 		return false
 	})
 	return zones
 }
 
-// GetZoneFromContext determines the zone from the current context
-func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
+// GetZoneFromContext determines the zone from the current context.
+func (k *Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 	chainID, err := k.GetChainIDFromContext(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("unable to fetch zone from context: %w", err)
@@ -108,7 +134,18 @@ func (k Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 	return &zone, nil
 }
 
+func (k *Keeper) GetZoneForAccount(ctx sdk.Context, address string) (zone *types.Zone) {
+	chainID, found := k.GetAddressZoneMapping(ctx, address)
+	if !found {
+		return nil
+	}
+	// doesn't matter if this is _found_ because we are expecting to return nil if not anyway.
+	z, _ := k.GetZone(ctx, chainID)
+	return &z
+}
+
 // GetZoneForDelegateAccount determines the zone for a given address.
+<<<<<<< HEAD
 func (k Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.Zone {
 	var zone *types.Zone
 	k.IterateZones(ctx, func(_ int64, zoneInfo types.Zone) (stop bool) {
@@ -157,24 +194,37 @@ func (k Keeper) EnsureICAsActive(ctx sdk.Context, zone *types.Zone) error {
 		return err
 	}
 	return k.EnsureICAActive(ctx, zone, zone.WithdrawalAddress)
+=======
+func (k *Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.Zone {
+	z := k.GetZoneForAccount(ctx, address)
+	if z != nil && z.DelegationAddress != nil && address == z.DelegationAddress.Address {
+		return z
+	}
+	return nil
+>>>>>>> origin/develop
 }
 
-func (k Keeper) EnsureICAActive(ctx sdk.Context, zone *types.Zone, account *types.ICAAccount) error {
-	if account == nil {
-		k.Logger(ctx).Info("Account does not exist")
-		// address has not been set yet. nothing to check.
-		return nil
+func (k *Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *types.Zone {
+	z := k.GetZoneForAccount(ctx, address)
+	if z != nil && z.PerformanceAddress != nil && address == z.PerformanceAddress.Address {
+		return z
 	}
+	return nil
+}
 
-	if _, found := k.ICAControllerKeeper.GetOpenActiveChannel(ctx, zone.ConnectionId, account.GetPortName()); found {
-		k.Logger(ctx).Info("Account is active", "account", account.Address)
-		// channel is active. all is well :)
-		return nil
+func (k *Keeper) GetZoneForDepositAccount(ctx sdk.Context, address string) *types.Zone {
+	z := k.GetZoneForAccount(ctx, address)
+	if z != nil && z.DepositAddress != nil && address == z.DepositAddress.Address {
+		return z
 	}
+<<<<<<< HEAD
 
 	// channel is not active; attempt reopen.
 	k.Logger(ctx).Error("channel is inactive. attempting to reopen.", "connection", zone.ConnectionId, "port", account.GetPortName())
 	return k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, strings.TrimPrefix(account.GetPortName(), icatypes.PortKeyPrefix), "")
+=======
+	return nil
+>>>>>>> origin/develop
 }
 
 func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {
@@ -192,9 +242,10 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 		k.Logger(ctx).Info("Deposit address not set")
 		return nil
 	}
+
 	withdrawalAddress := zone.WithdrawalAddress.Address
 
-	if zone.DepositAddress.WithdrawalAddress != zone.WithdrawalAddress.Address {
+	if zone.DepositAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
 		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "", zone.MessagesPerTx)
 		if err != nil {
@@ -202,7 +253,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 		}
 	}
 
-	if zone.DelegationAddress.WithdrawalAddress != zone.WithdrawalAddress.Address {
+	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
 		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx)
 		if err != nil {
@@ -221,8 +272,8 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 	return nil
 }
 
-// SetAccountBalanceForDenom sets the balance on an account for a given denominination.
-func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, address string, coin sdk.Coin) error {
+// SetAccountBalanceForDenom sets the balance on an account for a given denomination.
+func (k *Keeper) SetAccountBalanceForDenom(ctx sdk.Context, zone *types.Zone, address string, coin sdk.Coin) error {
 	// ? is this switch statement still required ?
 	// prior to callback we had no way to distinguish the originator
 	// with the query type in setAccountCb this is probably superfluous...
@@ -258,12 +309,12 @@ func SetAccountBalanceForDenom(k Keeper, ctx sdk.Context, zone types.Zone, addre
 	default:
 		panic("unexpected")
 	}
-	k.SetZone(ctx, &zone)
+	k.SetZone(ctx, zone)
 	return nil
 }
 
 // SetAccountBalance triggers provable KV queries to prove an AllBalances query.
-func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address string, queryResult []byte) error {
+func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address string, queryResult []byte) error {
 	queryRes := banktypes.QueryAllBalancesResponse{}
 	err := k.cdc.Unmarshal(queryResult, &queryRes)
 	if err != nil {
@@ -310,7 +361,7 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 				"accountbalance",
 				0,
 			)
-			icaAccount.BalanceWaitgroup++
+			icaAccount.IncrementBalanceWaitgroup()
 
 		}
 	}
@@ -328,26 +379,30 @@ func (k Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address stri
 			"accountbalance",
 			0,
 		)
-		icaAccount.BalanceWaitgroup++
+		icaAccount.IncrementBalanceWaitgroup()
 	}
 
 	k.SetZone(ctx, &zone)
 	return nil
 }
 
+<<<<<<< HEAD
 func (k Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone) error {
+=======
+func (k *Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone) error {
+>>>>>>> origin/develop
 	k.Logger(ctx).Info("Initialize performance delegations")
 
 	delegations := k.GetAllPerformanceDelegations(ctx, &zone)
 	validatorsToDelegate := []string{}
 OUTER:
-	for _, v := range zone.GetBondedValidatorAddressesAsSlice() {
+	for _, v := range k.GetActiveValidators(ctx, zone.ChainId) {
 		for _, d := range delegations {
-			if d.ValidatorAddress == v {
+			if d.ValidatorAddress == v.ValoperAddress {
 				continue OUTER
 			}
 		}
-		validatorsToDelegate = append(validatorsToDelegate, v)
+		validatorsToDelegate = append(validatorsToDelegate, v.ValoperAddress)
 	}
 
 	amount := sdk.NewCoin(zone.BaseDenom, sdk.NewInt(10000))
@@ -366,23 +421,163 @@ OUTER:
 
 	// send delegations to validators
 	k.Logger(ctx).Info("send performance delegations", "zone", zone.ChainId)
-	var msgs []sdk.Msg
-	for _, val := range validatorsToDelegate {
+
+	msgs := make([]sdk.Msg, len(validatorsToDelegate))
+	for i, val := range validatorsToDelegate {
 		k.Logger(ctx).Info(
 			"performance delegation",
 			"zone", zone.ChainId,
 			"validator", val,
 			"amount", amount,
 		)
-		msgs = append(msgs, &stakingtypes.MsgDelegate{
+		msgs[i] = &stakingtypes.MsgDelegate{
 			DelegatorAddress: zone.PerformanceAddress.GetAddress(),
 			ValidatorAddress: val,
 			Amount:           amount,
-		})
+		}
 	}
 
 	if len(msgs) > 0 {
 		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx)
 	}
 	return nil
+}
+
+func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.Statistics, error) {
+	out := &types.Statistics{}
+	out.ChainId = zone.ChainId
+	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
+	userMap := map[string]bool{}
+	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) bool {
+		for _, coin := range receipt.Amount {
+			out.Deposited += coin.Amount.Int64()
+			if _, found := userMap[receipt.Sender]; !found {
+				userMap[receipt.Sender] = true
+				out.Depositors++
+			}
+			out.Deposits++
+		}
+		return false
+	})
+	out.Supply = k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.Int64()
+	distance, err := k.DistanceToTarget(ctx, zone)
+	if err != nil {
+		return nil, err
+	}
+	out.DistanceToTarget = fmt.Sprintf("%f", distance)
+	return out, nil
+}
+
+func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string) {
+	// clear unbondings
+	k.IteratePrefixedUnbondingRecords(ctx, []byte(chainID), func(_ int64, record types.UnbondingRecord) (stop bool) {
+		k.DeleteUnbondingRecord(ctx, record.ChainId, record.Validator, record.EpochNumber)
+		return false
+	})
+
+	// clear redelegations
+	k.IteratePrefixedRedelegationRecords(ctx, []byte(chainID), func(_ int64, _ []byte, record types.RedelegationRecord) (stop bool) {
+		k.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
+		return false
+	})
+
+	// remove zone and related records
+	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+		if zone.ChainId == chainID {
+			// remove uni-5 delegation records
+			k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
+				err := k.RemoveDelegation(ctx, zone, delegation)
+				if err != nil {
+					panic(err)
+				}
+				return false
+			})
+
+			// remove performance delegation records
+			k.IterateAllPerformanceDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
+				err := k.RemoveDelegation(ctx, zone, delegation)
+				if err != nil {
+					panic(err)
+				}
+				return false
+			})
+			// remove receipts
+			k.IterateZoneReceipts(ctx, zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				k.DeleteReceipt(ctx, types.GetReceiptKey(receiptInfo.ChainId, receiptInfo.Txhash))
+				return false
+			})
+
+			// remove withdrawal records
+			k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
+				k.DeleteWithdrawalRecord(ctx, zone.ChainId, record.Txhash, record.Status)
+				return false
+			})
+
+			k.DeleteZone(ctx, zone.ChainId)
+
+		}
+		return false
+	})
+
+	// remove queries in state
+	k.ICQKeeper.IterateQueries(ctx, func(_ int64, queryInfo icqtypes.Query) (stop bool) {
+		if queryInfo.ChainId == chainID {
+			k.ICQKeeper.DeleteQuery(ctx, queryInfo.Id)
+		}
+		return false
+	})
+}
+
+func (k *Keeper) CurrentDelegationsAsIntent(ctx sdk.Context, zone *types.Zone) types.ValidatorIntents {
+	currentDelegations := k.GetAllDelegations(ctx, zone)
+	intents := make(types.ValidatorIntents, 0)
+	for _, d := range currentDelegations {
+		intents = append(intents, &types.ValidatorIntent{ValoperAddress: d.ValidatorAddress, Weight: sdk.NewDecFromInt(d.Amount.Amount)})
+	}
+
+	return intents.Normalize()
+}
+
+func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) (float64, error) {
+	current := k.CurrentDelegationsAsIntent(ctx, zone)
+	target, err := k.GetAggregateIntentOrDefault(ctx, zone)
+	if err != nil {
+		return 0, err
+	}
+	preSqRt := sdk.ZeroDec()
+
+	for _, valoper := range zone.Validators {
+		c := current.MustGetForValoper(valoper.ValoperAddress)
+		t := target.MustGetForValoper(valoper.ValoperAddress)
+		v := c.Weight.SubMut(t.Weight)
+		preSqRt = preSqRt.AddMut(v.Mul(v))
+	}
+
+	psqrtf, err := preSqRt.Float64()
+	if err != nil {
+		panic("this value should never be greater than 64-bit dec!")
+	}
+	return math.Sqrt(psqrtf), nil
+}
+
+// DefaultAggregateIntents determines the default aggregate intent (for epoch 0).
+func (k *Keeper) DefaultAggregateIntents(ctx sdk.Context, chainID string) types.ValidatorIntents {
+	out := make(types.ValidatorIntents, 0)
+	k.IterateValidators(ctx, chainID, func(index int64, validator types.Validator) (stop bool) {
+		if validator.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
+			if !validator.Jailed && !validator.Tombstoned && validator.Status == stakingtypes.BondStatusBonded {
+				out = append(out, &types.ValidatorIntent{ValoperAddress: validator.GetValoperAddress(), Weight: sdk.OneDec()})
+			}
+		}
+		return false
+	})
+
+	valCount := sdk.NewInt(int64(len(out)))
+
+	// normalise the array (divide everything by length of intent list)
+	for idx, intent := range out.Sort() {
+		out[idx].Weight = intent.Weight.Quo(sdk.NewDecFromInt(valCount))
+	}
+
+	return out
 }

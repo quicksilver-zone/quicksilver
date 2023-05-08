@@ -5,12 +5,11 @@ import (
 	"fmt"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	yaml "gopkg.in/yaml.v2"
 
 	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Parameter store keys.
@@ -21,19 +20,18 @@ var (
 	KeyReductionPeriodInEpochs              = []byte("ReductionPeriodInEpochs")
 	KeyReductionFactor                      = []byte("ReductionFactor")
 	KeyPoolAllocationRatio                  = []byte("PoolAllocationRatio")
-	KeyDeveloperRewardsReceiver             = []byte("DeveloperRewardsReceiver")
 	KeyMintingRewardsDistributionStartEpoch = []byte("MintingRewardsDistributionStartEpoch")
 )
 
-// ParamTable for minting module.
+// ParamKeyTable returns ParamTable for minting module.
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})
 }
 
 func NewParams(
 	mintDenom string, genesisEpochProvisions sdk.Dec, epochIdentifier string,
-	reductionFactor sdk.Dec, reductionPeriodInEpochs int64, distrProportions DistributionProportions,
-	mintingRewardsDistributionStartEpoch int64,
+	reductionPeriodInEpochs int64, reductionFactor sdk.Dec,
+	distrProportions DistributionProportions, mintingRewardsDistributionStartEpoch int64,
 ) Params {
 	return Params{
 		MintDenom:                            mintDenom,
@@ -46,25 +44,25 @@ func NewParams(
 	}
 }
 
-// default minting module parameters.
+// DefaultParams returns default minting module parameters.
 func DefaultParams() Params {
-	return Params{
-		MintDenom:               sdk.DefaultBondDenom,
-		GenesisEpochProvisions:  sdk.NewDec(200000000 / 122),
-		EpochIdentifier:         "day",                     // 1 day
-		ReductionPeriodInEpochs: 365,                       // 1 years
-		ReductionFactor:         sdk.NewDecWithPrec(75, 2), // 0.75
-		DistributionProportions: DistributionProportions{
+	return NewParams(
+		sdk.DefaultBondDenom,
+		sdk.NewDec(200000000/122),
+		"day",
+		365,
+		sdk.NewDecWithPrec(75, 2),
+		DistributionProportions{
 			Staking:              sdk.NewDecWithPrec(3, 1), // 0.3
 			PoolIncentives:       sdk.NewDecWithPrec(3, 1), // 0.3
 			ParticipationRewards: sdk.NewDecWithPrec(3, 1), // 0.3
 			CommunityPool:        sdk.NewDecWithPrec(1, 1), // 0.1
 		},
-		MintingRewardsDistributionStartEpoch: 0,
-	}
+		0,
+	)
 }
 
-// validate params.
+// Validate validates params.
 func (p Params) Validate() error {
 	if err := validateMintDenom(p.MintDenom); err != nil {
 		return err
@@ -150,7 +148,7 @@ func validateReductionFactor(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.GT(sdk.NewDec(1)) {
+	if v.GT(sdk.OneDec()) {
 		return errors.New("reduction factor cannot be greater than 1")
 	}
 
@@ -175,13 +173,16 @@ func validateDistributionProportions(i interface{}) error {
 		return errors.New("pool incentives distribution ratio should not be negative")
 	}
 
+	if v.ParticipationRewards.IsNegative() {
+		return errors.New("participation rewards distribution ratio should not be negative")
+	}
+
 	if v.CommunityPool.IsNegative() {
 		return errors.New("community pool distribution ratio should not be negative")
 	}
 
 	totalProportions := v.Staking.Add(v.PoolIncentives).Add(v.CommunityPool).Add(v.ParticipationRewards)
-
-	if !totalProportions.Equal(sdk.NewDec(1)) {
+	if !totalProportions.Equal(sdk.OneDec()) {
 		return errors.New("total distributions ratio should be 1")
 	}
 
