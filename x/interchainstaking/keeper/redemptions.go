@@ -11,7 +11,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
-	cmutils "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper/utils"
+	utilsort "github.com/ingenuity-build/quicksilver/utils/sort"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -46,7 +46,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 
 	distribution[intents[0].ValoperAddress] += outstanding.Uint64()
 
-	for _, valoper := range cmutils.Keys(distribution) {
+	for _, valoper := range utilsort.Keys(distribution) {
 		msgs = append(msgs, &lsmstakingtypes.MsgTokenizeShares{
 			DelegatorAddress:    zone.DelegationAddress.Address,
 			ValidatorAddress:    valoper,
@@ -161,11 +161,11 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 	if err != nil {
 		return err
 	}
-	valopers := cmutils.Keys(allocationsMap)
+	valopers := utilsort.Keys(allocationsMap)
 	vidx := 0
 	v := valopers[vidx]
 WITHDRAWAL:
-	for _, hash := range cmutils.Keys(txCoinMap) {
+	for _, hash := range utilsort.Keys(txCoinMap) {
 		for {
 			if txCoinMap[hash].Amount.IsZero() {
 				continue WITHDRAWAL
@@ -215,7 +215,7 @@ WITHDRAWAL:
 		}
 	}
 
-	for _, hash := range cmutils.Keys(txDistrsMap) {
+	for _, hash := range utilsort.Keys(txDistrsMap) {
 		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, WithdrawStatusQueued)
 		if !found {
 			return errors.New("unable to find withdrawal record")
@@ -230,7 +230,7 @@ WITHDRAWAL:
 	}
 
 	var msgs []sdk.Msg
-	for _, valoper := range cmutils.Keys(valOutCoinsMap) {
+	for _, valoper := range utilsort.Keys(valOutCoinsMap) {
 		if !valOutCoinsMap[valoper].Amount.IsZero() {
 			sort.Strings(txHashes[valoper])
 			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashes[valoper]})

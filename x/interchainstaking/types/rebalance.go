@@ -8,8 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/ingenuity-build/quicksilver/utils"
-	cmutils "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper/utils"
+	utilsort "github.com/ingenuity-build/quicksilver/utils/sort"
 )
 
 // CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
@@ -25,7 +24,7 @@ func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkma
 		return out
 	}(targetAllocations)
 
-	keySet := utils.Unique(append(targetValopers, cmutils.Keys(currentAllocations)...))
+	keySet := utilsort.Unique(append(targetValopers, utilsort.Keys(currentAllocations)...))
 	sort.Strings(keySet)
 	// for target allocations, raise the intent weight by the total delegated value to get target amount
 	for _, valoper := range keySet {
@@ -88,7 +87,7 @@ func DetermineAllocationsForRebalancing(
 		}
 		lockedPerValidator[redelegation.Destination] = thisLocked + redelegation.Amount
 	}
-	for _, valoper := range cmutils.Keys(currentAllocations) {
+	for _, valoper := range utilsort.Keys(currentAllocations) {
 		// if validator already has a redelegation _to_ it, we can no longer redelegate _from_ it (transitive redelegations)
 		// remove _locked_ amount from lpv and total locked for purposes of rebalancing.
 		if currentLocked[valoper] {

@@ -7,6 +7,18 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
+func Keys[V interface{}](in map[string]V) []string {
+	out := make([]string, 0)
+
+	for k := range in {
+		out = append(out, k)
+	}
+
+	sort.Strings(out)
+
+	return out
+}
+
 // SortSlice sorts a slice of type T elements that implement constraints.Ordered.
 // Mutates input slice s.
 func SortSlice[T constraints.Ordered](s []T) {
