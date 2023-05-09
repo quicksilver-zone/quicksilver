@@ -41,7 +41,7 @@ require (
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-alpha8 // indirect
-	github.com/cosmos/cosmos-sdk v0.46.11 // indirect
+	github.com/cosmos/cosmos-sdk v0.46.12 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
 	github.com/cosmos/iavl v0.19.5 // indirect
@@ -56,7 +56,7 @@ require (
 	github.com/dgraph-io/badger/v3 v3.2103.2 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
-	github.com/docker/docker v20.10.19+incompatible // indirect
+	github.com/docker/docker v20.10.24+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.0 // indirect
@@ -214,7 +214,7 @@ replace (
 	github.com/btcsuite/btcd => github.com/btcsuite/btcd v0.22.2 //indirect
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/ingenuity-build => ../../
-	github.com/strangelove-ventures/interchaintest/v5 => github.com/aljo242/interchaintest/v5 v5.0.0-20230424123205-4db4414add68
+	github.com/strangelove-ventures/interchaintest/v5 => github.com/aljo242/interchaintest/v5 v5.0.0-20230509122157-64ddf9ed35c2
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 )

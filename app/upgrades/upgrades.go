@@ -16,6 +16,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010402rc1UpgradeName, CreateUpgradeHandler: V010402rc1UpgradeHandler},
 		{UpgradeName: V010402rc2UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010402rc3UpgradeName, CreateUpgradeHandler: V010402rc3UpgradeHandler},
+		{UpgradeName: V010402rc4UpgradeName, CreateUpgradeHandler: V010402rc4UpgradeHandler},
 	}
 }
 
@@ -83,6 +84,25 @@ func V010402rc3UpgradeHandler(
 				valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")
 				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, OsmosisTestnetChainID, valoper)
 			}
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010402rc4UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) {
+			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeLiquidToken"]
+			if !exists {
+				panic("liquid tokens protocol data type not found")
+			}
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "osmo-test-5/ibc/FBD3AC18A981B89F60F9FE5B21BD7F1DE87A53C3505D5A5E438E2399409CFB6F")))
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rhye-1/uqosmo")))
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
