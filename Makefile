@@ -336,7 +336,6 @@ test-rpc:
 test-rpc-pending:
 	./scripts/integration-test-all.sh -t "pending" -q 1 -z 1 -s 2 -m "pending" -r "true"
 
-
 vulncheck: $(BUILDDIR)/
 	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
 	$(BUILDDIR)/govulncheck ./...
@@ -347,61 +346,63 @@ vet:
 	@echo "Done!"
 
 RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
-RUNNER_BASE_IMAGE_ALPINE := alpine:3.16
+RUNNER_BASE_IMAGE_ALPINE := alpine:3.17
 RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
+
 docker-build-debug:
 	@DOCKER_BUILDKIT=1 $(DOCKER) build -t quicksilver:${COMMIT} --build-arg BASE_IMG_TAG=debug --build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) -f test/e2e/e2e.Dockerfile .
 	@DOCKER_BUILDKIT=1 $(DOCKER) tag quicksilver:${COMMIT} quicksilver:debug
 
-docker-build-e2e-init-chain:
-	@DOCKER_BUILDKIT=1 docker build -t quicksilver-e2e-init-chain:debug --build-arg E2E_SCRIPT_NAME=chain --platform=linux/x86_64 -f test/e2e/initialization/init.Dockerfile .
-
-docker-build-e2e-init-node:
-	@DOCKER_BUILDKIT=1 docker build -t quicksilver-e2e-init-node:debug --build-arg E2E_SCRIPT_NAME=node --platform=linux/x86_64 -f test/e2e/initialization/init.Dockerfile .
-
-build-e2e-script:
-	mkdir -p $(BUILDDIR)
-	go build -mod=readonly $(BUILD_FLAGS) -o $(BUILDDIR)/ ./test/e2e/initialization/$(E2E_SCRIPT_NAME)
-
-# test-e2e runs a full e2e test suite
-# deletes any pre-existing QUICKSILVER containers before running.
-#
-# Deletes Docker resources at the end.
-# Utilizes Go cache.
-test-e2e: e2e-setup test-e2e-ci e2e-remove-resources
-
-# TODO
-# currently skipping upgrades
-
-# test-e2e-ci runs a full e2e test suite
-# does not do any validation about the state of the Docker environment
-# As a result, avoid using this locally.
-test-e2e-ci:
-	@VERSION=$(VERSION) QUICKSILVER_E2E=True QUICKSILVER_E2E_DEBUG_LOG=False QUICKSILVER_E2E_SKIP_UPGRADE=True QUICKSILVER_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION)  go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E)
-
-# test-e2e-debug runs a full e2e test suite but does
-# not attempt to delete Docker resources at the end.
-test-e2e-debug: e2e-setup
-	@VERSION=$(VERSION) QUICKSILVER_E2E=True QUICKSILVER_E2E_DEBUG_LOG=True QUICKSILVER_E2E_SKIP_UPGRADE=True QUICKSILVER_E2E_UPGRADE_VERSION=$(E2E_UPGRADE_VERSION) QUICKSILVER_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
-
-# test-e2e-short runs the e2e test with only short tests.
-# Does not delete any of the containers after running.
-# Deletes any existing containers before running.
-# Does not use Go cache.
-test-e2e-short: e2e-setup
-	@VERSION=$(VERSION) QUICKSILVER_E2E=True QUICKSILVER_E2E_DEBUG_LOG=True QUICKSILVER_E2E_SKIP_UPGRADE=True QUICKSILVER_E2E_SKIP_IBC=True QUICKSILVER_E2E_SKIP_STATE_SYNC=True QUICKSILVER_E2E_SKIP_CLEANUP=True go test -mod=readonly -timeout=25m -v $(PACKAGES_E2E) -count=1
-
-e2e-setup: e2e-check-image-sha e2e-remove-resources
-	@echo Finished e2e environment setup, ready to start the test
-
-e2e-check-image-sha:
-	test/e2e/scripts/run/check_image_sha.sh
-
-e2e-remove-resources:
-	test/e2e/scripts/run/remove_stale_resources.sh
-
-
 .PHONY: run-tests test test-all test-import test-rpc $(TEST_TARGETS)
+
+###############################################################################
+###                             e2e interchain test                         ###
+###############################################################################
+
+# Executes basic chain tests via interchaintest
+ictest-basic:
+	@cd test/interchaintest && go test -v -run TestBasicQuicksilverStart .
+
+# Executes a basic chain upgrade test via interchaintest
+ictest-upgrade:
+	@cd test/interchaintest && go test -v -run TestBasicQuicksilverUpgrade .
+
+# Executes a basic chain upgrade locally via interchaintest after compiling a local image as quicksilver:local
+ictest-upgrade-local: local-image ictest-upgrade
+
+# Executes IBC Transfer tests via interchaintest
+ictest-ibc:
+	@cd test/interchaintest && go test -v -run TestQuicksilverJunoIBCTransfer .
+
+# Executes TestInterchainStaking tests via interchaintest
+ictest-interchainstaking:
+	@cd test/interchaintest && go test -v -run TestInterchainStaking .
+
+# Executes all tests via interchaintest after compiling a local image as quicksilver:local
+ictest-all: local-image ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
+
+.PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all
+
+###############################################################################
+###                                  heighliner                             ###
+###############################################################################
+
+get-heighliner:
+	@git clone https://github.com/strangelove-ventures/heighliner.git
+	@cd heighliner && go install
+
+local-image:
+ifeq (,$(shell which heighliner))
+	@echo 'heighliner' binary not found. Consider running `make get-heighliner`
+else
+	heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
+endif
+	# install other docker images
+	$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
+	$(DOCKER) image pull quicksilverzone/interchain-queries:e2e
+
+
+.PHONY: get-heighliner local-image
 
 SIM_NUM_BLOCKS ?= 500
 SIM_BLOCK_SIZE ?= 200
