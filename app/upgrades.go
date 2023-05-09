@@ -5,6 +5,7 @@ import (
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
 
 	"github.com/ingenuity-build/quicksilver/app/upgrades"
 )
@@ -43,6 +44,12 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 	// 	storeUpgrades = &storetypes.StoreUpgrades{
 	// 		Added: []string{claimsmanagertypes.ModuleName},
 	// 	}
+
+	case upgrades.V010402rc3UpgradeName:
+
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{packetforwardtypes.ModuleName},
+		}
 	default:
 		// no-op
 	}
