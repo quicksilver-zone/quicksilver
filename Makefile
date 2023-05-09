@@ -333,8 +333,88 @@ test-rpc:
 test-rpc-pending:
 	./scripts/integration-test-all.sh -t "pending" -q 1 -z 1 -s 2 -m "pending" -r "true"
 
+<<<<<<< HEAD
 .PHONY: run-tests test test-all test-import test-rpc $(TEST_TARGETS)
 
+=======
+vulncheck: $(BUILDDIR)/
+	GOBIN=$(BUILDDIR) go install golang.org/x/vuln/cmd/govulncheck@latest
+	$(BUILDDIR)/govulncheck ./...
+
+vet:
+	@echo "Running vet..."
+	@go vet ./...
+	@echo "Done!"
+
+RUNNER_BASE_IMAGE_DISTROLESS := gcr.io/distroless/static-debian11
+RUNNER_BASE_IMAGE_ALPINE := alpine:3.17
+RUNNER_BASE_IMAGE_NONROOT := gcr.io/distroless/static-debian11:nonroot
+
+docker-build-debug:
+	@DOCKER_BUILDKIT=1 $(DOCKER) build -t quicksilver:${COMMIT} --build-arg BASE_IMG_TAG=debug --build-arg RUNNER_IMAGE=$(RUNNER_BASE_IMAGE_ALPINE) -f test/e2e/e2e.Dockerfile .
+	@DOCKER_BUILDKIT=1 $(DOCKER) tag quicksilver:${COMMIT} quicksilver:debug
+
+.PHONY: run-tests test test-all test-import test-rpc $(TEST_TARGETS)
+
+###############################################################################
+###                             e2e interchain test                         ###
+###############################################################################
+
+# Executes basic chain tests via interchaintest
+ictest-basic:
+	@cd test/interchaintest && go test -v -run TestBasicQuicksilverStart .
+
+# Executes a basic chain upgrade test via interchaintest
+ictest-upgrade:
+	@cd test/interchaintest && go test -v -run TestBasicQuicksilverUpgrade .
+
+# Executes a basic chain upgrade locally via interchaintest after compiling a local image as quicksilver:local
+ictest-upgrade-local: local-image ictest-upgrade
+
+# Executes IBC Transfer tests via interchaintest
+ictest-ibc:
+	@cd test/interchaintest && go test -v -run TestQuicksilverJunoIBCTransfer .
+
+# Executes TestInterchainStaking tests via interchaintest
+ictest-interchainstaking:
+	@cd test/interchaintest && go test -v -run TestInterchainStaking .
+
+# Executes all tests via interchaintest after compiling a local image as quicksilver:local
+ictest-all: local-image ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
+
+.PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all
+
+###############################################################################
+###                                  heighliner                             ###
+###############################################################################
+
+get-heighliner:
+	@git clone https://github.com/strangelove-ventures/heighliner.git
+	@cd heighliner && go install
+
+local-image:
+ifeq (,$(shell which heighliner))
+	@echo 'heighliner' binary not found. Consider running `make get-heighliner`
+else
+	heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
+endif
+	# install other docker images
+	$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
+	$(DOCKER) image pull quicksilverzone/interchain-queries:e2e
+
+
+.PHONY: get-heighliner local-image
+
+SIM_NUM_BLOCKS ?= 500
+SIM_BLOCK_SIZE ?= 200
+SIM_CI_NUM_BLOCKS ?= 125
+SIM_CI_BLOCK_SIZE ?= 50
+SIM_PERIOD ?= 5
+SIM_COMMIT ?= true
+SIM_TIMEOUT ?= 24h
+
+
+>>>>>>> e201aa8 (test: interchaintest (#390))
 test-sim-nondeterminism:
 	@echo "Running non-determinism test..."
 	@go test -mod=readonly $(SIMAPP) -run TestAppStateDeterminism -Enabled=true \

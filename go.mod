@@ -23,7 +23,12 @@ require (
 	github.com/spf13/cast v1.5.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
+<<<<<<< HEAD
 	github.com/spf13/viper v1.13.0
+=======
+	github.com/spf13/viper v1.15.0
+	github.com/strangelove-ventures/packet-forward-middleware/v5 v5.1.2
+>>>>>>> e201aa8 (test: interchaintest (#390))
 	github.com/stretchr/testify v1.8.2
 	github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 	github.com/tendermint/tendermint v0.34.27
@@ -66,7 +71,11 @@ require (
 	github.com/armon/go-metrics v0.4.1 // indirect
 	github.com/ashanbrown/forbidigo v1.5.1 // indirect
 	github.com/ashanbrown/makezero v1.1.1 // indirect
+<<<<<<< HEAD
 	github.com/aws/aws-sdk-go v1.40.45 // indirect
+=======
+	github.com/aws/aws-sdk-go v1.44.122 // indirect
+>>>>>>> e201aa8 (test: interchaintest (#390))
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -94,7 +103,10 @@ require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogoproto v1.4.2 // indirect
+<<<<<<< HEAD
 	github.com/cosmos/gorocksdb v1.2.0 // indirect
+=======
+>>>>>>> e201aa8 (test: interchaintest (#390))
 	github.com/cosmos/iavl v0.19.5 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
@@ -177,6 +189,10 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
+<<<<<<< HEAD
+=======
+	github.com/iancoleman/orderedmap v0.2.0 // indirect
+>>>>>>> e201aa8 (test: interchaintest (#390))
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/jgautheron/goconst v1.5.1 // indirect
@@ -225,8 +241,12 @@ require (
 	github.com/nishanths/predeclared v0.2.2 // indirect
 	github.com/nunnatsa/ginkgolinter v0.9.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
+<<<<<<< HEAD
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
+=======
+	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
+>>>>>>> e201aa8 (test: interchaintest (#390))
 	github.com/petermattis/goid v0.0.0-20180202154549-b0b1615b78e5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
@@ -262,7 +282,11 @@ require (
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
+<<<<<<< HEAD
 	github.com/subosito/gotenv v1.4.1 // indirect
+=======
+	github.com/subosito/gotenv v1.4.2 // indirect
+>>>>>>> e201aa8 (test: interchaintest (#390))
 	github.com/t-yuki/gocover-cobertura v0.0.0-20180217150009-aaee18c8195c // indirect
 	github.com/tdakkota/asciicheck v0.2.0 // indirect
 	github.com/tecbot/gorocksdb v0.0.0-20191217155057-f0fad39f321c // indirect
