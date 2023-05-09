@@ -1,6 +1,9 @@
 package upgrades
 
 import (
+	"time"
+
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
@@ -103,6 +106,28 @@ func V010402rc4UpgradeHandler(
 			}
 			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "osmo-test-5/ibc/FBD3AC18A981B89F60F9FE5B21BD7F1DE87A53C3505D5A5E438E2399409CFB6F")))
 			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rhye-1/uqosmo")))
+			rcptTime := time.Unix(1682932342, 0)
+			rcpt1 := types.Receipt{
+				ChainId:   "theta-testnet-001",
+				Sender:    "cosmos1e6p7tk969ftlzmz82drp84ruukwge6z6udand8",
+				Txhash:    "005AABC399866544CBEC4DC57887A7297289BF40C056A1544D3CE18946DB7DB9",
+				Amount:    sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(100000000))),
+				FirstSeen: &rcptTime,
+				Completed: nil,
+			}
+
+			rcpt2 := types.Receipt{
+				ChainId:   "elgafar-1",
+				Sender:    "stars1e6p7tk969ftlzmz82drp84ruukwge6z6g32wxk",
+				Txhash:    "01041964B4CDDD3ECA1C9F1EFC039B547C2D30D5B85C55089EB6F7DF311786B6",
+				Amount:    sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(100000000))),
+				FirstSeen: &rcptTime,
+				Completed: nil,
+			}
+
+			appKeepers.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
+			appKeepers.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
+
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
