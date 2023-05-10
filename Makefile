@@ -382,7 +382,7 @@ ictest-deps:
 	@$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
 	@$(DOCKER) image pull quicksilverzone/interchain-queries:e2e
 
-ictest-build-push: ictest-build
+ictest-build-push: ictest-setup
 	@$(DOCKER) tag quicksilver:local  quicksilverzone/quicksilver-e2e:latest
 	@$(DOCKER) push quicksilverzone/quicksilver-e2e:latest
 
