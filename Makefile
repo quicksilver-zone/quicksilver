@@ -395,10 +395,10 @@ ictest-build-push: ictest-build
 get-heighliner:
 	@rm -rf heighliner
 	@git clone https://github.com/strangelove-ventures/heighliner.git
-	@cd heighliner && go install
+	@cd heighliner && go build
 
 local-image:
-	$(GOBIN)/heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
+	@heighliner/heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
 
 .PHONY: get-heighliner local-image
 
