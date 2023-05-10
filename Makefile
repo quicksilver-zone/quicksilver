@@ -367,7 +367,7 @@ ictest-ibc: ictest-deps
 	@cd test/interchaintest && go test -v -run TestQuicksilverJunoIBCTransfer .
 
 # Executes TestInterchainStaking tests via interchaintest
-ictest-interchainstaking:
+ictest-interchainstaking: ictest-deps
 	@cd test/interchaintest && go test -v -run TestInterchainStaking .
 
 # Executes all tests via interchaintest after compiling a local image as quicksilver:local
