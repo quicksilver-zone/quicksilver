@@ -20,6 +20,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010402rc2UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010402rc3UpgradeName, CreateUpgradeHandler: V010402rc3UpgradeHandler},
 		{UpgradeName: V010402rc4UpgradeName, CreateUpgradeHandler: V010402rc4UpgradeHandler},
+		{UpgradeName: V010402rc5UpgradeName, CreateUpgradeHandler: V010402rc5UpgradeHandler},
 	}
 }
 
@@ -127,6 +128,85 @@ func V010402rc4UpgradeHandler(
 
 			appKeepers.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
 			appKeepers.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
+
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010402rc5UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) {
+
+			rcptTime := time.Unix(1682932342, 0)
+
+			rcpts := []types.Receipt{
+				{
+					ChainId:   "theta-testnet-001",
+					Sender:    "cosmos1e6p7tk969ftlzmz82drp84ruukwge6z6udand8",
+					Txhash:    "005AABC399866544CBEC4DC57887A7297289BF40C056A1544D3CE18946DB7DB9",
+					Amount:    sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(100000000))),
+					FirstSeen: &rcptTime,
+					Completed: nil,
+				},
+				{
+					ChainId:   "theta-testnet-001",
+					Sender:    "cosmos1e6p7tk969ftlzmz82drp84ruukwge6z6udand8",
+					Txhash:    "60DBC8449D74B5782D5918A908F16AFF594E0E4CF28CAD82B9B329610ED01B80",
+					Amount:    sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(200000000))),
+					FirstSeen: &rcptTime,
+					Completed: nil,
+				},
+				{
+					ChainId:   "theta-testnet-001",
+					Sender:    "cosmos1e6p7tk969ftlzmz82drp84ruukwge6z6udand8",
+					Txhash:    "2BB80824D07D3B2FA5B69E23C973D3B4885A4C8407871DDEFC324305748366BA",
+					Amount:    sdk.NewCoins(sdk.NewCoin("uatom", sdkmath.NewInt(150000000))),
+					FirstSeen: &rcptTime,
+					Completed: nil,
+				},
+				{
+					ChainId:   "elgafar-1",
+					Sender:    "stars1e6p7tk969ftlzmz82drp84ruukwge6z6g32wxk",
+					Txhash:    "01041964B4CDDD3ECA1C9F1EFC039B547C2D30D5B85C55089EB6F7DF311786B6",
+					Amount:    sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(100000000))),
+					FirstSeen: &rcptTime,
+					Completed: nil,
+				},
+				{
+					ChainId:   "elgafar-1",
+					Sender:    "stars1e6p7tk969ftlzmz82drp84ruukwge6z6g32wxk",
+					Txhash:    "74E497648091F539A47965EC8EDCA36F54329A5FEFC417F5BD28DD2C8297BBAC",
+					Amount:    sdk.NewCoins(sdk.NewCoin("ustars", sdkmath.NewInt(200000000))),
+					FirstSeen: &rcptTime,
+					Completed: nil,
+				},
+				{
+					ChainId:   "uni-6",
+					Sender:    "juno1f6g9guyeyzgzjc9l8wg4xl5x0rvxddew0wx2jp",
+					Txhash:    "11C89B3342326B8C84B0FDE1C63DC233B51E56D8EA6E1AB2B0BAD8094E77C38B",
+					Amount:    sdk.NewCoins(sdk.NewCoin("ujunox", sdkmath.NewInt(200000000))),
+					FirstSeen: &rcptTime,
+					Completed: nil,
+				},
+				{
+					ChainId:   "regen-redwood-1",
+					Sender:    "regen1f6g9guyeyzgzjc9l8wg4xl5x0rvxddewx7wdre",
+					Txhash:    "D5D1C2741A613E1303D32A7755DFC68072D23BCA281CE24D2A4A7857A8674D3B",
+					Amount:    sdk.NewCoins(sdk.NewCoin("uregen", sdkmath.NewInt(200000000))),
+					FirstSeen: &rcptTime,
+					Completed: nil,
+				},
+			}
+
+			for _, rcpt := range rcpts {
+				appKeepers.InterchainstakingKeeper.SetReceipt(ctx, rcpt)
+			}
 
 		}
 
