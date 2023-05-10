@@ -3,7 +3,6 @@ package types_test
 import (
 	"bytes"
 	"compress/zlib"
-
 	"testing"
 
 	"github.com/stretchr/testify/require"

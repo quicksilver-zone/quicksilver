@@ -267,7 +267,8 @@ func TestMsgIncentivePoolSpendValidateBasic(t *testing.T) {
 				Amount:    sdk.Coins{},
 			},
 			true,
-		}, {
+		},
+		{
 			"invalid amount",
 			fields{
 				Authority: addr1,
