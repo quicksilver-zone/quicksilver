@@ -352,18 +352,18 @@ vet:
 ###############################################################################
 
 # Executes basic chain tests via interchaintest
-ictest-basic:
+ictest-basic: ictest-deps
 	@cd test/interchaintest && go test -v -run TestBasicQuicksilverStart .
 
 # Executes a basic chain upgrade test via interchaintest
-ictest-upgrade:
+ictest-upgrade: ictest-deps
 	@cd test/interchaintest && go test -v -run TestBasicQuicksilverUpgrade .
 
 # Executes a basic chain upgrade locally via interchaintest after compiling a local image as quicksilver:local
 ictest-upgrade-local: local-image ictest-deps ictest-upgrade
 
 # Executes IBC Transfer tests via interchaintest
-ictest-ibc:
+ictest-ibc: ictest-deps
 	@cd test/interchaintest && go test -v -run TestQuicksilverJunoIBCTransfer .
 
 # Executes TestInterchainStaking tests via interchaintest
@@ -373,14 +373,16 @@ ictest-interchainstaking:
 # Executes all tests via interchaintest after compiling a local image as quicksilver:local
 ictest-all: ictest-setup ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
 
-ictest-setup: get-heighliner local-image ictest-deps
+ictest-setup: ictest-build ictest-deps
+
+ictest-build: get-heighliner local-image
 
 ictest-deps:
 	# install other docker images
 	$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
 	$(DOCKER) image pull quicksilverzone/interchain-queries:e2e
 
-.PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all ictest-deps
+.PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all ictest-deps ictest-build
 
 ###############################################################################
 ###                                  heighliner                             ###
