@@ -12,7 +12,7 @@ import (
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	utilsort "github.com/ingenuity-build/quicksilver/utils/sort"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -183,7 +183,7 @@ func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Zone, 
 
 func (k *Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations map[string]sdkmath.Int) []sdk.Msg {
 	var msgs []sdk.Msg
-	for _, valoper := range utils.Keys(allocations) {
+	for _, valoper := range utilsort.Keys(allocations) {
 		if !allocations[valoper].IsZero() {
 			msgs = append(msgs, &stakingTypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: sdk.NewCoin(zone.BaseDenom, allocations[valoper])})
 		}

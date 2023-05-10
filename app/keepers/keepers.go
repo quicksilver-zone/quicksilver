@@ -374,6 +374,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[claimsmanagertypes.StoreKey],
+		appKeepers.BankKeeper,
 		*appKeepers.IBCKeeper,
 	)
 

@@ -3,6 +3,7 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"cosmossdk.io/math"
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
@@ -28,4 +29,18 @@ func (c *Claim) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// UserAllocation is an internal keeper struct to track transient state for
+// rewards distribution. It contains the user address and the coins that are
+// allocated to it.
+type UserAllocation struct {
+	Address string
+	Amount  math.Int
+}
+
+type CustomZone struct {
+	ChainID            string
+	HoldingsAllocation uint64
+	LocalDenom         string
 }

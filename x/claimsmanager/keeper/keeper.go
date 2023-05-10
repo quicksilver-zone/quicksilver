@@ -17,9 +17,10 @@ import (
 )
 
 type Keeper struct {
-	cdc       codec.BinaryCodec
-	storeKey  storetypes.StoreKey
-	IBCKeeper ibckeeper.Keeper
+	cdc        codec.BinaryCodec
+	storeKey   storetypes.StoreKey
+	bankKeeper types.BankKeeper
+	IBCKeeper  ibckeeper.Keeper
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -27,12 +28,14 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.Codec,
 	key storetypes.StoreKey,
+	bankKeeper types.BankKeeper,
 	ibcKeeper ibckeeper.Keeper,
 ) Keeper {
 	return Keeper{
-		cdc:       cdc,
-		storeKey:  key,
-		IBCKeeper: ibcKeeper,
+		cdc:        cdc,
+		storeKey:   key,
+		bankKeeper: bankKeeper,
+		IBCKeeper:  ibcKeeper,
 	}
 }
 

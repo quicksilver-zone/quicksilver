@@ -8,6 +8,7 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
+	claimtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -175,7 +176,7 @@ func (k *Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation
 }
 
 // DistributeToUsers sends the allocated user rewards to the user address.
-func (k *Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.UserAllocation) error {
+func (k *Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []claimtypes.UserAllocation) error {
 	k.Logger(ctx).Info("distributeToUsers", "allocations", userAllocations)
 	hasError := false
 

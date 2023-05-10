@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	claimtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -228,10 +229,10 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 	ctx sdk.Context,
 	zone *icstypes.Zone,
 	zs types.ZoneScore,
-) []types.UserAllocation {
+) []claimtypes.UserAllocation {
 	k.Logger(ctx).Info("calcUserValidatorSelectionAllocations", "zone", zone.ChainId, "scores", zs, "allocation", zone.ValidatorSelectionAllocation)
 
-	userAllocations := make([]types.UserAllocation, 0)
+	userAllocations := make([]claimtypes.UserAllocation, 0)
 	if zone.ValidatorSelectionAllocation == 0 {
 		k.Logger(ctx).Info("validator selection allocation is zero, nothing to allocate")
 		return userAllocations
@@ -273,7 +274,7 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 	tokensPerPoint := allocation.Quo(sum)
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
-		ua := types.UserAllocation{
+		ua := claimtypes.UserAllocation{
 			Address: us.Address,
 			Amount:  us.Score.Mul(tokensPerPoint).TruncateInt(),
 		}

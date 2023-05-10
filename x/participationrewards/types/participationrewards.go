@@ -138,14 +138,6 @@ func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 	return pdi.ValidateBasic()
 }
 
-// UserAllocation is an internal keeper struct to track transient state for
-// rewards distribution. It contains the user address and the coins that are
-// allocated to it.
-type UserAllocation struct {
-	Address string
-	Amount  math.Int
-}
-
 // ZoneScore is an internal struct to track transient state for the calculation
 // of zone scores. It specifically tallies the total zone voting power used in
 // calculations to determine validator voting power percentages.
