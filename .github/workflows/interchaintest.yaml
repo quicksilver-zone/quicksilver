@@ -53,10 +53,7 @@ jobs:
             ${{ runner.os }}-golang-
 
       - name: build and push container
-        run: |
-          make ictest-build
-          /usr/bin/docker tag quicksilver:latest  quicksilverzone/quicksilver-e2e:latest
-          /usr/bin/docker push quicksilverzone/quicksilver-e2e:latest
+        run: ictest-build-push
 
   test-quicksilver-basic:
     runs-on: ubuntu-latest
