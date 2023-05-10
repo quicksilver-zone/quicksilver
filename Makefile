@@ -398,11 +398,7 @@ get-heighliner:
 	@cd heighliner && go install
 
 local-image:
-ifeq (,$(shell which heighliner))
-	@echo 'heighliner' binary not found. Consider running `make get-heighliner`
-else
-	/usr/local/bin/heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
-endif
+	$(GOBIN)/heighliner build -c quicksilver --local --build-env BUILD_TAGS=muslc
 
 .PHONY: get-heighliner local-image
 
