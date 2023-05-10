@@ -13,8 +13,8 @@ on:
       - 'go.sum'
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}-e2e
+  REGISTRY: quicksilverzone
+  IMAGE_NAME: quicksilver-e2e
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -53,7 +53,7 @@ jobs:
             ${{ runner.os }}-golang-
 
       - name: build and push container
-        run: ictest-build-push
+        run: make ictest-build-push
 
   test-quicksilver-basic:
     runs-on: ubuntu-latest
