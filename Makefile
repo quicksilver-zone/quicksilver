@@ -379,16 +379,21 @@ ictest-build: get-heighliner local-image
 
 ictest-deps:
 	# install other docker images
-	$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
-	$(DOCKER) image pull quicksilverzone/interchain-queries:e2e
+	@$(DOCKER) image pull quicksilverzone/xcclookup:v0.4.3
+	@$(DOCKER) image pull quicksilverzone/interchain-queries:e2e
 
-.PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all ictest-deps ictest-build
+ictest-build-push: ictest-build
+	@$(DOCKER) tag quicksilver:local  quicksilverzone/quicksilver-e2e:latest
+	@$(DOCKER) push quicksilverzone/quicksilver-e2e:latest
+
+.PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all ictest-deps ictest-build ictest-build-push
 
 ###############################################################################
 ###                                  heighliner                             ###
 ###############################################################################
 
 get-heighliner:
+	@rm -rf heighliner
 	@git clone https://github.com/strangelove-ventures/heighliner.git
 	@cd heighliner && go install
 
