@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"sort"
 
@@ -409,24 +410,29 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 	return nil
 }
 
-func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone) (int, error) {
-	var err error
-	count := 0
+func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, delAddrBalance sdk.Coin) error {
+	var amount sdk.Coins
+	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
+
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-		if receiptInfo.Completed == nil {
-			sendMsg := banktypes.MsgSend{
-				FromAddress: "",
-				ToAddress:   "",
-				Amount:      receiptInfo.Amount,
-			}
-			err = k.handleSendToDelegate(ctx, zone, &sendMsg, receiptInfo.Txhash)
-			if err != nil {
-				k.Logger(ctx).Error("error in processing pending delegations", "chain", zone.ChainId, "receipt", receiptInfo.Txhash, "error", err)
-				return true
-			}
-			count++
+		if receiptInfo.FirstSeen.After(exclusionTime) && receiptInfo.Completed == nil {
+			amount = amount.Add(receiptInfo.Amount...)
 		}
 		return false
 	})
-	return count, err
+
+	coins := sdk.NewCoins(delAddrBalance).Sub(amount...)
+
+	if coins.IsAnyNegative() || coins.IsZero() {
+		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
+		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
+		return nil
+	}
+
+	sendMsg := banktypes.MsgSend{
+		FromAddress: "",
+		ToAddress:   "",
+		Amount:      coins,
+	}
+	return k.handleSendToDelegate(ctx, zone, &sendMsg, fmt.Sprintf("batch/%d", exclusionTime.Unix()))
 }
