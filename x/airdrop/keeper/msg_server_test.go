@@ -6,6 +6,8 @@ import (
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
+	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
+
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
@@ -482,6 +484,81 @@ func (s *KeeperTestSuite) Test_msgServer_Claim() {
 			s.Require().NoError(err)
 			s.Require().NotNil(resp)
 			s.Require().Equal(tt.want, resp)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
+	appA := s.GetQuicksilverApp(s.chainA)
+
+	modAccAddr := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
+	userAddress := utils.GenerateAccAddressForTest().String()
+	denom := "uatom" // same as test zone setup in keeper_test
+	coins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromUint64(1000)))
+	mintCoins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromUint64(100000000)))
+
+	// set up mod acct with funds
+	err := appA.BankKeeper.MintCoins(s.chainA.GetContext(), minttypes.ModuleName, mintCoins)
+	s.Require().NoError(err)
+	err = appA.BankKeeper.SendCoinsFromModuleToModule(s.chainA.GetContext(), minttypes.ModuleName, types.ModuleName, mintCoins)
+	s.Require().NoError(err)
+
+	msg := types.MsgIncentivePoolSpend{}
+	tests := []struct {
+		name     string
+		malleate func()
+		want     *types.MsgIncentivePoolSpendResponse
+		wantErr  bool
+	}{
+		{
+			name: "invalid authority",
+			malleate: func() {
+				msg = types.MsgIncentivePoolSpend{
+					Authority: "invalid",
+					ToAddress: userAddress,
+					Amount:    coins,
+				}
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "valid",
+			malleate: func() {
+				msg = types.MsgIncentivePoolSpend{
+					Authority: modAccAddr,
+					ToAddress: userAddress,
+					Amount:    coins,
+				}
+			},
+			want:    &types.MsgIncentivePoolSpendResponse{},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			tt.malleate()
+
+			k := keeper.NewMsgServerImpl(appA.AirdropKeeper)
+			resp, err := k.IncentivePoolSpend(sdk.WrapSDKContext(s.chainA.GetContext()), &msg)
+			if tt.wantErr {
+				s.Require().Error(err)
+				s.Require().Nil(resp)
+				s.T().Logf("Error: %v", err)
+				return
+			}
+
+			s.Require().NoError(err)
+			s.Require().NotNil(resp)
+			s.Require().Equal(tt.want, resp)
+
+			// verify that balance has been properly transferred
+			accAddr, err := sdk.AccAddressFromBech32(msg.ToAddress)
+			s.Require().NoError(err)
+			balance := appA.BankKeeper.GetAllBalances(s.chainA.GetContext(), accAddr)
+			s.Require().Equal(msg.Amount, balance)
 		})
 	}
 }
