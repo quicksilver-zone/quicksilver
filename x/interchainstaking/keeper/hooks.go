@@ -22,23 +22,25 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 		k.Logger(ctx).Info("handling day end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 		k.Logger(ctx).Debug("flushing outstanding delegations for the day")
 		k.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
-			addressBytes, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
-			if err != nil {
-				k.Logger(ctx).Error("cannot decode bech32 delegation addr")
-				return false
-			}
+			if zone.DelegationAddress != nil {
+				addressBytes, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
+				if err != nil {
+					k.Logger(ctx).Error("cannot decode bech32 delegation addr")
+					return false
+				}
 
-			k.ICQKeeper.MakeRequest(
-				ctx,
-				zone.ConnectionId,
-				zone.ChainId,
-				types.BankStoreKey,
-				append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
-				sdk.NewInt(-1),
-				types.ModuleName,
-				"delegationaccountbalance",
-				0,
-			)
+				k.ICQKeeper.MakeRequest(
+					ctx,
+					zone.ConnectionId,
+					zone.ChainId,
+					types.BankStoreKey,
+					append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
+					sdk.NewInt(-1),
+					types.ModuleName,
+					"delegationaccountbalance",
+					0,
+				)
+			}
 			return false
 		})
 	}
