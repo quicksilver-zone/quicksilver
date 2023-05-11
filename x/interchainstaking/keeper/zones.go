@@ -164,6 +164,14 @@ func (k *Keeper) GetZoneForDepositAccount(ctx sdk.Context, address string) *type
 	return nil
 }
 
+func (k *Keeper) GetZoneForWithdrawalAccount(ctx sdk.Context, address string) *types.Zone {
+	z := k.GetZoneForAccount(ctx, address)
+	if z != nil && z.WithdrawalAddress != nil && address == z.WithdrawalAddress.Address {
+		return z
+	}
+	return nil
+}
+
 func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {
 	if zone.WithdrawalAddress == nil {
 		k.Logger(ctx).Info("Withdrawal address not set")
