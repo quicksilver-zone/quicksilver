@@ -113,7 +113,7 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 		if found {
 			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(sdk.NewInt(redelegation.Amount))
 			if availablePerValidator[redelegation.Destination].LT(sdk.ZeroInt()) {
-				panic("negative available amount; unable to continue")
+				panic(fmt.Sprintf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ChainId, redelegation.Destination, availablePerValidator[redelegation.Destination].String()))
 			}
 			total = total.Sub(sdk.NewInt(redelegation.Amount))
 		}
