@@ -332,7 +332,7 @@ func (k *Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.Zone, addr sdk.Ac
 
 func (k *Keeper) SetReceiptsCompleted(ctx sdk.Context, zone *types.Zone, qualifyingTime, completionTime time.Time) {
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-		if receiptInfo.FirstSeen.Before(qualifyingTime) {
+		if receiptInfo.FirstSeen.Before(qualifyingTime) && receiptInfo.Completed == nil {
 			receiptInfo.Completed = &completionTime
 			k.SetReceipt(ctx, receiptInfo)
 
