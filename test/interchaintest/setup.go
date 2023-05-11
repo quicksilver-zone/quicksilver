@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	QuickSilverE2ERepo  = "ghcr.io/ingenuity-build/quicksilver-e2e"
+	QuickSilverE2ERepo  = "quicksilverzone/quicksilver-e2e"
 	QuicksilverMainRepo = "quicksilverzone/quicksilver"
 
 	repo, version = GetDockerImageInfo()
