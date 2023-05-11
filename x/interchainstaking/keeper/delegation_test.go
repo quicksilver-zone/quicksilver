@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
-	cosmosmath "cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
+	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -41,7 +42,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	suite.Require().True(found)
 	suite.Require().Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
 
-	updateDelegation.Amount.Amount = cosmosmath.NewInt(10000)
+	updateDelegation.Amount.Amount = sdkmath.NewInt(10000)
 	icsKeeper.SetPerformanceDelegation(ctx, &zone, updateDelegation)
 
 	updatedDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
@@ -109,14 +110,14 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 	val4 := utils.GenerateValAddressForTest()
 
 	tc := []struct {
-		current  map[string]cosmosmath.Int
+		current  map[string]sdkmath.Int
 		target   icstypes.ValidatorIntents
 		inAmount sdk.Coins
-		expected map[string]cosmosmath.Int
-		dust     cosmosmath.Int
+		expected map[string]sdkmath.Int
+		dust     sdkmath.Int
 	}{
 		{
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(350000),
 				val2.String(): sdk.NewInt(650000),
 				val3.String(): sdk.NewInt(75000),
@@ -127,14 +128,14 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000))),
-			expected: map[string]cosmosmath.Int{
+			expected: map[string]sdkmath.Int{
 				val1.String(): sdk.ZeroInt(),
 				val2.String(): sdk.NewInt(33182),
 				val3.String(): sdk.NewInt(16818),
 			},
 		},
 		{
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(52),
 				val2.String(): sdk.NewInt(24),
 				val3.String(): sdk.NewInt(20),
@@ -147,7 +148,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(20))),
-			expected: map[string]cosmosmath.Int{
+			expected: map[string]sdkmath.Int{
 				val4.String(): sdk.NewInt(11),
 				val3.String(): sdk.ZeroInt(),
 				val2.String(): sdk.NewInt(6),
@@ -155,7 +156,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 			},
 		},
 		{
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(52),
 				val2.String(): sdk.NewInt(24),
 				val3.String(): sdk.NewInt(20),
@@ -168,7 +169,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50))),
-			expected: map[string]cosmosmath.Int{
+			expected: map[string]sdkmath.Int{
 				val4.String(): sdk.NewInt(20),
 				val2.String(): sdk.NewInt(13),
 				val1.String(): sdk.NewInt(10),
@@ -178,7 +179,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 	}
 
 	for caseNumber, val := range tc {
-		sum := cosmosmath.ZeroInt()
+		sum := sdkmath.ZeroInt()
 		for _, amount := range val.current {
 			sum = sum.Add(amount)
 		}
@@ -342,12 +343,12 @@ func TestCalculateDeltas(t *testing.T) {
 	}}
 
 	tc := []struct {
-		current  map[string]cosmosmath.Int
+		current  map[string]sdkmath.Int
 		target   icstypes.ValidatorIntents
 		expected icstypes.ValidatorIntents
 	}{
 		{
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(350000),
 				val2.String(): sdk.NewInt(650000),
 				val3.String(): sdk.NewInt(75000),
@@ -364,7 +365,7 @@ func TestCalculateDeltas(t *testing.T) {
 			},
 		},
 		{
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(53),
 				val2.String(): sdk.NewInt(26),
 				val3.String(): sdk.NewInt(14),
@@ -384,7 +385,7 @@ func TestCalculateDeltas(t *testing.T) {
 			},
 		},
 		{
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(30),
 				val2.String(): sdk.NewInt(30),
 				val3.String(): sdk.NewInt(60),
@@ -405,7 +406,7 @@ func TestCalculateDeltas(t *testing.T) {
 		},
 		// default intent -- all equal
 		{
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(15),
 				val2.String(): sdk.NewInt(5),
 				val3.String(): sdk.NewInt(20),
@@ -421,7 +422,7 @@ func TestCalculateDeltas(t *testing.T) {
 		},
 		{
 			// GetAggregateIntentOrDefault will preclude val4 on account on high commission.
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(8),
 				val2.String(): sdk.NewInt(12),
 				val3.String(): sdk.NewInt(20),
@@ -438,7 +439,7 @@ func TestCalculateDeltas(t *testing.T) {
 	}
 
 	for caseNumber, val := range tc {
-		sum := cosmosmath.ZeroInt()
+		sum := sdkmath.ZeroInt()
 		for _, amount := range val.current {
 			sum = sum.Add(amount)
 		}
@@ -477,15 +478,15 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 
 	tc := []struct {
 		name          string
-		current       map[string]cosmosmath.Int
+		current       map[string]sdkmath.Int
 		target        icstypes.ValidatorIntents
 		expected      []icskeeper.RebalanceTarget
-		dust          cosmosmath.Int
+		dust          sdkmath.Int
 		redelegations []types.RedelegationRecord
 	}{
 		{
 			name: "case 1",
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(350000),
 				val2.String(): sdk.NewInt(650000),
 				val3.String(): sdk.NewInt(75000),
@@ -496,13 +497,13 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
 			},
 			expected: []icskeeper.RebalanceTarget{
-				{Amount: cosmosmath.NewInt(27250), Source: val1.String(), Target: val2.String()},
-				{Amount: cosmosmath.NewInt(250), Source: val1.String(), Target: val3.String()},
+				{Amount: sdkmath.NewInt(27250), Source: val1.String(), Target: val2.String()},
+				{Amount: sdkmath.NewInt(250), Source: val1.String(), Target: val3.String()},
 			},
 		},
 		{
 			name: "case 2",
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(56),
 				val2.String(): sdk.NewInt(24),
 				val3.String(): sdk.NewInt(14),
@@ -515,14 +516,14 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			expected: []icskeeper.RebalanceTarget{
-				{Amount: cosmosmath.NewInt(4), Source: val1.String(), Target: val4.String()},
-				{Amount: cosmosmath.NewInt(3), Source: val1.String(), Target: val2.String()},
+				{Amount: sdkmath.NewInt(4), Source: val1.String(), Target: val4.String()},
+				{Amount: sdkmath.NewInt(3), Source: val1.String(), Target: val2.String()},
 			},
 			redelegations: []types.RedelegationRecord{},
 		},
 		{
 			name: "case 3",
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(30),
 				val2.String(): sdk.NewInt(30),
 				val3.String(): sdk.NewInt(60),
@@ -535,16 +536,16 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			expected: []icskeeper.RebalanceTarget{
-				{Amount: cosmosmath.NewInt(42), Source: val4.String(), Target: val1.String()},
+				{Amount: sdkmath.NewInt(42), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: cosmosmath.NewInt(10), Source: val4.String(), Target: val2.String()},
+				//{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val2.String()},
 			},
 			redelegations: []types.RedelegationRecord{},
 		},
 		// default intent -- all equal
 		{
 			name: "case 4 - default intent, all equal",
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(15),
 				val2.String(): sdk.NewInt(5),
 				val3.String(): sdk.NewInt(20),
@@ -552,17 +553,17 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			},
 			target: zone.GetAggregateIntentOrDefault(),
 			expected: []icskeeper.RebalanceTarget{
-				{Amount: cosmosmath.NewInt(14), Source: val4.String(), Target: val2.String()},
+				{Amount: sdkmath.NewInt(14), Source: val4.String(), Target: val2.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: cosmosmath.NewInt(10), Source: val4.String(), Target: val1.String()},
-				//{Amount: cosmosmath.NewInt(5), Source: val4.String(), Target: val3.String()},
+				//{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
+				//{Amount: sdkmath.NewInt(5), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{},
 		},
 		//
 		{
 			name: "case 5 - default intent with val4 high commission; truncate rebalance to 50% of tvl",
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(8),
 				val2.String(): sdk.NewInt(12),
 				val3.String(): sdk.NewInt(20),
@@ -570,16 +571,16 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			},
 			target: zone2.GetAggregateIntentOrDefault(),
 			expected: []icskeeper.RebalanceTarget{
-				{Amount: cosmosmath.NewInt(14), Source: val4.String(), Target: val1.String()},
+				{Amount: sdkmath.NewInt(14), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: cosmosmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				//{Amount: cosmosmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
+				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{},
 		},
 		{
 			name: "case 6 - includes redelegation, no impact",
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(8),
 				val2.String(): sdk.NewInt(12),
 				val3.String(): sdk.NewInt(20),
@@ -587,10 +588,10 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			},
 			target: zone2.GetAggregateIntentOrDefault(),
 			expected: []icskeeper.RebalanceTarget{
-				{Amount: cosmosmath.NewInt(14), Source: val4.String(), Target: val1.String()},
+				{Amount: sdkmath.NewInt(14), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: cosmosmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				//{Amount: cosmosmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
+				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 30, CompletionTime: time.Now().Add(time.Hour)},
@@ -598,7 +599,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 		},
 		{
 			name: "case 7 - includes redelegation, truncated delegation",
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(8),
 				val2.String(): sdk.NewInt(12),
 				val3.String(): sdk.NewInt(20),
@@ -606,10 +607,10 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			},
 			target: zone2.GetAggregateIntentOrDefault(),
 			expected: []icskeeper.RebalanceTarget{
-				{Amount: cosmosmath.NewInt(10), Source: val4.String(), Target: val1.String()},
+				{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: cosmosmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				//{Amount: cosmosmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
+				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
@@ -617,7 +618,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 		},
 		{
 			name: "case 8 - includes redelegation, truncated delegation",
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(8),
 				val2.String(): sdk.NewInt(12),
 				val3.String(): sdk.NewInt(20),
@@ -625,10 +626,10 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			},
 			target: zone2.GetAggregateIntentOrDefault(),
 			expected: []icskeeper.RebalanceTarget{
-				{Amount: cosmosmath.NewInt(10), Source: val4.String(), Target: val1.String()},
+				{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: cosmosmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				//{Amount: cosmosmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
+				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
@@ -636,7 +637,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 		},
 		{
 			name: "case 8 - includes redelegation, truncated delegation overflow",
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(2),
 				val2.String(): sdk.NewInt(8),
 				val3.String(): sdk.NewInt(30),
@@ -644,10 +645,10 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			},
 			target: zone2.GetAggregateIntentOrDefault(),
 			expected: []icskeeper.RebalanceTarget{
-				{Amount: cosmosmath.NewInt(10), Source: val4.String(), Target: val1.String()},
+				{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: cosmosmath.NewInt(4), Source: val3.String(), Target: val1.String()},  // joe: I would expect this to be included...
-				//{Amount: cosmosmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				//{Amount: sdkmath.NewInt(4), Source: val3.String(), Target: val1.String()},  // joe: I would expect this to be included...
+				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
@@ -655,7 +656,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 		},
 		{
 			name: "case 9 - includes redelegation, zero delegation",
-			current: map[string]cosmosmath.Int{
+			current: map[string]sdkmath.Int{
 				val1.String(): sdk.NewInt(8),
 				val2.String(): sdk.NewInt(12),
 				val3.String(): sdk.NewInt(20),
@@ -663,10 +664,10 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 			},
 			target:   zone2.GetAggregateIntentOrDefault(),
 			expected: []icskeeper.RebalanceTarget{
-				//{Amount: cosmosmath.NewInt(10), Source: val4.String(), Target: val1.String()},
+				//{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
 				// below values _would_ applied, if we weren't limited by a max of total/7
-				//{Amount: cosmosmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				//{Amount: cosmosmath.NewInt(4), Source: val4.String(), Target: val3.String()},
+				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
+				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
 			redelegations: []types.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 60, CompletionTime: time.Now().Add(time.Hour)},
@@ -675,7 +676,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 	}
 
 	for _, val := range tc {
-		sum := cosmosmath.ZeroInt()
+		sum := sdkmath.ZeroInt()
 		for _, amount := range val.current {
 			sum = sum.Add(amount)
 		}
@@ -722,35 +723,267 @@ func (s *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 	})
 }
 
-func (s *KeeperTestSuite) TestFlushDelegations() {
-	s.Run("flush delegations", func() {
-		s.SetupTest()
-		s.setupTestZones()
+func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
+	userAddress := utils.GenerateAccAddressForTest().String()
+	denom := "uatom"
+	tests := []struct {
+		name               string
+		setStatements      func(ctx sdk.Context, quicksilver *app.Quicksilver)
+		delAddrBalance     sdk.Coin
+		mockAck            bool
+		expectedDelegation sdk.Coins
+		assertStatements   func(ctx sdk.Context, quicksilver *app.Quicksilver) bool
+	}{
+		{
+			name:           "zero pending delegations, no pending receipts, no exclusion receipts",
+			setStatements:  func(ctx sdk.Context, quicksilver *app.Quicksilver) {},
+			delAddrBalance: sdk.NewCoin("uatom", sdkmath.ZeroInt()),
+			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				return true
+			},
+		},
+		{
+			name: "zero pending delegations, 2 pending receipts and no exclusion receipts",
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
+				cutOffTime := ctx.BlockTime().AddDate(0, 0, -1)
+				pendingRecieptTime := cutOffTime.Add(-2 * time.Hour)
+				excludedReciptTime := cutOffTime.Add(-3 * time.Hour)
 
-		app := s.GetQuicksilverApp(s.chainA)
-		ctx := s.chainA.GetContext()
+				rcpt1 := types.Receipt{
+					ChainId: s.chainB.ChainID,
+					Sender:  userAddress,
+					Txhash:  "TestDeposit01",
+					Amount: sdk.NewCoins(
+						sdk.NewCoin(
+							denom,
+							sdk.NewIntFromUint64(2000000), // 20% deposit
+						),
+					),
+					FirstSeen: &pendingRecieptTime,
+					Completed: nil,
+				}
 
-		t := time.Now()
-		receipt := icstypes.Receipt{
-			ChainId: s.chainB.ChainID,
-			Sender:  utils.GenerateAccAddressForTest().String(),
-			Txhash:  "6F2EEAE407E620C3D8F68C535C899CD7F1BAB1680686DF41C2FC38D139B940E9",
-			Amount: sdk.NewCoins(
-				sdk.NewCoin(
-					"ujuno",
-					sdk.NewIntFromUint64(2000000),
-				),
-			),
-			FirstSeen: &t,
-		}
+				rcpt2 := types.Receipt{
+					ChainId: s.chainB.ChainID,
+					Sender:  userAddress,
+					Txhash:  "TestDeposit02",
+					Amount: sdk.NewCoins(
+						sdk.NewCoin(
+							denom,
+							sdk.NewIntFromUint64(100), // 20% deposit
+						),
+					),
+					FirstSeen: &excludedReciptTime,
+					Completed: nil,
+				}
+				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
+				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
+			},
+			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(0)),
+			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				count := 0
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				s.Require().True(found)
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+					if receiptInfo.Completed == nil {
+						count++
+					}
 
-		app.InterchainstakingKeeper.SetReceipt(ctx, receipt)
+					return false
+				})
 
-		zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-		s.Require().True(found)
+				s.Require().Equal(0, count)
+				return true
+			},
+		},
+		{
+			name: "zero pending delegations, 1  pending receipt and 1 exclusion receipt",
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
+				cutOffTime := ctx.BlockTime().AddDate(0, 0, -1)
+				pendingRecieptTime := cutOffTime.Add(-2 * time.Hour)
+				excludedReciptTime := cutOffTime.Add(2 * time.Hour)
 
-		count, err := app.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone)
-		s.Require().NoError(err)
-		s.Require().Equal(1, count)
-	})
+				rcpt1 := types.Receipt{
+					ChainId: s.chainB.ChainID,
+					Sender:  userAddress,
+					Txhash:  "TestDeposit01",
+					Amount: sdk.NewCoins(
+						sdk.NewCoin(
+							denom,
+							sdk.NewIntFromUint64(2000000), // 20% deposit
+						),
+					),
+					FirstSeen: &pendingRecieptTime,
+					Completed: nil,
+				}
+
+				rcpt2 := types.Receipt{
+					ChainId: s.chainB.ChainID,
+					Sender:  userAddress,
+					Txhash:  "TestDeposit02",
+					Amount: sdk.NewCoins(
+						sdk.NewCoin(
+							denom,
+							sdk.NewIntFromUint64(100), // 20% deposit
+						),
+					),
+					FirstSeen: &excludedReciptTime,
+				}
+				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
+				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
+			},
+			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(100)),
+			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				count := 0
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				s.Require().True(found)
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+					if receiptInfo.Completed == nil {
+						count++
+					}
+					return false
+				})
+				s.Require().Equal(1, count)
+				return true
+			},
+		},
+		{
+			name: "non-zero pending delegations, 1 pending receipts and 1 exclusion recipts ",
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
+				cutOffTime := ctx.BlockTime().AddDate(0, 0, -1)
+				pendingRecieptTime := cutOffTime.Add(-2 * time.Hour)
+				excludedReciptTime := cutOffTime.Add(2 * time.Hour)
+
+				rcpt1 := types.Receipt{
+					ChainId: s.chainB.ChainID,
+					Sender:  userAddress,
+					Txhash:  "TestDeposit01",
+					Amount: sdk.NewCoins(
+						sdk.NewCoin(
+							denom,
+							sdk.NewIntFromUint64(2000000), // 20% deposit
+						),
+					),
+					FirstSeen: &pendingRecieptTime,
+					Completed: nil,
+				}
+
+				rcpt2 := types.Receipt{
+					ChainId: s.chainB.ChainID,
+					Sender:  userAddress,
+					Txhash:  "TestDeposit02",
+					Amount: sdk.NewCoins(
+						sdk.NewCoin(
+							denom,
+							sdk.NewIntFromUint64(100), // 20% deposit
+						),
+					),
+					FirstSeen: &excludedReciptTime,
+					Completed: nil,
+				}
+				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
+				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
+			},
+			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(2000100)),
+			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				count := 0
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				s.Require().True(found)
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+					if receiptInfo.Completed == nil {
+						count++
+					}
+					return false
+				})
+				s.Require().Equal(1, count)
+				return true
+			},
+			mockAck:            true,
+			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+		},
+		{
+			name: "non-zero pending delegations, 2 pending receipts",
+			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
+				cutOffTime := ctx.BlockTime().AddDate(0, 0, -1)
+				pendingRecieptTime := cutOffTime.Add(-2 * time.Hour)
+				excludedReciptTime := cutOffTime.Add(-3 * time.Hour)
+
+				rcpt1 := types.Receipt{
+					ChainId: s.chainB.ChainID,
+					Sender:  userAddress,
+					Txhash:  "TestDeposit01",
+					Amount: sdk.NewCoins(
+						sdk.NewCoin(
+							denom,
+							sdk.NewIntFromUint64(2000000), // 20% deposit
+						),
+					),
+					FirstSeen: &pendingRecieptTime,
+					Completed: nil,
+				}
+
+				rcpt2 := types.Receipt{
+					ChainId: s.chainB.ChainID,
+					Sender:  userAddress,
+					Txhash:  "TestDeposit02",
+					Amount: sdk.NewCoins(
+						sdk.NewCoin(
+							denom,
+							sdk.NewIntFromUint64(100), // 20% deposit
+						),
+					),
+					FirstSeen: &excludedReciptTime,
+					Completed: nil,
+				}
+				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
+				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
+			},
+			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(2000100)),
+			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				count := 0
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				s.Require().True(found)
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+					if receiptInfo.Completed == nil {
+						count++
+					}
+					return false
+				})
+				s.Require().Equal(0, count)
+				return true
+			},
+			mockAck:            true,
+			expectedDelegation: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000100))),
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			s.setupTestZones()
+
+			quicksilver := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+
+			test.setStatements(ctx, quicksilver)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			s.Require().True(found)
+			before := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
+			err := quicksilver.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone, test.delAddrBalance)
+			if test.mockAck {
+				var msgs []sdk.Msg
+				allocations := quicksilver.InterchainstakingKeeper.DeterminePlanForDelegation(ctx, &zone, test.expectedDelegation)
+				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(ctx, &zone, allocations)...)
+				for _, msg := range msgs {
+					err := quicksilver.InterchainstakingKeeper.HandleDelegate(ctx, msg, "batch/1577836910")
+					s.Require().NoError(err)
+				}
+			}
+			after := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
+			fmt.Println(before, after)
+			s.Require().NoError(err)
+			isCorrect := test.assertStatements(ctx, quicksilver)
+			s.Require().True(isCorrect)
+		})
+	}
 }

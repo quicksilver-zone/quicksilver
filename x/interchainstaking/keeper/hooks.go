@@ -3,9 +3,11 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -14,6 +16,35 @@ func (k Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) {
 }
 
 func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) {
+	// every day
+	if epochIdentifier == epochstypes.EpochIdentifierDay {
+
+		k.Logger(ctx).Info("handling day end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
+		k.Logger(ctx).Debug("flushing outstanding delegations for the day")
+		k.IterateZones(ctx, func(index int64, zone types.Zone) (stop bool) {
+			if zone.DelegationAddress != nil {
+				addressBytes, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
+				if err != nil {
+					k.Logger(ctx).Error("cannot decode bech32 delegation addr")
+					return false
+				}
+
+				k.ICQKeeper.MakeRequest(
+					ctx,
+					zone.ConnectionId,
+					zone.ChainId,
+					types.BankStoreKey,
+					append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
+					sdk.NewInt(-1),
+					types.ModuleName,
+					"delegationaccountbalance",
+					0,
+				)
+			}
+			return false
+		})
+	}
+
 	// every epoch
 	if epochIdentifier == "epoch" {
 		k.Logger(ctx).Info("handling epoch end")
