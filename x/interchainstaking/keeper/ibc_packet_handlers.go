@@ -358,12 +358,25 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 		return errors.New("unexpected recipient")
 	}
 
-	return k.HandleDistributeFeesFromModuleAccount(ctx)
-}
+	zone := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
 
-func (k *Keeper) HandleDistributeFeesFromModuleAccount(ctx sdk.Context) error {
-	// what do we have in the account?
-	balance := k.BankKeeper.GetAllBalances(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName))
+	receivedCoin := sMsg.Token
+	if receivedCoin.Denom != zone.BaseDenom {
+		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
+		rewardCoin := receivedCoin.SubAmount(feeAmount)
+		zoneAddress, err := utils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
+		if err != nil {
+			return err
+		}
+		k.Logger(ctx).Info("distributing collected rewards to users", "amount", rewardCoin)
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, zoneAddress, sdk.NewCoins(rewardCoin)) // Fee collector name needs to be passed in to keeper constructor.
+		if err != nil {
+			return err
+		}
+		receivedCoin = sdk.NewCoin(receivedCoin.Denom, feeAmount)
+	}
+
+	balance := sdk.NewCoins(receivedCoin)
 	k.Logger(ctx).Info("distributing collected fees to stakers", "amount", balance)
 	return k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, balance) // Fee collector name needs to be passed in to keeper constructor.
 }
