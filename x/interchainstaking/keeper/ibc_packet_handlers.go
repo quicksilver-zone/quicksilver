@@ -594,13 +594,65 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	record.CompletionTime = completion
 	k.SetRedelegationRecord(ctx, record)
 
-	delegation, found := k.GetDelegation(ctx, zone, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress)
+	tgtDelegation, found := k.GetDelegation(ctx, zone, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress)
 	if !found {
 		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
 		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
-	delegation.RedelegationEnd = completion.Unix() // this field should be a timestamp, but let's avoid unnecessary state changes.
-	k.SetDelegation(ctx, zone, delegation)
+	// TODO: is the field below actually used?
+	tgtDelegation.Amount = tgtDelegation.Amount.Add(redelegateMsg.Amount)
+	tgtDelegation.RedelegationEnd = completion.Unix() // this field should be a timestamp, but let's avoid unnecessary state changes.
+	k.SetDelegation(ctx, zone, tgtDelegation)
+
+	delAddr, err := utils.AccAddressFromBech32(redelegateMsg.DelegatorAddress, zone.AccountPrefix)
+	if err != nil {
+		return err
+	}
+	valAddr, err := utils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
+	if err != nil {
+		return err
+	}
+	data := stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+	// send request to update delegation record for target del/val tuple.
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		zone.ConnectionId,
+		zone.ChainId,
+		"store/staking/key",
+		data,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"delegation",
+		0,
+	)
+
+	srcDelegation, found := k.GetDelegation(ctx, zone, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress)
+	if !found {
+		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
+		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+	}
+	srcDelegation.Amount = tgtDelegation.Amount.Sub(redelegateMsg.Amount)
+	k.SetDelegation(ctx, zone, srcDelegation)
+
+	valAddr, err = utils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
+	if err != nil {
+		return err
+	}
+	data = stakingtypes.GetDelegationKey(delAddr, valAddr)
+
+	// send request to update delegation record for src del/val tuple.
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		zone.ConnectionId,
+		zone.ChainId,
+		"store/staking/key",
+		data,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"delegation",
+		0,
+	)
 	return nil
 }
 
