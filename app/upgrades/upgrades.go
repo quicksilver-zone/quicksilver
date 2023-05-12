@@ -224,7 +224,6 @@ func V010402rc6UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) || isTest(ctx) {
-
 			// for each zone, trigger an icq request to update all delegations.
 			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
 				vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
