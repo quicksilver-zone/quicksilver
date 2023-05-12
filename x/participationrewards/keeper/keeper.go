@@ -21,14 +21,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-// UserAllocation is an internal keeper struct to track transient state for
-// rewards distribution. It contains the user address and the coins that are
-// allocated to it.
-type UserAllocation struct {
-	Address string
-	Amount  sdkmath.Int
-}
-
 var _ osmosistypes.ParticipationRewardsKeeper = &Keeper{}
 
 type Keeper struct {
