@@ -170,7 +170,7 @@ func v0102010UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
 			),
 			sdk.NewEvent(
-				types.EventTypeReopenICA,
+				types.EventTypeCloseICA,
 				sdk.NewAttribute(types.AttributeKeyPortID, "icacontroller-stargaze-1.delegate"),
 				sdk.NewAttribute(types.AttributeKeyChannelID, "channel-50"),
 			),
