@@ -232,15 +232,25 @@ WITHDRAWAL:
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(valOutCoinsMap) {
 		if !valOutCoinsMap[valoper].Amount.IsZero() {
-			sort.Strings(txHashes[valoper])
-			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashes[valoper]})
 			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: valOutCoinsMap[valoper]})
 		}
 	}
 
 	k.Logger(ctx).Info("unbonding messages to send", "msg", msgs)
 
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch), zone.MessagesPerTx)
+	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch), zone.MessagesPerTx)
+	if err != nil {
+		return err
+	}
+
+	for _, valoper := range utils.Keys(valOutCoinsMap) {
+		if !valOutCoinsMap[valoper].Amount.IsZero() {
+			sort.Strings(txHashes[valoper])
+			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashes[valoper]})
+		}
+	}
+
+	return nil
 }
 
 func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error {

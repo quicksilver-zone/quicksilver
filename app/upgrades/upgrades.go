@@ -6,6 +6,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/query"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/ingenuity-build/quicksilver/app/keepers"
@@ -21,6 +23,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010402rc3UpgradeName, CreateUpgradeHandler: V010402rc3UpgradeHandler},
 		{UpgradeName: V010402rc4UpgradeName, CreateUpgradeHandler: V010402rc4UpgradeHandler},
 		{UpgradeName: V010402rc5UpgradeName, CreateUpgradeHandler: V010402rc5UpgradeHandler},
+		{UpgradeName: V010402rc6UpgradeName, CreateUpgradeHandler: V010402rc6UpgradeHandler},
 	}
 }
 
@@ -208,6 +211,38 @@ func V010402rc5UpgradeHandler(
 				appKeepers.InterchainstakingKeeper.SetReceipt(ctx, rcpt)
 			}
 
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010402rc6UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) {
+			// for each zone, trigger an icq request to update all delegations.
+			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+				vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
+				bz := appKeepers.InterchainstakingKeeper.GetCodec().MustMarshal(&delegationQuery)
+
+				appKeepers.InterchainstakingKeeper.ICQKeeper.MakeRequest(
+					ctx,
+					zone.ConnectionId,
+					zone.ChainId,
+					"cosmos.staking.v1beta1.Query/DelegatorDelegations",
+					bz,
+					sdk.NewInt(-1),
+					types.ModuleName,
+					"delegations",
+					0,
+				)
+				return false
+			})
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
