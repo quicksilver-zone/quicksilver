@@ -2,6 +2,7 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
+	tmos "github.com/cometbft/cometbft-db/libs/os"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -56,7 +57,6 @@ import (
 	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v7/router"
 	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v7/router/keeper"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
-	tmos "github.com/tendermint/tendermint/libs/os"
 
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"

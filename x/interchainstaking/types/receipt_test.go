@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"testing"
 
+	abcitypes "github.com/cometbft/cometbft-db/abci/types"
 	"github.com/stretchr/testify/require"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )

@@ -69,10 +69,11 @@ import (
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
+	dbm "github.com/cometbft/cometbft-db"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
@@ -81,10 +82,9 @@ import (
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	dbm "github.com/tendermint/tm-db"
+	abci "github.com/cometbft/cometbft-db/abci/types"
+	"github.com/cometbft/cometbft-db/libs/log"
+	tmos "github.com/cometbft/cometbft-db/libs/os"
 
 	"github.com/ingenuity-build/quicksilver/app/keepers"
 	"github.com/ingenuity-build/quicksilver/docs"
@@ -100,6 +100,9 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards"
 	participationrewardsclient "github.com/ingenuity-build/quicksilver/x/participationrewards/client"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory"
+
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 func Init() {
@@ -118,65 +121,6 @@ const (
 var (
 	// DefaultNodeHome default home directories for the application daemon.
 	DefaultNodeHome string
-
-	// ModuleBasics defines the module BasicManager is in charge of setting up basic,
-	// non-dependant module elements, such as codec registration
-	// and genesis verification.
-	ModuleBasics = module.NewBasicManager(
-		auth.AppModuleBasic{},
-		genutil.AppModuleBasic{},
-		bank.AppModuleBasic{},
-		capability.AppModuleBasic{},
-		staking.AppModuleBasic{},
-		distr.AppModuleBasic{},
-		mint.AppModuleBasic{},
-		gov.NewAppModuleBasic(
-			[]govclient.ProposalHandler{
-				paramsclient.ProposalHandler, upgradeclient.LegacyProposalHandler, upgradeclient.LegacyCancelProposalHandler,
-				ibcclientclient.UpdateClientProposalHandler, ibcclientclient.UpgradeProposalHandler, interchainstakingclient.RegisterProposalHandler, interchainstakingclient.UpdateProposalHandler,
-				participationrewardsclient.AddProtocolDataProposalHandler,
-			},
-		),
-		params.AppModuleBasic{},
-		crisis.AppModuleBasic{},
-		slashing.AppModuleBasic{},
-		ibc.AppModuleBasic{},
-		authzmodule.AppModuleBasic{},
-		feegrantmodule.AppModuleBasic{},
-		upgrade.AppModuleBasic{},
-		evidence.AppModuleBasic{},
-		transfer.AppModuleBasic{},
-		ica.AppModuleBasic{},
-		vesting.AppModuleBasic{},
-		claimsmanager.AppModuleBasic{},
-		epochs.AppModuleBasic{},
-		interchainstaking.AppModuleBasic{},
-		interchainquery.AppModuleBasic{},
-		participationrewards.AppModuleBasic{},
-		airdrop.AppModuleBasic{},
-		tokenfactory.AppModuleBasic{},
-		wasm.AppModuleBasic{},
-	)
-
-	// module account permissions
-	maccPerms = map[string][]string{
-		authtypes.FeeCollectorName:                 nil,
-		distrtypes.ModuleName:                      nil,
-		minttypes.ModuleName:                       {authtypes.Minter},
-		stakingtypes.BondedPoolName:                {authtypes.Burner, authtypes.Staking},
-		stakingtypes.NotBondedPoolName:             {authtypes.Burner, authtypes.Staking},
-		govtypes.ModuleName:                        {authtypes.Burner},
-		ibctransfertypes.ModuleName:                {authtypes.Minter, authtypes.Burner},
-		icatypes.ModuleName:                        nil,
-		claimsmanagertypes.ModuleName:              nil,
-		interchainstakingtypes.ModuleName:          {authtypes.Minter},
-		interchainstakingtypes.EscrowModuleAccount: {authtypes.Burner},
-		interchainquerytypes.ModuleName:            nil,
-		participationrewardstypes.ModuleName:       nil,
-		airdroptypes.ModuleName:                    nil,
-		wasm.ModuleName:                            {authtypes.Burner},
-		tokenfactorytypes.ModuleName:               {authtypes.Minter, authtypes.Burner},
-	}
 
 	// module accounts that are allowed to receive tokens
 	allowedReceivingModAcc = map[string]bool{

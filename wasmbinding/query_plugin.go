@@ -6,10 +6,10 @@ import (
 
 	sdkioerrors "cosmossdk.io/errors"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	abci "github.com/cometbft/cometbft-db/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/wasmbinding/bindings"
 )

@@ -8,13 +8,13 @@ import (
 	"testing"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft-db/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/store"
 	simulationtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sdksimulation "github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/test/simulation"
