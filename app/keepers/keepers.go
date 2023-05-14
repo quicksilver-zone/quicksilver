@@ -53,9 +53,9 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v5/router"
-	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v5/router/keeper"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v7/router"
+	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v7/router/keeper"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 	tmos "github.com/tendermint/tendermint/libs/os"
 
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"

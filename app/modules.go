@@ -45,8 +45,8 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/24-host"
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v5/router"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v7/router"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"

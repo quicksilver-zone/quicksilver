@@ -20,7 +20,7 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibchost "github.com/cosmos/ibc-go/v7/modules/core/24-host"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
