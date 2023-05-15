@@ -515,6 +515,31 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) 
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber), zone.MessagesPerTx)
 }
 
+func (k *Keeper) CloseICAChannel(ctx sdk.Context, portID, channelID string) error {
+	_, capability, err := k.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, portID, channelID)
+	if err != nil {
+		return err
+	}
+
+	if err := k.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, portID, channelID, capability); err != nil {
+		return err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeCloseICA,
+			sdk.NewAttribute(types.AttributeKeyPortID, portID),
+			sdk.NewAttribute(types.AttributeKeyChannelID, channelID),
+		),
+	})
+
+	return nil
+}
+
 type RebalanceTarget struct {
 	Amount math.Int
 	Source string
