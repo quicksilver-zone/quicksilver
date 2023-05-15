@@ -7,8 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
@@ -31,7 +29,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010204UpgradeName, v010204UpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010207UpgradeName, v010207UpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010209UpgradeName, v010209UpgradeHandler(app))
-	app.UpgradeKeeper.SetUpgradeHandler(v0102010UpgradeName, v0102010UpgradeHandler(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v0102010UpgradeName, noOpUpgradeHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -148,33 +146,6 @@ func v010209UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 		// block gas is 2m
 		zone.MessagesPerTx = 2
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
-
-		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-	}
-}
-
-func v0102010UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		_, capability, err := app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, "icacontroller-stargaze-1.delegate", "channel-50")
-		if err != nil {
-			panic(err)
-		}
-
-		if err := app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, "icacontroller-stargaze-1.delegate", "channel-50", capability); err != nil {
-			panic(err)
-		}
-
-		ctx.EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				sdk.EventTypeMessage,
-				sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
-			),
-			sdk.NewEvent(
-				types.EventTypeCloseICA,
-				sdk.NewAttribute(types.AttributeKeyPortID, "icacontroller-stargaze-1.delegate"),
-				sdk.NewAttribute(types.AttributeKeyChannelID, "channel-50"),
-			),
-		})
 
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
