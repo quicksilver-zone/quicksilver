@@ -1,6 +1,6 @@
 package types
 
-import abcitypes "github.com/cometbft/cometbft-db/abci/types"
+import abcitypes "github.com/cometbft/cometbft/abci/types"
 
 func AttributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
 	out := make(map[string]string)

@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	abcitypes "github.com/cometbft/cometbft-db/abci/types"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"

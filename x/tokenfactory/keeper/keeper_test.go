@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft-db/crypto/ed25519"
-	tmproto "github.com/cometbft/cometbft-db/proto/tendermint/types"
+	"github.com/cometbft/cometbft/crypto/ed25519"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"

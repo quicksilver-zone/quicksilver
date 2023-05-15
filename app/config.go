@@ -17,7 +17,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	dbm "github.com/cometbft/cometbft-db"
-	purningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 )
 
 func DefaultConfig() network.Config {
@@ -46,21 +45,20 @@ func DefaultConfig() network.Config {
 }
 
 func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
-	return func(val network.Validator) servertypes.Application {
+	return func(val network.ValidatorI) servertypes.Application {
 		return NewQuicksilver(
-			val.Ctx.Logger,
+			val.GetCtx().Logger,
 			dbm.NewMemDB(),
 			nil,
 			true,
 			map[int64]bool{},
 			DefaultNodeHome,
 			0,
-			encCfg,
 			wasm.EnableAllProposals,
 			EmptyAppOptions{},
 			GetWasmOpts(EmptyAppOptions{}),
 			false,
-			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}

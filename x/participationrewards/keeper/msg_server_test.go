@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/cometbft/cometbft-db/proto/tendermint/crypto"
+	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	abci "github.com/cometbft/cometbft-db/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/ingenuity-build/quicksilver/app"

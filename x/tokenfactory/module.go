@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	abci "github.com/cometbft/cometbft-db/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"

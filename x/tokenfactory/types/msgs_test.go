@@ -9,7 +9,7 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 
-	"github.com/cometbft/cometbft-db/crypto/ed25519"
+	"github.com/cometbft/cometbft/crypto/ed25519"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 

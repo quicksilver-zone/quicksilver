@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	tmcli "github.com/cometbft/cometbft-db/libs/cli"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app"

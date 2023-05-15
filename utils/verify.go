@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	tmmath "github.com/cometbft/cometbft-db/libs/math"
-	"github.com/cometbft/cometbft-db/light"
-	"github.com/cometbft/cometbft-db/types"
+	tmmath "github.com/cometbft/cometbft/libs/math"
+	"github.com/cometbft/cometbft/light"
+	"github.com/cometbft/cometbft/types"
 )
 
 // VerifyNonAdjacent is identical to VerifyNonAdjacent in tendermint/tendermint/light/verifier.go, with the exception that

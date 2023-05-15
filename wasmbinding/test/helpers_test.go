@@ -6,9 +6,9 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/app"
 
-	"github.com/cometbft/cometbft-db/crypto"
-	"github.com/cometbft/cometbft-db/crypto/ed25519"
-	tmproto "github.com/cometbft/cometbft-db/proto/tendermint/types"
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/cometbft/cometbft/crypto/ed25519"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

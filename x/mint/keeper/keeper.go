@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/cometbft/cometbft-db/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/x/mint/types"
 

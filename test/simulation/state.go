@@ -12,8 +12,8 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	simappparams "cosmossdk.io/simapp/params"
-	tmjson "github.com/cometbft/cometbft-db/libs/json"
-	tmtypes "github.com/cometbft/cometbft-db/types"
+	tmjson "github.com/cometbft/cometbft/libs/json"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
