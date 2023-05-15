@@ -7,9 +7,9 @@ import (
 	"os/exec"
 	"strconv"
 
-	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
+	tmdb "github.com/tendermint/tm-db"
 
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
