@@ -635,3 +635,12 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 
 	return out
 }
+
+func (k *Keeper) ChanCloseInit(ctx sdk.Context, port, channel string) error {
+	_, capability, err := k.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, port, channel)
+	if err != nil {
+		return err
+	}
+
+	return k.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, port, channel, capability)
+}

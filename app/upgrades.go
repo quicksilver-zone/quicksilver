@@ -155,12 +155,8 @@ func v010209UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 
 func v0102010UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		_, capability, err := app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, "icacontroller-stargaze-1.delegate", "channel-50")
-		if err != nil {
-			panic(err)
-		}
 
-		if err := app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, "icacontroller-stargaze-1.delegate", "channel-50", capability); err != nil {
+		if err := app.InterchainstakingKeeper.ChanCloseInit(ctx, "icacontroller-stargaze-1.delegate", "channel-50"); err != nil {
 			panic(err)
 		}
 
