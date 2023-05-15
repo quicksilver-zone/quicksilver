@@ -29,7 +29,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v010204UpgradeName, v010204UpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010207UpgradeName, v010207UpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v010209UpgradeName, v010209UpgradeHandler(app))
-	app.UpgradeKeeper.SetUpgradeHandler(v0102010UpgradeName, v0102010UpgradeHandler(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v0102010UpgradeName, noOpUpgradeHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
@@ -146,17 +146,6 @@ func v010209UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
 		// block gas is 2m
 		zone.MessagesPerTx = 2
 		app.InterchainstakingKeeper.SetZone(ctx, &zone)
-
-		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
-	}
-}
-
-func v0102010UpgradeHandler(app *Quicksilver) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		err := app.InterchainstakingKeeper.CloseICAChannel(ctx, "cacontroller-stargaze-1.delegate", "channel-50")
-		if err != nil {
-			panic(err)
-		}
 
 		return app.mm.RunMigrations(ctx, app.configurator, fromVM)
 	}
