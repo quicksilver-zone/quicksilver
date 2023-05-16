@@ -49,7 +49,7 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Qui
 	require.NoError(t, err)
 
 	// when stored
-	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "testing123")
+	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "title", "description", sdk.MustAccAddressFromBech32(govAddress))
 	require.NoError(t, err)
 
 	// and proposal execute

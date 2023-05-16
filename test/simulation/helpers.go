@@ -70,8 +70,8 @@ func Operations(quicksilver *app.Quicksilver, cdc codec.JSONCodec, config simtyp
 		}
 	}
 
-	simState.ParamChanges = quicksilver.SimulationManager().GenerateParamChanges(config.Seed)
-	simState.Contents = quicksilver.SimulationManager().GetProposalContents(simState)
+	// simState.LegacyParamChange = quicksilver.SimulationManager().GenerateParamChanges(config.Seed)
+	simState.LegacyProposalContents = quicksilver.SimulationManager().GetProposalContents(simState)
 	return quicksilver.SimulationManager().WeightedOperations(simState)
 }
 
@@ -84,7 +84,7 @@ func CheckExportSimulation(
 ) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
-		exported, err := quicksilver.ExportAppStateAndValidators(false, nil)
+		exported, err := quicksilver.ExportAppStateAndValidators(false, nil, nil)
 		if err != nil {
 			return err
 		}
