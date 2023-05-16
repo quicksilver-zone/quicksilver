@@ -37,8 +37,8 @@ func (ao EmptyAppOptions) Get(_ string) interface{} {
 
 // DefaultConsensusParams defines the default Tendermint consensus params used in
 // Quicksilver testing.
-var DefaultConsensusParams = &abci.ConsensusParams{
-	Block: &abci.BlockParams{
+var DefaultConsensusParams = &tmproto.ConsensusParams{
+	Block: &tmproto.BlockParams{
 		MaxBytes: 200000,
 		MaxGas:   -1, // no limit
 	},
@@ -87,7 +87,6 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		map[int64]bool{},
 		DefaultNodeHome,
 		5,
-		MakeEncodingConfig(),
 		wasm.EnableAllProposals,
 		EmptyAppOptions{},
 		GetWasmOpts(EmptyAppOptions{}),
@@ -136,7 +135,6 @@ func SetupTestingApp() (testApp ibctesting.TestingApp, genesisState map[string]j
 		map[int64]bool{},
 		DefaultNodeHome,
 		5,
-		MakeEncodingConfig(),
 		wasm.EnableAllProposals,
 		EmptyAppOptions{},
 		GetWasmOpts(EmptyAppOptions{}),
@@ -205,7 +203,7 @@ func GenesisStateWithValSet(t *testing.T,
 	})
 
 	// update total supply
-	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{})
+	bankGenesis := banktypes.NewGenesisState(banktypes.DefaultGenesisState().Params, balances, totalSupply, []banktypes.Metadata{}, []banktypes.SendEnabled{})
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankGenesis)
 
 	return genesisState

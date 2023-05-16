@@ -47,6 +47,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/docs"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 )
 
 func Init() {
@@ -410,6 +411,10 @@ func (app *Quicksilver) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 func (app *Quicksilver) GetTxConfig() client.TxConfig {
 	cfg := MakeEncodingConfig()
 	return cfg.TxConfig
+}
+
+func (app *Quicksilver) RegisterNodeService(clientCtx client.Context) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
 }
 
 // GetMaccPerms returns a copy of the module account permissions.
