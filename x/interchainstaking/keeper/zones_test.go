@@ -8,8 +8,8 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	dbm "github.com/cometbft/cometbft-db"
-	tmproto "github.com/cometbft/cometbft-db/proto/tendermint/types"
 	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/maps"
@@ -27,6 +27,9 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		dbm.NewMemDB(),
 		io.Discard,
 		true,
+		map[int64]bool{},
+		app.DefaultNodeHome,
+		5,
 		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),

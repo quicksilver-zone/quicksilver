@@ -9,6 +9,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMsgClaim_ValidateBasic(t *testing.T) {

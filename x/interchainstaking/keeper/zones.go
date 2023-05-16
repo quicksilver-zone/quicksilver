@@ -12,6 +12,7 @@ import (
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/cosmos/gogoproto/proto"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -184,7 +185,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DepositAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DepositAddress, "", zone.MessagesPerTx)
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DepositAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -192,7 +193,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx)
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -201,7 +202,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 	// set withdrawal address for performance address, if it exists
 	if zone.PerformanceAddress != nil && zone.PerformanceAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.PerformanceAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []sdk.Msg{&msg}, zone.PerformanceAddress, "", zone.MessagesPerTx)
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -355,7 +356,7 @@ OUTER:
 	// send delegations to validators
 	k.Logger(ctx).Info("send performance delegations", "zone", zone.ChainId)
 
-	msgs := make([]sdk.Msg, len(validatorsToDelegate))
+	msgs := make([]proto.Message, len(validatorsToDelegate))
 	for i, val := range validatorsToDelegate {
 		k.Logger(ctx).Info(
 			"performance delegation",

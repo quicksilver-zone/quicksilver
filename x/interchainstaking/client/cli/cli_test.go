@@ -395,7 +395,7 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 
 			runFlags := []string{
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
-				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+				// fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=true", flags.FlagDryRun),
 			}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -943,7 +944,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			s.Require().True(found)
 			err := quicksilver.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone, test.delAddrBalance)
 			if test.mockAck {
-				var msgs []sdk.Msg
+				var msgs []proto.Message
 				allocations, err := quicksilver.InterchainstakingKeeper.DeterminePlanForDelegation(ctx, &zone, test.expectedDelegation)
 				s.Require().NoError(err)
 				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(&zone, allocations)...)

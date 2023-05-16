@@ -11,6 +11,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -56,7 +57,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	}
 	// add unallocated dust.
 	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding)
-	sdkMsgs := make([]sdk.Msg, 0)
+	sdkMsgs := make([]proto.Message, 0)
 	for _, msg := range msgs {
 		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
 	}
@@ -229,7 +230,7 @@ WITHDRAWAL:
 		return nil
 	}
 
-	var msgs []sdk.Msg
+	var msgs []proto.Message
 	for _, valoper := range utils.Keys(valOutCoinsMap) {
 		if !valOutCoinsMap[valoper].Amount.IsZero() {
 			sort.Strings(txHashes[valoper])

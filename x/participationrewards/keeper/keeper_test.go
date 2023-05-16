@@ -301,8 +301,8 @@ func (s *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountSuffi
 
 	quicksilver.InterchainstakingKeeper.SetConnectionForPort(s.chainA.GetContext(), connectionID, portID)
 
-	channelID := qApp.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(suite.chainA.GetContext())
-	qApp.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.HostPortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
+	channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(s.chainA.GetContext())
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(s.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.HostPortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(s.chainA.GetContext(), portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(s.chainA.GetContext(), connectionID, portID, channelID)

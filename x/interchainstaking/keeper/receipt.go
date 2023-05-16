@@ -11,11 +11,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/cosmos/gogoproto/proto"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -136,19 +138,20 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 			return errors.New("unable to find remote transfer connection")
 		}
 
-		err = k.TransferKeeper.SendTransfer(
-			ctx,
-			srcPort,
-			srcChannel,
-			qAssets[0],
-			k.AccountKeeper.GetModuleAddress(types.ModuleName),
-			senderAddress,
-			clienttypes.Height{
+		transferMsg := ibctransfertypes.MsgTransfer{
+			SourcePort:    srcPort,
+			SourceChannel: srcChannel,
+			Token:         qAssets[0],
+			Sender:        k.AccountKeeper.GetModuleAddress(types.ModuleName).String(),
+			Receiver:      senderAddress,
+			TimeoutHeight: clienttypes.Height{
 				RevisionNumber: 0,
 				RevisionHeight: 0,
 			},
-			uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
-		)
+			TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
+		}
+
+		_, err = k.TransferKeeper.Transfer(ctx, &transferMsg)
 	} else {
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
 	}
@@ -164,11 +167,11 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 // TransferToDelegate transfers tokens from the zone deposit account address to the zone delegate account address.
 func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone *types.Zone, coins sdk.Coins, memo string) error {
 	msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
-	return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, memo, zone.MessagesPerTx)
+	return k.SubmitTx(ctx, []proto.Message{msg}, zone.DepositAddress, memo, zone.MessagesPerTx)
 }
 
 // SubmitTx submits a Tx on behalf of an ICAAccount to a remote chain.
-func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAccount, memo string, messagesPerTx int64) error {
+func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.ICAAccount, memo string, messagesPerTx int64) error {
 	// if no messages, do nothing
 	if len(msgs) == 0 {
 		return nil
