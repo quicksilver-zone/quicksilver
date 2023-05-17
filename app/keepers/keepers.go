@@ -530,6 +530,8 @@ func (appKeepers *AppKeepers) InitKeepers(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
+	appKeepers.GovKeeper.SetLegacyRouter(govRouter)
+
 	appKeepers.AirdropKeeper = airdropkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[airdroptypes.StoreKey],
