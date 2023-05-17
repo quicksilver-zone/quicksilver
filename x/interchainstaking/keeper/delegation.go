@@ -435,8 +435,8 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 			return false
 		})
 
-		coins2, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(amount...)
-		coins = coins2
+		var hasNeg bool
+		coins, hasNeg = sdk.NewCoins(delAddrBalance).SafeSub(amount...)
 		if hasNeg || coins.IsZero() {
 			k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
 			k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
