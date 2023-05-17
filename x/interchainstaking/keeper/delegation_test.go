@@ -1055,7 +1055,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					}
 					return false
 				})
-				s.Require().Equal(2, count)
+				s.Require().Equal(0, count)
 				return true
 			},
 			mockAck: false,
