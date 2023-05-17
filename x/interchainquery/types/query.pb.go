@@ -12,7 +12,7 @@ import (
 	types2 "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	_ "github.com/gogo/protobuf/gogoproto"
 	grpc1 "github.com/gogo/protobuf/grpc"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/cosmos/gogoproto/proto"
 	types1 "github.com/cometbft/cometbft/proto/tendermint/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
