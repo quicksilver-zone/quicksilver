@@ -12,10 +12,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
-
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // gets the key for delegator bond with validator
@@ -413,20 +412,36 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, delAddrBalance sdk.Coin) error {
 	var amount sdk.Coins
 	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
+	var coins sdk.Coins
+	if ctx.BlockHeight() < 1978500 && ctx.ChainID() == "quicksilver-2" {
+		k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+			if receiptInfo.FirstSeen.After(exclusionTime) && receiptInfo.Completed == nil {
+				amount = amount.Add(receiptInfo.Amount...)
+			}
+			return false
+		})
 
-	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-		if receiptInfo.FirstSeen.After(exclusionTime) && receiptInfo.Completed == nil {
-			amount = amount.Add(receiptInfo.Amount...)
+		coins = sdk.NewCoins(delAddrBalance).Sub(amount...)
+		if coins.IsAnyNegative() || coins.IsZero() {
+			k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
+			k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
+			return nil
 		}
-		return false
-	})
+	} else {
+		k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+			if receiptInfo.FirstSeen.Before(exclusionTime) && receiptInfo.Completed == nil {
+				amount = amount.Add(receiptInfo.Amount...)
+			}
+			return false
+		})
 
-	coins := sdk.NewCoins(delAddrBalance).Sub(amount...)
-
-	if coins.IsAnyNegative() || coins.IsZero() {
-		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
-		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
-		return nil
+		var hasNeg bool
+		coins, hasNeg = sdk.NewCoins(delAddrBalance).SafeSub(amount...)
+		if hasNeg || coins.IsZero() {
+			k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
+			k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
+			return nil
+		}
 	}
 
 	sendMsg := banktypes.MsgSend{
