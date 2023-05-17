@@ -43,9 +43,12 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
+	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v7/router"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	"github.com/ingenuity-build/quicksilver/x/airdrop"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager"
@@ -64,9 +67,6 @@ import (
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-
 )
 
 var (
@@ -107,6 +107,7 @@ var (
 		participationrewards.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
 		tokenfactory.AppModuleBasic{},
+		tendermint.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 	)
 
@@ -150,7 +151,7 @@ func appModules(
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(govtypes.ModuleName)),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),		
+		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
@@ -191,7 +192,7 @@ func simulationModules(
 	return []module.AppModuleSimulation{
 		// SDK app modules
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
-		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),		
+		capability.NewAppModule(appCodec, *app.CapabilityKeeper, false),
 		gov.NewAppModule(appCodec, app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		slashing.NewAppModule(appCodec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
 		distr.NewAppModule(appCodec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),

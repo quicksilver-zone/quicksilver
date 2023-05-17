@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	purningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	purningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -28,7 +28,7 @@ func DefaultConfig() network.Config {
 		LegacyAmino:       encCfg.Amino,
 		InterfaceRegistry: encCfg.InterfaceRegistry,
 		AccountRetriever:  authtypes.AccountRetriever{},
-		AppConstructor:    NewAppConstructor(encCfg),
+		AppConstructor:    NewAppConstructor(encCfg, "quicktest-1"),
 		GenesisState:      ModuleBasics.DefaultGenesis(encCfg.Marshaler),
 		TimeoutCommit:     1 * time.Second / 2,
 		ChainID:           "quicktest-1",
@@ -44,7 +44,7 @@ func DefaultConfig() network.Config {
 	}
 }
 
-func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
+func NewAppConstructor(encCfg EncodingConfig, chainId string) network.AppConstructor {
 	return func(val network.ValidatorI) servertypes.Application {
 		return NewQuicksilver(
 			val.GetCtx().Logger,
@@ -59,6 +59,7 @@ func NewAppConstructor(encCfg EncodingConfig) network.AppConstructor {
 			GetWasmOpts(EmptyAppOptions{}),
 			false,
 			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+			baseapp.SetChainID(chainId),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}

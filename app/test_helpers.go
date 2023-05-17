@@ -13,6 +13,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -91,6 +92,7 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		EmptyAppOptions{},
 		GetWasmOpts(EmptyAppOptions{}),
 		false,
+		baseapp.SetChainID("mercury-1"),
 	)
 
 	genesisState := NewDefaultGenesisState()
