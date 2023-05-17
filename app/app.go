@@ -181,7 +181,7 @@ func NewQuicksilver(
 	app.mm.RegisterServices(app.configurator)
 
 	// For migration sdk 46 => 47
-	app.RegisterUpgradeHandlers()
+	// app.RegisterUpgradeHandlers()
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 
