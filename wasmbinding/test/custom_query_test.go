@@ -115,6 +115,9 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksi
 	msgContent, err := govv1.NewLegacyContent(src, govAddress)
 	require.NoError(t, err)
 
+	content, err := govv1.LegacyContentFromMessage(msgContent)
+	fmt.Println("heh", content.ProposalRoute())
+
 	// when stored
 	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "tittle", "description", sdk.AccAddress(govAddress))
 	require.NoError(t, err)

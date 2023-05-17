@@ -92,13 +92,13 @@ func Setup(t *testing.T, isCheckTx bool) *Quicksilver {
 		EmptyAppOptions{},
 		GetWasmOpts(EmptyAppOptions{}),
 		false,
-		baseapp.SetChainID("mercury-1"),
 	)
 
 	genesisState := NewDefaultGenesisState()
 	genesisState = GenesisStateWithValSet(t, app, genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 
 	if !isCheckTx {
+		baseapp.SetChainID("mercury-1")(app.GetBaseApp())
 		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
 		if err != nil {
 			panic(err)
