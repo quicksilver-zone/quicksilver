@@ -143,7 +143,7 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 
 var separator = []byte{byte(255)}
 
-type fieldType uint64
+type fieldType int
 
 const (
 	AccountMap fieldType = iota
@@ -152,14 +152,13 @@ const (
 )
 
 type MemoField struct {
-	id     uint32
-	length uint32
-	data   []byte
+	ID   int
+	Data []byte
 }
 
-func (z *Zone) DecodeMemo(memo string) (valWeights []byte, memoFields []MemoField, err error) {
-	memoFields = make([]MemoField, 0)
+type MemoFields []MemoField
 
+func (z *Zone) DecodeMemo(memo string) (valWeights []byte, memoFields MemoFields, err error) {
 	if memo == "" {
 		return valWeights, memoFields, errors.New("memo length unexpectedly zero")
 	}
@@ -186,28 +185,50 @@ func (z *Zone) DecodeMemo(memo string) (valWeights []byte, memoFields []MemoFiel
 
 	default:
 		// iterate through all non-validator weights parts of the memo
-		memoFields = make([]MemoField, len(parts)-1)
-		for i, part := range parts[1:] {
-			memoFields[i], err = DecodeMemoField(part)
-			if err != nil {
-				return valWeights, memoFields, fmt.Errorf("unable to decode memo field: %w", err)
-			}
+		memoFields, err := ParseMemoFields(parts[1])
+		if err != nil {
+			return valWeights, memoFields, fmt.Errorf("unable to decode memo field: %w", err)
 		}
+
 	}
 
 	return valWeights, memoFields, err
 }
 
-func DecodeMemoField(fieldBytes []byte) (MemoField, error) {
-	fieldID := fieldBytes[0]
-	fieldLength := fieldBytes[1]
-	if len(fieldBytes[2:]) != int(fieldLength) {
-		return MemoField{}, errors.New("invalid field length for memo field")
+func ParseMemoFields(fieldBytes []byte) (MemoFields, error) {
+	if len(fieldBytes) < 3 {
+		return MemoFields{}, errors.New("invalid field bytes format")
 	}
 
-	return MemoField{
-		id:     uint32(fieldID),
-		length: uint32(fieldLength),
-		data:   fieldBytes[2:],
-	}, nil
+	memoFields := make([]MemoField, 0)
+
+	idx := 0
+	for idx < len(fieldBytes) {
+		// prevent out of bounds
+		if len(fieldBytes[idx:]) < 3 {
+			return MemoFields{}, errors.New("invalid field bytes format")
+		}
+
+		fieldID := int(fieldBytes[idx])
+		idx++
+		fieldLength := int(fieldBytes[idx])
+		idx++
+
+		if len(fieldBytes[idx:]) < int(fieldLength) {
+			return MemoFields{}, errors.New("invalid field length for memo field")
+		}
+
+		memoFields = append(memoFields, MemoField{
+			ID:   fieldID,
+			Data: fieldBytes[idx : idx+fieldLength], // add one for half-open range
+		})
+		idx += fieldLength
+	}
+
+	// secondary sanity check
+	if idx != len(fieldBytes) {
+		return MemoFields{}, errors.New("error parsing multiple fields")
+	}
+
+	return memoFields, nil
 }

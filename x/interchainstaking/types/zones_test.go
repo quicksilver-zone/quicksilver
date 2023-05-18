@@ -504,3 +504,88 @@ func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 // 	}
 
 // }
+
+func TestParseMemoFields(t *testing.T) {
+	testCases := []struct {
+		name               string
+		fieldBytes         []byte
+		expectedMemoFields types.MemoFields
+		wantErr            bool
+	}{
+		{
+			name:       "invalid no length data",
+			fieldBytes: []byte{},
+			expectedMemoFields: types.MemoFields{
+				{
+					Data: []byte{},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:       "invalid length field",
+			fieldBytes: []byte{0, 1, 0, 0},
+			expectedMemoFields: types.MemoFields{
+				{
+					Data: []byte{},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid multiple",
+			fieldBytes: []byte{
+				0, 3, 0, 0, // should be 2 for length field
+				1, 4, 1, 1, 1, 3,
+			},
+			expectedMemoFields: types.MemoFields{
+				{
+					Data: []byte{},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name:       "valid single",
+			fieldBytes: []byte{0, 2, 1, 1},
+			expectedMemoFields: types.MemoFields{
+				{
+					ID:   0,
+					Data: []byte{1, 1},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid multiple",
+			fieldBytes: []byte{
+				0, 2, 1, 1,
+				2, 3, 1, 2, 3,
+			},
+			expectedMemoFields: types.MemoFields{
+				{
+					ID:   0,
+					Data: []byte{1, 1},
+				},
+				{
+					ID:   2,
+					Data: []byte{1, 2, 3},
+				},
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			out, err := types.ParseMemoFields(tc.fieldBytes)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedMemoFields, out)
+		})
+	}
+}
