@@ -63,7 +63,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		Tvl:                          sdk.ZeroDec(),
 		UnbondingPeriod:              0,
 		MessagesPerTx:                0,
-		Is_118Cointype:               true,
+		Is_118:                       true,
 	}
 	zone.Validators = append(zone.Validators,
 		&types.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000), Score: sdk.ZeroDec()},
@@ -164,7 +164,7 @@ func (s *IntegrationTestSuite) ZonesEqual(zoneA, zoneB types.Zone) bool {
 	for i := range zoneA.Validators {
 		s.Require().Equal(zoneA.Validators[i], zoneB.Validators[i])
 	}
-	s.Require().Equal(zoneA.Is_118Cointype, zoneB.Is_118Cointype)
+	s.Require().Equal(zoneA.Is_118, zoneB.Is_118)
 
 	return true
 }

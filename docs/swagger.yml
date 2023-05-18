@@ -2607,7 +2607,7 @@ paths:
                     type: boolean
                   return_to_sender:
                     type: boolean
-                  is_118_cointype:
+                  is_118:
                     type: boolean
               stats:
                 type: object
@@ -2890,7 +2890,7 @@ paths:
                       type: boolean
                     return_to_sender:
                       type: boolean
-                    is_118_cointype:
+                    is_118:
                       type: boolean
               stats:
                 type: array

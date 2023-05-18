@@ -79,7 +79,7 @@ func (s *KeeperTestSuite) initTestZone() {
 		UnbondingEnabled: false,
 		LiquidityModule:  true,
 		Decimals:         6,
-		Is_118Cointype:   true,
+		Is_118:           true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
@@ -94,7 +94,7 @@ func (s *KeeperTestSuite) initTestZone() {
 		UnbondingEnabled: false,
 		LiquidityModule:  true,
 		Decimals:         6,
-		Is_118Cointype:   true,
+		Is_118:           true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
@@ -109,7 +109,7 @@ func (s *KeeperTestSuite) initTestZone() {
 		UnbondingEnabled: false,
 		LiquidityModule:  true,
 		Decimals:         6,
-		Is_118Cointype:   true,
+		Is_118:           true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 }

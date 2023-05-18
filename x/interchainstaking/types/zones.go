@@ -3,7 +3,6 @@ package types
 import (
 	"bytes"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -100,29 +99,21 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 	// should we be return DelegatorIntent here?
 	out := make(ValidatorIntents, 0)
 
-	if memo == "" {
-		return out, errors.New("memo length unexpectedly zero")
-	}
-
-	memoBytes, err := base64.StdEncoding.DecodeString(memo)
+	valWeightBytes, _, err := z.DecodeMemo(memo)
 	if err != nil {
-		return out, fmt.Errorf("unable to determine intent from memo: Failed to decode base64 message: %w", err)
+		return ValidatorIntents{}, fmt.Errorf("error decoding memo: %w", err)
 	}
 
-	if len(memoBytes)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
-		return out, fmt.Errorf("unable to determine intent from memo: Message was incorrect length: %d", len(memoBytes))
-	}
-
-	for index := 0; index < len(memoBytes); {
+	for index := 0; index < len(valWeightBytes); {
 		// truncate weight to 200
-		rawWeight := int64(memoBytes[index])
+		rawWeight := int64(valWeightBytes[index])
 		if rawWeight > 200 {
 			return ValidatorIntents{}, fmt.Errorf("out of bounds value received in memo intent message; expected 0-200, got %d", rawWeight)
 		}
 		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(rawWeight)).QuoInt(sdk.NewInt(200))
 		coinWeight := sdkWeight.MulInt(coins.AmountOf(z.BaseDenom))
 		index++
-		address := memoBytes[index : index+20]
+		address := valWeightBytes[index : index+20]
 		index += 20
 		valAddr, err := bech32.ConvertAndEncode(z.AccountPrefix+"valoper", address)
 		if err != nil {
@@ -148,14 +139,11 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 // field_id = [
 //  0x00 = map
 //  0x01 = rts
-//] // will scale to future fields
+// ] // will scale to future fields
+
+var separator = []byte{byte(255)}
 
 func (z *Zone) DecodeMemo(memo string) (valWeights, something []byte, err error) {
-	separator, err := hex.DecodeString("0xFF")
-	if err != nil {
-		return valWeights, something, err
-	}
-
 	if memo == "" {
 		return valWeights, something, errors.New("memo length unexpectedly zero")
 	}

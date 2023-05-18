@@ -88,7 +88,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 					sdk.NewCoin("uqck", sdk.NewInt(700000)),
 				),
 			},
-			Is_118Cointype: true,
+			Is_118: true,
 		}
 		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainId)
 		kpr.SetZone(ctx, &zone)
