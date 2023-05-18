@@ -205,5 +205,9 @@ func DecodeMemoField(fieldBytes []byte) (MemoField, error) {
 		return MemoField{}, errors.New("invalid field length for memo field")
 	}
 
-	return MemoField{}, nil
+	return MemoField{
+		id:     uint32(fieldID),
+		length: uint32(fieldLength),
+		data:   fieldBytes[2:],
+	}, nil
 }
