@@ -245,8 +245,8 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	zone.WithdrawalWaitgroup += uint32(len(msgs))
 	k.SetZone(ctx, zone)
 	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup, "address", delegator)
-
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "", zone.MessagesPerTx)
+	owner := zone.ChainId + ".delegate"
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "", zone.MessagesPerTx, owner)
 }
 
 func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool) {
@@ -275,7 +275,8 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 	if zone.PerformanceAddress != nil {
 		k.SetPerformanceDelegation(ctx, zone, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
 		msg := stakingTypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
-		return k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "perf/"+validator, zone.MessagesPerTx)
+		owner := zone.ChainId + ".performance"
+		return k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "perf/"+validator, zone.MessagesPerTx, owner)
 	}
 	return nil
 }

@@ -211,7 +211,8 @@ func (k Keeper) CalcOverallScores(
 	// submit rewards withdrawals to reset zone performance for next epoch
 	k.Logger(ctx).Info("send performance rewards withdrawal messages to reset scores for next epoch")
 	if len(msgs) > 0 {
-		if err := k.icsKeeper.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx); err != nil {
+		owner := zone.ChainId + ".performance"
+		if err := k.icsKeeper.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx, owner); err != nil {
 			return err
 		}
 	}

@@ -185,7 +185,8 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DepositAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DepositAddress, "", zone.MessagesPerTx)
+		owner := zone.ChainId + ".deposit"
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DepositAddress, "", zone.MessagesPerTx, owner)
 		if err != nil {
 			return err
 		}
@@ -193,7 +194,8 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx)
+		owner := zone.ChainId + ".delegate"
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx, owner)
 		if err != nil {
 			return err
 		}
@@ -202,7 +204,8 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 	// set withdrawal address for performance address, if it exists
 	if zone.PerformanceAddress != nil && zone.PerformanceAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.PerformanceAddress.Address, WithdrawAddress: withdrawalAddress}
-		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "", zone.MessagesPerTx)
+		owner := zone.ChainId + ".performance"
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "", zone.MessagesPerTx, owner)
 		if err != nil {
 			return err
 		}
@@ -372,7 +375,8 @@ OUTER:
 	}
 
 	if len(msgs) > 0 {
-		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx)
+		owner := zone.ChainId + ".performance"
+		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx, owner)
 	}
 	return nil
 }
