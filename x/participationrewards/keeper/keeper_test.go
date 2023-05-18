@@ -154,6 +154,7 @@ func (s *KeeperTestSuite) setupTestZones() {
 		LiquidityModule:  true,
 		DepositsEnabled:  true,
 		UnbondingEnabled: false,
+		Is_118Cointype:   true,
 	}
 	selftestzone := icstypes.Zone{
 		ConnectionId:     s.path.EndpointB.ConnectionID,
@@ -165,6 +166,7 @@ func (s *KeeperTestSuite) setupTestZones() {
 		LiquidityModule:  true,
 		DepositsEnabled:  true,
 		UnbondingEnabled: false,
+		Is_118Cointype:   true,
 	}
 
 	quicksilver.InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &selftestzone)
@@ -199,6 +201,7 @@ func (s *KeeperTestSuite) setupTestZones() {
 		UnbondingEnabled:   false,
 		LiquidityModule:    true,
 		DepositsEnabled:    true,
+		Is_118Cointype:     true,
 		Decimals:           6,
 		PerformanceAddress: performanceAccountOsmo,
 		Validators: []*icstypes.Validator{
@@ -242,6 +245,7 @@ func (s *KeeperTestSuite) setupTestZones() {
 		ReturnToSender:     false,
 		LiquidityModule:    true,
 		PerformanceAddress: performanceAccountCosmos,
+		Is_118Cointype:     true,
 	}
 	quicksilver.InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zoneCosmos)
 	cosmosVals := []icstypes.Validator{
@@ -285,6 +289,7 @@ func (s *KeeperTestSuite) setupTestZones() {
 			PortName:          "cosmoshub-4.performance",
 			WithdrawalAddress: utils.GenerateAccAddressForTestWithPrefix("osmo"),
 		},
+		Is_118Cointype: true,
 	}
 	quicksilver.InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zoneOsmosis)
 }

@@ -17,7 +17,7 @@ func TestIsDelegateAddress(t *testing.T) {
 	acc2 := utils.GenerateAccAddressForTest()
 	bech32 := utils.ConvertAccAddressForTestUsingPrefix(acc, "cosmos")
 	bech322 := utils.ConvertAccAddressForTestUsingPrefix(acc2, "cosmos")
-	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", DelegationAddress: &types.ICAAccount{Address: bech32}}
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", DelegationAddress: &types.ICAAccount{Address: bech32}, Is_118Cointype: true}
 	require.True(t, zone.IsDelegateAddress(bech32))
 	require.False(t, zone.IsDelegateAddress(bech322))
 }
@@ -25,8 +25,8 @@ func TestIsDelegateAddress(t *testing.T) {
 func TestGetDelegationAccount(t *testing.T) {
 	acc := utils.GenerateAccAddressForTest()
 	bech32 := utils.ConvertAccAddressForTestUsingPrefix(acc, "cosmos")
-	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", DelegationAddress: &types.ICAAccount{Address: bech32}}
-	zone2 := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", DelegationAddress: &types.ICAAccount{Address: bech32}, Is_118Cointype: true}
+	zone2 := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118Cointype: true}
 
 	delegateAccount, err := zone.GetDelegationAccount()
 	require.NoError(t, err)
@@ -38,14 +38,14 @@ func TestGetDelegationAccount(t *testing.T) {
 }
 
 func TestValidateCoinsForZone(t *testing.T) {
-	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118Cointype: true}
 	valAddresses := []string{"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7"}
 	require.NoError(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy1", sdk.OneInt())), valAddresses))
 	require.Errorf(t, zone.ValidateCoinsForZone(sdk.NewCoins(sdk.NewCoin("cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr1", sdk.OneInt())), valAddresses), "invalid denom for zone: cosmosvaloper18ldc09yx4aua9g8mkl3sj526hgydzzyehcyjjr1")
 }
 
 func TestCoinsToIntent(t *testing.T) {
-	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118Cointype: true}
 	valAddresses := []string{"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7"}
 
 	testCases := []struct {
@@ -101,7 +101,7 @@ func TestCoinsToIntent(t *testing.T) {
 }
 
 func TestBase64MemoToIntent(t *testing.T) {
-	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118Cointype: true}
 	zone.Validators = append(zone.Validators,
 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
@@ -178,7 +178,7 @@ func TestBase64MemoToIntent(t *testing.T) {
 }
 
 func TestUpdateIntentWithMemo(t *testing.T) {
-	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118Cointype: true}
 	zone.Validators = append(zone.Validators,
 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
@@ -263,7 +263,7 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 }
 
 func TestUpdateIntentWithMemoBad(t *testing.T) {
-	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118Cointype: true}
 	zone.Validators = append(zone.Validators,
 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
@@ -299,7 +299,7 @@ func TestUpdateIntentWithMemoBad(t *testing.T) {
 }
 
 func TestUpdateIntentWithCoins(t *testing.T) {
-	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
+	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118Cointype: true}
 	zone.Validators = append(zone.Validators,
 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
 		&types.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},

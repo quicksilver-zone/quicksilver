@@ -82,6 +82,7 @@ func (s *AppTestSuite) initTestZone() {
 		BaseDenom:       "uatom",
 		MultiSend:       false,
 		LiquidityModule: true,
+		Is_118Cointype:  true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
@@ -94,6 +95,7 @@ func (s *AppTestSuite) initTestZone() {
 		BaseDenom:       "uatom",
 		MultiSend:       false,
 		LiquidityModule: false,
+		Is_118Cointype:  true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
@@ -106,6 +108,7 @@ func (s *AppTestSuite) initTestZone() {
 		BaseDenom:       "uosmo",
 		MultiSend:       false,
 		LiquidityModule: true,
+		Is_118Cointype:  true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 	// uni-5 zone
@@ -117,6 +120,7 @@ func (s *AppTestSuite) initTestZone() {
 		BaseDenom:       "ujunox",
 		MultiSend:       false,
 		LiquidityModule: true,
+		Is_118Cointype:  true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 

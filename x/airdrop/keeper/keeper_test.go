@@ -76,11 +76,12 @@ func (s *KeeperTestSuite) SetupTest() {
 func (s *KeeperTestSuite) initTestZone() {
 	// test zone
 	zone := icstypes.Zone{
-		ConnectionId:  s.path.EndpointB.ConnectionID,
-		ChainId:       s.chainB.ChainID,
-		AccountPrefix: "cosmos",
-		LocalDenom:    "uqatom",
-		BaseDenom:     "uatom",
+		ConnectionId:   s.path.EndpointB.ConnectionID,
+		ChainId:        s.chainB.ChainID,
+		AccountPrefix:  "cosmos",
+		LocalDenom:     "uqatom",
+		BaseDenom:      "uatom",
+		Is_118Cointype: true,
 	}
 
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
