@@ -1,7 +1,9 @@
 package types
 
 import (
+	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strings"
@@ -50,6 +52,8 @@ COINS:
 	}
 	return nil
 }
+
+// memo functionality
 
 // this method exist to make testing easier!
 func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins, vals []string) DelegatorIntent {
@@ -132,4 +136,54 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 		out = out.SetForValoper(valAddr, val)
 	}
 	return out, nil
+}
+
+// decode memo
+// if zone.Is_118:
+//		decode as we have ( up to 8 validators)
+// 		return
+//
+// decode as we have (up to 6 validators)
+// look for separator 0xFF
+// field_id = [
+//  0x00 = map
+//  0x01 = rts
+//] // will scale to future fields
+
+func (z *Zone) DecodeMemo(memo string) (valWeights, something []byte, err error) {
+	separator, err := hex.DecodeString("0xFF")
+	if err != nil {
+		return valWeights, something, err
+	}
+
+	if memo == "" {
+		return valWeights, something, errors.New("memo length unexpectedly zero")
+	}
+
+	memoBytes, err := base64.StdEncoding.DecodeString(memo)
+	if err != nil {
+		return valWeights, something, fmt.Errorf("failed to decode base64 message: %w", err)
+	}
+
+	parts := bytes.Split(memoBytes, separator)
+	valWeights = parts[0]
+	if len(valWeights)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
+		return valWeights, something, fmt.Errorf("unable to determine intent from memo: Message was incorrect length: %d", len(memoBytes))
+	}
+
+	switch {
+	case len(parts) == 1:
+		if len(valWeights)/21 > 8 {
+			return valWeights, something, errors.New("memo format not currently supported")
+		}
+	case len(parts) == 2:
+		something = parts[1]
+		if len(valWeights)/21 > 6 {
+			return valWeights, something, errors.New("memo format not currently supported")
+		}
+	default:
+		return valWeights, something, errors.New("memo format not currently supported")
+	}
+
+	return valWeights, something, err
 }
