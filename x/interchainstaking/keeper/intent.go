@@ -201,9 +201,10 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount, k.GetValidatorAddresses(ctx, zone.ChainId))
 	}
 
+	var memoUpdates []types.ZoneMemoUpdate
+	var err error
 	if updateWithMemo {
-		var err error
-		delIntent, err = zone.UpdateIntentWithMemo(delIntent, memo, baseBalance, inAmount)
+		delIntent, memoUpdates, err = zone.UpdateZoneWithMemo(delIntent, memo, baseBalance, inAmount)
 		if err != nil {
 			return err
 		}
@@ -213,7 +214,15 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 		return nil
 	}
 
+	for _, update := range memoUpdates {
+		err = update()
+		if err != nil {
+			return fmt.Errorf("error updating zone from memo: %w", err)
+		}
+	}
+
 	k.SetDelegatorIntent(ctx, zone, delIntent, snapshot)
+
 	return nil
 }
 

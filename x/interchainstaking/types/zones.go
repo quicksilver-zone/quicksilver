@@ -61,15 +61,31 @@ func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec,
 	return intent
 }
 
-// this method exist to make testing easier!
-func (z *Zone) UpdateIntentWithMemo(intent DelegatorIntent, memo string, multiplier sdk.Dec, inAmount sdk.Coins) (DelegatorIntent, error) {
-	// coinIntent is ordinal
-	memoIntent, err := z.ConvertMemoToOrdinalIntents(inAmount, memo)
+type ZoneMemoUpdate func() error
+
+func (z *Zone) UpdateZoneWithMemo(intent DelegatorIntent, memo string, multiplier sdk.Dec, inAmount sdk.Coins) (DelegatorIntent, []ZoneMemoUpdate, error) {
+	memoIntent, memoFields, err := z.DecodeMemo(inAmount, memo)
 	if err != nil {
-		return DelegatorIntent{}, err
+		return DelegatorIntent{}, nil, fmt.Errorf("error decoding memo: %w", err)
 	}
+
 	intent = intent.AddOrdinal(multiplier, memoIntent)
-	return intent, nil
+
+	updates, err := z.memoUpdatesFromFields(memoFields)
+	if err != nil {
+		return DelegatorIntent{}, nil, fmt.Errorf("error generating memo field updates: %w", err)
+	}
+
+	return intent, updates, nil
+}
+
+func (z *Zone) memoUpdatesFromFields(memoFields MemoFields) ([]ZoneMemoUpdate, error) {
+	updates := make([]ZoneMemoUpdate, 0)
+
+	_ = memoFields
+	// TODO ADD LOGIC FOR UPDATING BASED ON FIELDS
+
+	return updates, nil
 }
 
 func (z *Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins, zoneVals []string) ValidatorIntents {
@@ -97,36 +113,13 @@ COINS:
 
 func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (ValidatorIntents, error) {
 	// should we be return DelegatorIntent here?
-	out := make(ValidatorIntents, 0)
 
-	valWeightBytes, _, err := z.DecodeMemo(memo)
+	validatorIntents, _, err := z.DecodeMemo(coins, memo)
 	if err != nil {
 		return ValidatorIntents{}, fmt.Errorf("error decoding memo: %w", err)
 	}
 
-	for index := 0; index < len(valWeightBytes); {
-		// truncate weight to 200
-		rawWeight := int64(valWeightBytes[index])
-		if rawWeight > 200 {
-			return ValidatorIntents{}, fmt.Errorf("out of bounds value received in memo intent message; expected 0-200, got %d", rawWeight)
-		}
-		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(rawWeight)).QuoInt(sdk.NewInt(200))
-		coinWeight := sdkWeight.MulInt(coins.AmountOf(z.BaseDenom))
-		index++
-		address := valWeightBytes[index : index+20]
-		index += 20
-		valAddr, err := bech32.ConvertAndEncode(z.AccountPrefix+"valoper", address)
-		if err != nil {
-			return ValidatorIntents{}, err
-		}
-		val, ok := out.GetForValoper(valAddr)
-		if !ok {
-			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
-		}
-		val.Weight = val.Weight.Add(coinWeight)
-		out = out.SetForValoper(valAddr, val)
-	}
-	return out, nil
+	return validatorIntents, nil
 }
 
 // decode memo
@@ -158,41 +151,71 @@ type MemoField struct {
 
 type MemoFields []MemoField
 
-func (z *Zone) DecodeMemo(memo string) (valWeights []byte, memoFields MemoFields, err error) {
+func (z *Zone) DecodeMemo(coins sdk.Coins, memo string) (validatorIntents ValidatorIntents, memoFields MemoFields, err error) {
 	if memo == "" {
-		return valWeights, memoFields, errors.New("memo length unexpectedly zero")
+		return validatorIntents, memoFields, errors.New("memo length unexpectedly zero")
 	}
 
 	memoBytes, err := base64.StdEncoding.DecodeString(memo)
 	if err != nil {
-		return valWeights, memoFields, fmt.Errorf("failed to decode base64 message: %w", err)
+		return validatorIntents, memoFields, fmt.Errorf("failed to decode base64 message: %w", err)
 	}
 
 	parts := bytes.Split(memoBytes, separator)
-	valWeights = parts[0]
-	if len(valWeights)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
-		return valWeights, memoFields, fmt.Errorf("unable to determine intent from memo: Message was incorrect length: %d", len(memoBytes))
+	valWeightsBytes := parts[0]
+	if len(valWeightsBytes)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
+		return validatorIntents, memoFields, fmt.Errorf("unable to determine intent from memo: Message was incorrect length: %d", len(memoBytes))
 	}
 
 	switch {
 	case len(parts) == 0:
-		return valWeights, memoFields, errors.New("invalid memo format")
+		return validatorIntents, memoFields, errors.New("invalid memo format")
 
 	case len(parts) == 1:
-		if len(valWeights)/21 > 8 {
-			return valWeights, memoFields, errors.New("memo format not currently supported")
+		if len(valWeightsBytes)/21 > 8 {
+			return validatorIntents, memoFields, errors.New("memo format not currently supported")
 		}
 
 	default:
 		// iterate through all non-validator weights parts of the memo
-		memoFields, err := ParseMemoFields(parts[1])
+		memoFields, err = ParseMemoFields(parts[1])
 		if err != nil {
-			return valWeights, memoFields, fmt.Errorf("unable to decode memo field: %w", err)
+			return validatorIntents, memoFields, fmt.Errorf("unable to decode memo field: %w", err)
 		}
-
 	}
 
-	return valWeights, memoFields, err
+	validatorIntents, err = z.validatorIntentsFromBytes(coins, valWeightsBytes)
+
+	return validatorIntents, memoFields, err
+}
+
+func (z *Zone) validatorIntentsFromBytes(coins sdk.Coins, weightBytes []byte) (ValidatorIntents, error) {
+	validatorIntents := make(ValidatorIntents, 0)
+
+	for index := 0; index < len(weightBytes); {
+		// truncate weight to 200
+		rawWeight := int64(weightBytes[index])
+		if rawWeight > 200 {
+			return validatorIntents, fmt.Errorf("out of bounds value received in memo intent message; expected 0-200, got %d", rawWeight)
+		}
+		sdkWeight := sdk.NewDecFromInt(sdk.NewInt(rawWeight)).QuoInt(sdk.NewInt(200))
+		coinWeight := sdkWeight.MulInt(coins.AmountOf(z.BaseDenom))
+		index++
+		address := weightBytes[index : index+20]
+		index += 20
+		valAddr, err := bech32.ConvertAndEncode(z.AccountPrefix+"valoper", address)
+		if err != nil {
+			return validatorIntents, err
+		}
+		val, ok := validatorIntents.GetForValoper(valAddr)
+		if !ok {
+			val = &ValidatorIntent{ValoperAddress: valAddr, Weight: sdk.ZeroDec()}
+		}
+		val.Weight = val.Weight.Add(coinWeight)
+		validatorIntents = validatorIntents.SetForValoper(valAddr, val)
+	}
+
+	return validatorIntents, nil
 }
 
 func ParseMemoFields(fieldBytes []byte) (MemoFields, error) {
@@ -214,7 +237,7 @@ func ParseMemoFields(fieldBytes []byte) (MemoFields, error) {
 		fieldLength := int(fieldBytes[idx])
 		idx++
 
-		if len(fieldBytes[idx:]) < int(fieldLength) {
+		if len(fieldBytes[idx:]) < fieldLength {
 			return MemoFields{}, errors.New("invalid field length for memo field")
 		}
 

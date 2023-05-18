@@ -1,6 +1,8 @@
 package types_test
 
 import (
+	"encoding/base64"
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -100,7 +102,7 @@ func TestCoinsToIntent(t *testing.T) {
 	}
 }
 
-func TestBase64MemoToIntent(t *testing.T) {
+func TestDecodeMemo(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
 		&types.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded},
@@ -112,11 +114,12 @@ func TestBase64MemoToIntent(t *testing.T) {
 	)
 
 	testCases := []struct {
-		name           string
-		memo           string
-		amount         int
-		expectedIntent map[string]sdk.Dec
-		wantErr        bool
+		name               string
+		memo               string
+		amount             int
+		expectedIntent     map[string]sdk.Dec
+		expectedMemoFields types.MemoFields
+		wantErr            bool
 	}{
 		{
 			memo:   "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc",
@@ -146,35 +149,70 @@ func TestBase64MemoToIntent(t *testing.T) {
 			},
 		},
 		{
+			name:   "val intents and memo fields",
+			memo:   "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc/wACAQI=",
+			amount: 100,
+			expectedIntent: map[string]sdk.Dec{
+				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(45),
+				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(55),
+			},
+			expectedMemoFields: types.MemoFields{
+				{
+					ID:   0,
+					Data: []byte{1, 2},
+				},
+			},
+		},
+		{
 			name:    "empty memo",
 			memo:    "",
-			amount:  10,
 			wantErr: true,
 		},
 		{
 			name:    "invalid length",
 			memo:    "ToS/+Ex92tEcuMBzhukZKMVnXKS8NKaQBJTx9zza4rrxyLiP9fwLijOcPK/59acWzdcBME6ub8f0LID97qWECuxJKXmxBM1YBQyWHSAXDiwmMY78K",
-			amount:  10,
+			wantErr: true,
+		},
+		{
+			name:    "invalid base64",
+			memo:    "\xFF",
+			wantErr: true,
+		},
+		{
+			name:    "invalid base64",
+			memo:    "\xFF",
 			wantErr: true,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			out, err := zone.ConvertMemoToOrdinalIntents(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
+			validatorIntents, memoFields, err := zone.DecodeMemo(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
 			if tc.wantErr {
 				require.Error(t, err)
 				return
 			}
 
 			require.NoError(t, err)
-			for _, v := range out {
+			for _, v := range validatorIntents {
 				if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
 					t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
 				}
 			}
+
+			require.Equal(t, tc.expectedMemoFields, memoFields)
 		})
 	}
+}
+
+func TestGenMemos(t *testing.T) {
+	oldMemo := "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc"
+	memoBytes, err := base64.StdEncoding.DecodeString(oldMemo)
+	require.NoError(t, err)
+	memoBytes = append(memoBytes, 255, 0, 2, 1, 2)
+
+	newMemo := base64.StdEncoding.EncodeToString(memoBytes)
+	fmt.Println(newMemo)
 }
 
 func TestUpdateIntentWithMemo(t *testing.T) {
@@ -252,7 +290,7 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 
 	for caseidx, tc := range testCases {
 
-		intent, err := zone.UpdateIntentWithMemo(intentFromDecSlice(tc.originalIntent), tc.memo, sdk.NewDec(int64(tc.baseAmount)), sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))))
+		intent, _, err := zone.UpdateZoneWithMemo(intentFromDecSlice(tc.originalIntent), tc.memo, sdk.NewDec(int64(tc.baseAmount)), sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))))
 		require.NoError(t, err)
 		for idx, v := range intent.Intents.Sort() {
 			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
@@ -293,7 +331,7 @@ func TestUpdateIntentWithMemoBad(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, err := zone.UpdateIntentWithMemo(intentFromDecSlice(tc.originalIntent), tc.memo, sdk.NewDec(int64(tc.baseAmount)), sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))))
+		_, _, err := zone.UpdateZoneWithMemo(intentFromDecSlice(tc.originalIntent), tc.memo, sdk.NewDec(int64(tc.baseAmount)), sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))))
 		require.Errorf(t, err, tc.errorMsg)
 	}
 }
