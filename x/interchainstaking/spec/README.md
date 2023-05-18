@@ -101,6 +101,11 @@ type Zone struct {
 	LastEpochHeight              int64                                  `protobuf:"varint,20,opt,name=last_epoch_height,json=lastEpochHeight,proto3" json:"last_epoch_height,omitempty"`
 	Tvl                          github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,21,opt,name=tvl,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"tvl"`
 	UnbondingPeriod              int64                                  `protobuf:"varint,22,opt,name=unbonding_period,json=unbondingPeriod,proto3" json:"unbonding_period,omitempty"`
+  MessagesPerTx                int64                                  `protobuf:"varint,23,opt,name=messages_per_tx,json=messagesPerTx,proto3" json:"messages_per_tx,omitempty"`
+	Decimals                     int64                                  `protobuf:"varint,24,opt,name=decimals,proto3" json:"decimals,omitempty"`
+	UnbondingEnabled             bool                                   `protobuf:"varint,25,opt,name=unbonding_enabled,json=unbondingEnabled,proto3" json:"unbonding_enabled,omitempty"`
+	DepositsEnabled              bool                                   `protobuf:"varint,26,opt,name=deposits_enabled,json=depositsEnabled,proto3" json:"deposits_enabled,omitempty"`
+	ReturnToSender               bool                                   `protobuf:"varint,27,opt,name=return_to_sender,json=returnToSender,proto3" json:"return_to_sender,omitempty"`
 }
 ```
 
@@ -135,6 +140,11 @@ type Zone struct {
   boundary;
 - **Tvl** - the Total Value Locked for this zone (in terms of Atom value);
 - **UnbondingPeriod** - this zone's unbonding period;
+- **MessagesPerTx** - the number of ICA messages batched together in a single transaction;
+- **Decimals** - the exponent of the minor token; e.g. uAtom = 6;
+- **UnbondingEnabled** - is unbonding enabled for this zone;
+- **DepositsEnabled** - are deposits enabled for this zone;
+- **ReturnToSender** - are minted qAssets returned to depositor's address on the host zone;
 
 ### ICAAccount
 
@@ -315,6 +325,8 @@ type Receipt struct {
 	Sender  string                                   `protobuf:"bytes,2,opt,name=sender,proto3" json:"sender,omitempty"`
 	Txhash  string                                   `protobuf:"bytes,3,opt,name=txhash,proto3" json:"txhash,omitempty"`
 	Amount  github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,4,rep,name=amount,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"amount"`
+  FirstSeen *time.Time                               `protobuf:"bytes,5,opt,name=first_seen,json=firstSeen,proto3,stdtime" json:"first_seen,omitempty"`
+	Completed *time.Time                               `protobuf:"bytes,6,opt,name=completed,proto3,stdtime" json:"completed,omitempty"`
 }
 ```
 
