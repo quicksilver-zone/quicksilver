@@ -51,10 +51,13 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 
 	// 2. Now set a zone and ensure it is retrieved.
 	zone = types.Zone{
-		ConnectionId: "conn-test",
-		ChainId:      chainID,
-		LocalDenom:   "uqck",
-		BaseDenom:    "qck",
+		ConnectionId:       "conn-test",
+		ChainId:            chainID,
+		LocalDenom:         "uqck",
+		BaseDenom:          "qck",
+		RedemptionRate:     sdk.ZeroDec(),
+		LastRedemptionRate: sdk.ZeroDec(),
+		Tvl:                sdk.ZeroDec(),
 	}
 	kpr.SetZone(ctx, &zone)
 	gotZone, ok := kpr.GetZone(ctx, chainID)
@@ -87,6 +90,9 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 					sdk.NewCoin("uqck", sdk.NewInt(700000)),
 				),
 			},
+			RedemptionRate:     sdk.ZeroDec(),
+			LastRedemptionRate: sdk.ZeroDec(),
+			Tvl:                sdk.ZeroDec(),
 		}
 		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainId)
 		kpr.SetZone(ctx, &zone)
