@@ -143,35 +143,67 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 
 var separator = []byte{byte(255)}
 
-func (z *Zone) DecodeMemo(memo string) (valWeights, something []byte, err error) {
+type fieldType uint64
+
+const (
+	AccountMap fieldType = iota
+	ReturnToSender
+	// add more here
+)
+
+type MemoField struct {
+	id     uint32
+	length uint32
+	data   []byte
+}
+
+func (z *Zone) DecodeMemo(memo string) (valWeights []byte, memoFields []MemoField, err error) {
+	memoFields = make([]MemoField, 0)
+
 	if memo == "" {
-		return valWeights, something, errors.New("memo length unexpectedly zero")
+		return valWeights, memoFields, errors.New("memo length unexpectedly zero")
 	}
 
 	memoBytes, err := base64.StdEncoding.DecodeString(memo)
 	if err != nil {
-		return valWeights, something, fmt.Errorf("failed to decode base64 message: %w", err)
+		return valWeights, memoFields, fmt.Errorf("failed to decode base64 message: %w", err)
 	}
 
 	parts := bytes.Split(memoBytes, separator)
 	valWeights = parts[0]
 	if len(valWeights)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
-		return valWeights, something, fmt.Errorf("unable to determine intent from memo: Message was incorrect length: %d", len(memoBytes))
+		return valWeights, memoFields, fmt.Errorf("unable to determine intent from memo: Message was incorrect length: %d", len(memoBytes))
 	}
 
 	switch {
+	case len(parts) == 0:
+		return valWeights, memoFields, errors.New("invalid memo format")
+
 	case len(parts) == 1:
 		if len(valWeights)/21 > 8 {
-			return valWeights, something, errors.New("memo format not currently supported")
+			return valWeights, memoFields, errors.New("memo format not currently supported")
 		}
-	case len(parts) == 2:
-		something = parts[1]
-		if len(valWeights)/21 > 6 {
-			return valWeights, something, errors.New("memo format not currently supported")
-		}
+
 	default:
-		return valWeights, something, errors.New("memo format not currently supported")
+		// iterate through all non-validator weights parts of the memo
+		memoFields = make([]MemoField, len(parts)-1)
+		for i, part := range parts[1:] {
+			memoFields[i], err = DecodeMemoField(part)
+			if err != nil {
+				return valWeights, memoFields, fmt.Errorf("unable to decode memo field: %w", err)
+			}
+		}
 	}
 
-	return valWeights, something, err
+	return valWeights, memoFields, err
+}
+
+func DecodeMemoField(fieldBytes []byte) (MemoField, error) {
+	fieldID := fieldBytes[0]
+	fieldLength := fieldBytes[1]
+	if len(fieldBytes[2:]) != int(fieldLength) {
+		return MemoField{}, errors.New("invalid field length for memo field")
+	}
+
+	return MemoField{}, nil
 }
