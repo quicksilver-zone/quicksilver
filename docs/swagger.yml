@@ -2607,6 +2607,8 @@ paths:
                     type: boolean
                   return_to_sender:
                     type: boolean
+                  is_118_cointype:
+                    type: boolean
               stats:
                 type: object
                 properties:
@@ -2887,6 +2889,8 @@ paths:
                     deposits_enabled:
                       type: boolean
                     return_to_sender:
+                      type: boolean
+                    is_118_cointype:
                       type: boolean
               stats:
                 type: array
