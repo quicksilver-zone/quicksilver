@@ -148,7 +148,7 @@ type fieldType uint64
 const (
 	AccountMap fieldType = iota
 	ReturnToSender
-	// add more here
+	// add more here.
 )
 
 type MemoField struct {
