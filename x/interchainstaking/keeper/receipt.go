@@ -80,8 +80,22 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 
 	k.Logger(ctx).Info("found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", senderAccAddress.String(), "chain id", zone.ChainId, "assets", assets, "hash", hash)
 
+	var (
+		memoIntent types.ValidatorIntents = nil
+		memoFields types.MemoFields       = nil
+	)
+	if len(memo) > 0 {
+		// process memo
+		memoIntent, memoFields, err = zone.DecodeMemo(assets, memo)
+		if err != nil {
+			// What should we do on error here? just log?
+		}
+	}
+
+	_ = memoFields
+
 	// update state
-	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, zone, assets, memo); err != nil {
+	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, zone, assets, memoIntent); err != nil {
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}

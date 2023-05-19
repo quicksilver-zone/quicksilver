@@ -57,27 +57,14 @@ COINS:
 // this method exist to make testing easier!
 func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec, inAmount sdk.Coins, vals []string) DelegatorIntent {
 	// coinIntent is ordinal
-	intent = intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount, vals))
-	return intent
+	return intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount, vals))
+}
+
+func (z *Zone) UpdateZoneIntentWithMemo(memoIntent ValidatorIntents, intent DelegatorIntent, multiplier sdk.Dec) DelegatorIntent {
+	return intent.AddOrdinal(multiplier, memoIntent)
 }
 
 type ZoneMemoUpdate func() error
-
-func (z *Zone) UpdateZoneWithMemo(intent DelegatorIntent, memo string, multiplier sdk.Dec, inAmount sdk.Coins) (DelegatorIntent, []ZoneMemoUpdate, error) {
-	memoIntent, memoFields, err := z.DecodeMemo(inAmount, memo)
-	if err != nil {
-		return DelegatorIntent{}, nil, fmt.Errorf("error decoding memo: %w", err)
-	}
-
-	intent = intent.AddOrdinal(multiplier, memoIntent)
-
-	updates, err := z.memoUpdatesFromFields(memoFields)
-	if err != nil {
-		return DelegatorIntent{}, nil, fmt.Errorf("error generating memo field updates: %w", err)
-	}
-
-	return intent, updates, nil
-}
 
 func (z *Zone) memoUpdatesFromFields(memoFields MemoFields) ([]ZoneMemoUpdate, error) {
 	updates := make([]ZoneMemoUpdate, 0)

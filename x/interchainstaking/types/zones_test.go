@@ -289,9 +289,9 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 	}
 
 	for caseidx, tc := range testCases {
-
-		intent, _, err := zone.UpdateZoneWithMemo(intentFromDecSlice(tc.originalIntent), tc.memo, sdk.NewDec(int64(tc.baseAmount)), sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))))
+		memoIntent, _, err := zone.DecodeMemo(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
 		require.NoError(t, err)
+		intent := zone.UpdateZoneIntentWithMemo(memoIntent, intentFromDecSlice(tc.originalIntent), sdk.NewDec(int64(tc.baseAmount)))
 		for idx, v := range intent.Intents.Sort() {
 			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
 				t.Errorf("Case [%d:%d] -> Got %v expected %v", caseidx, idx, v.Weight, tc.expectedIntent[v.ValoperAddress])
@@ -331,7 +331,7 @@ func TestUpdateIntentWithMemoBad(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, _, err := zone.UpdateZoneWithMemo(intentFromDecSlice(tc.originalIntent), tc.memo, sdk.NewDec(int64(tc.baseAmount)), sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))))
+		_, _, err := zone.DecodeMemo(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
 		require.Errorf(t, err, tc.errorMsg)
 	}
 }
