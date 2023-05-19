@@ -562,7 +562,7 @@ func TestParseMemoFields(t *testing.T) {
 		},
 		{
 			name:       "invalid length field",
-			fieldBytes: []byte{0, 1, 0, 0},
+			fieldBytes: []byte{byte(types.FieldTypeAccountMap), 1, 0, 0},
 			expectedMemoFields: types.MemoFields{
 				{
 					Data: []byte{},
@@ -573,8 +573,8 @@ func TestParseMemoFields(t *testing.T) {
 		{
 			name: "invalid multiple",
 			fieldBytes: []byte{
-				0, 3, 0, 0, // should be 2 for length field
-				1, 4, 1, 1, 1, 3,
+				byte(types.FieldTypeAccountMap), 3, 0, 0, // should be 2 for length field
+				byte(types.FieldTypeReturnToSender), 4, 1, 1, 1, 3,
 			},
 			expectedMemoFields: types.MemoFields{
 				{
@@ -584,8 +584,24 @@ func TestParseMemoFields(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name: "invalid address for account map",
+			fieldBytes: []byte{
+				byte(types.FieldTypeAccountMap), 0,
+				byte(types.FieldTypeReturnToSender), 0,
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid field id 3",
+			fieldBytes: []byte{
+				3, 2, 1, 1,
+				byte(types.FieldTypeReturnToSender), 0,
+			},
+			wantErr: true,
+		},
+		{
 			name:       "valid single",
-			fieldBytes: []byte{0, 2, 1, 1},
+			fieldBytes: []byte{byte(types.FieldTypeAccountMap), 2, 1, 1},
 			expectedMemoFields: types.MemoFields{
 				{
 					ID:   0,
@@ -597,17 +613,17 @@ func TestParseMemoFields(t *testing.T) {
 		{
 			name: "valid multiple",
 			fieldBytes: []byte{
-				0, 2, 1, 1,
-				2, 3, 1, 2, 3,
+				byte(types.FieldTypeAccountMap), 2, 1, 1,
+				byte(types.FieldTypeReturnToSender), 0,
 			},
 			expectedMemoFields: types.MemoFields{
 				{
-					ID:   0,
+					ID:   types.FieldTypeAccountMap,
 					Data: []byte{1, 1},
 				},
 				{
-					ID:   2,
-					Data: []byte{1, 2, 3},
+					ID:   types.FieldTypeReturnToSender,
+					Data: nil,
 				},
 			},
 			wantErr: false,

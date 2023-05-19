@@ -112,11 +112,9 @@ func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (Valida
 
 var separator = []byte{byte(255)}
 
-type fieldType int
-
 const (
-	AccountMap fieldType = iota
-	ReturnToSender
+	FieldTypeAccountMap int = iota
+	FieldTypeReturnToSender
 	// add more here.
 )
 
@@ -126,6 +124,26 @@ type MemoField struct {
 }
 
 type MemoFields []MemoField
+
+func (m *MemoField) Validate() error {
+	switch m.ID {
+	case FieldTypeAccountMap:
+		if len(m.Data) == 0 {
+			return errors.New("invalid length for account map memo field 0")
+		}
+		// check if valid address
+		_, err := sdk.Bech32ifyAddressBytes("test", m.Data)
+		if err != nil {
+			return fmt.Errorf("invalid address for account map memo field: address: %s", m.Data)
+		}
+	case FieldTypeReturnToSender:
+		// do nothing - we ignore data if RTS
+	default:
+		return fmt.Errorf("invalid field type %d", m.ID)
+	}
+
+	return nil
+}
 
 func (z *Zone) DecodeMemo(coins sdk.Coins, memo string) (validatorIntents ValidatorIntents, memoFields MemoFields, err error) {
 	if memo == "" {
@@ -204,7 +222,7 @@ func ParseMemoFields(fieldBytes []byte) (MemoFields, error) {
 	idx := 0
 	for idx < len(fieldBytes) {
 		// prevent out of bounds
-		if len(fieldBytes[idx:]) < 3 {
+		if len(fieldBytes[idx:]) < 2 {
 			return MemoFields{}, errors.New("invalid field bytes format")
 		}
 
@@ -213,14 +231,26 @@ func ParseMemoFields(fieldBytes []byte) (MemoFields, error) {
 		fieldLength := int(fieldBytes[idx])
 		idx++
 
-		if len(fieldBytes[idx:]) < fieldLength {
+		var data []byte
+		switch {
+		case fieldLength == 0:
+			data = nil
+		case len(fieldBytes[idx:]) < fieldLength:
 			return MemoFields{}, errors.New("invalid field length for memo field")
+		default:
+			data = fieldBytes[idx : idx+fieldLength]
 		}
 
-		memoFields = append(memoFields, MemoField{
+		memoField := MemoField{
 			ID:   fieldID,
-			Data: fieldBytes[idx : idx+fieldLength], // add one for half-open range
-		})
+			Data: data,
+		}
+		err := memoField.Validate()
+		if err != nil {
+			return MemoFields{}, fmt.Errorf("invalid memo field: %w", err)
+		}
+
+		memoFields = append(memoFields, memoField)
 		idx += fieldLength
 	}
 
