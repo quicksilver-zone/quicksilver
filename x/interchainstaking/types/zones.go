@@ -64,17 +64,6 @@ func (z *Zone) UpdateZoneIntentWithMemo(memoIntent ValidatorIntents, intent Dele
 	return intent.AddOrdinal(multiplier, memoIntent)
 }
 
-type ZoneMemoUpdate func() error
-
-func (z *Zone) memoUpdatesFromFields(memoFields MemoFields) ([]ZoneMemoUpdate, error) {
-	updates := make([]ZoneMemoUpdate, 0)
-
-	_ = memoFields
-	// TODO ADD LOGIC FOR UPDATING BASED ON FIELDS
-
-	return updates, nil
-}
-
 func (z *Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins, zoneVals []string) ValidatorIntents {
 	// should we be return DelegatorIntent here?
 	out := make(ValidatorIntents, 0)

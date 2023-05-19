@@ -81,14 +81,15 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 	k.Logger(ctx).Info("found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", senderAccAddress.String(), "chain id", zone.ChainId, "assets", assets, "hash", hash)
 
 	var (
-		memoIntent types.ValidatorIntents = nil
-		memoFields types.MemoFields       = nil
+		memoIntent types.ValidatorIntents
+		memoFields types.MemoFields
 	)
 	if len(memo) > 0 {
 		// process memo
 		memoIntent, memoFields, err = zone.DecodeMemo(assets, memo)
 		if err != nil {
 			// What should we do on error here? just log?
+			k.Logger(ctx).Error("error decoding memo", "error", err.Error(), "memo", memo)
 		}
 	}
 
