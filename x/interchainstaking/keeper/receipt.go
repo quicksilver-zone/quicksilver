@@ -81,9 +81,12 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 	k.Logger(ctx).Info("found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", senderAccAddress.String(), "chain id", zone.ChainId, "assets", assets, "hash", hash)
 
 	var (
-		memoIntent types.ValidatorIntents
-		memoFields types.MemoFields
+		memoIntent    types.ValidatorIntents
+		memoFields    types.MemoFields
+		memoRTS       bool
+		mappedAddress []byte
 	)
+
 	if len(memo) > 0 {
 		// process memo
 		memoIntent, memoFields, err = zone.DecodeMemo(assets, memo)
@@ -91,16 +94,16 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 			// What should we do on error here? just log?
 			k.Logger(ctx).Error("error decoding memo", "error", err.Error(), "memo", memo)
 		}
+		memoRTS = memoFields.RTS()
+		mappedAddress, _ = memoFields.AccountMap()
 	}
-
-	_ = memoFields
 
 	// update state
 	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, zone, assets, memoIntent); err != nil {
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-	if err := k.MintQAsset(ctx, senderAccAddress, senderAddress, zone, assets, memoFields); err != nil {
+	if err := k.MintQAsset(ctx, senderAccAddress, senderAddress, zone, assets, memoRTS, mappedAddress); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
@@ -117,7 +120,7 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 }
 
 // MintQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
-func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoFields types.MemoFields) error {
+func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress []byte) error {
 	if zone.RedemptionRate.IsZero() {
 		return errors.New("zero redemption rate")
 	}
@@ -134,7 +137,8 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 		return err
 	}
 
-	if zone.ReturnToSender {
+	switch {
+	case zone.ReturnToSender || memoRTS:
 		var srcPort string
 		var srcChannel string
 
@@ -163,7 +167,13 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 			},
 			uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
 		)
-	} else {
+	case mappedAddress != nil:
+		// set mapped account
+		k.SetAddressMapPair(ctx, sender, mappedAddress, zone.ChainId)
+
+		// set send to mapped account
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mappedAddress, qAssets)
+	default:
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
 	}
 

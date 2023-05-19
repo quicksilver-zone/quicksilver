@@ -157,7 +157,7 @@ func TestDecodeMemo(t *testing.T) {
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(55),
 			},
 			expectedMemoFields: types.MemoFields{
-				{
+				0: {
 					ID:   0,
 					Data: []byte{1, 2},
 				},
@@ -553,33 +553,18 @@ func TestParseMemoFields(t *testing.T) {
 		{
 			name:       "invalid no length data",
 			fieldBytes: []byte{},
-			expectedMemoFields: types.MemoFields{
-				{
-					Data: []byte{},
-				},
-			},
-			wantErr: true,
+			wantErr:    true,
 		},
 		{
 			name:       "invalid length field",
 			fieldBytes: []byte{byte(types.FieldTypeAccountMap), 1, 0, 0},
-			expectedMemoFields: types.MemoFields{
-				{
-					Data: []byte{},
-				},
-			},
-			wantErr: true,
+			wantErr:    true,
 		},
 		{
 			name: "invalid multiple",
 			fieldBytes: []byte{
 				byte(types.FieldTypeAccountMap), 3, 0, 0, // should be 2 for length field
 				byte(types.FieldTypeReturnToSender), 4, 1, 1, 1, 3,
-			},
-			expectedMemoFields: types.MemoFields{
-				{
-					Data: []byte{},
-				},
 			},
 			wantErr: true,
 		},
@@ -603,7 +588,7 @@ func TestParseMemoFields(t *testing.T) {
 			name:       "valid single",
 			fieldBytes: []byte{byte(types.FieldTypeAccountMap), 2, 1, 1},
 			expectedMemoFields: types.MemoFields{
-				{
+				types.FieldTypeAccountMap: types.MemoField{
 					ID:   0,
 					Data: []byte{1, 1},
 				},
@@ -617,11 +602,11 @@ func TestParseMemoFields(t *testing.T) {
 				byte(types.FieldTypeReturnToSender), 0,
 			},
 			expectedMemoFields: types.MemoFields{
-				{
+				types.FieldTypeAccountMap: {
 					ID:   types.FieldTypeAccountMap,
 					Data: []byte{1, 1},
 				},
-				{
+				types.FieldTypeReturnToSender: {
 					ID:   types.FieldTypeReturnToSender,
 					Data: nil,
 				},

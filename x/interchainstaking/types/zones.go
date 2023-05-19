@@ -123,7 +123,17 @@ type MemoField struct {
 	Data []byte
 }
 
-type MemoFields []MemoField
+type MemoFields map[int]MemoField
+
+func (m MemoFields) RTS() bool {
+	_, found := m[FieldTypeReturnToSender]
+	return found
+}
+
+func (m MemoFields) AccountMap() ([]byte, bool) {
+	field, found := m[FieldTypeAccountMap]
+	return field.Data, found
+}
 
 func (m *MemoField) Validate() error {
 	switch m.ID {
@@ -217,13 +227,13 @@ func ParseMemoFields(fieldBytes []byte) (MemoFields, error) {
 		return MemoFields{}, errors.New("invalid field bytes format")
 	}
 
-	memoFields := make([]MemoField, 0)
+	memoFields := make(MemoFields)
 
 	idx := 0
 	for idx < len(fieldBytes) {
 		// prevent out of bounds
 		if len(fieldBytes[idx:]) < 2 {
-			return MemoFields{}, errors.New("invalid field bytes format")
+			return memoFields, errors.New("invalid field bytes format")
 		}
 
 		fieldID := int(fieldBytes[idx])
@@ -236,7 +246,7 @@ func ParseMemoFields(fieldBytes []byte) (MemoFields, error) {
 		case fieldLength == 0:
 			data = nil
 		case len(fieldBytes[idx:]) < fieldLength:
-			return MemoFields{}, errors.New("invalid field length for memo field")
+			return memoFields, errors.New("invalid field length for memo field")
 		default:
 			data = fieldBytes[idx : idx+fieldLength]
 		}
@@ -247,16 +257,21 @@ func ParseMemoFields(fieldBytes []byte) (MemoFields, error) {
 		}
 		err := memoField.Validate()
 		if err != nil {
-			return MemoFields{}, fmt.Errorf("invalid memo field: %w", err)
+			return memoFields, fmt.Errorf("invalid memo field: %w", err)
 		}
 
-		memoFields = append(memoFields, memoField)
+		if _, found := memoFields[fieldID]; found {
+			return memoFields, fmt.Errorf("duplicate field ID found in memo: fieldID: %d", fieldID)
+		}
+
+		memoFields[fieldID] = memoField
+
 		idx += fieldLength
 	}
 
 	// secondary sanity check
 	if idx != len(fieldBytes) {
-		return MemoFields{}, errors.New("error parsing multiple fields")
+		return memoFields, errors.New("error parsing multiple fields")
 	}
 
 	return memoFields, nil
