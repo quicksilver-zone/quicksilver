@@ -36,16 +36,16 @@ func (s *KeeperTestSuite) TestKeeper_RemoteAddressStore() {
 	s.Require().NoError(err)
 
 	s.Run("not found", func() {
-		_, found := icsKeeper.GetRemoteAddress(ctx, localAddress, testChainID)
+		_, found := icsKeeper.GetRemoteAddressMap(ctx, localAddress, testChainID)
 		s.Require().False(found)
 	})
 
 	s.Run("set", func() {
-		icsKeeper.SetRemoteAddress(ctx, localAddress, remoteAddress, testChainID)
+		icsKeeper.SetRemoteAddressMap(ctx, localAddress, remoteAddress, testChainID)
 	})
 
 	s.Run("found", func() {
-		addr, found := icsKeeper.GetRemoteAddress(ctx, localAddress, testChainID)
+		addr, found := icsKeeper.GetRemoteAddressMap(ctx, localAddress, testChainID)
 		s.Require().True(found)
 		s.Require().Equal(remoteAddress, addr)
 	})
@@ -64,16 +64,16 @@ func (s *KeeperTestSuite) TestKeeper_LocalAddressStore() {
 	s.Require().NoError(err)
 
 	s.Run("not found", func() {
-		_, found := icsKeeper.GetLocalAddress(ctx, remoteAddress, testChainID)
+		_, found := icsKeeper.GetLocalAddressMap(ctx, remoteAddress, testChainID)
 		s.Require().False(found)
 	})
 
 	s.Run("set", func() {
-		icsKeeper.SetLocalAddress(ctx, localAddress, remoteAddress, testChainID)
+		icsKeeper.SetLocalAddressMap(ctx, localAddress, remoteAddress, testChainID)
 	})
 
 	s.Run("found", func() {
-		addr, found := icsKeeper.GetLocalAddress(ctx, remoteAddress, testChainID)
+		addr, found := icsKeeper.GetLocalAddressMap(ctx, remoteAddress, testChainID)
 		s.Require().True(found)
 		s.Require().Equal(localAddress, addr)
 	})
@@ -92,9 +92,9 @@ func (s *KeeperTestSuite) TestKeeper_AddressMapPair() {
 	s.Require().NoError(err)
 
 	s.Run("not found", func() {
-		_, found := icsKeeper.GetLocalAddress(ctx, remoteAddress, testChainID)
+		_, found := icsKeeper.GetLocalAddressMap(ctx, remoteAddress, testChainID)
 		s.Require().False(found)
-		_, found = icsKeeper.GetRemoteAddress(ctx, remoteAddress, testChainID)
+		_, found = icsKeeper.GetRemoteAddressMap(ctx, remoteAddress, testChainID)
 		s.Require().False(found)
 	})
 
@@ -103,10 +103,10 @@ func (s *KeeperTestSuite) TestKeeper_AddressMapPair() {
 	})
 
 	s.Run("found", func() {
-		addr, found := icsKeeper.GetLocalAddress(ctx, remoteAddress, testChainID)
+		addr, found := icsKeeper.GetLocalAddressMap(ctx, remoteAddress, testChainID)
 		s.Require().True(found)
 		s.Require().Equal(localAddress, addr)
-		addr, found = icsKeeper.GetRemoteAddress(ctx, localAddress, testChainID)
+		addr, found = icsKeeper.GetRemoteAddressMap(ctx, localAddress, testChainID)
 		s.Require().True(found)
 		s.Require().Equal(remoteAddress, addr)
 	})
