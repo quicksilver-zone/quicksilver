@@ -123,7 +123,12 @@ func (s *KeeperTestSuite) coreTest() {
 		return false
 	})
 
-	_, found := quicksilver.ClaimsManagerKeeper.GetLastEpochClaim(ctx, "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
+	// In the setupTestClaims() the claim was set in the store by ClaimsManagerKeeper.SetClaim
+	// which use the GetKeyClaim key to set in the store instead of GetKeyLastEpochClaim so
+	// it will return not found when use the GetLastEpochClaim
+	// either we use the ClaimsManagerKeeper.SetLastEpochClaim to add the last claim or
+	// switch to GetClaim in the line of code below
+	_, found := quicksilver.ClaimsManagerKeeper.GetClaim(ctx, "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
 	s.Require().True(found)
 
 	quicksilver.EpochsKeeper.AfterEpochEnd(s.chainA.GetContext(), epochtypes.EpochIdentifierEpoch, 3)
@@ -537,4 +542,15 @@ func (s *KeeperTestSuite) addClaim(address, chainID string, claimType cmtypes.Cl
 		Amount:        amount,
 	}
 	s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper.SetClaim(s.chainA.GetContext(), &claim)
+}
+
+func (s *KeeperTestSuite) addLastEpochClaim(address, chainID string, claimType cmtypes.ClaimType, sourceChainID string, amount uint64) {
+	claim := cmtypes.Claim{
+		UserAddress:   address,
+		ChainId:       chainID,
+		Module:        claimType,
+		SourceChainId: sourceChainID,
+		Amount:        amount,
+	}
+	s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper.SetLastEpochClaim(s.chainA.GetContext(), &claim)
 }

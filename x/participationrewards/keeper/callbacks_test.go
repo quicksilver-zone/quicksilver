@@ -74,16 +74,28 @@ func (s *KeeperTestSuite) executeValidatorSelectionRewardsCallback(performanceAd
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: performanceAddress}
 	bz := prk.GetCodec().MustMarshal(&rewardsQuery)
 
-	qid := icqkeeper.GenerateQueryHash(
+	// qid := icqkeeper.GenerateQueryHash(
+	// 	s.path.EndpointA.ConnectionID,
+	// 	s.chainB.ChainID,
+	// 	"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
+	// 	bz,
+	// 	types.ModuleName,
+	// )
+
+	// query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	// s.Require().True(found, "qid: %s", qid)
+
+	// Should we create a new query first since the query with the qid generate above i dont see where it was set in the store
+	query := prk.IcqKeeper.NewQuery(
+		types.ModuleName,
 		s.path.EndpointA.ConnectionID,
 		s.chainB.ChainID,
 		"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
 		bz,
-		types.ModuleName,
+		sdk.NewInt(200),
+		"",
+		0,
 	)
-
-	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
-	s.Require().True(found, "qid: %s", qid)
 
 	var respJSON strings.Builder
 	respJSON.Write([]byte(`{"rewards":[`))
@@ -108,7 +120,7 @@ func (s *KeeperTestSuite) executeValidatorSelectionRewardsCallback(performanceAd
 		ctx,
 		prk,
 		resp,
-		query,
+		*query,
 	)
 	s.Require().NoError(err)
 }
