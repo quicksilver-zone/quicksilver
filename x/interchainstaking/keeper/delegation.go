@@ -413,35 +413,19 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	var amount sdk.Coins
 	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
 	var coins sdk.Coins
-	if ctx.BlockHeight() < 1978500 && ctx.ChainID() == "quicksilver-2" {
-		k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-			if receiptInfo.FirstSeen.After(exclusionTime) && receiptInfo.Completed == nil {
-				amount = amount.Add(receiptInfo.Amount...)
-			}
-			return false
-		})
-
-		coins = sdk.NewCoins(delAddrBalance).Sub(amount...)
-		if coins.IsAnyNegative() || coins.IsZero() {
-			k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
-			k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
-			return nil
+	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+		if receiptInfo.FirstSeen.Before(exclusionTime) && receiptInfo.Completed == nil {
+			amount = amount.Add(receiptInfo.Amount...)
 		}
-	} else {
-		k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-			if receiptInfo.FirstSeen.Before(exclusionTime) && receiptInfo.Completed == nil {
-				amount = amount.Add(receiptInfo.Amount...)
-			}
-			return false
-		})
+		return false
+	})
 
-		var hasNeg bool
-		coins, hasNeg = sdk.NewCoins(delAddrBalance).SafeSub(amount...)
-		if hasNeg || coins.IsZero() {
-			k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
-			k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
-			return nil
-		}
+	var hasNeg bool
+	coins, hasNeg = sdk.NewCoins(delAddrBalance).SafeSub(amount...)
+	if hasNeg || coins.IsZero() {
+		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
+		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
+		return nil
 	}
 
 	sendMsg := banktypes.MsgSend{
