@@ -416,6 +416,7 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 
 		s.Run(tt.name, func() {
 			s.SetupTest()
+			ctx := s.chainA.GetContext()
 
 			appA := s.GetQuicksilverApp(s.chainA)
 			// override disabled proof verification; lets test actual proofs :)
@@ -423,14 +424,12 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			appA.ParticipationRewardsKeeper.ValidateSelfProofOps = utils.ValidateSelfProofOps
 
 			s.coordinator.CommitNBlocks(s.chainA, 3)
-			ctx := s.chainA.GetContext()
 			tt.malleate(ctx, appA)
 			s.coordinator.CommitNBlocks(s.chainA, 3)
-			ctx = s.chainA.GetContext()
+
 			s.Require().NoError(appA.ClaimsManagerKeeper.StoreSelfConsensusState(ctx, "epoch"))
 			s.coordinator.CommitNBlocks(s.chainA, 1)
 
-			ctx = s.chainA.GetContext()
 			msg = tt.generate(ctx, appA)
 			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
 			params.ClaimsEnabled = true
