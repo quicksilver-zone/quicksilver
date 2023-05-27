@@ -44,7 +44,7 @@ func DefaultConfig() network.Config {
 	}
 }
 
-func NewAppConstructor(encCfg EncodingConfig, chainId string) network.AppConstructor {
+func NewAppConstructor(encCfg EncodingConfig, chainID string) network.AppConstructor {
 	return func(val network.ValidatorI) servertypes.Application {
 		return NewQuicksilver(
 			val.GetCtx().Logger,
