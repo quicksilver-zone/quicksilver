@@ -28,39 +28,39 @@ services:
       context: .
       dockerfile: Dockerfile
   testzone1-1:
-    image: quicksilverzone/testzone:latest
+    image: gaia:v9.0.1-debug
     hostname: testzone1-1
     volumes:
-      - ./data/lstest-1:/icad/.ica
+      - ./data/lstest-1:/gaia/.gaia
     command:
-      - icad
+      - gaiad
       - start
     ports:
     - 27657:26657
     - 23137:1317
   testzone1-2:
-    image: quicksilverzone/testzone:latest
+    image: gaia:v9.0.1
     hostname: testzone1-2
     volumes:
-      - ./data/lstest-1a:/icad/.ica
+      - ./data/lstest-1a:/gaia/.gaia
     command:
-      - icad
+      - gaiad
       - start
   testzone1-3:
-    image: quicksilverzone/testzone:latest
+    image: gaia:v9.0.1
     hostname: testzone1-3
     volumes:
-      - ./data/lstest-1b:/icad/.ica
+      - ./data/lstest-1b:/gaia/.gaia
     command:
-      - icad
+      - gaiad
       - start
   testzone1-4:
-    image: quicksilverzone/testzone:latest
+    image: gaia:v9.0.1
     hostname: testzone1-4
     volumes:
-      - ./data/lstest-1c:/icad/.ica
+      - ./data/lstest-1c:/gaia/.gaia
     command:
-      - icad
+      - gaiad
       - start
   testzone2-1:
     image: quicksilverzone/qsosmosis:v12.1.0
@@ -110,7 +110,7 @@ services:
       context: .
       dockerfile: Dockerfile.hermes
   icq:
-    image: quicksilverzone/interchain-queries:v0.6.2
+    image: quicksilverzone/interchain-queries:latest
     volumes:
       - ./data/icq:/icq/.icq
     command:
