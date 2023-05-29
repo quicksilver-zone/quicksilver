@@ -244,8 +244,8 @@ WITHDRAWAL:
 	}
 
 	k.Logger(ctx).Info("unbonding messages to send", "msg", msgs)
-
-	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch), zone.MessagesPerTx)
+	owner := zone.ChainId + ".delegate"
+	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch), zone.MessagesPerTx, owner)
 	if err != nil {
 		return err
 	}

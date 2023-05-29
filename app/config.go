@@ -59,7 +59,7 @@ func NewAppConstructor(encCfg EncodingConfig, chainID string) network.AppConstru
 			GetWasmOpts(EmptyAppOptions{}),
 			false,
 			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
-			baseapp.SetChainID(chainId),
+			baseapp.SetChainID(chainID),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}
