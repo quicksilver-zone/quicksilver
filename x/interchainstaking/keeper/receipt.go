@@ -25,10 +25,8 @@ const (
 	ICATimeout      = time.Hour * 6
 )
 
-func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, txHash string, zone types.Zone) error {
+func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash string, zone types.Zone) error {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
-	hash := txHash
-	memo := txn.Body.Memo
 
 	senderAddress := Unset
 	coins := sdk.Coins{}
@@ -80,12 +78,12 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, txHash str
 	var accAddress sdk.AccAddress = addressBytes
 
 	k.Logger(ctx).Info("Found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "sender", senderAddress, "local", accAddress.String(), "chain id", zone.ChainId, "amount", coins, "hash", hash)
-	// create receipt
 
-	if err := k.UpdateIntent(ctx, accAddress, zone, coins, memo); err != nil {
+	if err := k.UpdateIntent(ctx, accAddress, zone, coins, txn.Body.Memo); err != nil {
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
+
 	if err := k.MintQAsset(ctx, accAddress, senderAddress, zone, coins, false); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
@@ -96,8 +94,8 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, txHash str
 		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
 
+	// create receipt
 	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
-
 	k.SetReceipt(ctx, *receipt)
 
 	return nil
