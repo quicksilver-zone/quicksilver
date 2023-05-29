@@ -258,15 +258,15 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 
 	} else {
 		if !val.Jailed && validator.IsJailed() {
-			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress)
+			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
 
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
 			if !val.VotingPower.IsPositive() {
-				return errors.New("existing voting power must be greater than zero")
+				return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
 			}
 			if !validator.Tokens.IsPositive() {
-				return errors.New("incoming voting power must be greater than zero")
+				return fmt.Errorf("incoming voting power must be greater than zero, received %s", validator.Tokens)
 			}
 			// determine difference between previous vp/shares ratio and new ratio.
 			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
