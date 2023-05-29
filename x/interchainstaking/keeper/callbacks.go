@@ -215,6 +215,8 @@ func PerfBalanceCallback(k Keeper, ctx sdk.Context, response []byte, query icqty
 	return nil
 }
 
+// DepositIntervalCallback will issue a tendermint.Tx query for any hash that is reported and
+// for which a receipt has not yet been issued.
 func DepositIntervalCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
@@ -351,6 +353,8 @@ func checkValidity(
 	return nil
 }
 
+// DepositTx handles an individual deposit transaction given a Tendermint Tx and
+// associated block inclusion proof.
 func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
@@ -430,16 +434,16 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return fmt.Errorf("unable to validate proof: %w", err)
 	}
 
-	txn, err := TxDecoder(k.cdc)(res.TxBytes)
+	sdkTx, err := TxDecoder(k.cdc)(res.TxBytes)
 	if err != nil {
 		return err
 	}
 
-	txtx, ok := txn.(*tx.Tx)
+	authTx, ok := sdkTx.(*tx.Tx)
 	if !ok {
 		return errors.New("cannot assert type of tx")
 	}
-	return k.HandleReceiptTransaction(ctx, txtx, hashStr, zone)
+	return k.HandleReceiptTransaction(ctx, authTx, hashStr, zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.
@@ -529,6 +533,9 @@ func DelegationAccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, qu
 		return err
 	}
 
+	zone.WithdrawalWaitgroup--
+	k.SetZone(ctx, &zone)
+
 	return k.FlushOutstandingDelegations(ctx, &zone, coin)
 }
 
@@ -577,7 +584,12 @@ func AllBalancesCallback(k Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
 }
 
-// TxDecoder
+// TxDecoder returns a function that converts transactions from
+// []byte to an sdk.Tx. This logic is largely copied from
+// x/auth/tx/decoder.go, without some of the checking of unknown fields
+// that a) require a codec.ProtoCodecMarshaler; and b) are unrequired
+// given the finite scope of the result.
+
 func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		// Make sure txBytes follow ADR-027.

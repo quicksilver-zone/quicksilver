@@ -428,6 +428,11 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 		return nil
 	}
 
+	// set the zone amount to the coins to be flushed.
+	zone.DelegationAddress.Balance = coins
+	k.Logger(ctx).Info("flush delegations ", "total", coins)
+	k.SetZone(ctx, zone)
+
 	sendMsg := banktypes.MsgSend{
 		FromAddress: "",
 		ToAddress:   "",
