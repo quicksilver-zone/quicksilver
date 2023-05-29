@@ -95,7 +95,7 @@ func (k Keeper) MigrateParams(ctx sdk.Context) {
 	oldParams := types.ParamsV1{}
 	params := types.Params{}
 	k.paramSpace.GetParamSet(ctx, &oldParams)
-	fmt.Println("previous pr paramset", oldParams.String())
+	// fmt.Println("previous pr paramset", oldParams.String())
 	params.DistributionProportions = oldParams.DistributionProportions
 	params.ClaimsEnabled = false
 	k.paramSpace.SetParamSet(ctx, &params)

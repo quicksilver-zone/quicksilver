@@ -444,7 +444,7 @@ func TestCalculateDeltas(t *testing.T) {
 			sum = sum.Add(amount)
 		}
 		deltas := icskeeper.CalculateDeltas(val.current, sum, val.target)
-		fmt.Println("Deltas", deltas)
+		// fmt.Println("Deltas", deltas)
 		require.Equal(t, len(val.expected), len(deltas), fmt.Sprintf("expected %d RebalanceTargets in case %d, got %d", len(val.expected), caseNumber, len(deltas)))
 		for idx, expected := range val.expected {
 			require.Equal(t, expected, deltas[idx], fmt.Sprintf("case %d, idx %d: Expected %v, got %v", caseNumber, idx, expected, deltas[idx]))

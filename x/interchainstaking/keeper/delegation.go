@@ -414,7 +414,7 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
 	var coinsToFlush sdk.Coins
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-		fmt.Println(receiptInfo)
+		// fmt.Println(receiptInfo)
 		if (receiptInfo.FirstSeen.After(exclusionTime) || receiptInfo.FirstSeen.Equal(exclusionTime)) && receiptInfo.Completed == nil {
 			pendingAmount = pendingAmount.Add(receiptInfo.Amount...)
 		}

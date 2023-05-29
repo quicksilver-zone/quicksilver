@@ -885,8 +885,8 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		}
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
 		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime())
-		fmt.Println(zone.DelegationAddress.Balance)
-		fmt.Println(delegateMsg.Amount)
+		// fmt.Println(zone.DelegationAddress.Balance)
+		// fmt.Println(delegateMsg.Amount)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
 		k.SetZone(ctx, zone)
 		if zone.DelegationAddress.Balance.IsZero() && zone.WithdrawalWaitgroup == 0 {
