@@ -878,7 +878,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 	switch {
 	case memo == "rewards":
 	case strings.HasPrefix(memo, "batch"):
-		k.Logger(ctx).Error("batch delegation", "memo", memo, "tx", delegateMsg)
+		k.Logger(ctx).Debug("batch delegation", "memo", memo, "tx", delegateMsg)
 		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
 		if err != nil {
 			return err
