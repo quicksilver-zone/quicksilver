@@ -37,12 +37,14 @@ message QueryRequestsResponse {
 
 // GetTxResponse is the response type for the Service.GetTx method.
 message GetTxWithProofResponse {
-  // tx is the queried transaction.
-  cosmos.tx.v1beta1.Tx tx = 1;
+  // tx is the queried transaction; deprecated.
+  cosmos.tx.v1beta1.Tx tx = 1; // deprecated, v1.2.13
   // tx_response is the queried TxResponses.
-  cosmos.base.abci.v1beta1.TxResponse tx_response = 2;
+  cosmos.base.abci.v1beta1.TxResponse tx_response = 2; // deprecated, v1.2.13
   // proof is the tmproto.TxProof for the queried tx
   tendermint.types.TxProof proof = 3;
   // ibc-go header to validate txs
   ibc.lightclients.tendermint.v1.Header header = 4;
+  // tx_bytes is the byte representation of the queried tx
+  bytes tx_bytes = 5;
 }

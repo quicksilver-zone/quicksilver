@@ -15,7 +15,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -26,37 +25,38 @@ const (
 	ICATimeout      = time.Hour * 6
 )
 
-func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.Zone) error {
+func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, txHash string, zone types.Zone) error {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
-	hash := txr.TxHash
+	hash := txHash
 	memo := txn.Body.Memo
 
 	senderAddress := Unset
 	coins := sdk.Coins{}
 
-	for _, event := range txr.Events {
-		if event.Type == transferPort {
-			attrs := attributesToMap(event.Attributes)
-			sender := attrs["sender"]
-			amount := attrs["amount"]
-			if attrs["recipient"] == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
-				if senderAddress == Unset {
-					senderAddress = sender
-				}
-
-				if sender != senderAddress {
-					k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
-					return fmt.Errorf("sender mismatch: expected %q, got %q", senderAddress, sender)
-				}
-
-				k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
-				thisCoins, err := sdk.ParseCoinsNormalized(amount)
-				if err != nil {
-					k.Logger(ctx).Error("unable to parse coin", "string", amount)
-				}
-				coins = coins.Add(thisCoins...)
-			}
+	for _, msg := range txn.GetMsgs() {
+		msgSend, ok := msg.(*bankTypes.MsgSend)
+		if !ok {
+			k.Logger(ctx).Error("got message that wasn't MsgSend!")
+			continue
 		}
+		sender := msgSend.FromAddress
+		amount := msgSend.Amount
+
+		if msgSend.ToAddress == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
+			if senderAddress == Unset {
+				senderAddress = sender
+			}
+
+			if sender != senderAddress {
+				k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
+				return fmt.Errorf("sender mismatch: expected %q, got %q", senderAddress, sender)
+			}
+
+			k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
+
+			coins = coins.Add(amount...)
+		}
+
 	}
 
 	if senderAddress == Unset {
@@ -101,14 +101,6 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 	k.SetReceipt(ctx, *receipt)
 
 	return nil
-}
-
-func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
-	out := make(map[string]string)
-	for _, attr := range attrs {
-		out[string(attr.Key)] = string(attr.Value)
-	}
-	return out
 }
 
 func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone types.Zone, inCoins sdk.Coins, returnToSender bool) error {
