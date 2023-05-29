@@ -25,37 +25,38 @@ const (
 	ICATimeout      = time.Hour * 6
 )
 
-func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone *types.Zone) error {
-	k.Logger(ctx).Info("deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
-	hash := txr.TxHash
+func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, txHash string, zone types.Zone) error {
+	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
+	hash := txHash
 	memo := txn.Body.Memo
 
 	senderAddress := Unset
 	assets := sdk.Coins{}
 
-	for _, event := range txr.Events {
-		if event.Type == types.TransferPort {
-			attrs := types.AttributesToMap(event.Attributes)
-			sender := attrs["sender"]
-			amount := attrs["amount"]
-			if attrs["recipient"] == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
-				if senderAddress == Unset {
-					senderAddress = sender
-				}
-
-				if sender != senderAddress {
-					k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
-					return fmt.Errorf("sender mismatch: expected %q, got %q", senderAddress, sender)
-				}
-
-				k.Logger(ctx).Info("deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
-				thisCoins, err := sdk.ParseCoinsNormalized(amount)
-				if err != nil {
-					k.Logger(ctx).Error("unable to parse coin", "string", amount)
-				}
-				assets = assets.Add(thisCoins...)
-			}
+	for _, msg := range txn.GetMsgs() {
+		msgSend, ok := msg.(*bankTypes.MsgSend)
+		if !ok {
+			k.Logger(ctx).Error("got message that wasn't MsgSend!")
+			continue
 		}
+		sender := msgSend.FromAddress
+		amount := msgSend.Amount
+
+		if msgSend.ToAddress == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
+			if senderAddress == Unset {
+				senderAddress = sender
+			}
+
+			if sender != senderAddress {
+				k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
+				return fmt.Errorf("sender mismatch: expected %q, got %q", senderAddress, sender)
+			}
+
+			k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
+
+			assets = assets.Add(amount...)
+		}
+
 	}
 
 	if senderAddress == Unset {
@@ -81,22 +82,22 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 	k.Logger(ctx).Info("found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", senderAccAddress.String(), "chain id", zone.ChainId, "assets", assets, "hash", hash)
 
 	// update state
-	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, zone, assets, memo); err != nil {
+	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, &zone, assets, memo); err != nil {
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-	if err := k.MintQAsset(ctx, senderAccAddress, senderAddress, zone, assets); err != nil {
+	if err := k.MintQAsset(ctx, senderAccAddress, senderAddress, &zone, assets); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
 
-	if err := k.TransferToDelegate(ctx, zone, assets, hash); err != nil {
+	if err := k.TransferToDelegate(ctx, &zone, assets, hash); err != nil {
 		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
 
 	// create receipt
-	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, assets)
+	receipt := k.NewReceipt(ctx, &zone, senderAddress, hash, assets)
 	k.SetReceipt(ctx, *receipt)
 
 	return nil
