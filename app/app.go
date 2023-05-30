@@ -236,14 +236,71 @@ func NewQuicksilver(
 // Name returns the name of the App.
 func (app *Quicksilver) Name() string { return app.BaseApp.Name() }
 
-// BeginBlocker updates every begin block.
+// BeginBlocker updates every begin block
 func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() == 235001 {
-		zone, found := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
+	if ctx.ChainID() == "magic-1" && ctx.BlockHeight() == 94420 {
+		// set messages_per_tx
+		// cosmos
+		zone, found := app.InterchainstakingKeeper.GetZone(ctx, "theta-testnet-001")
 		if !found {
-			panic("ERROR: unable to find expected stargaze-1 zone")
+			panic("unable to find zone theta-testnet-001")
 		}
-		app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
+		zone.MessagesPerTx = 8
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		// stargaze
+		zone, found = app.InterchainstakingKeeper.GetZone(ctx, "elgafar-1")
+		if !found {
+			panic("unable to find zone elgafar-1")
+		}
+		zone.MessagesPerTx = 8
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		// close cosmos delegate channel
+
+		_, capability, err := app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, "icacontroller-theta-testnet-001.delegate", "channel-8")
+		if err != nil {
+			panic(err)
+		}
+
+		if err := app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, "icacontroller-theta-testnet-001.delegate", "channel-8", capability); err != nil {
+			panic(err)
+		}
+
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(sdk.AttributeKeyModule, interchainstakingtypes.AttributeValueCategory),
+			),
+			sdk.NewEvent(
+				interchainstakingtypes.EventTypeCloseICA,
+				sdk.NewAttribute(interchainstakingtypes.AttributeKeyPortID, "icacontroller-theta-testnet-001.delegate"),
+				sdk.NewAttribute(interchainstakingtypes.AttributeKeyChannelID, "channel-8"),
+			),
+		})
+
+		// close stargaze delegate channel
+
+		_, capability, err = app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, "icacontroller-elgafar-1.delegate", "channel-12")
+		if err != nil {
+			panic(err)
+		}
+
+		if err := app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, "icacontroller-elgafar-1.delegate", "channel-12", capability); err != nil {
+			panic(err)
+		}
+
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(sdk.AttributeKeyModule, interchainstakingtypes.AttributeValueCategory),
+			),
+			sdk.NewEvent(
+				interchainstakingtypes.EventTypeCloseICA,
+				sdk.NewAttribute(interchainstakingtypes.AttributeKeyPortID, "icacontroller-elgafar-1.delegate"),
+				sdk.NewAttribute(interchainstakingtypes.AttributeKeyChannelID, "channel-12"),
+			),
+		})
 	}
 
 	return app.mm.BeginBlock(ctx, req)
