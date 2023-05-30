@@ -76,7 +76,12 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, tx, hash, zone)
-	suite.Require().ErrorContains(err, "no sender found. Ignoring")
+	//suite.Require().ErrorContains(err, "no sender found. Ignoring")
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, keeper.GetReceiptKey(zone.ChainId, hash))
+	suite.Require().True(found)                  // check nilReceipt is found for hash
+	suite.Require().Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
+	suite.Require().Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
@@ -103,7 +108,12 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, tx, hash, zone)
-	suite.Require().ErrorContains(err, "no sender found. Ignoring")
+	//suite.Require().ErrorContains(err, "no sender found. Ignoring")
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, keeper.GetReceiptKey(zone.ChainId, hash))
+	suite.Require().True(found)                  // check nilReceipt is found for hash
+	suite.Require().Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
+	suite.Require().Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestHandleReceiptMixedMessageTypeGood() {
@@ -168,7 +178,12 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMixedSender() { // 
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, tx, hash, zone)
-	suite.Require().ErrorContains(err, "sender mismatch: expected")
+	//suite.Require().ErrorContains(err, "sender mismatch: expected")
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, keeper.GetReceiptKey(zone.ChainId, hash))
+	suite.Require().True(found)                  // check nilReceipt is found for hash
+	suite.Require().Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
+	suite.Require().Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
+	suite.Require().NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadDenom() {
@@ -201,8 +216,8 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadDenom() {
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), after)
 }
 
-func (suite *KeeperTestSuite) TestMintQAsset() {
-}
+// func (suite *KeeperTestSuite) TestMintQAsset() {
+// }
 
 // test all getters, setters, deleters, iterators.
 func (suite *KeeperTestSuite) TestReceiptStore() {
@@ -227,10 +242,10 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 
 	suite.Require().Zero(len(icsKeeper.AllReceipts(ctx)))
 
-	receipt1 := icsKeeper.NewReceipt(ctx, zone, account1.String(), hash1, sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(100))))
-	receipt2 := icsKeeper.NewReceipt(ctx, zone, account1.String(), hash2, sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(200))))
-	receipt3 := icsKeeper.NewReceipt(ctx, zone, account2.String(), hash3, sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(300))))
-	receipt4 := icsKeeper.NewReceipt(ctx, zone2, account2.String(), hash4, sdk.NewCoins(sdk.NewCoin("uosmo", math.NewInt(500))))
+	receipt1 := icsKeeper.NewReceipt(ctx, &zone, account1.String(), hash1, sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(100))))
+	receipt2 := icsKeeper.NewReceipt(ctx, &zone, account1.String(), hash2, sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(200))))
+	receipt3 := icsKeeper.NewReceipt(ctx, &zone, account2.String(), hash3, sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(300))))
+	receipt4 := icsKeeper.NewReceipt(ctx, &zone2, account2.String(), hash4, sdk.NewCoins(sdk.NewCoin("uosmo", math.NewInt(500))))
 
 	icsKeeper.SetReceipt(ctx, *receipt1)
 	icsKeeper.SetReceipt(ctx, *receipt2)
