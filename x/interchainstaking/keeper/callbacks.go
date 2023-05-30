@@ -422,9 +422,12 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 
 	res := icqtypes.GetTxWithProofResponse{}
 	err := k.cdc.Unmarshal(args, &res)
+	if err != nil {
+		return err
+	}
 
 	// check tx is valid for hash.
-	hash := tmhash.Sum(res.TxBytes)
+	hash := tmhash.Sum(res.Proof.Data)
 	hashStr := hex.EncodeToString(hash)
 
 	queryRequest := tx.GetTxRequest{}
@@ -444,7 +447,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return nil
 	}
 
-	txn, err := TxDecoder(k.cdc)(res.TxBytes)
+	txn, err := TxDecoder(k.cdc)(res.Proof.Data)
 	if err != nil {
 		return err
 	}
