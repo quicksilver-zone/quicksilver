@@ -9,6 +9,7 @@ import (
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -49,6 +50,7 @@ type Keeper struct {
 	IBCKeeper           ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
+	Ir                  codectypes.InterfaceRegistry
 	paramStore          paramtypes.Subspace
 }
 
@@ -539,15 +541,15 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 		lockedPerValidator[redelegation.Destination] = thisLocked + redelegation.Amount
 	}
 
-	fmt.Println("Total locked (per-validator)", totalLocked, lockedPerValidator)
+	// fmt.Println("Total locked (per-validator)", totalLocked, lockedPerValidator)
 
 	// TODO: make this a param
 	maxCanRebalance := currentSum.Sub(math.NewInt(totalLocked)).Quo(sdk.NewInt(2))
-	fmt.Println("Can rebalance with current locking", maxCanRebalance)
+	// fmt.Println("Can rebalance with current locking", maxCanRebalance)
 
 	// TODO: make this a param
 	maxCanRebalance = math.MinInt(maxCanRebalance, currentSum.Quo(sdk.NewInt(7)))
-	fmt.Println("Can rebalance with locking this epoch", maxCanRebalance)
+	// fmt.Println("Can rebalance with locking this epoch", maxCanRebalance)
 
 	// sort keys by relative value of delta
 	sort.SliceStable(deltas, func(i, j int) bool {
@@ -579,10 +581,10 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 	toRebalance := sdk.MinInt(sdk.MinInt(wantToRebalance, canRebalanceFrom), maxCanRebalance)
 
 	if toRebalance.Equal(math.ZeroInt()) {
-		fmt.Println("No rebalancing this epoch")
+		// fmt.Println("No rebalancing this epoch")
 		return []RebalanceTarget{}
 	}
-	fmt.Println("Will rebalance this epoch", toRebalance)
+	// fmt.Println("Will rebalance this epoch", toRebalance)
 
 	tgtIdx := 0
 	srcIdx := len(deltas) - 1

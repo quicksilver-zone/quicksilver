@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
@@ -15,7 +16,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -26,49 +26,51 @@ const (
 	ICATimeout      = time.Hour * 6
 )
 
-func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, txn *tx.Tx, zone types.Zone) error {
+func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash string, zone types.Zone) error {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
-	hash := txr.TxHash
-	memo := txn.Body.Memo
 
 	senderAddress := Unset
 	coins := sdk.Coins{}
 
-	for _, event := range txr.Events {
-		if event.Type == transferPort {
-			attrs := attributesToMap(event.Attributes)
-			sender := attrs["sender"]
-			amount := attrs["amount"]
-			if attrs["recipient"] == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
-				if senderAddress == Unset {
-					senderAddress = sender
-				}
-
-				if sender != senderAddress {
-					k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
-					return fmt.Errorf("sender mismatch: expected %q, got %q", senderAddress, sender)
-				}
-
-				k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
-				thisCoins, err := sdk.ParseCoinsNormalized(amount)
-				if err != nil {
-					k.Logger(ctx).Error("unable to parse coin", "string", amount)
-				}
-				coins = coins.Add(thisCoins...)
-			}
+	for _, msg := range txn.GetMsgs() {
+		msgSend, ok := msg.(*bankTypes.MsgSend)
+		if !ok {
+			k.Logger(ctx).Error("got message that wasn't MsgSend!")
+			continue
 		}
+		sender := msgSend.FromAddress
+		amount := msgSend.Amount
+
+		if msgSend.ToAddress == zone.DepositAddress.GetAddress() { // negate case where sender sends to multiple addresses in one tx
+			if senderAddress == Unset {
+				senderAddress = sender
+			}
+
+			if sender != senderAddress {
+				k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
+				k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
+				return nil
+			}
+
+			k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
+
+			coins = coins.Add(amount...)
+		}
+
 	}
 
 	if senderAddress == Unset {
 		k.Logger(ctx).Error("no sender found. Ignoring.")
-		return fmt.Errorf("no sender found. Ignoring")
+		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
+		return nil
 	}
 
 	// sdk.AccAddressFromBech32 doesn't work here as it expects the local HRP
 	_, addressBytes, err := bech32.DecodeAndConvert(senderAddress)
 	if err != nil {
 		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress)
-		return fmt.Errorf("unable to decode sender address. Ignoring. senderAddress=%q", senderAddress)
+		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
+		return nil
 	}
 
 	if err := zone.ValidateCoinsForZone(coins); err != nil {
@@ -80,12 +82,12 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 	var accAddress sdk.AccAddress = addressBytes
 
 	k.Logger(ctx).Info("Found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "sender", senderAddress, "local", accAddress.String(), "chain id", zone.ChainId, "amount", coins, "hash", hash)
-	// create receipt
 
-	if err := k.UpdateIntent(ctx, accAddress, zone, coins, memo); err != nil {
+	if err := k.UpdateIntent(ctx, accAddress, zone, coins, txn.Body.Memo); err != nil {
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
+
 	if err := k.MintQAsset(ctx, accAddress, senderAddress, zone, coins, false); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
@@ -96,19 +98,11 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txr *sdk.TxResponse, t
 		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
 
-	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
-
+	// create receipt
+	receipt := k.NewReceipt(ctx, &zone, senderAddress, hash, coins)
 	k.SetReceipt(ctx, *receipt)
 
 	return nil
-}
-
-func attributesToMap(attrs []abcitypes.EventAttribute) map[string]string {
-	out := make(map[string]string)
-	for _, attr := range attrs {
-		out[string(attr.Key)] = string(attr.Value)
-	}
-	return out
 }
 
 func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone types.Zone, inCoins sdk.Coins, returnToSender bool) error {
@@ -222,7 +216,13 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 // ---------------------------------------------------------------
 
-func (k Keeper) NewReceipt(ctx sdk.Context, zone types.Zone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
+func (k Keeper) NilReceipt(ctx sdk.Context, zone *types.Zone, txhash string) {
+	t := ctx.BlockTime()
+	r := types.Receipt{ChainId: zone.ChainId, Sender: "", Txhash: txhash, Amount: sdk.Coins{}, FirstSeen: &t, Completed: &t}
+	k.SetReceipt(ctx, r)
+}
+
+func (k Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
 	t := ctx.BlockTime()
 	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t}
 }
@@ -328,6 +328,6 @@ func (k *Keeper) SetReceiptsCompleted(ctx sdk.Context, zone *types.Zone, qualify
 	})
 }
 
-func GetReceiptKey(chainID string, txhash string) string {
-	return fmt.Sprintf("%s/%s", chainID, txhash)
+func GetReceiptKey(chainID, txhash string) string {
+	return fmt.Sprintf("%s/%s", chainID, strings.ToUpper(txhash))
 }

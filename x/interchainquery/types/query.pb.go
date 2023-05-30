@@ -143,7 +143,7 @@ func (m *QueryRequestsResponse) GetPagination() *query.PageResponse {
 
 // GetTxResponse is the response type for the Service.GetTx method.
 type GetTxWithProofResponse struct {
-	// tx is the queried transaction.
+	// tx is the queried transaction; deprecated.
 	Tx *tx.Tx `protobuf:"bytes,1,opt,name=tx,proto3" json:"tx,omitempty"`
 	// tx_response is the queried TxResponses.
 	TxResponse *types.TxResponse `protobuf:"bytes,2,opt,name=tx_response,json=txResponse,proto3" json:"tx_response,omitempty"`

@@ -385,7 +385,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 				// set receipts
 				receipt := icsKeeper.NewReceipt(
 					ctx,
-					zone,
+					&zone,
 					testAddress,
 					"testReceiptHash#01",
 					sdk.NewCoins(
