@@ -373,7 +373,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 	}
 
 	// check tx is valid for hash.
-	hash := tmhash.Sum(res.TxBytes)
+	hash := tmhash.Sum(res.Proof.Data)
 	hashStr := hex.EncodeToString(hash)
 
 	queryRequest := tx.GetTxRequest{}
@@ -434,7 +434,7 @@ func DepositTx(k Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) err
 		return fmt.Errorf("unable to validate proof: %w", err)
 	}
 
-	sdkTx, err := TxDecoder(k.cdc)(res.TxBytes)
+	sdkTx, err := TxDecoder(k.cdc)(res.Proof.Data)
 	if err != nil {
 		return err
 	}
