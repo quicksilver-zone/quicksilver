@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
@@ -327,6 +328,6 @@ func (k *Keeper) SetReceiptsCompleted(ctx sdk.Context, zone *types.Zone, qualify
 	})
 }
 
-func GetReceiptKey(chainID string, txhash string) string {
-	return fmt.Sprintf("%s/%s", chainID, txhash)
+func GetReceiptKey(chainID, txhash string) string {
+	return fmt.Sprintf("%s/%s", chainID, strings.ToUpper(txhash))
 }
