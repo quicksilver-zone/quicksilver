@@ -98,7 +98,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash strin
 	}
 
 	// create receipt
-	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, coins)
+	receipt := k.NewReceipt(ctx, &zone, senderAddress, hash, coins)
 	k.SetReceipt(ctx, *receipt)
 
 	return nil
