@@ -47,7 +47,8 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash strin
 
 			if sender != senderAddress {
 				k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
-				return fmt.Errorf("sender mismatch: expected %q, got %q", senderAddress, sender)
+				k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
+				return nil
 			}
 
 			k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
@@ -59,14 +60,16 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash strin
 
 	if senderAddress == Unset {
 		k.Logger(ctx).Error("no sender found. Ignoring.")
-		return fmt.Errorf("no sender found. Ignoring")
+		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
+		return nil
 	}
 
 	// sdk.AccAddressFromBech32 doesn't work here as it expects the local HRP
 	_, addressBytes, err := bech32.DecodeAndConvert(senderAddress)
 	if err != nil {
 		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress)
-		return fmt.Errorf("unable to decode sender address. Ignoring. senderAddress=%q", senderAddress)
+		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
+		return nil
 	}
 
 	if err := zone.ValidateCoinsForZone(coins); err != nil {
@@ -212,7 +215,13 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 
 // ---------------------------------------------------------------
 
-func (k Keeper) NewReceipt(ctx sdk.Context, zone types.Zone, sender string, txhash string, amount sdk.Coins) *types.Receipt {
+func (k Keeper) NilReceipt(ctx sdk.Context, zone *types.Zone, txhash string) {
+	t := ctx.BlockTime()
+	r := types.Receipt{ChainId: zone.ChainId, Sender: "", Txhash: txhash, Amount: sdk.Coins{}, FirstSeen: &t, Completed: &t}
+	k.SetReceipt(ctx, r)
+}
+
+func (k Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
 	t := ctx.BlockTime()
 	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t}
 }
