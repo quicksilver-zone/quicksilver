@@ -873,12 +873,69 @@ func (app *Quicksilver) Name() string { return app.BaseApp.Name() }
 
 // BeginBlocker updates every begin block
 func (app *Quicksilver) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() == 235001 {
-		zone, found := app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
+	if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() == 2149250 {
+		// set messages_per_tx
+		// cosmos
+		zone, found := app.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
 		if !found {
-			panic("ERROR: unable to find expected stargaze-1 zone")
+			panic("unable to find zone cosmoshub-4")
 		}
-		app.InterchainstakingKeeper.OverrideRedemptionRateNoCap(ctx, zone)
+		zone.MessagesPerTx = 8
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		// stargaze
+		zone, found = app.InterchainstakingKeeper.GetZone(ctx, "stargaze-1")
+		if !found {
+			panic("unable to find zone stargaze-1")
+		}
+		zone.MessagesPerTx = 8
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		// close cosmos delegate channel
+
+		_, capability, err := app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, "icacontroller-cosmoshub-4.delegate", "channel-61")
+		if err != nil {
+			panic(err)
+		}
+
+		if err := app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, "icacontroller-cosmoshub-4.delegate", "channel-61", capability); err != nil {
+			panic(err)
+		}
+
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(sdk.AttributeKeyModule, interchainstakingtypes.AttributeValueCategory),
+			),
+			sdk.NewEvent(
+				interchainstakingtypes.EventTypeCloseICA,
+				sdk.NewAttribute(interchainstakingtypes.AttributeKeyPortID, "icacontroller-cosmoshub-4.delegate"),
+				sdk.NewAttribute(interchainstakingtypes.AttributeKeyChannelID, "channel-61"),
+			),
+		})
+
+		// close stargaze delegate channel
+
+		_, capability, err = app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, "icacontroller-stargaze-1.delegate", "channel-50")
+		if err != nil {
+			panic(err)
+		}
+
+		if err := app.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, "icacontroller-stargaze-1.delegate", "channel-50", capability); err != nil {
+			panic(err)
+		}
+
+		ctx.EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				sdk.EventTypeMessage,
+				sdk.NewAttribute(sdk.AttributeKeyModule, interchainstakingtypes.AttributeValueCategory),
+			),
+			sdk.NewEvent(
+				interchainstakingtypes.EventTypeCloseICA,
+				sdk.NewAttribute(interchainstakingtypes.AttributeKeyPortID, "icacontroller-stargaze-1.delegate"),
+				sdk.NewAttribute(interchainstakingtypes.AttributeKeyChannelID, "channel-50"),
+			),
+		})
 	}
 
 	return app.mm.BeginBlock(ctx, req)
