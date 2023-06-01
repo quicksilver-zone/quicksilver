@@ -1,27 +1,10 @@
 package keeper_test
 
-import (
-	"crypto/rand"
-)
+import "github.com/ingenuity-build/quicksilver/utils"
 
 const (
 	testChainID = "test-1"
 )
-
-// generateRandomBytes returns securely generated random bytes.
-// It will return an error if the system's secure random
-// number generator fails to function correctly, in which
-// case the caller should not continue.
-func generateRandomBytes(n int) ([]byte, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	// Note that err == nil only if we read len(b) bytes.
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
-}
 
 func (s *KeeperTestSuite) TestKeeper_RemoteAddressStore() {
 	s.SetupTest()
@@ -30,9 +13,9 @@ func (s *KeeperTestSuite) TestKeeper_RemoteAddressStore() {
 	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
 	ctx := s.chainA.GetContext()
 
-	localAddress, err := generateRandomBytes(28)
+	localAddress, err := utils.GenerateRandomBytes(28)
 	s.Require().NoError(err)
-	remoteAddress, err := generateRandomBytes(40)
+	remoteAddress, err := utils.GenerateRandomBytes(40)
 	s.Require().NoError(err)
 
 	s.Run("not found", func() {
@@ -58,9 +41,9 @@ func (s *KeeperTestSuite) TestKeeper_LocalAddressStore() {
 	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
 	ctx := s.chainA.GetContext()
 
-	localAddress, err := generateRandomBytes(28)
+	localAddress, err := utils.GenerateRandomBytes(28)
 	s.Require().NoError(err)
-	remoteAddress, err := generateRandomBytes(40)
+	remoteAddress, err := utils.GenerateRandomBytes(40)
 	s.Require().NoError(err)
 
 	s.Run("not found", func() {
@@ -86,9 +69,9 @@ func (s *KeeperTestSuite) TestKeeper_AddressMapPair() {
 	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
 	ctx := s.chainA.GetContext()
 
-	localAddress, err := generateRandomBytes(28)
+	localAddress, err := utils.GenerateRandomBytes(28)
 	s.Require().NoError(err)
-	remoteAddress, err := generateRandomBytes(40)
+	remoteAddress, err := utils.GenerateRandomBytes(40)
 	s.Require().NoError(err)
 
 	s.Run("not found", func() {
