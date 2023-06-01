@@ -47,6 +47,9 @@ func NewCreateDenomCmd() *cobra.Command {
 			}
 
 			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			msg := types.NewMsgCreateDenom(
 				clientCtx.GetFromAddress().String(),
@@ -74,6 +77,9 @@ func NewMintCmd() *cobra.Command {
 			}
 
 			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			amount, err := sdk.ParseCoinNormalized(args[0])
 			if err != nil {
@@ -175,6 +181,9 @@ func NewChangeAdminCmd() *cobra.Command {
 			}
 
 			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
 
 			msg := types.NewMsgChangeAdmin(
 				clientCtx.GetFromAddress().String(),

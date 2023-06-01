@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/math"
@@ -356,10 +355,6 @@ func (s *KeeperTestSuite) TestKeeper_Delegations() {
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
 				s.Require().True(found)
-
-				res := icsKeeper.GetValidators(ctx, s.chainB.ChainID)
-
-				fmt.Println("val", res)
 
 				// set delegation
 				// TODO: set standardized delegations for keeper_test package
