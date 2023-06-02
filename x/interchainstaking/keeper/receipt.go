@@ -3,7 +3,6 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
@@ -63,6 +62,7 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, txHash str
 
 	if senderAddress == Unset {
 		k.Logger(ctx).Error("no sender found. Ignoring.")
+		fmt.Println("HERE1")
 		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
 		return nil
 	}
@@ -302,6 +302,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 func (k Keeper) NilReceipt(ctx sdk.Context, zone *types.Zone, txhash string) {
 	t := ctx.BlockTime()
 	r := types.Receipt{ChainId: zone.ChainId, Sender: "", Txhash: txhash, Amount: sdk.Coins{}, FirstSeen: &t, Completed: &t}
+	fmt.Println(r)
 	k.SetReceipt(ctx, r)
 }
 
@@ -409,8 +410,4 @@ func (k *Keeper) SetReceiptsCompleted(ctx sdk.Context, zone *types.Zone, qualify
 		}
 		return false
 	})
-}
-
-func GetReceiptKey(chainID, txhash string) string {
-	return fmt.Sprintf("%s/%s", chainID, strings.ToUpper(txhash))
 }

@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -122,7 +123,7 @@ func GetPerformanceDelegationsKey(zone *Zone, delAddr sdk.AccAddress) []byte {
 }
 
 func GetReceiptKey(chainID, txhash string) string {
-	return fmt.Sprintf("%s/%s", chainID, txhash)
+	return fmt.Sprintf("%s/%s", chainID, strings.ToUpper(txhash))
 }
 
 // GetRedelegationKey gets the redelegation key.

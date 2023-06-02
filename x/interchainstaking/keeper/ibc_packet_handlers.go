@@ -860,7 +860,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		k.SetZone(ctx, zone)
 		if zone.DelegationAddress.Balance.IsZero() && zone.WithdrawalWaitgroup == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
-			if err = k.TriggerRedemptionRate(ctx, zone); err != nil {
+			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
 			}
 		}

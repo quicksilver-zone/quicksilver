@@ -911,7 +911,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt1)
 				quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt2)
 			},
-			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(2000000)),
+			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(0)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
@@ -922,7 +922,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					}
 					return false
 				})
-				s.Require().Equal(0, count)
+				s.Require().Equal(1, count)
 				return true
 			},
 			// zero delegation balance must mean that we cannot delegate anything.
@@ -994,7 +994,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			test.setStatements(ctx, quicksilver)
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 			s.Require().True(found)
-			//before := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
+			// before := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
 			err := quicksilver.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone, test.delAddrBalance)
 			// refetch zone after FlushOutstandingDelegations setZone().
 			ctx = s.chainA.GetContext()
@@ -1008,8 +1008,8 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					s.Require().NoError(err)
 				}
 			}
-			//after := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
-			//fmt.Println(before, after)
+			// after := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
+			// fmt.Println(before, after)
 			s.Require().NoError(err)
 			isCorrect := test.assertStatements(ctx, quicksilver)
 			s.Require().True(isCorrect)
