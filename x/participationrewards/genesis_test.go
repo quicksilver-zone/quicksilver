@@ -33,7 +33,7 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 	}
 	protocolData := types.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)], bz)
 
-	app.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("%d", pool.PoolID), protocolData)
+	app.ParticipationRewardsKeeper.SetProtocolData(ctx, []byte(fmt.Sprintf("%d", pool.PoolID)), protocolData)
 
 	genesis := participationrewards.ExportGenesis(ctx, app.ParticipationRewardsKeeper)
 

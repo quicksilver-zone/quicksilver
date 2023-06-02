@@ -19,12 +19,13 @@ const (
 // OsmosisPoolProtocolData defines protocol state to track qAssets locked in
 // Osmosis pools.
 type OsmosisPoolProtocolData struct {
-	PoolID      uint64
-	PoolName    string
-	LastUpdated time.Time
-	PoolData    json.RawMessage
-	PoolType    string
-	Zones       map[string]string // chainID: IBC/denom
+	PoolID         uint64
+	PoolName       string
+	LastUpdated    time.Time
+	PoolData       json.RawMessage
+	PoolType       string
+	Zones          map[string]string // chainID: IBC/denom
+	IsIncentivized bool
 }
 
 func (opd *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
@@ -106,10 +107,16 @@ func (opd *OsmosisPoolProtocolData) ValidateBasic() error {
 	return nil
 }
 
+func (opd *OsmosisPoolProtocolData) GenerateKey() []byte {
+	return []byte(fmt.Sprintf("%d", opd.PoolID))
+}
+
 // -----------------------------------------------------
 
 type OsmosisParamsProtocolData struct {
-	ChainID string
+	ChainID   string
+	BaseDenom string
+	BaseChain string
 }
 
 // ValidateBasic satisfies ProtocolDataI and validates basic stateless data.
@@ -121,9 +128,21 @@ func (oppd *OsmosisParamsProtocolData) ValidateBasic() error {
 		errs["ChainID"] = ErrUndefinedAttribute
 	}
 
+	if oppd.BaseChain == "" {
+		errs["BaseChain"] = ErrUndefinedAttribute
+	}
+
+	if oppd.BaseDenom == "" {
+		errs["BaseDenom"] = ErrUndefinedAttribute
+	}
+
 	if len(errs) > 0 {
 		return multierror.New(errs)
 	}
 
 	return nil
+}
+
+func (oppd *OsmosisParamsProtocolData) GenerateKey() []byte {
+	return []byte("osmosisparams")
 }

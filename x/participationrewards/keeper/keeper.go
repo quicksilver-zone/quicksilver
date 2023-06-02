@@ -134,7 +134,7 @@ func (k *Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 		Data: selfConnectionData,
 	}
 	k.Logger(ctx).Info("Setting self protocol data", "data", data)
-	k.SetProtocolData(ctx, ctx.ChainID(), &data)
+	k.SetProtocolData(ctx, []byte(ctx.ChainID()), &data)
 
 	return nil
 }

@@ -36,12 +36,22 @@ func (m *AddProtocolDataProposal) ValidateBasic() error {
 		errors["Type"] = ErrUndefinedAttribute
 	}
 
-	if m.Key == "" {
-		errors["Key"] = ErrUndefinedAttribute
-	}
+	// Key is now a deprecated field and unused.
+	// if len(m.Key) == 0 {
+	// 	errors["Key"] = ErrUndefinedAttribute
+	// }
 
 	if len(m.Data) == 0 {
 		errors["Data"] = ErrUndefinedAttribute
+	}
+
+	pd, err := UnmarshalProtocolData(ProtocolDataType(ProtocolDataType_value[m.Type]), m.Data)
+	if err != nil {
+		errors["Data"] = err
+	} else {
+		if err = pd.ValidateBasic(); err != nil {
+			errors["Data"] = err
+		}
 	}
 
 	if len(errors) > 0 {
@@ -58,6 +68,5 @@ Title:			%s
 Description:	%s
 Type:			%s
 Data:			%s
-Key:			%s
-`, m.Title, m.Description, m.Type, m.Data, m.Key)
+`, m.Title, m.Description, m.Type, m.Data)
 }

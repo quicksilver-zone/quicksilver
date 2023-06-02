@@ -8,7 +8,6 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -17,28 +16,26 @@ type tokenValues map[string]sdk.Dec
 func (k *Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 	k.Logger(ctx).Info("calcTokenValues")
 
-	tvs := make(map[string]sdk.Dec)
-
-	// get base zone (Cosmos)
-	var cosmosZone *icstypes.Zone
-	k.icsKeeper.IterateZones(ctx, func(_ int64, zone *icstypes.Zone) (stop bool) {
-		if zone.AccountPrefix == "cosmos" {
-			cosmosZone = zone
-			return true
-		}
-		return false
-	})
-	if cosmosZone == nil {
-		return nil, errors.New("unable to find Cosmos zone")
+	data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeOsmosisParams, "osmosisparams")
+	if !found {
+		return tokenValues{}, errors.New("could not find osmosisparams protocol data")
+	}
+	osmoParams, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisParams, data.Data)
+	if err != nil {
+		return tokenValues{}, err
 	}
 
-	// add base value
-	tvs[cosmosZone.BaseDenom] = sdk.OneDec()
-	// tvs[uatom] = 1.0
+	baseDenom := osmoParams.(*types.OsmosisParamsProtocolData).BaseDenom
+	baseChain := osmoParams.(*types.OsmosisParamsProtocolData).BaseChain
 
-	// capture errors from iterator
+	tvs := make(map[string]sdk.Dec)
+
+	// add base value
+	tvs[baseDenom] = sdk.OneDec()
+
+	// capture errors from iteratora
 	errs := make(map[string]error)
-	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, data types.ProtocolData) bool {
+	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		idxLabel := fmt.Sprintf("index[%d]", idx)
 		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, data.Data)
 		if err != nil {
@@ -58,26 +55,26 @@ func (k *Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 		//  - queryIBCDenom -> the target IBC denom in this pair
 		//  - valueDenom -> the target zone.BaseDenom
 		var baseIBCDenom, queryIBCDenom, valueDenom string
-		isCosmosPair := false
+		isBasePair := false
 
 		for chainID, denom := range pool.Zones {
+			if chainID == baseChain {
+				isBasePair = true
+				baseIBCDenom = denom
+				continue
+			}
+
 			zone, ok := k.icsKeeper.GetZone(ctx, chainID)
 			if !ok {
 				errs[idxLabel] = fmt.Errorf("zone not found, %s", chainID)
 				return true
 			}
 
-			if zone.AccountPrefix == "cosmos" {
-				isCosmosPair = true
-				baseIBCDenom = denom
-				continue
-			}
-
 			queryIBCDenom = denom
 			valueDenom = zone.BaseDenom
 		}
 
-		if isCosmosPair {
+		if isBasePair {
 			if pool.PoolData == nil {
 				errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
 				return true
@@ -112,7 +109,7 @@ func (k *Keeper) calcTokenValues(ctx sdk.Context) (tokenValues, error) {
 func (k *Keeper) AllocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocation types.RewardsAllocation) error {
 	k.Logger(ctx).Info("allocateZoneRewards", "token values", tvs, "allocation", allocation)
 
-	if err := k.setZoneAllocations(ctx, tvs, allocation); err != nil {
+	if err := k.SetZoneAllocations(ctx, tvs, allocation); err != nil {
 		return err
 	}
 
@@ -121,9 +118,9 @@ func (k *Keeper) AllocateZoneRewards(ctx sdk.Context, tvs tokenValues, allocatio
 	return k.AllocateHoldingsRewards(ctx)
 }
 
-// setZoneAllocations returns the proportional zone rewards allocations as a
+// SetZoneAllocations returns the proportional zone rewards allocations as a
 // map indexed by the zone id.
-func (k *Keeper) setZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation types.RewardsAllocation) error {
+func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs tokenValues, allocation types.RewardsAllocation) error {
 	k.Logger(ctx).Info("setZoneAllocations", "allocation", allocation)
 
 	otvl := sdk.ZeroDec()

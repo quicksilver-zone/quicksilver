@@ -25,6 +25,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010402rc5UpgradeName, CreateUpgradeHandler: V010402rc5UpgradeHandler},
 		{UpgradeName: V010402rc6UpgradeName, CreateUpgradeHandler: V010402rc6UpgradeHandler},
 		{UpgradeName: V010402rc7UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010403rc0UpgradeName, CreateUpgradeHandler: V010403rc0UpgradeHandler},
 	}
 }
 
@@ -86,7 +87,7 @@ func V010402rc3UpgradeHandler(
 				panic("connection protocol data type not found")
 			}
 
-			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rege-redwood-1")))
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("rege-redwood-1")))
 			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, OsmosisTestnetChainID)
 			for _, val := range vals {
 				valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")
@@ -109,8 +110,8 @@ func V010402rc4UpgradeHandler(
 			if !exists {
 				panic("liquid tokens protocol data type not found")
 			}
-			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "osmo-test-5/ibc/FBD3AC18A981B89F60F9FE5B21BD7F1DE87A53C3505D5A5E438E2399409CFB6F")))
-			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rhye-1/uqosmo")))
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("osmo-test-5/ibc/FBD3AC18A981B89F60F9FE5B21BD7F1DE87A53C3505D5A5E438E2399409CFB6F")))
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("rhye-1/uqosmo")))
 			rcptTime := time.Unix(1682932342, 0)
 			rcpt1 := types.Receipt{
 				ChainId:   "theta-testnet-001",
@@ -242,6 +243,30 @@ func V010402rc6UpgradeHandler(
 					"delegations",
 					0,
 				)
+				return false
+			})
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010403rc0UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) {
+			appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), func(index int64, key []byte, data prtypes.ProtocolData) (stop bool) {
+				prefixedKey := append(prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), key...)
+				appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prefixedKey)
+				pd, err := prtypes.UnmarshalProtocolData(prtypes.ProtocolDataTypeLiquidToken, data.Data)
+				if err != nil {
+					panic(err)
+				}
+				newKey := pd.GenerateKey()
+				appKeepers.ParticipationRewardsKeeper.SetProtocolData(ctx, newKey, &data)
 				return false
 			})
 		}
