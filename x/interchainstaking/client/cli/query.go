@@ -150,7 +150,7 @@ func GetDepositAccountCmd() *cobra.Command {
 func GetMappedAccountsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "mapped-accounts [address]",
-		Short: "Query mapped accounts  for a given address.",
+		Short: "Query mapped accounts for a given address.",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
