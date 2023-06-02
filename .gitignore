@@ -23,6 +23,7 @@ dist
 
 rocksdb
 data
+heighliner
 
 # python script
 autotest.py
