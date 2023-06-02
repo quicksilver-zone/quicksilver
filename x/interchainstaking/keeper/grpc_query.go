@@ -266,25 +266,16 @@ func (k *Keeper) MappedAccounts(c context.Context, req *types.QueryMappedAccount
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	var mappedAccounts []types.MappedAccount
+	remoteAddressMap := make(map[string][]byte)
+	addrBytes, err := utils.AccAddressFromBech32(req.Address, config.Bech32Prefix)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Address")
+	}
 
-	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
-		var mappedAccount types.MappedAccount
-		if !zone.Is_118 {
-			addrBytes, err := utils.AccAddressFromBech32(req.Address, config.Bech32Prefix)
-			if err != nil {
-				return false
-			}
-			remoteAddress, found := k.GetRemoteAddressMap(ctx, addrBytes, zone.ChainId)
-			if !found {
-				return false
-			}
-			mappedAccount.ChainId = zone.ChainId
-			mappedAccount.Address = remoteAddress
-			mappedAccounts = append(mappedAccounts, mappedAccount)
-		}
+	k.IterateUserMappedAccounts(ctx, addrBytes, func(index int64, chainID string, remoteAddressBytes []byte) (stop bool) {
+		remoteAddressMap[chainID] = remoteAddressBytes
 		return false
 	})
 
-	return &types.QueryMappedAccountsResponse{MappedAccounts: mappedAccounts}, nil
+	return &types.QueryMappedAccountsResponse{MappedAccounts: GetMappedAccounts(remoteAddressMap)}, nil
 }

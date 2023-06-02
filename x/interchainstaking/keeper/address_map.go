@@ -15,6 +15,30 @@ func (k *Keeper) GetRemoteAddressMap(ctx sdk.Context, localAddress []byte, chain
 	return value, value != nil
 }
 
+// IterateUserMappedAccounts iterates over all the user mapped accounts.
+func (k Keeper) IterateUserMappedAccounts(ctx sdk.Context, localAddress []byte, fn func(index int64, chainID string, remoteAddressBytes []byte) (stop bool)) {
+	// noop
+	if fn == nil {
+		return
+	}
+
+	store := ctx.KVStore(k.storeKey)
+	iterator := sdk.KVStorePrefixIterator(store, types.GetRemoteAddressPrefix(localAddress))
+	defer iterator.Close()
+
+	i := int64(0)
+	for ; iterator.Valid(); iterator.Next() {
+		value := iterator.Value()
+		key := iterator.Key()
+		chainIDBytes := key[len(types.GetRemoteAddressPrefix(localAddress)):]
+		stop := fn(i, string(chainIDBytes), value)
+		if stop {
+			break
+		}
+		i++
+	}
+}
+
 // SetRemoteAddressMap sets a remote address using a local address as a map.
 func (k *Keeper) SetRemoteAddressMap(ctx sdk.Context, localAddress, remoteAddress []byte, chainID string) {
 	store := ctx.KVStore(k.storeKey)
@@ -42,4 +66,16 @@ func (k *Keeper) SetLocalAddressMap(ctx sdk.Context, localAddress, remoteAddress
 func (k *Keeper) SetAddressMapPair(ctx sdk.Context, localAddress, remoteAddress []byte, chainID string) {
 	k.SetLocalAddressMap(ctx, localAddress, remoteAddress, chainID)
 	k.SetRemoteAddressMap(ctx, localAddress, remoteAddress, chainID)
+}
+
+func GetMappedAccounts(remoteAddressMap map[string][]byte) []types.MappedAccount {
+	mappedAccounts := make([]types.MappedAccount, 0, len(remoteAddressMap))
+	for chainID, remoteAddress := range remoteAddressMap {
+		mappedAccounts = append(mappedAccounts, types.MappedAccount{
+			ChainId: chainID,
+			Address: remoteAddress,
+		})
+	}
+
+	return mappedAccounts
 }
