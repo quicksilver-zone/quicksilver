@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
 
 	"google.golang.org/grpc/codes"
@@ -286,5 +287,4 @@ func (k *Keeper) MappedAccounts(c context.Context, req *types.QueryMappedAccount
 	})
 
 	return &types.QueryMappedAccountsResponse{MappedAccounts: mappedAccounts}, nil
-
 }
