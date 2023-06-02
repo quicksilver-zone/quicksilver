@@ -156,11 +156,11 @@ func FuzzValsetCallback(f *testing.F) {
 	})
 }
 
-func (s *FuzzingTestSuite) FuzzValsetCallback(args []byte) {
-	app := s.GetQuicksilverApp(s.chainA)
+func (suite *FuzzingTestSuite) FuzzValsetCallback(args []byte) {
+	app := suite.GetQuicksilverApp(suite.chainA)
 	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-	ctx := s.chainA.GetContext()
+	ctx := suite.chainA.GetContext()
 
-	err := keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: s.chainB.ChainID})
-	s.Require().NoError(err)
+	err := keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: suite.chainB.ChainID})
+	suite.Require().NoError(err)
 }

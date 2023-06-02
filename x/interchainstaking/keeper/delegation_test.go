@@ -12,41 +12,41 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (s *KeeperTestSuite) TestKeeper_DelegationStore() {
-	s.SetupTest()
-	s.setupTestZones()
+func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
+	suite.SetupTest()
+	suite.setupTestZones()
 
-	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
-	ctx := s.chainA.GetContext()
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
 
 	// get test zone
-	zone, found := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-	s.Require().True(found)
-	zoneValidatorAddresses := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.Require().True(found)
+	zoneValidatorAddresses := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 
 	performanceDelegations := icsKeeper.GetAllPerformanceDelegations(ctx, &zone)
-	s.Require().Len(performanceDelegations, 4)
+	suite.Require().Len(performanceDelegations, 4)
 
 	performanceDelegationPointers := icsKeeper.GetAllPerformanceDelegationsAsPointer(ctx, &zone)
 	for i, pdp := range performanceDelegationPointers {
-		s.Require().Equal(performanceDelegations[i], *pdp)
+		suite.Require().Equal(performanceDelegations[i], *pdp)
 	}
 
 	// update performance delegation
 	updateDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
-	s.Require().True(found)
-	s.Require().Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
+	suite.Require().True(found)
+	suite.Require().Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
 
 	updateDelegation.Amount.Amount = sdkmath.NewInt(10000)
 	icsKeeper.SetPerformanceDelegation(ctx, &zone, updateDelegation)
 
 	updatedDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
-	s.Require().True(found)
-	s.Require().Equal(updateDelegation, updatedDelegation)
+	suite.Require().True(found)
+	suite.Require().Equal(updateDelegation, updatedDelegation)
 
 	// check that there are no delegations
 	delegations := icsKeeper.GetAllDelegations(ctx, &zone)
-	s.Require().Len(delegations, 0)
+	suite.Require().Len(delegations, 0)
 
 	// set delegations
 	icsKeeper.SetDelegation(
@@ -79,20 +79,20 @@ func (s *KeeperTestSuite) TestKeeper_DelegationStore() {
 
 	// check for delegations set above
 	delegations = icsKeeper.GetAllDelegations(ctx, &zone)
-	s.Require().Len(delegations, 3)
+	suite.Require().Len(delegations, 3)
 
 	// load and match pointers
 	delegationPointers := icsKeeper.GetAllDelegationsAsPointer(ctx, &zone)
 	for i, dp := range delegationPointers {
-		s.Require().Equal(delegations[i], *dp)
+		suite.Require().Equal(delegations[i], *dp)
 	}
 
 	// get delegations for delegation address and match
 	addr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.GetAddress())
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
 	dds := icsKeeper.GetDelegatorDelegations(ctx, &zone, addr)
-	s.Require().Len(dds, 3)
-	s.Require().Equal(delegations, dds)
+	suite.Require().Len(dds, 3)
+	suite.Require().Equal(delegations, dds)
 }
 
 type delegationUpdate struct {
@@ -100,7 +100,7 @@ type delegationUpdate struct {
 	absolute   bool
 }
 
-func (s *KeeperTestSuite) TestUpdateDelegation() {
+func (suite *KeeperTestSuite) TestUpdateDelegation() {
 	del1 := utils.GenerateAccAddressForTest()
 
 	val1 := utils.GenerateValAddressForTest()
@@ -195,14 +195,14 @@ func (s *KeeperTestSuite) TestUpdateDelegation() {
 	for _, tt := range tests {
 		tt := tt
 
-		s.Run(tt.name, func() {
-			s.SetupTest()
-			s.setupTestZones()
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
 
-			qApp := s.GetQuicksilverApp(s.chainA)
-			ctx := s.chainA.GetContext()
-			zone, found := qApp.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-			s.Require().True(found)
+			qApp := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			zone, found := qApp.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.Require().True(found)
 
 			if tt.delegation != nil {
 				qApp.InterchainstakingKeeper.SetDelegation(ctx, &zone, *tt.delegation)
@@ -210,439 +210,52 @@ func (s *KeeperTestSuite) TestUpdateDelegation() {
 
 			for _, update := range tt.updates {
 				err := qApp.InterchainstakingKeeper.UpdateDelegationRecordForAddress(ctx, update.delegation.DelegationAddress, update.delegation.ValidatorAddress, update.delegation.Amount, &zone, update.absolute)
-				s.Require().NoError(err)
+				suite.Require().NoError(err)
 			}
 
 			actual, found := qApp.InterchainstakingKeeper.GetDelegation(ctx, &zone, tt.expected.DelegationAddress, tt.expected.ValidatorAddress)
-			s.Require().True(found)
-			s.Require().Equal(tt.expected, actual)
+			suite.Require().True(found)
+			suite.Require().Equal(tt.expected, actual)
 		})
 	}
 }
 
-// func (s *KeeperTestSuite) TestCalculateDeltas() {
+func (suite *KeeperTestSuite) TestStoreGetDeleteDelegation() {
+	suite.Run("delegation - store / get / delete", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
 
-// 	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
-// 	// once sorted alphabetically on valoper.
+		qApp := suite.GetQuicksilverApp(suite.chainA)
+		ctx := suite.chainA.GetContext()
 
-// 	val1 := utils.GenerateValAddressForTest()
-// 	val2 := utils.GenerateValAddressForTest()
-// 	val3 := utils.GenerateValAddressForTest()
-// 	val4 := utils.GenerateValAddressForTest()
-
-// 	zone := types.Zone{Validators: []*types.Validator{
-// 		{ValoperAddress: val1.String(), CommissionRate: sdk.NewDecWithPrec(30, 2), Status: stakingtypes.BondStatusBonded},
-// 		{ValoperAddress: val2.String(), CommissionRate: sdk.NewDecWithPrec(25, 2), Status: stakingtypes.BondStatusBonded},
-// 		{ValoperAddress: val3.String(), CommissionRate: sdk.NewDecWithPrec(10, 2), Status: stakingtypes.BondStatusBonded},
-// 		{ValoperAddress: val4.String(), CommissionRate: sdk.NewDecWithPrec(12, 2), Status: stakingtypes.BondStatusBonded},
-// 	}}
-
-// 	zone2 := types.Zone{Validators: []*types.Validator{
-// 		{ValoperAddress: val1.String(), CommissionRate: sdk.NewDecWithPrec(30, 2), Status: stakingtypes.BondStatusBonded},
-// 		{ValoperAddress: val2.String(), CommissionRate: sdk.NewDecWithPrec(25, 2), Status: stakingtypes.BondStatusBonded},
-// 		{ValoperAddress: val3.String(), CommissionRate: sdk.NewDecWithPrec(10, 2), Status: stakingtypes.BondStatusBonded},
-// 		{ValoperAddress: val4.String(), CommissionRate: sdk.NewDecWithPrec(75, 2), Status: stakingtypes.BondStatusBonded},
-// 	}}
-
-// 	tc := []struct {
-// 		current  map[string]sdkmath.Int
-// 		target   func(qs *app.Quicksilver) types.ValidatorIntents {}
-// 		expected types.ValidatorIntents
-// 	}{
-// 		{
-// 			current: map[string]sdkmath.Int{
-// 				val1.String(): sdk.NewInt(350000),
-// 				val2.String(): sdk.NewInt(650000),
-// 				val3.String(): sdk.NewInt(75000),
-// 			},
-// 			target: func(qs *app.Quicksilver) types.ValidatorIntents {
-// 				return types.ValidatorIntents{
-// 					{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(30, 2)},
-// 					{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(63, 2)},
-// 					{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
-// 				}
-// 			},
-// 			expected: types.ValidatorIntents{
-// 				{ValoperAddress: val2.String(), Weight: sdk.NewDec(27250)},
-// 				{ValoperAddress: val3.String(), Weight: sdk.NewDec(250)},
-// 				{ValoperAddress: val1.String(), Weight: sdk.NewDec(-27500)},
-// 			},
-// 		},
-// 		{
-// 			current: map[string]sdkmath.Int{
-// 				val1.String(): sdk.NewInt(53),
-// 				val2.String(): sdk.NewInt(26),
-// 				val3.String(): sdk.NewInt(14),
-// 				val4.String(): sdk.NewInt(7),
-// 			},
-// 			target: func(qs *app.Quicksilver) types.ValidatorIntents {
-// 				return types.ValidatorIntents{
-// 					{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
-// 					{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(28, 2)},
-// 					{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(12, 2)},
-// 					{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
-// 				}
-// 			},
-// 			expected: types.ValidatorIntents{
-// 				{ValoperAddress: val4.String(), Weight: sdk.NewDec(3)},
-// 				{ValoperAddress: val2.String(), Weight: sdk.NewDec(2)},
-// 				{ValoperAddress: val3.String(), Weight: sdk.NewDec(-2)},
-// 				{ValoperAddress: val1.String(), Weight: sdk.NewDec(-3)},
-// 			},
-// 		},
-// 		{
-// 			current: map[string]sdkmath.Int{
-// 				val1.String(): sdk.NewInt(30),
-// 				val2.String(): sdk.NewInt(30),
-// 				val3.String(): sdk.NewInt(60),
-// 				val4.String(): sdk.NewInt(180),
-// 			},
-// 			target: func(qs *app.Quicksilver) types.ValidatorIntents {
-// 				return types.ValidatorIntents{
-// 					{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
-// 					{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
-// 					{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
-// 					{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
-// 				}
-// 			},
-// 			expected: types.ValidatorIntents{
-// 				{ValoperAddress: val1.String(), Weight: sdk.NewDec(120)},
-// 				{ValoperAddress: val2.String(), Weight: sdk.NewDec(45)},
-// 				{ValoperAddress: val3.String(), Weight: sdk.NewDec(-15)},
-// 				{ValoperAddress: val4.String(), Weight: sdk.NewDec(-150)},
-// 			},
-// 		},
-// 		// default intent -- all equal
-// 		{
-// 			current: map[string]sdkmath.Int{
-// 				val1.String(): sdk.NewInt(15),
-// 				val2.String(): sdk.NewInt(5),
-// 				val3.String(): sdk.NewInt(20),
-// 				val4.String(): sdk.NewInt(60),
-// 			},
-// 			target: func(qs *app.Quicksilver) types.ValidatorIntents {
-// 				return qs.InterchainstakingKeeper.GetAggregateIntentOrDefault(ctx, zone)
-// 			},
-// 			expected: types.ValidatorIntents{
-// 				{ValoperAddress: val2.String(), Weight: sdk.NewDec(20)},
-// 				{ValoperAddress: val1.String(), Weight: sdk.NewDec(10)},
-// 				{ValoperAddress: val3.String(), Weight: sdk.NewDec(5)},
-// 				{ValoperAddress: val4.String(), Weight: sdk.NewDec(-35)},
-// 			},
-// 		},
-// 		{
-// 			// GetAggregateIntentOrDefault will preclude val4 on account on high commission.
-// 			current: map[string]sdkmath.Int{
-// 				val1.String(): sdk.NewInt(8),
-// 				val2.String(): sdk.NewInt(12),
-// 				val3.String(): sdk.NewInt(20),
-// 				val4.String(): sdk.NewInt(60),
-// 			},
-// 			target: func(qs *app.Quicksilver) types.ValidatorIntents {
-// 				return qs.InterchainstakingKeeper.GetAggregateIntentOrDefault(ctx, zone2)
-// 			},
-// 			expected: types.ValidatorIntents{
-// 				{ValoperAddress: val1.String(), Weight: sdk.NewDec(25)},
-// 				{ValoperAddress: val2.String(), Weight: sdk.NewDec(21)},
-// 				{ValoperAddress: val3.String(), Weight: sdk.NewDec(13)},
-// 				{ValoperAddress: val4.String(), Weight: sdk.NewDec(-60)},
-// 			},
-// 		},
-// 	}
-
-// 	for caseNumber, val := range tc {
-// 		s.Run(fmt.Sprint("case %d", caseNumber), func() {
-// 			s.SetupTest()
-// 			s.setupTestZones()
-
-// 			app := s.GetQuicksilverApp(s.chainA)
-// 			ctx := s.chainA.GetContext()
-
-// 			sum := sdkmath.ZeroInt()
-// 			for _, amount := range val.current {
-// 				sum = sum.Add(amount)
-// 			}
-// 			deltas := types.CalculateDeltas(val.current, sum, val.(app))
-// 			s.Require().Equal(len(val.expected), len(deltas), fmt.Sprintf("expected %d RebalanceTargets in case %d, got %d", len(val.expected), caseNumber, len(deltas)))
-// 			for idx, expected := range val.expected {
-// 				s.Require().Equal(expected, deltas[idx], fmt.Sprintf("case %d, idx %d: Expected %v, got %v", caseNumber, idx, expected, deltas[idx]))
-// 			}
-// 		})
-// 	}
-// }
-
-/*func TestDetermineAllocationsForRebalance(t *testing.T) {
-	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
-	// once sorted alphabetically on valoper.
-
-	val1 := utils.GenerateValAddressForTest()
-	val2 := utils.GenerateValAddressForTest()
-	val3 := utils.GenerateValAddressForTest()
-	val4 := utils.GenerateValAddressForTest()
-
-	zone := types.Zone{Validators: []*types.Validator{
-		{ValoperAddress: val1.String(), CommissionRate: sdk.NewDecWithPrec(30, 2), Status: stakingtypes.BondStatusBonded},
-		{ValoperAddress: val2.String(), CommissionRate: sdk.NewDecWithPrec(25, 2), Status: stakingtypes.BondStatusBonded},
-		{ValoperAddress: val3.String(), CommissionRate: sdk.NewDecWithPrec(10, 2), Status: stakingtypes.BondStatusBonded},
-		{ValoperAddress: val4.String(), CommissionRate: sdk.NewDecWithPrec(12, 2), Status: stakingtypes.BondStatusBonded},
-	}}
-
-	zone2 := types.Zone{Validators: []*types.Validator{
-		{ValoperAddress: val1.String(), CommissionRate: sdk.NewDecWithPrec(30, 2), Status: stakingtypes.BondStatusBonded},
-		{ValoperAddress: val2.String(), CommissionRate: sdk.NewDecWithPrec(25, 2), Status: stakingtypes.BondStatusBonded},
-		{ValoperAddress: val3.String(), CommissionRate: sdk.NewDecWithPrec(10, 2), Status: stakingtypes.BondStatusBonded},
-		{ValoperAddress: val4.String(), CommissionRate: sdk.NewDecWithPrec(75, 2), Status: stakingtypes.BondStatusBonded},
-	}}
-
-	tc := []struct {
-		name          string
-		current       map[string]sdkmath.Int
-		locked        map[string]bool
-		target        types.ValidatorIntents
-		expected      []types.RebalanceTarget
-		dust          sdkmath.Int
-		redelegations []types.RedelegationRecord
-	}{
-		{
-			name: "case 1",
-			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(350000),
-				val2.String(): sdk.NewInt(650000),
-				val3.String(): sdk.NewInt(75000),
-			},
-			target: types.ValidatorIntents{
-				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(30, 2)},
-				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(63, 2)},
-				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
-			},
-			expected: []types.RebalanceTarget{
-				{Amount: sdkmath.NewInt(27250), Source: val1.String(), Target: val2.String()},
-				{Amount: sdkmath.NewInt(250), Source: val1.String(), Target: val3.String()},
-			},
-		},
-		{
-			name: "case 2",
-			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(56),
-				val2.String(): sdk.NewInt(24),
-				val3.String(): sdk.NewInt(14),
-				val4.String(): sdk.NewInt(5),
-			},
-			target: types.ValidatorIntents{
-				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
-				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(28, 2)},
-				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(12, 2)},
-				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
-			},
-			expected: []types.RebalanceTarget{
-				{Amount: sdkmath.NewInt(4), Source: val1.String(), Target: val4.String()},
-				{Amount: sdkmath.NewInt(3), Source: val1.String(), Target: val2.String()},
-			},
-			redelegations: []types.RedelegationRecord{},
-		},
-		{
-			name: "case 3",
-			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(30),
-				val2.String(): sdk.NewInt(30),
-				val3.String(): sdk.NewInt(60),
-				val4.String(): sdk.NewInt(180),
-			},
-			target: types.ValidatorIntents{
-				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
-				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
-				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
-				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
-			},
-			expected: []types.RebalanceTarget{
-				{Amount: sdkmath.NewInt(42), Source: val4.String(), Target: val1.String()},
-				// below values _would_ applied, if we weren't limited by a max of total/7
-				// {Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val2.String()},
-			},
-			redelegations: []types.RedelegationRecord{},
-		},
-		// default intent -- all equal
-		{
-			name: "case 4 - default intent, all equal",
-			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(15),
-				val2.String(): sdk.NewInt(5),
-				val3.String(): sdk.NewInt(20),
-				val4.String(): sdk.NewInt(60),
-			},
-			target: zone.GetAggregateIntentOrDefault(),
-			expected: []types.RebalanceTarget{
-				{Amount: sdkmath.NewInt(14), Source: val4.String(), Target: val2.String()},
-				// below values _would_ applied, if we weren't limited by a max of total/7
-				// {Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
-				// {Amount: sdkmath.NewInt(5), Source: val4.String(), Target: val3.String()},
-			},
-			redelegations: []types.RedelegationRecord{},
-		},
-		//
-		{
-			name: "case 5 - default intent with val4 high commission; truncate rebalance to 50% of tvl",
-			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(8),
-				val2.String(): sdk.NewInt(12),
-				val3.String(): sdk.NewInt(20),
-				val4.String(): sdk.NewInt(60),
-			},
-			target: zone2.GetAggregateIntentOrDefault(),
-			expected: []types.RebalanceTarget{
-				{Amount: sdkmath.NewInt(14), Source: val4.String(), Target: val1.String()},
-				// below values _would_ applied, if we weren't limited by a max of total/7
-				// {Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
-			},
-			redelegations: []types.RedelegationRecord{},
-		},
-		{
-			name: "case 6 - includes redelegation, no impact",
-			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(8),
-				val2.String(): sdk.NewInt(12),
-				val3.String(): sdk.NewInt(20),
-				val4.String(): sdk.NewInt(60),
-			},
-			target: zone2.GetAggregateIntentOrDefault(),
-			expected: []types.RebalanceTarget{
-				{Amount: sdkmath.NewInt(14), Source: val4.String(), Target: val1.String()},
-				// below values _would_ applied, if we weren't limited by a max of total/7
-				// {Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
-			},
-			redelegations: []types.RedelegationRecord{
-				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 30, CompletionTime: time.Now().Add(time.Hour)},
-			},
-		},
-		{
-			name: "case 7 - includes redelegation, truncated delegation",
-			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(8),
-				val2.String(): sdk.NewInt(12),
-				val3.String(): sdk.NewInt(20),
-				val4.String(): sdk.NewInt(60),
-			},
-			target: zone2.GetAggregateIntentOrDefault(),
-			expected: []types.RebalanceTarget{
-				{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
-				// below values _would_ applied, if we weren't limited by a max of total/7
-				// {Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
-			},
-			redelegations: []types.RedelegationRecord{
-				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
-			},
-		},
-		{
-			name: "case 8 - includes redelegation, truncated delegation",
-			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(8),
-				val2.String(): sdk.NewInt(12),
-				val3.String(): sdk.NewInt(20),
-				val4.String(): sdk.NewInt(60),
-			},
-			target: zone2.GetAggregateIntentOrDefault(),
-			expected: []types.RebalanceTarget{
-				{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
-				// below values _would_ applied, if we weren't limited by a max of total/7
-				// {Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
-			},
-			redelegations: []types.RedelegationRecord{
-				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
-			},
-		},
-		{
-			name: "case 9 - includes redelegation, truncated delegation overflow",
-			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(2),
-				val2.String(): sdk.NewInt(8),
-				val3.String(): sdk.NewInt(30),
-				val4.String(): sdk.NewInt(60),
-			},
-			target: zone2.GetAggregateIntentOrDefault(),
-			expected: []types.RebalanceTarget{
-				{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
-				// below values _would_ applied, if we weren't limited by a max of total/7
-				// {Amount: sdkmath.NewInt(4), Source: val3.String(), Target: val1.String()}, // joe: I would expect this to be included...
-				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
-			},
-			redelegations: []types.RedelegationRecord{
-				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
-			},
-		},
-		{
-			name: "case 10 - includes redelegation, zero delegation",
-			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(8),
-				val2.String(): sdk.NewInt(12),
-				val3.String(): sdk.NewInt(20),
-				val4.String(): sdk.NewInt(60),
-			},
-			target:   zone2.GetAggregateIntentOrDefault(),
-			expected: []types.RebalanceTarget{
-				// {Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
-				// below values _would_ applied, if we weren't limited by a max of total/7
-				// {Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
-				// {Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
-			},
-			redelegations: []types.RedelegationRecord{
-				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 60, CompletionTime: time.Now().Add(time.Hour)},
-			},
-		},
-	}
-
-	for _, val := range tc {
-		sum := sdkmath.ZeroInt()
-		for _, amount := range val.current {
-			sum = sum.Add(amount)
-		}
-		allocations := types.DetermineAllocationsForRebalancing(val.current, val.locked, sum, val.target, val.redelegations, nil)
-		require.Equal(t, len(val.expected), len(allocations), fmt.Sprintf("expected %d RebalanceTargets in '%s', got %d", len(val.expected), val.name, len(allocations)))
-		for idx, rebalance := range val.expected {
-			require.Equal(t, rebalance, allocations[idx], fmt.Sprintf("%s, idx %d: Expected %v, got %v", val.name, idx, rebalance, allocations[idx]))
-		}
-	}
-}*/
-
-func (s *KeeperTestSuite) TestStoreGetDeleteDelegation() {
-	s.Run("delegation - store / get / delete", func() {
-		s.SetupTest()
-		s.setupTestZones()
-
-		qApp := s.GetQuicksilverApp(s.chainA)
-		ctx := s.chainA.GetContext()
-
-		zone, found := qApp.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-		s.Require().True(found)
+		zone, found := qApp.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.Require().True(found)
 
 		delegator := utils.GenerateAccAddressForTest()
 		validator := utils.GenerateValAddressForTest()
 
 		_, found = qApp.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegator.String(), validator.String())
-		s.Require().False(found)
+		suite.Require().False(found)
 
 		newDelegation := types.NewDelegation(delegator.String(), validator.String(), sdk.NewCoin("uatom", sdk.NewInt(5000)))
 		qApp.InterchainstakingKeeper.SetDelegation(ctx, &zone, newDelegation)
 
 		fetchedDelegation, found := qApp.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegator.String(), validator.String())
-		s.Require().True(found)
-		s.Require().Equal(newDelegation, fetchedDelegation)
+		suite.Require().True(found)
+		suite.Require().Equal(newDelegation, fetchedDelegation)
 
 		allDelegations := qApp.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)
-		s.Require().Len(allDelegations, 1)
+		suite.Require().Len(allDelegations, 1)
 
 		err := qApp.InterchainstakingKeeper.RemoveDelegation(ctx, &zone, newDelegation)
-		s.Require().NoError(err)
+		suite.Require().NoError(err)
 
 		allDelegations2 := qApp.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)
-		s.Require().Len(allDelegations2, 0)
+		suite.Require().Len(allDelegations2, 0)
 	})
 }
 
-func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
+func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 	userAddress := utils.GenerateAccAddressForTest().String()
 	denom := "uatom"
 	tests := []struct {
@@ -669,7 +282,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptTwoTime := cutOffTime.Add(-3 * time.Hour)
 
 				rcpt1 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
 					Amount: sdk.NewCoins(
@@ -683,7 +296,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				}
 
 				rcpt2 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
 					Amount: sdk.NewCoins(
@@ -701,8 +314,8 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(0)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-				s.Require().True(found)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.Require().True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
@@ -711,7 +324,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					return false
 				})
 
-				s.Require().Equal(0, count)
+				suite.Require().Equal(0, count)
 				return true
 			},
 		},
@@ -723,7 +336,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptTwoTime := cutOffTime.Add(2 * time.Hour)
 
 				rcpt1 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
 					Amount: sdk.NewCoins(
@@ -737,7 +350,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				}
 
 				rcpt2 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
 					Amount: sdk.NewCoins(
@@ -754,15 +367,15 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(100)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-				s.Require().True(found)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.Require().True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
 					return false
 				})
-				s.Require().Equal(1, count)
+				suite.Require().Equal(1, count)
 				return true
 			},
 		},
@@ -774,7 +387,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptTwoTime := cutOffTime.Add(2 * time.Hour)  // -22h
 
 				rcpt1 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
 					Amount: sdk.NewCoins(
@@ -788,7 +401,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				}
 
 				rcpt2 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
 					Amount: sdk.NewCoins(
@@ -806,15 +419,15 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(2000100)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-				s.Require().True(found)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.Require().True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
 					return false
 				})
-				s.Require().Equal(1, count)
+				suite.Require().Equal(1, count)
 				return true
 			},
 			mockAck:            true,
@@ -828,7 +441,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptTwoTime := cutOffTime.Add(-3 * time.Hour)
 
 				rcpt1 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
 					Amount: sdk.NewCoins(
@@ -842,7 +455,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				}
 
 				rcpt2 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
 					Amount: sdk.NewCoins(
@@ -860,15 +473,15 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(2000100)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-				s.Require().True(found)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.Require().True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
 					return false
 				})
-				s.Require().Equal(0, count)
+				suite.Require().Equal(0, count)
 				return true
 			},
 			mockAck:            true,
@@ -882,7 +495,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptTwoTime := cutOffTime.Add(2 * time.Hour)
 
 				rcpt1 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
 					Amount: sdk.NewCoins(
@@ -896,7 +509,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				}
 
 				rcpt2 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
 					Amount: sdk.NewCoins(
@@ -914,15 +527,15 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(0)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-				s.Require().True(found)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.Require().True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
 					return false
 				})
-				s.Require().Equal(1, count)
+				suite.Require().Equal(1, count)
 				return true
 			},
 			// zero delegation balance must mean that we cannot delegate anything.
@@ -934,7 +547,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				cutOffTime := ctx.BlockTime().AddDate(0, 0, -1)
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
 				rcpt1 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
 					Amount: sdk.NewCoins(
@@ -948,7 +561,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				}
 
 				rcpt2 := types.Receipt{
-					ChainId: s.chainB.ChainID,
+					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
 					Amount: sdk.NewCoins(
@@ -966,15 +579,15 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			delAddrBalance: sdk.NewCoin("uatom", sdkmath.NewInt(100)),
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-				s.Require().True(found)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.Require().True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
 					return false
 				})
-				s.Require().Equal(0, count)
+				suite.Require().Equal(0, count)
 				return true
 			},
 			// delegation balance == 100, which equals the value of the second receipt.
@@ -984,35 +597,35 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 	}
 
 	for _, test := range tests {
-		s.Run(test.name, func() {
-			s.SetupTest()
-			s.setupTestZones()
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
 
-			quicksilver := s.GetQuicksilverApp(s.chainA)
-			ctx := s.chainA.GetContext()
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
 
 			test.setStatements(ctx, quicksilver)
-			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-			s.Require().True(found)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.Require().True(found)
 			// before := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
 			err := quicksilver.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone, test.delAddrBalance)
 			// refetch zone after FlushOutstandingDelegations setZone().
-			ctx = s.chainA.GetContext()
+			ctx = suite.chainA.GetContext()
 			if test.mockAck {
 				var msgs []sdk.Msg
 				allocations, err := quicksilver.InterchainstakingKeeper.DeterminePlanForDelegation(ctx, &zone, test.expectedDelegation)
-				s.Require().NoError(err)
+				suite.Require().NoError(err)
 				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(&zone, allocations)...)
 				for _, msg := range msgs {
 					err := quicksilver.InterchainstakingKeeper.HandleDelegate(ctx, msg, "batch/1577836910")
-					s.Require().NoError(err)
+					suite.Require().NoError(err)
 				}
 			}
 			// after := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
 			// fmt.Println(before, after)
-			s.Require().NoError(err)
+			suite.Require().NoError(err)
 			isCorrect := test.assertStatements(ctx, quicksilver)
-			s.Require().True(isCorrect)
+			suite.Require().True(isCorrect)
 		})
 	}
 }

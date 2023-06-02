@@ -14,21 +14,21 @@ var (
 	user2 = utils.GenerateAccAddressForTest()
 )
 
-func (s *KeeperTestSuite) TestKeeper_IntentStore() {
-	s.SetupTest()
-	s.setupTestZones()
+func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
+	suite.SetupTest()
+	suite.setupTestZones()
 
-	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
-	ctx := s.chainA.GetContext()
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
 
 	// get test zone
-	zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
-	s.Require().True(found)
+	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.Require().True(found)
 	zoneValidatorAddresses := icsKeeper.GetValidators(ctx, zone.ChainId)
 
 	// check that there are no intents
 	intents := icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	s.Require().Len(intents, 0)
+	suite.Require().Len(intents, 0)
 
 	// set intents for testAddress
 	icsKeeper.SetDelegatorIntent(
@@ -110,16 +110,16 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 
 	// check for intents set above
 	intents = icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	s.Require().Len(intents, 3)
+	suite.Require().Len(intents, 3)
 
 	// delete intent for testAddress
 	icsKeeper.DeleteDelegatorIntent(ctx, &zone, testAddress, false)
 
 	// check intents
 	intents = icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	s.Require().Len(intents, 2)
+	suite.Require().Len(intents, 2)
 
-	s.T().Logf("intents:\n%+v\n", intents)
+	suite.T().Logf("intents:\n%+v\n", intents)
 
 	// update intent for user1
 	err := icsKeeper.UpdateDelegatorIntent(
@@ -134,18 +134,18 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 		),
 		nil,
 	)
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
 
 	// load and match pointers
 	intentsPointers := icsKeeper.AllDelegatorIntentsAsPointer(ctx, &zone, false)
 	for i, ip := range intentsPointers {
-		s.Require().Equal(intents[i], *ip)
+		suite.Require().Equal(intents[i], *ip)
 	}
 
-	s.T().Logf("intents:\n%+v\n", intentsPointers)
+	suite.T().Logf("intents:\n%+v\n", intentsPointers)
 }
 
-func (s *KeeperTestSuite) TestAggregateIntent() {
+func (suite *KeeperTestSuite) TestAggregateIntent() {
 	tc := []struct {
 		name     string
 		intents  func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.DelegatorIntent
@@ -314,19 +314,19 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 	}
 
 	for _, tt := range tc {
-		s.Run(tt.name, func() {
-			s.SetupTest()
-			s.setupTestZones()
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
 
-			quicksilver := s.GetQuicksilverApp(s.chainA)
-			ctx := s.chainA.GetContext()
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
 			icsKeeper := quicksilver.InterchainstakingKeeper
-			zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
-			s.Require().True(found)
+			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.Require().True(found)
 
 			// give each user some funds
 			for addrString, balance := range tt.balances() {
-				s.giveFunds(ctx, zone.LocalDenom, balance, addrString)
+				suite.giveFunds(ctx, zone.LocalDenom, balance, addrString)
 			}
 
 			for _, intent := range tt.intents(ctx, quicksilver, zone) {
@@ -336,17 +336,17 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 			_ = icsKeeper.AggregateDelegatorIntents(ctx, &zone)
 
 			// refresh zone to pull new aggregate
-			zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
-			s.Require().True(found)
+			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.Require().True(found)
 
 			actual, err := icsKeeper.GetAggregateIntentOrDefault(ctx, &zone)
-			s.Require().NoError(err)
-			s.Require().Equal(tt.expected(ctx, quicksilver, zone), actual)
+			suite.Require().NoError(err)
+			suite.Require().Equal(tt.expected(ctx, quicksilver, zone), actual)
 		})
 	}
 }
 
-// func (s *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
+// func (suite *KeeperTestSuite) TestAggregateIntentWithPRClaims() {
 // 	tc := []struct {
 // 		name     string
 // 		intents  func(zone icstypes.Zone) []icstypes.DelegatorIntent
@@ -423,21 +423,21 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 // 	}
 
 // 	for _, tt := range tc {
-// 		s.Run(tt.name, func() {
-// 			s.SetupTest()
-// 			s.setupTestZones()
+// 		suite.Run(tt.name, func() {
+// 			suite.SetupTest()
+// 			suite.setupTestZones()
 
-// 			quicksilver := s.GetQuicksilverApp(s.chainA)
-// 			ctx := s.chainA.GetContext()
+// 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+// 			ctx := suite.chainA.GetContext()
 // 			icsKeeper := quicksilver.InterchainstakingKeeper
-// 			zone, found := icsKeeper.GetZone(ctx, s.chainB.ChainID)
-// 			s.Require().True(found)
+// 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+// 			suite.Require().True(found)
 
 // 			// give each user some funds
 // 			for addrString, balance := range tt.balances(zone.LocalDenom) {
 // 				quicksilver.MintKeeper.MintCoins(ctx, balance)
 // 				addr, err := utils.AccAddressFromBech32(addrString, "")
-// 				s.Require().NoError(err)
+// 				suite.Require().NoError(err)
 // 				quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, balance)
 // 			}
 
@@ -452,11 +452,11 @@ func (s *KeeperTestSuite) TestAggregateIntent() {
 // 			icsKeeper.AggregateDelegatorIntents(ctx, zone)
 
 // 			// refresh zone to pull new aggregate
-// 			zone, found = icsKeeper.GetZone(ctx, s.chainB.ChainID)
-// 			s.Require().True(found)
+// 			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+// 			suite.Require().True(found)
 
 // 			actual := zone.GetAggregateIntentOrDefault()
-// 			s.Require().Equal(tt.expected(zone), actual)
+// 			suite.Require().Equal(tt.expected(zone), actual)
 // 		})
 // 	}
 // }
