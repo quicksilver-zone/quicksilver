@@ -844,16 +844,26 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		}
 		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
 	}
-
 	switch {
 	case memo == "rewards":
 	case strings.HasPrefix(memo, "batch"):
+		k.Logger(ctx).Debug("batch delegation", "memo", memo, "tx", delegateMsg)
 		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
 		if err != nil {
 			return err
 		}
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
 		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime())
+		// fmt.Println(zone.DelegationAddress.Balance)
+		// fmt.Println(delegateMsg.Amount)
+		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
+		k.SetZone(ctx, zone)
+		if zone.DelegationAddress.Balance.IsZero() && zone.WithdrawalWaitgroup == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
+			if err = k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
 	default:
 		receipt, found := k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, memo))
 		if !found {
@@ -1050,31 +1060,36 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 		k.SetZone(ctx, zone)
 	}
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.WithdrawalWaitgroup, "delegator", withdrawalMsg.DelegatorAddress)
-	switch zone.WithdrawalWaitgroup {
-	case 0:
-		// interface assertion
-		balanceQuery := banktypes.QueryAllBalancesRequest{Address: zone.WithdrawalAddress.Address}
-		bz, err := k.cdc.Marshal(&balanceQuery)
-		if err != nil {
-			return err
-		}
-		k.Logger(ctx).Info("Distributing rewards")
-		// total rewards balance withdrawn
-		k.ICQKeeper.MakeRequest(
-			ctx,
-			zone.ConnectionId,
-			zone.ChainId,
-			"cosmos.bank.v1beta1.Query/AllBalances",
-			bz,
-			sdk.NewInt(int64(-1)),
-			types.ModuleName,
-			"distributerewards",
-			0,
-		)
-		return nil
+	switch zone.WithdrawalWaitgroup == 0 && zone.DelegationAddress.Balance.IsZero() {
+	case true:
+		k.Logger(ctx).Info("triggering redemption rate calc after rewards withdrawal")
+		return k.TriggerRedemptionRate(ctx, zone)
 	default:
 		return nil
 	}
+}
+
+func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error {
+	// interface assertion
+	balanceQuery := banktypes.QueryAllBalancesRequest{Address: zone.WithdrawalAddress.Address}
+	bz, err := k.cdc.Marshal(&balanceQuery)
+	if err != nil {
+		return err
+	}
+	k.Logger(ctx).Info("Distributing rewards")
+	// total rewards balance withdrawn
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		zone.ConnectionId,
+		zone.ChainId,
+		"cosmos.bank.v1beta1.Query/AllBalances",
+		bz,
+		sdk.NewInt(int64(-1)),
+		types.ModuleName,
+		"distributerewards",
+		0,
+	)
+	return nil
 }
 
 func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {
