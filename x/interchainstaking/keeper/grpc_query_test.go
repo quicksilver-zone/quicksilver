@@ -836,7 +836,7 @@ func (s *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 
 func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
-	usrAddress1, _ := utils.AccAddressFromBech32("quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq", "quick")
+	usrAddress1, _ := utils.AccAddressFromBech32("cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn", "cosmos")
 	ctx := s.chainA.GetContext()
 
 	tests := []struct {
@@ -869,7 +869,7 @@ func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 				}
 				icsKeeper.SetZone(ctx, &zone)
 			},
-			&types.QueryMappedAccountsRequest{Address: "quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq"},
+			&types.QueryMappedAccountsRequest{Address: "cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn"},
 			false,
 			0,
 		},
@@ -892,7 +892,7 @@ func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 
 				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, utils.GenerateRandomHash(), zone.ChainId)
 			},
-			&types.QueryMappedAccountsRequest{Address: "quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq"},
+			&types.QueryMappedAccountsRequest{Address: "cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn"},
 			false,
 			1,
 		},
@@ -929,7 +929,7 @@ func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 
 				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, utils.GenerateRandomHash(), zone2.ChainId)
 			},
-			&types.QueryMappedAccountsRequest{Address: "quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq"},
+			&types.QueryMappedAccountsRequest{Address: "cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn"},
 			false,
 			2,
 		},
