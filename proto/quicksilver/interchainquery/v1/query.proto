@@ -45,4 +45,6 @@ message GetTxWithProofResponse {
   tendermint.types.TxProof proof = 3;
   // ibc-go header to validate txs
   ibc.lightclients.tendermint.v1.Header header = 4;
+  // tx_bytes is the byte representation of the queried tx
+  bytes tx_bytes = 5;
 }
