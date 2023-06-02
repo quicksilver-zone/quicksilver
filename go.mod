@@ -309,6 +309,7 @@ replace (
 	// https://github.com/CosmWasm/wasmd/pull/938
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.40.0-tf.rc4
 	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0
+	github.com/cosmos/ledger-cosmos-go v0.13.0 => github.com/cosmos/ledger-cosmos-go v0.12.1
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
