@@ -9,10 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	
+
+	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	config "github.com/ingenuity-build/quicksilver/cmd/config"
 )
 
 var _ types.QueryServer = &Keeper{}
