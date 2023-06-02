@@ -423,7 +423,6 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					suite.Require().True(found)
 					for _, unbonding := range actualRecord.Distribution {
 						r, found := quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ChainId, unbonding.Valoper, 1)
-						fmt.Println(r)
 						suite.Require().True(found)
 						suite.Require().Contains(r.RelatedTxhash, record.Txhash)
 					}
@@ -1473,8 +1472,6 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 
 	// mock ack for redelegations
 	quicksilver.InterchainstakingKeeper.IteratePrefixedRedelegationRecords(ctx, []byte(zone.ChainId), func(idx int64, _ []byte, record icstypes.RedelegationRecord) (stop bool) {
-		fmt.Println(record)
-		fmt.Println("##")
 		if record.EpochNumber == 2 {
 			msg := stakingtypes.MsgBeginRedelegate{
 				DelegatorAddress:    zone.DelegationAddress.Address,
