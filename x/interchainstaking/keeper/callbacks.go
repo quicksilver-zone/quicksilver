@@ -2,20 +2,27 @@ package keeper
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"google.golang.org/protobuf/encoding/protowire"
+
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -419,18 +426,37 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
-	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, res.GetTxResponse().TxHash))
+	// check tx is valid for hash.
+	hash := tmhash.Sum(res.Proof.Data)
+	hashStr := hex.EncodeToString(hash)
+
+	queryRequest := tx.GetTxRequest{}
+	err = k.cdc.Unmarshal(query.Request, &queryRequest)
+	if err != nil {
+		return err
+	}
+
+	// check hash matches query
+	if !strings.EqualFold(hashStr, queryRequest.Hash) {
+		return fmt.Errorf("invalid tx for query - expected %s, got %s", queryRequest.Hash, hashStr)
+	}
+
+	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hashStr))
 	if found {
-		k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", res.GetTxResponse().TxHash)
+		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", hashStr)
 		return nil
 	}
 
-	err = k.CheckTMHeaderForZone(ctx, &zone, res)
+	txn, err := TxDecoder(k.cdc)(res.Proof.Data)
 	if err != nil {
-		return fmt.Errorf("unable  to verify proof: %w", err)
+		return err
 	}
 
-	return k.HandleReceiptForTransaction(ctx, res.GetTxResponse(), res.GetTx(), &zone)
+	txtx, ok := txn.(*tx.Tx)
+	if !ok {
+		return errors.New("cannot assert type of tx")
+	}
+	return k.HandleReceiptTransaction(ctx, txtx, hashStr, zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.
@@ -566,4 +592,114 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 	k.SetZone(ctx, &zone)
 
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
+}
+
+// TxDecoder
+func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		// Make sure txBytes follow ADR-027.
+		err := rejectNonADR027TxRaw(txBytes)
+		if err != nil {
+			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
+		var raw tx.TxRaw
+
+		err = cdc.Unmarshal(txBytes, &raw)
+		if err != nil {
+			return nil, err
+		}
+
+		var body tx.TxBody
+
+		err = cdc.Unmarshal(raw.BodyBytes, &body)
+		if err != nil {
+			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
+		var authInfo tx.AuthInfo
+
+		err = cdc.Unmarshal(raw.AuthInfoBytes, &authInfo)
+		if err != nil {
+			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
+		return &tx.Tx{
+			Body:       &body,
+			AuthInfo:   &authInfo,
+			Signatures: raw.Signatures,
+		}, nil
+	}
+}
+
+func rejectNonADR027TxRaw(txBytes []byte) error {
+	// Make sure all fields are ordered in ascending order with this variable.
+	prevTagNum := protowire.Number(0)
+
+	for len(txBytes) > 0 {
+		tagNum, wireType, m := protowire.ConsumeTag(txBytes)
+		if m < 0 {
+			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
+		}
+		// TxRaw only has bytes fields.
+		if wireType != protowire.BytesType {
+			return fmt.Errorf("expected %d wire type, got %d", protowire.BytesType, wireType)
+		}
+		// Make sure fields are ordered in ascending order.
+		if tagNum < prevTagNum {
+			return fmt.Errorf("txRaw must follow ADR-027, got tagNum %d after tagNum %d", tagNum, prevTagNum)
+		}
+		prevTagNum = tagNum
+
+		// All 3 fields of TxRaw have wireType == 2, so their next component
+		// is a varint, so we can safely call ConsumeVarint here.
+		// Byte structure: <varint of bytes length><bytes sequence>
+		// Inner  fields are verified in `DefaultTxDecoder`
+		lengthPrefix, m := protowire.ConsumeVarint(txBytes[m:])
+		if m < 0 {
+			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
+		}
+		// We make sure that this varint is as short as possible.
+		n := varintMinLength(lengthPrefix)
+		if n != m {
+			return fmt.Errorf("length prefix varint for tagNum %d is not as short as possible, read %d, only need %d", tagNum, m, n)
+		}
+
+		// Skip over the bytes that store fieldNumber and wireType bytes.
+		_, _, m = protowire.ConsumeField(txBytes)
+		if m < 0 {
+			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
+		}
+		txBytes = txBytes[m:]
+	}
+
+	return nil
+}
+
+// varintMinLength returns the minimum number of bytes necessary to encode an
+// uint using varint encoding.
+func varintMinLength(n uint64) int {
+	switch {
+	// Note: 1<<N == 2**N.
+	case n < 1<<(7):
+		return 1
+	case n < 1<<(7*2):
+		return 2
+	case n < 1<<(7*3):
+		return 3
+	case n < 1<<(7*4):
+		return 4
+	case n < 1<<(7*5):
+		return 5
+	case n < 1<<(7*6):
+		return 6
+	case n < 1<<(7*7):
+		return 7
+	case n < 1<<(7*8):
+		return 8
+	case n < 1<<(7*9):
+		return 9
+	default:
+		return 10
+	}
 }

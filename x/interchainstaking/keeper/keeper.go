@@ -8,6 +8,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,6 +48,7 @@ type Keeper struct {
 	IBCKeeper           ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
+	Ir                  codectypes.InterfaceRegistry
 	paramStore          paramtypes.Subspace
 }
 
