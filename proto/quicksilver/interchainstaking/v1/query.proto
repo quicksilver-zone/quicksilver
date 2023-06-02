@@ -70,6 +70,11 @@ service Query {
       "/quicksilver/interchainstaking/v1/zones/"
       "{chain_id}/redelegation_records";
   }
+
+  // MappedAccounts provides data on the mapped accounts for a given user over different host chains.
+  rpc MappedAccounts(QueryMappedAccountsRequest) returns (QueryMappedAccountsResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/mapped_addresses/{address}";
+  }
 }
 
 message Statistics {
@@ -80,6 +85,11 @@ message Statistics {
   int64 delegated = 5;
   int64 supply = 6;
   string distance_to_target = 7;
+}
+
+message MappedAccount {
+  string chain_id = 1;
+  bytes address = 2;
 }
 
 message QueryZonesRequest {
@@ -182,5 +192,15 @@ message QueryRedelegationRecordsRequest {
 
 message QueryRedelegationRecordsResponse {
   repeated RedelegationRecord redelegations = 1 [(gogoproto.nullable) = false];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryMappedAccountsRequest {
+  string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryMappedAccountsResponse {
+  repeated MappedAccount mapped_accounts = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

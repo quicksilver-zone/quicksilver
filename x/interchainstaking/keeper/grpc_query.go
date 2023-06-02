@@ -7,9 +7,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	config "github.com/ingenuity-build/quicksilver/cmd/config"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -253,4 +256,35 @@ func (k *Keeper) RedelegationRecords(c context.Context, req *types.QueryRedelega
 	redelegations := k.ZoneRedelegationRecords(ctx, req.ChainId)
 
 	return &types.QueryRedelegationRecordsResponse{Redelegations: redelegations}, nil
+}
+
+func (k *Keeper) MappedAccounts(c context.Context, req *types.QueryMappedAccountsRequest) (*types.QueryMappedAccountsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	var mappedAccounts []types.MappedAccount
+
+	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+		var mappedAccount types.MappedAccount
+		if !zone.Is_118 {
+			addrBytes, err := utils.AccAddressFromBech32(req.Address, config.Bech32Prefix)
+			if err != nil {
+				return false
+			}
+			remoteAddress, found := k.GetRemoteAddressMap(ctx, addrBytes, zone.ChainId)
+			if !found {
+				return false
+			}
+			mappedAccount.ChainId = zone.ChainId
+			mappedAccount.Address = remoteAddress
+			mappedAccounts = append(mappedAccounts, mappedAccount)
+		}
+		return false
+	})
+
+	return &types.QueryMappedAccountsResponse{MappedAccounts: mappedAccounts}, nil
+
 }

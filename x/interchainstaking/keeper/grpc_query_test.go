@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -824,6 +825,132 @@ func (s *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 			s.Require().NoError(err)
 			s.Require().NotNil(resp)
 			s.Require().Equal(tt.expectLength, len(resp.Redelegations))
+
+			vstr, err := json.MarshalIndent(resp, "", "\t")
+			s.Require().NoError(err)
+
+			s.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
+	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
+	usrAddress1, _ := utils.AccAddressFromBech32("quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq", "quick")
+	ctx := s.chainA.GetContext()
+
+	tests := []struct {
+		name         string
+		malleate     func()
+		req          *types.QueryMappedAccountsRequest
+		wantErr      bool
+		expectLength int
+	}{
+		{
+			"MappedAccounts_Nil_Request",
+			func() {},
+			nil,
+			true,
+			0,
+		},
+		{
+			"MappedAccounts_NoRecords_Request",
+			func() {
+				// setup zones
+				zone := types.Zone{
+					ConnectionId:    "connection-77001",
+					ChainId:         "evmos_9001-1",
+					AccountPrefix:   "evmos",
+					LocalDenom:      "uqevmos",
+					BaseDenom:       "uevmos",
+					MultiSend:       false,
+					LiquidityModule: false,
+					Is_118:          false,
+				}
+				icsKeeper.SetZone(ctx, &zone)
+			},
+			&types.QueryMappedAccountsRequest{Address: "quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq"},
+			false,
+			0,
+		},
+		{
+			"MappedAccounts_ValidRecord_Request",
+			func() {
+				// setup zones
+				s.setupTestZones()
+				zone := types.Zone{
+					ConnectionId:    "connection-77881",
+					ChainId:         "evmos_9001-1",
+					AccountPrefix:   "evmos",
+					LocalDenom:      "uqevmos",
+					BaseDenom:       "uevmos",
+					MultiSend:       false,
+					LiquidityModule: false,
+					Is_118:          false,
+				}
+				icsKeeper.SetZone(ctx, &zone)
+
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, utils.GenerateRandomHash(), zone.ChainId)
+			},
+			&types.QueryMappedAccountsRequest{Address: "quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq"},
+			false,
+			1,
+		},
+
+		{
+			"MappedAccounts_ValidMultipleRecord_Request",
+			func() {
+				// setup zones
+				zone := types.Zone{
+					ConnectionId:    "connection-77881",
+					ChainId:         "evmos_9001-1",
+					AccountPrefix:   "evmos",
+					LocalDenom:      "uqevmos",
+					BaseDenom:       "uevmos",
+					MultiSend:       false,
+					LiquidityModule: false,
+					Is_118:          false,
+				}
+				icsKeeper.SetZone(ctx, &zone)
+
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, utils.GenerateRandomHash(), zone.ChainId)
+
+				zone2 := types.Zone{
+					ConnectionId:    "connection-77891",
+					ChainId:         "injective-1",
+					AccountPrefix:   "injective",
+					LocalDenom:      "uqinj",
+					BaseDenom:       "uinj",
+					MultiSend:       false,
+					LiquidityModule: false,
+					Is_118:          false,
+				}
+				icsKeeper.SetZone(ctx, &zone2)
+
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, utils.GenerateRandomHash(), zone2.ChainId)
+			},
+			&types.QueryMappedAccountsRequest{Address: "quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq"},
+			false,
+			2,
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.MappedAccounts(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr {
+				s.T().Logf("Error:\n%v\n", err)
+				s.Require().Error(err)
+				return
+			}
+			s.Require().NoError(err)
+			s.Require().NotNil(resp)
+			s.Require().Equal(tt.expectLength, len(resp.MappedAccounts))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
 			s.Require().NoError(err)
