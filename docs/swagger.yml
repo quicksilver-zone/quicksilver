@@ -2383,7 +2383,7 @@ paths:
     get:
       summary: >-
         MappedAccounts provides data on the mapped accounts for a given user
-        over different chains.
+        over different host chains.
       operationId: MappedAccounts
       responses:
         '200':
@@ -2391,16 +2391,11 @@ paths:
           schema:
             type: object
             properties:
-              mapped_accounts:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    chain_id:
-                      type: string
-                    address:
-                      type: string
-                      format: byte
+              RemoteAddressMap:
+                type: object
+                additionalProperties:
+                  type: string
+                  format: byte
               pagination:
                 type: object
                 properties:

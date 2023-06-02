@@ -67,15 +67,3 @@ func (k *Keeper) SetAddressMapPair(ctx sdk.Context, localAddress, remoteAddress 
 	k.SetLocalAddressMap(ctx, localAddress, remoteAddress, chainID)
 	k.SetRemoteAddressMap(ctx, localAddress, remoteAddress, chainID)
 }
-
-func GetMappedAccounts(remoteAddressMap map[string][]byte) []types.MappedAccount {
-	mappedAccounts := make([]types.MappedAccount, 0, len(remoteAddressMap))
-	for chainID, remoteAddress := range remoteAddressMap {
-		mappedAccounts = append(mappedAccounts, types.MappedAccount{
-			ChainId: chainID,
-			Address: remoteAddress,
-		})
-	}
-
-	return mappedAccounts
-}

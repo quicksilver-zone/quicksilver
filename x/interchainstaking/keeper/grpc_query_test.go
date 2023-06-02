@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -950,7 +949,7 @@ func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 			}
 			s.Require().NoError(err)
 			s.Require().NotNil(resp)
-			s.Require().Equal(tt.expectLength, len(resp.MappedAccounts))
+			s.Require().Equal(tt.expectLength, len(resp.RemoteAddressMap))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
 			s.Require().NoError(err)

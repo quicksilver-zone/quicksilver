@@ -87,11 +87,6 @@ message Statistics {
   string distance_to_target = 7;
 }
 
-message MappedAccount {
-  string chain_id = 1;
-  bytes address = 2;
-}
-
 message QueryZonesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
@@ -201,6 +196,6 @@ message QueryMappedAccountsRequest {
 }
 
 message QueryMappedAccountsResponse {
-  repeated MappedAccount mapped_accounts = 1 [(gogoproto.nullable) = false];
+   map<string, bytes> RemoteAddressMap= 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
