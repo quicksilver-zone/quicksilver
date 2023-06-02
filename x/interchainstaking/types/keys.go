@@ -153,3 +153,8 @@ func GetUnbondingKey(chainID, validator string, epochNumber int64) []byte {
 func GetZoneValidatorsKey(chainID string) []byte {
 	return append(KeyPrefixValidatorsInfo, []byte(chainID)...)
 }
+
+// GetRemoteAddressPrefix gets the prefix for a remote address mapping.
+func GetRemoteAddressPrefix(locaAddress []byte) []byte {
+	return append(KeyPrefixRemoteAddress, locaAddress...)
+}
