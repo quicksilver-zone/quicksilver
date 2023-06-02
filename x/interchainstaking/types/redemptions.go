@@ -1,8 +1,6 @@
 package types
 
 import (
-	"fmt"
-
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -34,7 +32,6 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 			if !deltas[idx].Weight.IsNegative() {
 				continue
 			}
-			fmt.Println("trying to remove from overallocated", deltas[idx].ValoperAddress)
 			outWeights[deltas[idx].ValoperAddress] = deltas[idx].Weight.Quo(sdk.NewDecFromInt(sum)).Mul(sdk.NewDecFromInt(overAllocationSplit)).TruncateInt().Abs()
 			if outWeights[deltas[idx].ValoperAddress].GT(availablePerValidator[deltas[idx].ValoperAddress]) {
 				outWeights[deltas[idx].ValoperAddress] = availablePerValidator[deltas[idx].ValoperAddress]
@@ -42,7 +39,6 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 			} else {
 				availablePerValidator[deltas[idx].ValoperAddress] = availablePerValidator[deltas[idx].ValoperAddress].Sub(outWeights[deltas[idx].ValoperAddress])
 			}
-			fmt.Println("removed from overallocated", outWeights[deltas[idx].ValoperAddress])
 			deltas[idx].Weight = deltas[idx].Weight.Add(sdk.NewDecFromInt(outWeights[deltas[idx].ValoperAddress]))
 			outSum = outSum.Add(outWeights[deltas[idx].ValoperAddress])
 

@@ -447,7 +447,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return nil
 	}
 
-	txn, err := TxDecoder(k.cdc)(res.Proof.Data)
+	txn, err := txDecoder(k.cdc)(res.Proof.Data)
 	if err != nil {
 		return err
 	}
@@ -594,8 +594,8 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
 }
 
-// TxDecoder
-func TxDecoder(cdc codec.Codec) sdk.TxDecoder {
+// txDecoder.
+func txDecoder(cdc codec.Codec) sdk.TxDecoder {
 	return func(txBytes []byte) (sdk.Tx, error) {
 		// Make sure txBytes follow ADR-027.
 		err := rejectNonADR027TxRaw(txBytes)
