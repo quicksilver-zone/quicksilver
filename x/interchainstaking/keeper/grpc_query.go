@@ -7,11 +7,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	config "github.com/ingenuity-build/quicksilver/cmd/config"
-	"github.com/ingenuity-build/quicksilver/utils"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	
+	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	config "github.com/ingenuity-build/quicksilver/cmd/config"
 )
 
 var _ types.QueryServer = &Keeper{}
