@@ -119,6 +119,39 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 	return nil
 }
 
+// SendTokenIBC is a helper function that finds the zone channel and performs an ibc transfer from senderAccAddress
+// to receiver.
+func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, receiver string, zone *types.Zone, coin sdk.Coin) error {
+	var srcPort string
+	var srcChannel string
+
+	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
+		if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
+			srcChannel = channel.Counterparty.ChannelId
+			srcPort = channel.Counterparty.PortId
+			return true
+		}
+		return false
+	})
+	if srcPort == "" {
+		return errors.New("unable to find remote transfer connection")
+	}
+
+	return k.TransferKeeper.SendTransfer(
+		ctx,
+		srcPort,
+		srcChannel,
+		coin,
+		senderAccAddress,
+		receiver,
+		clienttypes.Height{
+			RevisionNumber: 0,
+			RevisionHeight: 0,
+		},
+		uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
+	)
+}
+
 // MintQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
 func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress []byte) error {
 	if zone.RedemptionRate.IsZero() {
@@ -131,6 +164,16 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 		qAssets = qAssets.Add(sdk.NewCoin(zone.LocalDenom, amount))
 	}
 
+	// check if a remote address exists for a non 118 coin type zone
+	if mappedAddress == nil && !zone.Is_118 {
+		var found bool
+		mappedAddress, found = k.GetRemoteAddressMap(ctx, sender, zone.ChainId)
+		if !found {
+			// if not found, skip minting and refund assets
+			return k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, assets[0])
+		}
+	}
+
 	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", qAssets)
 	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, qAssets)
 	if err != nil {
@@ -139,34 +182,8 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 
 	switch {
 	case zone.ReturnToSender || memoRTS:
-		var srcPort string
-		var srcChannel string
+		err = k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, qAssets[0])
 
-		k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
-			if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
-				srcChannel = channel.Counterparty.ChannelId
-				srcPort = channel.Counterparty.PortId
-				return true
-			}
-			return false
-		})
-		if srcPort == "" {
-			return errors.New("unable to find remote transfer connection")
-		}
-
-		err = k.TransferKeeper.SendTransfer(
-			ctx,
-			srcPort,
-			srcChannel,
-			qAssets[0],
-			k.AccountKeeper.GetModuleAddress(types.ModuleName),
-			senderAddress,
-			clienttypes.Height{
-				RevisionNumber: 0,
-				RevisionHeight: 0,
-			},
-			uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
-		)
 	case mappedAddress != nil:
 		// set mapped account
 		k.SetAddressMapPair(ctx, sender, mappedAddress, zone.ChainId)
@@ -174,7 +191,12 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 		// set send to mapped account
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mappedAddress, qAssets)
 	default:
-		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
+		if !zone.Is_118 {
+			err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mappedAddress, qAssets)
+		} else {
+			err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
+		}
+
 	}
 
 	if err != nil {
