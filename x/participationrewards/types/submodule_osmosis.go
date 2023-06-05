@@ -3,8 +3,10 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/balancer"
@@ -24,8 +26,13 @@ type OsmosisPoolProtocolData struct {
 	LastUpdated    time.Time
 	PoolData       json.RawMessage
 	PoolType       string
-	Zones          map[string]string // chainID: IBC/denom
+	Denoms         map[string]DenomWithZone
 	IsIncentivized bool
+}
+
+type DenomWithZone struct {
+	Denom   string
+	ChainId string
 }
 
 func (opd *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
@@ -82,15 +89,15 @@ func (opd *OsmosisPoolProtocolData) ValidateBasic() error {
 	}
 
 	i := 0
-	for chainID, denom := range opd.Zones {
-		el := fmt.Sprintf("Zones[%d]", i)
+	for ibcdenom, denom := range opd.Denoms {
+		el := fmt.Sprintf("Denoms[%s]", ibcdenom)
 
-		if chainID == "" {
-			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrUndefinedAttribute)
+		if denom.ChainId == "" || len(strings.Split(denom.ChainId, "-")) < 2 {
+			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrInvalidChainID)
 		}
 
-		if denom == "" {
-			errs[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrUndefinedAttribute)
+		if denom.Denom == "" || sdk.ValidateDenom(denom.Denom) != nil {
+			errs[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrInvalidDenom)
 		}
 
 		i++

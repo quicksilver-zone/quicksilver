@@ -197,12 +197,15 @@ func TestUnmarshalProtocolData(t *testing.T) {
 			"osmosispool_data",
 			args{
 				datatype: types.ProtocolDataTypeOsmosisPool,
-				data:     []byte(`{"poolid": 1, "poolname": "atom/osmo","zones": {"cosmoshub-4": "IBC/atom_denom", "osmosis-1": "IBC/osmo_denom"}}`),
+				data:     []byte(`{"poolid": 1, "poolname": "atom/osmo","denoms": {"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2": {"denom": "uatom", "chainid": "cosmoshub-4"}, "uosmo": {"denom": "uosmo", "chainid": "osmosis-1"}}}`),
 			},
 			&types.OsmosisPoolProtocolData{
 				PoolID:   1,
 				PoolName: "atom/osmo",
-				Zones:    map[string]string{"cosmoshub-4": "IBC/atom_denom", "osmosis-1": "IBC/osmo_denom"},
+				Denoms: map[string]types.DenomWithZone{
+					"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2": {Denom: "uatom", ChainId: "cosmoshub-4"},
+					"uosmo": {Denom: "uosmo", ChainId: "osmosis-1"},
+				},
 			},
 			false,
 		},

@@ -371,15 +371,18 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	suite.addProtocolData(
 		types.ProtocolDataTypeOsmosisPool,
 		[]byte(fmt.Sprintf(
-			"{\"poolid\":%d,\"poolname\":%q,\"pooltype\":\"balancer\",\"zones\":{%q:%q,%q:%q}}",
+			"{\"poolid\":%d,\"poolname\":%q,\"pooltype\":\"balancer\",\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
 			1,
 			"atom/osmo",
-			"cosmoshub-4",
 			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
-			"osmosis-1",
+			"cosmoshub-4",
+			"uatom",
 			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159",
+			"osmosis-1",
+			"uosmo",
 		)),
 	)
+
 	// atom (cosmoshub) on osmosis
 	suite.addProtocolData(
 		types.ProtocolDataTypeLiquidToken,
@@ -408,7 +411,7 @@ func (suite *KeeperTestSuite) addProtocolData(dataType types.ProtocolDataType, d
 
 	pd := types.ProtocolData{
 		Type: types.ProtocolDataType_name[int32(dataType)],
-		Data: []byte(data),
+		Data: data,
 	}
 
 	upd, err := types.UnmarshalProtocolData(dataType, pd.Data)
@@ -457,11 +460,15 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 }
 
 func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender, hash string, coins sdk.Coins) {
+	t := time.Now().Add(-time.Hour)
+	t2 := time.Now().Add(-5 * time.Minute)
 	receipt := icstypes.Receipt{
-		ChainId: zone.ChainId,
-		Sender:  sender,
-		Txhash:  hash,
-		Amount:  coins,
+		ChainId:   zone.ChainId,
+		Sender:    sender,
+		Txhash:    hash,
+		Amount:    coins,
+		FirstSeen: &t,
+		Completed: &t2,
 	}
 
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), receipt)

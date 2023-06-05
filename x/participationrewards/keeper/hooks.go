@@ -62,7 +62,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 			sub.Hooks(ctx, k)
 		}
 
-		tvs, err := k.calcTokenValues(ctx)
+		tvs, err := k.CalcTokenValues(ctx)
 		if err != nil {
 			k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
 			return nil

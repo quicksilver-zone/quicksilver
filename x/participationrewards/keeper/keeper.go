@@ -118,12 +118,13 @@ func (k *Keeper) GetCodec() codec.BinaryCodec {
 }
 
 func (k *Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
-	selfConnectionData, err := json.Marshal(types.ConnectionProtocolData{
+	selfConnectionData := types.ConnectionProtocolData{
 		ConnectionID: types.SelfConnection,
 		ChainID:      ctx.ChainID(),
 		LastEpoch:    ctx.BlockHeight() - 2, // reason why -2 works here.
 		Prefix:       config.Bech32Prefix,
-	})
+	}
+	selfConnectionDataBlob, err := json.Marshal(selfConnectionData)
 	if err != nil {
 		k.Logger(ctx).Info("Error Marshalling self connection Data")
 		return err
@@ -131,10 +132,10 @@ func (k *Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 
 	data := types.ProtocolData{
 		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
-		Data: selfConnectionData,
+		Data: selfConnectionDataBlob,
 	}
 	k.Logger(ctx).Info("Setting self protocol data", "data", data)
-	k.SetProtocolData(ctx, []byte(ctx.ChainID()), &data)
+	k.SetProtocolData(ctx, selfConnectionData.GenerateKey(), &data)
 
 	return nil
 }

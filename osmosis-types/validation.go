@@ -34,9 +34,9 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 	pool, _ := ipool.(*participationrewardstypes.OsmosisPoolProtocolData)
 
 	poolDenom := ""
-	for zk, zd := range pool.Zones {
-		if zk == chainID {
-			poolDenom = zd
+	for zk, zd := range pool.Denoms {
+		if zd.ChainId == chainID {
+			poolDenom = zk
 			break
 		}
 	}

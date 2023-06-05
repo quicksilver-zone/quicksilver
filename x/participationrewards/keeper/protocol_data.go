@@ -20,7 +20,7 @@ func (k *Keeper) GetProtocolData(ctx sdk.Context, pdType types.ProtocolDataType,
 	return data, true
 }
 
-// SetProtocolData set protocol data info
+// SetProtocolData set protocol data info.
 func (k Keeper) SetProtocolData(ctx sdk.Context, key []byte, data *types.ProtocolData) {
 	if data == nil {
 		k.Logger(ctx).Error("protocol data not set; value is nil")
