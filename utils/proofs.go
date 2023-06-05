@@ -9,11 +9,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	commitmenttypes "github.com/cosmos/ibc-go/v7/modules/core/23-commitment/types"
-	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
-	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-
 )
 
 type ProofOpsFn func(ctx sdk.Context, ibcKeeper *ibckeeper.Keeper, connectionID, chainID string, height int64, module string, key []byte, data []byte, proofOps *crypto.ProofOps) error
@@ -41,7 +39,7 @@ func ValidateProofOps(
 	if !found {
 		return errors.New("unable to fetch consensus state")
 	}
-	expConsensusState, ok := consensusState.(*ibctm.ConsensusState)
+	expConsensusState, ok := consensusState.(*tmclienttypes.ConsensusState)
 	if !ok {
 		return errors.New("unable to convert consensus state")
 	}

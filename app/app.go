@@ -43,11 +43,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/ingenuity-build/quicksilver/app/keepers"
 	"github.com/ingenuity-build/quicksilver/docs"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 )
 
 func Init() {
@@ -67,7 +67,7 @@ var (
 	// DefaultNodeHome default home directories for the application daemon.
 	DefaultNodeHome string
 
-	// module accounts that are allowed to receive tokens
+	// module accounts that are allowed to receive tokens.
 	allowedReceivingModAcc = map[string]bool{
 		distrtypes.ModuleName:             true,
 		interchainstakingtypes.ModuleName: true,

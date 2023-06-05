@@ -7,7 +7,6 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
-	"github.com/ingenuity-build/quicksilver/app/upgrades"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -22,6 +21,7 @@ import (
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ingenuity-build/quicksilver/app/upgrades"
 )
 
 func (app *Quicksilver) setUpgradeHandlers() {
@@ -73,7 +73,7 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 	}
 }
 
-// TODO: Rename
+// TODO: Rename.
 const UpgradeName = "v046-to-v047"
 
 func (app Quicksilver) RegisterUpgradeHandlers() {

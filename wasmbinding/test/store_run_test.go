@@ -38,6 +38,8 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Qui
 
 	govKeeper := quicksilverApp.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
+	require.NoError(t, err)
+
 	checksum, err := hex.DecodeString("5686AE32B4CC3811109CD4B37A80B8A99B9FF35323AA4FA0485174A8DF1E5A77")
 	require.NoError(t, err)
 

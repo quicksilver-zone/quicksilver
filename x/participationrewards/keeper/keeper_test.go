@@ -544,13 +544,13 @@ func (s *KeeperTestSuite) addClaim(address, chainID string, claimType cmtypes.Cl
 	s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper.SetClaim(s.chainA.GetContext(), &claim)
 }
 
-func (s *KeeperTestSuite) addLastEpochClaim(address, chainID string, claimType cmtypes.ClaimType, sourceChainID string, amount uint64) {
-	claim := cmtypes.Claim{
-		UserAddress:   address,
-		ChainId:       chainID,
-		Module:        claimType,
-		SourceChainId: sourceChainID,
-		Amount:        amount,
-	}
-	s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper.SetLastEpochClaim(s.chainA.GetContext(), &claim)
-}
+// func (s *KeeperTestSuite) addLastEpochClaim(address, chainID string, claimType cmtypes.ClaimType, sourceChainID string, amount uint64) {
+// 	claim := cmtypes.Claim{
+// 		UserAddress:   address,
+// 		ChainId:       chainID,
+// 		Module:        claimType,
+// 		SourceChainId: sourceChainID,
+// 		Amount:        amount,
+// 	}
+// 	s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper.SetLastEpochClaim(s.chainA.GetContext(), &claim)
+// }

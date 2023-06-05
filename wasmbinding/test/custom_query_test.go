@@ -104,9 +104,10 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksi
 
 	govKeeper := quicksilverApp.GovKeeper
 	wasmCode, err := os.ReadFile("../testdata/osmo_reflect.wasm")
+	require.NoError(t, err)
+
 	govAddress := govKeeper.GetGovernanceAccount(ctx).GetAddress().String()
 	checksum, err := hex.DecodeString("DF10BCE8651C409945203319137C69F548183B26E97DCB7898DC51E572740552")
-
 	require.NoError(t, err)
 
 	src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
