@@ -32,7 +32,7 @@ type OsmosisPoolProtocolData struct {
 
 type DenomWithZone struct {
 	Denom   string
-	ChainId string
+	ChainID string
 }
 
 func (opd *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
@@ -92,7 +92,7 @@ func (opd *OsmosisPoolProtocolData) ValidateBasic() error {
 	for ibcdenom, denom := range opd.Denoms {
 		el := fmt.Sprintf("Denoms[%s]", ibcdenom)
 
-		if denom.ChainId == "" || len(strings.Split(denom.ChainId, "-")) < 2 {
+		if denom.ChainID == "" || len(strings.Split(denom.ChainID, "-")) < 2 {
 			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrInvalidChainID)
 		}
 

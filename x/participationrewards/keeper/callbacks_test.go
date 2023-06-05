@@ -53,8 +53,8 @@ func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 		PoolData:    expectedData,
 		PoolType:    "balancer",
 		Denoms: map[string]types.DenomWithZone{
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3": {ChainId: "cosmoshub-4", Denom: "uatom"},
-			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159": {ChainId: "osmosis-1", Denom: "uosmo"},
+			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3": {ChainID: "cosmoshub-4", Denom: "uatom"},
+			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159": {ChainID: "osmosis-1", Denom: "uosmo"},
 		},
 	}
 

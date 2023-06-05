@@ -203,8 +203,8 @@ func TestUnmarshalProtocolData(t *testing.T) {
 				PoolID:   1,
 				PoolName: "atom/osmo",
 				Denoms: map[string]types.DenomWithZone{
-					"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2": {Denom: "uatom", ChainId: "cosmoshub-4"},
-					"uosmo": {Denom: "uosmo", ChainId: "osmosis-1"},
+					"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2": {Denom: "uatom", ChainID: "cosmoshub-4"},
+					"uosmo": {Denom: "uosmo", ChainID: "osmosis-1"},
 				},
 			},
 			false,

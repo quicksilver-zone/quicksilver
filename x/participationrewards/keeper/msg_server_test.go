@@ -267,7 +267,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 	}
 }
 
-func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
+func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 	address := utils.GenerateAccAddressForTest()
 
 	var msg *types.MsgSubmitClaim
@@ -297,8 +297,8 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
-					Zone:        s.chainB.ChainID,
-					SrcZone:     s.chainA.ChainID,
+					Zone:        suite.chainB.ChainID,
+					SrcZone:     suite.chainA.ChainID,
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -318,8 +318,8 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 		{
 			"local_callback_value_invalid_denom",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				s.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
-				s.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
 			},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
@@ -335,8 +335,8 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
-					Zone:        s.chainB.ChainID,
-					SrcZone:     s.chainA.ChainID,
+					Zone:        suite.chainB.ChainID,
+					SrcZone:     suite.chainA.ChainID,
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -356,19 +356,19 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 		{
 			"local_callback_value_valid_denom",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				s.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
-				s.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
 
 				// add uqatom to the list of allowed denoms for this zone
 				rawPd := types.LiquidAllowedDenomProtocolData{
-					ChainID:               s.chainA.ChainID,
+					ChainID:               suite.chainA.ChainID,
 					IbcDenom:              "uqatom",
 					QAssetDenom:           "uqatom",
-					RegisteredZoneChainID: s.chainB.ChainID,
+					RegisteredZoneChainID: suite.chainB.ChainID,
 				}
 
 				blob, err := json.Marshal(rawPd)
-				s.Require().NoError(err)
+				suite.Require().NoError(err)
 				pd := types.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)], blob)
 
 				appA.ParticipationRewardsKeeper.SetProtocolData(ctx, rawPd.GenerateKey(), pd)
@@ -387,8 +387,8 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
-					Zone:        s.chainB.ChainID,
-					SrcZone:     s.chainA.ChainID,
+					Zone:        suite.chainB.ChainID,
+					SrcZone:     suite.chainA.ChainID,
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -405,9 +405,9 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			"",
 			[]cmtypes.Claim{{
 				UserAddress:   address.String(),
-				ChainId:       s.chainB.ChainID,
+				ChainId:       suite.chainB.ChainID,
 				Module:        cmtypes.ClaimTypeLiquidToken,
-				SourceChainId: s.chainA.ChainID,
+				SourceChainId: suite.chainA.ChainID,
 				Amount:        100,
 			}},
 		},
@@ -415,23 +415,23 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 	for _, tt := range tests {
 		tt := tt
 
-		s.Run(tt.name, func() {
-			s.SetupTest()
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
 
-			appA := s.GetQuicksilverApp(s.chainA)
+			appA := suite.GetQuicksilverApp(suite.chainA)
 			// override disabled proof verification; lets test actual proofs :)
 			appA.ParticipationRewardsKeeper.ValidateProofOps = utils.ValidateProofOps
 			appA.ParticipationRewardsKeeper.ValidateSelfProofOps = utils.ValidateSelfProofOps
 
-			s.coordinator.CommitNBlocks(s.chainA, 3)
-			ctx := s.chainA.GetContext()
+			suite.coordinator.CommitNBlocks(suite.chainA, 3)
+			ctx := suite.chainA.GetContext()
 			tt.malleate(ctx, appA)
-			s.coordinator.CommitNBlocks(s.chainA, 3)
-			ctx = s.chainA.GetContext()
-			s.Require().NoError(appA.ClaimsManagerKeeper.StoreSelfConsensusState(ctx, "epoch"))
-			s.coordinator.CommitNBlocks(s.chainA, 1)
+			suite.coordinator.CommitNBlocks(suite.chainA, 3)
+			ctx = suite.chainA.GetContext()
+			suite.Require().NoError(appA.ClaimsManagerKeeper.StoreSelfConsensusState(ctx, "epoch"))
+			suite.coordinator.CommitNBlocks(suite.chainA, 1)
 
-			ctx = s.chainA.GetContext()
+			ctx = suite.chainA.GetContext()
 			msg = tt.generate(ctx, appA)
 			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
 			params.ClaimsEnabled = true
@@ -441,22 +441,22 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			k := keeper.NewMsgServerImpl(appA.ParticipationRewardsKeeper)
 			resp, err := k.SubmitClaim(sdk.WrapSDKContext(ctx), msg)
 			if tt.wantErr != "" {
-				s.Require().Errorf(err, tt.wantErr)
-				s.Require().Nil(resp)
-				s.T().Logf("Error: %v", err)
+				suite.Require().Errorf(err, tt.wantErr)
+				suite.Require().Nil(resp)
+				suite.T().Logf("Error: %v", err)
 				return
 			}
 
 			for _, expectedClaim := range tt.claims {
 				actualClaim, found := appA.ClaimsManagerKeeper.GetClaim(ctx, expectedClaim.ChainId, expectedClaim.UserAddress, expectedClaim.Module, expectedClaim.SourceChainId)
-				s.Require().True(found)
-				s.Require().Equal(expectedClaim.Amount, actualClaim.Amount)
+				suite.Require().True(found)
+				suite.Require().Equal(expectedClaim.Amount, actualClaim.Amount)
 
 			}
 
-			s.Require().NoError(err)
-			s.Require().NotNil(resp)
-			s.Require().Equal(tt.want, resp)
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			suite.Require().Equal(tt.want, resp)
 		})
 	}
 }

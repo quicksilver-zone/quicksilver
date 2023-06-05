@@ -35,7 +35,7 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 
 	poolDenom := ""
 	for zk, zd := range pool.Denoms {
-		if zd.ChainId == chainID {
+		if zd.ChainID == chainID {
 			poolDenom = zk
 			break
 		}

@@ -51,8 +51,8 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 					PoolType:    "balancer",
 					PoolData:    json.RawMessage("{\"address\":\"osmo1mw0ac6rwlp5r8wapwk3zs6g29h8fcscxqakdzw9emkne6c8wjp9q0t3v8t\",\"id\":1,\"pool_params\":{\"swap_fee\":\"0.002000000000000000\",\"exit_fee\":\"0.000000000000000000\",\"smooth_weight_change_params\":null},\"future_pool_governor\":\"24h\",\"total_shares\":{\"denom\":\"gamm/pool/1\",\"amount\":\"216987393856026889179749817\"},\"pool_assets\":[{\"token\":{\"denom\":\"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2\",\"amount\":\"1909639500022\"},\"weight\":\"536870912000000\"},{\"token\":{\"denom\":\"uosmo\",\"amount\":\"35673230362499\"},\"weight\":\"536870912000000\"}],\"total_weight\":\"1073741824000000\"}"),
 					Denoms: map[string]types.DenomWithZone{
-						"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2": {Denom: "uatom", ChainId: "cosmoshub-4"},
-						"uosmo": {Denom: "uosmo", ChainId: "osmosis-1"},
+						"ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2": {Denom: "uatom", ChainID: "cosmoshub-4"},
+						"uosmo": {Denom: "uosmo", ChainID: "osmosis-1"},
 					},
 					IsIncentivized: false,
 				},
@@ -63,8 +63,8 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 					PoolType:    "balancer",
 					PoolData:    json.RawMessage("{\"address\":\"osmo1k3j5wgcj8um2gnu8qxdm0mzzuh6x66p4p7gn6fraf3wnpfcvg9sq2zhx7j\",\"id\":\"952\",\"pool_params\":{\"swap_fee\":\"0.003000000000000000\",\"exit_fee\":\"0.000000000000000000\",\"smooth_weight_change_params\":null},\"future_pool_governor\":\"168h\",\"total_shares\":{\"denom\":\"gamm/pool/952\",\"amount\":\"281109110456689694028077\"},\"pool_assets\":[{\"token\":{\"denom\":\"ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D\",\"amount\":\"1036526700301\"},\"weight\":\"1073741824\"},{\"token\":{\"denom\":\"uosmo\",\"amount\":\"162265452817\"},\"weight\":\"1073741824\"}],\"total_weight\":\"2147483648\"}"),
 					Denoms: map[string]types.DenomWithZone{
-						"ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D": {Denom: "uqck", ChainId: "quicksilver-2"},
-						"uosmo": {Denom: "uosmo", ChainId: "osmosis-1"},
+						"ibc/635CB83EF1DFE598B10A3E90485306FD0D47D34217A4BE5FD9977FA010A5367D": {Denom: "uqck", ChainID: "quicksilver-2"},
+						"uosmo": {Denom: "uosmo", ChainID: "osmosis-1"},
 					},
 					IsIncentivized: false,
 				},
@@ -84,20 +84,20 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 
 			qs := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
-			osmoParamsJson, err := json.Marshal(tt.osmosisParams)
+			osmoParamsJSON, err := json.Marshal(tt.osmosisParams)
 			suite.Require().NoError(err)
 			data := types.ProtocolData{
 				Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisParams)],
-				Data: osmoParamsJson,
+				Data: osmoParamsJSON,
 			}
 			qs.ParticipationRewardsKeeper.SetProtocolData(ctx, tt.osmosisParams.GenerateKey(), &data)
 
 			for _, pool := range tt.osmosisPools {
-				poolJson, err := json.Marshal(pool)
+				poolJSON, err := json.Marshal(pool)
 				suite.Require().NoError(err)
 				data := types.ProtocolData{
 					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)],
-					Data: poolJson,
+					Data: poolJSON,
 				}
 				qs.ParticipationRewardsKeeper.SetProtocolData(ctx, pool.GenerateKey(), &data)
 			}

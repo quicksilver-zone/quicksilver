@@ -59,13 +59,13 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 		isBasePair := false
 
 		for ibcDenom, denom := range pool.Denoms {
-			if denom.ChainId == baseChain {
+			if denom.ChainID == baseChain {
 				isBasePair = true
 				baseIBCDenom = ibcDenom
 			} else {
-				zone, ok := k.icsKeeper.GetZone(ctx, denom.ChainId)
+				zone, ok := k.icsKeeper.GetZone(ctx, denom.ChainID)
 				if !ok {
-					//errs[idxLabel] = fmt.Errorf("zone not found, %s", denom.ChainId)
+					// errs[idxLabel] = fmt.Errorf("zone not found, %s", denom.ChainId)
 					return false
 				}
 
@@ -78,9 +78,7 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 			}
 		}
 
-		if !isBasePair {
-			return false // baseChain does not feature here, so ignore!
-		} else {
+		if isBasePair {
 			if pool.PoolData == nil {
 				errs[idxLabel] = fmt.Errorf("pool data is nil, awaiting OsmosisPoolUpdateCallback")
 				return true
@@ -133,7 +131,6 @@ func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation
 	otvl := sdk.ZeroDec()
 	// pass 1: iterate zones - set tvl & calc overall tvl
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-
 		tv, exists := tvs[zone.BaseDenom]
 		if !exists {
 			k.Logger(ctx).Error(fmt.Sprintf("unable to obtain token value for zone %s", zone.ChainId))
@@ -157,7 +154,6 @@ func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation
 
 	// pass 2: iterate zones - calc zone tvl proportion & set allocations
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-
 		if zone.Tvl.IsNil() {
 			zone.Tvl = sdk.ZeroDec()
 		}
