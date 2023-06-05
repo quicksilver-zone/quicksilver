@@ -103,7 +103,7 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-	if err := k.MintQAsset(ctx, senderAccAddress, senderAddress, zone, assets, memoRTS, mappedAddress); err != nil {
+	if err := k.MintAndSendQAsset(ctx, senderAccAddress, senderAddress, zone, assets, memoRTS, mappedAddress); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
@@ -152,8 +152,19 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 	)
 }
 
-// MintQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
-func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress []byte) error {
+// MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
+// The function handles the following cases:
+//  1. If the zone is labeled "return to sender" or the Tx memo contains "return to sender" flag:
+//     - Mint QAssets and IBC transfer to the corresponding zone acc
+//  2. If there is no mapped account but the zone is labeled as non-118 coin type:
+//     - Do not mint QAssets and refund assets
+//  3. If a mapped account is set for a non-118 coin type zone:
+//     - Mint QAssets and send to corresponding mapped address
+//  4. If a new mapped account is provided to the function and the zone is labeled as non-118 coin type:
+//     - Mint QAssets, set new mapping for the mapped account in the keeper, and send to corresponding mapped account.
+//  5. If the zone is non-118 and no other flags are set:
+//     - Mint QAssets and transfer to send to msg creator.
+func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress []byte) error {
 	if zone.RedemptionRate.IsZero() {
 		return errors.New("zero redemption rate")
 	}
@@ -165,6 +176,7 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 	}
 
 	// check if a remote address exists for a non 118 coin type zone
+	setMappedAddress := true
 	if mappedAddress == nil && !zone.Is_118 {
 		var found bool
 		mappedAddress, found = k.GetRemoteAddressMap(ctx, sender, zone.ChainId)
@@ -172,6 +184,8 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 			// if not found, skip minting and refund assets
 			return k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, assets[0])
 		}
+		// do not set, since mapped address already exists
+		setMappedAddress = false
 	}
 
 	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", qAssets)
@@ -184,18 +198,16 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 	case zone.ReturnToSender || memoRTS:
 		err = k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, qAssets[0])
 
-	case mappedAddress != nil:
+	case mappedAddress != nil && !zone.Is_118:
 		// set mapped account
-		k.SetAddressMapPair(ctx, sender, mappedAddress, zone.ChainId)
+		if setMappedAddress {
+			k.SetAddressMapPair(ctx, sender, mappedAddress, zone.ChainId)
+		}
 
 		// set send to mapped account
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mappedAddress, qAssets)
 	default:
-		if !zone.Is_118 {
-			err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mappedAddress, qAssets)
-		} else {
-			err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
-		}
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
 
 	}
 
