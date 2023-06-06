@@ -276,11 +276,12 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 
 	allocation := sdk.NewDecFromInt(sdk.NewIntFromUint64(zone.ValidatorSelectionAllocation))
 	tokensPerPoint := allocation.Quo(sum)
+	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
 		ua := types.UserAllocation{
 			Address: us.Address,
-			Amount:  us.Score.Mul(tokensPerPoint).TruncateInt(),
+			Amount:  sdk.NewCoin(bondDenom, us.Score.Mul(tokensPerPoint).TruncateInt()),
 		}
 		userAllocations = append(userAllocations, ua)
 	}

@@ -182,10 +182,7 @@ func (k *Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.User
 		}
 
 		coins := sdk.NewCoins(
-			sdk.NewCoin(
-				k.stakingKeeper.BondDenom(ctx),
-				ua.Amount,
-			),
+			ua.Amount,
 		)
 
 		addrBytes, err := addressutils.AccAddressFromBech32(ua.Address, "")
@@ -195,6 +192,48 @@ func (k *Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.User
 		}
 
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addrBytes, coins)
+		if err != nil {
+			k.Logger(ctx).Error("distribute to user", "address", ua.Address, "coins", coins)
+			hasError = true
+		} else {
+			k.Logger(ctx).Info("distribute to user", "address", ua.Address, "coins", coins, "remaining", k.GetModuleBalance(ctx))
+		}
+	}
+
+	if hasError {
+		return errors.New("errors occurred while distributing rewards, review logs")
+	}
+
+	return nil
+}
+
+// DistributeToUsers sends the allocated user rewards to the user address.
+func (k *Keeper) DistributeToUsersFromAddress(ctx sdk.Context, userAllocations []types.UserAllocation, fromAddress string) error {
+	k.Logger(ctx).Info("distributeToUsers", "allocations", userAllocations)
+	hasError := false
+
+	fromAddrBytes, err := addressutils.AccAddressFromBech32(fromAddress, "")
+	if err != nil {
+		k.Logger(ctx).Error("unmarshalling address", "address", fromAddress)
+		hasError = true
+	}
+
+	for _, ua := range userAllocations {
+		if ua.Amount.IsZero() {
+			continue
+		}
+
+		coins := sdk.NewCoins(
+			ua.Amount,
+		)
+
+		addrBytes, err := addressutils.AccAddressFromBech32(ua.Address, "")
+		if err != nil {
+			k.Logger(ctx).Error("unmarshalling address", "address", ua.Address)
+			hasError = true
+		}
+
+		err = k.bankKeeper.SendCoins(ctx, fromAddrBytes, addrBytes, coins)
 		if err != nil {
 			k.Logger(ctx).Error("distribute to user", "address", ua.Address, "coins", coins)
 			hasError = true
