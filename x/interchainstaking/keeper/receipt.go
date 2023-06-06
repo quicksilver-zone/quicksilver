@@ -177,7 +177,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 
 	// check if a remote address exists for a non 118 coin type zone
 	setMappedAddress := true
-	if mappedAddress == nil && !zone.Is_118 {
+	if mappedAddress == nil && !zone.Is_118 && !zone.ReturnToSender && !memoRTS {
 		var found bool
 		mappedAddress, found = k.GetRemoteAddressMap(ctx, sender, zone.ChainId)
 		if !found {
