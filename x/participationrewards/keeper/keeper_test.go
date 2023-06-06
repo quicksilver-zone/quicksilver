@@ -142,6 +142,9 @@ func (suite *KeeperTestSuite) coreTest() {
 func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 
+	withdrawalAddress1 := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	withdrawalAddress2 := addressutils.GenerateAddressForTestWithPrefix("osmo")
+
 	// test zone
 	testzone := icstypes.Zone{
 		ConnectionId:     suite.path.EndpointA.ConnectionID,
@@ -154,6 +157,11 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		DepositsEnabled:  true,
 		UnbondingEnabled: false,
 		Is_118:           true,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           withdrawalAddress1,
+			PortName:          suite.chainB.ChainID + ".withrawal",
+			WithdrawalAddress: withdrawalAddress1,
+		},
 	}
 	selftestzone := icstypes.Zone{
 		ConnectionId:     suite.path.EndpointB.ConnectionID,
@@ -166,6 +174,11 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		DepositsEnabled:  true,
 		UnbondingEnabled: false,
 		Is_118:           true,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           withdrawalAddress2,
+			PortName:          suite.chainA.ChainID + ".withrawal",
+			WithdrawalAddress: withdrawalAddress2,
+		},
 	}
 
 	quicksilver.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &selftestzone)
@@ -186,9 +199,12 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	// self zone
 	performanceAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
-	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "self")
+	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "testchain1.performance")
 	suite.Require().NoError(err)
-	performanceAccountOsmo.WithdrawalAddress = addressutils.GenerateAddressForTestWithPrefix("osmo")
+	withdrawalAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
+	withdrawalAccountOsmo, err := icstypes.NewICAAccount(withdrawalAddressOsmo, "testchain1.withdrawal")
+	suite.Require().NoError(err)
+	performanceAccountOsmo.WithdrawalAddress = withdrawalAddressOsmo
 
 	zoneSelf := icstypes.Zone{
 		ConnectionId:       "connection-77004",
@@ -203,6 +219,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		Is_118:             true,
 		Decimals:           6,
 		PerformanceAddress: performanceAccountOsmo,
+		WithdrawalAddress:  withdrawalAccountOsmo,
 		Validators: []*icstypes.Validator{
 			{
 				ValoperAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
@@ -235,6 +252,11 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	suite.Require().NoError(err)
 	performanceAccountCosmos.WithdrawalAddress = addressutils.GenerateAddressForTestWithPrefix("cosmos")
 
+	withdrawalAddressCosmos := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	withdrawalAccountCosmos, err := icstypes.NewICAAccount(withdrawalAddressCosmos, "cosmoshub-4.withdrawal")
+	suite.Require().NoError(err)
+	performanceAccountOsmo.WithdrawalAddress = withdrawalAddressCosmos
+
 	zoneCosmos := icstypes.Zone{
 		ConnectionId:       "connection-77001",
 		ChainId:            "cosmoshub-4",
@@ -245,6 +267,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		LiquidityModule:    true,
 		PerformanceAddress: performanceAccountCosmos,
 		Is_118:             true,
+		WithdrawalAddress:  withdrawalAccountCosmos,
 	}
 	quicksilver.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneCosmos)
 	cosmosVals := []icstypes.Validator{
@@ -274,6 +297,8 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		quicksilver.InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zoneCosmos.ChainId, cosmosVal)
 	}
 
+	withdrawalAddress := addressutils.GenerateAddressForTestWithPrefix("osmo")
+
 	// osmosis zone
 	zoneOsmosis := icstypes.Zone{
 		ConnectionId:    "connection-77002",
@@ -285,8 +310,13 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		LiquidityModule: true,
 		PerformanceAddress: &icstypes.ICAAccount{
 			Address:           addressutils.GenerateAddressForTestWithPrefix("osmo"),
-			PortName:          "cosmoshub-4.performance",
-			WithdrawalAddress: addressutils.GenerateAddressForTestWithPrefix("osmo"),
+			PortName:          "osmosis-1.performance",
+			WithdrawalAddress: withdrawalAddress,
+		},
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           withdrawalAddress,
+			PortName:          "osmosis-1.withrawal",
+			WithdrawalAddress: withdrawalAddress,
 		},
 		Is_118: true,
 	}
