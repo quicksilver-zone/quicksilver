@@ -162,7 +162,7 @@ func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, 
 //     - Mint QAssets and send to corresponding mapped address
 //  4. If a new mapped account is provided to the function and the zone is labeled as non-118 coin type:
 //     - Mint QAssets, set new mapping for the mapped account in the keeper, and send to corresponding mapped account.
-//  5. If the zone is non-118 and no other flags are set:
+//  5. If the zone is 118 and no other flags are set:
 //     - Mint QAssets and transfer to send to msg creator.
 func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress []byte) error {
 	if zone.RedemptionRate.IsZero() {
@@ -182,7 +182,8 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 		mappedAddress, found = k.GetRemoteAddressMap(ctx, sender, zone.ChainId)
 		if !found {
 			// if not found, skip minting and refund assets
-			return k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, assets[0])
+			msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: senderAddress, Amount: assets}
+			return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, "", zone.MessagesPerTx)
 		}
 		// do not set, since mapped address already exists
 		setMappedAddress = false
