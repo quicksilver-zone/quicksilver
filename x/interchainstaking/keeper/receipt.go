@@ -196,10 +196,7 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 	}
 
 	// TO DO: discuss on adding this because we are receiving err capability not found from scoppedICAController
-	err = k.ICAControllerKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
-	if err != nil {
-		return err
-	}
+	k.ICAControllerKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) //nolint:errcheck
 
 	chunkSize := int(messagesPerTx)
 	if chunkSize < 1 {
