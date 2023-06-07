@@ -178,11 +178,6 @@ func TestDecodeMemo(t *testing.T) {
 			memo:    "\xFF",
 			wantErr: true,
 		},
-		{
-			name:    "invalid base64",
-			memo:    "\xFF",
-			wantErr: true,
-		},
 	}
 
 	for _, tc := range testCases {
