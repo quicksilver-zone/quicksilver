@@ -200,16 +200,6 @@ func TestDecodeMemo(t *testing.T) {
 	}
 }
 
-func TestGenMemos(t *testing.T) {
-	oldMemo := "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc"
-	memoBytes, err := base64.StdEncoding.DecodeString(oldMemo)
-	require.NoError(t, err)
-	memoBytes = append(memoBytes, 255, 0, 2, 1, 2)
-
-	newMemo := base64.StdEncoding.EncodeToString(memoBytes)
-	fmt.Println(newMemo)
-}
-
 func TestUpdateIntentWithMemo(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	zone.Validators = append(zone.Validators,
