@@ -507,17 +507,16 @@ func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 }
 
 func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) error {
-	var err error
-
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		if ctx.BlockTime().After(withdrawal.CompletionTime) && !withdrawal.CompletionTime.Equal(time.Time{}) { // completion date has passed.
 			k.Logger(ctx).Info("found completed unbonding")
 			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
-			err = k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, withdrawal.Txhash, zone.MessagesPerTx)
+			err := k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, withdrawal.Txhash, zone.MessagesPerTx)
 			if err != nil {
+				k.Logger(ctx).Error("error", err)
+
 				// TODO HANDLE
 
-				k.Logger(ctx).Error("error", err)
 				return true
 			}
 			k.Logger(ctx).Info("sending funds", "for", withdrawal.Delegator, "delegate_account", zone.DelegationAddress.GetAddress(), "to", withdrawal.Recipient, "amount", withdrawal.Amount)
@@ -525,7 +524,7 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 		}
 		return false
 	})
-	return err
+	return nil
 }
 
 func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmount sdk.Coin, memo string) error {
@@ -539,7 +538,6 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	}
 
 	zone := k.GetZoneForDelegateAccount(ctx, tsMsg.DelegatorAddress)
-
 	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ChainId, memo, WithdrawStatusTokenize)
 
 	if !found {
