@@ -28,6 +28,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdZones(),
 		GetDelegatorIntentCmd(),
 		GetDepositAccountCmd(),
+		GetMappedAccountsCmd(),
 	)
 
 	return cmd
@@ -132,6 +133,40 @@ func GetDepositAccountCmd() *cobra.Command {
 			}
 
 			res, err := queryClient.DepositAccount(cmd.Context(), req)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetMappedAccountsCmd returns the mapped account for the given address.
+func GetMappedAccountsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "mapped-accounts [address]",
+		Short: "Query mapped accounts for a given address.",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			// args
+			address := args[0]
+
+			queryClient := types.NewQueryClient(clientCtx)
+			req := &types.QueryMappedAccountsRequest{
+				Address: address,
+			}
+
+			res, err := queryClient.MappedAccounts(cmd.Context(), req)
 			if err != nil {
 				return err
 			}

@@ -80,16 +80,33 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 
 	k.Logger(ctx).Info("found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", senderAccAddress.String(), "chain id", zone.ChainId, "assets", assets, "hash", hash)
 
+	var (
+		memoIntent    types.ValidatorIntents
+		memoFields    types.MemoFields
+		memoRTS       bool
+		mappedAddress []byte
+	)
+
+	if len(memo) > 0 {
+		// process memo
+		memoIntent, memoFields, err = zone.DecodeMemo(assets, memo)
+		if err != nil {
+			// What should we do on error here? just log?
+			k.Logger(ctx).Error("error decoding memo", "error", err.Error(), "memo", memo)
+		}
+		memoRTS = memoFields.RTS()
+		mappedAddress, _ = memoFields.AccountMap()
+	}
+
 	// update state
-	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, zone, assets, memo); err != nil {
+	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, zone, assets, memoIntent); err != nil {
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-	if err := k.MintQAsset(ctx, senderAccAddress, senderAddress, zone, assets); err != nil {
+	if err := k.MintAndSendQAsset(ctx, senderAccAddress, senderAddress, zone, assets, memoRTS, mappedAddress); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
 	}
-
 	if err := k.TransferToDelegate(ctx, zone, assets, hash); err != nil {
 		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ChainId, "err", err)
 		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainId, err)
@@ -102,8 +119,52 @@ func (k *Keeper) HandleReceiptForTransaction(ctx sdk.Context, txr *sdk.TxRespons
 	return nil
 }
 
-// MintQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
-func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins) error {
+// SendTokenIBC is a helper function that finds the zone channel and performs an ibc transfer from senderAccAddress
+// to receiver.
+func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, receiver string, zone *types.Zone, coin sdk.Coin) error {
+	var srcPort string
+	var srcChannel string
+
+	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
+		if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
+			srcChannel = channel.Counterparty.ChannelId
+			srcPort = channel.Counterparty.PortId
+			return true
+		}
+		return false
+	})
+	if srcPort == "" {
+		return errors.New("unable to find remote transfer connection")
+	}
+
+	return k.TransferKeeper.SendTransfer(
+		ctx,
+		srcPort,
+		srcChannel,
+		coin,
+		senderAccAddress,
+		receiver,
+		clienttypes.Height{
+			RevisionNumber: 0,
+			RevisionHeight: 0,
+		},
+		uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
+	)
+}
+
+// MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
+// The function handles the following cases:
+//  1. If the zone is labeled "return to sender" or the Tx memo contains "return to sender" flag:
+//     - Mint QAssets and IBC transfer to the corresponding zone acc
+//  2. If there is no mapped account but the zone is labeled as non-118 coin type:
+//     - Do not mint QAssets and refund assets
+//  3. If a mapped account is set for a non-118 coin type zone:
+//     - Mint QAssets and send to corresponding mapped address
+//  4. If a new mapped account is provided to the function and the zone is labeled as non-118 coin type:
+//     - Mint QAssets, set new mapping for the mapped account in the keeper, and send to corresponding mapped account.
+//  5. If the zone is 118 and no other flags are set:
+//     - Mint QAssets and transfer to send to msg creator.
+func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddress string, zone *types.Zone, assets sdk.Coins, memoRTS bool, mappedAddress []byte) error {
 	if zone.RedemptionRate.IsZero() {
 		return errors.New("zero redemption rate")
 	}
@@ -114,43 +175,41 @@ func (k *Keeper) MintQAsset(ctx sdk.Context, sender sdk.AccAddress, senderAddres
 		qAssets = qAssets.Add(sdk.NewCoin(zone.LocalDenom, amount))
 	}
 
+	// check if a remote address exists for a non 118 coin type zone
+	setMappedAddress := true
+	if mappedAddress == nil && !zone.Is_118 && !zone.ReturnToSender && !memoRTS {
+		var found bool
+		mappedAddress, found = k.GetRemoteAddressMap(ctx, sender, zone.ChainId)
+		if !found {
+			// if not found, skip minting and refund assets
+			msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: senderAddress, Amount: assets}
+			return k.SubmitTx(ctx, []sdk.Msg{msg}, zone.DepositAddress, "", zone.MessagesPerTx)
+		}
+		// do not set, since mapped address already exists
+		setMappedAddress = false
+	}
+
 	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", qAssets)
 	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, qAssets)
 	if err != nil {
 		return err
 	}
 
-	if zone.ReturnToSender {
-		var srcPort string
-		var srcChannel string
+	switch {
+	case zone.ReturnToSender || memoRTS:
+		err = k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, qAssets[0])
 
-		k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
-			if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
-				srcChannel = channel.Counterparty.ChannelId
-				srcPort = channel.Counterparty.PortId
-				return true
-			}
-			return false
-		})
-		if srcPort == "" {
-			return errors.New("unable to find remote transfer connection")
+	case mappedAddress != nil && !zone.Is_118:
+		// set mapped account
+		if setMappedAddress {
+			k.SetAddressMapPair(ctx, sender, mappedAddress, zone.ChainId)
 		}
 
-		err = k.TransferKeeper.SendTransfer(
-			ctx,
-			srcPort,
-			srcChannel,
-			qAssets[0],
-			k.AccountKeeper.GetModuleAddress(types.ModuleName),
-			senderAddress,
-			clienttypes.Height{
-				RevisionNumber: 0,
-				RevisionHeight: 0,
-			},
-			uint64(ctx.BlockTime().UnixNano()+5*time.Minute.Nanoseconds()),
-		)
-	} else {
+		// set send to mapped account
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mappedAddress, qAssets)
+	default:
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
+
 	}
 
 	if err != nil {

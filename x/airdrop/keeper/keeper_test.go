@@ -81,6 +81,7 @@ func (s *KeeperTestSuite) initTestZone() {
 		AccountPrefix: "cosmos",
 		LocalDenom:    "uqatom",
 		BaseDenom:     "uatom",
+		Is_118:        true,
 	}
 
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)

@@ -132,7 +132,7 @@ func (s *KeeperTestSuite) TestKeeper_IntentStore() {
 				math.NewInt(7313913),
 			),
 		),
-		"",
+		nil,
 	)
 	s.Require().NoError(err)
 
