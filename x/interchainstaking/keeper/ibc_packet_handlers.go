@@ -515,7 +515,6 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 			if err != nil {
 				k.Logger(ctx).Error("error", err)
 
-				// TODO HANDLE
 				// do not update status and increment completion time
 				withdrawal.CompletionTime = ctx.BlockTime().AddDate(0, 0, 3)
 				k.SetWithdrawalRecord(ctx, withdrawal)
