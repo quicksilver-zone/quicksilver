@@ -2,7 +2,6 @@ package types_test
 
 import (
 	"encoding/base64"
-	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
