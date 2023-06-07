@@ -167,10 +167,10 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 }
 
 // UpdateDelegatorIntent updates delegator intents.
-func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress, zone *types.Zone, inAmount sdk.Coins, memo string) error {
+func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress, zone *types.Zone, inAmount sdk.Coins, memoIntent types.ValidatorIntents) error {
 	snapshot := false
 	updateWithCoin := inAmount.IsValid()
-	updateWithMemo := len(memo) > 0
+	updateWithMemo := memoIntent != nil
 
 	// this is here because we need access to the bankKeeper to ordinalize intent
 	delIntent, _ := k.GetDelegatorIntent(ctx, zone, delegator.String(), snapshot)
@@ -202,11 +202,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	}
 
 	if updateWithMemo {
-		var err error
-		delIntent, err = zone.UpdateIntentWithMemo(delIntent, memo, baseBalance, inAmount)
-		if err != nil {
-			return err
-		}
+		delIntent = zone.UpdateZoneIntentWithMemo(memoIntent, delIntent, baseBalance)
 	}
 
 	if len(delIntent.Intents) == 0 {
@@ -214,6 +210,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	}
 
 	k.SetDelegatorIntent(ctx, zone, delIntent, snapshot)
+
 	return nil
 }
 
