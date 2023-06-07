@@ -518,8 +518,6 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 				// do not update status and increment completion time
 				withdrawal.CompletionTime = ctx.BlockTime().AddDate(0, 0, 3)
 				k.SetWithdrawalRecord(ctx, withdrawal)
-
-				return true
 			} else {
 				k.Logger(ctx).Info("sending funds", "for", withdrawal.Delegator, "delegate_account", zone.DelegationAddress.GetAddress(), "to", withdrawal.Recipient, "amount", withdrawal.Amount)
 				k.UpdateWithdrawalRecordStatus(ctx, &withdrawal, WithdrawStatusSend)
