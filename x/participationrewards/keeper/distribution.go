@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -58,18 +59,18 @@ func (k *Keeper) CalcTokenValues(ctx sdk.Context) (TokenValues, error) {
 		var baseIBCDenom, queryIBCDenom, valueDenom string
 		isBasePair := false
 
-		for ibcDenom, denom := range pool.Denoms {
-			if denom.ChainID == baseChain {
+		for _, ibcDenom := range utils.Keys(pool.Denoms) {
+			if pool.Denoms[ibcDenom].ChainID == baseChain {
 				isBasePair = true
 				baseIBCDenom = ibcDenom
 			} else {
-				zone, ok := k.icsKeeper.GetZone(ctx, denom.ChainID)
+				zone, ok := k.icsKeeper.GetZone(ctx, pool.Denoms[ibcDenom].ChainID)
 				if !ok {
 					// errs[idxLabel] = fmt.Errorf("zone not found, %s", denom.ChainId)
 					return false
 				}
 
-				if denom.Denom == zone.BaseDenom {
+				if pool.Denoms[ibcDenom].Denom == zone.BaseDenom {
 					queryIBCDenom = ibcDenom
 					valueDenom = zone.BaseDenom
 				} else {

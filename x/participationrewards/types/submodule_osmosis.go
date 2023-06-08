@@ -11,6 +11,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/balancer"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/stableswap"
+	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 const (
@@ -89,14 +90,14 @@ func (opd *OsmosisPoolProtocolData) ValidateBasic() error {
 	}
 
 	i := 0
-	for ibcdenom, denom := range opd.Denoms {
+	for _, ibcdenom := range utils.Keys(opd.Denoms) {
 		el := fmt.Sprintf("Denoms[%s]", ibcdenom)
 
-		if denom.ChainID == "" || len(strings.Split(denom.ChainID, "-")) < 2 {
+		if opd.Denoms[ibcdenom].ChainID == "" || len(strings.Split(opd.Denoms[ibcdenom].ChainID, "-")) < 2 {
 			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrInvalidChainID)
 		}
 
-		if denom.Denom == "" || sdk.ValidateDenom(denom.Denom) != nil {
+		if opd.Denoms[ibcdenom].Denom == "" || sdk.ValidateDenom(opd.Denoms[ibcdenom].Denom) != nil {
 			errs[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrInvalidDenom)
 		}
 
