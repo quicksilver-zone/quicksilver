@@ -53,6 +53,7 @@ import (
 	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibchookstypes "github.com/ingenuity-build/quicksilver/x/ibc-hooks/types"
 	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v7/router"
 	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v7/router/keeper"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
@@ -68,6 +69,7 @@ import (
 	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+	ibchookskeeper "github.com/ingenuity-build/quicksilver/x/ibc-hooks/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking"
@@ -115,6 +117,7 @@ type AppKeepers struct {
 	ClaimsManagerKeeper        claimsmanagerkeeper.Keeper
 	InterchainstakingKeeper    interchainstakingkeeper.Keeper
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
+	IBCHooksKeeper             ibchookskeeper.Keeper
 	ParticipationRewardsKeeper *participationrewardskeeper.Keeper
 	AirdropKeeper              *airdropkeeper.Keeper
 	TokenFactoryKeeper         tokenfactorykeeper.Keeper
@@ -578,6 +581,7 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(minttypes.ModuleName)
 	paramsKeeper.Subspace(interchainstakingtypes.ModuleName)
 	paramsKeeper.Subspace(interchainquerytypes.ModuleName)
+	paramsKeeper.Subspace(ibchookstypes.ModuleName)
 	paramsKeeper.Subspace(participationrewardstypes.ModuleName)
 	paramsKeeper.Subspace(airdroptypes.ModuleName)
 	paramsKeeper.Subspace(tokenfactorytypes.ModuleName)
