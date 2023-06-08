@@ -262,8 +262,9 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 		case "/cosmos.bank.v1beta1.MsgSend":
 			if !success {
-				// TODO: handle this.
-				return nil
+				if err := k.HandleFailedBankSend(ctx, src, packetData.Memo); err != nil {
+					return err
+				}
 			}
 			response := banktypes.MsgSendResponse{}
 			if msgResponseType != "" {
@@ -738,6 +739,15 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		"delegation",
 		0,
 	)
+
+	return nil
+}
+
+func (k *Keeper) HandleFailedBankSend(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	_, err := types.ParseMsgMemo(memo, types.MsgTypeWithdrawal)
+	if err != nil {
+		return nil
+	}
 
 	return nil
 }
