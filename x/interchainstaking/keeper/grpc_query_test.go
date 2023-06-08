@@ -7,7 +7,8 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	"github.com/ingenuity-build/quicksilver/utils/randomutils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -836,7 +837,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 
 func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
-	usrAddress1, _ := utils.AccAddressFromBech32("cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn", "cosmos")
+	usrAddress1, _ := addressutils.AccAddressFromBech32("cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn", "cosmos")
 	ctx := s.chainA.GetContext()
 
 	tests := []struct {
@@ -890,7 +891,7 @@ func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 				}
 				icsKeeper.SetZone(ctx, &zone)
 
-				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, utils.GenerateRandomHash(), zone.ChainId)
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ChainId)
 			},
 			&types.QueryMappedAccountsRequest{Address: "cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn"},
 			false,
@@ -913,7 +914,7 @@ func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 				}
 				icsKeeper.SetZone(ctx, &zone)
 
-				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, utils.GenerateRandomHash(), zone.ChainId)
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ChainId)
 
 				zone2 := types.Zone{
 					ConnectionId:    "connection-77891",
@@ -927,7 +928,7 @@ func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 				}
 				icsKeeper.SetZone(ctx, &zone2)
 
-				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, utils.GenerateRandomHash(), zone2.ChainId)
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone2.ChainId)
 			},
 			&types.QueryMappedAccountsRequest{Address: "cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn"},
 			false,

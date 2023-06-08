@@ -8,7 +8,6 @@ import (
 	sdkioerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
@@ -66,11 +65,10 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, txHash str
 		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
 		return nil
 	}
-
 	// sdk.AccAddressFromBech32 doesn't work here as it expects the local HRP
-	_, addressBytes, err := bech32.DecodeAndConvert(senderAddress)
+	addressBytes, err := addressutils.AccAddressFromBech32(senderAddress, zone.GetAccountPrefix())
 	if err != nil {
-		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress)
+		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress, "error", err)
 		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
 		return nil
 	}

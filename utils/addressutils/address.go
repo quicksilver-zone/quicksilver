@@ -77,12 +77,12 @@ func MustValAddressFromBech32(address, prefix string) sdk.ValAddress {
 
 // GenerateAccAddressForTest generates a random sdk.AccAddress for test purposes.
 func GenerateAccAddressForTest() sdk.AccAddress {
-	return sdk.AccAddress(randomutils.GenerateRandomHash())
+	return sdk.AccAddress(randomutils.GenerateRandomBytes(32))
 }
 
 // GenerateValAddressForTest generates a random sdk.ValAddress for test purposes.
 func GenerateValAddressForTest() sdk.ValAddress {
-	return sdk.ValAddress(randomutils.GenerateRandomHash())
+	return sdk.ValAddress(randomutils.GenerateRandomBytes(32))
 }
 
 // GenerateAddressForTestWithPrefix generates a random bech32 address with the specified prefix for test purposes.
