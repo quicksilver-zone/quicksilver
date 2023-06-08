@@ -513,7 +513,8 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 		if ctx.BlockTime().After(withdrawal.CompletionTime) && !withdrawal.CompletionTime.Equal(time.Time{}) { // completion date has passed.
 			k.Logger(ctx).Info("found completed unbonding")
 			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
-			err := k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, withdrawal.Txhash, zone.MessagesPerTx)
+			err := k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, fmt.Sprintf("%s/%s", types.MsgTypeUnbondSend, withdrawal.Txhash), zone.MessagesPerTx)
+
 			if err != nil {
 				k.Logger(ctx).Error("error", err)
 
@@ -744,7 +745,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 }
 
 func (k *Keeper) HandleFailedBankSend(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	_, err := types.ParseMsgMemo(memo, types.MsgTypeWithdrawal)
+	_, err := types.ParseMsgMemo(memo, types.MsgTypeUnbondSend)
 	if err != nil {
 		return nil
 	}

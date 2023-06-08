@@ -7,8 +7,10 @@ import (
 )
 
 const (
-	MsgTypeWithdrawal = "withdrawal"
-	MsgTypeRebalance  = "rebalance"
+	MsgTypeWithdrawal  = "withdrawal"
+	MsgTypeRebalance   = "rebalance"
+	MsgTypeUnbondSend  = "unbondSend"
+	MsgTypePerformance = "perf"
 	// TransferPort is the portID for ibc transfer module.
 	TransferPort = "transfer"
 )
