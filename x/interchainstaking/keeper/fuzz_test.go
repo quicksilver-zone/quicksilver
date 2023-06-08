@@ -8,7 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -94,7 +94,7 @@ func FuzzZones(f *testing.F) {
 
 func FuzzValsetCallback(f *testing.F) {
 	// 1. Generate the seeds.
-	newVal := utils.GenerateValAddressForTest()
+	newVal := addressutils.GenerateValAddressForTest()
 	valSetFuncs := []func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse{
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
 			val := in[0]

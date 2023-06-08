@@ -5,14 +5,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
-	user1 := utils.GenerateAccAddressForTest()
-	user2 := utils.GenerateAccAddressForTest()
+	user1 := addressutils.GenerateAccAddressForTest()
+	user2 := addressutils.GenerateAccAddressForTest()
 
 	tests := []struct {
 		name      string

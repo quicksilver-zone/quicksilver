@@ -14,6 +14,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/app"
 	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -40,7 +41,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"invalid_height",
 			func() {
 				msg = types.MsgSubmitClaim{
-					UserAddress: utils.GenerateAccAddressForTest().String(),
+					UserAddress: addressutils.GenerateAccAddressForTest().String(),
 					Zone:        suite.chainB.ChainID,
 					SrcZone:     suite.chainB.ChainID,
 					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
@@ -61,8 +62,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		{
 			"invalid_osmosis_user",
 			func() {
-				userAddress := utils.GenerateAccAddressForTest()
-				osmoAddress := utils.GenerateAccAddressForTestWithPrefix("osmo")
+				userAddress := addressutils.GenerateAccAddressForTest()
+				osmoAddress := addressutils.GenerateAddressForTestWithPrefix("osmo")
 				lockedResp := osmolockup.LockedResponse{
 					Lock: &osmolockup.PeriodLock{
 						ID:       1,
@@ -101,8 +102,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		{
 			"invalid_osmosis_pool",
 			func() {
-				userAddress := utils.GenerateAccAddressForTest()
-				osmoAddress := utils.ConvertAccAddressForTestUsingPrefix(userAddress, "osmo")
+				userAddress := addressutils.GenerateAccAddressForTest()
+				osmoAddress := addressutils.MustEncodeAddressToBech32("osmo", userAddress)
 				lockedResp := osmolockup.LockedResponse{
 					Lock: &osmolockup.PeriodLock{
 						ID:       1,
@@ -141,8 +142,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		{
 			"valid_osmosis",
 			func() {
-				userAddress := utils.GenerateAccAddressForTest()
-				osmoAddress := utils.ConvertAccAddressForTestUsingPrefix(userAddress, "osmo")
+				userAddress := addressutils.GenerateAccAddressForTest()
+				osmoAddress := addressutils.MustEncodeAddressToBech32("osmo", userAddress)
 				locked := &osmolockup.PeriodLock{
 					ID:       1,
 					Owner:    osmoAddress,
@@ -179,7 +180,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		{
 			"valid_liquid",
 			func() {
-				address := utils.GenerateAccAddressForTest()
+				address := addressutils.GenerateAccAddressForTest()
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				cd := sdk.Coin{
@@ -211,7 +212,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		{
 			"valid_liquid",
 			func() {
-				address := utils.GenerateAccAddressForTest()
+				address := addressutils.GenerateAccAddressForTest()
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				cd := sdk.Coin{
@@ -268,7 +269,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 }
 
 func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
-	address := utils.GenerateAccAddressForTest()
+	address := addressutils.GenerateAccAddressForTest()
 
 	var msg *types.MsgSubmitClaim
 	tests := []struct {
@@ -283,7 +284,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			"local_callback_nil",
 			func(ctx sdk.Context, appA *app.Quicksilver) {},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
-				address := utils.GenerateAccAddressForTest()
+				address := addressutils.GenerateAccAddressForTest()
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				query := abci.RequestQuery{

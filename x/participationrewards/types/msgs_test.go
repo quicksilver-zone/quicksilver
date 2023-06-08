@@ -9,13 +9,13 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
-	userAddress := utils.GenerateAccAddressForTest().String()
+	userAddress := addressutils.GenerateAccAddressForTest().String()
 
 	type fields struct {
 		UserAddress string
@@ -106,7 +106,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgSubmitClaim_GetSigners(t *testing.T) {
-	validAddress := utils.GenerateAccAddressForTest().String()
+	validAddress := addressutils.GenerateAccAddressForTest().String()
 	validAcc, _ := sdk.AccAddressFromBech32(validAddress)
 
 	type fields struct {
@@ -150,7 +150,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 }
 
 func TestNewMsgSubmitClaim(t *testing.T) {
-	userAddress := utils.GenerateAccAddressForTest()
+	userAddress := addressutils.GenerateAccAddressForTest()
 	type args struct {
 		userAddress sdk.Address
 		srcZone     string

@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app/upgrades"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -126,7 +126,7 @@ func (s *AppTestSuite) initTestZone() {
 
 	receipt := icstypes.Receipt{
 		ChainId: "uni-5",
-		Sender:  utils.GenerateAccAddressForTest().String(),
+		Sender:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 		Txhash:  "TestDeposit01",
 		Amount: sdk.NewCoins(
 			sdk.NewCoin(
@@ -178,7 +178,7 @@ func (s *AppTestSuite) initTestZone() {
 
 	wRecord := icstypes.WithdrawalRecord{
 		ChainId:   "uni-5",
-		Delegator: utils.GenerateAccAddressForTest().String(),
+		Delegator: addressutils.GenerateAccAddressForTest().String(),
 		Distribution: []*icstypes.Distribution{
 			{Valoper: "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn", Amount: 1000000},
 			{Valoper: "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed", Amount: 1000000},
@@ -195,14 +195,8 @@ func (s *AppTestSuite) initTestZone() {
 	if err != nil {
 		return
 	}
-	addr1, err := utils.AccAddressFromBech32("quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq", "quick")
-	if err != nil {
-		return
-	}
-	addr2, err := utils.AccAddressFromBech32("quick16x03wcp37kx5e8ehckjxvwcgk9j0cqnhcccnty", "quick")
-	if err != nil {
-		return
-	}
+	addr1 := addressutils.GenerateAccAddressForTest()
+	addr2 := addressutils.GenerateAccAddressForTest()
 
 	err = s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(s.chainA.GetContext(), tokenfactorytypes.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
 	if err != nil {
@@ -278,22 +272,22 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		if zone.ChainId == "uni-5" {
 			s.Require().Nil(zone.Validators)
-			valAddrBytes, err := utils.ValAddressFromBech32("junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn", "junovaloper")
+			valAddrBytes, err := addressutils.ValAddressFromBech32("junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn", "junovaloper")
 			s.Require().NoError(err)
 			_, found := app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
 			s.Require().True(found)
-			valAddrBytes2, err := utils.ValAddressFromBech32("junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed", "junovaloper")
+			valAddrBytes2, err := addressutils.ValAddressFromBech32("junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed", "junovaloper")
 			s.Require().NoError(err)
 			_, found = app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes2)
 			s.Require().True(found)
 		}
 		if zone.ChainId == "osmosis-1" {
 			s.Require().Nil(zone.Validators)
-			valAddrBytes, err := utils.ValAddressFromBech32("osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", "osmovaloper")
+			valAddrBytes, err := addressutils.ValAddressFromBech32("osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", "osmovaloper")
 			s.Require().NoError(err)
 			_, found := app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
 			s.Require().True(found)
-			valAddrBytes2, err := utils.ValAddressFromBech32("osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", "osmovaloper")
+			valAddrBytes2, err := addressutils.ValAddressFromBech32("osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", "osmovaloper")
 			s.Require().NoError(err)
 			_, found = app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes2)
 			s.Require().True(found)

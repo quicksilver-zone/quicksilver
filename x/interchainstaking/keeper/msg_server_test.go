@@ -6,9 +6,8 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -16,7 +15,7 @@ import (
 func (suite *KeeperTestSuite) TestRequestRedemption() {
 	var msg icstypes.MsgRequestRedemption
 
-	testAccount, err := utils.AccAddressFromBech32(testAddress, "")
+	testAccount, err := addressutils.AccAddressFromBech32(testAddress, "")
 	suite.Require().NoError(err)
 
 	tests := []struct {
@@ -28,7 +27,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
@@ -42,7 +41,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim (discounted)",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
@@ -61,7 +60,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim (interest)",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
@@ -81,7 +80,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim (interest)",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
@@ -101,7 +100,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - partial claim",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
@@ -115,7 +114,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - partial claim (discounted)",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
@@ -134,7 +133,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - partial claim (interest)",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
@@ -154,7 +153,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - unbonding not enabled for zone",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
@@ -173,7 +172,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - wrong denom",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uatom", sdk.NewInt(10000000)),
@@ -187,7 +186,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - insufficient funds",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(1000000000)),
@@ -201,7 +200,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - bad prefix",
 			func() {
-				addr, err := bech32.ConvertAndEncode("bob", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("bob", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
@@ -215,7 +214,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - bad from address",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
@@ -229,7 +228,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - too many locked tokens",
 			func() {
-				addr, err := bech32.ConvertAndEncode("cosmos", utils.GenerateAccAddressForTest())
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),

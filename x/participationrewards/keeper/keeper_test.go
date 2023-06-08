@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
@@ -19,7 +18,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	ics "github.com/ingenuity-build/quicksilver/x/interchainstaking"
@@ -27,7 +26,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-var testAddress = utils.GenerateAccAddressForTest().String()
+var testAddress = addressutils.GenerateAddressForTestWithPrefix("cosmos")
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
@@ -186,10 +185,10 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	}
 
 	// self zone
-	performanceAddressOsmo := utils.GenerateAccAddressForTestWithPrefix("osmo")
+	performanceAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
 	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "self")
 	suite.Require().NoError(err)
-	performanceAccountOsmo.WithdrawalAddress = utils.GenerateAccAddressForTestWithPrefix("osmo")
+	performanceAccountOsmo.WithdrawalAddress = addressutils.GenerateAddressForTestWithPrefix("osmo")
 
 	zoneSelf := icstypes.Zone{
 		ConnectionId:       "connection-77004",
@@ -231,10 +230,10 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneSelf)
 
 	// cosmos zone
-	performanceAddressCosmos := utils.GenerateAccAddressForTestWithPrefix("cosmos")
+	performanceAddressCosmos := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	performanceAccountCosmos, err := icstypes.NewICAAccount(performanceAddressCosmos, "cosmoshub-4.performance")
 	suite.Require().NoError(err)
-	performanceAccountCosmos.WithdrawalAddress = utils.GenerateAccAddressForTestWithPrefix("cosmos")
+	performanceAccountCosmos.WithdrawalAddress = addressutils.GenerateAddressForTestWithPrefix("cosmos")
 
 	zoneCosmos := icstypes.Zone{
 		ConnectionId:       "connection-77001",
@@ -285,9 +284,9 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		ReturnToSender:  false,
 		LiquidityModule: true,
 		PerformanceAddress: &icstypes.ICAAccount{
-			Address:           utils.GenerateAccAddressForTestWithPrefix("osmo"),
+			Address:           addressutils.GenerateAddressForTestWithPrefix("osmo"),
 			PortName:          "cosmoshub-4.performance",
-			WithdrawalAddress: utils.GenerateAccAddressForTestWithPrefix("osmo"),
+			WithdrawalAddress: addressutils.GenerateAddressForTestWithPrefix("osmo"),
 		},
 		Is_118: true,
 	}
@@ -343,10 +342,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 		return err
 	}
 
-	addr, err := bech32.ConvertAndEncode(remotePrefix, utils.GenerateAccAddressForTest())
-	if err != nil {
-		return err
-	}
+	addr := addressutils.GenerateAddressForTestWithPrefix(remotePrefix)
 	quicksilver.ICAControllerKeeper.SetInterchainAccountAddress(suite.chainA.GetContext(), connectionID, portID, addr)
 	return ibcModule.OnChanOpenAck(suite.chainA.GetContext(), portID, channelID, "", "")
 }
@@ -473,8 +469,8 @@ func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender, hash strin
 
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetReceipt(suite.chainA.GetContext(), receipt)
 
-	delegationAddress := utils.GenerateAccAddressForTestWithPrefix("cosmos")
-	validatorAddress := utils.GenerateValAddressForTestWithPrefix("cosmos")
+	delegationAddress := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	validatorAddress := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	delegation := icstypes.Delegation{
 		DelegationAddress: delegationAddress,
 		ValidatorAddress:  validatorAddress,

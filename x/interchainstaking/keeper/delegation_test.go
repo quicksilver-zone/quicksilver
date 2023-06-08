@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -101,14 +101,14 @@ type delegationUpdate struct {
 }
 
 func (suite *KeeperTestSuite) TestUpdateDelegation() {
-	del1 := utils.GenerateAccAddressForTest()
+	del1 := addressutils.GenerateAccAddressForTest()
 
-	val1 := utils.GenerateValAddressForTest()
-	val2 := utils.GenerateValAddressForTest()
-	val3 := utils.GenerateValAddressForTest()
-	val4 := utils.GenerateValAddressForTest()
-	val5 := utils.GenerateValAddressForTest()
-	val6 := utils.GenerateValAddressForTest()
+	val1 := addressutils.GenerateValAddressForTest()
+	val2 := addressutils.GenerateValAddressForTest()
+	val3 := addressutils.GenerateValAddressForTest()
+	val4 := addressutils.GenerateValAddressForTest()
+	val5 := addressutils.GenerateValAddressForTest()
+	val6 := addressutils.GenerateValAddressForTest()
 
 	tests := []struct {
 		name       string
@@ -231,8 +231,8 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 		zone, found := qApp.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 		suite.Require().True(found)
 
-		delegator := utils.GenerateAccAddressForTest()
-		validator := utils.GenerateValAddressForTest()
+		delegator := addressutils.GenerateAccAddressForTest()
+		validator := addressutils.GenerateValAddressForTest()
 
 		_, found = qApp.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegator.String(), validator.String())
 		suite.Require().False(found)
@@ -256,7 +256,7 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 }
 
 func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
-	userAddress := utils.GenerateAccAddressForTest().String()
+	userAddress := addressutils.GenerateAccAddressForTest().String()
 	denom := "uatom"
 	tests := []struct {
 		name               string

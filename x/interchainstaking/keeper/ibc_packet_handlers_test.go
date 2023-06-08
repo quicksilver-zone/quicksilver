@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -20,7 +19,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -30,7 +29,7 @@ func TestHandleMsgTransferGood(t *testing.T) {
 	err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
 	require.NoError(t, err)
 
-	sender := utils.GenerateAccAddressForTest()
+	sender := addressutils.GenerateAccAddressForTest()
 	senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
 	require.NoError(t, err)
 
@@ -67,10 +66,10 @@ func TestHandleMsgTransferBadType(t *testing.T) {
 }
 
 func TestHandleMsgTransferBadRecipient(t *testing.T) {
-	recipient := utils.GenerateAccAddressForTest()
+	recipient := addressutils.GenerateAccAddressForTest()
 	quicksilver, ctx := app.GetAppWithContext(t, true)
 
-	sender := utils.GenerateAccAddressForTest()
+	sender := addressutils.GenerateAccAddressForTest()
 	senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
 	require.NoError(t, err)
 
@@ -82,14 +81,6 @@ func TestHandleMsgTransferBadRecipient(t *testing.T) {
 		Receiver:      recipient.String(),
 	}
 	require.Error(t, quicksilver.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
-}
-
-func mustGetTestBech32Address(hrp string) string {
-	outAddr, err := bech32.ConvertAndEncode(hrp, utils.GenerateAccAddressForTest())
-	if err != nil {
-		panic(err)
-	}
-	return outAddr
 }
 
 func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
@@ -109,14 +100,14 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				return []icstypes.WithdrawalRecord{
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 1000000},
 							{Valoper: vals[1], Amount: 1000000},
 							{Valoper: vals[2], Amount: 1000000},
 							{Valoper: vals[3], Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -162,14 +153,14 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				return []icstypes.WithdrawalRecord{
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 1000000},
 							{Valoper: vals[1], Amount: 1000000},
 							{Valoper: vals[2], Amount: 1000000},
 							{Valoper: vals[3], Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -177,14 +168,14 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					},
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 5000000},
 							{Valoper: vals[1], Amount: 2500000},
 							{Valoper: vals[2], Amount: 5000000},
 							{Valoper: vals[3], Amount: 2500000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
 						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
@@ -230,14 +221,14 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				return []icstypes.WithdrawalRecord{
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 1000000},
 							{Valoper: vals[1], Amount: 1000000},
 							{Valoper: vals[2], Amount: 1000000},
 							{Valoper: vals[3], Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -293,14 +284,14 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				return []icstypes.WithdrawalRecord{
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 5000000},
 							{Valoper: vals[1], Amount: 2500000},
 							{Valoper: vals[2], Amount: 5000000},
 							{Valoper: vals[3], Amount: 2500000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
 						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
@@ -308,14 +299,14 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 					},
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 1000000},
 							{Valoper: vals[1], Amount: 1000000},
 							{Valoper: vals[2], Amount: 1000000},
 							{Valoper: vals[3], Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -389,7 +380,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			for _, delegation := range delegations {
 				quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-				valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
+				valAddrBytes, err := addressutils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 				suite.Require().NoError(err)
 				val, _ := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
 				val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
@@ -446,14 +437,14 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 				return []icstypes.WithdrawalRecord{
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -471,14 +462,14 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 				return []icstypes.WithdrawalRecord{
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -498,14 +489,14 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 				return []icstypes.WithdrawalRecord{
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -513,14 +504,14 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 					},
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 5000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1250000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 5000000},
-							{Valoper: utils.GenerateValAddressForTest().String(), Amount: 1250000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 5000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1250000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 5000000},
+							{Valoper: addressutils.GenerateValAddressForTest().String(), Amount: 1250000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
 						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
@@ -586,8 +577,8 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 }
 
 func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
-	v1 := utils.GenerateValAddressForTest().String()
-	v2 := utils.GenerateValAddressForTest().String()
+	v1 := addressutils.GenerateValAddressForTest().String()
+	v2 := addressutils.GenerateValAddressForTest().String()
 	tests := []struct {
 		name    string
 		records func(zone *icstypes.Zone) []icstypes.WithdrawalRecord
@@ -601,12 +592,12 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 				return []icstypes.WithdrawalRecord{
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: v1, Amount: 1000000},
 							{Valoper: v2, Amount: 1000000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -627,12 +618,12 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 				return []icstypes.WithdrawalRecord{
 					{
 						ChainId:   zone.ChainId,
-						Delegator: utils.GenerateAccAddressForTest().String(),
+						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: v1, Amount: 1000000},
 							{Valoper: v2, Amount: 1500000},
 						},
-						Recipient:  mustGetTestBech32Address(zone.AccountPrefix),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2500000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2500000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
@@ -757,8 +748,8 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 	hash1 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x01}))
 	hash2 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x02}))
 	hash3 := fmt.Sprintf("%x", sha256.Sum256([]byte{0x03}))
-	delegator1 := utils.GenerateAccAddressForTest().String()
-	delegator2 := utils.GenerateAccAddressForTest().String()
+	delegator1 := addressutils.GenerateAccAddressForTest().String()
+	delegator2 := addressutils.GenerateAccAddressForTest().String()
 
 	tests := []struct {
 		name                      string
@@ -787,7 +778,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 								Amount:  1000,
 							},
 						},
-						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(2000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
 						Txhash:     hash1,
@@ -828,7 +819,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 								Amount:  1000,
 							},
 						},
-						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:     hash1,
@@ -838,7 +829,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						ChainId:      suite.chainB.ChainID,
 						Delegator:    delegator1,
 						Distribution: nil,
-						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:       fmt.Sprintf("%064d", 1),
@@ -862,7 +853,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 								Amount:  1000,
 							},
 						},
-						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:     hash1,
@@ -897,7 +888,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						ChainId:      suite.chainB.ChainID,
 						Delegator:    delegator1,
 						Distribution: nil,
-						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:       hash1,
@@ -925,7 +916,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 								Amount:  500,
 							},
 						},
-						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1500))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1350)),
 						Txhash:     hash1,
@@ -944,7 +935,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 								Amount:  2000,
 							},
 						},
-						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(2700)),
 						Txhash:     hash2,
@@ -963,7 +954,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 								Amount:  400,
 							},
 						},
-						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:     hash3,
@@ -1004,7 +995,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 								Amount:  1000,
 							},
 						},
-						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:     hash1,
@@ -1019,7 +1010,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 								Amount:  1000,
 							},
 						},
-						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:     hash2,
@@ -1034,7 +1025,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 								Amount:  600,
 							},
 						},
-						Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(600))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(540)),
 						Txhash:     hash3,
@@ -1044,7 +1035,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						ChainId:      suite.chainB.ChainID,
 						Delegator:    delegator1,
 						Distribution: nil,
-						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(500))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(450)),
 						Txhash:       fmt.Sprintf("%064d", 1),
@@ -1054,7 +1045,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						ChainId:      suite.chainB.ChainID,
 						Delegator:    delegator2,
 						Distribution: nil,
-						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(2000))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
 						Txhash:       fmt.Sprintf("%064d", 2),
@@ -1064,7 +1055,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						ChainId:      suite.chainB.ChainID,
 						Delegator:    delegator1,
 						Distribution: nil,
-						Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(400))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(360)),
 						Txhash:       fmt.Sprintf("%064d", 3),
@@ -1089,7 +1080,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 		//						Amount:  1000,
 		//					},
 		//				},
-		//				Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+		//				Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 		//				Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 		//				BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(1000).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
 		//				Txhash:     hash1,
@@ -1108,7 +1099,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 		//						Amount:  456,
 		//					},
 		//				},
-		//				Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+		//				Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 		//				Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(579))),
 		//				BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(579).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
 		//				Txhash:     hash2,
@@ -1161,7 +1152,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 		//				ChainId:      s.chainB.ChainID,
 		//				Delegator:    delegator1,
 		//				Distribution: nil,
-		//				Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+		//				Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 		//				Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 		//				BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewDec(1000).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
 		//				Txhash:       hash1,
@@ -1171,7 +1162,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 		//				ChainId:      s.chainB.ChainID,
 		//				Delegator:    delegator2,
 		//				Distribution: nil,
-		//				Recipient:    mustGetTestBech32Address(zone.GetAccountPrefix()),
+		//				Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 		//				Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(123))),
 		//				BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewDec(123).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
 		//				Txhash:       fmt.Sprintf("%064d", 1),
@@ -1186,7 +1177,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 		//						Amount:  456,
 		//					},
 		//				},
-		//				Recipient:  mustGetTestBech32Address(zone.GetAccountPrefix()),
+		//				Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
 		//				Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(456))),
 		//				BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewDec(456).Quo(sdk.MustNewDecFromStr(fmt.Sprintf("%f", randRr))).TruncateInt()),
 		//				Txhash:     hash2,
@@ -1273,7 +1264,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	}
 	vals := quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
 	for _, val := range vals {
-		valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "cosmosvaloper")
+		valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "cosmosvaloper")
 		quicksilver.InterchainstakingKeeper.DeleteValidator(ctx, zone.ChainId, valoper)
 	}
 
@@ -1316,7 +1307,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	}
 	for _, delegation := range delegations {
 		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-		addressBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
+		addressBytes, err := addressutils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 		suite.Require().NoError(err)
 		val, _ := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, addressBytes)
 		val.VotingPower = val.VotingPower.Add(delegation.Amount.Amount)
@@ -1403,7 +1394,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	}
 	vals := quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
 	for _, val := range vals {
-		valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "cosmosvaloper")
+		valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "cosmosvaloper")
 		quicksilver.InterchainstakingKeeper.DeleteValidator(ctx, zone.ChainId, valoper)
 	}
 
@@ -1443,7 +1434,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	}
 	for _, delegation := range delegations {
 		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-		valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
+		valAddrBytes, err := addressutils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 		suite.Require().NoError(err)
 
 		val, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
@@ -1531,7 +1522,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, []byte) {
 				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
 				suite.Require().NoError(err)
-				sender := utils.GenerateAccAddressForTest()
+				sender := addressutils.GenerateAccAddressForTest()
 				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
 				suite.Require().NoError(err)
 
@@ -1651,7 +1642,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]sdk.Msg, *codectypes.Any) {
 				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
 				suite.Require().NoError(err)
-				sender := utils.GenerateAccAddressForTest()
+				sender := addressutils.GenerateAccAddressForTest()
 				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
 				suite.Require().NoError(err)
 

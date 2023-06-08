@@ -5,13 +5,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 var (
-	user1 = utils.GenerateAccAddressForTest()
-	user2 = utils.GenerateAccAddressForTest()
+	user1 = addressutils.GenerateAccAddressForTest()
+	user2 = addressutils.GenerateAccAddressForTest()
 )
 
 func (suite *KeeperTestSuite) TestKeeper_IntentStore() {

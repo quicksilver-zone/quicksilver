@@ -9,7 +9,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	"github.com/ingenuity-build/quicksilver/utils/randomutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -24,15 +25,15 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
 
-	fromAddress := utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix)
+	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
 
 	msg := banktypes.MsgSend{FromAddress: fromAddress, ToAddress: zone.DepositAddress.Address, Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1000000)))}
 	anymsg, err := codectypes.NewAnyWithValue(&msg)
 	suite.Require().NoError(err)
 
 	transaction := &tx.Tx{Body: &tx.TxBody{Messages: []*codectypes.Any{anymsg}}}
-	hash := utils.GenerateRandomHashAsHex()
-	hash2 := utils.GenerateRandomHashAsHex()
+	hash := randomutils.GenerateRandomHashAsHex()
+	hash2 := randomutils.GenerateRandomHashAsHex()
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
@@ -62,14 +63,14 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
 
-	fromAddress := utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix)
+	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
 
 	msg := banktypes.MsgSend{FromAddress: fromAddress, ToAddress: zone.DelegationAddress.Address, Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1000000)))}
 	anymsg, err := codectypes.NewAnyWithValue(&msg)
 	suite.Require().NoError(err)
 
 	transaction := &tx.Tx{Body: &tx.TxBody{Messages: []*codectypes.Any{anymsg}}}
-	hash := utils.GenerateRandomHashAsHex()
+	hash := randomutils.GenerateRandomHashAsHex()
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
@@ -94,14 +95,14 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
 
-	fromAddress := utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix)
+	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
 
 	msg := stakingtypes.MsgDelegate{DelegatorAddress: fromAddress, ValidatorAddress: zone.DelegationAddress.Address, Amount: sdk.NewCoin(zone.BaseDenom, math.NewInt(1000000))}
 	anymsg, err := codectypes.NewAnyWithValue(&msg)
 	suite.Require().NoError(err)
 
 	transaction := &tx.Tx{Body: &tx.TxBody{Messages: []*codectypes.Any{anymsg}}}
-	hash := utils.GenerateRandomHashAsHex()
+	hash := randomutils.GenerateRandomHashAsHex()
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
@@ -126,7 +127,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptMixedMessageTypeGood() {
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
 
-	fromAddress := utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix)
+	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
 
 	msg := banktypes.MsgSend{FromAddress: fromAddress, ToAddress: zone.DepositAddress.Address, Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1000000)))}
 	anymsg, err := codectypes.NewAnyWithValue(&msg)
@@ -137,7 +138,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptMixedMessageTypeGood() {
 	suite.Require().NoError(err)
 
 	transaction := &tx.Tx{Body: &tx.TxBody{Messages: []*codectypes.Any{anymsg, anymsg2}}}
-	hash := utils.GenerateRandomHashAsHex()
+	hash := randomutils.GenerateRandomHashAsHex()
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
@@ -160,8 +161,8 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMixedSender() { // 
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
 
-	fromAddress := utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix)
-	fromAddress2 := utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix)
+	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
+	fromAddress2 := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
 
 	msg := banktypes.MsgSend{FromAddress: fromAddress, ToAddress: zone.DepositAddress.Address, Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1000000)))}
 	anymsg, err := codectypes.NewAnyWithValue(&msg)
@@ -171,7 +172,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMixedSender() { // 
 	suite.Require().NoError(err)
 
 	transaction := &tx.Tx{Body: &tx.TxBody{Messages: []*codectypes.Any{anymsg, anymsg2}}}
-	hash := utils.GenerateRandomHashAsHex()
+	hash := randomutils.GenerateRandomHashAsHex()
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
@@ -196,14 +197,14 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadDenom() {
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
 
-	fromAddress := utils.GenerateAccAddressForTestWithPrefix(zone.AccountPrefix)
+	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
 
 	msg := banktypes.MsgSend{FromAddress: fromAddress, ToAddress: zone.DepositAddress.Address, Amount: sdk.NewCoins(sdk.NewCoin("ushit", math.NewInt(1000000)))}
 	anymsg, err := codectypes.NewAnyWithValue(&msg)
 	suite.Require().NoError(err)
 
 	transaction := &tx.Tx{Body: &tx.TxBody{Messages: []*codectypes.Any{anymsg}}}
-	hash := utils.GenerateRandomHashAsHex()
+	hash := randomutils.GenerateRandomHashAsHex()
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
@@ -230,12 +231,12 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
 
-	account1 := utils.GenerateAccAddressForTest()
-	account2 := utils.GenerateAccAddressForTest()
-	hash1 := utils.GenerateRandomHashAsHex()
-	hash2 := utils.GenerateRandomHashAsHex()
-	hash3 := utils.GenerateRandomHashAsHex()
-	hash4 := utils.GenerateRandomHashAsHex()
+	account1 := addressutils.GenerateAccAddressForTest()
+	account2 := addressutils.GenerateAccAddressForTest()
+	hash1 := randomutils.GenerateRandomHashAsHex()
+	hash2 := randomutils.GenerateRandomHashAsHex()
+	hash3 := randomutils.GenerateRandomHashAsHex()
+	hash4 := randomutils.GenerateRandomHashAsHex()
 
 	zone2 := types.Zone{ChainId: "test-1"}
 

@@ -11,7 +11,7 @@ import (
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 
 	"github.com/ingenuity-build/quicksilver/app/keepers"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -90,7 +90,7 @@ func V010402rc3UpgradeHandler(
 			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("rege-redwood-1")))
 			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, OsmosisTestnetChainID)
 			for _, val := range vals {
-				valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")
+				valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")
 				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, OsmosisTestnetChainID, valoper)
 			}
 		}

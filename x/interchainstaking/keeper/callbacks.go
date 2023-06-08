@@ -11,7 +11,6 @@ import (
 	sdkioerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	"google.golang.org/protobuf/encoding/protowire"
 
@@ -26,6 +25,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -163,11 +163,11 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		if err != nil {
 			return err
 		}
-		validatorAddress, err := bech32.ConvertAndEncode(zone.GetValoperPrefix(), validator)
+		validatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetValoperPrefix(), validator)
 		if err != nil {
 			return err
 		}
-		delegatorAddress, err := bech32.ConvertAndEncode(zone.GetAccountPrefix(), delegator)
+		delegatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetAccountPrefix(), delegator)
 		if err != nil {
 			return err
 		}
@@ -180,7 +180,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		}
 		return nil
 	}
-	valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
+	valAddrBytes, err := addressutils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
 	}
@@ -494,7 +494,7 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 		return err
 	}
 
-	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
+	address, err := addressutils.EncodeAddressToBech32(zone.AccountPrefix, accAddr)
 	if err != nil {
 		return err
 	}
@@ -536,7 +536,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 		k.Logger(ctx).Debug("invalid coin for zone", "zone", zone.ChainId, "err", err)
 		return err
 	}
-	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
+	address, err := addressutils.EncodeAddressToBech32(zone.AccountPrefix, accAddr)
 	if err != nil {
 		return err
 	}

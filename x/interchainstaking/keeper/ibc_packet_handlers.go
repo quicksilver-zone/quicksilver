@@ -26,6 +26,7 @@ import (
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -604,11 +605,11 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	tgtDelegation.RedelegationEnd = completion.Unix() // this field should be a timestamp, but let's avoid unnecessary state changes.
 	k.SetDelegation(ctx, zone, tgtDelegation)
 
-	delAddr, err := utils.AccAddressFromBech32(redelegateMsg.DelegatorAddress, zone.AccountPrefix)
+	delAddr, err := addressutils.AccAddressFromBech32(redelegateMsg.DelegatorAddress, zone.AccountPrefix)
 	if err != nil {
 		return err
 	}
-	valAddr, err := utils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
+	valAddr, err := addressutils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
 	if err != nil {
 		return err
 	}
@@ -635,7 +636,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	srcDelegation.Amount = tgtDelegation.Amount.Sub(redelegateMsg.Amount)
 	k.SetDelegation(ctx, zone, srcDelegation)
 
-	valAddr, err = utils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
+	valAddr, err = addressutils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
 	if err != nil {
 		return err
 	}
@@ -713,11 +714,11 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		k.UpdateWithdrawalRecordStatus(ctx, &record, WithdrawStatusUnbond)
 	}
 
-	delAddr, err := utils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
+	delAddr, err := addressutils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
 	if err != nil {
 		return err
 	}
-	valAddr, err := utils.ValAddressFromBech32(undelegateMsg.ValidatorAddress, "")
+	valAddr, err := addressutils.ValAddressFromBech32(undelegateMsg.ValidatorAddress, "")
 	if err != nil {
 		return err
 	}

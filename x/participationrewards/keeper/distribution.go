@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -187,7 +187,7 @@ func (k *Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.User
 			),
 		)
 
-		addrBytes, err := utils.AccAddressFromBech32(ua.Address, "")
+		addrBytes, err := addressutils.AccAddressFromBech32(ua.Address, "")
 		if err != nil {
 			k.Logger(ctx).Error("unmarshalling address", "address", ua.Address)
 			hasError = true

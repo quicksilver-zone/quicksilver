@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -19,9 +19,9 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
 		zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 		suite.Require().True(found)
 
-		validator := utils.GenerateValAddressForTest()
+		validator := addressutils.GenerateValAddressForTest()
 
-		valAddrBytes, err := utils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
+		valAddrBytes, err := addressutils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
 		suite.Require().NoError(err)
 		_, found = app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
 		suite.Require().False(found)

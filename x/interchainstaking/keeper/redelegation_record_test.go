@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -11,8 +11,8 @@ func (suite *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 
-	testValidatorOne := utils.GenerateAccAddressForTestWithPrefix("cosmosvaloper")
-	testValidatorTwo := utils.GenerateValAddressForTestWithPrefix("cosmosvaloper")
+	testValidatorOne := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+	testValidatorTwo := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
 
 	suite.SetupTest()
 

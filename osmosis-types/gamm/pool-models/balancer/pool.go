@@ -9,10 +9,10 @@ import (
 
 	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/internal/cfmm_common"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 //nolint:deadcode
@@ -75,11 +75,12 @@ func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []Pool
 // GetAddress returns the address of a pool.
 // If the pool address is not bech32 valid, it returns an empty address.
 func (p Pool) GetAddress() sdk.AccAddress {
-	_, addr, err := bech32.DecodeAndConvert(p.Address)
+	addr, err := addressutils.AccAddressFromBech32(p.Address, "")
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}
 	return addr
+
 }
 
 func (p Pool) GetId() uint64 {

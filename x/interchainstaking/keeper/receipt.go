@@ -16,6 +16,7 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -384,7 +385,7 @@ func (k *Keeper) IterateZoneReceipts(ctx sdk.Context, zone *types.Zone, fn func(
 func (k *Keeper) UserZoneReceipts(ctx sdk.Context, zone *types.Zone, addr sdk.AccAddress) ([]types.Receipt, error) {
 	receipts := make([]types.Receipt, 0)
 
-	bech32Address, err := bech32.ConvertAndEncode(zone.AccountPrefix, addr)
+	bech32Address, err := addressutils.EncodeAddressToBech32(zone.AccountPrefix, addr)
 	if err != nil {
 		return receipts, err
 	}

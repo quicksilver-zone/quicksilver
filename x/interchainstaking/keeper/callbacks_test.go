@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -30,7 +30,7 @@ const (
 )
 
 func (suite *KeeperTestSuite) TestHandleValsetCallback() {
-	newVal := utils.GenerateValAddressForTest()
+	newVal := addressutils.GenerateValAddressForTest()
 
 	tests := []struct {
 		name   string
@@ -345,7 +345,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 }
 
 func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
-	newVal := utils.GenerateAccAddressForTestWithPrefix("cosmosvaloper")
+	newVal := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
 	zone := icstypes.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
 	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zone.ChainId, icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("0.2"), VotingPower: sdk.NewInt(2000), DelegatorShares: sdk.NewDec(2000)})
@@ -400,7 +400,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
 			suite.True(found)
 
-			valAddrBytes, err := utils.ValAddressFromBech32(test.expected.ValoperAddress, zone.GetValoperPrefix())
+			valAddrBytes, err := addressutils.ValAddressFromBech32(test.expected.ValoperAddress, zone.GetValoperPrefix())
 			suite.Require().NoError(err)
 			val, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
 			suite.True(found)
@@ -665,7 +665,7 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 		zone.WithdrawalWaitgroup++
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		user := utils.GenerateAccAddressForTest()
+		user := addressutils.GenerateAccAddressForTest()
 
 		queryReq := distrtypes.QueryDelegationTotalRewardsRequest{
 			DelegatorAddress: user.String(),
@@ -1130,7 +1130,8 @@ func TestValsetCallbackNilValidatorReqPagination(t *testing.T) {
 	ctx := suite.chainA.GetContext()
 
 	data := []byte("\x12\"\n 00000000000000000000000000000000")
-	_ = keeper.ValsetCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID})
+	err := keeper.ValsetCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID})
+	suite.Require().NoError(err)
 }
 
 func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
@@ -1356,9 +1357,9 @@ func TestDelegationCallbackNew(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delAddr, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
+	delAddr, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
 	suite.Require().NoError(err)
-	valAddr, err := utils.ValAddressFromBech32(vals[3].OperatorAddress, "")
+	valAddr, err := addressutils.ValAddressFromBech32(vals[3].OperatorAddress, "")
 	suite.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
@@ -1395,9 +1396,9 @@ func TestDelegationCallbackUpdate(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delAddr, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
+	delAddr, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
 	suite.Require().NoError(err)
-	valAddr, err := utils.ValAddressFromBech32(vals[3].OperatorAddress, "")
+	valAddr, err := addressutils.ValAddressFromBech32(vals[3].OperatorAddress, "")
 	suite.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
@@ -1434,9 +1435,9 @@ func TestDelegationCallbackNoOp(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delAddr, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
+	delAddr, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
 	suite.Require().NoError(err)
-	valAddr, err := utils.ValAddressFromBech32(vals[3].OperatorAddress, "")
+	valAddr, err := addressutils.ValAddressFromBech32(vals[3].OperatorAddress, "")
 	suite.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 	ctx = suite.chainA.GetContext()
@@ -1473,9 +1474,9 @@ func TestDelegationCallbackRemove(t *testing.T) {
 
 	data := cdc.MustMarshal(&response)
 
-	delAddr, err := utils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
+	delAddr, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, "")
 	suite.Require().NoError(err)
-	valAddr, err := utils.ValAddressFromBech32(vals[3].OperatorAddress, "")
+	valAddr, err := addressutils.ValAddressFromBech32(vals[3].OperatorAddress, "")
 	suite.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
@@ -1584,7 +1585,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 
 		delAddr := zone.DelegationAddress.Address
 
-		accAddr, err := utils.AccAddressFromBech32(delAddr, "cosmos")
+		accAddr, err := addressutils.AccAddressFromBech32(delAddr, "cosmos")
 		suite.Require().NoError(err)
 
 		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
