@@ -71,6 +71,7 @@ The following modules and packages were lifted and reused in almost entirety fro
     x/mint
     x/epochs
     x/tokenfactory
+    x/ibc-hooks
     test/e2e
 
 We're also using CosmWasm, developed over the course of years with lead from Confio and support from the whole of Cosmos. 
