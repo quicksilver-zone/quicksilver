@@ -9,7 +9,10 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - depguard
+    # Check whether the function uses a non-inherited context.
+    - contextcheck
+    # Check for two durations multiplied together.
+    - durationcheck
     - dogsled
     - errcheck
     - goconst
