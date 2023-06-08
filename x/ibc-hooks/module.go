@@ -2,11 +2,16 @@ package ibc_hooks
 
 import (
 	"encoding/json"
+
+	"math/rand"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/simulation"
 	"github.com/spf13/cobra"
 
 	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/client/cli"
@@ -26,7 +31,9 @@ var (
 )
 
 // AppModuleBasic defines the basic application module used by the ibc-hooks module.
-type AppModuleBasic struct{}
+type AppModuleBasic struct {
+	cdc codec.Codec
+}
 
 var _ module.AppModuleBasic = AppModuleBasic{}
 
@@ -77,11 +84,16 @@ type AppModule struct {
 }
 
 // NewAppModule creates a new AppModule object.
-func NewAppModule(ak osmoutils.AccountKeeper) AppModule {
+func NewAppModule(cdc codec.Codec, ak osmoutils.AccountKeeper) AppModule {
 	return AppModule{
-		AppModuleBasic: AppModuleBasic{},
+		AppModuleBasic: NewAppModuleBasic(cdc),
 		authKeeper:     ak,
 	}
+}
+
+// NewAppModuleBasic return a new AppModuleBasic.
+func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
+	return AppModuleBasic{cdc: cdc}
 }
 
 // Name returns the ibc-hooks module's name.
@@ -119,3 +131,29 @@ func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Validato
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// AppModuleSimulation functions
+
+// GenerateGenesisState creates a randomized GenState of the pool-incentives module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return nil
+}
+
+// RandomizedParams creates randomized mint param changes for the simulator.
+func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
+	return []simtypes.LegacyParamChange{}
+}
+
+// RegisterStoreDecoder registers a decoder for supply module's types.
+func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+}
+
+// WeightedOperations returns the all the gov module operations with their respective weights.
+func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+	return nil // TODO add
+}

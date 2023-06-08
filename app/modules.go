@@ -44,6 +44,7 @@ import (
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
 	tendermint "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	ibchooks "github.com/ingenuity-build/quicksilver/x/ibc-hooks"
 	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v7/router"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
@@ -55,6 +56,7 @@ import (
 	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/epochs"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+	ibchookstypes "github.com/ingenuity-build/quicksilver/x/ibc-hooks/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery"
 	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking"
@@ -104,6 +106,7 @@ var (
 		epochs.AppModuleBasic{},
 		interchainstaking.AppModuleBasic{},
 		interchainquery.AppModuleBasic{},
+		ibchooks.AppModuleBasic{},
 		participationrewards.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
 		tokenfactory.AppModuleBasic{},
@@ -125,6 +128,7 @@ var (
 		interchainstakingtypes.ModuleName:          {authtypes.Minter},
 		interchainstakingtypes.EscrowModuleAccount: {authtypes.Burner},
 		interchainquerytypes.ModuleName:            nil,
+		ibchookstypes.ModuleName:                   nil,
 		participationrewardstypes.ModuleName:       nil,
 		airdroptypes.ModuleName:                    nil,
 		packetforwardtypes.ModuleName:              nil,
@@ -173,6 +177,7 @@ func appModules(
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper),
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
+		ibchooks.NewAppModule(appCodec, app.AccountKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
@@ -211,6 +216,7 @@ func simulationModules(
 		epochs.NewAppModule(appCodec, app.EpochsKeeper),
 		interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper),
 		interchainquery.NewAppModule(appCodec, app.InterchainQueryKeeper),
+		ibchooks.NewAppModule(appCodec, app.AccountKeeper),
 		participationrewards.NewAppModule(appCodec, app.ParticipationRewardsKeeper),
 		airdrop.NewAppModule(appCodec, app.AirdropKeeper),
 		tokenfactory.NewAppModule(app.TokenFactoryKeeper, app.AccountKeeper, app.BankKeeper),
@@ -245,6 +251,7 @@ func orderBeginBlockers() []string {
 		interchainquerytypes.ModuleName, // check ordering here.
 		// no-op modules
 		ibctransfertypes.ModuleName,
+		ibchookstypes.ModuleName,
 		icatypes.ModuleName,
 		packetforwardtypes.ModuleName,
 		claimsmanagertypes.ModuleName,
@@ -282,6 +289,7 @@ func orderEndBlockers() []string {
 		epochstypes.ModuleName,
 		// no-op modules
 		ibcexported.ModuleName,
+		ibchookstypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		icatypes.ModuleName,
 		packetforwardtypes.ModuleName,
@@ -346,6 +354,7 @@ func orderInitBlockers() []string {
 		participationrewardstypes.ModuleName,
 		airdroptypes.ModuleName,
 		tokenfactorytypes.ModuleName,
+		ibchookstypes.ModuleName,
 		// wasmd
 		wasm.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
