@@ -835,10 +835,10 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 	}
 }
 
-func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
-	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
+func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	usrAddress1, _ := addressutils.AccAddressFromBech32("cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn", "cosmos")
-	ctx := s.chainA.GetContext()
+	ctx := suite.chainA.GetContext()
 
 	tests := []struct {
 		name         string
@@ -878,7 +878,7 @@ func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 			"MappedAccounts_ValidRecord_Request",
 			func() {
 				// setup zones
-				s.setupTestZones()
+				suite.setupTestZones()
 				zone := types.Zone{
 					ConnectionId:    "connection-77881",
 					ChainId:         "evmos_9001-1",
@@ -938,25 +938,25 @@ func (s *KeeperTestSuite) TestKeeper_MappedAccounts() {
 
 	// run tests:
 	for _, tt := range tests {
-		s.Run(tt.name, func() {
+		suite.Run(tt.name, func() {
 			tt.malleate()
 			resp, err := icsKeeper.MappedAccounts(
 				ctx,
 				tt.req,
 			)
 			if tt.wantErr {
-				s.T().Logf("Error:\n%v\n", err)
-				s.Require().Error(err)
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Require().Error(err)
 				return
 			}
-			s.Require().NoError(err)
-			s.Require().NotNil(resp)
-			s.Require().Equal(tt.expectLength, len(resp.RemoteAddressMap))
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			suite.Require().Equal(tt.expectLength, len(resp.RemoteAddressMap))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			s.Require().NoError(err)
+			suite.Require().NoError(err)
 
-			s.T().Logf("Response:\n%s\n", vstr)
+			suite.T().Logf("Response:\n%s\n", vstr)
 		})
 	}
 }

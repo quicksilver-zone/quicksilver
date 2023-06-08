@@ -8,85 +8,85 @@ const (
 	testChainID = "test-1"
 )
 
-func (s *KeeperTestSuite) TestKeeper_RemoteAddressStore() {
-	s.SetupTest()
-	s.setupTestZones()
+func (suite *KeeperTestSuite) TestKeeper_RemoteAddressStore() {
+	suite.SetupTest()
+	suite.setupTestZones()
 
-	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
-	ctx := s.chainA.GetContext()
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
 
 	localAddress := randomutils.GenerateRandomBytes(28)
 	remoteAddress := randomutils.GenerateRandomBytes(40)
 
-	s.Run("not found", func() {
+	suite.Run("not found", func() {
 		_, found := icsKeeper.GetRemoteAddressMap(ctx, localAddress, testChainID)
-		s.Require().False(found)
+		suite.Require().False(found)
 	})
 
-	s.Run("set", func() {
+	suite.Run("set", func() {
 		icsKeeper.SetRemoteAddressMap(ctx, localAddress, remoteAddress, testChainID)
 	})
 
-	s.Run("found", func() {
+	suite.Run("found", func() {
 		addr, found := icsKeeper.GetRemoteAddressMap(ctx, localAddress, testChainID)
-		s.Require().True(found)
-		s.Require().Equal(remoteAddress, addr)
+		suite.Require().True(found)
+		suite.Require().Equal(remoteAddress, addr)
 	})
 }
 
-func (s *KeeperTestSuite) TestKeeper_LocalAddressStore() {
-	s.SetupTest()
-	s.setupTestZones()
+func (suite *KeeperTestSuite) TestKeeper_LocalAddressStore() {
+	suite.SetupTest()
+	suite.setupTestZones()
 
-	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
-	ctx := s.chainA.GetContext()
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
 
 	localAddress := randomutils.GenerateRandomBytes(28)
 	remoteAddress := randomutils.GenerateRandomBytes(40)
 
-	s.Run("not found", func() {
+	suite.Run("not found", func() {
 		_, found := icsKeeper.GetLocalAddressMap(ctx, remoteAddress, testChainID)
-		s.Require().False(found)
+		suite.Require().False(found)
 	})
 
-	s.Run("set", func() {
+	suite.Run("set", func() {
 		icsKeeper.SetLocalAddressMap(ctx, localAddress, remoteAddress, testChainID)
 	})
 
-	s.Run("found", func() {
+	suite.Run("found", func() {
 		addr, found := icsKeeper.GetLocalAddressMap(ctx, remoteAddress, testChainID)
-		s.Require().True(found)
-		s.Require().Equal(localAddress, addr)
+		suite.Require().True(found)
+		suite.Require().Equal(localAddress, addr)
 	})
 }
 
-func (s *KeeperTestSuite) TestKeeper_AddressMapPair() {
-	s.SetupTest()
-	s.setupTestZones()
+func (suite *KeeperTestSuite) TestKeeper_AddressMapPair() {
+	suite.SetupTest()
+	suite.setupTestZones()
 
-	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
-	ctx := s.chainA.GetContext()
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
 
 	localAddress := randomutils.GenerateRandomBytes(28)
 	remoteAddress := randomutils.GenerateRandomBytes(40)
 
-	s.Run("not found", func() {
+	suite.Run("not found", func() {
 		_, found := icsKeeper.GetLocalAddressMap(ctx, remoteAddress, testChainID)
-		s.Require().False(found)
+		suite.Require().False(found)
 		_, found = icsKeeper.GetRemoteAddressMap(ctx, remoteAddress, testChainID)
-		s.Require().False(found)
+		suite.Require().False(found)
 	})
 
-	s.Run("set", func() {
+	suite.Run("set", func() {
 		icsKeeper.SetAddressMapPair(ctx, localAddress, remoteAddress, testChainID)
 	})
 
-	s.Run("found", func() {
+	suite.Run("found", func() {
 		addr, found := icsKeeper.GetLocalAddressMap(ctx, remoteAddress, testChainID)
-		s.Require().True(found)
-		s.Require().Equal(localAddress, addr)
+		suite.Require().True(found)
+		suite.Require().Equal(localAddress, addr)
 		addr, found = icsKeeper.GetRemoteAddressMap(ctx, localAddress, testChainID)
-		s.Require().True(found)
-		s.Require().Equal(remoteAddress, addr)
+		suite.Require().True(found)
+		suite.Require().Equal(remoteAddress, addr)
 	})
 }

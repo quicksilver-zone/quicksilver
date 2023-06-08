@@ -65,14 +65,12 @@ func (k Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, txHash str
 		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
 		return nil
 	}
-	// sdk.AccAddressFromBech32 doesn't work here as it expects the local HRP
-	addressBytes, err := addressutils.AccAddressFromBech32(senderAddress, zone.GetAccountPrefix())
+	senderAccAddress, err := addressutils.AccAddressFromBech32(senderAddress, zone.GetAccountPrefix())
 	if err != nil {
 		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress, "error", err)
 		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
 		return nil
 	}
-	var senderAccAddress sdk.AccAddress = addressBytes
 
 	if err := zone.ValidateCoinsForZone(assets, k.GetValidatorAddresses(ctx, zone.ChainId)); err != nil {
 		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before.

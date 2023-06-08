@@ -112,24 +112,24 @@ func TestAddressFromBech32(t *testing.T) {
 			require.Panics(t, func() { addressutils.MustAccAddressFromBech32(c.address, c.prefix) })
 			require.Panics(t, func() { addressutils.MustValAddressFromBech32(c.address, c.prefix) })
 		} else {
-			var addr sdk.AccAddress = addressutils.MustAccAddressFromBech32(c.address, c.prefix)
+			addr := addressutils.MustAccAddressFromBech32(c.address, c.prefix)
 			require.Equal(t, c.expectedBytes, addr.Bytes())
 
-			var valaddr sdk.ValAddress = addressutils.MustValAddressFromBech32(c.address, c.prefix)
+			valaddr := addressutils.MustValAddressFromBech32(c.address, c.prefix)
 			require.Equal(t, c.expectedBytes, valaddr.Bytes())
 		}
 	}
 }
 
 func TestGenerateAccAddressForTest(t *testing.T) {
-	var address sdk.AccAddress = addressutils.GenerateAccAddressForTest()
+	address := addressutils.GenerateAccAddressForTest()
 	require.Equal(t, 32, len(address.Bytes()))
 	err := sdk.VerifyAddressFormat(address.Bytes())
 	require.NoError(t, err)
 }
 
 func TestGenerateValAddressForTest(t *testing.T) {
-	var address sdk.ValAddress = addressutils.GenerateValAddressForTest()
+	address := addressutils.GenerateValAddressForTest()
 	require.Equal(t, 32, len(address.Bytes()))
 	err := sdk.VerifyAddressFormat(address.Bytes())
 	require.NoError(t, err)
@@ -142,7 +142,6 @@ func TestGenerateAddressForTestWithPrefix(t *testing.T) {
 }
 
 func TestEncodeAddressToBech32(t *testing.T) {
-
 	cases := []struct {
 		name            string
 		addrBytes       []byte
@@ -165,14 +164,14 @@ func TestEncodeAddressToBech32(t *testing.T) {
 			"",
 		},
 		{
-			"suprisingly valid, nil",
+			"surprisingly valid, nil",
 			nil,
 			"cosmos",
 			"cosmos1550dq7",
 			"",
 		},
 		{
-			"even more suprisingly valid - no hrp :/",
+			"even more surprisingly valid - no hrp :/",
 			[]byte{0xb3, 0x2b, 0x91, 0x3c, 0x68, 0x1b, 0x75, 0xe2, 0xef, 0x4d, 0xe9, 0x75, 0xd0, 0xcc, 0x6, 0xb6, 0x3b, 0xbb, 0xa8, 0xf8},
 			"",
 			"1kv4ez0rgrd679m6da96apnqxkcamh28cjkahle",

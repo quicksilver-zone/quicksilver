@@ -80,7 +80,6 @@ func (p Pool) GetAddress() sdk.AccAddress {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}
 	return addr
-
 }
 
 func (p Pool) GetId() uint64 {

@@ -14,12 +14,12 @@ import (
 func TestGenerateRandomHash(t *testing.T) {
 	random := rand.New(rand.NewSource(time.Now().UnixNano()))
 	b := random.Intn(128)
-	var byteslice []byte = randomutils.GenerateRandomBytes(b)
+	byteslice := randomutils.GenerateRandomBytes(b)
 	require.Equal(t, b, len(byteslice))
 }
 
 func TestGenerateRandomHashAsHex(t *testing.T) {
-	var hexHash string = randomutils.GenerateRandomHashAsHex(32)
+	hexHash := randomutils.GenerateRandomHashAsHex(32)
 	require.Equal(t, 64, len(hexHash))
 	byteslice, err := hex.DecodeString(hexHash)
 	require.NoError(t, err)
