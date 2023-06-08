@@ -122,7 +122,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				zone.WithdrawalWaitgroup = 0
 			}
 
-			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_middleware.go)
+			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 			k.Logger(ctx).Info(
 				"withdrawing rewards",
 				"chain_id", zone.ChainId,
