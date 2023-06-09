@@ -8,10 +8,10 @@ import (
 
 	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/internal/cfmm_common"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 var _ gamm.PoolI = &Pool{}
@@ -42,7 +42,7 @@ func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLi
 }
 
 func (p Pool) GetAddress() sdk.AccAddress {
-	_, addr, err := bech32.DecodeAndConvert(p.Address)
+	addr, err := addressutils.AccAddressFromBech32(p.Address, "")
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}
