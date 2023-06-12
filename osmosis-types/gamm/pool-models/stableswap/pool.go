@@ -11,6 +11,7 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/internal/cfmm_common"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 var _ gamm.PoolI = &Pool{}
@@ -41,7 +42,7 @@ func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLi
 }
 
 func (p Pool) GetAddress() sdk.AccAddress {
-	addr, err := sdk.AccAddressFromBech32(p.Address)
+	addr, err := addressutils.AccAddressFromBech32(p.Address, "")
 	if err != nil {
 		panic(fmt.Sprintf("could not bech32 decode address of pool with id: %d", p.GetId()))
 	}

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 func (z Zone) SupportReturnToSender() bool { return z.ReturnToSender }
@@ -207,7 +207,7 @@ func (z *Zone) validatorIntentsFromBytes(coins sdk.Coins, weightBytes []byte) (V
 		index++
 		address := weightBytes[index : index+20]
 		index += 20
-		valAddr, err := bech32.ConvertAndEncode(z.AccountPrefix+"valoper", address)
+		valAddr, err := addressutils.EncodeAddressToBech32(z.AccountPrefix+"valoper", sdk.ValAddress(address))
 		if err != nil {
 			return validatorIntents, err
 		}

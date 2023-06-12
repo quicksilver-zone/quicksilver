@@ -206,8 +206,6 @@ WITHDRAWAL:
 
 			allocationsMap[v] = sdk.ZeroInt()
 			if allocationsMap[v].IsZero() {
-				fmt.Println("valopers len", len(valopers))
-				fmt.Println("vidx+1", vidx+1)
 				if len(valopers) > vidx+1 {
 					vidx++
 					v = valopers[vidx]
