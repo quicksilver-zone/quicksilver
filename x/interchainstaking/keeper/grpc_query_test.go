@@ -9,7 +9,6 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/utils/randomutils"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -557,7 +556,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
 					"ABC012",
-					icskeeper.WithdrawStatusQueued,
+					types.WithdrawStatusQueued,
 					time.Time{},
 				)
 			},
@@ -650,7 +649,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
 					"ABC012",
-					icskeeper.WithdrawStatusQueued,
+					types.WithdrawStatusQueued,
 					time.Time{},
 				)
 			},
