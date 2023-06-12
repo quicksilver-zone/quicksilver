@@ -8,25 +8,25 @@ import (
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func TestIsDelegateAddress(t *testing.T) {
-	acc := utils.GenerateAccAddressForTest()
-	acc2 := utils.GenerateAccAddressForTest()
-	bech32 := utils.ConvertAccAddressForTestUsingPrefix(acc, "cosmos")
-	bech322 := utils.ConvertAccAddressForTestUsingPrefix(acc2, "cosmos")
+	acc := addressutils.GenerateAccAddressForTest()
+	acc2 := addressutils.GenerateAccAddressForTest()
+	bech32 := addressutils.MustEncodeAddressToBech32("cosmos", acc)
+	bech322 := addressutils.MustEncodeAddressToBech32("cosmos", acc2)
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", DelegationAddress: &types.ICAAccount{Address: bech32}, Is_118: true}
 	require.True(t, zone.IsDelegateAddress(bech32))
 	require.False(t, zone.IsDelegateAddress(bech322))
 }
 
 func TestGetDelegationAccount(t *testing.T) {
-	acc := utils.GenerateAccAddressForTest()
-	bech32 := utils.ConvertAccAddressForTestUsingPrefix(acc, "cosmos")
+	acc := addressutils.GenerateAccAddressForTest()
+	bech32 := addressutils.MustEncodeAddressToBech32("cosmos", acc)
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", DelegationAddress: &types.ICAAccount{Address: bech32}, Is_118: true}
-	zone2 := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
+	zone2 := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
 
 	delegateAccount, err := zone.GetDelegationAccount()
 	require.NoError(t, err)
@@ -412,7 +412,7 @@ func TestUpdateIntentWithCoins(t *testing.T) {
 
 func intentFromDecSlice(in map[string]sdk.Dec) types.DelegatorIntent {
 	out := types.DelegatorIntent{
-		Delegator: utils.GenerateAccAddressForTest().String(),
+		Delegator: addressutils.GenerateAccAddressForTest().String(),
 		Intents:   []*types.ValidatorIntent{},
 	}
 	for addr, weight := range in {

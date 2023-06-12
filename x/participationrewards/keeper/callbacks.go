@@ -134,7 +134,7 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 	if err != nil {
 		return err
 	}
-	k.SetProtocolData(ctx, fmt.Sprintf("%d", poolID), &data)
+	k.SetProtocolData(ctx, pool.GenerateKey(), &data)
 
 	return nil
 }
@@ -193,6 +193,6 @@ func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtyp
 	if err != nil {
 		return err
 	}
-	k.SetProtocolData(ctx, query.ChainId, &data)
+	k.SetProtocolData(ctx, connectionData.GenerateKey(), &data)
 	return nil
 }

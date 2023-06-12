@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -75,7 +75,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	indexToZone := make(map[int64]types.Zone, nzones)
 	for i := 0; i < nzones; i++ {
 		chainID := fmt.Sprintf("%s%d", chainIDPrefix, i)
-		delegationAddr := utils.GenerateAccAddressForTestWithPrefix("cosmos")
+		delegationAddr := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 		zone := types.Zone{
 			ConnectionId: "conn-test",
 			ChainId:      chainID,
