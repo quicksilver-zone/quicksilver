@@ -758,13 +758,17 @@ func (k *Keeper) HandleFailedBankSend(ctx sdk.Context, msg sdk.Msg, memo string)
 
 	chainID, found := k.GetAddressZoneMapping(ctx, sendMsg.ToAddress)
 	if !found {
-
+		return fmt.Errorf("unable to find address mapping for address %s: txHash %s", sendMsg.ToAddress, txHash)
 	}
 
-	_, found = k.GetWithdrawalRecord(ctx, chainID, txHash, types.WithdrawStatusSend)
+	wdr, found := k.GetWithdrawalRecord(ctx, chainID, txHash, types.WithdrawStatusSend)
 	if !found {
-
+		return fmt.Errorf("unable to find withdrawal record for %s: txHash %s", sendMsg.ToAddress, txHash)
 	}
+
+	// update delayed record with status
+	wdr.DelayCompletion(ctx, types.DefaultWithdrawalRequeueDelay)
+	k.UpdateWithdrawalRecordStatus(ctx, &wdr, types.WithdrawStatusUnbond)
 
 	return nil
 }
