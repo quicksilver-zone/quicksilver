@@ -263,8 +263,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		case "/cosmos.bank.v1beta1.MsgSend":
 			if !success {
 				if err := k.HandleFailedBankSend(ctx, src, packetData.Memo); err != nil {
+					k.Logger(ctx).Error("unable to handle failed MsgSend", "error", err)
 					return err
 				}
+				continue
 			}
 			response := banktypes.MsgSendResponse{}
 			if msgResponseType != "" {
