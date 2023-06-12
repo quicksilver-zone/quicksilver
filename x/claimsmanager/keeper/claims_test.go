@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
@@ -24,7 +24,7 @@ var testClaims = []types.Claim{
 	},
 	// random user claim on chainB (using osmosis pool)
 	{
-		UserAddress: utils.GenerateAccAddressForTest().String(),
+		UserAddress: addressutils.GenerateAccAddressForTest().String(),
 		// ChainID:       suite.chainB.ChainID,
 		Module:        types.ClaimTypeOsmosisPool,
 		SourceChainId: "osmosis-1",
@@ -48,7 +48,7 @@ var testClaims = []types.Claim{
 	},
 	// random user claim on "cosmoshub-4" (liquid)
 	{
-		UserAddress:   utils.GenerateAccAddressForTest().String(),
+		UserAddress:   addressutils.GenerateAccAddressForTest().String(),
 		ChainId:       "cosmoshub-4",
 		Module:        types.ClaimTypeLiquidToken,
 		SourceChainId: "",

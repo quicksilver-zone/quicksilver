@@ -11,7 +11,7 @@ import (
 func (k *Keeper) GetProtocolData(ctx sdk.Context, pdType types.ProtocolDataType, key string) (types.ProtocolData, bool) {
 	data := types.ProtocolData{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
-	bz := store.Get(types.GetProtocolDataKey(pdType, key))
+	bz := store.Get(types.GetProtocolDataKey(pdType, []byte(key)))
 	if len(bz) == 0 {
 		return data, false
 	}
@@ -20,8 +20,8 @@ func (k *Keeper) GetProtocolData(ctx sdk.Context, pdType types.ProtocolDataType,
 	return data, true
 }
 
-// SetProtocolData sets protocol data info.
-func (k *Keeper) SetProtocolData(ctx sdk.Context, key string, data *types.ProtocolData) {
+// SetProtocolData set protocol data info.
+func (k Keeper) SetProtocolData(ctx sdk.Context, key []byte, data *types.ProtocolData) {
 	if data == nil {
 		k.Logger(ctx).Error("protocol data not set; value is nil")
 		return
@@ -39,13 +39,13 @@ func (k *Keeper) SetProtocolData(ctx sdk.Context, key string, data *types.Protoc
 }
 
 // DeleteProtocolData deletes protocol data info.
-func (k *Keeper) DeleteProtocolData(ctx sdk.Context, key string) {
+func (k *Keeper) DeleteProtocolData(ctx sdk.Context, key []byte) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
-	store.Delete([]byte(key))
+	store.Delete(key)
 }
 
 // IteratePrefixedProtocolDatas iterate through protocol data with the given prefix and perform the provided function.
-func (k *Keeper) IteratePrefixedProtocolDatas(ctx sdk.Context, key []byte, fn func(index int64, data types.ProtocolData) (stop bool)) {
+func (k *Keeper) IteratePrefixedProtocolDatas(ctx sdk.Context, key []byte, fn func(index int64, key []byte, data types.ProtocolData) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixProtocolData)
 	iterator := sdk.KVStorePrefixIterator(store, key)
 	defer iterator.Close()
@@ -54,7 +54,7 @@ func (k *Keeper) IteratePrefixedProtocolDatas(ctx sdk.Context, key []byte, fn fu
 	for ; iterator.Valid(); iterator.Next() {
 		data := types.ProtocolData{}
 		k.cdc.MustUnmarshal(iterator.Value(), &data)
-		stop := fn(i, data)
+		stop := fn(i, iterator.Key(), data)
 		if stop {
 			break
 		}

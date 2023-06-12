@@ -55,7 +55,7 @@ func (m *LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *type
 			return 0, err
 		}
 
-		data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, fmt.Sprintf("%s/%s", msg.SrcZone, denom))
+		data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, fmt.Sprintf("%s_%s", msg.SrcZone, denom))
 		if !found {
 			// we don't have a record for this denom, but this is okay, we don't want to submit records for every ibc denom.
 			continue
