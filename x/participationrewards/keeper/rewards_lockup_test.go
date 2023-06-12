@@ -12,7 +12,6 @@ func (s *KeeperTestSuite) TestAllocateLockupRewards() {
 		name          string
 		getAllocation func(*app.Quicksilver, types.Context) int64
 		wantErr       bool
-		wantPanic     bool
 	}{
 		{
 			"valid unit allocation",
@@ -20,14 +19,12 @@ func (s *KeeperTestSuite) TestAllocateLockupRewards() {
 				return 1
 			},
 			false,
-			false,
 		},
 		{
-			"panic case -ve allocation",
+			"invalid -ve allocation",
 			func(appA *app.Quicksilver, ctx types.Context) int64 {
 				return -1
 			},
-			false,
 			true,
 		},
 		{
@@ -36,14 +33,12 @@ func (s *KeeperTestSuite) TestAllocateLockupRewards() {
 				return 0
 			},
 			false,
-			false,
 		},
 		{
 			"valid total module balance allocation",
 			func(appA *app.Quicksilver, ctx types.Context) int64 {
 				return appA.ParticipationRewardsKeeper.GetModuleBalance(ctx).Int64()
 			},
-			false,
 			false,
 		},
 		{
@@ -52,7 +47,6 @@ func (s *KeeperTestSuite) TestAllocateLockupRewards() {
 				return appA.ParticipationRewardsKeeper.GetModuleBalance(ctx).Int64() + 1
 			},
 			true,
-			false,
 		},
 	}
 
@@ -72,12 +66,6 @@ func (s *KeeperTestSuite) TestAllocateLockupRewards() {
 			initialBalance := appA.ParticipationRewardsKeeper.GetModuleBalance(ctx).Int64()
 			allocation := tt.getAllocation(appA, ctx)
 
-			if tt.wantPanic {
-				s.Require().True(s.Panics(func() {
-					appA.ParticipationRewardsKeeper.AllocateLockupRewards(ctx, math.NewInt(allocation))
-				}))
-				return
-			}
 			if err := appA.ParticipationRewardsKeeper.AllocateLockupRewards(ctx, math.NewInt(allocation)); err != nil {
 				s.Require().True((err != nil) == tt.wantErr)
 				return
