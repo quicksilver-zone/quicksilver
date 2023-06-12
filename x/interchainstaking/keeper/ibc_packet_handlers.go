@@ -756,9 +756,10 @@ func (k *Keeper) HandleFailedBankSend(ctx sdk.Context, msg sdk.Msg, memo string)
 		return errors.New("unable to unmarshal MsgSend")
 	}
 
-	chainID, found := k.GetAddressZoneMapping(ctx, sendMsg.ToAddress)
+	// get chainID for the remote zone using msg addresses (ICA acc)
+	chainID, found := k.GetAddressZoneMapping(ctx, sendMsg.FromAddress)
 	if !found {
-		return fmt.Errorf("unable to find address mapping for address %s: txHash %s", sendMsg.ToAddress, txHash)
+		return fmt.Errorf("unable to find address mapping for address %s: txHash %s", sendMsg.FromAddress, txHash)
 	}
 
 	wdr, found := k.GetWithdrawalRecord(ctx, chainID, txHash, types.WithdrawStatusSend)
