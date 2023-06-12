@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
@@ -21,7 +21,7 @@ var (
 	chainB      *ibctesting.TestChain
 	path        *ibctesting.Path
 
-	testAddress sdk.AccAddress = utils.GenerateAccAddressForTest()
+	testAddress sdk.AccAddress = addressutils.GenerateAccAddressForTest()
 )
 
 func init() {

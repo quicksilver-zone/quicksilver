@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -55,7 +55,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	// does destination address match the prefix registered against the zone?
-	if _, err := utils.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
+	if _, err := addressutils.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
 		return nil, fmt.Errorf("destination address %s does not match expected prefix %s [%w]", msg.DestinationAddress, zone.AccountPrefix, err)
 	}
 
