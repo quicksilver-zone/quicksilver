@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-var testAddress = utils.GenerateAccAddressForTest().String()
+var testAddress = addressutils.GenerateAccAddressForTest().String()
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp

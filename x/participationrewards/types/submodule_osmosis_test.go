@@ -10,7 +10,9 @@ import (
 
 func TestOsmosisParamsProtocolData_ValidateBasic(t *testing.T) {
 	type fields struct {
-		ChainID string
+		ChainID   string
+		BaseChain string
+		BaseDenom string
 	}
 	tests := []struct {
 		name    string
@@ -23,9 +25,18 @@ func TestOsmosisParamsProtocolData_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"valid",
+			"missing-fields",
 			fields{
-				"test-01",
+				ChainID: "test-01",
+			},
+			true,
+		},
+		{
+			"value",
+			fields{
+				ChainID:   "test-01",
+				BaseDenom: "uosmo",
+				BaseChain: "test-01",
 			},
 			false,
 		},
@@ -33,7 +44,9 @@ func TestOsmosisParamsProtocolData_ValidateBasic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			oppd := types.OsmosisParamsProtocolData{
-				ChainID: tt.fields.ChainID,
+				ChainID:   tt.fields.ChainID,
+				BaseDenom: tt.fields.BaseDenom,
+				BaseChain: tt.fields.BaseChain,
 			}
 			err := oppd.ValidateBasic()
 			if tt.wantErr {
