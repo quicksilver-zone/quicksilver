@@ -58,13 +58,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	}
 }
 
-// ParamSetPairs implements params.ParamSet.
-func (p *ParamsV1) ParamSetPairs() paramtypes.ParamSetPairs {
-	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(KeyDistributionProportions, &p.DistributionProportions, validateDistributionProportions),
-	}
-}
-
 func validateDistributionProportions(i interface{}) error {
 	dp, ok := i.(DistributionProportions)
 	if !ok {
@@ -91,14 +84,5 @@ func (p *Params) Validate() error {
 // String implements the Stringer interface.
 func (p *Params) String() string {
 	out, _ := yaml.Marshal(p)
-	return string(out)
-}
-
-// String implements the Stringer interface.
-func (p *ParamsV1) String() string {
-	out, err := yaml.Marshal(p)
-	if err != nil {
-		panic(err)
-	}
 	return string(out)
 }

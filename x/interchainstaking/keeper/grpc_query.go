@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -253,4 +254,25 @@ func (k *Keeper) RedelegationRecords(c context.Context, req *types.QueryRedelega
 	redelegations := k.ZoneRedelegationRecords(ctx, req.ChainId)
 
 	return &types.QueryRedelegationRecordsResponse{Redelegations: redelegations}, nil
+}
+
+func (k *Keeper) MappedAccounts(c context.Context, req *types.QueryMappedAccountsRequest) (*types.QueryMappedAccountsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	remoteAddressMap := make(map[string][]byte)
+	addrBytes, err := addressutils.AccAddressFromBech32(req.Address, sdk.GetConfig().GetBech32AccountAddrPrefix())
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "Invalid Address")
+	}
+
+	k.IterateUserMappedAccounts(ctx, addrBytes, func(index int64, chainID string, remoteAddressBytes []byte) (stop bool) {
+		remoteAddressMap[chainID] = remoteAddressBytes
+		return false
+	})
+
+	return &types.QueryMappedAccountsResponse{RemoteAddressMap: remoteAddressMap}, nil
 }

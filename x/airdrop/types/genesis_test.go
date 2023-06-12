@@ -16,6 +16,9 @@ func TestGenesisState_Validate(t *testing.T) {
 		ZoneDrops    []*types.ZoneDrop
 		ClaimRecords []*types.ClaimRecord
 	}
+
+	defaultGenesis := types.DefaultGenesisState()
+
 	tests := []struct {
 		name    string
 		fields  fields
@@ -24,6 +27,15 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			"null genesis",
 			fields{},
+			false,
+		},
+		{
+			"default genesis",
+			fields{
+				defaultGenesis.Params,
+				defaultGenesis.ZoneDrops,
+				defaultGenesis.ClaimRecords,
+			},
 			false,
 		},
 		{

@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"errors"
-
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -16,7 +14,7 @@ func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 
 func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
 	if epochIdentifier == epochstypes.EpochIdentifierEpoch {
-		k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, data types.ProtocolData) (stop bool) {
+		k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, _ []byte, data types.ProtocolData) (stop bool) {
 			blockQuery := tmservice.GetLatestBlockRequest{}
 			bz := k.cdc.MustMarshal(&blockQuery)
 
@@ -56,11 +54,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 			k.GetParams(ctx).DistributionProportions,
 		)
 		if err != nil {
-			if errors.Is(err, types.ErrNothingToAllocate) {
-				k.Logger(ctx).Info(err.Error())
-			} else {
-				k.Logger(ctx).Error(err.Error())
-			}
+			k.Logger(ctx).Error(err.Error())
 		}
 
 		k.Logger(ctx).Info("Triggering submodule hooks")
@@ -68,9 +62,15 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 			sub.Hooks(ctx, k)
 		}
 
-		tvs, err := k.calcTokenValues(ctx)
+		tvs, err := k.CalcTokenValues(ctx)
 		if err != nil {
 			k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
+			return nil
+		}
+
+		if allocation == nil {
+			// if allocation is unset, then return early to avoid panic
+			k.Logger(ctx).Error("nil allocation", "error", err.Error())
 			return nil
 		}
 

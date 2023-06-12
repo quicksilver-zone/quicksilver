@@ -14,4 +14,6 @@ var (
 	ErrNothingToAllocate             = sdkioerrors.Register(ModuleName, 9, "balance is zero, nothing to allocate")
 	ErrInvalidAssetName              = sdkioerrors.Register(ModuleName, 10, "invalid ibc asset name")
 	ErrInvalidChainID                = sdkioerrors.Register(ModuleName, 11, "invalid chain id")
+	ErrInvalidDenom                  = sdkioerrors.Register(ModuleName, 12, "invalid denom")
+	ErrCannotUnmarshal               = sdkioerrors.Register(ModuleName, 13, "unable to unmarshal")
 )

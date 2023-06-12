@@ -48,3 +48,7 @@ func (lpd *LiquidAllowedDenomProtocolData) ValidateBasic() error {
 
 	return nil
 }
+
+func (lpd *LiquidAllowedDenomProtocolData) GenerateKey() []byte {
+	return []byte(lpd.ChainID + "_" + lpd.IbcDenom)
+}

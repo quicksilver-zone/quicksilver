@@ -64,6 +64,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		Decimals:           p.Decimals,
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 		MessagesPerTx:      p.MessagesPerTx,
+		Is_118:             p.Is_118,
 	}
 	k.SetZone(ctx, zone)
 
