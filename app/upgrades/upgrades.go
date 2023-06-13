@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
 	"github.com/ingenuity-build/quicksilver/app/keepers"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -26,6 +25,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010402rc6UpgradeName, CreateUpgradeHandler: V010402rc6UpgradeHandler},
 		{UpgradeName: V010402rc7UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010403rc0UpgradeName, CreateUpgradeHandler: V010403rc0UpgradeHandler},
+		{UpgradeName: V010404beta0UpgradeName, CreateUpgradeHandler: V010404beta0UpgradeHandler},
 	}
 }
 
@@ -267,6 +267,24 @@ func V010403rc0UpgradeHandler(
 				}
 				newKey := pd.GenerateKey()
 				appKeepers.ParticipationRewardsKeeper.SetProtocolData(ctx, newKey, &data)
+				return false
+			})
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta0UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) {
+			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+				zone.Is_118 = true
+				appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
 				return false
 			})
 		}
