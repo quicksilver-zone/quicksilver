@@ -7,16 +7,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 var (
-	acc1 = utils.GenerateAccAddressForTest().String()
-	v1   = utils.GenerateValAddressForTest().String()
-	v2   = utils.GenerateValAddressForTest().String()
-	v3   = utils.GenerateValAddressForTest().String()
-	v4   = utils.GenerateValAddressForTest().String()
+	acc1 = addressutils.GenerateAccAddressForTest().String()
+	v1   = addressutils.GenerateValAddressForTest().String()
+	v2   = addressutils.GenerateValAddressForTest().String()
+	v3   = addressutils.GenerateValAddressForTest().String()
+	v4   = addressutils.GenerateValAddressForTest().String()
 )
 
 func TestSharesToTokens(t *testing.T) {
@@ -71,7 +71,7 @@ func TestNormalizeIntentWithEqualIntents(t *testing.T) {
 }
 
 func TestNormalizeIntentWithNonEqualIntents(t *testing.T) {
-	di := types.DelegatorIntent{Delegator: utils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
+	di := types.DelegatorIntent{Delegator: addressutils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
 		{ValoperAddress: v1, Weight: sdk.NewDec(5).Quo(sdk.NewDec(50))},
 		{ValoperAddress: v2, Weight: sdk.NewDec(10).Quo(sdk.NewDec(50))},
 		{ValoperAddress: v3, Weight: sdk.NewDec(35).Quo(sdk.NewDec(50))},
@@ -84,7 +84,7 @@ func TestNormalizeIntentWithNonEqualIntents(t *testing.T) {
 }
 
 func TestOrdinalizeIntentWithEqualIntents(t *testing.T) {
-	di := types.DelegatorIntent{Delegator: utils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
+	di := types.DelegatorIntent{Delegator: addressutils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
 		{ValoperAddress: v1, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
 		{ValoperAddress: v2, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
 		{ValoperAddress: v3, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
@@ -95,7 +95,7 @@ func TestOrdinalizeIntentWithEqualIntents(t *testing.T) {
 }
 
 func TestOrdinalizeIntentWithNonEqualIntents(t *testing.T) {
-	di := types.DelegatorIntent{Delegator: utils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
+	di := types.DelegatorIntent{Delegator: addressutils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
 		{ValoperAddress: v1, Weight: sdk.NewDec(5).Quo(sdk.NewDec(50))},
 		{ValoperAddress: v2, Weight: sdk.NewDec(10).Quo(sdk.NewDec(50))},
 		{ValoperAddress: v3, Weight: sdk.NewDec(35).Quo(sdk.NewDec(50))},
@@ -108,7 +108,7 @@ func TestOrdinalizeIntentWithNonEqualIntents(t *testing.T) {
 
 func TestAddOrdinal(t *testing.T) {
 	di := types.DelegatorIntent{
-		Delegator: utils.GenerateAccAddressForTest().String(),
+		Delegator: addressutils.GenerateAccAddressForTest().String(),
 		Intents: []*types.ValidatorIntent{
 			{ValoperAddress: v1, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
 			{ValoperAddress: v2, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
@@ -135,7 +135,7 @@ func TestAddOrdinal(t *testing.T) {
 }
 
 func TestAddOrdinalWithNewVal(t *testing.T) {
-	di := types.DelegatorIntent{Delegator: utils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
+	di := types.DelegatorIntent{Delegator: addressutils.GenerateAccAddressForTest().String(), Intents: []*types.ValidatorIntent{
 		{ValoperAddress: v1, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
 		{ValoperAddress: v2, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},
 		{ValoperAddress: v3, Weight: sdk.OneDec().Quo(sdk.NewDec(3))},

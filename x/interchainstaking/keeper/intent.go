@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	prtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -167,10 +167,10 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 }
 
 // UpdateDelegatorIntent updates delegator intents.
-func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress, zone *types.Zone, inAmount sdk.Coins, memo string) error {
+func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress, zone *types.Zone, inAmount sdk.Coins, memoIntent types.ValidatorIntents) error {
 	snapshot := false
 	updateWithCoin := inAmount.IsValid()
-	updateWithMemo := len(memo) > 0
+	updateWithMemo := memoIntent != nil
 
 	// this is here because we need access to the bankKeeper to ordinalize intent
 	delIntent, _ := k.GetDelegatorIntent(ctx, zone, delegator.String(), snapshot)
@@ -202,11 +202,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	}
 
 	if updateWithMemo {
-		var err error
-		delIntent, err = zone.UpdateIntentWithMemo(delIntent, memo, baseBalance, inAmount)
-		if err != nil {
-			return err
-		}
+		delIntent = zone.UpdateZoneIntentWithMemo(memoIntent, delIntent, baseBalance)
 	}
 
 	if len(delIntent.Intents) == 0 {
@@ -214,6 +210,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	}
 
 	k.SetDelegatorIntent(ctx, zone, delIntent, snapshot)
+
 	return nil
 }
 
@@ -222,7 +219,7 @@ func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, in
 
 	for i, intent := range intents {
 		var valAddrBytes []byte
-		valAddrBytes, err := utils.ValAddressFromBech32(intent.ValoperAddress, zone.GetValoperPrefix())
+		valAddrBytes, err := addressutils.ValAddressFromBech32(intent.ValoperAddress, zone.GetValoperPrefix())
 		if err != nil {
 			return err
 		}

@@ -74,16 +74,14 @@ func TestDistributionProportions_ValidateBasic(t *testing.T) {
 func TestKeyedProtocolData_ValidateBasic(t *testing.T) {
 	invalidOsmosisData := `{
 	"poolname": "osmosispools/1",
-	"zones": {
-		"": ""
-	}
+	"denoms": {	}
 }`
 	validOsmosisData := `{
 	"poolid": 1,
 	"poolname": "atom/osmo",
 	"pooltype": "balancer",
-	"zones": {
-		"zone_id": "IBC/zone_denom"
+	"denoms": {
+		"uosmo": {"chainid": "osmosis-1", "denom": "uosmo"}
 	}
 }`
 	validLiquidData := `{

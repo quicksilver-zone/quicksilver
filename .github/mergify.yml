@@ -4,18 +4,6 @@ queue_rules:
       - "#approved-reviews-by>1"
 
 pull_request_rules:
-  - name: automerge to develop with label automerge and branch protection passing
-    conditions:
-      - "#approved-reviews-by>1"
-      - base=develop
-      - label=automerge
-    actions:
-      queue:
-        name: default
-        method: squash
-        commit_message_template: |
-          {{ title }} (#{{ number }})
-          {{ body }}
   - name: frontport patches to develop branch
     conditions:
       - base=main
@@ -32,3 +20,12 @@ pull_request_rules:
       backport:
         branches:
           - main
+  - name: port patches to unstable branch
+    conditions:
+      - base=develop
+      - label=port/unstable
+    actions:
+      backport:
+        branches:
+          - unstable
+

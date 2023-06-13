@@ -3,21 +3,21 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (s *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
-	quicksilver := s.GetQuicksilverApp(s.chainA)
-	ctx := s.chainA.GetContext()
+func (suite *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
 
-	testValidatorOne := utils.GenerateAccAddressForTestWithPrefix("cosmosvaloper")
-	testValidatorTwo := utils.GenerateValAddressForTestWithPrefix("cosmosvaloper")
+	testValidatorOne := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+	testValidatorTwo := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
 
-	s.SetupTest()
+	suite.SetupTest()
 
 	records := quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
-	s.Require().Equal(0, len(records))
+	suite.Require().Equal(0, len(records))
 
 	record := types.RedelegationRecord{
 		ChainId:        "cosmoshub-4",
@@ -32,22 +32,22 @@ func (s *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
 
 	records = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
 
-	s.Require().Equal(1, len(records))
+	suite.Require().Equal(1, len(records))
 
 	recordFetched, found := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, "cosmoshub-4", testValidatorOne, testValidatorTwo, 1)
 
-	s.Require().True(found)
-	s.Require().Equal(record, recordFetched)
+	suite.Require().True(found)
+	suite.Require().Equal(record, recordFetched)
 
 	allRecords := quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
-	s.Require().Equal(1, len(allRecords))
+	suite.Require().Equal(1, len(allRecords))
 	allCosmosRecords := quicksilver.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "cosmoshub-4")
-	s.Require().Equal(1, len(allCosmosRecords))
+	suite.Require().Equal(1, len(allCosmosRecords))
 	allOtherChainRecords := quicksilver.InterchainstakingKeeper.ZoneRedelegationRecords(ctx, "elgafar-1")
-	s.Require().Equal(0, len(allOtherChainRecords))
+	suite.Require().Equal(0, len(allOtherChainRecords))
 
 	quicksilver.InterchainstakingKeeper.DeleteRedelegationRecord(ctx, "cosmoshub-4", testValidatorOne, testValidatorTwo, 1)
 
 	allCosmosRecords = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
-	s.Require().Equal(0, len(allCosmosRecords))
+	suite.Require().Equal(0, len(allCosmosRecords))
 }

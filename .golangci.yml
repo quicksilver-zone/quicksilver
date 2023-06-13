@@ -22,7 +22,6 @@ linters:
     - contextcheck
     # Check for two durations multiplied together.
     - durationcheck
-    - depguard
     - dogsled
     - errcheck
     # Checks `Err-` prefix for var and `-Error` suffix for error type.

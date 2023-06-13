@@ -5,12 +5,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 func TestKeys(t *testing.T) {
-	address := utils.GenerateAccAddressForTest()
+	address := addressutils.GenerateAccAddressForTest()
 
 	// zone
 	prefixClaim := types.GetPrefixClaim("testzone-1")
@@ -34,7 +34,7 @@ func TestKeys(t *testing.T) {
 }
 
 func TestLastEpochKeys(t *testing.T) {
-	address := utils.GenerateAccAddressForTest()
+	address := addressutils.GenerateAccAddressForTest()
 
 	// zone
 	prefixClaim := types.GetPrefixLastEpochClaim("testzone-1")

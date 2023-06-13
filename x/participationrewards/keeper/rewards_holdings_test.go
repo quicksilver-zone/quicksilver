@@ -5,14 +5,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (s *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
-	user1 := utils.GenerateAccAddressForTest()
-	user2 := utils.GenerateAccAddressForTest()
+func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
+	user1 := addressutils.GenerateAccAddressForTest()
+	user2 := addressutils.GenerateAccAddressForTest()
 
 	tests := []struct {
 		name      string
@@ -24,7 +24,7 @@ func (s *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 		{
 			"zero claims; no allocation",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				zone.HoldingsAllocation = 0
 				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
 			},
@@ -35,11 +35,11 @@ func (s *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 		{
 			"zero relevant claims; 64k allocation, all returned",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				zone.HoldingsAllocation = 64000
 				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
-				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: "otherchain-1", Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: s.chainA.ChainID, Amount: 500})
-				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: "otherchain-1", Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: s.chainA.ChainID, Amount: 1000})
+				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: "otherchain-1", Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 500})
+				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: "otherchain-1", Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 1000})
 			},
 			[]types.UserAllocation{},
 			sdk.NewInt(64000),
@@ -48,13 +48,13 @@ func (s *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 		{
 			"valid claims - equal claims",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				zone.HoldingsAllocation = 5000
 
-				s.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewIntFromUint64(5000)))))
+				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewIntFromUint64(5000)))))
 				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
-				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: s.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: s.chainA.ChainID, Amount: 2500})
-				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: s.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: s.chainA.ChainID, Amount: 2500})
+				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 2500})
+				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 2500})
 			},
 			[]types.UserAllocation{
 				{
@@ -72,13 +72,13 @@ func (s *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 		{
 			"valid claims - inequal claims, less than 100%, truncation",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				zone.HoldingsAllocation = 5000
 
-				s.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewIntFromUint64(2500)))))
+				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewIntFromUint64(2500)))))
 				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
-				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: s.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: s.chainA.ChainID, Amount: 500})
-				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: s.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: s.chainA.ChainID, Amount: 1000})
+				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 500})
+				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 1000})
 			},
 			[]types.UserAllocation{
 				{
@@ -96,13 +96,13 @@ func (s *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 		{
 			"valid claims - inequal claims, 100%, truncation",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				zone.HoldingsAllocation = 5000
 
-				s.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewIntFromUint64(1500)))))
+				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewIntFromUint64(1500)))))
 				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
-				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: s.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: s.chainA.ChainID, Amount: 500})
-				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: s.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: s.chainA.ChainID, Amount: 1000})
+				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user1.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 500})
+				appA.ClaimsManagerKeeper.SetClaim(ctx, &cmtypes.Claim{UserAddress: user2.String(), ChainId: suite.chainB.ChainID, Module: cmtypes.ClaimTypeLiquidToken, SourceChainId: suite.chainA.ChainID, Amount: 1000})
 			},
 			[]types.UserAllocation{
 				{
@@ -121,27 +121,27 @@ func (s *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 	for _, tt := range tests {
 		tt := tt
 
-		s.Run(tt.name, func() {
-			s.SetupTest()
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
 
-			appA := s.GetQuicksilverApp(s.chainA)
-			ctx := s.chainA.GetContext()
+			appA := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
 
 			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
 			params.ClaimsEnabled = true
 			appA.ParticipationRewardsKeeper.SetParams(ctx, params)
 
-			tt.malleate(s.chainA.GetContext(), appA)
+			tt.malleate(suite.chainA.GetContext(), appA)
 
-			zone, found := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-			s.Require().True(found)
+			zone, found := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.Require().True(found)
 
-			s.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
-			s.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+			suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+			suite.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
 
 			allocations, remainder := appA.ParticipationRewardsKeeper.CalcUserHoldingsAllocations(ctx, &zone)
-			s.Require().ElementsMatch(tt.want, allocations)
-			s.Require().True(tt.remainder.Equal(remainder))
+			suite.Require().ElementsMatch(tt.want, allocations)
+			suite.Require().True(tt.remainder.Equal(remainder))
 		})
 	}
 }
