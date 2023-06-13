@@ -5,7 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 		IsConcluded: false,
 	}
 	userAddresses := []string{
-		utils.GenerateAccAddressForTest().String(),
+		addressutils.GenerateAccAddressForTest().String(),
 	}
 
 	prop := types.RegisterZoneDropProposal{}

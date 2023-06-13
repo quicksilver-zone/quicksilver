@@ -29,7 +29,7 @@ func (k *Keeper) ProtocolData(c context.Context, q *types.QueryProtocolDataReque
 	}
 
 	prefix := append(types.GetPrefixProtocolDataKey(types.ProtocolDataType(pdType)), []byte(q.Key)...)
-	k.IteratePrefixedProtocolDatas(ctx, prefix, func(index int64, data types.ProtocolData) (stop bool) {
+	k.IteratePrefixedProtocolDatas(ctx, prefix, func(index int64, _ []byte, data types.ProtocolData) (stop bool) {
 		out = append(out, data.Data)
 		return false
 	})

@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -43,9 +43,9 @@ func TestRoundtripDelegationMarshalToUnmarshal(t *testing.T) {
 }
 
 func TestSetForValoper(t *testing.T) {
-	v1 := utils.GenerateValAddressForTest().String()
-	v2 := utils.GenerateValAddressForTest().String()
-	v3 := utils.GenerateValAddressForTest().String()
+	v1 := addressutils.GenerateValAddressForTest().String()
+	v2 := addressutils.GenerateValAddressForTest().String()
+	v3 := addressutils.GenerateValAddressForTest().String()
 
 	intents := types.ValidatorIntents{
 		{ValoperAddress: v1, Weight: sdk.NewDecWithPrec(10, 1)},
@@ -64,10 +64,10 @@ func TestSetForValoper(t *testing.T) {
 }
 
 func TestNormalizeValidatorIntentsDeterminism(t *testing.T) {
-	v1 := utils.GenerateValAddressForTest().String()
-	v2 := utils.GenerateValAddressForTest().String()
-	v3 := utils.GenerateValAddressForTest().String()
-	v4 := utils.GenerateValAddressForTest().String()
+	v1 := addressutils.GenerateValAddressForTest().String()
+	v2 := addressutils.GenerateValAddressForTest().String()
+	v3 := addressutils.GenerateValAddressForTest().String()
+	v4 := addressutils.GenerateValAddressForTest().String()
 
 	cases := []struct {
 		name    string
@@ -109,10 +109,10 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
 	// once sorted alphabetically on valoper.
 
-	val1 := utils.GenerateValAddressForTest()
-	val2 := utils.GenerateValAddressForTest()
-	val3 := utils.GenerateValAddressForTest()
-	val4 := utils.GenerateValAddressForTest()
+	val1 := addressutils.GenerateValAddressForTest()
+	val2 := addressutils.GenerateValAddressForTest()
+	val3 := addressutils.GenerateValAddressForTest()
+	val4 := addressutils.GenerateValAddressForTest()
 
 	tc := []struct {
 		current  map[string]sdkmath.Int

@@ -28,7 +28,7 @@ func HandleAddProtocolDataProposal(ctx sdk.Context, k *Keeper, p *types.AddProto
 		return err
 	}
 
-	k.SetProtocolData(ctx, p.Key, protocolData)
+	k.SetProtocolData(ctx, pd.GenerateKey(), protocolData)
 
 	return nil
 }

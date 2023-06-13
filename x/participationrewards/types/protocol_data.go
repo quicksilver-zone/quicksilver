@@ -67,6 +67,7 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 
 type ProtocolDataI interface {
 	ValidateBasic() error
+	GenerateKey() []byte
 }
 
 // ConnectionProtocolData defines state for connection tracking.
@@ -98,6 +99,10 @@ func (cpd *ConnectionProtocolData) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func (cpd ConnectionProtocolData) GenerateKey() []byte {
+	return []byte(cpd.ChainID)
 }
 
 var (
