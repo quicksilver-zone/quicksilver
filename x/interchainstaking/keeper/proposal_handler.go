@@ -197,6 +197,13 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 		case "account_prefix":
 			zone.AccountPrefix = change.Value
 
+		case "is_118":
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return err
+			}
+			zone.Is_118 = boolValue
+
 		case "connection_id":
 			if !strings.HasPrefix(change.Value, "connection-") {
 				return errors.New("unexpected connection format")
