@@ -3,14 +3,14 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func (s *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
-	user1, _ := utils.AccAddressFromBech32("cosmos1kcgprgjxntc5w4ygfsgvjnnypeptf3vw6gyv0z77h27cx23vg5rsptlw4a", "")
-	user2, _ := utils.AccAddressFromBech32("cosmos1u4ln57y5m2qyna7aq09u3r05waf74ad9rsk4hzr79acapar6lhqqumtd5d", "")
+	user1, _ := addressutils.AccAddressFromBech32("cosmos1kcgprgjxntc5w4ygfsgvjnnypeptf3vw6gyv0z77h27cx23vg5rsptlw4a", "")
+	user2, _ := addressutils.AccAddressFromBech32("cosmos1u4ln57y5m2qyna7aq09u3r05waf74ad9rsk4hzr79acapar6lhqqumtd5d", "")
 
 	tests := []struct {
 		name            string
