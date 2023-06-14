@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -377,6 +378,69 @@ func (s *KeeperTestSuite) TestCalcDistributionScores() {
 			}
 
 			err := appA.ParticipationRewardsKeeper.CalcDistributionScores(ctx, zone, &zs)
+			s.Require().Equal(err != nil, tt.wantErr)
+			tt.verify(zs)
+		})
+	}
+}
+func (s *KeeperTestSuite) TestCalcOverallScores() {
+
+	tests := []struct {
+		name             string
+		malleate         func(sdk.Context, *app.Quicksilver)
+		validatorScores  func(sdk.Context, *app.Quicksilver, string) map[string]*types.Validator
+		delegatorRewards func() distributiontypes.QueryDelegationTotalRewardsResponse
+		verify           func(zs types.ZoneScore)
+		wantErr          bool
+	}{
+		{
+			name: "nil delegation rewards",
+			malleate: func(context sdk.Context, quicksilver *app.Quicksilver) {
+			},
+			validatorScores: func(context sdk.Context, quicksilver *app.Quicksilver, s string) map[string]*types.Validator {
+				return nil
+			},
+			delegatorRewards: func() distributiontypes.QueryDelegationTotalRewardsResponse {
+				return distributiontypes.QueryDelegationTotalRewardsResponse{}
+			},
+			verify: func(zs types.ZoneScore) {
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+
+		s.Run(tt.name, func() {
+			s.SetupTest()
+
+			appA := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+
+			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
+			params.ClaimsEnabled = true
+			appA.ParticipationRewardsKeeper.SetParams(ctx, params)
+
+			tt.malleate(ctx, appA)
+
+			zone, found := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			s.Require().True(found)
+
+			s.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+			s.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(appA.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+
+			validatorScores := tt.validatorScores(ctx, appA, zone.ChainId)
+
+			zs := types.ZoneScore{
+				ZoneID:           zone.ChainId,
+				TotalVotingPower: sdk.NewInt(0),
+				ValidatorScores:  validatorScores,
+			}
+
+			delegatorRewards := distributiontypes.QueryDelegationTotalRewardsResponse{}
+
+			err := appA.ParticipationRewardsKeeper.CalcOverallScores(ctx, zone, delegatorRewards, &zs)
 			s.Require().Equal(err != nil, tt.wantErr)
 			tt.verify(zs)
 		})
