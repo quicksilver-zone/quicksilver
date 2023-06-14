@@ -9,14 +9,13 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/ingenuity-build/quicksilver/app/upgrades"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/stretchr/testify/suite"
 )
 
 func init() {
@@ -328,6 +327,31 @@ func (s *AppTestSuite) TestV010402rc3UpgradeHandler() {
 
 	vals = app.InterchainstakingKeeper.GetValidators(ctx, upgrades.OsmosisTestnetChainID)
 	s.Require().Equal(0, len(vals))
+}
+
+func (s *AppTestSuite) TestV010404beta0UpgradeHandler() {
+	app := s.GetQuicksilverApp(s.chainA)
+	// osmosis zone
+	zone := icstypes.Zone{
+		ConnectionId:    "connection-77002",
+		ChainId:         upgrades.OsmosisTestnetChainID,
+		AccountPrefix:   "osmo",
+		LocalDenom:      "uqosmo",
+		BaseDenom:       "uosmo",
+		MultiSend:       false,
+		LiquidityModule: true,
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+	handler := upgrades.V010404beta0UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	ctx := s.chainA.GetContext()
+
+	zone, _ = app.InterchainstakingKeeper.GetZone(ctx, upgrades.OsmosisTestnetChainID)
+	s.Require().False(zone.Is_118)
+
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.Require().NoError(err)
+	zone, _ = app.InterchainstakingKeeper.GetZone(ctx, upgrades.OsmosisTestnetChainID)
+	s.Require().True(zone.Is_118)
 }
 
 // func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
