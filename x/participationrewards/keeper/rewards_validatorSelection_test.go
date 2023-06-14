@@ -244,7 +244,7 @@ func (s *KeeperTestSuite) TestCalcDistributionScores() {
 		name            string
 		malleate        func(sdk.Context, *app.Quicksilver)
 		validatorScores func(sdk.Context, *app.Quicksilver, string) map[string]*types.Validator
-		verify          func(zs types.ZoneScore)
+		verify          func(sdk.Context, *app.Quicksilver, types.ZoneScore)
 		wantErr         bool
 	}{
 		{
@@ -267,7 +267,7 @@ func (s *KeeperTestSuite) TestCalcDistributionScores() {
 			validatorScores: func(ctx sdk.Context, appA *app.Quicksilver, chainId string) map[string]*types.Validator {
 				return nil
 			},
-			verify: func(zs types.ZoneScore) {
+			verify: func(context sdk.Context, quicksilver *app.Quicksilver, score types.ZoneScore) {
 			},
 			wantErr: true,
 		},
@@ -302,12 +302,12 @@ func (s *KeeperTestSuite) TestCalcDistributionScores() {
 				}
 				return validatorScores
 			},
-			verify: func(zs types.ZoneScore) {
+			verify: func(context sdk.Context, quicksilver *app.Quicksilver, score types.ZoneScore) {
 			},
 			wantErr: true,
 		},
 		{
-			name: "valid zonescore, same power",
+			name: "valid zonescore, different power",
 			malleate: func(ctx sdk.Context, appA *app.Quicksilver) {
 				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				appA.InterchainstakingKeeper.IterateDelegatorIntents(ctx, &zone, true, func(_ int64, di icstypes.DelegatorIntent) (stop bool) {
@@ -315,8 +315,8 @@ func (s *KeeperTestSuite) TestCalcDistributionScores() {
 					return false
 				})
 
-				for _, val := range appA.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId) {
-					val.VotingPower = sdk.NewInt(10)
+				for i, val := range appA.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId) {
+					val.VotingPower = sdk.NewInt(int64(10 + i*10))
 					appA.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val)
 				}
 				zone.ValidatorSelectionAllocation = 5000
@@ -326,23 +326,43 @@ func (s *KeeperTestSuite) TestCalcDistributionScores() {
 			validatorScores: func(ctx sdk.Context, appA *app.Quicksilver, chainId string) map[string]*types.Validator {
 				validatorScores := make(map[string]*types.Validator)
 
-				for _, val := range appA.InterchainstakingKeeper.GetValidators(ctx, chainId) {
-					validatorScores[val.ValoperAddress] = &types.Validator{
-						PowerPercentage:   sdk.NewDec(1),
-						DistributionScore: sdk.NewDec(1),
-						PerformanceScore:  sdk.NewDec(1),
-						Validator:         &val,
-					}
+				vals := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
+				(&vals[0]).VotingPower = sdk.NewInt(10)
+				validatorScores[vals[0].ValoperAddress] = &types.Validator{
+					PowerPercentage:   sdk.NewDec(1),
+					DistributionScore: sdk.NewDec(1),
+					PerformanceScore:  sdk.NewDec(1),
+					Validator:         &vals[0],
+				}
+				(&vals[1]).VotingPower = sdk.NewInt(20)
+				validatorScores[vals[1].ValoperAddress] = &types.Validator{
+					PowerPercentage:   sdk.NewDec(1),
+					DistributionScore: sdk.NewDec(1),
+					PerformanceScore:  sdk.NewDec(1),
+					Validator:         &vals[1],
+				}
+				(&vals[2]).VotingPower = sdk.NewInt(30)
+				validatorScores[vals[2].ValoperAddress] = &types.Validator{
+					PowerPercentage:   sdk.NewDec(1),
+					DistributionScore: sdk.NewDec(1),
+					PerformanceScore:  sdk.NewDec(1),
+					Validator:         &vals[2],
 				}
 				return validatorScores
 			},
-			verify: func(zs types.ZoneScore) {
-				s.Require().Equal(zs.TotalVotingPower, sdk.NewInt(40))
+			verify: func(ctx sdk.Context, appA *app.Quicksilver, zs types.ZoneScore) {
+				s.Require().Equal(zs.TotalVotingPower, sdk.NewInt(100))
 
-				for _, val := range zs.ValidatorScores {
-					s.Require().Equal(strings.TrimRight(val.PowerPercentage.String(), "0"), "0.25")
-					s.Require().Equal(val.DistributionScore, sdk.NewDec(1))
-				}
+				validators := appA.InterchainstakingKeeper.GetValidators(ctx, zs.ZoneID)
+
+				s.Require().Equal(strings.TrimRight(zs.ValidatorScores[validators[0].ValoperAddress].PowerPercentage.String(), "0"), "0.1")
+				s.Require().Equal(strings.TrimRight(zs.ValidatorScores[validators[1].ValoperAddress].PowerPercentage.String(), "0"), "0.2")
+				s.Require().Equal(strings.TrimRight(zs.ValidatorScores[validators[2].ValoperAddress].PowerPercentage.String(), "0"), "0.3")
+
+				s.Require().Equal(zs.ValidatorScores[validators[0].ValoperAddress].DistributionScore, sdk.NewDec(1))
+				s.Require().Equal(strings.TrimRight(zs.ValidatorScores[validators[1].ValoperAddress].DistributionScore.String(), "0"), "0.75")
+				s.Require().Equal(strings.TrimRight(zs.ValidatorScores[validators[2].ValoperAddress].DistributionScore.String(), "0"), "0.5")
+
 			},
 			wantErr: false,
 		},
@@ -379,7 +399,7 @@ func (s *KeeperTestSuite) TestCalcDistributionScores() {
 
 			err := appA.ParticipationRewardsKeeper.CalcDistributionScores(ctx, zone, &zs)
 			s.Require().Equal(err != nil, tt.wantErr)
-			tt.verify(zs)
+			tt.verify(ctx, appA, zs)
 		})
 	}
 }
@@ -389,8 +409,8 @@ func (s *KeeperTestSuite) TestCalcOverallScores() {
 		name             string
 		malleate         func(sdk.Context, *app.Quicksilver)
 		validatorScores  func(sdk.Context, *app.Quicksilver, string) map[string]*types.Validator
-		delegatorRewards func() distributiontypes.QueryDelegationTotalRewardsResponse
-		verify           func(zs types.ZoneScore)
+		delegatorRewards func(sdk.Context, *app.Quicksilver, string) distributiontypes.QueryDelegationTotalRewardsResponse
+		verify           func(types.ZoneScore, []distributiontypes.DelegationDelegatorReward)
 		wantErr          bool
 	}{
 		{
@@ -400,12 +420,120 @@ func (s *KeeperTestSuite) TestCalcOverallScores() {
 			validatorScores: func(context sdk.Context, quicksilver *app.Quicksilver, s string) map[string]*types.Validator {
 				return nil
 			},
-			delegatorRewards: func() distributiontypes.QueryDelegationTotalRewardsResponse {
+			delegatorRewards: func(_ sdk.Context, _ *app.Quicksilver, _ string) distributiontypes.QueryDelegationTotalRewardsResponse {
 				return distributiontypes.QueryDelegationTotalRewardsResponse{}
 			},
-			verify: func(zs types.ZoneScore) {
+			verify: func(_ types.ZoneScore, _ []distributiontypes.DelegationDelegatorReward) {
 			},
 			wantErr: true,
+		},
+		{
+			name: "zero total rewards",
+			malleate: func(context sdk.Context, quicksilver *app.Quicksilver) {
+			},
+			validatorScores: func(context sdk.Context, quicksilver *app.Quicksilver, s string) map[string]*types.Validator {
+				return nil
+			},
+			delegatorRewards: func(ctx sdk.Context, appA *app.Quicksilver, chainID string) distributiontypes.QueryDelegationTotalRewardsResponse {
+				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				valAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[0]
+				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{{ValidatorAddress: valAddress, Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdk.NewInt(1)))}}, Total: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdk.NewInt(0)))}
+			},
+			verify: func(_ types.ZoneScore, _ []distributiontypes.DelegationDelegatorReward) {
+			},
+			wantErr: true,
+		},
+		{
+			name: "validator removed from active set - performance greater than limit",
+			malleate: func(ctx sdk.Context, appA *app.Quicksilver) {
+				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				appA.InterchainstakingKeeper.IterateDelegatorIntents(ctx, &zone, true, func(_ int64, di icstypes.DelegatorIntent) (stop bool) {
+					appA.InterchainstakingKeeper.DeleteDelegatorIntent(ctx, &zone, di.Delegator, true)
+					return false
+				})
+
+				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
+			},
+			validatorScores: func(ctx sdk.Context, appA *app.Quicksilver, chainId string) map[string]*types.Validator {
+				validatorScores := make(map[string]*types.Validator)
+
+				val := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)[1]
+				validatorScores[val.ValoperAddress] = &types.Validator{
+					PowerPercentage:   sdk.NewDec(1),
+					DistributionScore: sdk.NewDec(3),
+					PerformanceScore:  sdk.NewDec(619),
+					Validator:         &val,
+				}
+
+				return validatorScores
+			},
+			delegatorRewards: func(ctx sdk.Context, appA *app.Quicksilver, chainID string) distributiontypes.QueryDelegationTotalRewardsResponse {
+				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				inactiveAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[0]
+				activeAddress := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)[1]
+				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{
+					{ValidatorAddress: inactiveAddress, Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdk.NewInt(1)))},
+					{ValidatorAddress: activeAddress, Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdk.NewInt(10)))},
+				}, Total: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdk.NewInt(11)))}
+			},
+			verify: func(zs types.ZoneScore, delegatorRewards []distributiontypes.DelegationDelegatorReward) {
+				s.Require().True(zs.ValidatorScores[delegatorRewards[0].ValidatorAddress] == nil)
+				s.Require().Equal(zs.ValidatorScores[delegatorRewards[1].ValidatorAddress].PerformanceScore, sdk.NewDec(1))
+				s.Require().Equal(zs.ValidatorScores[delegatorRewards[1].ValidatorAddress].Score, sdk.NewDec(3))
+			},
+		},
+		{
+			name: "multiple validators rewarded",
+			malleate: func(ctx sdk.Context, appA *app.Quicksilver) {
+				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				appA.InterchainstakingKeeper.IterateDelegatorIntents(ctx, &zone, true, func(_ int64, di icstypes.DelegatorIntent) (stop bool) {
+					appA.InterchainstakingKeeper.DeleteDelegatorIntent(ctx, &zone, di.Delegator, true)
+					return false
+				})
+
+				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
+			},
+			validatorScores: func(ctx sdk.Context, appA *app.Quicksilver, chainId string) map[string]*types.Validator {
+				validatorScores := make(map[string]*types.Validator)
+				vals := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
+
+				validatorScores[vals[0].ValoperAddress] = &types.Validator{
+					PowerPercentage:   sdk.NewDec(1),
+					DistributionScore: sdk.NewDec(1),
+					PerformanceScore:  sdk.NewDec(1),
+					Validator:         &vals[0],
+				}
+				validatorScores[vals[1].ValoperAddress] = &types.Validator{
+					PowerPercentage:   sdk.NewDec(1),
+					DistributionScore: sdk.NewDec(5),
+					PerformanceScore:  sdk.NewDec(1),
+					Validator:         &vals[1],
+				}
+				validatorScores[vals[2].ValoperAddress] = &types.Validator{
+					PowerPercentage:   sdk.NewDec(1),
+					DistributionScore: sdk.NewDec(7),
+					PerformanceScore:  sdk.NewDec(1),
+					Validator:         &vals[2],
+				}
+				return validatorScores
+			},
+			delegatorRewards: func(ctx sdk.Context, appA *app.Quicksilver, chainID string) distributiontypes.QueryDelegationTotalRewardsResponse {
+				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				validators := appA.InterchainstakingKeeper.GetValidatorAddresses(ctx, chainID)
+				return distributiontypes.QueryDelegationTotalRewardsResponse{Rewards: []distributiontypes.DelegationDelegatorReward{
+					{ValidatorAddress: validators[0], Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdk.NewInt(5)))},
+					{ValidatorAddress: validators[1], Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdk.NewInt(10)))},
+					{ValidatorAddress: validators[2], Reward: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdk.NewInt(15)))},
+				}, Total: sdk.NewDecCoins(sdk.NewDecCoin(zone.BaseDenom, sdk.NewInt(30)))}
+			},
+			verify: func(zs types.ZoneScore, delegatorRewards []distributiontypes.DelegationDelegatorReward) {
+				s.Require().Equal(strings.TrimRight(zs.ValidatorScores[delegatorRewards[0].ValidatorAddress].PerformanceScore.String(), "0"), "0.5")
+				s.Require().Equal(strings.TrimRight(zs.ValidatorScores[delegatorRewards[0].ValidatorAddress].Score.String(), "0"), "0.5")
+				s.Require().Equal(zs.ValidatorScores[delegatorRewards[1].ValidatorAddress].PerformanceScore, sdk.NewDec(1))
+				s.Require().Equal(zs.ValidatorScores[delegatorRewards[1].ValidatorAddress].Score, sdk.NewDec(5))
+				s.Require().Equal(zs.ValidatorScores[delegatorRewards[2].ValidatorAddress].PerformanceScore, sdk.NewDec(1))
+				s.Require().Equal(zs.ValidatorScores[delegatorRewards[2].ValidatorAddress].Score, sdk.NewDec(7))
+			},
 		},
 	}
 
@@ -438,11 +566,12 @@ func (s *KeeperTestSuite) TestCalcOverallScores() {
 				ValidatorScores:  validatorScores,
 			}
 
-			delegatorRewards := distributiontypes.QueryDelegationTotalRewardsResponse{}
+			delegatorRewards := tt.delegatorRewards(ctx, appA, zone.ChainId)
 
 			err := appA.ParticipationRewardsKeeper.CalcOverallScores(ctx, zone, delegatorRewards, &zs)
+
 			s.Require().Equal(err != nil, tt.wantErr)
-			tt.verify(zs)
+			tt.verify(zs, delegatorRewards.Rewards)
 		})
 	}
 }
