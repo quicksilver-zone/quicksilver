@@ -123,12 +123,7 @@ func (s *KeeperTestSuite) coreTest() {
 		return false
 	})
 
-	// In the setupTestClaims() the claim was set in the store by ClaimsManagerKeeper.SetClaim
-	// which use the GetKeyClaim key to set in the store instead of GetKeyLastEpochClaim so
-	// it will return not found when use the GetLastEpochClaim
-	// either we use the ClaimsManagerKeeper.SetLastEpochClaim to add the last claim or
-	// switch to GetClaim in the line of code below
-	_, found := quicksilver.ClaimsManagerKeeper.GetClaim(ctx, "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
+	_, found := quicksilver.ClaimsManagerKeeper.GetLastEpochClaim(ctx, "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
 	s.Require().True(found)
 
 	quicksilver.EpochsKeeper.AfterEpochEnd(s.chainA.GetContext(), epochtypes.EpochIdentifierEpoch, 3)
@@ -196,7 +191,7 @@ func (s *KeeperTestSuite) setupTestZones() {
 
 	zoneSelf := icstypes.Zone{
 		ConnectionId:       "connection-77004",
-		ChainId:            "testchain1",
+		ChainId:            "testchain1-1",
 		AccountPrefix:      "osmo",
 		LocalDenom:         "uqosmo",
 		BaseDenom:          "uosmo",
@@ -400,12 +395,12 @@ func (s *KeeperTestSuite) setupTestProtocolData() {
 	s.addProtocolData(types.ProtocolDataTypeLiquidToken,
 		fmt.Sprintf(
 			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
-			"testchain1",
+			"testchain1-1",
 			"cosmoshub-4",
 			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 			"uqatom",
 		),
-		"testchain1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3")
+		"testchain1-1/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3")
 }
 
 func (s *KeeperTestSuite) addProtocolData(dataType types.ProtocolDataType, data, key string) {
