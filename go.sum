@@ -450,8 +450,8 @@ github.com/cosmos/gogoproto v1.4.2 h1:UeGRcmFW41l0G0MiefWhkPEVEwvu78SZsHBvI78dAY
 github.com/cosmos/gogoproto v1.4.2/go.mod h1:cLxOsn1ljAHSV527CHOtaIP91kK6cCrZETRBrkzItWU=
 github.com/cosmos/iavl v0.19.6 h1:XY78yEeNPrEYyNCKlqr9chrwoeSDJ0bV2VjocTk//OU=
 github.com/cosmos/iavl v0.19.6/go.mod h1:X9PKD3J0iFxdmgNLa7b2LYWdsGd90ToV5cAONApkEPw=
-github.com/cosmos/ibc-go/v5 v5.2.1 h1:i8Kl9KZfPJVYuihjbGPnjTQWecXQfRLz+QrjJGhzY9o=
-github.com/cosmos/ibc-go/v5 v5.2.1/go.mod h1:eH18ghfqGGT9gDCTMDLWg1zPLXplSnPxXRNWPx98xhU=
+github.com/cosmos/ibc-go/v5 v5.3.1 h1:zuaIWMEoXM9egWmmAqzBPYLvEjYgB6xy6wZoc8xsZ5U=
+github.com/cosmos/ibc-go/v5 v5.3.1/go.mod h1:Q2W1rjtwR738fqFQhE66dZ0frsLlr+Wiezlwei0TMGo=
 github.com/cosmos/interchain-accounts v0.3.2 h1:7S5rSndahpjkzUvG00kKZrTZsEuVHuVC9a7p0qDVcF8=
 github.com/cosmos/ledger-cosmos-go v0.12.2 h1:/XYaBlE2BJxtvpkHiBm97gFGSGmYGKunKyF3nNqAXZA=
 github.com/cosmos/ledger-cosmos-go v0.12.2/go.mod h1:ZcqYgnfNJ6lAXe4HPtWgarNEY+B74i+2/8MhZw4ziiI=
