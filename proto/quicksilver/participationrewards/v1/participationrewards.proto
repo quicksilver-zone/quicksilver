@@ -35,8 +35,7 @@ message Params {
 
   // distribution_proportions defines the proportions of the minted
   // participation rewards;
-  DistributionProportions distribution_proportions = 1
-      [ (gogoproto.nullable) = false ];
+  DistributionProportions distribution_proportions = 1 [(gogoproto.nullable) = false];
   bool claims_enabled = 2;
 }
 
@@ -49,7 +48,7 @@ message KeyedProtocolData {
 // determination of rewards.
 message ProtocolData {
   string type = 1;
-  bytes data = 2 [ (gogoproto.casttype) = "encoding/json.RawMessage" ];
+  bytes data = 2 [(gogoproto.casttype) = "encoding/json.RawMessage"];
 }
 
 enum ProtocolDataType {
