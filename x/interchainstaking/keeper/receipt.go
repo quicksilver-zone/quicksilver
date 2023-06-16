@@ -152,7 +152,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 		mappedAddress, found = k.GetRemoteAddressMap(ctx, sender, zone.ChainId)
 		if !found {
 			// if not found, skip minting and refund assets
-			portOwner := zone.ChainId + ".withdrawal"
+			portOwner := zone.ChainId + ".deposit"
 			msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: senderAddress, Amount: assets}
 			return k.SubmitTx(ctx, []proto.Message{msg}, zone.DepositAddress, "", zone.MessagesPerTx, portOwner)
 		}

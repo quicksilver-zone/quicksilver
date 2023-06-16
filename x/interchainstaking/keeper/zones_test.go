@@ -98,7 +98,6 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainId)
 		kpr.SetZone(ctx, &zone)
 		gotZone, ok := kpr.GetZone(ctx, chainID)
-		println("check gotZone", gotZone.String())
 		require.True(t, ok, "expected to retrieve the correct zone")
 		require.NotEqual(t, types.Zone{}, gotZone, "Expecting a non-blank zone")
 		require.Equal(t, zone, gotZone, "Expecting the stored zone")
