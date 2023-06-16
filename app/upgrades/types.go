@@ -13,18 +13,20 @@ import (
 const (
 	ProductionChainID     = "quicksilver-2"
 	RhyeChainID           = "rhye-1"
-	DevnetChainID         = "quicktest-1"
+	DevnetChainID         = "magic-1"
 	TestChainID           = "testchain1"
 	OsmosisTestnetChainID = "osmo-test-5"
 
-	V010402rc1UpgradeName = "v1.4.2-rc1"
-	V010402rc2UpgradeName = "v1.4.2-rc2"
-	V010402rc3UpgradeName = "v1.4.2-rc3"
-	V010402rc4UpgradeName = "v1.4.2-rc4"
-	V010402rc5UpgradeName = "v1.4.2-rc5"
-	V010402rc6UpgradeName = "v1.4.2-rc6"
-	V010402rc7UpgradeName = "v1.4.2-rc7"
-	V010403rc0UpgradeName = "v1.4.3-rc0"
+	V010402rc1UpgradeName   = "v1.4.2-rc1"
+	V010402rc2UpgradeName   = "v1.4.2-rc2"
+	V010402rc3UpgradeName   = "v1.4.2-rc3"
+	V010402rc4UpgradeName   = "v1.4.2-rc4"
+	V010402rc5UpgradeName   = "v1.4.2-rc5"
+	V010402rc6UpgradeName   = "v1.4.2-rc6"
+	V010402rc7UpgradeName   = "v1.4.2-rc7"
+	V010403rc0UpgradeName   = "v1.4.3-rc0"
+	V010404beta0UpgradeName = "v1.4.4-beta.0"
+	V010404beta1UpgradeName = "v1.4.4-beta.1"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

@@ -1,19 +1,3 @@
----
-name: Pull Request
-about: Default template for additions or fixes to Quicksilver.
----
-
-<!--  
-TO USE A RELEASE PR TEMPLATE:
-
-append the following to your PR URL:
-
-- ?template=release_pr_template.md
-
--->
-
-
-
 ## 1. Summary
 Fixes # (issue)
 <!-- What are you changing, removing, or adding in this review? -->
