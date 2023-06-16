@@ -56,6 +56,8 @@ var (
 	KeyPrefixRequeuedWithdrawalRecordSeq = []byte{0x0a}
 	KeyPrefixAddressZoneMapping          = []byte{0x0b}
 	KeyPrefixValidatorsInfo              = []byte{0x0c}
+	KeyPrefixRemoteAddress               = []byte{0x0d}
+	KeyPrefixLocalAddress                = []byte{0x0e}
 
 	// fill in missing 0d - 0f before adding 0x11!
 	KeyPrefixRedelegationRecord = []byte{0x10}
@@ -85,6 +87,16 @@ func ParseStakingDelegationKey(key []byte) (sdk.AccAddress, sdk.ValAddress, erro
 	}
 	valAddr := key[3+delAddrLen : 3+delAddrLen+valAddrLen]
 	return delAddr, valAddr, nil
+}
+
+// GetRemoteAddressKey gets the prefix for a remote address mapping.
+func GetRemoteAddressKey(localAddress []byte, chainID string) []byte {
+	return append(append(KeyPrefixRemoteAddress, localAddress...), []byte(chainID)...)
+}
+
+// GetLocalAddressKey gets the prefix for a local address mapping.
+func GetLocalAddressKey(remoteAddress []byte, chainID string) []byte {
+	return append(append(KeyPrefixLocalAddress, []byte(chainID)...), remoteAddress...)
 }
 
 // GetDelegationKey gets the key for delegator bond with validator.
@@ -140,4 +152,9 @@ func GetUnbondingKey(chainID, validator string, epochNumber int64) []byte {
 // GetZoneValidatorsKey gets the validators key prefix for a given chain.
 func GetZoneValidatorsKey(chainID string) []byte {
 	return append(KeyPrefixValidatorsInfo, []byte(chainID)...)
+}
+
+// GetRemoteAddressPrefix gets the prefix for a remote address mapping.
+func GetRemoteAddressPrefix(locaAddress []byte) []byte {
+	return append(KeyPrefixRemoteAddress, locaAddress...)
 }

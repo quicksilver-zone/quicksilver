@@ -3,10 +3,11 @@ package types_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
@@ -101,6 +102,78 @@ func TestMsgClaim_ValidateBasic(t *testing.T) {
 			true,
 		},
 		{
+			"invalid proof no key",
+			fields{
+				ChainID: "cosmoshub-4",
+				Action:  int64(types.ActionInitialClaim),
+				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+				Proofs: []*cmtypes.Proof{
+					{
+						Key:       nil,
+						Data:      []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						ProofOps:  &crypto.ProofOps{},
+						Height:    10,
+						ProofType: "lockup",
+					},
+				},
+			},
+			true,
+		},
+		{
+			"invalid proof no data",
+			fields{
+				ChainID: "cosmoshub-4",
+				Action:  int64(types.ActionInitialClaim),
+				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+				Proofs: []*cmtypes.Proof{
+					{
+						Key:       []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						Data:      nil,
+						ProofOps:  &crypto.ProofOps{},
+						Height:    10,
+						ProofType: "lockup",
+					},
+				},
+			},
+			true,
+		},
+		{
+			"invalid proof no proof ops",
+			fields{
+				ChainID: "cosmoshub-4",
+				Action:  int64(types.ActionInitialClaim),
+				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+				Proofs: []*cmtypes.Proof{
+					{
+						Key:       []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						Data:      []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						ProofOps:  nil,
+						Height:    10,
+						ProofType: "lockup",
+					},
+				},
+			},
+			true,
+		},
+		{
+			"invalid proof no height",
+			fields{
+				ChainID: "cosmoshub-4",
+				Action:  int64(types.ActionInitialClaim),
+				Address: "cosmos1pgfzn0zhxjjgte7hprwtnqyhrn534lqk437x2w",
+				Proofs: []*cmtypes.Proof{
+					{
+						Key:       []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						Data:      []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9},
+						ProofOps:  &crypto.ProofOps{},
+						Height:    -1,
+						ProofType: "lockup",
+					},
+				},
+			},
+			true,
+		},
+		{
 			"valid",
 			fields{
 				ChainID: "cosmoshub-4",
@@ -187,11 +260,23 @@ func TestMsgIncentivePoolSpendValidateBasic(t *testing.T) {
 			true,
 		},
 		{
-			"invalid amount",
+			"non positive amount",
 			fields{
 				Authority: addr1,
 				ToAddress: addr2,
 				Amount:    sdk.Coins{},
+			},
+			true,
+		},
+		{
+			"invalid amount",
+			fields{
+				Authority: addr1,
+				ToAddress: addr2,
+				Amount: sdk.Coins{sdk.Coin{
+					Denom:  "",
+					Amount: sdkmath.NewInt(1000),
+				}},
 			},
 			true,
 		},
