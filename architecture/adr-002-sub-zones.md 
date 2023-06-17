@@ -128,7 +128,7 @@ If `SubzoneInfo` and is non-empty, then the zone is a subzone.  We can add the f
 
 ```go
 func (z *Zone) IsSubzone() bool {
-    return z.SubzoneInfo.Authority != "" && z.SubzoneInfo.BaseChainID != ""
+    return z.SubZoneInfo != nil
 }
 ```
 
