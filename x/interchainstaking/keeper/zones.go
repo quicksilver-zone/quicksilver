@@ -33,7 +33,7 @@ func (k *Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
 func (k *Keeper) SetZone(ctx sdk.Context, zone *types.Zone) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := k.cdc.MustMarshal(zone)
-	store.Set([]byte(zone.ChainId), bz)
+	store.Set([]byte(zone.ChainID()), bz)
 }
 
 // DeleteZone delete zone info.
@@ -97,7 +97,7 @@ func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 
 func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainID(), WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
 		out = out.Add(wr.Amount[0])
 		return false
 	})
@@ -255,7 +255,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 	queryRes := banktypes.QueryAllBalancesResponse{}
 	err := k.cdc.Unmarshal(queryResult, &queryRes)
 	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal balance", "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal balance", "zone", zone.ChainID(), "err", err)
 		return err
 	}
 	_, addr, err := bech32.DecodeAndConvert(address)
@@ -290,7 +290,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				zone.ConnectionId,
-				zone.ChainId,
+				zone.ChainID(),
 				types.BankStoreKey,
 				append(data, []byte(coin.Denom)...),
 				sdk.NewInt(-1),

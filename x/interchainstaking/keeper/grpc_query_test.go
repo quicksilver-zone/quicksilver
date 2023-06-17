@@ -550,7 +550,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ChainId,
+					zone.ChainID(),
 					"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
 					distribution,
 					testAddress,
@@ -643,7 +643,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ChainId,
+					zone.ChainID(),
 					"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
 					distribution,
 					testAddress,
@@ -722,7 +722,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 				icsKeeper.SetUnbondingRecord(
 					ctx,
 					types.UnbondingRecord{
-						ChainId:       zone.ChainId,
+						ChainId:       zone.ChainID(),
 						EpochNumber:   1,
 						Validator:     icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 						RelatedTxhash: []string{"ABC012"},

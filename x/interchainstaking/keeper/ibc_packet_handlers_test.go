@@ -95,11 +95,11 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 		{
 			name: "valid",
 			records: func(ctx sdk.Context, qs *app.Quicksilver, zone *icstypes.Zone) []icstypes.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
 
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainId,
+						ChainId:   zone.ChainID(),
 						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 1000000},
@@ -116,7 +116,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				}
 			},
 			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone *icstypes.Zone) []icstypes.Delegation {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
 				return []icstypes.Delegation{
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
@@ -149,10 +149,10 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 		{
 			name: "valid - two",
 			records: func(ctx sdk.Context, qs *app.Quicksilver, zone *icstypes.Zone) []icstypes.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainId,
+						ChainId:   zone.ChainID(),
 						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 1000000},
@@ -167,7 +167,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						Status:     icskeeper.WithdrawStatusQueued,
 					},
 					{
-						ChainId:   zone.ChainId,
+						ChainId:   zone.ChainID(),
 						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 5000000},
@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				}
 			},
 			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone *icstypes.Zone) []icstypes.Delegation {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
 				return []icstypes.Delegation{
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
@@ -217,10 +217,10 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 		{
 			name: "invalid - locked tokens",
 			records: func(ctx sdk.Context, qs *app.Quicksilver, zone *icstypes.Zone) []icstypes.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainId,
+						ChainId:   zone.ChainID(),
 						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 1000000},
@@ -237,7 +237,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				}
 			},
 			delegations: func(ctx sdk.Context, qs *app.Quicksilver, zone *icstypes.Zone) []icstypes.Delegation {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
 				return []icstypes.Delegation{
 					{
 						DelegationAddress: zone.DelegationAddress.Address,
@@ -262,7 +262,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				}
 			},
 			redelegations: func(ctx sdk.Context, qs *app.Quicksilver, zone *icstypes.Zone) []icstypes.RedelegationRecord {
-				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
 				return []icstypes.RedelegationRecord{
 					{
 						ChainId:        zone.ChainId,

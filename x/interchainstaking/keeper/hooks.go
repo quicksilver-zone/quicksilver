@@ -43,7 +43,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				k.Logger(ctx).Error(
 					"encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch",
 					"error", err.Error(),
-					"chain_id", zone.ChainId,
+					"chain_id", zone.ChainID(),
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -63,7 +63,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				k.Logger(ctx).Error(
 					"encountered a problem handling queued unbondings",
 					"error", err.Error(),
-					"chain_id", zone.ChainId,
+					"chain_id", zone.ChainID(),
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -78,7 +78,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				k.Logger(ctx).Error(
 					"encountered a problem rebalancing",
 					"error", err.Error(),
-					"chain_id", zone.ChainId,
+					"chain_id", zone.ChainID(),
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -87,7 +87,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			if zone.WithdrawalWaitgroup > 0 {
 				k.Logger(ctx).Error(
 					"epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!",
-					"chain_id", zone.ChainId,
+					"chain_id", zone.ChainID(),
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -97,12 +97,12 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 			k.Logger(ctx).Info(
 				"withdrawing rewards",
-				"chain_id", zone.ChainId,
+				"chain_id", zone.ChainID(),
 				"epoch_identifier", epochIdentifier,
 				"epoch_number", epochNumber,
 			)
 
-			vals := k.GetValidators(ctx, zone.ChainId)
+			vals := k.GetValidators(ctx, zone.ChainID())
 			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 			bz := k.cdc.MustMarshal(&delegationQuery)
 

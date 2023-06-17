@@ -137,7 +137,7 @@ func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return err
 	}
 
-	k.Logger(ctx).Debug("Delegations callback triggered", "chain", zone.ChainId)
+	k.Logger(ctx).Debug("Delegations callback triggered", "chain", zone.ChainID())
 
 	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
 }
@@ -155,7 +155,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", zone.ChainId)
+	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", zone.ChainID())
 
 	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
 		// delegation never gets removed, even with zero shares.
@@ -184,7 +184,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	if err != nil {
 		return err
 	}
-	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+	val, found := k.GetValidator(ctx, zone.ChainID(), valAddrBytes)
 	if !found {
 		err := fmt.Errorf("unable to get validator: %s", delegation.ValidatorAddress)
 		k.Logger(ctx).Error(err.Error())
@@ -224,7 +224,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
 	}
 
-	k.Logger(ctx).Debug("Deposit interval callback", "zone", zone.ChainId)
+	k.Logger(ctx).Debug("Deposit interval callback", "zone", zone.ChainID())
 
 	txs := tx.GetTxsEventResponse{}
 
@@ -240,7 +240,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 	for _, txn := range txs.TxResponses {
 		req := tx.GetTxRequest{Hash: txn.TxHash}
 		hashBytes := k.cdc.MustMarshal(&req)
-		_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, txn.TxHash))
+		_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainID(), txn.TxHash))
 		if found {
 			k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
 			continue
@@ -418,7 +418,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
 	}
 
-	k.Logger(ctx).Debug("DepositTx callback", "zone", zone.ChainId)
+	k.Logger(ctx).Debug("DepositTx callback", "zone", zone.ChainID())
 
 	res := icqtypes.GetTxWithProofResponse{}
 	err := k.cdc.Unmarshal(args, &res)
@@ -441,7 +441,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return fmt.Errorf("invalid tx for query - expected %s, got %s", queryRequest.Hash, hashStr)
 	}
 
-	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hashStr))
+	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainID(), hashStr))
 	if found {
 		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", hashStr)
 		return nil
@@ -469,7 +469,7 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
 	// but lets us be safe here :)
 	if len(query.Request) < 2 {
-		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainId, "error", "request length is too short")
+		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainID(), "error", "request length is too short")
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
@@ -490,7 +490,7 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 	// Ensure that the coin is valid.
 	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/80
 	if err := coin.Validate(); err != nil {
-		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainID(), "err", err)
 		return err
 	}
 
@@ -512,7 +512,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
 	// but lets us be safe here :)
 	if len(query.Request) < 2 {
-		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainId, "error", "request length is too short")
+		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainID(), "error", "request length is too short")
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]

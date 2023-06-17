@@ -51,7 +51,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	if !zone.UnbondingEnabled {
-		return nil, fmt.Errorf("unbonding currently disabled for zone %s", zone.ChainId)
+		return nil, fmt.Errorf("unbonding currently disabled for zone %s", zone.ChainID())
 	}
 
 	// does destination address match the prefix registered against the zone?
@@ -101,7 +101,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 			sdk.NewAttribute(types.AttributeKeyBurnAmount, msg.Value.String()),
 			sdk.NewAttribute(types.AttributeKeyRedeemAmount, nativeTokens.String()),
 			sdk.NewAttribute(types.AttributeKeyRecipientAddress, msg.DestinationAddress),
-			sdk.NewAttribute(types.AttributeKeyChainID, zone.ChainId),
+			sdk.NewAttribute(types.AttributeKeyChainID, zone.ChainID()),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, zone.ConnectionId),
 		),
 	})
