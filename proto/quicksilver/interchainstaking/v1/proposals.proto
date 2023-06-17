@@ -14,11 +14,10 @@ message RegisterZoneProposal {
   string title = 1;
   string description = 2;
 
-  string connection_id = 3 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
-  string base_denom = 4 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
-  string local_denom = 5 [ (gogoproto.moretags) = "yaml:\"local_denom\"" ];
-  string account_prefix = 6
-      [ (gogoproto.moretags) = "yaml:\"account_prefix\"" ];
+  string connection_id = 3 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string base_denom = 4 [(gogoproto.moretags) = "yaml:\"base_denom\""];
+  string local_denom = 5 [(gogoproto.moretags) = "yaml:\"local_denom\""];
+  string account_prefix = 6 [(gogoproto.moretags) = "yaml:\"account_prefix\""];
   bool multi_send = 7; // deprecated
   bool liquidity_module = 8;
   int64 messages_per_tx = 9;
@@ -33,25 +32,20 @@ message RegisterZoneProposalWithDeposit {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string title = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
-  string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
-  string connection_id = 3 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
-  string base_denom = 4 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
-  string local_denom = 5 [ (gogoproto.moretags) = "yaml:\"local_denom\"" ];
-  string account_prefix = 6
-      [ (gogoproto.moretags) = "yaml:\"account_prefix\"" ];
-  bool multi_send = 7 [ (gogoproto.moretags) = "yaml:\"multi_send\"" ];
-  bool liquidity_module = 8
-      [ (gogoproto.moretags) = "yaml:\"liquidity_module\"" ];
-  string deposit = 9 [ (gogoproto.moretags) = "yaml:\"deposit\"" ];
+  string title = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+  string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+  string connection_id = 3 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string base_denom = 4 [(gogoproto.moretags) = "yaml:\"base_denom\""];
+  string local_denom = 5 [(gogoproto.moretags) = "yaml:\"local_denom\""];
+  string account_prefix = 6 [(gogoproto.moretags) = "yaml:\"account_prefix\""];
+  bool multi_send = 7 [(gogoproto.moretags) = "yaml:\"multi_send\""];
+  bool liquidity_module = 8 [(gogoproto.moretags) = "yaml:\"liquidity_module\""];
+  string deposit = 9 [(gogoproto.moretags) = "yaml:\"deposit\""];
   int64 messages_per_tx = 10;
-  bool return_to_sender = 11
-      [ (gogoproto.moretags) = "yaml:\"return_to_sender\"" ];
-  bool deposits_enabled = 12
-      [ (gogoproto.moretags) = "yaml:\"deposits_enabled\"" ];
-  bool unbonding_enabled = 13
-      [ (gogoproto.moretags) = "yaml:\"deposits_enabled\"" ];
-  int64 decimals = 14 [ (gogoproto.moretags) = "yaml:\"decimals\"" ];
+  bool return_to_sender = 11 [(gogoproto.moretags) = "yaml:\"return_to_sender\""];
+  bool deposits_enabled = 12 [(gogoproto.moretags) = "yaml:\"deposits_enabled\""];
+  bool unbonding_enabled = 13 [(gogoproto.moretags) = "yaml:\"deposits_enabled\""];
+  int64 decimals = 14 [(gogoproto.moretags) = "yaml:\"decimals\""];
   bool is_118 = 15;
 }
 
@@ -60,32 +54,30 @@ message UpdateZoneProposal {
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = false;
 
-  string title = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
-  string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
-  string chain_id = 3 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  string title = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+  string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+  string chain_id = 3 [(gogoproto.moretags) = "yaml:\"chain_id\""];
 
-  repeated UpdateZoneValue changes = 4
-      [ (gogoproto.moretags) = "yaml:\"changes\"" ];
+  repeated UpdateZoneValue changes = 4 [(gogoproto.moretags) = "yaml:\"changes\""];
 }
 
 message UpdateZoneProposalWithDeposit {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string title = 1 [ (gogoproto.moretags) = "yaml:\"title\"" ];
-  string description = 2 [ (gogoproto.moretags) = "yaml:\"description\"" ];
-  string chain_id = 3 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  string title = 1 [(gogoproto.moretags) = "yaml:\"title\""];
+  string description = 2 [(gogoproto.moretags) = "yaml:\"description\""];
+  string chain_id = 3 [(gogoproto.moretags) = "yaml:\"chain_id\""];
 
-  repeated UpdateZoneValue changes = 4
-      [ (gogoproto.moretags) = "yaml:\"changes\"" ];
-  string deposit = 5 [ (gogoproto.moretags) = "yaml:\"deposit\"" ];
+  repeated UpdateZoneValue changes = 4 [(gogoproto.moretags) = "yaml:\"changes\""];
+  string deposit = 5 [(gogoproto.moretags) = "yaml:\"deposit\""];
 }
 
 // UpdateZoneValue defines an individual parameter change, for use in
 // UpdateZoneProposal.
 message UpdateZoneValue {
-  string key = 1 [ (gogoproto.moretags) = "yaml:\"key\"" ];
-  string value = 2 [ (gogoproto.moretags) = "yaml:\"value\"" ];
+  string key = 1 [(gogoproto.moretags) = "yaml:\"key\""];
+  string value = 2 [(gogoproto.moretags) = "yaml:\"value\""];
 }
 
 message MsgGovReopenChannel {
@@ -95,10 +87,10 @@ message MsgGovReopenChannel {
   string title = 1;
   string description = 2;
 
-  string connection_id = 3 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
-  string port_id = 4 [ (gogoproto.moretags) = "yaml:\"port_id\"" ];
+  string connection_id = 3 [(gogoproto.moretags) = "yaml:\"connection_id\""];
+  string port_id = 4 [(gogoproto.moretags) = "yaml:\"port_id\""];
 
-  string authority = 5 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string authority = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgGovReopenChannelResponse defines the MsgGovReopenChannel response type.
@@ -111,10 +103,10 @@ message MsgGovCloseChannel {
   string title = 1;
   string description = 2;
 
-  string channel_id = 3 [ (gogoproto.moretags) = "yaml:\"channel_id\"" ];
-  string port_id = 4 [ (gogoproto.moretags) = "yaml:\"port_id\"" ];
+  string channel_id = 3 [(gogoproto.moretags) = "yaml:\"channel_id\""];
+  string port_id = 4 [(gogoproto.moretags) = "yaml:\"port_id\""];
 
-  string authority = 5 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string authority = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgGovCloseChannelResponse defines the MsgGovCloseChannel response type.
