@@ -394,15 +394,15 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 			bz, err := quicksilver.AppCodec().Marshal(&test.validator)
 			suite.Require().NoError(err)
 
-			err = keeper.ValidatorCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
+			err = keeper.ValidatorCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainID()})
 			suite.Require().NoError(err)
 
-			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zone.ID())
 			suite.True(found)
 
 			valAddrBytes, err := addressutils.ValAddressFromBech32(test.expected.ValoperAddress, zone.GetValoperPrefix())
 			suite.Require().NoError(err)
-			val, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+			val, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainID(), valAddrBytes)
 			suite.True(found)
 			suite.Equal(test.expected, val)
 		})
@@ -422,16 +422,16 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 		{
 			name: "jailed; single distribution",
 			validator: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *stakingtypes.Validator {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
 			},
 			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *icstypes.Validator {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return &icstypes.Validator{ValoperAddress: vals[0].ValoperAddress, CommissionRate: vals[0].CommissionRate, VotingPower: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", Jailed: true}
 			},
 
 			withdrawal: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return icstypes.WithdrawalRecord{
 					ChainId:   suite.chainB.ChainID,
 					Delegator: zone.DelegationAddress.Address,
@@ -450,7 +450,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 				}
 			},
 			expectedWithdrawal: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return icstypes.WithdrawalRecord{
 					ChainId:   suite.chainB.ChainID,
 					Delegator: zone.DelegationAddress.Address,
@@ -472,16 +472,16 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 		{
 			name: "jailed; multi distribution",
 			validator: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *stakingtypes.Validator {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
 			},
 			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *icstypes.Validator {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return &icstypes.Validator{ValoperAddress: vals[0].ValoperAddress, CommissionRate: vals[0].CommissionRate, VotingPower: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", Jailed: true}
 			},
 
 			withdrawal: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return icstypes.WithdrawalRecord{
 					ChainId:   suite.chainB.ChainID,
 					Delegator: zone.DelegationAddress.Address,
@@ -504,7 +504,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 				}
 			},
 			expectedWithdrawal: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return icstypes.WithdrawalRecord{
 					ChainId:   suite.chainB.ChainID,
 					Delegator: zone.DelegationAddress.Address,
@@ -530,16 +530,16 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 		{
 			name: "jailed; multi distribution, unrelated validators - no-op",
 			validator: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *stakingtypes.Validator {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return &stakingtypes.Validator{OperatorAddress: vals[0].ValoperAddress, Jailed: true, Status: stakingtypes.Bonded, Tokens: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Commission: stakingtypes.NewCommission(vals[0].CommissionRate, sdk.MustNewDecFromStr("0.5"), sdk.MustNewDecFromStr("0.5"))}
 			},
 			expected: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) *icstypes.Validator {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return &icstypes.Validator{ValoperAddress: vals[0].ValoperAddress, CommissionRate: vals[0].CommissionRate, VotingPower: vals[0].VotingPower.Mul(sdk.NewInt(19)).Quo(sdk.NewInt(20)), DelegatorShares: vals[0].DelegatorShares, Score: sdk.ZeroDec(), Status: "BOND_STATUS_BONDED", Jailed: true}
 			},
 
 			withdrawal: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return icstypes.WithdrawalRecord{
 					ChainId:   suite.chainB.ChainID,
 					Delegator: zone.DelegationAddress.Address,
@@ -562,7 +562,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 				}
 			},
 			expectedWithdrawal: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) icstypes.WithdrawalRecord {
-				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := qs.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				return icstypes.WithdrawalRecord{
 					ChainId:   suite.chainB.ChainID,
 					Delegator: zone.DelegationAddress.Address,
@@ -604,7 +604,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			bz, err := quicksilver.AppCodec().Marshal(test.validator(ctx, quicksilver, zone))
 			suite.Require().NoError(err)
 
-			err = keeper.ValidatorCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
+			err = keeper.ValidatorCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainID()})
 			suite.Require().NoError(err)
 
 			wr, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, suite.chainB.ChainID, test.withdrawal(ctx, quicksilver, zone).Txhash, test.withdrawal(ctx, quicksilver, zone).Status)
@@ -786,7 +786,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallback() {
 		// check a ICQ request was made
 		found := false
 		quicksilver.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
-			if queryInfo.ChainId == zone.ChainId &&
+			if queryInfo.ChainId == zone.ChainID() &&
 				queryInfo.ConnectionId == zone.ConnectionId &&
 				queryInfo.QueryType == icstypes.BankStoreKey &&
 				bytes.Equal(queryInfo.Request, append(data, []byte(response.Balances[0].GetDenom())...)) {
@@ -836,7 +836,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
 		// check a ICQ request was made
 		found := false
 		quicksilver.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
-			if queryInfo.ChainId == zone.ChainId &&
+			if queryInfo.ChainId == zone.ChainID() &&
 				queryInfo.ConnectionId == zone.ConnectionId &&
 				queryInfo.QueryType == icstypes.BankStoreKey &&
 				bytes.Equal(queryInfo.Request, append(data, []byte(response.Balances[0].GetDenom())...)) {
@@ -889,7 +889,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 		// check a ICQ request was made
 		found := false
 		quicksilver.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
-			if queryInfo.ChainId == zone.ChainId &&
+			if queryInfo.ChainId == zone.ChainID() &&
 				queryInfo.ConnectionId == zone.ConnectionId &&
 				queryInfo.QueryType == icstypes.BankStoreKey &&
 				bytes.Equal(queryInfo.Request, append(data, []byte("uqck")...)) {
@@ -937,7 +937,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 		// check a ICQ request was made
 		found := false
 		quicksilver.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
-			if queryInfo.ChainId == zone.ChainId &&
+			if queryInfo.ChainId == zone.ChainID() &&
 				queryInfo.ConnectionId == zone.ConnectionId &&
 				queryInfo.QueryType == icstypes.BankStoreKey &&
 				bytes.Equal(queryInfo.Request, append(data, []byte("uqck")...)) {
@@ -986,7 +986,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackMulti() {
 		for _, coin := range response.Balances {
 			found := false
 			quicksilver.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
-				if queryInfo.ChainId == zone.ChainId &&
+				if queryInfo.ChainId == zone.ChainID() &&
 					queryInfo.ConnectionId == zone.ConnectionId &&
 					queryInfo.QueryType == icstypes.BankStoreKey &&
 					bytes.Equal(queryInfo.Request, append(data, []byte(coin.GetDenom())...)) {

@@ -616,12 +616,12 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	if err != nil {
 		return err
 	}
-	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId), k.Logger(ctx))
+	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ID()), k.Logger(ctx))
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
 		k.SetRedelegationRecord(ctx, types.RedelegationRecord{
-			ChainId:     zone.ChainId,
+			ChainId:     zone.ID(),
 			EpochNumber: epochNumber,
 			Source:      rebalance.Source,
 			Destination: rebalance.Target,
@@ -650,7 +650,7 @@ func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryVal
 	return validatorsRes, nil
 }
 
-// UnmarshalValidatorsRequest attempts to umarshal  a byte slice into a QueryValidatorsRequest.
+// UnmarshalValidatorsRequest attempts to umarshal a byte slice into a QueryValidatorsRequest.
 func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
 	validatorsReq := stakingtypes.QueryValidatorsRequest{}
 	err := k.cdc.Unmarshal(data, &validatorsReq)

@@ -52,7 +52,7 @@ func (k *Keeper) Zones(c context.Context, req *types.QueryZonesRequest) (*types.
 	}, nil
 }
 
-// Zone returns information about registered zones.
+// Zone returns information about a registered zone.
 func (k *Keeper) Zone(c context.Context, req *types.QueryZoneRequest) (*types.QueryZoneResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")

@@ -459,7 +459,7 @@ func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender, hash strin
 	t := time.Now().Add(-time.Hour)
 	t2 := time.Now().Add(-5 * time.Minute)
 	receipt := icstypes.Receipt{
-		ChainId:   zone.ChainId,
+		ChainId:   zone.ID(),
 		Sender:    sender,
 		Txhash:    hash,
 		Amount:    coins,

@@ -11,6 +11,8 @@ import (
 )
 
 func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID string) error {
+	// TODO: how to handle for subzone
+
 	chainID, err := k.GetChainID(ctx, connectionID)
 	if err != nil {
 		ctx.Logger().Error(
@@ -89,7 +91,6 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			if err != nil {
 				return err
 			}
-
 			k.SetAddressZoneMapping(ctx, address, zone.ChainID())
 		}
 

@@ -63,7 +63,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	for _, msg := range msgs {
 		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
 	}
-	k.AddWithdrawalRecord(ctx, zone.ChainID(), sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
+	k.AddWithdrawalRecord(ctx, zone.ID(), sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
 
 	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx)
 }
@@ -83,7 +83,7 @@ func (k *Keeper) queueRedemption(
 
 	k.AddWithdrawalRecord(
 		ctx,
-		zone.ChainID(),
+		zone.ID(),
 		sender.String(),
 		distribution,
 		destination,
@@ -116,7 +116,7 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 		if found {
 			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(sdk.NewInt(redelegation.Amount))
 			if availablePerValidator[redelegation.Destination].LT(sdk.ZeroInt()) {
-				return map[string]math.Int{}, sdk.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ChainID(), redelegation.Destination, availablePerValidator[redelegation.Destination].String())
+				return map[string]math.Int{}, sdk.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ID(), redelegation.Destination, availablePerValidator[redelegation.Destination].String())
 			}
 			total = total.Sub(sdk.NewInt(redelegation.Amount))
 		}
@@ -140,7 +140,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return err
 	}
 
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainID(), WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		k.Logger(ctx).Info("handling queued withdrawal request", "from", withdrawal.Delegator, "to", withdrawal.Recipient, "amount", withdrawal.Amount)
 		if len(withdrawal.Amount) == 0 {
 			k.Logger(ctx).Error("withdrawal %s has no amount set; cannot process...", withdrawal.Txhash)
@@ -220,7 +220,7 @@ WITHDRAWAL:
 	}
 
 	for _, hash := range utils.Keys(txDistrsMap) {
-		record, found := k.GetWithdrawalRecord(ctx, zone.ChainID(), hash, WithdrawStatusQueued)
+		record, found := k.GetWithdrawalRecord(ctx, zone.ID(), hash, WithdrawStatusQueued)
 		if !found {
 			return errors.New("unable to find withdrawal record")
 		}
@@ -260,10 +260,10 @@ WITHDRAWAL:
 func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error {
 	var err error
 
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainID(), WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		if ctx.BlockTime().After(withdrawal.CompletionTime.Add(24 * time.Hour)) {
 			k.Logger(ctx).Info("garbage collecting completed unbondings")
-			k.DeleteWithdrawalRecord(ctx, zone.ChainID(), withdrawal.Txhash, WithdrawStatusCompleted)
+			k.DeleteWithdrawalRecord(ctx, zone.ID(), withdrawal.Txhash, WithdrawStatusCompleted)
 		}
 		return false
 	})
