@@ -59,6 +59,11 @@ service Query {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records";
   }
 
+  // WithdrawalRecords provides data on the active withdrawals.
+  rpc UserWithdrawalRecords(QueryUserWithdrawalRecordsRequest) returns (QueryWithdrawalRecordsResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/users/{user_address}/withdrawal_records";
+  }
+
   // UnbondingRecords provides data on the active unbondings.
   rpc UnbondingRecords(QueryUnbondingRecordsRequest) returns (QueryUnbondingRecordsResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/unbonding_records";
@@ -168,6 +173,12 @@ message QueryWithdrawalRecordsRequest {
 message QueryWithdrawalRecordsResponse {
   repeated WithdrawalRecord withdrawals = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryUserWithdrawalRecordsRequest {
+  string user_address = 1 [(gogoproto.moretags) = "cosmos.AddressString"];
+  string delegator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
 
 message QueryUnbondingRecordsRequest {
