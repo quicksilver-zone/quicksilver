@@ -16,12 +16,28 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// HandleRegisterZoneProposal is a handler for executing a passed community spend proposal.
+// HandleRegisterZoneProposal is a handler for executing a register zone proposal.
 func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZoneProposal) error {
 	// get chain id from connection
 	chainID, err := k.GetChainID(ctx, p.ConnectionId)
 	if err != nil {
 		return fmt.Errorf("unable to obtain chain id: %w", err)
+	}
+
+	// if subzone
+	if p.SubzoneInfo != nil {
+		if chainID != p.SubzoneInfo.BaseChainID {
+			return fmt.Errorf("incorrect ID \"%s\" for subzone \"%s\"", chainID, p.SubzoneInfo.BaseChainID)
+		}
+
+		// get zone
+		_, found := k.GetZone(ctx, p.SubzoneInfo.BaseChainID)
+		if !found {
+			return fmt.Errorf("unable to find base chain \"%s\" for subzone \"%s\"", chainID, p.SubzoneInfo.BaseChainID)
+		}
+
+		// set chainID to be specified unique ID
+		chainID = p.SubzoneInfo.ChainID
 	}
 
 	// get zone
