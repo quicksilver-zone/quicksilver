@@ -4,4 +4,5 @@ import "testing"
 
 func TestHandleRegisterZoneProposal(t *testing.T) {
 	// TODO test
+	_ = t
 }
