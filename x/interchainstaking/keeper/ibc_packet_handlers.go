@@ -497,7 +497,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 	var err error
 
-	k.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation types.RedelegationRecord) bool {
+	k.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation types.RedelegationRecord) (stop bool) {
 		// if the redelegation completion time was in the past AND is not 0000-00-00T00:00:00Z, then delete it.
 		if ctx.BlockTime().After(redelegation.CompletionTime) && !redelegation.CompletionTime.Equal(time.Time{}) {
 			k.Logger(ctx).Info("garbage collecting completed redelegations", "key", key, "completion", redelegation.CompletionTime)
@@ -512,7 +512,7 @@ func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) error {
 	var err error
 
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) (stop bool) {
 		if ctx.BlockTime().After(withdrawal.CompletionTime) && !withdrawal.CompletionTime.Equal(time.Time{}) { // completion date has passed.
 			k.Logger(ctx).Info("found completed unbonding")
 			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}

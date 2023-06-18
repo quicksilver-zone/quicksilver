@@ -18,6 +18,11 @@ import (
 
 // HandleRegisterZoneProposal is a handler for executing a register zone proposal.
 func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZoneProposal) error {
+	var (
+		baseZone types.Zone
+		found    bool
+	)
+
 	// get chain id from connection
 	chainID, err := k.GetChainID(ctx, p.ConnectionId)
 	if err != nil {
@@ -31,7 +36,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		}
 
 		// get zone
-		_, found := k.GetZone(ctx, p.SubzoneInfo.BaseChainID)
+		baseZone, found = k.GetZone(ctx, p.SubzoneInfo.BaseChainID)
 		if !found {
 			return fmt.Errorf("unable to find base chain \"%s\" for subzone \"%s\"", chainID, p.SubzoneInfo.BaseChainID)
 		}
@@ -41,7 +46,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	}
 
 	// get zone
-	_, found := k.GetZone(ctx, chainID)
+	_, found = k.GetZone(ctx, chainID)
 	if found {
 		return fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainID)
 	}
@@ -83,6 +88,14 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		Is_118:             p.Is_118,
 		SubzoneInfo:        p.SubzoneInfo,
 	}
+
+	// verify subzone if setting
+	if zone.IsSubzone() {
+		if err := types.ValidateSubzoneForBasezone(*zone, baseZone); err != nil {
+			return err
+		}
+	}
+
 	k.SetZone(ctx, zone)
 
 	// generate deposit account
