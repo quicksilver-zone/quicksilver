@@ -81,6 +81,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 		MessagesPerTx:      p.MessagesPerTx,
 		Is_118:             p.Is_118,
+		SubzoneInfo:        p.SubzoneInfo,
 	}
 	k.SetZone(ctx, zone)
 
@@ -255,32 +256,32 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			portOwner := zone.ChainID() + ".deposit"
+			portOwner := zone.ID() + ".deposit"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			// generate withdrawal account
-			portOwner = zone.ChainID() + ".withdrawal"
+			portOwner = zone.ID() + ".withdrawal"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			// generate perf account
-			portOwner = zone.ChainID() + ".performance"
+			portOwner = zone.ID() + ".performance"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			// generate delegate accounts
-			portOwner = zone.ChainID() + ".delegate"
+			portOwner = zone.ID() + ".delegate"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 			query := stakingTypes.QueryValidatorsRequest{}
-			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ID(), query, sdkmath.NewInt(period))
 			if err != nil {
 				return err
 			}
@@ -291,7 +292,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 	}
 	k.SetZone(ctx, &zone)
 
-	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ChainID())
+	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ID())
 
 	return nil
 }
