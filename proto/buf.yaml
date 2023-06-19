@@ -3,3 +3,6 @@ name: buf.build/ingenuity-build/quicksilver
 deps:
   - buf.build/cosmos/cosmos-sdk:8cb30a2c4de74dc9bd8d260b1e75e176
   - buf.build/johnletey/ibc:v5.2.0
+  - buf.build/cosmos/cosmos-proto
+  - buf.build/cosmos/gogo-proto
+  - buf.build/googleapis/googleapis
