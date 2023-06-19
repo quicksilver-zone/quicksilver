@@ -236,6 +236,10 @@ func (k *Keeper) UserWithdrawalRecords(c context.Context, req *types.QueryUserWi
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	if _, err := addressutils.AddressFromBech32(req.UserAddress, ""); err != nil {
+		return nil, err
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	withdrawalrecords := k.AllUserWithdrawalRecords(ctx, req.UserAddress)
