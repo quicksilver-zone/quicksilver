@@ -141,7 +141,7 @@ func (k *Keeper) AllWithdrawalRecords(ctx sdk.Context) []types.WithdrawalRecord 
 func (k *Keeper) AllUserWithdrawalRecords(ctx sdk.Context, address string) []types.WithdrawalRecord {
 	records := []types.WithdrawalRecord{}
 	k.IterateWithdrawalRecords(ctx, func(_ int64, record types.WithdrawalRecord) (stop bool) {
-		if record.Recipient == address {
+		if record.Delegator == address {
 			records = append(records, record)
 		}
 		return false
