@@ -666,7 +666,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 				)
 			},
 			&types.QueryUserWithdrawalRecordsRequest{
-				UserAddress: testAddress,
+				UserAddress: "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
 			},
 			false,
 			1,
