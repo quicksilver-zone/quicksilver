@@ -120,7 +120,7 @@ message SubzoneInfo {
       string chainID = 3;
 }
 ```
-The `SubzoneInfo` `authority` field is the whilelisted Quicksilver account which controls this subzone.  The `BaseChainID`
+The `SubzoneInfo` `authority` field is the whitelisted Quicksilver account which controls this subzone.  The `BaseChainID`
 field is a reference to the "base" or "parent" chain that this zone is a sub-zone of.  For example, if a base zone for
 the Cosmos Hub with chainID "gaia-5" exists, an `authority` could propose to create a new `sub-zone` with "gaia-5" as its
 base zone.
