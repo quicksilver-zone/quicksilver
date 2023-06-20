@@ -434,7 +434,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
-		zone.ChainID(),
+		zone.ID(),
 		types.BankStoreKey,
 		append(data, []byte(zone.BaseDenom)...),
 		sdk.NewInt(-1),
@@ -446,7 +446,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 	return nil
 }
 
-func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, chainID string, validatorsReq stakingtypes.QueryValidatorsRequest, period sdkmath.Int) error {
+func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, zoneID string, validatorsReq stakingtypes.QueryValidatorsRequest, period sdkmath.Int) error {
 	bz, err := k.cdc.Marshal(&validatorsReq)
 	if err != nil {
 		return errors.New("failed to marshal valset pagination request")
@@ -455,7 +455,7 @@ func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, chainID string, 
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		connectionID,
-		chainID,
+		zoneID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz,
 		period,
@@ -467,13 +467,13 @@ func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, chainID string, 
 	return nil
 }
 
-func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) {
+func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, zoneID string, validator stakingtypes.Validator) {
 	_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
 	data := stakingtypes.GetValidatorKey(addr)
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		connectionID,
-		chainID,
+		zoneID,
 		"store/staking/key",
 		data,
 		sdk.NewInt(-1),

@@ -246,7 +246,16 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 			continue
 		}
 		k.Logger(ctx).Info("Found previously unhandled tx. Processing.", "txhash", txn.TxHash)
-		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
+		k.ICQKeeper.MakeRequest(
+			ctx,
+			query.ConnectionId,
+			query.ChainId,
+			"tendermint.Tx",
+			hashBytes, sdk.NewInt(-1),
+			types.ModuleName,
+			"deposittx",
+			0,
+		)
 	}
 	return nil
 }

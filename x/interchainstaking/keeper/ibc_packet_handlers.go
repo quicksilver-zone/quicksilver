@@ -491,7 +491,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
-	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ID(), query, sdkmath.NewInt(period))
 }
 
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
@@ -1029,7 +1029,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
-	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ID(), query, sdkmath.NewInt(period))
 	if err != nil {
 		return err
 	}

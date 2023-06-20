@@ -46,7 +46,6 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 	switch {
 	// deposit address
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixDeposit:
-
 		if zone.DepositAddress == nil {
 			zone.DepositAddress, err = types.NewICAAccount(address, portID)
 			if err != nil {
@@ -64,7 +63,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				connectionID,
-				chainID,
+				zone.ChainID(),
 				"cosmos.bank.v1beta1.Query/AllBalances",
 				bz,
 				sdk.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),

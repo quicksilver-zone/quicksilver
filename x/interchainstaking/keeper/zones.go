@@ -327,7 +327,7 @@ func (k *Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone) 
 	k.Logger(ctx).Info("Initialize performance delegations")
 
 	delegations := k.GetAllPerformanceDelegations(ctx, &zone)
-	validatorsToDelegate := []string{}
+	var validatorsToDelegate []string
 OUTER:
 	for _, v := range k.GetActiveValidators(ctx, zone.ChainID()) {
 		for _, d := range delegations {

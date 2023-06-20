@@ -124,7 +124,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingTypes.QueryValidatorsRequest{}
-	err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+	err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ID(), query, sdkmath.NewInt(period))
 	if err != nil {
 		return err
 	}
