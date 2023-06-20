@@ -28,6 +28,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010403rc0UpgradeName, CreateUpgradeHandler: V010403rc0UpgradeHandler},
 		{UpgradeName: V010404beta0UpgradeName, CreateUpgradeHandler: V010404beta0UpgradeHandler},
 		{UpgradeName: V010404beta1UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010404beta2UpgradeName, CreateUpgradeHandler: V010404beta2UpgradeHandler},
 	}
 }
 
@@ -289,6 +290,32 @@ func V010404beta0UpgradeHandler(
 				appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
 				return false
 			})
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta2UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTest(ctx) || isDevnet(ctx) {
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "elgafar-1")
+			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, "elgafar-1")
+			for _, val := range vals {
+				valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "starsvaloper")
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, "elgafar-1", valoper)
+			}
+
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, "evmos_9000-4")
+			vals2 := appKeepers.InterchainstakingKeeper.GetValidators(ctx, "evmos_9000-4")
+			for _, val2 := range vals2 {
+				valoper, _ := addressutils.ValAddressFromBech32(val2.ValoperAddress, "evmosvaloper")
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, "evmos_9000-4", valoper)
+			}
 		}
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
