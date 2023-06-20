@@ -48,7 +48,7 @@ service Query {
   }
 
   rpc TxStatus(QueryTxStatusRequest) returns (QueryTxStatusResponse) {
-    option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/txhashes/{tx_hash}";
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/deposits/{tx_hash}";
   }
 
   // WithdrawalRecords provides data on the active withdrawals.
