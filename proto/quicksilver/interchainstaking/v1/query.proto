@@ -177,7 +177,7 @@ message QueryWithdrawalRecordsResponse {
 
 message QueryUserWithdrawalRecordsRequest {
   string user_address = 1 [(gogoproto.moretags) = "cosmos.AddressString"];
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryUnbondingRecordsRequest {
