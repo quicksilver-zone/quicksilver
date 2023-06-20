@@ -182,7 +182,7 @@ message QueryUserWithdrawalRecordsRequest {
 
 message QueryUnbondingRecordsRequest {
   string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryUnbondingRecordsResponse {
