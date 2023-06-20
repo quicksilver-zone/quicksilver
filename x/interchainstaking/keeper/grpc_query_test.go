@@ -493,6 +493,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()
+	suite.setupTestZones()
 
 	testReceiptHash := "testReceiptHash#01"
 
@@ -512,11 +513,19 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 			true,
 		},
 		{
-			"Invalid_Zone",
-			func() {
-				// setup zones
-				suite.setupTestZones()
+			"empty_TxHash",
+			func() {},
+			&types.QueryTxStatusRequest{
+				ChainId: suite.chainB.ChainID,
+				TxHash:  "",
 			},
+			func(context sdk.Context, response *types.QueryTxStatusResponse) {
+			},
+			true,
+		},
+		{
+			"Invalid_Zone",
+			func() {},
 			&types.QueryTxStatusRequest{
 				ChainId: "boguschain",
 				TxHash:  "unimportant",
@@ -533,6 +542,7 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 				TxHash:  "randomhash",
 			},
 			func(context sdk.Context, response *types.QueryTxStatusResponse) {
+				suite.Require().EqualValues(response, &types.QueryTxStatusResponse{&types.Receipt{}})
 			},
 			false,
 		},

@@ -199,6 +199,10 @@ func (k *Keeper) TxStatus(c context.Context, req *types.QueryTxStatusRequest) (*
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
+	if len(req.GetTxHash()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "tx hash cannot be empty")
+	}
+
 	ctx := sdk.UnwrapSDKContext(c)
 
 	zone, found := k.GetZone(ctx, req.GetChainId())
