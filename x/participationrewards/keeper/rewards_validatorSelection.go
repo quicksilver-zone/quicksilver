@@ -160,7 +160,7 @@ func (k Keeper) CalcOverallScores(
 
 	rewards := delegatorRewards.GetRewards()
 	if rewards == nil {
-		err := errors.New("No delegator rewards")
+		err := errors.New("no delegator rewards")
 		k.Logger(ctx).Error(err.Error())
 		return err
 	}
@@ -168,7 +168,7 @@ func (k Keeper) CalcOverallScores(
 	total := delegatorRewards.GetTotal().AmountOf(zone.BaseDenom)
 
 	if total.IsZero() {
-		err := errors.New("No delegator rewards (2)")
+		err := errors.New("no delegator rewards (2)")
 		k.Logger(ctx).Error(err.Error())
 		return err
 	}

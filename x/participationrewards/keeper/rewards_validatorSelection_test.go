@@ -60,14 +60,14 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 			},
 			validatorScores: func(ctx sdk.Context, appA *app.Quicksilver, chainId string) map[string]*types.Validator {
 				validatorScores := make(map[string]*types.Validator)
-
-				for _, val := range appA.InterchainstakingKeeper.GetValidators(ctx, chainId) {
-					val.Score = sdk.NewDec(1)
-					validatorScores[val.ValoperAddress] = &types.Validator{
+				validators := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
+				for i, _ := range validators {
+					validators[i].Score = sdk.NewDec(1)
+					validatorScores[validators[i].ValoperAddress] = &types.Validator{
 						PowerPercentage:   sdk.NewDec(1),
 						DistributionScore: sdk.NewDec(1),
 						PerformanceScore:  sdk.NewDec(1),
-						Validator:         &val,
+						Validator:         &validators[i],
 					}
 				}
 				return validatorScores
@@ -94,13 +94,14 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 			validatorScores: func(ctx sdk.Context, appA *app.Quicksilver, chainId string) map[string]*types.Validator {
 				validatorScores := make(map[string]*types.Validator)
 
-				for _, val := range appA.InterchainstakingKeeper.GetValidators(ctx, chainId) {
-					val.Score = sdk.NewDec(1)
-					validatorScores[val.ValoperAddress] = &types.Validator{
+				validators := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
+				for i, _ := range validators {
+					validators[i].Score = sdk.NewDec(1)
+					validatorScores[validators[i].ValoperAddress] = &types.Validator{
 						PowerPercentage:   sdk.NewDec(1),
 						DistributionScore: sdk.NewDec(1),
 						PerformanceScore:  sdk.NewDec(1),
-						Validator:         &val,
+						Validator:         &validators[i],
 					}
 				}
 				return validatorScores
@@ -137,13 +138,14 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 			validatorScores: func(ctx sdk.Context, appA *app.Quicksilver, chainId string) map[string]*types.Validator {
 				validatorScores := make(map[string]*types.Validator)
 
-				for _, val := range appA.InterchainstakingKeeper.GetValidators(ctx, chainId) {
-					val.Score = sdk.NewDec(1)
-					validatorScores[val.ValoperAddress] = &types.Validator{
+				validators := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
+				for i, _ := range validators {
+					validators[i].Score = sdk.NewDec(1)
+					validatorScores[validators[i].ValoperAddress] = &types.Validator{
 						PowerPercentage:   sdk.NewDec(1),
 						DistributionScore: sdk.NewDec(1),
 						PerformanceScore:  sdk.NewDec(1),
-						Validator:         &val,
+						Validator:         &validators[i],
 					}
 				}
 				return validatorScores
@@ -180,13 +182,14 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 			validatorScores: func(ctx sdk.Context, appA *app.Quicksilver, chainId string) map[string]*types.Validator {
 				validatorScores := make(map[string]*types.Validator)
 
-				for _, val := range appA.InterchainstakingKeeper.GetValidators(ctx, chainId) {
-					val.Score = sdk.NewDec(1)
-					validatorScores[val.ValoperAddress] = &types.Validator{
+				validators := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
+				for i, _ := range validators {
+					validators[i].Score = sdk.NewDec(1)
+					validatorScores[validators[i].ValoperAddress] = &types.Validator{
 						PowerPercentage:   sdk.NewDec(1),
 						DistributionScore: sdk.NewDec(1),
 						PerformanceScore:  sdk.NewDec(1),
-						Validator:         &val,
+						Validator:         &validators[i],
 					}
 				}
 				return validatorScores
@@ -281,9 +284,10 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 				})
 				zone.ValidatorSelectionAllocation = 5000
 
-				for _, val := range appA.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId) {
-					val.VotingPower = sdk.NewInt(0)
-					appA.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val)
+				validators := appA.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				for i, _ := range validators {
+					validators[i].VotingPower = sdk.NewInt(0)
+					appA.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, validators[i])
 				}
 
 				appA.InterchainstakingKeeper.SetZone(ctx, &zone)
@@ -291,13 +295,14 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 			validatorScores: func(ctx sdk.Context, appA *app.Quicksilver, chainId string) map[string]*types.Validator {
 				validatorScores := make(map[string]*types.Validator)
 
-				for _, val := range appA.InterchainstakingKeeper.GetValidators(ctx, chainId) {
-					val.Score = sdk.NewDec(1)
-					validatorScores[val.ValoperAddress] = &types.Validator{
+				validators := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
+				for i, _ := range validators {
+					validators[i].Score = sdk.NewDec(1)
+					validatorScores[validators[i].ValoperAddress] = &types.Validator{
 						PowerPercentage:   sdk.NewDec(1),
 						DistributionScore: sdk.NewDec(1),
 						PerformanceScore:  sdk.NewDec(1),
-						Validator:         &val,
+						Validator:         &validators[i],
 					}
 				}
 				return validatorScores
