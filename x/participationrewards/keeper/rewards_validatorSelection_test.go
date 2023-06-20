@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 			validatorScores: func(ctx sdk.Context, appA *app.Quicksilver, chainId string) map[string]*types.Validator {
 				validatorScores := make(map[string]*types.Validator)
 				validators := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
-				for i, _ := range validators {
+				for i := range validators {
 					validators[i].Score = sdk.NewDec(1)
 					validatorScores[validators[i].ValoperAddress] = &types.Validator{
 						PowerPercentage:   sdk.NewDec(1),
@@ -95,7 +95,7 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 				validatorScores := make(map[string]*types.Validator)
 
 				validators := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
-				for i, _ := range validators {
+				for i := range validators {
 					validators[i].Score = sdk.NewDec(1)
 					validatorScores[validators[i].ValoperAddress] = &types.Validator{
 						PowerPercentage:   sdk.NewDec(1),
@@ -139,7 +139,7 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 				validatorScores := make(map[string]*types.Validator)
 
 				validators := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
-				for i, _ := range validators {
+				for i := range validators {
 					validators[i].Score = sdk.NewDec(1)
 					validatorScores[validators[i].ValoperAddress] = &types.Validator{
 						PowerPercentage:   sdk.NewDec(1),
@@ -183,7 +183,7 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 				validatorScores := make(map[string]*types.Validator)
 
 				validators := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
-				for i, _ := range validators {
+				for i := range validators {
 					validators[i].Score = sdk.NewDec(1)
 					validatorScores[validators[i].ValoperAddress] = &types.Validator{
 						PowerPercentage:   sdk.NewDec(1),
@@ -285,7 +285,7 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 				zone.ValidatorSelectionAllocation = 5000
 
 				validators := appA.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
-				for i, _ := range validators {
+				for i := range validators {
 					validators[i].VotingPower = sdk.NewInt(0)
 					appA.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, validators[i])
 				}
@@ -296,7 +296,7 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 				validatorScores := make(map[string]*types.Validator)
 
 				validators := appA.InterchainstakingKeeper.GetValidators(ctx, chainId)
-				for i, _ := range validators {
+				for i := range validators {
 					validators[i].Score = sdk.NewDec(1)
 					validatorScores[validators[i].ValoperAddress] = &types.Validator{
 						PowerPercentage:   sdk.NewDec(1),
