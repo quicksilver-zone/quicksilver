@@ -9,12 +9,13 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/ingenuity-build/quicksilver/app/upgrades"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
-	"github.com/stretchr/testify/suite"
 )
 
 func init() {
