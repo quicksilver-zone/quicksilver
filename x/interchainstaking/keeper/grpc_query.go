@@ -198,7 +198,7 @@ func (k *Keeper) TxStatus(c context.Context, req *types.QueryTxStatusRequest) (*
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
-	if len(req.GetTxHash()) == 0 {
+	if req.GetTxHash() == "" {
 		return nil, status.Error(codes.InvalidArgument, "tx hash cannot be empty")
 	}
 
@@ -219,7 +219,7 @@ func (k *Keeper) TxStatus(c context.Context, req *types.QueryTxStatusRequest) (*
 		return false
 	})
 
-	return &types.QueryTxStatusResponse{txReceipt}, nil
+	return &types.QueryTxStatusResponse{Receipt: txReceipt}, nil
 }
 
 func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
