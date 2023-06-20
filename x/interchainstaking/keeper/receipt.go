@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
@@ -217,6 +218,13 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	}
 
 	k.Logger(ctx).Info("Transferred qAssets to sender", "assets", qAssets, "sender", sender)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			minttypes.EventTypeMint,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, qAssets.AmountOf(zone.LocalDenom).String()),
+		),
+	)
 	return nil
 }
 
