@@ -497,19 +497,32 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 
 	testReceiptHash := "testReceiptHash#01"
 
+	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.Require().True(found)
+
+	// set receipts
+	testReceipt := icsKeeper.NewReceipt(
+		ctx,
+		&zone,
+		testAddress,
+		testReceiptHash,
+		sdk.NewCoins(
+			sdk.NewCoin(zone.BaseDenom, math.NewInt(50000000)),
+		),
+	)
+
 	tests := []struct {
 		name     string
 		malleate func()
 		req      *types.QueryTxStatusRequest
-		verify   func(sdk.Context, *types.QueryTxStatusResponse)
+		want     *types.QueryTxStatusResponse
 		wantErr  bool
 	}{
 		{
 			"Nil_Request",
 			func() {},
 			nil,
-			func(context sdk.Context, response *types.QueryTxStatusResponse) {
-			},
+			nil,
 			true,
 		},
 		{
@@ -519,8 +532,7 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 				ChainId: suite.chainB.ChainID,
 				TxHash:  "",
 			},
-			func(context sdk.Context, response *types.QueryTxStatusResponse) {
-			},
+			nil,
 			true,
 		},
 		{
@@ -530,60 +542,29 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 				ChainId: "boguschain",
 				TxHash:  "unimportant",
 			},
-			func(context sdk.Context, response *types.QueryTxStatusResponse) {
-			},
+			nil,
 			true,
 		},
 		{
-			"Receipts_No_Zone_Receipts",
-			func() {},
-			&types.QueryTxStatusRequest{
+			name:     "Receipts_No_Zone_Receipts",
+			malleate: func() {},
+			req: &types.QueryTxStatusRequest{
 				ChainId: suite.chainB.ChainID,
 				TxHash:  "randomhash",
 			},
-			func(context sdk.Context, response *types.QueryTxStatusResponse) {
-				suite.Require().EqualValues(response, &types.QueryTxStatusResponse{&types.Receipt{}})
-			},
-			false,
+			want:    &types.QueryTxStatusResponse{&types.Receipt{}},
+			wantErr: false,
 		},
 		{
 			"Receipts_Valid_Receipts",
 			func() {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
-
-				// set receipts
-				receipt := icsKeeper.NewReceipt(
-					ctx,
-					&zone,
-					testAddress,
-					testReceiptHash,
-					sdk.NewCoins(
-						sdk.NewCoin(zone.BaseDenom, math.NewInt(50000000)),
-					),
-				)
-				icsKeeper.SetReceipt(ctx, *receipt)
+				icsKeeper.SetReceipt(ctx, *testReceipt)
 			},
 			&types.QueryTxStatusRequest{
 				ChainId: suite.chainB.ChainID,
 				TxHash:  testReceiptHash,
 			},
-			func(ctx sdk.Context, response *types.QueryTxStatusResponse) {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
-
-				receipt := icsKeeper.NewReceipt(
-					ctx,
-					&zone,
-					testAddress,
-					testReceiptHash,
-					sdk.NewCoins(
-						sdk.NewCoin(zone.BaseDenom, math.NewInt(50000000)),
-					),
-				)
-
-				suite.Require().EqualValues(response, &types.QueryTxStatusResponse{Receipt: receipt})
-			},
+			&types.QueryTxStatusResponse{Receipt: testReceipt},
 			false,
 		},
 	}
@@ -603,8 +584,7 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 			}
 			suite.Require().NoError(err)
 			suite.Require().NotNil(resp)
-
-			tt.verify(ctx, resp)
+			suite.Require().EqualValues(tt.want, resp)
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
 			suite.Require().NoError(err)
