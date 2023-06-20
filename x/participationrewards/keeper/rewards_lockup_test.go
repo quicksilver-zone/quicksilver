@@ -7,7 +7,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestAllocateLockupRewards() {
-
 	tests := []struct {
 		name          string
 		getAllocation func(types.Context, *app.Quicksilver) int64

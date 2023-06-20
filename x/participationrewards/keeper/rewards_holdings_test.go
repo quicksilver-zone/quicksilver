@@ -144,6 +144,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 		})
 	}
 }
+
 func (suite *KeeperTestSuite) TestAllocateHoldingsRewards() {
 	user1 := addressutils.GenerateAccAddressForTest()
 	user2 := addressutils.GenerateAccAddressForTest()

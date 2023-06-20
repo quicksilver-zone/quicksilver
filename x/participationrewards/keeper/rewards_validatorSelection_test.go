@@ -1,13 +1,14 @@
 package keeper_test
 
 import (
+	"strings"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	"strings"
 )
 
 var (
@@ -16,7 +17,6 @@ var (
 )
 
 func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
-
 	tests := []struct {
 		name            string
 		malleate        func(sdk.Context, *app.Quicksilver)
@@ -238,8 +238,8 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 		})
 	}
 }
-func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 
+func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 	tests := []struct {
 		name            string
 		malleate        func(sdk.Context, *app.Quicksilver)
@@ -362,7 +362,6 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 				suite.Require().Equal(zs.ValidatorScores[validators[0].ValoperAddress].DistributionScore, sdk.NewDec(1))
 				suite.Require().Equal(strings.TrimRight(zs.ValidatorScores[validators[1].ValoperAddress].DistributionScore.String(), "0"), "0.75")
 				suite.Require().Equal(strings.TrimRight(zs.ValidatorScores[validators[2].ValoperAddress].DistributionScore.String(), "0"), "0.5")
-
 			},
 			wantErr: false,
 		},
@@ -403,8 +402,8 @@ func (suite *KeeperTestSuite) TestCalcDistributionScores() {
 		})
 	}
 }
-func (suite *KeeperTestSuite) TestCalcOverallScores() {
 
+func (suite *KeeperTestSuite) TestCalcOverallScores() {
 	tests := []struct {
 		name             string
 		malleate         func(sdk.Context, *app.Quicksilver)
