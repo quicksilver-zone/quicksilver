@@ -193,6 +193,32 @@ func (k *Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*
 	return &types.QueryReceiptsResponse{Receipts: receipts}, nil
 }
 
+func (k *Keeper) TxStatus(c context.Context, req *types.QueryTxStatusRequest) (*types.QueryTxStatusResponse, error) {
+	// TODO: implement pagination
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	zone, found := k.GetZone(ctx, req.GetChainId())
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+	}
+
+	var txReceipt types.Receipt
+
+	k.IterateZoneReceipts(ctx, &zone, func(_ int64, receipt types.Receipt) (stop bool) {
+		if receipt.Txhash == req.GetTxHash() {
+			txReceipt = receipt
+			return true
+		}
+		return false
+	})
+
+	return &types.QueryTxStatusResponse{&txReceipt}, nil
+}
+
 func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
