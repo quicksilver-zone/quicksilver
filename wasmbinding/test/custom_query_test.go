@@ -110,7 +110,7 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksi
 	checksum, err := hex.DecodeString("DF10BCE8651C409945203319137C69F548183B26E97DCB7898DC51E572740552")
 	require.NoError(t, err)
 
-	src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) {
+	src := wasmtypes.StoreCodeProposalFixture(func(p *wasmtypes.StoreCodeProposal) { //nolint:staticcheck
 		p.RunAs = addr.String()
 		p.WASMByteCode = wasmCode
 		p.CodeHash = checksum

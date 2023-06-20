@@ -82,7 +82,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	if zone.LiquidityModule {
-		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil { //nolint:contextcheck
 			return nil, fmt.Errorf("unable to process redemption for LSM: %w", err)
 		}
 	} else {
@@ -176,7 +176,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
 	}
 
-	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
+	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil { //nolint:contextcheck
 		return &types.MsgGovReopenChannelResponse{}, err
 	}
 

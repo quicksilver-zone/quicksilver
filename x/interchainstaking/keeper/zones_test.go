@@ -93,7 +93,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 			RedemptionRate:     sdk.ZeroDec(),
 			LastRedemptionRate: sdk.ZeroDec(),
 			Tvl:                sdk.ZeroDec(),
-			Is_118: true,
+			Is_118:             true,
 		}
 		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainId)
 		kpr.SetZone(ctx, &zone)
