@@ -206,17 +206,17 @@ func (k *Keeper) TxStatus(c context.Context, req *types.QueryTxStatusRequest) (*
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
 
-	var txReceipt types.Receipt
+	txReceipt := &types.Receipt{}
 
 	k.IterateZoneReceipts(ctx, &zone, func(_ int64, receipt types.Receipt) (stop bool) {
 		if receipt.Txhash == req.GetTxHash() {
-			txReceipt = receipt
+			txReceipt = &receipt
 			return true
 		}
 		return false
 	})
 
-	return &types.QueryTxStatusResponse{&txReceipt}, nil
+	return &types.QueryTxStatusResponse{txReceipt}, nil
 }
 
 func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
