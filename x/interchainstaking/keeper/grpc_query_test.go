@@ -490,6 +490,120 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	testReceiptHash := "testReceiptHash#01"
+
+	tests := []struct {
+		name     string
+		malleate func()
+		req      *types.QueryTxStatusRequest
+		verify   func(sdk.Context, *types.QueryTxStatusResponse)
+		wantErr  bool
+	}{
+		{
+			"Nil_Request",
+			func() {},
+			nil,
+			func(context sdk.Context, response *types.QueryTxStatusResponse) {
+			},
+			true,
+		},
+		{
+			"Invalid_Zone",
+			func() {
+				// setup zones
+				suite.setupTestZones()
+			},
+			&types.QueryTxStatusRequest{
+				ChainId: "boguschain",
+				TxHash:  "unimportant",
+			},
+			func(context sdk.Context, response *types.QueryTxStatusResponse) {
+			},
+			true,
+		},
+		{
+			"Receipts_No_Zone_Receipts",
+			func() {},
+			&types.QueryTxStatusRequest{
+				ChainId: suite.chainB.ChainID,
+				TxHash:  "randomhash",
+			},
+			func(context sdk.Context, response *types.QueryTxStatusResponse) {
+			},
+			false,
+		},
+		{
+			"Receipts_Valid_Receipts",
+			func() {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.Require().True(found)
+
+				// set receipts
+				receipt := icsKeeper.NewReceipt(
+					ctx,
+					&zone,
+					testAddress,
+					testReceiptHash,
+					sdk.NewCoins(
+						sdk.NewCoin(zone.BaseDenom, math.NewInt(50000000)),
+					),
+				)
+				icsKeeper.SetReceipt(ctx, *receipt)
+			},
+			&types.QueryTxStatusRequest{
+				ChainId: suite.chainB.ChainID,
+				TxHash:  testReceiptHash,
+			},
+			func(ctx sdk.Context, response *types.QueryTxStatusResponse) {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.Require().True(found)
+
+				receipt := icsKeeper.NewReceipt(
+					ctx,
+					&zone,
+					testAddress,
+					testReceiptHash,
+					sdk.NewCoins(
+						sdk.NewCoin(zone.BaseDenom, math.NewInt(50000000)),
+					),
+				)
+
+				suite.Require().EqualValues(response, &types.QueryTxStatusResponse{Receipt: receipt})
+			},
+			false,
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.TxStatus(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+
+			tt.verify(ctx, resp)
+
+			vstr, err := json.MarshalIndent(resp, "", "\t")
+			suite.Require().NoError(err)
+
+			suite.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()
