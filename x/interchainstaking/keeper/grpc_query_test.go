@@ -500,7 +500,6 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
 
-	// set receipts
 	testReceipt := icsKeeper.NewReceipt(
 		ctx,
 		&zone,
