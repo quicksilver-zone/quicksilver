@@ -6,7 +6,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/app"
 )
 
-func (s *KeeperTestSuite) TestAllocateLockupRewards() {
+func (suite *KeeperTestSuite) TestAllocateLockupRewards() {
 
 	tests := []struct {
 		name          string
@@ -53,11 +53,11 @@ func (s *KeeperTestSuite) TestAllocateLockupRewards() {
 	for _, tt := range tests {
 		tt := tt
 
-		s.Run(tt.name, func() {
-			s.SetupTest()
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
 
-			appA := s.GetQuicksilverApp(s.chainA)
-			ctx := s.chainA.GetContext()
+			appA := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
 
 			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
 			params.ClaimsEnabled = true
@@ -67,11 +67,11 @@ func (s *KeeperTestSuite) TestAllocateLockupRewards() {
 			allocation := tt.getAllocation(ctx, appA)
 
 			if err := appA.ParticipationRewardsKeeper.AllocateLockupRewards(ctx, math.NewInt(allocation)); err != nil {
-				s.Require().True((err != nil) == tt.wantErr)
+				suite.Require().True((err != nil) == tt.wantErr)
 				return
 			}
 			finalBalance := appA.ParticipationRewardsKeeper.GetModuleBalance(ctx).Int64()
-			s.Require().Equal(initialBalance-finalBalance, allocation)
+			suite.Require().Equal(initialBalance-finalBalance, allocation)
 		})
 	}
 }
