@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"cosmossdk.io/math"
-	"github.com/coinbase/rosetta-sdk-go/storage/errors"
+	"errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -11,7 +11,7 @@ import (
 func (k Keeper) AllocateLockupRewards(ctx sdk.Context, allocation math.Int) error {
 	if allocation.IsNegative() {
 		k.Logger(ctx).Error("invalid allocation requested", "allocation", allocation)
-		return errors.ErrInvalidValue
+		return errors.New("invalid allocation")
 	}
 	k.Logger(ctx).Info("allocateLockupRewards", "allocation", allocation)
 
