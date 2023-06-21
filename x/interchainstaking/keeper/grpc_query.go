@@ -204,22 +204,12 @@ func (k *Keeper) TxStatus(c context.Context, req *types.QueryTxStatusRequest) (*
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	zone, found := k.GetZone(ctx, req.GetChainId())
+	txReceipt, found := k.GetReceipt(ctx, types.GetReceiptKey(req.GetChainId(), req.GetTxHash()))
 	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no ceipt found matching %s", req.TxHash))
 	}
 
-	txReceipt := &types.Receipt{}
-
-	k.IterateZoneReceipts(ctx, &zone, func(_ int64, receipt types.Receipt) (stop bool) {
-		if receipt.Txhash == req.GetTxHash() {
-			txReceipt = &receipt
-			return true
-		}
-		return false
-	})
-
-	return &types.QueryTxStatusResponse{Receipt: txReceipt}, nil
+	return &types.QueryTxStatusResponse{Receipt: &txReceipt}, nil
 }
 
 func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
