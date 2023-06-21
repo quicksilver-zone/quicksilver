@@ -146,7 +146,7 @@ func (k *Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorInt
 	return &types.QueryDelegatorIntentResponse{Intent: &intent}, nil
 }
 
-// DelegatorIntents returns information about the delegation intent of the caller for all zones.
+// DelegatorIntents returns information about the delegation intent of the given delegator for all zones.
 func (k *Keeper) DelegatorIntents(c context.Context, req *types.QueryDelegatorIntentsRequest) (*types.QueryDelegatorIntentsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
