@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	utils "github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 const expectedDenom = "denom"
@@ -21,7 +22,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 		{
 			"valid",
 			func() (sdk.AccAddress, []byte) {
-				accAddr := utils.GenerateAccAddressForTest()
+				accAddr := addressutils.GenerateAccAddressForTest()
 				key := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
 				key = append(key, []byte(expectedDenom)...)
 				return accAddr, key
@@ -31,9 +32,9 @@ func TestDenomFromRequestKey(t *testing.T) {
 		{
 			"invalid - address mismatch",
 			func() (sdk.AccAddress, []byte) {
-				keyAddr, err := utils.AccAddressFromBech32("cosmos135rd8ft0dyq8fv3w3hhmaa55qu3pe668j99qh67mg747ew4ad03qsgq8vh", "cosmos")
+				keyAddr, err := addressutils.AccAddressFromBech32("cosmos135rd8ft0dyq8fv3w3hhmaa55qu3pe668j99qh67mg747ew4ad03qsgq8vh", "cosmos")
 				require.NoError(t, err)
-				checkAddr, err := utils.AccAddressFromBech32("cosmos1ent5eg0xn3pskf3fhdw8mky88ry7t4kx628ru3pzp4nqjp6eufusphlldy", "cosmos")
+				checkAddr, err := addressutils.AccAddressFromBech32("cosmos1ent5eg0xn3pskf3fhdw8mky88ry7t4kx628ru3pzp4nqjp6eufusphlldy", "cosmos")
 				require.NoError(t, err)
 				key := banktypes.CreateAccountBalancesPrefix(keyAddr.Bytes())
 				key = append(key, []byte(expectedDenom)...)
@@ -54,7 +55,7 @@ func TestDenomFromRequestKey(t *testing.T) {
 		{
 			"invalid - empty denom",
 			func() (sdk.AccAddress, []byte) {
-				accAddr := utils.GenerateAccAddressForTest()
+				accAddr := addressutils.GenerateAccAddressForTest()
 				key := banktypes.CreateAccountBalancesPrefix(accAddr.Bytes())
 				key = append(key, []byte("")...)
 				return accAddr, key

@@ -14,7 +14,7 @@ func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 
 func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64) error {
 	if epochIdentifier == epochstypes.EpochIdentifierEpoch {
-		k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, data types.ProtocolData) (stop bool) {
+		k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeConnection), func(index int64, _ []byte, data types.ProtocolData) (stop bool) {
 			blockQuery := tmservice.GetLatestBlockRequest{}
 			bz := k.cdc.MustMarshal(&blockQuery)
 
@@ -62,7 +62,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 			sub.Hooks(ctx, k)
 		}
 
-		tvs, err := k.calcTokenValues(ctx)
+		tvs, err := k.CalcTokenValues(ctx)
 		if err != nil {
 			k.Logger(ctx).Error("unable to calculate token values", "error", err.Error())
 			return nil

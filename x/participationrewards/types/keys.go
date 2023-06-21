@@ -19,8 +19,8 @@ const (
 
 var KeyPrefixProtocolData = []byte{0x00}
 
-func GetProtocolDataKey(pdType ProtocolDataType, key string) []byte {
-	return append(sdk.Uint64ToBigEndian(uint64(pdType)), []byte(key)...)
+func GetProtocolDataKey(pdType ProtocolDataType, key []byte) []byte {
+	return append(sdk.Uint64ToBigEndian(uint64(pdType)), key...)
 }
 
 func GetPrefixProtocolDataKey(pdType ProtocolDataType) []byte {

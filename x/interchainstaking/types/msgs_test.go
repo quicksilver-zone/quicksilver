@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -155,8 +155,8 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 				Value: sdk.Coin{
 					Denom: "stake",
 				},
-				DestinationAddress: utils.GenerateAccAddressForTest().String(),
-				FromAddress:        utils.GenerateAccAddressForTest().String(),
+				DestinationAddress: addressutils.GenerateAccAddressForTest().String(),
+				FromAddress:        addressutils.GenerateAccAddressForTest().String(),
 			},
 			true,
 		},
@@ -168,7 +168,7 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 					Amount: sdkmath.OneInt(),
 				},
 				DestinationAddress: "",
-				FromAddress:        utils.GenerateAccAddressForTest().String(),
+				FromAddress:        addressutils.GenerateAccAddressForTest().String(),
 			},
 			true,
 		},
@@ -179,7 +179,7 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 					Denom:  "stake",
 					Amount: sdkmath.OneInt(),
 				},
-				DestinationAddress: utils.GenerateAccAddressForTest().String(),
+				DestinationAddress: addressutils.GenerateAccAddressForTest().String(),
 				FromAddress:        "",
 			},
 			true,
@@ -191,8 +191,8 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 					Denom:  "stake",
 					Amount: sdkmath.ZeroInt(),
 				},
-				DestinationAddress: utils.GenerateAccAddressForTest().String(),
-				FromAddress:        utils.GenerateAccAddressForTest().String(),
+				DestinationAddress: addressutils.GenerateAccAddressForTest().String(),
+				FromAddress:        addressutils.GenerateAccAddressForTest().String(),
 			},
 			true,
 		},
@@ -203,8 +203,8 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 					Denom:  "stake",
 					Amount: sdkmath.NewInt(-1),
 				},
-				DestinationAddress: utils.GenerateAccAddressForTest().String(),
-				FromAddress:        utils.GenerateAccAddressForTest().String(),
+				DestinationAddress: addressutils.GenerateAccAddressForTest().String(),
+				FromAddress:        addressutils.GenerateAccAddressForTest().String(),
 			},
 			true,
 		},
@@ -215,8 +215,8 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 					Denom:  "stake",
 					Amount: sdkmath.OneInt(),
 				},
-				DestinationAddress: utils.GenerateAccAddressForTest().String(),
-				FromAddress:        utils.GenerateAccAddressForTest().String(),
+				DestinationAddress: addressutils.GenerateAccAddressForTest().String(),
+				FromAddress:        addressutils.GenerateAccAddressForTest().String(),
 			},
 			false,
 		},

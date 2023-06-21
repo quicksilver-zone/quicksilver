@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
@@ -219,8 +219,8 @@ func TestMsgIncentivePoolSpendValidateBasic(t *testing.T) {
 	}
 
 	validTestCoins := sdk.NewCoins(sdk.NewCoin("test", sdk.NewIntFromUint64(10000)))
-	addr1 := utils.GenerateAccAddressForTest().String()
-	addr2 := utils.GenerateAccAddressForTest().String()
+	addr1 := addressutils.GenerateAccAddressForTest().String()
+	addr2 := addressutils.GenerateAccAddressForTest().String()
 
 	tests := []struct {
 		name    string

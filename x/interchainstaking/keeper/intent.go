@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	prtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -219,7 +219,7 @@ func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, in
 
 	for i, intent := range intents {
 		var valAddrBytes []byte
-		valAddrBytes, err := utils.ValAddressFromBech32(intent.ValoperAddress, zone.GetValoperPrefix())
+		valAddrBytes, err := addressutils.ValAddressFromBech32(intent.ValoperAddress, zone.GetValoperPrefix())
 		if err != nil {
 			return err
 		}

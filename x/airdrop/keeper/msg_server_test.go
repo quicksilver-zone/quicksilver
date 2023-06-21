@@ -8,7 +8,7 @@ import (
 
 	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
@@ -18,7 +18,7 @@ import (
 func (s *KeeperTestSuite) Test_msgServer_Claim() {
 	appA := s.GetQuicksilverApp(s.chainA)
 
-	userAddress := utils.GenerateAccAddressForTest().String()
+	userAddress := addressutils.GenerateAccAddressForTest().String()
 	denom := "uatom" // same as test zone setup in keeper_test
 
 	msg := types.MsgClaim{}
@@ -492,7 +492,7 @@ func (s *KeeperTestSuite) Test_msgServer_IncentivePoolSpend() {
 	appA := s.GetQuicksilverApp(s.chainA)
 
 	modAccAddr := "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn"
-	userAddress := utils.GenerateAccAddressForTest().String()
+	userAddress := addressutils.GenerateAccAddressForTest().String()
 	denom := "uatom" // same as test zone setup in keeper_test
 	coins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromUint64(1000)))
 	mintCoins := sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromUint64(100000000)))

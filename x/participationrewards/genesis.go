@@ -13,7 +13,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	k.SetParams(ctx, genState.Params)
 
 	for _, kpd := range genState.ProtocolData {
-		k.SetProtocolData(ctx, kpd.Key, kpd.ProtocolData)
+		k.SetProtocolData(ctx, []byte(kpd.Key), kpd.ProtocolData)
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -264,7 +264,7 @@ func (k *Keeper) MappedAccounts(c context.Context, req *types.QueryMappedAccount
 	ctx := sdk.UnwrapSDKContext(c)
 
 	remoteAddressMap := make(map[string][]byte)
-	addrBytes, err := utils.AccAddressFromBech32(req.Address, sdk.GetConfig().GetBech32AccountAddrPrefix())
+	addrBytes, err := addressutils.AccAddressFromBech32(req.Address, sdk.GetConfig().GetBech32AccountAddrPrefix())
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "Invalid Address")
 	}

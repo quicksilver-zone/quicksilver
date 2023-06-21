@@ -26,6 +26,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -606,11 +607,11 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	tgtDelegation.RedelegationEnd = completion.Unix() // this field should be a timestamp, but let's avoid unnecessary state changes.
 	k.SetDelegation(ctx, zone, tgtDelegation)
 
-	delAddr, err := utils.AccAddressFromBech32(redelegateMsg.DelegatorAddress, zone.AccountPrefix)
+	delAddr, err := addressutils.AccAddressFromBech32(redelegateMsg.DelegatorAddress, zone.AccountPrefix)
 	if err != nil {
 		return err
 	}
-	valAddr, err := utils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
+	valAddr, err := addressutils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
 	if err != nil {
 		return err
 	}
@@ -637,7 +638,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	srcDelegation.Amount = tgtDelegation.Amount.Sub(redelegateMsg.Amount)
 	k.SetDelegation(ctx, zone, srcDelegation)
 
-	valAddr, err = utils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
+	valAddr, err = addressutils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
 	if err != nil {
 		return err
 	}
@@ -715,11 +716,11 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		k.UpdateWithdrawalRecordStatus(ctx, &record, WithdrawStatusUnbond)
 	}
 
-	delAddr, err := utils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
+	delAddr, err := addressutils.AccAddressFromBech32(undelegateMsg.DelegatorAddress, "")
 	if err != nil {
 		return err
 	}
-	valAddr, err := utils.ValAddressFromBech32(undelegateMsg.ValidatorAddress, "")
+	valAddr, err := addressutils.ValAddressFromBech32(undelegateMsg.ValidatorAddress, "")
 	if err != nil {
 		return err
 	}
@@ -846,16 +847,24 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg proto.Message, memo string)
 		}
 		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
 	}
-
 	switch {
 	case memo == "rewards":
 	case strings.HasPrefix(memo, "batch"):
+		k.Logger(ctx).Debug("batch delegation", "memo", memo, "tx", delegateMsg)
 		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
 		if err != nil {
 			return err
 		}
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
 		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime())
+		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
+		k.SetZone(ctx, zone)
+		if zone.DelegationAddress.Balance.IsZero() && zone.WithdrawalWaitgroup == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
+			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
 	default:
 		receipt, found := k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, memo))
 		if !found {
@@ -1052,31 +1061,36 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 		k.SetZone(ctx, zone)
 	}
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.WithdrawalWaitgroup, "delegator", withdrawalMsg.DelegatorAddress)
-	switch zone.WithdrawalWaitgroup {
-	case 0:
-		// interface assertion
-		balanceQuery := banktypes.QueryAllBalancesRequest{Address: zone.WithdrawalAddress.Address}
-		bz, err := k.cdc.Marshal(&balanceQuery)
-		if err != nil {
-			return err
-		}
-		k.Logger(ctx).Info("Distributing rewards")
-		// total rewards balance withdrawn
-		k.ICQKeeper.MakeRequest(
-			ctx,
-			zone.ConnectionId,
-			zone.ChainId,
-			"cosmos.bank.v1beta1.Query/AllBalances",
-			bz,
-			sdk.NewInt(int64(-1)),
-			types.ModuleName,
-			"distributerewards",
-			0,
-		)
-		return nil
+	switch zone.WithdrawalWaitgroup == 0 && zone.DelegationAddress.Balance.IsZero() {
+	case true:
+		k.Logger(ctx).Info("triggering redemption rate calc after rewards withdrawal")
+		return k.TriggerRedemptionRate(ctx, zone)
 	default:
 		return nil
 	}
+}
+
+func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error {
+	// interface assertion
+	balanceQuery := banktypes.QueryAllBalancesRequest{Address: zone.WithdrawalAddress.Address}
+	bz, err := k.cdc.Marshal(&balanceQuery)
+	if err != nil {
+		return err
+	}
+	k.Logger(ctx).Info("Distributing rewards")
+	// total rewards balance withdrawn
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		zone.ConnectionId,
+		zone.ChainId,
+		"cosmos.bank.v1beta1.Query/AllBalances",
+		bz,
+		sdk.NewInt(int64(-1)),
+		types.ModuleName,
+		"distributerewards",
+		0,
+	)
+	return nil
 }
 
 func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byte, query queryTypes.Query) error {

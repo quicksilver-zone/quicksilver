@@ -10,6 +10,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,6 +28,7 @@ import (
 	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/cosmos/gogoproto/proto"
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -48,6 +50,7 @@ type Keeper struct {
 	IBCKeeper           ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
+	Ir                  codectypes.InterfaceRegistry
 	paramStore          paramtypes.Subspace
 }
 
@@ -191,7 +194,7 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 	}
 
 	for _, validator := range validatorsRes.Validators {
-		addr, err := utils.ValAddressFromBech32(validator.OperatorAddress, "")
+		addr, err := addressutils.ValAddressFromBech32(validator.OperatorAddress, "")
 		if err != nil {
 			return err
 		}
@@ -227,7 +230,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		return err
 	}
 
-	valAddrBytes, err := utils.ValAddressFromBech32(validator.OperatorAddress, zone.GetValoperPrefix())
+	valAddrBytes, err := addressutils.ValAddressFromBech32(validator.OperatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
 	}
@@ -583,7 +586,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 	// filter intents here...
 	// check validators for tombstoned
 	for _, v := range intents {
-		valAddrBytes, err := utils.ValAddressFromBech32(v.ValoperAddress, z.GetValoperPrefix())
+		valAddrBytes, err := addressutils.ValAddressFromBech32(v.ValoperAddress, z.GetValoperPrefix())
 		if err != nil {
 			return nil, err
 		}
