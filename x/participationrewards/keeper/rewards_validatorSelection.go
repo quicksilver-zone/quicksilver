@@ -200,7 +200,9 @@ func (k Keeper) CalcOverallScores(
 		// calculate and set overall score
 		vs.Score = vs.DistributionScore.Mul(vs.PerformanceScore)
 		k.Logger(ctx).Info("overall score", "validator", vs.ValoperAddress, "overall", vs.Score)
-		k.icsKeeper.SetValidator(ctx, zone.ChainId, *(vs.Validator))
+		if err := k.icsKeeper.SetValidator(ctx, zone.ChainId, *(vs.Validator)); err != nil {
+			k.Logger(ctx).Error("unable to set score for validator", "validator", vs.ValoperAddress)
+		}
 
 		// prepare validator performance withdrawal msg
 		msg := &distrtypes.MsgWithdrawDelegatorReward{
