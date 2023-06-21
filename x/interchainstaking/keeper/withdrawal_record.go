@@ -128,6 +128,18 @@ func (k *Keeper) AllWithdrawalRecords(ctx sdk.Context) []types.WithdrawalRecord 
 	return records
 }
 
+// AllUserWithdrawalRecords returns every record in the store for the specified user.
+func (k *Keeper) AllUserWithdrawalRecords(ctx sdk.Context, address string) []types.WithdrawalRecord {
+	records := []types.WithdrawalRecord{}
+	k.IterateWithdrawalRecords(ctx, func(_ int64, record types.WithdrawalRecord) (stop bool) {
+		if record.Delegator == address {
+			records = append(records, record)
+		}
+		return false
+	})
+	return records
+}
+
 // AllZoneWithdrawalRecords returns every record in the store for the specified zone.
 func (k *Keeper) AllZoneWithdrawalRecords(ctx sdk.Context, chainID string) []types.WithdrawalRecord {
 	records := []types.WithdrawalRecord{}

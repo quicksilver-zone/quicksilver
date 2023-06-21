@@ -594,6 +594,109 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	tests := []struct {
+		name         string
+		malleate     func()
+		req          *types.QueryUserWithdrawalRecordsRequest
+		wantErr      bool
+		expectLength int
+	}{
+		{
+			"UserWithdrawalRecords_Nil_Request",
+			func() {},
+			nil,
+			true,
+			0,
+		},
+		{
+			"UserWithdrawalRecords_Invalid_Address",
+			func() {
+				// setup zones
+				suite.setupTestZones()
+			},
+			&types.QueryUserWithdrawalRecordsRequest{
+				UserAddress: "incorrect address",
+			},
+			true,
+			0,
+		},
+		{
+			"UserWithdrawalRecords_No_Withdrawal_Records",
+			func() {},
+			&types.QueryUserWithdrawalRecordsRequest{
+				UserAddress: testAddress,
+			},
+			false,
+			0,
+		},
+		{
+			"UserWithdrawalRecords_Valid_Records",
+			func() {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.Require().True(found)
+
+				distribution := []*types.Distribution{
+					{
+						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+						Amount:  10000000,
+					},
+					{
+						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
+						Amount:  20000000,
+					},
+				}
+
+				// set records
+				icsKeeper.AddWithdrawalRecord(
+					ctx,
+					zone.ChainId,
+					"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+					distribution,
+					testAddress,
+					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
+					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
+					"ABC012",
+					icskeeper.WithdrawStatusQueued,
+					time.Time{},
+				)
+			},
+			&types.QueryUserWithdrawalRecordsRequest{
+				UserAddress: "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+			},
+			false,
+			1,
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.UserWithdrawalRecords(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			suite.Require().Equal(tt.expectLength, len(resp.Withdrawals))
+
+			vstr, err := json.MarshalIndent(resp, "", "\t")
+			suite.Require().NoError(err)
+
+			suite.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()
