@@ -230,6 +230,23 @@ func (k *Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawal
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
 
+func (k *Keeper) UserWithdrawalRecords(c context.Context, req *types.QueryUserWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+	// TODO: implement pagination
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if _, err := addressutils.AddressFromBech32(req.UserAddress, ""); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	withdrawalrecords := k.AllUserWithdrawalRecords(ctx, req.UserAddress)
+
+	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+}
+
 func (k *Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRecordsRequest) (*types.QueryUnbondingRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {
