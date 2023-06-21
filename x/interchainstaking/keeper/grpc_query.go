@@ -158,8 +158,9 @@ func (k *Keeper) DelegatorIntents(c context.Context, req *types.QueryDelegatorIn
 
 	k.IterateZones(ctx, func(_ int64, zone *types.Zone) bool {
 		intent, _ := k.GetDelegatorIntent(ctx, zone, req.DelegatorAddress, false)
-
-		intents = append(intents, &types.DelegatorIntentsResponse{ChainId: zone.ChainId, Intent: &intent})
+		if intent.Intents != nil {
+			intents = append(intents, &types.DelegatorIntentsResponse{ChainId: zone.ChainId, Intent: &intent})
+		}
 		return false
 	})
 
