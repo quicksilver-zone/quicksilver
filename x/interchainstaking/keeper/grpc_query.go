@@ -206,7 +206,7 @@ func (k *Keeper) TxStatus(c context.Context, req *types.QueryTxStatusRequest) (*
 
 	txReceipt, found := k.GetReceipt(ctx, types.GetReceiptKey(req.GetChainId(), req.GetTxHash()))
 	if !found {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("no ceipt found matching %s", req.TxHash))
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no receipt found matching %s", req.TxHash))
 	}
 
 	return &types.QueryTxStatusResponse{Receipt: &txReceipt}, nil
