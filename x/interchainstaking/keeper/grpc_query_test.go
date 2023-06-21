@@ -551,8 +551,8 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 				ChainId: suite.chainB.ChainID,
 				TxHash:  "randomhash",
 			},
-			want:    &types.QueryTxStatusResponse{Receipt: &types.Receipt{}},
-			wantErr: false,
+			want:    nil,
+			wantErr: true,
 		},
 		{
 			"Receipts_Valid_Receipts",
