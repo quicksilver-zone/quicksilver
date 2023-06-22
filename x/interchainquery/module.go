@@ -3,6 +3,7 @@ package interchainquery
 import (
 	"context"
 	"encoding/json"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"

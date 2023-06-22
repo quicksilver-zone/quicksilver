@@ -195,7 +195,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
-		owner := zone.ChainId + ".delegate"
+		owner := fmt.Sprintf("%s.%s", zone.ChainId, types.ICASuffixDelegate)
 		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx, owner)
 		if err != nil {
 			return err

@@ -424,7 +424,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 	}
 
 	k.Logger(ctx).Info("messages to send", "messages", msgs)
-	owner := zone.ChainId + ".delegate"
+	owner := fmt.Sprintf("%s.%s", zone.ChainId, types.ICASuffixDelegate)
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo, zone.MessagesPerTx, owner)
 }
 
@@ -515,7 +515,7 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 		if ctx.BlockTime().After(withdrawal.CompletionTime) && !withdrawal.CompletionTime.Equal(time.Time{}) { // completion date has passed.
 			k.Logger(ctx).Info("found completed unbonding")
 			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
-			owner := zone.ChainId + ".delegate"
+			owner := fmt.Sprintf("%s.%s", zone.ChainId, types.ICASuffixDelegate)
 			err = k.SubmitTx(ctx, []proto.Message{sendMsg}, zone.DelegationAddress, withdrawal.Txhash, zone.MessagesPerTx, owner)
 			if err != nil {
 				k.Logger(ctx).Error("error", err)
@@ -557,7 +557,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 				k.DeleteWithdrawalRecord(ctx, zone.ChainId, memo, WithdrawStatusTokenize)
 				withdrawalRecord.Status = WithdrawStatusSend
 				sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.Address, ToAddress: withdrawalRecord.Recipient, Amount: withdrawalRecord.Amount}
-				owner := zone.ChainId + ".delegate"
+				owner := fmt.Sprintf("%s.%s", zone.ChainId, types.ICASuffixDelegate)
 				err = k.SubmitTx(ctx, []proto.Message{sendMsg}, zone.DelegationAddress, memo, zone.MessagesPerTx, owner)
 				if err != nil {
 					return err

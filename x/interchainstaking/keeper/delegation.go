@@ -246,7 +246,7 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	zone.WithdrawalWaitgroup += uint32(len(msgs))
 	k.SetZone(ctx, zone)
 	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup, "address", delegator)
-	owner := zone.ChainId + ".delegate"
+	owner := fmt.Sprintf("%s.%s", zone.ChainId, types.ICASuffixDelegate)
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "", zone.MessagesPerTx, owner)
 }
 
