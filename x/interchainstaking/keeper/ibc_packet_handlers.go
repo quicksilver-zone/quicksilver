@@ -59,7 +59,6 @@ func DeserializeCosmosTxTyped(cdc codec.BinaryCodec, data []byte) ([]TypedMsg, e
 }
 
 func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte) error {
-
 	var ack channeltypes.Acknowledgement
 	err := icatypes.ModuleCdc.UnmarshalJSON(acknowledgement, &ack)
 	txMsgData := &sdk.TxMsgData{}
@@ -220,7 +219,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 		case "/cosmos.bank.v1beta1.MsgSend":
 			if !success {
-				if err := k.HandleFailedBankSend(ctx, src, packetData.Memo); err != nil {
+				if err := k.HandleFailedBankSend(ctx, msg.Msg, packetData.Memo); err != nil {
 					k.Logger(ctx).Error("unable to handle failed MsgSend", "error", err)
 					return err
 				}
@@ -512,10 +511,6 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 }
 
 func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
-	if completion.IsZero() {
-		return errors.New("invalid zero nil completion time for redelegation")
-	}
-
 	epochNumber, err := types.ParseEpochMsgMemo(memo, types.MsgTypeRebalance)
 	if err != nil {
 		return err
@@ -618,10 +613,6 @@ func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo 
 }
 
 func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.Time, memo string) error {
-	if completion.IsZero() {
-		return errors.New("invalid zero nil completion time for unbonding")
-	}
-
 	k.Logger(ctx).Info("Received MsgUndelegate acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgUndelegate
 	undelegateMsg, ok := msg.(*stakingtypes.MsgUndelegate)
