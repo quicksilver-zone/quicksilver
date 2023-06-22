@@ -223,7 +223,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			minttypes.EventTypeMint,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, qAssets.AmountOf(zone.LocalDenom).String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, qAssets.String()),
 		),
 	)
 	return nil
