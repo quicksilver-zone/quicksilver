@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
-
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -151,11 +149,6 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
-	return nil
-}
-
-// RandomizedParams creates randomized mint param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
 	return nil
 }
 

@@ -3,8 +3,6 @@ package interchainquery
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
-
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -161,11 +159,6 @@ func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
 // ProposalContents doesn't return any content functions for governance proposals.
 func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
 	return nil
-}
-
-// RandomizedParams creates randomized mint param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
-	return []simtypes.LegacyParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types.
