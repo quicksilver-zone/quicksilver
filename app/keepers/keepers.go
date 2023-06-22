@@ -59,6 +59,7 @@ import (
 
 	"github.com/cometbft/cometbft/libs/log"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/wasmbinding"

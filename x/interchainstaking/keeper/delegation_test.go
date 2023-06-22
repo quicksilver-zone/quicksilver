@@ -10,6 +10,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 
 	"github.com/cosmos/gogoproto/proto"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 

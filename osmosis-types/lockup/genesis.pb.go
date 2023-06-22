@@ -5,8 +5,8 @@ package lockup
 
 import (
 	"fmt"
-	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
+	_ "github.com/gogo/protobuf/gogoproto"
 	io "io"
 	math "math"
 	math_bits "math/bits"

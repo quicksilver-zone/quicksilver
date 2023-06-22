@@ -49,6 +49,7 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+
 	"github.com/ingenuity-build/quicksilver/x/airdrop"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager"
