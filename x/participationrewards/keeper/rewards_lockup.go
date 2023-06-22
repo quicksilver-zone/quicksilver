@@ -1,8 +1,10 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"errors"
+
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"

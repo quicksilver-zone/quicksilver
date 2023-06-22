@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ingenuity-build/quicksilver/app"
 )
 
