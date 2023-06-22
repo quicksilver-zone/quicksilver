@@ -660,7 +660,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
 					"ABC012",
-					icskeeper.WithdrawStatusQueued,
+					types.WithdrawStatusQueued,
 					time.Time{},
 				)
 			},
