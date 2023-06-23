@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	testZoneID    = "test-zone-1"
-	testSubzoneID = "test-subzone-1"
+	testZoneID        = "test-zone-1"
+	testSubzoneID     = "test-zone-1|1"
+	invalidSubZoneID1 = "test-subzone-1"
+	invalidSubZoneID2 = "test-subzone-1|1"
 )
 
 var (
@@ -43,6 +45,12 @@ func TestZone_ChainID(t *testing.T) {
 func TestZone_ID(t *testing.T) {
 	require.Equal(t, testZoneID, zone.ID())
 	require.Equal(t, testSubzoneID, subzone.ID())
+}
+
+func TestValidateSubzoneID(t *testing.T) {
+	require.NoError(t, types.ValidateSubzoneID(testSubzoneID, testZoneID))
+	require.Error(t, types.ValidateSubzoneID(invalidSubZoneID1, testZoneID))
+	require.Error(t, types.ValidateSubzoneID(invalidSubZoneID2, testZoneID))
 }
 
 func TestValidateSubzoneForBasezone(t *testing.T) {
@@ -87,11 +95,31 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-subzone-chain",
+					ChainID:     "test-chain|1234",
 				},
 			},
 			baseZone: baseZone,
 			valid:    true,
+		},
+		{
+			name: "invalid subzoneID",
+			subzone: types.Zone{
+				ConnectionId:    "test-connection",
+				AccountPrefix:   "testprefix",
+				LocalDenom:      "subqdenom",
+				BaseDenom:       "denom",
+				MultiSend:       true,
+				LiquidityModule: false,
+				Decimals:        18,
+				Is_118:          true,
+				SubzoneInfo: &types.SubzoneInfo{
+					Authority:   "testauth",
+					BaseChainID: "test-chain",
+					ChainID:     "test-chain-subzone", // not using delimiter
+				},
+			},
+			baseZone: baseZone,
+			valid:    false,
 		},
 		{
 			name: "invalid connection",
@@ -107,7 +135,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-subzone-chain",
+					ChainID:     "test-chain|1234",
 				},
 			},
 			baseZone: baseZone,
@@ -127,7 +155,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-subzone-chain",
+					ChainID:     "test-chain|1234",
 				},
 			},
 			baseZone: baseZone,
@@ -147,7 +175,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-subzone-chain",
+					ChainID:     "test-chain|1234",
 				},
 			},
 			baseZone: baseZone,
@@ -167,12 +195,13 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-subzone-chain",
+					ChainID:     "test-chain|1234",
 				},
 			},
 			baseZone: baseZone,
 			valid:    false,
 		},
+
 		{
 			name: "invalid capability fields",
 			subzone: types.Zone{
@@ -187,7 +216,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-subzone-chain",
+					ChainID:     "test-chain|1234",
 				},
 			},
 			baseZone: baseZone,
@@ -223,7 +252,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-subzone-chain",
+					ChainID:     "test-chain|1234",
 				},
 			},
 			baseZone: invalidBaseZone,
