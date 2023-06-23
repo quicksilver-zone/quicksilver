@@ -725,7 +725,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	packetData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
-		Memo: fmt.Sprintf("rebalance/%d", 1),
+		Memo: icstypes.EpochRebalanceMemo(1),
 	}
 
 	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
@@ -1093,7 +1093,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 			packetData := icatypes.InterchainAccountPacketData{
 				Type: icatypes.EXECUTE_TX,
 				Data: data,
-				Memo: fmt.Sprintf("withdrawal/%d", test.epoch),
+				Memo: icstypes.EpochWithdrawalMemo(test.epoch),
 			}
 
 			packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
@@ -1219,7 +1219,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 				ValidatorDstAddress: record.Destination,
 				Amount:              sdk.NewCoin("uatom", math.NewInt(record.Amount)),
 			}
-			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
+			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), icstypes.EpochRebalanceMemo(2))
 			if err != nil {
 				return false
 			}
@@ -1347,7 +1347,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 				ValidatorDstAddress: record.Destination,
 				Amount:              sdk.NewCoin("uatom", math.NewInt(record.Amount)),
 			}
-			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
+			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), icstypes.EpochRebalanceMemo(2))
 			if err != nil {
 				return false
 			}
@@ -2049,7 +2049,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 			packetData := icatypes.InterchainAccountPacketData{
 				Type: icatypes.EXECUTE_TX,
 				Data: data,
-				Memo: fmt.Sprintf("withdrawal/%d", test.epoch),
+				Memo: icstypes.EpochWithdrawalMemo(test.epoch),
 			}
 
 			packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
@@ -2140,7 +2140,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNonNilCompletion()
 	packetData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
-		Memo: fmt.Sprintf("rebalance/%d", 1),
+		Memo: icstypes.EpochRebalanceMemo(1),
 	}
 
 	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
@@ -2234,7 +2234,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNilCompletion() {
 	packetData := icatypes.InterchainAccountPacketData{
 		Type: icatypes.EXECUTE_TX,
 		Data: data,
-		Memo: fmt.Sprintf("rebalance/%d", epoch),
+		Memo: icstypes.EpochRebalanceMemo(epoch),
 	}
 
 	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
