@@ -5,8 +5,8 @@ package types
 
 import (
 	fmt "fmt"
-	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/cosmos/gogoproto/gogoproto"
+	proto "github.com/cosmos/gogoproto/proto"
 	github_com_gogo_protobuf_types "github.com/cosmos/gogoproto/types"
 	_ "google.golang.org/protobuf/types/known/durationpb"
 	_ "google.golang.org/protobuf/types/known/timestamppb"

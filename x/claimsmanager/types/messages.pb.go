@@ -6,8 +6,8 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	proto "github.com/cosmos/gogoproto/proto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
+	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"
 	math "math"
 )
