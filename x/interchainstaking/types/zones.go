@@ -12,6 +12,22 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
+func (z *Zone) DepositPort() string {
+	return fmt.Sprintf("%s.%s", z.ChainId, ICASuffixDelegate)
+}
+
+func (z *Zone) DelegatePort() string {
+	return fmt.Sprintf("%s.%s", z.ChainId, ICASuffixDelegate)
+}
+
+func (z *Zone) WithdrawalPort() string {
+	return fmt.Sprintf("%s.%s", z.ChainId, ICASuffixWithdrawal)
+}
+
+func (z *Zone) PerformancePort() string {
+	return fmt.Sprintf("%s.%s", z.ChainId, ICASuffixPerformance)
+}
+
 func (z Zone) SupportReturnToSender() bool { return z.ReturnToSender }
 func (z Zone) IsUnbondingEnabled() bool    { return z.UnbondingEnabled }
 func (z Zone) SupportLsm() bool            { return z.LiquidityModule }
