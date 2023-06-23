@@ -105,7 +105,6 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		//nolint:staticcheck // SA1019 ignore this!
 		var msgResponse []byte
 		if len(txMsgData.MsgResponses) > 0 {
-			k.Logger(ctx).Info("decoding message", "message", txMsgData.MsgResponses[msgIndex])
 			msgResponse = txMsgData.MsgResponses[msgIndex].GetValue()
 		} else if len(txMsgData.Data) > 0 {
 			msgResponse = txMsgData.Data[msgIndex].GetData()
