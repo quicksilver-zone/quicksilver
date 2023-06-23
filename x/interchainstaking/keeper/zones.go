@@ -186,8 +186,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DepositAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
-		owner := zone.ChainId + ".deposit"
-		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DepositAddress, "", zone.MessagesPerTx, owner)
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DepositAddress, "", zone.MessagesPerTx, zone.DepositOwner())
 		if err != nil {
 			return err
 		}
@@ -195,8 +194,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
-		owner := fmt.Sprintf("%s.%s", zone.ChainId, types.ICASuffixDelegate)
-		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx, owner)
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx, zone.DelegateOwner())
 		if err != nil {
 			return err
 		}
@@ -205,8 +203,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 	// set withdrawal address for performance address, if it exists
 	if zone.PerformanceAddress != nil && zone.PerformanceAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.PerformanceAddress.Address, WithdrawAddress: withdrawalAddress}
-		owner := zone.ChainId + ".performance"
-		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "", zone.MessagesPerTx, owner)
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "", zone.MessagesPerTx, zone.PerformanceOwner())
 		if err != nil {
 			return err
 		}
@@ -376,8 +373,7 @@ OUTER:
 	}
 
 	if len(msgs) > 0 {
-		owner := zone.ChainId + ".performance"
-		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx, owner)
+		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx, zone.PerformanceOwner())
 	}
 	return nil
 }

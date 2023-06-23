@@ -223,8 +223,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 // TransferToDelegate transfers tokens from the zone deposit account address to the zone delegate account address.
 func (k *Keeper) TransferToDelegate(ctx sdk.Context, zone *types.Zone, coins sdk.Coins, memo string) error {
 	msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: zone.DelegationAddress.GetAddress(), Amount: coins}
-	owner := zone.ChainId + ".deposit"
-	return k.SubmitTx(ctx, []proto.Message{msg}, zone.DepositAddress, memo, zone.MessagesPerTx, owner)
+	return k.SubmitTx(ctx, []proto.Message{msg}, zone.DepositAddress, memo, zone.MessagesPerTx, zone.DepositOwner())
 }
 
 // SubmitTx submits a Tx on behalf of an ICAAccount to a remote chain.

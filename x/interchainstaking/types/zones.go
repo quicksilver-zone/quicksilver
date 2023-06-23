@@ -13,7 +13,7 @@ import (
 )
 
 func (z *Zone) DepositOwner() string {
-	return fmt.Sprintf("%s.%s", z.ChainId, ICASuffixDelegate)
+	return fmt.Sprintf("%s.%s", z.ChainId, ICASuffixDeposit)
 }
 
 func (z *Zone) DelegateOwner() string {

@@ -66,8 +66,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
 	}
 	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
-	owner := fmt.Sprintf("%s.%s", zone.ChainId, types.ICASuffixDelegate)
-	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx, owner)
+	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx, zone.DelegateOwner())
 }
 
 // queueRedemption will determine based on zone intent, the tokens to unbond, and add a withdrawal record with status QUEUED.
@@ -243,8 +242,7 @@ WITHDRAWAL:
 	}
 
 	k.Logger(ctx).Info("unbonding messages to send", "msg", msgs)
-	owner := fmt.Sprintf("%s.%s", zone.ChainId, types.ICASuffixDelegate)
-	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch), zone.MessagesPerTx, owner)
+	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch), zone.MessagesPerTx, zone.DelegateOwner())
 	if err != nil {
 		return err
 	}
