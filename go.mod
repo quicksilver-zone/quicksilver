@@ -314,13 +314,16 @@ require (
 )
 
 replace (
+	// use cosmos fork of keyring
+	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// https://github.com/CosmWasm/wasmd/pull/938
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.40.0-tf.rc4
 	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0
 	github.com/cosmos/ledger-cosmos-go v0.13.0 => github.com/cosmos/ledger-cosmos-go v0.12.1
-	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
+	// dgrijalva/jwt-go is deprecated and doesn't receive security updates
+	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
-	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.8.1
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
 	github.com/iqlusioninc/liquidity-staking-module => github.com/ingenuity-build/liquidity-staking-module-v47 v0.0.3-0.20230622161804-11f9e45f1920
 	// pebbledb - https://gist.github.com/faddat/673107b72eccdd869b242338dd17e9d9
 	github.com/tendermint/tm-db => github.com/notional-labs/tm-db v0.6.8-0.20230214123107-77c191d0f7ee
