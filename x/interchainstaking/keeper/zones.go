@@ -97,7 +97,7 @@ func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 
 func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainID(), WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), types.WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
 		out = out.Add(wr.Amount[0])
 		return false
 	})

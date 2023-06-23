@@ -322,7 +322,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 
 func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
 	var err error
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainID(), WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), types.WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
 		recordSubAmount := sdkmath.ZeroInt()
 		distr := record.Distribution
 		for _, d := range distr {
@@ -633,7 +633,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 		return nil
 	}
 	k.Logger(ctx).Info("Send rebalancing messages", "msgs", msgs)
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber), zone.MessagesPerTx)
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("%s/%d", types.MsgTypeRebalance, epochNumber), zone.MessagesPerTx)
 }
 
 // UnmarshalValidatorsResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.

@@ -20,7 +20,6 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -111,7 +110,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     icskeeper.WithdrawStatusQueued,
+						Status:     icstypes.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -164,7 +163,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     icskeeper.WithdrawStatusQueued,
+						Status:     icstypes.WithdrawStatusQueued,
 					},
 					{
 						ChainId:   zone.ChainID(),
@@ -179,7 +178,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
 						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
-						Status:     icskeeper.WithdrawStatusQueued,
+						Status:     icstypes.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -232,7 +231,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     icskeeper.WithdrawStatusQueued,
+						Status:     icstypes.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -295,7 +294,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
 						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
-						Status:     icskeeper.WithdrawStatusQueued,
+						Status:     icstypes.WithdrawStatusQueued,
 					},
 					{
 						ChainId:   zone.ID(),
@@ -310,7 +309,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     icskeeper.WithdrawStatusQueued,
+						Status:     icstypes.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -403,14 +402,14 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 			for idx, record := range records {
 				// check record with old status is opposite to expectedTransition (if false, this record should exist in status 3)
-				_, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ID(), record.Txhash, icskeeper.WithdrawStatusQueued)
+				_, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ID(), record.Txhash, icstypes.WithdrawStatusQueued)
 				suite.Require().Equal(!test.expectTransition[idx], found)
 				// check record with new status is as per expectedTransition (if false, this record should not exist in status 4)
-				_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ID(), record.Txhash, icskeeper.WithdrawStatusUnbond)
+				_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ID(), record.Txhash, icstypes.WithdrawStatusUnbond)
 				suite.Require().Equal(test.expectTransition[idx], found)
 
 				if test.expectTransition[idx] {
-					actualRecord, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ID(), record.Txhash, icskeeper.WithdrawStatusUnbond)
+					actualRecord, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ID(), record.Txhash, icstypes.WithdrawStatusUnbond)
 					suite.Require().True(found)
 					for _, unbonding := range actualRecord.Distribution {
 						r, found := quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, zone.ID(), unbonding.Valoper, 1)
@@ -448,7 +447,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     icskeeper.WithdrawStatusQueued,
+						Status:     icstypes.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -473,7 +472,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     icskeeper.WithdrawStatusSend,
+						Status:     icstypes.WithdrawStatusSend,
 					},
 				}
 			},
@@ -500,7 +499,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     icskeeper.WithdrawStatusSend,
+						Status:     icstypes.WithdrawStatusSend,
 					},
 					{
 						ChainId:   zone.ID(),
@@ -515,7 +514,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(15000000)),
 						Txhash:     "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
-						Status:     icskeeper.WithdrawStatusSend,
+						Status:     icstypes.WithdrawStatusSend,
 					},
 				}
 			},
@@ -559,14 +558,14 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 				suite.Require().NoError(err)
 			}
 
-			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), icskeeper.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
+			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), icstypes.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash == test.memo {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
-			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
+			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), icstypes.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash != test.memo {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
@@ -601,7 +600,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2000000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     icskeeper.WithdrawStatusSend,
+						Status:     icstypes.WithdrawStatusSend,
 					},
 				}
 			},
@@ -627,7 +626,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 						Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2500000))),
 						BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2500000)),
 						Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-						Status:     icskeeper.WithdrawStatusSend,
+						Status:     icstypes.WithdrawStatusSend,
 					},
 				}
 			},
@@ -675,14 +674,14 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 				}
 			}
 
-			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), icskeeper.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
+			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), icstypes.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash == test.memo {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
-			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), icskeeper.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
+			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), icstypes.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
 				if withdrawal.Txhash != test.memo {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
@@ -782,7 +781,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(2000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
 						Txhash:     hash1,
-						Status:     icskeeper.WithdrawStatusUnbond,
+						Status:     icstypes.WithdrawStatusUnbond,
 					},
 				}
 			},
@@ -823,7 +822,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:     hash1,
-						Status:     icskeeper.WithdrawStatusUnbond,
+						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
 						ChainId:      suite.chainB.ChainID,
@@ -833,7 +832,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:       fmt.Sprintf("%064d", 1),
-						Status:       icskeeper.WithdrawStatusQueued,
+						Status:       icstypes.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -857,7 +856,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:     hash1,
-						Status:     icskeeper.WithdrawStatusUnbond,
+						Status:     icstypes.WithdrawStatusUnbond,
 					},
 				}
 			},
@@ -892,7 +891,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:       hash1,
-						Status:       icskeeper.WithdrawStatusQueued,
+						Status:       icstypes.WithdrawStatusQueued,
 					},
 				}
 			},
@@ -920,7 +919,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1500))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1350)),
 						Txhash:     hash1,
-						Status:     icskeeper.WithdrawStatusUnbond,
+						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
 						ChainId:   suite.chainB.ChainID,
@@ -939,7 +938,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(2700)),
 						Txhash:     hash2,
-						Status:     icskeeper.WithdrawStatusUnbond,
+						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
 						ChainId:   suite.chainB.ChainID,
@@ -958,7 +957,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:     hash3,
-						Status:     icskeeper.WithdrawStatusUnbond,
+						Status:     icstypes.WithdrawStatusUnbond,
 					},
 				}
 			},
@@ -999,7 +998,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:     hash1,
-						Status:     icskeeper.WithdrawStatusUnbond,
+						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
 						ChainId:   suite.chainB.ChainID,
@@ -1014,7 +1013,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(900)),
 						Txhash:     hash2,
-						Status:     icskeeper.WithdrawStatusUnbond,
+						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
 						ChainId:   suite.chainB.ChainID,
@@ -1029,7 +1028,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:     sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(600))),
 						BurnAmount: sdk.NewCoin(zone.LocalDenom, sdk.NewInt(540)),
 						Txhash:     hash3,
-						Status:     icskeeper.WithdrawStatusUnbond,
+						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
 						ChainId:      suite.chainB.ChainID,
@@ -1039,7 +1038,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(500))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(450)),
 						Txhash:       fmt.Sprintf("%064d", 1),
-						Status:       icskeeper.WithdrawStatusQueued,
+						Status:       icstypes.WithdrawStatusQueued,
 					},
 					{
 						ChainId:      suite.chainB.ChainID,
@@ -1049,7 +1048,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(2000))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
 						Txhash:       fmt.Sprintf("%064d", 2),
-						Status:       icskeeper.WithdrawStatusQueued,
+						Status:       icstypes.WithdrawStatusQueued,
 					},
 					{
 						ChainId:      suite.chainB.ChainID,
@@ -1059,7 +1058,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Amount:       sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(400))),
 						BurnAmount:   sdk.NewCoin(zone.LocalDenom, sdk.NewInt(360)),
 						Txhash:       fmt.Sprintf("%064d", 3),
-						Status:       icskeeper.WithdrawStatusQueued,
+						Status:       icstypes.WithdrawStatusQueued,
 					},
 				}
 			},
