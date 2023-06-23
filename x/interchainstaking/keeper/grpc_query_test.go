@@ -550,7 +550,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ChainId,
+					zone.ChainID(),
 					"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
 					distribution,
 					testAddress,
@@ -746,7 +746,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ChainId,
+					zone.ChainID(),
 					"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
 					distribution,
 					testAddress,
@@ -825,7 +825,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 				icsKeeper.SetUnbondingRecord(
 					ctx,
 					types.UnbondingRecord{
-						ChainId:       zone.ChainId,
+						ChainId:       zone.ChainID(),
 						EpochNumber:   1,
 						Validator:     icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 						RelatedTxhash: []string{"ABC012"},
@@ -900,7 +900,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 				icsKeeper.SetRedelegationRecord(
 					ctx,
 					types.RedelegationRecord{
-						ChainId:     zone.ChainId,
+						ChainId:     zone.ID(),
 						EpochNumber: 1,
 						Source:      icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
 						Destination: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
@@ -994,7 +994,7 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 				}
 				icsKeeper.SetZone(ctx, &zone)
 
-				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ChainId)
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ID())
 			},
 			&types.QueryMappedAccountsRequest{Address: "cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn"},
 			false,
@@ -1017,7 +1017,7 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 				}
 				icsKeeper.SetZone(ctx, &zone)
 
-				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ChainId)
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ID())
 
 				zone2 := types.Zone{
 					ConnectionId:    "connection-77891",

@@ -225,7 +225,7 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []byte) error {
 	validator, err := k.UnmarshalValidator(data)
 	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zone.ChainID(), "err", err)
 		return err
 	}
 
@@ -233,7 +233,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 	if err != nil {
 		return err
 	}
-	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+	val, found := k.GetValidator(ctx, zone.ChainID(), valAddrBytes)
 	if !found {
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
@@ -241,7 +241,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		if validator.IsJailed() {
 			jailTime = ctx.BlockTime()
 		}
-		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
+		if err := k.SetValidator(ctx, zone.ChainID(), types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
 			VotingPower:     validator.Tokens,
@@ -306,7 +306,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			val.Status = validator.Status.String()
 		}
 
-		if err := k.SetValidator(ctx, zone.ChainId, val); err != nil {
+		if err := k.SetValidator(ctx, zone.ChainID(), val); err != nil {
 			return err
 		}
 
@@ -322,7 +322,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 
 func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
 	var err error
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainID(), WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
 		recordSubAmount := sdkmath.ZeroInt()
 		distr := record.Distribution
 		for _, d := range distr {
@@ -434,7 +434,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
-		zone.ChainId,
+		zone.ID(),
 		types.BankStoreKey,
 		append(data, []byte(zone.BaseDenom)...),
 		sdk.NewInt(-1),
@@ -446,7 +446,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 	return nil
 }
 
-func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, chainID string, validatorsReq stakingtypes.QueryValidatorsRequest, period sdkmath.Int) error {
+func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, zoneID string, validatorsReq stakingtypes.QueryValidatorsRequest, period sdkmath.Int) error {
 	bz, err := k.cdc.Marshal(&validatorsReq)
 	if err != nil {
 		return errors.New("failed to marshal valset pagination request")
@@ -455,7 +455,7 @@ func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, chainID string, 
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		connectionID,
-		chainID,
+		zoneID,
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz,
 		period,
@@ -467,13 +467,13 @@ func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, chainID string, 
 	return nil
 }
 
-func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) {
+func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, zoneID string, validator stakingtypes.Validator) {
 	_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
 	data := stakingtypes.GetValidatorKey(addr)
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		connectionID,
-		chainID,
+		zoneID,
 		"store/staking/key",
 		data,
 		sdk.NewInt(-1),
@@ -497,7 +497,7 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
-		zone.ChainId,
+		zone.ChainID(),
 		"cosmos.tx.v1beta1.Service/GetTxsEvent",
 		k.cdc.MustMarshal(&req),
 		sdk.NewInt(-1),
@@ -578,7 +578,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 	var filteredIntents types.ValidatorIntents
 
 	if len(z.AggregateIntent) == 0 {
-		intents = k.DefaultAggregateIntents(ctx, z.ChainId)
+		intents = k.DefaultAggregateIntents(ctx, z.ChainID())
 	} else {
 		intents = z.AggregateIntent
 	}
@@ -589,7 +589,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 		if err != nil {
 			return nil, err
 		}
-		val, found := k.GetValidator(ctx, z.ChainId, valAddrBytes)
+		val, found := k.GetValidator(ctx, z.ChainID(), valAddrBytes)
 
 		// this case should not happen as we check the validity of a validator entry when intent is set.
 		if !found {
@@ -616,12 +616,12 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	if err != nil {
 		return err
 	}
-	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId), k.Logger(ctx))
+	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ID()), k.Logger(ctx))
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
 		k.SetRedelegationRecord(ctx, types.RedelegationRecord{
-			ChainId:     zone.ChainId,
+			ChainId:     zone.ID(),
 			EpochNumber: epochNumber,
 			Source:      rebalance.Source,
 			Destination: rebalance.Target,
@@ -650,7 +650,7 @@ func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryVal
 	return validatorsRes, nil
 }
 
-// UnmarshalValidatorsRequest attempts to umarshal  a byte slice into a QueryValidatorsRequest.
+// UnmarshalValidatorsRequest attempts to umarshal a byte slice into a QueryValidatorsRequest.
 func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
 	validatorsReq := stakingtypes.QueryValidatorsRequest{}
 	err := k.cdc.Unmarshal(data, &validatorsReq)

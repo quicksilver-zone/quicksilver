@@ -27,7 +27,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 		}
 	}
 	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
-		if ctx.BlockHeight()%30 == 0 {
+		if ctx.BlockHeight()%blockInterval == 0 {
 			// for the tasks below, we cannot panic in begin blocker; as this will crash the chain.
 			// and as failing here is not terminal panicking is not necessary, but we should log
 			// as an error. we don't return on failure here as we still want to attempt the unrelated
@@ -56,7 +56,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 						// trigger valset update.
 						period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 						query := stakingTypes.QueryValidatorsRequest{}
-						err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
+						err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ID(), query, sdkmath.NewInt(period))
 						if err != nil {
 							k.Logger(ctx).Error("unable to trigger valset update query", "error", err.Error())
 							// failing to emit the valset update is not terminal but constitutes

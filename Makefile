@@ -508,7 +508,7 @@ BUF_VERSION=1.21.0
 
 proto-all: proto-gen
 
-proto-gen:
+proto-gen: proto-format
 	@echo "🤖 Generating code from protobuf..."
 	@$(DOCKER) run --rm --volume "$(PWD)":/workspace --workdir /workspace \
 		quicksilver-proto sh ./proto/generate.sh

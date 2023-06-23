@@ -61,7 +61,7 @@ func V010402rc1UpgradeHandler(
 						Tombstoned:      val.Tombstoned,
 						JailedSince:     val.JailedSince,
 					}
-					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newVal)
+					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone.ChainID(), newVal)
 					if err != nil {
 						panic(err)
 					}
@@ -230,14 +230,14 @@ func V010402rc6UpgradeHandler(
 		if isTestnet(ctx) || isTest(ctx) {
 			// for each zone, trigger an icq request to update all delegations.
 			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
-				vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone.ChainID())
 				delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 				bz := appKeepers.InterchainstakingKeeper.GetCodec().MustMarshal(&delegationQuery)
 
 				appKeepers.InterchainstakingKeeper.ICQKeeper.MakeRequest(
 					ctx,
 					zone.ConnectionId,
-					zone.ChainId,
+					zone.ChainID(),
 					"cosmos.staking.v1beta1.Query/DelegatorDelegations",
 					bz,
 					sdk.NewInt(-1),

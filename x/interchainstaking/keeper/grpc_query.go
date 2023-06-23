@@ -52,7 +52,7 @@ func (k *Keeper) Zones(c context.Context, req *types.QueryZonesRequest) (*types.
 	}, nil
 }
 
-// Zone returns information about registered zones.
+// Zone returns information about a registered zone.
 func (k *Keeper) Zone(c context.Context, req *types.QueryZoneRequest) (*types.QueryZoneResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -207,7 +207,7 @@ func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdr
 	}
 
 	withdrawalrecords := make([]types.WithdrawalRecord, 0)
-	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
+	k.IterateZoneWithdrawalRecords(ctx, zone.ChainID(), func(index int64, record types.WithdrawalRecord) (stop bool) {
 		if record.Delegator == req.DelegatorAddress {
 			withdrawalrecords = append(withdrawalrecords, record)
 		}

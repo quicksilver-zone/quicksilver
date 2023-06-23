@@ -90,7 +90,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 			},
 			Is_118: true,
 		}
-		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainId)
+		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainID())
 		kpr.SetZone(ctx, &zone)
 		gotZone, ok := kpr.GetZone(ctx, chainID)
 		require.True(t, ok, "expected to retrieve the correct zone")
