@@ -120,7 +120,7 @@ func storeReflectCode(t *testing.T, ctx sdk.Context, quicksilverApp *app.Quicksi
 	require.NoError(t, err)
 
 	// when stored
-	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "tittle", "description", sdk.AccAddress(govAddress))
+	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "title", "description", sdk.AccAddress(govAddress))
 	require.NoError(t, err)
 
 	// and proposal execute
