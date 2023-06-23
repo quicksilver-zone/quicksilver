@@ -137,7 +137,7 @@ func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return err
 	}
 
-	k.Logger(ctx).Debug("Delegations callback triggered", "chain", zone.ChainID())
+	k.Logger(ctx).Debug("Delegations callback triggered", "chain", zone.ID())
 
 	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
 }
@@ -155,7 +155,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", zone.ChainID())
+	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", zone.ID())
 
 	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
 		// delegation never gets removed, even with zero shares.
@@ -427,7 +427,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
 	}
 
-	k.Logger(ctx).Debug("DepositTx callback", "zone", zone.ChainID())
+	k.Logger(ctx).Debug("DepositTx callback", "zone", zone.ID())
 
 	res := icqtypes.GetTxWithProofResponse{}
 	err := k.cdc.Unmarshal(args, &res)

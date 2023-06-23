@@ -70,7 +70,7 @@ func (k Keeper) getZoneScores(
 
 // CalcDistributionScores calculates the validator distribution scores for the
 // given zone based on the normalized voting power of the validators; scoring
-// favours smaller validators for decentraliztion purposes.
+// favours smaller validators for decentralization purposes.
 func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *types.ZoneScore) error {
 	k.Logger(ctx).Info("calculate distribution scores", "zone", zone.ID())
 

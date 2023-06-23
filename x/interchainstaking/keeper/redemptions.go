@@ -111,7 +111,7 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 		availablePerValidator[delegation.ValidatorAddress] = thisAvailable.Add(delegation.Amount.Amount)
 		total = total.Add(delegation.Amount.Amount)
 	}
-	for _, redelegation := range k.ZoneRedelegationRecords(ctx, zone.ChainID()) {
+	for _, redelegation := range k.ZoneRedelegationRecords(ctx, zone.ID()) {
 		thisAvailable, found := availablePerValidator[redelegation.Destination]
 		if found {
 			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(sdk.NewInt(redelegation.Amount))
@@ -250,7 +250,7 @@ WITHDRAWAL:
 	for _, valoper := range utils.Keys(valOutCoinsMap) {
 		if !valOutCoinsMap[valoper].Amount.IsZero() {
 			sort.Strings(txHashes[valoper])
-			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainID(), EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashes[valoper]})
+			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ID(), EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashes[valoper]})
 		}
 	}
 

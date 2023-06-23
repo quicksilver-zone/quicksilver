@@ -33,7 +33,7 @@ func (k *Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
 func (k *Keeper) SetZone(ctx sdk.Context, zone *types.Zone) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := k.cdc.MustMarshal(zone)
-	store.Set([]byte(zone.ChainID()), bz)
+	store.Set([]byte(zone.ID()), bz)
 }
 
 // DeleteZone delete zone info.

@@ -16,7 +16,7 @@ import (
 
 func (k *Keeper) getStoreKey(zone *types.Zone, snapshot bool) []byte {
 	if snapshot {
-		return append(types.KeyPrefixSnapshotIntent, []byte(zone.ChainID())...)
+		return append(types.KeyPrefixSnapshotIntent, []byte(zone.ID())...)
 	}
 	return append(types.KeyPrefixIntent, []byte(zone.ID())...)
 }

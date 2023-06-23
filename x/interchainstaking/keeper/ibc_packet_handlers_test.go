@@ -98,7 +98,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainID(),
+						ChainId:   zone.ID(),
 						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 1000000},
@@ -151,7 +151,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainID(),
+						ChainId:   zone.ID(),
 						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 1000000},
@@ -166,7 +166,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 						Status:     icstypes.WithdrawStatusQueued,
 					},
 					{
-						ChainId:   zone.ChainID(),
+						ChainId:   zone.ID(),
 						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 5000000},
@@ -219,7 +219,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   zone.ChainID(),
+						ChainId:   zone.ID(),
 						Delegator: addressutils.GenerateAccAddressForTest().String(),
 						Distribution: []*icstypes.Distribution{
 							{Valoper: vals[0], Amount: 1000000},

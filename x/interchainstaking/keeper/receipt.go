@@ -103,11 +103,11 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 	// update state
 	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, &zone, assets, memoIntent); err != nil {
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ID(), "err", err.Error())
-		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainID(), err)
+		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ID(), err)
 	}
 	if err := k.MintAndSendQAsset(ctx, senderAccAddress, senderAddress, &zone, assets, memoRTS, mappedAddress); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ID(), "err", err)
-		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ChainID(), err)
+		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ID(), err)
 	}
 	if err := k.TransferToDelegate(ctx, &zone, assets, hash); err != nil {
 		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ID(), "err", err)
