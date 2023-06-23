@@ -176,7 +176,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
 	}
 
-	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil { //nolint:contextcheck
+	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil { //nolint:contextcheck // suppress incorrect lint error
 		return &types.MsgGovReopenChannelResponse{}, err
 	}
 
