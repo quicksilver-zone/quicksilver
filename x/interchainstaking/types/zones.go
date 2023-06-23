@@ -12,19 +12,19 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
-func (z *Zone) DepositPort() string {
+func (z *Zone) DepositOwner() string {
 	return fmt.Sprintf("%s.%s", z.ChainId, ICASuffixDelegate)
 }
 
-func (z *Zone) DelegatePort() string {
+func (z *Zone) DelegateOwner() string {
 	return fmt.Sprintf("%s.%s", z.ChainId, ICASuffixDelegate)
 }
 
-func (z *Zone) WithdrawalPort() string {
+func (z *Zone) WithdrawalOwner() string {
 	return fmt.Sprintf("%s.%s", z.ChainId, ICASuffixWithdrawal)
 }
 
-func (z *Zone) PerformancePort() string {
+func (z *Zone) PerformanceOwner() string {
 	return fmt.Sprintf("%s.%s", z.ChainId, ICASuffixPerformance)
 }
 
