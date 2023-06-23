@@ -2220,7 +2220,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNilCompletion() {
 	beforeSource := icstypes.Delegation{
 		DelegationAddress: zone.DelegationAddress.Address,
 		ValidatorAddress:  validators[0].ValoperAddress,
-		Amount:            sdk.NewCoin(zone.BaseDenom, math.NewInt(1000)),
+		Amount:            sdk.NewCoin(zone.BaseDenom, math.NewInt(1001)),
 	}
 
 	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, beforeTarget)
@@ -2267,7 +2267,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNilCompletion() {
 	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, zone.ChainId, validators[0].ValoperAddress, validators[1].ValoperAddress, epoch)
 	suite.Require().False(found) // redelegation record should have been removed.
 
-	afterSource, found := quicksilver.InterchainstakingKeeper.GetDelegation(ctx, &zone, zone.DelegationAddress.Address, validators[1].ValoperAddress)
+	afterSource, found := quicksilver.InterchainstakingKeeper.GetDelegation(ctx, &zone, zone.DelegationAddress.Address, validators[0].ValoperAddress)
 	suite.Require().True(found)
 	suite.Require().Equal(beforeSource.Amount.Sub(redelegate.Amount), afterSource.Amount)
 
