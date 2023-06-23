@@ -74,14 +74,6 @@ func (suite *KeeperTestSuite) executeValidatorSelectionRewardsCallback(performan
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: performanceAddress}
 	bz := prk.GetCodec().MustMarshal(&rewardsQuery)
 
-	// qid := icqkeeper.GenerateQueryHash(
-	// 	s.path.EndpointA.ConnectionID,
-	// 	s.chainB.ChainID,
-	// 	"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
-	// 	bz,
-	// 	types.ModuleName,
-	// )
-
 	// query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	// s.Require().True(found, "qid: %s", qid)
 
