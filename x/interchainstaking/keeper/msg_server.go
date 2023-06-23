@@ -82,7 +82,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	if zone.LiquidityModule {
-		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil { //nolint:contextcheck
+		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil { //nolint:contextcheck // incorrect lint firing
 			return nil, fmt.Errorf("unable to process redemption for LSM: %w", err)
 		}
 	} else {
