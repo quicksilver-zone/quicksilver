@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -1394,7 +1393,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 				DelegatorAddress:    zone.DelegationAddress.Address,
 				ValidatorSrcAddress: record.Source,
 				ValidatorDstAddress: record.Destination,
-				Amount:              sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
+				Amount:              sdk.NewCoin("uatom", math.NewInt(record.Amount)),
 			}
 			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
 			if err != nil {
@@ -1522,7 +1521,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 				DelegatorAddress:    zone.DelegationAddress.Address,
 				ValidatorSrcAddress: record.Source,
 				ValidatorDstAddress: record.Destination,
-				Amount:              sdk.NewCoin("uatom", sdkmath.NewInt(record.Amount)),
+				Amount:              sdk.NewCoin("uatom", math.NewInt(record.Amount)),
 			}
 			err := quicksilver.InterchainstakingKeeper.HandleBeginRedelegate(ctx, &msg, time.Now().Add(time.Hour*24*7), fmt.Sprintf("rebalance/%d", 2))
 			if err != nil {
