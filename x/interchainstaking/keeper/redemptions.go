@@ -63,7 +63,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	for _, msg := range msgs {
 		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
 	}
-	k.AddWithdrawalRecord(ctx, zone.ID(), sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
+	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0))
 
 	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx)
 }
@@ -83,14 +83,14 @@ func (k *Keeper) queueRedemption(
 
 	k.AddWithdrawalRecord(
 		ctx,
-		zone.ID(),
+		zone.ChainId,
 		sender.String(),
 		distribution,
 		destination,
 		amount,
 		burnAmount,
 		hash,
-		WithdrawStatusQueued,
+		types.WithdrawStatusQueued,
 		time.Time{},
 	)
 
@@ -111,12 +111,12 @@ func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (ma
 		availablePerValidator[delegation.ValidatorAddress] = thisAvailable.Add(delegation.Amount.Amount)
 		total = total.Add(delegation.Amount.Amount)
 	}
-	for _, redelegation := range k.ZoneRedelegationRecords(ctx, zone.ChainID()) {
+	for _, redelegation := range k.ZoneRedelegationRecords(ctx, zone.ChainId) {
 		thisAvailable, found := availablePerValidator[redelegation.Destination]
 		if found {
 			availablePerValidator[redelegation.Destination] = thisAvailable.Sub(sdk.NewInt(redelegation.Amount))
 			if availablePerValidator[redelegation.Destination].LT(sdk.ZeroInt()) {
-				return map[string]math.Int{}, sdk.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ID(), redelegation.Destination, availablePerValidator[redelegation.Destination].String())
+				return map[string]math.Int{}, sdk.ZeroInt(), fmt.Errorf("negative available amount [chain: %s, validator: %s, amount: %s]; unable to continue", zone.ChainId, redelegation.Destination, availablePerValidator[redelegation.Destination].String())
 			}
 			total = total.Sub(sdk.NewInt(redelegation.Amount))
 		}
@@ -140,7 +140,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return err
 	}
 
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		k.Logger(ctx).Info("handling queued withdrawal request", "from", withdrawal.Delegator, "to", withdrawal.Recipient, "amount", withdrawal.Amount)
 		if len(withdrawal.Amount) == 0 {
 			k.Logger(ctx).Error("withdrawal %s has no amount set; cannot process...", withdrawal.Txhash)
@@ -220,12 +220,12 @@ WITHDRAWAL:
 	}
 
 	for _, hash := range utils.Keys(txDistrsMap) {
-		record, found := k.GetWithdrawalRecord(ctx, zone.ID(), hash, WithdrawStatusQueued)
+		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, types.WithdrawStatusQueued)
 		if !found {
 			return errors.New("unable to find withdrawal record")
 		}
 		record.Distribution = txDistrsMap[hash]
-		k.UpdateWithdrawalRecordStatus(ctx, &record, WithdrawStatusUnbond)
+		k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusUnbond)
 	}
 
 	if len(txHashes) == 0 {
@@ -242,7 +242,7 @@ WITHDRAWAL:
 
 	k.Logger(ctx).Info("unbonding messages to send", "msg", msgs)
 
-	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch), zone.MessagesPerTx)
+	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("%s/%d", types.MsgTypeWithdrawal, epoch), zone.MessagesPerTx)
 	if err != nil {
 		return err
 	}
@@ -250,7 +250,7 @@ WITHDRAWAL:
 	for _, valoper := range utils.Keys(valOutCoinsMap) {
 		if !valOutCoinsMap[valoper].Amount.IsZero() {
 			sort.Strings(txHashes[valoper])
-			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainID(), EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashes[valoper]})
+			k.SetUnbondingRecord(ctx, types.UnbondingRecord{ChainId: zone.ChainId, EpochNumber: epoch, Validator: valoper, RelatedTxhash: txHashes[valoper]})
 		}
 	}
 
@@ -260,10 +260,10 @@ WITHDRAWAL:
 func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error {
 	var err error
 
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		if ctx.BlockTime().After(withdrawal.CompletionTime.Add(24 * time.Hour)) {
 			k.Logger(ctx).Info("garbage collecting completed unbondings")
-			k.DeleteWithdrawalRecord(ctx, zone.ID(), withdrawal.Txhash, WithdrawStatusCompleted)
+			k.DeleteWithdrawalRecord(ctx, zone.ChainId, withdrawal.Txhash, types.WithdrawStatusCompleted)
 		}
 		return false
 	})

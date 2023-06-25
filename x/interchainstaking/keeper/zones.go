@@ -33,7 +33,7 @@ func (k *Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
 func (k *Keeper) SetZone(ctx sdk.Context, zone *types.Zone) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := k.cdc.MustMarshal(zone)
-	store.Set([]byte(zone.ChainID()), bz)
+	store.Set([]byte(zone.ChainId), bz)
 }
 
 // DeleteZone delete zone info.
@@ -97,7 +97,7 @@ func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 
 func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainID(), WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
 		out = out.Add(wr.Amount[0])
 		return false
 	})
@@ -255,7 +255,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 	queryRes := banktypes.QueryAllBalancesResponse{}
 	err := k.cdc.Unmarshal(queryResult, &queryRes)
 	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal balance", "zone", zone.ID(), "err", err)
+		k.Logger(ctx).Error("unable to unmarshal balance", "zone", zone.ChainId, "err", err)
 		return err
 	}
 	_, addr, err := bech32.DecodeAndConvert(address)
@@ -290,7 +290,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				zone.ConnectionId,
-				zone.ChainID(),
+				zone.ChainId,
 				types.BankStoreKey,
 				append(data, []byte(coin.Denom)...),
 				sdk.NewInt(-1),
@@ -308,7 +308,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 		k.ICQKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
-			zone.ChainID(),
+			zone.ChainId,
 			types.BankStoreKey,
 			append(data, []byte(coin.Denom)...),
 			sdk.NewInt(-1),
@@ -327,9 +327,9 @@ func (k *Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone) 
 	k.Logger(ctx).Info("Initialize performance delegations")
 
 	delegations := k.GetAllPerformanceDelegations(ctx, &zone)
-	var validatorsToDelegate []string
+	validatorsToDelegate := []string{}
 OUTER:
-	for _, v := range k.GetActiveValidators(ctx, zone.ChainID()) {
+	for _, v := range k.GetActiveValidators(ctx, zone.ChainId) {
 		for _, d := range delegations {
 			if d.ValidatorAddress == v.ValoperAddress {
 				continue OUTER
@@ -353,13 +353,13 @@ OUTER:
 	}
 
 	// send delegations to validators
-	k.Logger(ctx).Info("send performance delegations", "zone", zone.ID())
+	k.Logger(ctx).Info("send performance delegations", "zone", zone.ChainId)
 
 	msgs := make([]sdk.Msg, len(validatorsToDelegate))
 	for i, val := range validatorsToDelegate {
 		k.Logger(ctx).Info(
 			"performance delegation",
-			"zone", zone.ID(),
+			"zone", zone.ChainId,
 			"validator", val,
 			"amount", amount,
 		)
@@ -378,7 +378,7 @@ OUTER:
 
 func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.Statistics, error) {
 	out := &types.Statistics{}
-	out.ChainId = zone.ID()
+	out.ChainId = zone.ChainId
 	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
 	userMap := map[string]bool{}
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) bool {
@@ -416,7 +416,7 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 
 	// remove zone and related records
 	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
-		if zone.ID() == chainID {
+		if zone.ChainId == chainID {
 			// remove uni-5 delegation records
 			k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
 				err := k.RemoveDelegation(ctx, zone, delegation)
@@ -441,12 +441,12 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 			})
 
 			// remove withdrawal records
-			k.IterateZoneWithdrawalRecords(ctx, zone.ID(), func(index int64, record types.WithdrawalRecord) (stop bool) {
-				k.DeleteWithdrawalRecord(ctx, zone.ID(), record.Txhash, record.Status)
+			k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
+				k.DeleteWithdrawalRecord(ctx, zone.ChainId, record.Txhash, record.Status)
 				return false
 			})
 
-			k.DeleteZone(ctx, zone.ID())
+			k.DeleteZone(ctx, zone.ChainId)
 
 		}
 		return false

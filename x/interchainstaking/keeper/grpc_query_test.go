@@ -9,9 +9,10 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/utils/randomutils"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
+
+var delegatorAddress = "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure"
 
 func (suite *KeeperTestSuite) TestKeeper_Zones() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
@@ -313,6 +314,136 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	tests := []struct {
+		name     string
+		malleate func()
+		req      *types.QueryDelegatorIntentsRequest
+		wantErr  bool
+		verify   func(delegation []*types.DelegatorIntentsResponse)
+	}{
+		{
+			name:     "DelegatorIntent_Nil_Request",
+			malleate: func() {},
+			req:      nil,
+			wantErr:  true,
+			verify: func([]*types.DelegatorIntentsResponse) {
+			},
+		},
+		{
+			"DelegatorIntent_No_Delegator_Intents",
+			func() {
+			},
+			&types.QueryDelegatorIntentsRequest{
+				DelegatorAddress: testAddress,
+			},
+			false,
+			func(intents []*types.DelegatorIntentsResponse) {
+				for _, intent := range intents {
+					suite.Require().Equal(intent.ChainId, suite.chainB.ChainID)
+					suite.Require().Equal(len(intent.Intent.Intents), 0)
+				}
+			},
+		},
+		{
+			"DelegatorIntent_Valid_Intents across multiple zones",
+			func() {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.Require().True(found)
+				// give funds
+				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
+				// set intents
+				intents := []types.DelegatorIntent{
+					{
+						Delegator: testAddress,
+						Intents: types.ValidatorIntents{
+							&types.ValidatorIntent{
+								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+								Weight:         sdk.OneDec(),
+							},
+						},
+					},
+				}
+				for _, intent := range intents {
+					icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
+				}
+
+				// cosmos zone
+				zone = types.Zone{
+					ConnectionId:    "connection-77001",
+					ChainId:         "cosmoshub-4",
+					AccountPrefix:   "cosmos",
+					LocalDenom:      "uqatom",
+					BaseDenom:       "uatom",
+					MultiSend:       false,
+					LiquidityModule: false,
+					Is_118:          true,
+				}
+				(&icsKeeper).SetZone(ctx, &zone)
+				// give funds
+				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
+				// set intents
+				intents = []types.DelegatorIntent{
+					{
+						Delegator: testAddress,
+						Intents: types.ValidatorIntents{
+							&types.ValidatorIntent{
+								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+								Weight:         sdk.OneDec(),
+							},
+						},
+					},
+				}
+				for _, intent := range intents {
+					icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
+				}
+			},
+			&types.QueryDelegatorIntentsRequest{
+				DelegatorAddress: testAddress,
+			},
+			false,
+			func(intents []*types.DelegatorIntentsResponse) {
+				suite.Require().Equal(len(intents), 2)
+				suite.Require().Equal(intents[0].ChainId, "cosmoshub-4")
+				suite.Require().Equal(intents[1].ChainId, suite.chainB.ChainID)
+				for _, intent := range intents {
+					suite.Require().Equal(intent.Intent.Delegator, testAddress)
+					suite.Require().Equal(len(intent.Intent.Intents), 1)
+				}
+			},
+		},
+	}
+
+	// run tests:
+	suite.setupTestZones()
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.DelegatorIntents(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			tt.verify(resp.Intents)
+
+			vstr, err := json.MarshalIndent(resp, "", "\t")
+			suite.Require().NoError(err)
+
+			suite.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()
@@ -525,7 +656,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 			func() {},
 			&types.QueryWithdrawalRecordsRequest{
 				ChainId:          suite.chainB.ChainID,
-				DelegatorAddress: "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+				DelegatorAddress: delegatorAddress,
 			},
 			false,
 			0,
@@ -550,20 +681,20 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ChainID(),
-					"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+					zone.ChainId,
+					delegatorAddress,
 					distribution,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
 					"ABC012",
-					icskeeper.WithdrawStatusQueued,
+					types.WithdrawStatusQueued,
 					time.Time{},
 				)
 			},
 			&types.QueryWithdrawalRecordsRequest{
 				ChainId:          suite.chainB.ChainID,
-				DelegatorAddress: "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+				DelegatorAddress: delegatorAddress,
 			},
 			false,
 			1,
@@ -655,18 +786,18 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
 					zone.ChainId,
-					"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+					delegatorAddress,
 					distribution,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
 					"ABC012",
-					icskeeper.WithdrawStatusQueued,
+					types.WithdrawStatusQueued,
 					time.Time{},
 				)
 			},
 			&types.QueryUserWithdrawalRecordsRequest{
-				UserAddress: "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+				UserAddress: delegatorAddress,
 			},
 			false,
 			1,
@@ -746,14 +877,14 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ChainID(),
-					"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+					zone.ChainId,
+					delegatorAddress,
 					distribution,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
 					"ABC012",
-					icskeeper.WithdrawStatusQueued,
+					types.WithdrawStatusQueued,
 					time.Time{},
 				)
 			},
@@ -825,7 +956,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 				icsKeeper.SetUnbondingRecord(
 					ctx,
 					types.UnbondingRecord{
-						ChainId:       zone.ChainID(),
+						ChainId:       zone.ChainId,
 						EpochNumber:   1,
 						Validator:     icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 						RelatedTxhash: []string{"ABC012"},
@@ -900,7 +1031,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 				icsKeeper.SetRedelegationRecord(
 					ctx,
 					types.RedelegationRecord{
-						ChainId:     zone.ID(),
+						ChainId:     zone.ChainId,
 						EpochNumber: 1,
 						Source:      icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
 						Destination: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
@@ -994,7 +1125,7 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 				}
 				icsKeeper.SetZone(ctx, &zone)
 
-				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ID())
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ChainId)
 			},
 			&types.QueryMappedAccountsRequest{Address: "cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn"},
 			false,
@@ -1017,7 +1148,7 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 				}
 				icsKeeper.SetZone(ctx, &zone)
 
-				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ID())
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ChainId)
 
 				zone2 := types.Zone{
 					ConnectionId:    "connection-77891",
