@@ -445,7 +445,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
 					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
-					Status:         keeper.WithdrawStatusUnbond,
+					Status:         icstypes.WithdrawStatusUnbond,
 					CompletionTime: completion,
 				}
 			},
@@ -464,7 +464,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(950))),
 					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
 					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
-					Status:         keeper.WithdrawStatusUnbond,
+					Status:         icstypes.WithdrawStatusUnbond,
 					CompletionTime: completion,
 				}
 			},
@@ -499,7 +499,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
 					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
-					Status:         keeper.WithdrawStatusUnbond,
+					Status:         icstypes.WithdrawStatusUnbond,
 					CompletionTime: completion,
 				}
 			},
@@ -522,7 +522,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(975))),
 					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
 					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
-					Status:         keeper.WithdrawStatusUnbond,
+					Status:         icstypes.WithdrawStatusUnbond,
 					CompletionTime: completion,
 				}
 			},
@@ -557,7 +557,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
 					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
-					Status:         keeper.WithdrawStatusUnbond,
+					Status:         icstypes.WithdrawStatusUnbond,
 					CompletionTime: completion,
 				}
 			},
@@ -580,7 +580,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 					Amount:         sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))),
 					BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1000)),
 					Txhash:         "1613D2E8FBF7C7294A4D2247B55EE89FB22FC68C62D61050B944F1191DF092BD",
-					Status:         keeper.WithdrawStatusUnbond,
+					Status:         icstypes.WithdrawStatusUnbond,
 					CompletionTime: completion,
 				}
 			},

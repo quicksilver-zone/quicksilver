@@ -11,15 +11,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-const (
-	// setting WithdrawStatusTokenize as 0 causes the value to be omitted when (un)marshalling :/.
-	WithdrawStatusTokenize  int32 = iota + 1
-	WithdrawStatusQueued    int32 = iota + 1
-	WithdrawStatusUnbond    int32 = iota + 1
-	WithdrawStatusSend      int32 = iota + 1
-	WithdrawStatusCompleted int32 = iota + 1
-)
-
 func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) (sequence uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
 	bz := store.Get(types.KeyPrefixRequeuedWithdrawalRecordSeq)
@@ -132,6 +123,18 @@ func (k *Keeper) AllWithdrawalRecords(ctx sdk.Context) []types.WithdrawalRecord 
 	records := []types.WithdrawalRecord{}
 	k.IterateWithdrawalRecords(ctx, func(_ int64, record types.WithdrawalRecord) (stop bool) {
 		records = append(records, record)
+		return false
+	})
+	return records
+}
+
+// AllUserWithdrawalRecords returns every record in the store for the specified user.
+func (k *Keeper) AllUserWithdrawalRecords(ctx sdk.Context, address string) []types.WithdrawalRecord {
+	records := []types.WithdrawalRecord{}
+	k.IterateWithdrawalRecords(ctx, func(_ int64, record types.WithdrawalRecord) (stop bool) {
+		if record.Delegator == address {
+			records = append(records, record)
+		}
 		return false
 	})
 	return records

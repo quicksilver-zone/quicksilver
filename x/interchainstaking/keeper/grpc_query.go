@@ -146,6 +146,27 @@ func (k *Keeper) DelegatorIntent(c context.Context, req *types.QueryDelegatorInt
 	return &types.QueryDelegatorIntentResponse{Intent: &intent}, nil
 }
 
+// DelegatorIntents returns information about the delegation intent of the given delegator for all zones.
+func (k *Keeper) DelegatorIntents(c context.Context, req *types.QueryDelegatorIntentsRequest) (*types.QueryDelegatorIntentsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	intents := []*types.DelegatorIntentsResponse{}
+
+	k.IterateZones(ctx, func(_ int64, zone *types.Zone) bool {
+		intent, _ := k.GetDelegatorIntent(ctx, zone, req.DelegatorAddress, false)
+		if intent.Intents != nil {
+			intents = append(intents, &types.DelegatorIntentsResponse{ChainId: zone.ChainId, Intent: &intent})
+		}
+		return false
+	})
+
+	return &types.QueryDelegatorIntentsResponse{Intents: intents}, nil
+}
+
 func (k *Keeper) Delegations(c context.Context, req *types.QueryDelegationsRequest) (*types.QueryDelegationsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -245,6 +266,23 @@ func (k *Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawal
 	ctx := sdk.UnwrapSDKContext(c)
 
 	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
+
+	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+}
+
+func (k *Keeper) UserWithdrawalRecords(c context.Context, req *types.QueryUserWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
+	// TODO: implement pagination
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if _, err := addressutils.AddressFromBech32(req.UserAddress, ""); err != nil {
+		return nil, err
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	withdrawalrecords := k.AllUserWithdrawalRecords(ctx, req.UserAddress)
 
 	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
 }
