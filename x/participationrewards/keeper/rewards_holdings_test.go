@@ -169,7 +169,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 			"",
 		},
 		{
-			"valid claims - inequal claims, 100%, truncation, plus mulitple ics + overflow",
+			"valid claims - inequal claims, 100%, truncation, plus multiple ics + overflow",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
 				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				zone.HoldingsAllocation = 5000

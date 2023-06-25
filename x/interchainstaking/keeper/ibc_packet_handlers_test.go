@@ -25,7 +25,6 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
-
 	nineDec := sdk.NewDecWithPrec(9, 2)
 
 	tcs := []struct {
