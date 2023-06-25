@@ -16,6 +16,8 @@ import (
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
+
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -217,6 +219,13 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	}
 
 	k.Logger(ctx).Info("Transferred qAssets to sender", "assets", qAssets, "sender", sender)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			minttypes.EventTypeMint,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, qAssets.String()),
+		),
+	)
 	return nil
 }
 
