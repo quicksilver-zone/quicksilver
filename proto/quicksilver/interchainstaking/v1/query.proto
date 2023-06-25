@@ -55,6 +55,10 @@ service Query {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/receipts";
   }
 
+  rpc TxStatus(QueryTxStatusRequest) returns (QueryTxStatusResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/deposits/{tx_hash}";
+  }
+
   // WithdrawalRecords provides data on the active withdrawals.
   rpc ZoneWithdrawalRecords(QueryWithdrawalRecordsRequest) returns (QueryWithdrawalRecordsResponse) {
     option (google.api.http).get =
@@ -183,6 +187,15 @@ message QueryReceiptsRequest {
 message QueryReceiptsResponse {
   repeated Receipt receipts = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryTxStatusRequest {
+  string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
+  string tx_hash = 2;
+}
+
+message QueryTxStatusResponse {
+  Receipt receipt = 1;
 }
 
 message QueryWithdrawalRecordsRequest {
