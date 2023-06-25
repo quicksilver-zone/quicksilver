@@ -365,7 +365,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 	zone := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
 
 	receivedCoin := sMsg.Token
-	if receivedCoin.Denom != zone.BaseDenom {
+	if zone != nil && receivedCoin.Denom != zone.BaseDenom {
 		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
 		rewardCoin := receivedCoin.SubAmount(feeAmount)
 		zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")

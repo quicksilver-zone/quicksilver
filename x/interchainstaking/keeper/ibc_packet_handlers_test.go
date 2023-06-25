@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,36 +24,91 @@ import (
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func TestHandleMsgTransferGood(t *testing.T) {
-	quicksilver, ctx := app.GetAppWithContext(t, true)
-	err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
-	require.NoError(t, err)
+func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 
-	sender := addressutils.GenerateAccAddressForTest()
-	senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
-	require.NoError(t, err)
+	nineDec := sdk.NewDecWithPrec(9, 2)
 
-	txMacc := quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
-	feeMacc := quicksilver.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
-	txMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
-	feeMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
-
-	transferMsg := ibctransfertypes.MsgTransfer{
-		SourcePort:    "transfer",
-		SourceChannel: "channel-0",
-		Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
-		Sender:        senderAddr,
-		Receiver:      quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+	tcs := []struct {
+		name             string
+		amount           sdk.Coin
+		fcAmount         sdk.Coin
+		withdrawalAmount sdk.Coin
+		feeAmount        *sdk.Dec
+	}{
+		{
+			name:             "staking denom - all goes to fc",
+			amount:           sdk.NewCoin("uatom", math.NewInt(100)),
+			fcAmount:         sdk.NewCoin("uatom", math.NewInt(100)),
+			withdrawalAmount: sdk.Coin{},
+		},
+		{
+			name:             "non staking denom - default (2.5%) to fc, remainder to withdrawal",
+			amount:           sdk.NewCoin("ujuno", math.NewInt(100)),
+			fcAmount:         sdk.NewCoin("ujuno", math.NewInt(2)),
+			withdrawalAmount: sdk.NewCoin("ujuno", math.NewInt(98)),
+		},
+		{
+			name:             "non staking denom - non-default (9%) to fc, remainder to withdrawal",
+			amount:           sdk.NewCoin("ibc/01234567890123456789012345678901", math.NewInt(100)),
+			fcAmount:         sdk.NewCoin("ibc/01234567890123456789012345678901", math.NewInt(9)),
+			withdrawalAmount: sdk.NewCoin("ibc/01234567890123456789012345678901", math.NewInt(91)),
+			feeAmount:        &nineDec, // 0.09 = 9%
+		},
 	}
-	require.NoError(t, quicksilver.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
+	for _, tc := range tcs {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
 
-	txMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
-	feeMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
 
-	// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
-	require.Equal(t, txMaccBalance.AmountOf("denom").Sub(txMaccBalance2.AmountOf("denom")), sdk.NewInt(100))
-	// assert that fee collector module balance is now 100denom more than before HandleMsgTransfer()
-	require.Equal(t, feeMaccBalance2.AmountOf("denom").Sub(feeMaccBalance.AmountOf("denom")), sdk.NewInt(100))
+			err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(tc.amount))
+			suite.Require().NoError(err)
+
+			if tc.feeAmount != nil {
+				params := quicksilver.InterchainstakingKeeper.GetParams(ctx)
+				params.CommissionRate.Set(*tc.feeAmount)
+				quicksilver.InterchainstakingKeeper.SetParams(ctx, params)
+			}
+
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.Require().True(found)
+
+			sender := zone.WithdrawalAddress.Address
+			suite.Require().NoError(err)
+
+			txMacc := quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
+			feeMacc := quicksilver.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
+
+			transferMsg := ibctransfertypes.MsgTransfer{
+				SourcePort:    "transfer",
+				SourceChannel: "channel-0",
+				Token:         tc.amount,
+				Sender:        sender,
+				Receiver:      quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
+			}
+			suite.Require().NoError(quicksilver.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
+
+			txMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
+			feeMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
+			fmt.Println(feeMaccBalance)
+			zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
+			suite.Require().NoError(err)
+			wdAccountBalance := quicksilver.BankKeeper.GetAllBalances(ctx, zoneAddress)
+
+			// assert that ics module balance is nil
+			suite.Require().Equal(sdk.Coins{}, txMaccBalance)
+
+			// assert that fee collector module balance is the expected value
+			suite.Require().Contains(feeMaccBalance, tc.fcAmount)
+
+			if !tc.withdrawalAmount.IsNil() {
+				// assert that zone withdrawal address balance (local chain) is the expected value
+				suite.Require().Contains(wdAccountBalance, tc.withdrawalAmount)
+			}
+		})
+	}
 }
 
 func TestHandleMsgTransferBadType(t *testing.T) {
