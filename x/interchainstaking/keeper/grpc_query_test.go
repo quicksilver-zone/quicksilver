@@ -621,6 +621,109 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+	suite.setupTestZones()
+
+	testReceiptHash := "testReceiptHash#01"
+
+	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.Require().True(found)
+
+	testReceipt := icsKeeper.NewReceipt(
+		ctx,
+		&zone,
+		testAddress,
+		testReceiptHash,
+		sdk.NewCoins(
+			sdk.NewCoin(zone.BaseDenom, math.NewInt(50000000)),
+		),
+	)
+
+	tests := []struct {
+		name     string
+		malleate func()
+		req      *types.QueryTxStatusRequest
+		want     *types.QueryTxStatusResponse
+		wantErr  bool
+	}{
+		{
+			"Nil_Request",
+			func() {},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"empty_TxHash",
+			func() {},
+			&types.QueryTxStatusRequest{
+				ChainId: suite.chainB.ChainID,
+				TxHash:  "",
+			},
+			nil,
+			true,
+		},
+		{
+			"Invalid_Zone",
+			func() {},
+			&types.QueryTxStatusRequest{
+				ChainId: "boguschain",
+				TxHash:  "unimportant",
+			},
+			nil,
+			true,
+		},
+		{
+			name:     "Receipts_No_Zone_Receipts",
+			malleate: func() {},
+			req: &types.QueryTxStatusRequest{
+				ChainId: suite.chainB.ChainID,
+				TxHash:  "randomhash",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			"Receipts_Valid_Receipts",
+			func() {
+				icsKeeper.SetReceipt(ctx, *testReceipt)
+			},
+			&types.QueryTxStatusRequest{
+				ChainId: suite.chainB.ChainID,
+				TxHash:  testReceiptHash,
+			},
+			&types.QueryTxStatusResponse{Receipt: testReceipt},
+			false,
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.TxStatus(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Require().Error(err)
+				return
+			}
+			suite.Require().NoError(err)
+			suite.Require().NotNil(resp)
+			suite.Require().EqualValues(tt.want, resp)
+
+			vstr, err := json.MarshalIndent(resp, "", "\t")
+			suite.Require().NoError(err)
+
+			suite.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	ctx := suite.chainA.GetContext()
