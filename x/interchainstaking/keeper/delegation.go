@@ -83,11 +83,11 @@ func (k *Keeper) GetAllDelegations(ctx sdk.Context, zone *types.Zone) (delegatio
 	return delegations
 }
 
-// IterateAllPerformanceDelegations iterates through all of the delegations.
+// IterateAllPerformanceDelegations iterates through all the delegations.
 func (k *Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(zone.ID())...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(zone.ChainID())...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
