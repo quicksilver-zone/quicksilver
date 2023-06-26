@@ -43,3 +43,19 @@ func ParseTxMsgMemo(memo, msgType string) (txHash string, err error) {
 
 	return parts[1], err
 }
+
+func EpochMsgMemo(msgType string, epoch int64) string {
+	return fmt.Sprintf("%s/%d", msgType, epoch)
+}
+
+func EpochRebalanceMemo(epoch int64) string {
+	return EpochMsgMemo(MsgTypeRebalance, epoch)
+}
+
+func EpochWithdrawalMemo(epoch int64) string {
+	return EpochMsgMemo(MsgTypeWithdrawal, epoch)
+}
+
+func TxUnbondSendMemo(hash string) string {
+	return fmt.Sprintf("%s/%s", MsgTypeUnbondSend, hash)
+}
