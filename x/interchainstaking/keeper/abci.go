@@ -56,7 +56,7 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 						// trigger valset update.
 						period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 						query := stakingTypes.QueryValidatorsRequest{}
-						err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ID(), query, sdkmath.NewInt(period))
+						err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
 						if err != nil {
 							k.Logger(ctx).Error("unable to trigger valset update query", "error", err.Error())
 							// failing to emit the valset update is not terminal but constitutes

@@ -63,7 +63,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				connectionID,
-				zone.ChainID(),
+				zone.ID(),
 				"cosmos.bank.v1beta1.Query/AllBalances",
 				bz,
 				sdk.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),

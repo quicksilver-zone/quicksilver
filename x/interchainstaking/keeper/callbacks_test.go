@@ -394,7 +394,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 			bz, err := quicksilver.AppCodec().Marshal(&test.validator)
 			suite.Require().NoError(err)
 
-			err = keeper.ValidatorCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ID()})
+			err = keeper.ValidatorCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainID()})
 			suite.Require().NoError(err)
 
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zone.ID())

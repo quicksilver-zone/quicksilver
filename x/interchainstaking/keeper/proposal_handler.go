@@ -122,11 +122,14 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		return err
 	}
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
-	query := stakingTypes.QueryValidatorsRequest{}
-	err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ID(), query, sdkmath.NewInt(period))
-	if err != nil {
-		return err
+	// query val set for base zone
+	if !zone.IsSubzone() {
+		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+		query := stakingTypes.QueryValidatorsRequest{}
+		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+		if err != nil {
+			return err
+		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -294,7 +297,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 
 			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 			query := stakingTypes.QueryValidatorsRequest{}
-			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ID(), query, sdkmath.NewInt(period))
+			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
 			if err != nil {
 				return err
 			}

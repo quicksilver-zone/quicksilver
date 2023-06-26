@@ -217,7 +217,7 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 	handler := upgrades.V010402rc1UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
 	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		if zone.ChainID() == "uni-5" {
+		if zone.ID() == "uni-5" {
 
 			zone.Validators = []*icstypes.Validator{
 				{
@@ -240,7 +240,7 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 			}
 			app.InterchainstakingKeeper.SetZone(ctx, zone)
 		}
-		if zone.ChainID() == "osmosis-1" {
+		if zone.ID() == "osmosis-1" {
 			zone.Validators = []*icstypes.Validator{
 				{
 					ValoperAddress:  "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
@@ -269,7 +269,7 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 	s.Require().NoError(err)
 
 	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		if zone.ChainID() == "uni-5" {
+		if zone.ID() == "uni-5" {
 			s.Require().Nil(zone.Validators)
 			valAddrBytes, err := addressutils.ValAddressFromBech32("junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn", "junovaloper")
 			s.Require().NoError(err)
@@ -280,7 +280,7 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 			_, found = app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainID(), valAddrBytes2)
 			s.Require().True(found)
 		}
-		if zone.ChainID() == "osmosis-1" {
+		if zone.ID() == "osmosis-1" {
 			s.Require().Nil(zone.Validators)
 			valAddrBytes, err := addressutils.ValAddressFromBech32("osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", "osmovaloper")
 			s.Require().NoError(err)

@@ -237,7 +237,7 @@ func V010402rc6UpgradeHandler(
 				appKeepers.InterchainstakingKeeper.ICQKeeper.MakeRequest(
 					ctx,
 					zone.ConnectionId,
-					zone.ChainID(),
+					zone.ID(),
 					"cosmos.staking.v1beta1.Query/DelegatorDelegations",
 					bz,
 					sdk.NewInt(-1),
