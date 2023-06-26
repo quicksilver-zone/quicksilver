@@ -353,13 +353,13 @@ OUTER:
 	}
 
 	// send delegations to validators
-	k.Logger(ctx).Info("send performance delegations", "zone", zone.ID())
+	k.Logger(ctx).Info("send performance delegations", "zone", zone.ChainID())
 
 	msgs := make([]sdk.Msg, len(validatorsToDelegate))
 	for i, val := range validatorsToDelegate {
 		k.Logger(ctx).Info(
 			"performance delegation",
-			"zone", zone.ID(),
+			"zone", zone.ChainID(),
 			"validator", val,
 			"amount", amount,
 		)
