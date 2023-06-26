@@ -133,7 +133,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 			err = proto.Unmarshal(msgResponse, &response)
 			if err != nil {
-				k.Logger(ctx).Error("unable to unpack MsgRedeemTokensforShares response", "error", err)
+				k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
 				return err
 			}
 
