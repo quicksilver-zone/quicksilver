@@ -59,10 +59,13 @@ func DeserializeCosmosTxTyped(cdc codec.BinaryCodec, data []byte) ([]TypedMsg, e
 }
 
 func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte) error {
-	var ack channeltypes.Acknowledgement
+	var (
+	     ack channeltypes.Acknowledgement
+	     success bool
+	     txMsgData *sdk.TxMsgData
+	)
+	
 	err := icatypes.ModuleCdc.UnmarshalJSON(acknowledgement, &ack)
-	txMsgData := &sdk.TxMsgData{}
-	var success bool
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal acknowledgement", "error", err, "data", acknowledgement)
 		return err
