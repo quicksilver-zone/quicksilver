@@ -362,10 +362,11 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 		return errors.New("unexpected recipient")
 	}
 
-	zone := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
-
 	receivedCoin := sMsg.Token
-	if zone != nil && receivedCoin.Denom != zone.BaseDenom {
+
+	zone, found := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
+
+	if found && receivedCoin.Denom != zone.BaseDenom {
 		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
 		rewardCoin := receivedCoin.SubAmount(feeAmount)
 		zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
@@ -373,7 +374,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 			return err
 		}
 		k.Logger(ctx).Info("distributing collected rewards to users", "amount", rewardCoin)
-		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, zoneAddress, sdk.NewCoins(rewardCoin)) // Fee collector name needs to be passed in to keeper constructor.
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, zoneAddress, sdk.NewCoins(rewardCoin))
 		if err != nil {
 			return err
 		}
@@ -382,7 +383,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 
 	balance := sdk.NewCoins(receivedCoin)
 	k.Logger(ctx).Info("distributing collected fees to stakers", "amount", balance)
-	return k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, balance) // Fee collector name needs to be passed in to keeper constructor.
+	return k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, balance)
 }
 
 func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) error {
@@ -556,7 +557,10 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 		return errors.New("unable to cast source message to MsgTokenizeShares")
 	}
 
-	zone := k.GetZoneForDelegateAccount(ctx, tsMsg.DelegatorAddress)
+	zone, found := k.GetZoneForDelegateAccount(ctx, tsMsg.DelegatorAddress)
+	if !found {
+		return fmt.Errorf("zone for delegate account %s not found", tsMsg.DelegatorAddress)
+	}
 	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusTokenize)
 
 	if !found {
@@ -603,7 +607,10 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	if !ok {
 		return errors.New("unable to unmarshal MsgBeginRedelegate")
 	}
-	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
+	zone, found := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
+	if !found {
+		return fmt.Errorf("zone for delegate account %s not found", redelegateMsg.DelegatorAddress)
+	}
 	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	if !found {
 		k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
@@ -687,7 +694,10 @@ func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo 
 	if !ok {
 		return errors.New("unable to unmarshal MsgBeginRedelegate")
 	}
-	zone := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
+	zone, found := k.GetZoneForDelegateAccount(ctx, redelegateMsg.DelegatorAddress)
+	if !found {
+		return fmt.Errorf("zone for delegate account %s not found", redelegateMsg.DelegatorAddress)
+	}
 	k.DeleteRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	k.Logger(ctx).Error("Cleaning up redelegation record")
 	return nil
@@ -711,8 +721,10 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		return err
 	}
 
-	zone := k.GetZoneForDelegateAccount(ctx, undelegateMsg.DelegatorAddress)
-
+	zone, found := k.GetZoneForDelegateAccount(ctx, undelegateMsg.DelegatorAddress)
+	if !found {
+		return fmt.Errorf("zone for delegate account %s not found", undelegateMsg.DelegatorAddress)
+	}
 	ubr, found := k.GetUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
 	if !found {
 		return fmt.Errorf("unbonding record for %s not found for epoch %d", undelegateMsg.ValidatorAddress, epochNumber)
@@ -802,7 +814,10 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 		return errors.New("unable to unmarshal MsgUndelegate")
 	}
 
-	zone := k.GetZoneForDelegateAccount(ctx, undelegateMsg.DelegatorAddress)
+	zone, found := k.GetZoneForDelegateAccount(ctx, undelegateMsg.DelegatorAddress)
+	if !found {
+		return fmt.Errorf("zone for delegate account %s not found", undelegateMsg.DelegatorAddress)
+	}
 	ubr, found := k.GetUnbondingRecord(ctx, zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
 	if !found {
 		return fmt.Errorf("cannot find unbonding record for %s/%s/%d", zone.ChainId, undelegateMsg.ValidatorAddress, epochNumber)
@@ -872,7 +887,10 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 	if err != nil {
 		return err
 	}
-	zone := k.GetZoneForDelegateAccount(ctx, redeemMsg.DelegatorAddress)
+	zone, found := k.GetZoneForDelegateAccount(ctx, redeemMsg.DelegatorAddress)
+	if !found {
+		return fmt.Errorf("zone for delegate account %s not found", redeemMsg.DelegatorAddress)
+	}
 
 	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
 }
@@ -885,10 +903,10 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		k.Logger(ctx).Error("unable to cast source message to MsgDelegate")
 		return errors.New("unable to cast source message to MsgDelegate")
 	}
-	zone := k.GetZoneForDelegateAccount(ctx, delegateMsg.DelegatorAddress)
-	if zone == nil {
+	zone, found := k.GetZoneForDelegateAccount(ctx, delegateMsg.DelegatorAddress)
+	if !found {
 		// most likely a performance account...
-		if zone := k.GetZoneForPerformanceAccount(ctx, delegateMsg.DelegatorAddress); zone != nil {
+		if _, found := k.GetZoneForPerformanceAccount(ctx, delegateMsg.DelegatorAddress); found {
 			return nil
 		}
 		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
@@ -933,12 +951,12 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 		k.Logger(ctx).Error("unable to cast source message to MsgSetWithdrawAddress")
 		return errors.New("unable to cast source message to MsgSetWithdrawAddress")
 	}
-	zone := k.GetZoneForDelegateAccount(ctx, original.DelegatorAddress)
-	if zone == nil {
-		zone = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
-		if zone == nil {
-			zone = k.GetZoneForDepositAccount(ctx, original.DelegatorAddress)
-			if zone == nil {
+	zone, found := k.GetZoneForDelegateAccount(ctx, original.DelegatorAddress)
+	if !found {
+		zone, found = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
+		if !found {
+			zone, found = k.GetZoneForDepositAccount(ctx, original.DelegatorAddress)
+			if !found {
 				return errors.New("unable to find zone")
 			}
 			if err := zone.DepositAddress.SetWithdrawalAddress(original.WithdrawAddress); err != nil {
