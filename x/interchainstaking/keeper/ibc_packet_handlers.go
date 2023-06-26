@@ -60,11 +60,12 @@ func DeserializeCosmosTxTyped(cdc codec.BinaryCodec, data []byte) ([]TypedMsg, e
 
 func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte) error {
 	var (
-	     ack channeltypes.Acknowledgement
-	     success bool
-	     txMsgData *sdk.TxMsgData
+		ack        channeltypes.Acknowledgement
+		success    bool
+		txMsgData  sdk.TxMsgData
+		packetData icatypes.InterchainAccountPacketData
 	)
-	
+
 	err := icatypes.ModuleCdc.UnmarshalJSON(acknowledgement, &ack)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal acknowledgement", "error", err, "data", acknowledgement)
@@ -78,7 +79,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		success = false
 	} else {
 		defer telemetry.IncrCounter(1, types.ModuleName, "ica_acknowledgement_success")
-		err = proto.Unmarshal(ack.GetResult(), txMsgData)
+		err = proto.Unmarshal(ack.GetResult(), &txMsgData)
 		if err != nil {
 			k.Logger(ctx).Error("unable to unmarshal acknowledgement", "error", err, "ack", ack.GetResult())
 			return err
@@ -86,7 +87,6 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		success = true
 	}
 
-	var packetData icatypes.InterchainAccountPacketData
 	err = icatypes.ModuleCdc.UnmarshalJSON(packet.GetData(), &packetData)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal acknowledgement packet data", "error", err, "data", packetData)
@@ -107,16 +107,27 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		// use msgData for v0.45 and below and msgResponse for v0.46+
 		//nolint:staticcheck // SA1019 ignore this!
 		var msgResponse []byte
-		if len(txMsgData.MsgResponses) > 0 {
+
+		// check that the msgResponses slice is at least the length of the current index.
+		switch {
+		case !success:
+			// no-op - there is no msgresponse for a AckErr
+		case len(txMsgData.MsgResponses) > msgIndex:
 			msgResponse = txMsgData.MsgResponses[msgIndex].GetValue()
-		} else if len(txMsgData.Data) > 0 {
+		case len(txMsgData.Data) > msgIndex:
 			msgResponse = txMsgData.Data[msgIndex].GetData()
+		default:
+			return fmt.Errorf("could not find msgresponse for index %d", msgIndex)
 		}
 
 		switch msg.Type {
 		case "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward":
-			// TODO: if this fails, it's okay. log but continue.
 			if !success {
+				withdrawalMsg, ok := msg.Msg.(*distrtypes.MsgWithdrawDelegatorReward)
+				if !ok {
+					return errors.New("unable to unmarshal MsgWithdrawDelegatorReward")
+				}
+				k.Logger(ctx).Error("Failed to withdraw rewards; will try again next epoch", "validator", withdrawalMsg.ValidatorAddress)
 				return nil
 			}
 			k.Logger(ctx).Info("Rewards withdrawn")
