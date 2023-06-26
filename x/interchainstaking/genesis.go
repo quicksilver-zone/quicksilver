@@ -88,7 +88,9 @@ func ExportDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.Delegati
 func ExportPerformanceDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegationsForZone {
 	delegationsForZones := make([]types.DelegationsForZone, 0)
 	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
-		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ID(), Delegations: k.GetAllPerformanceDelegationsAsPointer(ctx, zone)})
+		if !zone.IsSubzone() {
+			delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainID(), Delegations: k.GetAllPerformanceDelegationsAsPointer(ctx, zone)})
+		}
 		return false
 	})
 	return delegationsForZones
