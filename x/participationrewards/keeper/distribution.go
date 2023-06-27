@@ -171,10 +171,41 @@ func (k *Keeper) SetZoneAllocations(ctx sdk.Context, tvs TokenValues, allocation
 	return nil
 }
 
+// DistributeToUsersFromModule sends the allocated user rewards to the user address.
+func (k *Keeper) DistributeToUsersFromModule(ctx sdk.Context, userAllocations []types.UserAllocation) error {
+	k.Logger(ctx).Info("distribute to users from module", "allocations", userAllocations)
+
+	for _, ua := range userAllocations {
+		if ua.Amount.IsZero() {
+			continue
+		}
+
+		coins := sdk.NewCoins(ua.Amount)
+
+		addrBytes, err := addressutils.AccAddressFromBech32(ua.Address, "")
+		if err != nil {
+			return err
+		}
+
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addrBytes, coins)
+		if err != nil {
+			return err
+		}
+		k.Logger(ctx).Info("distribute to user", "address", ua.Address, "coins", coins, "remaining", k.GetModuleBalance(ctx))
+
+	}
+
+	return nil
+}
+
 // DistributeToUsers sends the allocated user rewards to the user address.
-func (k *Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.UserAllocation) error {
-	k.Logger(ctx).Info("distributeToUsers", "allocations", userAllocations)
-	hasError := false
+func (k *Keeper) DistributeToUsersFromAddress(ctx sdk.Context, userAllocations []types.UserAllocation, fromAddress string) error {
+	k.Logger(ctx).Info("distributeto users from account", "allocations", userAllocations)
+
+	fromAddrBytes, err := addressutils.AccAddressFromBech32(fromAddress, "")
+	if err != nil {
+		return err
+	}
 
 	for _, ua := range userAllocations {
 		if ua.Amount.IsZero() {
@@ -182,29 +213,19 @@ func (k *Keeper) DistributeToUsers(ctx sdk.Context, userAllocations []types.User
 		}
 
 		coins := sdk.NewCoins(
-			sdk.NewCoin(
-				k.stakingKeeper.BondDenom(ctx),
-				ua.Amount,
-			),
+			ua.Amount,
 		)
 
 		addrBytes, err := addressutils.AccAddressFromBech32(ua.Address, "")
 		if err != nil {
-			k.Logger(ctx).Error("unmarshalling address", "address", ua.Address)
-			hasError = true
+			return err
 		}
 
-		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, addrBytes, coins)
+		err = k.bankKeeper.SendCoins(ctx, fromAddrBytes, addrBytes, coins)
 		if err != nil {
-			k.Logger(ctx).Error("distribute to user", "address", ua.Address, "coins", coins)
-			hasError = true
-		} else {
-			k.Logger(ctx).Info("distribute to user", "address", ua.Address, "coins", coins, "remaining", k.GetModuleBalance(ctx))
+			return err
 		}
-	}
-
-	if hasError {
-		return errors.New("errors occurred while distributing rewards, review logs")
+		k.Logger(ctx).Info("distribute to user", "address", ua.Address, "coins", coins, "remaining", k.GetModuleBalance(ctx))
 	}
 
 	return nil
