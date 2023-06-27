@@ -481,7 +481,7 @@ func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) erro
 			err := k.SubmitTx(ctx, []sdk.Msg{sendMsg}, zone.DelegationAddress, types.TxUnbondSendMemo(withdrawal.Txhash), zone.MessagesPerTx)
 
 			if err != nil {
-				k.Logger(ctx).Error("error", err)
+				k.Logger(ctx).Error("error submitting transaction - requeue withdrawal", "error", err)
 
 				// do not update status and increment completion time
 				withdrawal.DelayCompletion(ctx, types.DefaultWithdrawalRequeueDelay)
