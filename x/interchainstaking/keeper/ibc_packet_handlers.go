@@ -495,10 +495,6 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
 
-	if zone.IsSubzone() {
-		return nil
-	}
-
 	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
 }
 
@@ -630,7 +626,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
-		zone.ChainID(),
+		zone.ID(),
 		"store/staking/key",
 		data,
 		sdk.NewInt(-1),
@@ -657,7 +653,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
-		zone.ChainID(),
+		zone.ID(),
 		"store/staking/key",
 		data,
 		sdk.NewInt(-1),
@@ -740,7 +736,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
-		zone.ChainID(),
+		zone.ID(),
 		"store/staking/key",
 		data,
 		sdk.NewInt(-1),
