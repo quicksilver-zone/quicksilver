@@ -91,13 +91,14 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 
 	if len(memo) > 0 {
 		// process memo
-		memoIntent, memoFields, err = zone.DecodeMemo(assets, memo)
+		memoFields, err = zone.DecodeMemo(memo)
 		if err != nil {
 			// What should we do on error here? just log?
 			k.Logger(ctx).Error("error decoding memo", "error", err.Error(), "memo", memo)
 		}
 		memoRTS = memoFields.RTS()
 		mappedAddress, _ = memoFields.AccountMap()
+		memoIntent, _ = memoFields.Intent(assets, &zone)
 	}
 
 	// update state

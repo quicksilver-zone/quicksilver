@@ -120,24 +120,31 @@ func TestDecodeMemo(t *testing.T) {
 		wantErr            bool
 	}{
 		{
-			memo:   "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc",
+			memo:   "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5w=",
 			amount: 100,
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(45),
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(55),
 			},
+			expectedMemoFields: types.MemoFields{
+				2: types.MemoField{ID: 2, Data: []uint8{0x5a, 0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc, 0x6e, 0xa6, 0x90, 0x4, 0x94, 0xf1, 0xf7, 0x3c, 0xda, 0xe2, 0xba, 0xf1, 0xc8, 0xb8, 0x8f, 0xf5, 0xfc, 0xb, 0x8a, 0x33, 0x9c}},
+			},
 		},
 		{
-			memo:   "RoS/+Ex92tEcuMBzhukZKMVnXKS8RqaQBJTx9zza4rrxyLiP9fwLijOcPK/59acWzdcBME6ub8f0LID97qWE",
+			memo:   "Aj9GhL/4TH3a0Ry4wHOG6RkoxWdcpLxGppAElPH3PNriuvHIuI/1/AuKM5w8r/n1pxbN1wEwTq5vx/QsgP3upYQ=",
 			amount: 1000,
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(350),
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(350),
 				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdk.NewDec(300),
 			},
+
+			expectedMemoFields: types.MemoFields{
+				2: types.MemoField{ID: 2, Data: []uint8{0x46, 0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc, 0x46, 0xa6, 0x90, 0x4, 0x94, 0xf1, 0xf7, 0x3c, 0xda, 0xe2, 0xba, 0xf1, 0xc8, 0xb8, 0x8f, 0xf5, 0xfc, 0xb, 0x8a, 0x33, 0x9c, 0x3c, 0xaf, 0xf9, 0xf5, 0xa7, 0x16, 0xcd, 0xd7, 0x1, 0x30, 0x4e, 0xae, 0x6f, 0xc7, 0xf4, 0x2c, 0x80, 0xfd, 0xee, 0xa5, 0x84}},
+			},
 		},
 		{
-			memo:   "ToS/+Ex92tEcuMBzhukZKMVnXKS8NKaQBJTx9zza4rrxyLiP9fwLijOcPK/59acWzdcBME6ub8f0LID97qWECuxJKXmxBM1YBQyWHSAXDiwmMY78",
+			memo:   "AlROhL/4TH3a0Ry4wHOG6RkoxWdcpLw0ppAElPH3PNriuvHIuI/1/AuKM5w8r/n1pxbN1wEwTq5vx/QsgP3upYQK7EkpebEEzVgFDJYdIBcOLCYxjvw=",
 			amount: 10,
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(39, 1),
@@ -145,26 +152,27 @@ func TestDecodeMemo(t *testing.T) {
 				"cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy": sdk.NewDec(3),
 				"cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll": sdk.NewDecWithPrec(5, 1),
 			},
+			expectedMemoFields: types.MemoFields{
+				2: types.MemoField{ID: 2, Data: []uint8{0x4e, 0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc, 0x34, 0xa6, 0x90, 0x4, 0x94, 0xf1, 0xf7, 0x3c, 0xda, 0xe2, 0xba, 0xf1, 0xc8, 0xb8, 0x8f, 0xf5, 0xfc, 0xb, 0x8a, 0x33, 0x9c, 0x3c, 0xaf, 0xf9, 0xf5, 0xa7, 0x16, 0xcd, 0xd7, 0x1, 0x30, 0x4e, 0xae, 0x6f, 0xc7, 0xf4, 0x2c, 0x80, 0xfd, 0xee, 0xa5, 0x84, 0xa, 0xec, 0x49, 0x29, 0x79, 0xb1, 0x4, 0xcd, 0x58, 0x5, 0xc, 0x96, 0x1d, 0x20, 0x17, 0xe, 0x2c, 0x26, 0x31, 0x8e, 0xfc}},
+			},
 		},
 		{
 			name:   "val intents and memo fields",
-			memo:   "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc/wACAQI=",
+			memo:   "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5wAAgEC",
 			amount: 100,
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDec(45),
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDec(55),
 			},
 			expectedMemoFields: types.MemoFields{
-				0: {
-					ID:   0,
-					Data: []byte{1, 2},
-				},
+				0: types.MemoField{ID: 0, Data: []uint8{0x1, 0x2}},
+				2: types.MemoField{ID: 2, Data: []uint8{0x5a, 0x84, 0xbf, 0xf8, 0x4c, 0x7d, 0xda, 0xd1, 0x1c, 0xb8, 0xc0, 0x73, 0x86, 0xe9, 0x19, 0x28, 0xc5, 0x67, 0x5c, 0xa4, 0xbc, 0x6e, 0xa6, 0x90, 0x4, 0x94, 0xf1, 0xf7, 0x3c, 0xda, 0xe2, 0xba, 0xf1, 0xc8, 0xb8, 0x8f, 0xf5, 0xfc, 0xb, 0x8a, 0x33, 0x9c}},
 			},
 		},
 		{
 			name:    "empty memo",
 			memo:    "",
-			wantErr: true,
+			wantErr: false,
 		},
 		{
 			name:    "invalid length",
@@ -180,17 +188,23 @@ func TestDecodeMemo(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			validatorIntents, memoFields, err := zone.DecodeMemo(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
+			memoFields, err := zone.DecodeMemo(tc.memo)
+
 			if tc.wantErr {
 				require.Error(t, err)
 				return
 			}
 
-			require.NoError(t, err)
-			for _, v := range validatorIntents {
-				if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
-					t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
+			validatorIntents, found := memoFields.Intent(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), &zone)
+			if len(tc.expectedIntent) > 0 {
+				require.True(t, found)
+				for _, v := range validatorIntents {
+					if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
+						t.Errorf("Got %v expected %v", v.Weight, tc.expectedIntent[v.ValoperAddress])
+					}
 				}
+			} else {
+				require.False(t, found)
 			}
 
 			require.Equal(t, tc.expectedMemoFields, memoFields)
@@ -222,7 +236,8 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
 			},
-			memo:   "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc",
+			memo: "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5w=",
+
 			amount: 100,
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
@@ -235,7 +250,7 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(55, 2),
 			},
-			memo:   "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc",
+			memo:   "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5w=",
 			amount: 1000,
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(45, 2),
@@ -248,7 +263,7 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(25, 2),
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(75, 2),
 			},
-			memo:   "WoS/+Ex92tEcuMBzhukZKMVnXKS8bqaQBJTx9zza4rrxyLiP9fwLijOc",
+			memo:   "AipahL/4TH3a0Ry4wHOG6RkoxWdcpLxuppAElPH3PNriuvHIuI/1/AuKM5w=",
 			amount: 100,
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(35, 2),
@@ -261,7 +276,7 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(25, 2),
 				"cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf": sdk.NewDecWithPrec(75, 2),
 			},
-			memo:   "RoS/+Ex92tEcuMBzhukZKMVnXKS8RqaQBJTx9zza4rrxyLiP9fwLijOcPK/59acWzdcBME6ub8f0LID97qWE",
+			memo:   "Aj9GhL/4TH3a0Ry4wHOG6RkoxWdcpLxGppAElPH3PNriuvHIuI/1/AuKM5w8r/n1pxbN1wEwTq5vx/QsgP3upYQ=",
 			amount: 1000,
 			expectedIntent: map[string]sdk.Dec{
 				"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0": sdk.NewDecWithPrec(30, 2),
@@ -272,8 +287,10 @@ func TestUpdateIntentWithMemo(t *testing.T) {
 	}
 
 	for caseidx, tc := range testCases {
-		memoIntent, _, err := zone.DecodeMemo(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
+		memoFields, err := zone.DecodeMemo(tc.memo)
 		require.NoError(t, err)
+		memoIntent, found := memoFields.Intent(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), &zone)
+		require.True(t, found)
 		intent := zone.UpdateZoneIntentWithMemo(memoIntent, intentFromDecSlice(tc.originalIntent), sdk.NewDec(int64(tc.baseAmount)))
 		for idx, v := range intent.Intents.Sort() {
 			if !tc.expectedIntent[v.ValoperAddress].Equal(v.Weight) {
@@ -314,7 +331,7 @@ func TestUpdateIntentWithMemoBad(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		_, _, err := zone.DecodeMemo(sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(int64(tc.amount)))), tc.memo)
+		_, err := zone.DecodeMemo(tc.memo)
 		require.Errorf(t, err, tc.errorMsg)
 	}
 }

@@ -29,7 +29,7 @@ func ParseEpochMsgMemo(memo, msgType string) (epochNumber int64, err error) {
 
 	epochNumber, err = strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("msg type %s: %w: %w", msgType, err, ErrUnexpectedEpochMsgMemo)
+		return 0, fmt.Errorf("msg type %s: %w", msgType, err)
 	}
 
 	return epochNumber, err
