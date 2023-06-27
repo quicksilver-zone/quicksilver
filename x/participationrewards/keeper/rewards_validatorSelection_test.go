@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 		name            string
 		malleate        func(sdk.Context, *app.Quicksilver)
 		validatorScores func(sdk.Context, *app.Quicksilver, string) map[string]*types.Validator
-		want            []types.UserAllocation
+		want            func(denom string) []types.UserAllocation
 	}{
 		{
 			name: "no allocation",
@@ -38,7 +38,7 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 			validatorScores: func(context sdk.Context, quicksilver *app.Quicksilver, s string) map[string]*types.Validator {
 				return nil
 			},
-			want: []types.UserAllocation{},
+			want: func(denom string) []types.UserAllocation { return []types.UserAllocation{} },
 		},
 		{
 			name: "zero weight intents, no user allocation",
@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 				}
 				return validatorScores
 			},
-			want: []types.UserAllocation{},
+			want: func(denom string) []types.UserAllocation { return []types.UserAllocation{} },
 		},
 		{
 			name: "unit weight intents - default validator scores - same valopaddress",
@@ -107,15 +107,17 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 				}
 				return validatorScores
 			},
-			want: []types.UserAllocation{
-				{
-					Address: user1.String(),
-					Amount:  sdk.NewInt(2500),
-				},
-				{
-					Address: user2.String(),
-					Amount:  sdk.NewInt(2500),
-				},
+			want: func(denom string) []types.UserAllocation {
+				return []types.UserAllocation{
+					{
+						Address: user1.String(),
+						Amount:  sdk.NewCoin(denom, sdk.NewInt(2500)),
+					},
+					{
+						Address: user2.String(),
+						Amount:  sdk.NewCoin(denom, sdk.NewInt(2500)),
+					},
+				}
 			},
 		},
 		{
@@ -151,15 +153,17 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 				}
 				return validatorScores
 			},
-			want: []types.UserAllocation{
-				{
-					Address: user1.String(),
-					Amount:  sdk.NewInt(2500),
-				},
-				{
-					Address: user2.String(),
-					Amount:  sdk.NewInt(2500),
-				},
+			want: func(denom string) []types.UserAllocation {
+				return []types.UserAllocation{
+					{
+						Address: user1.String(),
+						Amount:  sdk.NewCoin(denom, sdk.NewInt(2500)),
+					},
+					{
+						Address: user2.String(),
+						Amount:  sdk.NewCoin(denom, sdk.NewInt(2500)),
+					},
+				}
 			},
 		},
 		{
@@ -195,15 +199,17 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 				}
 				return validatorScores
 			},
-			want: []types.UserAllocation{
-				{
-					Address: user1.String(),
-					Amount:  sdk.NewInt(454),
-				},
-				{
-					Address: user2.String(),
-					Amount:  sdk.NewInt(4545),
-				},
+			want: func(denom string) []types.UserAllocation {
+				return []types.UserAllocation{
+					{
+						Address: user1.String(),
+						Amount:  sdk.NewCoin(denom, sdk.NewInt(454)),
+					},
+					{
+						Address: user2.String(),
+						Amount:  sdk.NewCoin(denom, sdk.NewInt(4545)),
+					},
+				}
 			},
 		},
 	}
@@ -238,7 +244,7 @@ func (suite *KeeperTestSuite) TestCalcUserValidatorSelectionAllocations() {
 			}
 
 			userAllocations := appA.ParticipationRewardsKeeper.CalcUserValidatorSelectionAllocations(ctx, &zone, zs)
-			suite.Require().Equal(tt.want, userAllocations)
+			suite.Require().Equal(tt.want(appA.StakingKeeper.BondDenom(ctx)), userAllocations)
 		})
 	}
 }

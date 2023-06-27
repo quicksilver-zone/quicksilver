@@ -18,14 +18,14 @@ func TestParseMsgMemo(t *testing.T) {
 	}{
 		{
 			name:                "valid rebalance",
-			memo:                types.MsgTypeRebalance + "/" + "10",
+			memo:                types.EpochRebalanceMemo(10),
 			msgType:             types.MsgTypeRebalance,
 			wantErr:             false,
 			expectedEpochNumber: 10,
 		},
 		{
 			name:                "valid withdrawal",
-			memo:                types.MsgTypeWithdrawal + "/" + "10",
+			memo:                types.EpochWithdrawalMemo(10),
 			msgType:             types.MsgTypeWithdrawal,
 			wantErr:             false,
 			expectedEpochNumber: 10,

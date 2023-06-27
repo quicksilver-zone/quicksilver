@@ -15,9 +15,9 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 	// obtain and iterate all claim records for each zone
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 		k.Logger(ctx).Info("zones", "zone", zone.ID())
-		userAllocations, remaining := k.CalcUserHoldingsAllocations(ctx, zone)
+		userAllocations, remaining, icsRewardsAllocations := k.CalcUserHoldingsAllocations(ctx, zone)
 
-		if err := k.DistributeToUsers(ctx, userAllocations); err != nil {
+		if err := k.DistributeToUsersFromModule(ctx, userAllocations); err != nil {
 			k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
 			// we might want to do a soft fail here so that all zones are not affected...
 			return false
@@ -32,6 +32,12 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 			}
 		}
 
+		if err := k.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address); err != nil {
+			k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
+			// we might want to do a soft fail here so that all zones are not affected...
+			return false
+		}
+
 		k.icsKeeper.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ID())
 		return false
 	})
@@ -40,15 +46,17 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 }
 
 // CalcUserHoldingsAllocations calculates allocations per user for a given zone, based upon claims submitted and zone.
-func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]types.UserAllocation, math.Int) {
+func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]types.UserAllocation, math.Int, []types.UserAllocation) {
 	k.Logger(ctx).Info("CalcUserHoldingsAllocations", "zone", zone.ID(), "allocations", zone.HoldingsAllocation)
 
 	userAllocations := make([]types.UserAllocation, 0)
+	icsRewardsAllocations := make([]types.UserAllocation, 0)
+
 	supply := k.bankKeeper.GetSupply(ctx, zone.LocalDenom)
 
 	if zone.HoldingsAllocation == 0 || supply.Amount.IsZero() {
 		k.Logger(ctx).Info("holdings allocation is zero, nothing to allocate")
-		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation)
+		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
 	}
 
 	// calculate user totals and zone total (held assets)
@@ -79,27 +87,46 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 
 	if zoneAmount.IsZero() {
 		k.Logger(ctx).Info("zero claims for zone", "zone", zone.ID())
-		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation)
+		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
 	}
 
 	zoneAllocation := math.NewIntFromUint64(zone.HoldingsAllocation)
 	tokensPerAsset := sdk.NewDecFromInt(zoneAllocation).Quo(sdk.NewDecFromInt(supply.Amount))
 
+	// determine ics rewards to be distributed per token.
+	icsRewardsAddr := sdk.MustAccAddressFromBech32(zone.WithdrawalAddress.Address)
+	icsRewardsBalance := k.bankKeeper.GetAllBalances(ctx, icsRewardsAddr)
+	icsRewardsPerAsset := make(map[string]sdk.Dec, len(icsRewardsBalance))
+	for _, rewardsAsset := range icsRewardsBalance {
+		icsRewardsPerAsset[rewardsAsset.Denom] = sdk.NewDecFromInt(rewardsAsset.Amount).Quo(sdk.NewDecFromInt(supply.Amount))
+	}
+
 	k.Logger(ctx).Info("tokens per asset", "zone", zone.ID(), "tpa", tokensPerAsset)
+	k.Logger(ctx).Info("ics rewards per asset", "zone", zone.ID(), "icsrpa", icsRewardsPerAsset)
 
 	for _, address := range utils.Keys(userAmountsMap) {
 		amount := userAmountsMap[address]
 		userAllocation := sdk.NewDecFromInt(amount).Mul(tokensPerAsset).TruncateInt()
 		allocation := types.UserAllocation{
 			Address: address,
-			Amount:  userAllocation,
+			Amount:  sdk.NewCoin(k.stakingKeeper.BondDenom(ctx), userAllocation),
 		}
 		userAllocations = append(userAllocations, allocation)
 		zoneAllocation = zoneAllocation.Sub(userAllocation)
 		if zoneAllocation.LT(sdk.ZeroInt()) {
 			panic("user allocation overflow")
 		}
+
+		// allocate ics rewards
+		for _, rewardsAsset := range icsRewardsBalance {
+			icsRewardsAllocation := types.UserAllocation{
+				Address: address,
+				Amount:  sdk.NewCoin(rewardsAsset.Denom, sdk.NewDecFromInt(amount).Mul(icsRewardsPerAsset[rewardsAsset.Denom]).TruncateInt()),
+			}
+			icsRewardsAllocations = append(icsRewardsAllocations, icsRewardsAllocation)
+		}
+
 	}
 
-	return userAllocations, zoneAllocation
+	return userAllocations, zoneAllocation, icsRewardsAllocations
 }

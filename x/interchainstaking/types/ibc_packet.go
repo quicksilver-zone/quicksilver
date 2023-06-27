@@ -29,7 +29,7 @@ func ParseEpochMsgMemo(memo, msgType string) (epochNumber int64, err error) {
 
 	epochNumber, err = strconv.ParseInt(parts[1], 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("msg type %s: %w: %w", msgType, err, ErrUnexpectedEpochMsgMemo)
+		return 0, fmt.Errorf("msg type %s: %w", msgType, err)
 	}
 
 	return epochNumber, err
@@ -42,4 +42,20 @@ func ParseTxMsgMemo(memo, msgType string) (txHash string, err error) {
 	}
 
 	return parts[1], err
+}
+
+func EpochMsgMemo(msgType string, epoch int64) string {
+	return fmt.Sprintf("%s/%d", msgType, epoch)
+}
+
+func EpochRebalanceMemo(epoch int64) string {
+	return EpochMsgMemo(MsgTypeRebalance, epoch)
+}
+
+func EpochWithdrawalMemo(epoch int64) string {
+	return EpochMsgMemo(MsgTypeWithdrawal, epoch)
+}
+
+func TxUnbondSendMemo(hash string) string {
+	return fmt.Sprintf("%s/%s", MsgTypeUnbondSend, hash)
 }

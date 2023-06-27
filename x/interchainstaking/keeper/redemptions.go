@@ -242,7 +242,7 @@ WITHDRAWAL:
 
 	k.Logger(ctx).Info("unbonding messages to send", "msg", msgs)
 
-	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("%s/%d", types.MsgTypeWithdrawal, epoch), zone.MessagesPerTx)
+	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, types.EpochWithdrawalMemo(epoch), zone.MessagesPerTx)
 	if err != nil {
 		return err
 	}
