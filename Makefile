@@ -68,7 +68,7 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=quicksilver \
           -X github.com/cosmos/cosmos-sdk/version.AppName=$(QS_BINARY) \
           -X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
           -X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
-          -X github.com/tendermint/tendermint/version.TMCoreSemVer=$(TMVERSION)
+          -X github.com/cometbft/cometbft/version.TMCoreSemVer=$(TMVERSION)
 
 # DB backend selection
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
@@ -504,26 +504,36 @@ mdlint-fix:
 ###############################################################################
 
 BUF_VERSION=1.15.1
+protoVer=0.13.3
+protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
+containerProtoGen=proto-gen-$(protoVer)
+containerProtoFmt=proto-fmt-$(protoVer)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
 proto-all: proto-gen
 
-proto-gen:
-	@echo "🤖 Generating code from protobuf..."
-	@$(DOCKER) run --rm --volume "$(PWD)":/workspace --workdir /workspace \
-		quicksilver-proto sh ./proto/generate.sh
-	@echo "✅ Completed code generation!"
+proto-format:
+	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
 
 proto-lint:
-	@echo "🤖 Running protobuf linter..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) lint
-	@echo "✅ Completed protobuf linting!"
+	@$(protoImage) buf lint --error-format=json
 
-proto-format:
-	@echo "🤖 Running protobuf format..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) format -w
-	@echo "✅ Completed protobuf format!"
+proto-gen:
+	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
+		sh ./scripts/protocgen.sh; fi
+	@echo "✅ Completed code generation!"
+
+# proto-lint:
+# 	@echo "🤖 Running protobuf linter..."
+# 	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
+# 		bufbuild/buf:$(BUF_VERSION) lint
+# 	@echo "✅ Completed protobuf linting!"
+
+# proto-format:
+# 	@echo "🤖 Running protobuf format..."
+# 	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
+# 		bufbuild/buf:$(BUF_VERSION) format -w
+# 	@echo "✅ Completed protobuf format!"
 
 proto-breaking-check:
 	@echo "🤖 Running protobuf breaking check against develop branch..."

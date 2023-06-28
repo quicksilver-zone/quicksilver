@@ -1426,7 +1426,8 @@ type QueryClient interface {
 	UnbondingRecords(ctx context.Context, in *QueryUnbondingRecordsRequest, opts ...grpc.CallOption) (*QueryUnbondingRecordsResponse, error)
 	// RedelegationRecords provides data on the active unbondings.
 	RedelegationRecords(ctx context.Context, in *QueryRedelegationRecordsRequest, opts ...grpc.CallOption) (*QueryRedelegationRecordsResponse, error)
-	// MappedAccounts provides data on the mapped accounts for a given user over different host chains.
+	// MappedAccounts provides data on the mapped accounts for a given user over
+	// different host chains.
 	MappedAccounts(ctx context.Context, in *QueryMappedAccountsRequest, opts ...grpc.CallOption) (*QueryMappedAccountsResponse, error)
 }
 
@@ -1570,7 +1571,8 @@ type QueryServer interface {
 	UnbondingRecords(context.Context, *QueryUnbondingRecordsRequest) (*QueryUnbondingRecordsResponse, error)
 	// RedelegationRecords provides data on the active unbondings.
 	RedelegationRecords(context.Context, *QueryRedelegationRecordsRequest) (*QueryRedelegationRecordsResponse, error)
-	// MappedAccounts provides data on the mapped accounts for a given user over different host chains.
+	// MappedAccounts provides data on the mapped accounts for a given user over
+	// different host chains.
 	MappedAccounts(context.Context, *QueryMappedAccountsRequest) (*QueryMappedAccountsResponse, error)
 }
 

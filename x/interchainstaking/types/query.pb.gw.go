@@ -1418,29 +1418,29 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 }
 
 var (
-	pattern_Query_Zones_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"quicksilver", "interchainstaking", "v1", "zones"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Zones_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"quicksilver", "interchainstaking", "v1", "zones"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Zone_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainstaking", "v1", "zone", "chain_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Zone_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainstaking", "v1", "zone", "chain_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ZoneValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "validators"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ZoneValidators_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "validators"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DepositAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "deposit_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DepositAccount_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "deposit_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_DelegatorIntent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "delegator_intent", "delegator_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_DelegatorIntent_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "delegator_intent", "delegator_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Delegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "delegations"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Delegations_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "delegations"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_Receipts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "receipts"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_Receipts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "receipts"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_ZoneWithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "withdrawal_records", "delegator_address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_ZoneWithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 6}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "withdrawal_records", "delegator_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_WithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "withdrawal_records"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_WithdrawalRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "withdrawal_records"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_UnbondingRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "unbonding_records"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_UnbondingRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "unbonding_records"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_RedelegationRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "redelegation_records"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_RedelegationRecords_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5}, []string{"quicksilver", "interchainstaking", "v1", "zones", "chain_id", "redelegation_records"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_MappedAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainstaking", "v1", "mapped_addresses", "address"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Query_MappedAccounts_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"quicksilver", "interchainstaking", "v1", "mapped_addresses", "address"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (
