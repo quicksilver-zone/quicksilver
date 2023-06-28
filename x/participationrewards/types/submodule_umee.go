@@ -69,6 +69,14 @@ func (upd *UmeeUTokenSupplyProtocolData) GetUTokenSupply() (math.Int, error) {
 	return GetUnderlyingData[math.Int](&upd.UmeeProtocolData)
 }
 
+type UmeeLeverageModuleBalanceProtocolData struct {
+	UmeeProtocolData
+}
+
+func (upd *UmeeLeverageModuleBalanceProtocolData) GetModuleBalance() (math.Int, error) {
+	return GetUnderlyingData[math.Int](&upd.UmeeProtocolData)
+}
+
 // -----------------------------------------------------
 
 type UmeeParamsProtocolData struct {

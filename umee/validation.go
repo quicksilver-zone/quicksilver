@@ -33,10 +33,6 @@ func ExchangeUToken(ctx sdk.Context, uToken sdk.Coin, prKeeper ParticipationRewa
 
 // DeriveExchangeRate calculated the token:uToken exchange rate of a base token denom.
 func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRewardsKeeper) (sdk.Dec, error) {
-	// uToken exchange rate is equal to the token supply (including borrowed
-	// tokens yet to be repaid and excluding tokens reserved) divided by total
-	// uTokens in circulation.
-
 	// Get reserves
 	reservesPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeReserves, denom)
 	if !ok {
@@ -56,7 +52,23 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 
 	reserveAmount := sdk.NewDecFromInt(intamount)
 
-	moduleBalance := sdk.NewDecFromInt(ModuleBalance(ctx, denom).Amount)
+	//get leverage module balance
+	balancePD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeLeverageModuleBalance, denom)
+	if !ok {
+		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
+	}
+	balanceData, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeUmeeLeverageModuleBalance, balancePD.Data)
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+
+	balance, _ := balanceData.(*participationrewardstypes.UmeeLeverageModuleBalanceProtocolData)
+
+	intamount, err = balance.GetModuleBalance()
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+	moduleBalance := sdk.NewDecFromInt(intamount)
 
 	//get interest scalar
 	interestPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeInterestScalar, denom)

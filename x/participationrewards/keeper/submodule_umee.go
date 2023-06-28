@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	umee "github.com/ingenuity-build/quicksilver/umee"
 	umeetypes "github.com/ingenuity-build/quicksilver/umee/types"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -102,31 +105,34 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			umeetypes.KeyUTokenSupply(supply.Denom),
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"umeereservesupdate",
+			UmeeUTokenSupplyUpdateCallbackID,
 			0,
 		) // query utoken supply
 
 		return false
 	})
 
-	//TODO: check module balance retrieval
-	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeUmeeReserves), func(idx int64, _ []byte, data types.ProtocolData) bool {
-		ireserves, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeReserves, data.Data)
+	//TODO: check module spendable coins retrieval
+	//assuming that module account is not a vesting account so there
+	//will be no locked coins to subtract from the total balance
+	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeUmeeLeverageModuleBalance), func(idx int64, _ []byte, data types.ProtocolData) bool {
+		ibalance, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeLeverageModuleBalance, data.Data)
 		if err != nil {
 			return false
 		}
-		reserves, _ := ireserves.(*types.UmeeReservesProtocolData)
+		balance, _ := ibalance.(*types.UmeeLeverageModuleBalanceProtocolData)
+		accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
 
 		// update leverage module balance
 		k.IcqKeeper.MakeRequest(
 			ctx,
 			connectionData.ConnectionID,
 			connectionData.ChainID,
-			"store/leverage/key",
-			umeetypes.KeyUTokenSupply(reserves.Denom), //wrong key
+			icstypes.BankStoreKey,
+			append(accountPrefix, []byte(balance.Denom)...),
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"umeereservesupdate",
+			UmeeLeverageModuleBalanceUpdateCallbackID,
 			0,
 		) // query leverage module balance
 

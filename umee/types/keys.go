@@ -1,21 +1,19 @@
 package types
 
-import "github.com/ingenuity-build/quicksilver/utils"
+import (
+	"github.com/ingenuity-build/quicksilver/utils"
+)
 
 const (
-	// ModuleName defines the module name
-	ModuleName = "leverage"
+	LeverageModuleName = "leverage"
 
 	// StoreKey defines the primary module store key
-	StoreKey = ModuleName
+	StoreKey = LeverageModuleName
 )
 
 // KVStore key prefixes
 var (
-	KeyPrefixCollateralAmount    = []byte{0x04}
 	KeyPrefixReserveAmount       = []byte{0x05}
-	KeyPrefixLastInterestTime    = []byte{0x06}
-	KeyPrefixBadDebt             = []byte{0x07}
 	KeyPrefixInterestScalar      = []byte{0x08}
 	KeyPrefixAdjustedTotalBorrow = []byte{0x09}
 	KeyPrefixUtokenSupply        = []byte{0x0A}
