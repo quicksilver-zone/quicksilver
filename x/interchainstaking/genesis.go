@@ -79,7 +79,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 func ExportDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegationsForZone {
 	delegationsForZones := make([]types.DelegationsForZone, 0)
 	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
-		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainId, Delegations: k.GetAllDelegationsAsPointer(ctx, zone)})
+		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ID(), Delegations: k.GetAllDelegationsAsPointer(ctx, zone)})
 		return false
 	})
 	return delegationsForZones
@@ -88,7 +88,9 @@ func ExportDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.Delegati
 func ExportPerformanceDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegationsForZone {
 	delegationsForZones := make([]types.DelegationsForZone, 0)
 	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
-		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainId, Delegations: k.GetAllPerformanceDelegationsAsPointer(ctx, zone)})
+		if !zone.IsSubzone() {
+			delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainID(), Delegations: k.GetAllPerformanceDelegationsAsPointer(ctx, zone)})
+		}
 		return false
 	})
 	return delegationsForZones
@@ -99,9 +101,9 @@ func ExportDelegatorIntentsPerZone(ctx sdk.Context, k keeper.Keeper) []types.Del
 	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
 		// export current epoch intents
 		delegatorIntentsForZones = append(delegatorIntentsForZones,
-			types.DelegatorIntentsForZone{ChainId: zone.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zone, false), Snapshot: false},
+			types.DelegatorIntentsForZone{ChainId: zone.ID(), DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zone, false), Snapshot: false},
 			// export last epoch intents
-			types.DelegatorIntentsForZone{ChainId: zone.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zone, true), Snapshot: true},
+			types.DelegatorIntentsForZone{ChainId: zone.ID(), DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zone, true), Snapshot: true},
 		)
 		return false
 	})

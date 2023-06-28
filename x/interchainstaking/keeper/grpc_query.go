@@ -52,7 +52,7 @@ func (k *Keeper) Zones(c context.Context, req *types.QueryZonesRequest) (*types.
 	}, nil
 }
 
-// Zone returns information about registered zones.
+// Zone returns information about a registered zone.
 func (k *Keeper) Zone(c context.Context, req *types.QueryZoneRequest) (*types.QueryZoneResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
@@ -246,15 +246,15 @@ func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdr
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no zone found matching %s", req.GetChainId()))
 	}
 
-	withdrawalrecords := make([]types.WithdrawalRecord, 0)
-	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
+	withdrawalRecords := make([]types.WithdrawalRecord, 0)
+	k.IterateZoneWithdrawalRecords(ctx, zone.ID(), func(index int64, record types.WithdrawalRecord) (stop bool) {
 		if record.Delegator == req.DelegatorAddress {
-			withdrawalrecords = append(withdrawalrecords, record)
+			withdrawalRecords = append(withdrawalRecords, record)
 		}
 		return false
 	})
 
-	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalRecords}, nil
 }
 
 func (k *Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
@@ -265,9 +265,9 @@ func (k *Keeper) WithdrawalRecords(c context.Context, req *types.QueryWithdrawal
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	withdrawalrecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
+	withdrawalRecords := k.AllZoneWithdrawalRecords(ctx, req.ChainId)
 
-	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalRecords}, nil
 }
 
 func (k *Keeper) UserWithdrawalRecords(c context.Context, req *types.QueryUserWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
@@ -282,9 +282,9 @@ func (k *Keeper) UserWithdrawalRecords(c context.Context, req *types.QueryUserWi
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	withdrawalrecords := k.AllUserWithdrawalRecords(ctx, req.UserAddress)
+	withdrawalRecords := k.AllUserWithdrawalRecords(ctx, req.UserAddress)
 
-	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalrecords}, nil
+	return &types.QueryWithdrawalRecordsResponse{Withdrawals: withdrawalRecords}, nil
 }
 
 func (k *Keeper) UnbondingRecords(c context.Context, req *types.QueryUnbondingRecordsRequest) (*types.QueryUnbondingRecordsResponse, error) {

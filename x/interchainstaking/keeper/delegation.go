@@ -58,11 +58,11 @@ func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, val
 	return delegation, true
 }
 
-// IterateAllDelegations iterates through all of the delegations.
+// IterateAllDelegations iterates through all the delegations.
 func (k *Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(zone.ChainId)...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(zone.ID())...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -83,11 +83,11 @@ func (k *Keeper) GetAllDelegations(ctx sdk.Context, zone *types.Zone) (delegatio
 	return delegations
 }
 
-// IterateAllPerformanceDelegations iterates through all of the delegations.
+// IterateAllPerformanceDelegations iterates through all the delegations.
 func (k *Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(zone.ChainID())...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -291,7 +291,7 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 
 	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
-		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
+		k.Logger(ctx).Debug("delegate account balance negative, setting outdated receipts")
 		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
 		return nil
 	}

@@ -23,6 +23,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 		LiquidityModule  bool
 		Decimals         int64
 		MessagesPerTx    int64
+		Is118            bool
 	}
 	tests := []struct {
 		name    string
@@ -44,6 +45,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				LiquidityModule:  false,
 				Decimals:         6,
 				MessagesPerTx:    5,
+				Is118:            true,
 			},
 			wantErr: false,
 		},
@@ -62,6 +64,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				LiquidityModule:  false,
 				Decimals:         6,
 				MessagesPerTx:    5,
+				Is118:            true,
 			},
 			wantErr: true,
 		},
@@ -80,6 +83,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				LiquidityModule:  false,
 				Decimals:         6,
 				MessagesPerTx:    5,
+				Is118:            true,
 			},
 			wantErr: true,
 		},
@@ -98,6 +102,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				LiquidityModule:  false,
 				Decimals:         6,
 				MessagesPerTx:    5,
+				Is118:            true,
 			},
 			wantErr: true,
 		},
@@ -116,6 +121,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				LiquidityModule:  false,
 				Decimals:         6,
 				MessagesPerTx:    5,
+				Is118:            true,
 			},
 			wantErr: true,
 		},
@@ -134,6 +140,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				LiquidityModule:  false,
 				Decimals:         6,
 				MessagesPerTx:    5,
+				Is118:            true,
 			},
 			wantErr: true,
 		},
@@ -152,6 +159,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				LiquidityModule:  true,
 				Decimals:         6,
 				MessagesPerTx:    5,
+				Is118:            true,
 			},
 			wantErr: true,
 		},
@@ -170,6 +178,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				LiquidityModule:  false,
 				Decimals:         0,
 				MessagesPerTx:    5,
+				Is118:            true,
 			},
 			wantErr: true,
 		},
@@ -188,6 +197,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				LiquidityModule:  false,
 				Decimals:         0,
 				MessagesPerTx:    0,
+				Is118:            true,
 			},
 			wantErr: true,
 		},
@@ -206,6 +216,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				LiquidityModule:  false,
 				Decimals:         0,
 				MessagesPerTx:    -1,
+				Is118:            true,
 			},
 			wantErr: true,
 		},
@@ -225,6 +236,7 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				tt.fields.LiquidityModule,
 				tt.fields.Decimals,
 				tt.fields.MessagesPerTx,
+				tt.fields.Is118,
 			)
 
 			err := m.ValidateBasic()

@@ -11,6 +11,8 @@ import (
 )
 
 func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID string) error {
+	// TODO: how to handle for subzone
+
 	chainID, err := k.GetChainID(ctx, connectionID)
 	if err != nil {
 		ctx.Logger().Error(
@@ -38,20 +40,19 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 		return err
 	}
 
-	ctx.Logger().Info("found matching address", "chain", zone.ChainId, "address", address, "port", portID)
+	ctx.Logger().Info("found matching address", "chain", zone.ChainID(), "address", address, "port", portID)
 	portParts := strings.Split(portID, ".")
 
 	switch {
 	// deposit address
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixDeposit:
-
 		if zone.DepositAddress == nil {
 			zone.DepositAddress, err = types.NewICAAccount(address, portID)
 			if err != nil {
 				return err
 			}
 
-			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
+			k.SetAddressZoneMapping(ctx, address, zone.ChainID())
 
 			balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
 			bz, err := k.GetCodec().Marshal(&balanceQuery)
@@ -62,7 +63,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				connectionID,
-				chainID,
+				zone.ID(),
 				"cosmos.bank.v1beta1.Query/AllBalances",
 				bz,
 				sdk.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),
@@ -79,7 +80,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			if err != nil {
 				return err
 			}
-			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
+			k.SetAddressZoneMapping(ctx, address, zone.ChainID())
 		}
 
 	// delegation addresses
@@ -89,8 +90,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			if err != nil {
 				return err
 			}
-
-			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
+			k.SetAddressZoneMapping(ctx, address, zone.ChainID())
 		}
 
 	// performance address
@@ -101,7 +101,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			if err != nil {
 				return err
 			}
-			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
+			k.SetAddressZoneMapping(ctx, address, zone.ChainID())
 		}
 
 		// emit this periodic query the first time, but not subsequently.
