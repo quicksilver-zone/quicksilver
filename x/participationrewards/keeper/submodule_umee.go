@@ -173,7 +173,7 @@ func (u UmeeModule) IsReady() bool {
 }
 
 func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
-	//the claim will have some u/assets in it, convert them to rewards, this will just contain the conversion logic
+	//TODO:Add msd in xcclookup
 	uToken := sdk.Coin{}
 	token, err := umee.ExchangeUToken(ctx, uToken, k)
 
