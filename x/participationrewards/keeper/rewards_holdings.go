@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -94,7 +95,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	tokensPerAsset := sdk.NewDecFromInt(zoneAllocation).Quo(sdk.NewDecFromInt(supply.Amount))
 
 	// determine ics rewards to be distributed per token.
-	icsRewardsAddr := sdk.MustAccAddressFromBech32(zone.WithdrawalAddress.Address)
+	icsRewardsAddr, _ := addressutils.AddressFromBech32(zone.WithdrawalAddress.Address, "")
 	icsRewardsBalance := k.bankKeeper.GetAllBalances(ctx, icsRewardsAddr)
 	icsRewardsPerAsset := make(map[string]sdk.Dec, len(icsRewardsBalance))
 	for _, rewardsAsset := range icsRewardsBalance {
