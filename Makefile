@@ -18,7 +18,6 @@ HTTPS_GIT := https://github.com/ingenuity-build/quicksilver.git
 
 DOCKER := $(shell which docker)
 DOCKERCOMPOSE := $(shell which docker-compose)
-DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 COMMIT_HASH := $(shell git rev-parse --short=7 HEAD)
 DOCKER_TAG := $(COMMIT_HASH)
 
@@ -503,47 +502,33 @@ mdlint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-BUF_VERSION=1.15.1
-protoVer=0.13.3
+protoVer=0.13.0
 protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-containerProtoGen=proto-gen-$(protoVer)
-containerProtoFmt=proto-fmt-$(protoVer)
 protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
-proto-all: proto-gen
-
-proto-format:
-	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
-
-proto-lint:
-	@$(protoImage) buf lint --error-format=json
+proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^${containerProtoGen}$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) \
-		sh ./scripts/protocgen.sh; fi
+	@echo "🤖 Generating code from protobuf..."
+	@$(protoImage) sh ./scripts/protocgen.sh
 	@echo "✅ Completed code generation!"
 
-# proto-lint:
-# 	@echo "🤖 Running protobuf linter..."
-# 	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-# 		bufbuild/buf:$(BUF_VERSION) lint
-# 	@echo "✅ Completed protobuf linting!"
+proto-lint:
+	@echo "🤖 Running protobuf linter..."
+	@$(protoImage) buf lint --error-format=json
+	@echo "✅ Completed protobuf linting!"
 
-# proto-format:
-# 	@echo "🤖 Running protobuf format..."
-# 	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-# 		bufbuild/buf:$(BUF_VERSION) format -w
-# 	@echo "✅ Completed protobuf format!"
+proto-format:
+	@echo "🤖 Running protobuf format..."
+	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
+	@echo "✅ Completed protobuf format!"
 
 proto-breaking-check:
 	@echo "🤖 Running protobuf breaking check against develop branch..."
-	@$(DOCKER) run --volume "$(PWD)":/workspace --workdir /workspace \
-		bufbuild/buf:$(BUF_VERSION) breaking --against '.git#branch=develop'
+	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=develop'
 	@echo "✅ Completed protobuf breaking check!"
 
-proto-setup:
-	@echo "🤖 Setting up protobuf environment..."
-	@$(DOCKER) build --rm --tag quicksilver-proto:latest --file proto/Dockerfile .
-	@echo "✅ Setup protobuf environment!"
-
-
+proto-swagger-gen:
+	@echo "🤖 Generating Protobuf Swagger..."
+	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
+	@echo "✅ Completed swagger generation!"

@@ -6,7 +6,4 @@ plugins:
   - name: grpc-gateway
     out: ..
     opt: logtostderr=true,allow_colon_final_segments=true
-  - name: swagger
-    out: ../tmp-swagger-gen
-    opt:
-      - simple_operation_ids=true
+
