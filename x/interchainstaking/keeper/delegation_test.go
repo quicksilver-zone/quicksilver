@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	// get test zone
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
-	zoneValidatorAddresses := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
+	zoneValidatorAddresses := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 
 	performanceDelegations := icsKeeper.GetAllPerformanceDelegations(ctx, &zone)
 	suite.Require().Len(performanceDelegations, 4)

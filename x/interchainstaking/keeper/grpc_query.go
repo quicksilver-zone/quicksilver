@@ -247,7 +247,7 @@ func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdr
 	}
 
 	withdrawalrecords := make([]types.WithdrawalRecord, 0)
-	k.IterateZoneWithdrawalRecords(ctx, zone.ChainID(), func(index int64, record types.WithdrawalRecord) (stop bool) {
+	k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
 		if record.Delegator == req.DelegatorAddress {
 			withdrawalrecords = append(withdrawalrecords, record)
 		}

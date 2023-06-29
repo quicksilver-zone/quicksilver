@@ -36,13 +36,13 @@ func TestZone_IsSubzone(t *testing.T) {
 }
 
 func TestZone_ChainID(t *testing.T) {
-	require.Equal(t, testZoneID, zone.ChainID())
-	require.Equal(t, testZoneID, subzone.ChainID())
+	require.Equal(t, testZoneID, zone.ChainId)
+	require.Equal(t, testZoneID, subzone.ChainId)
 }
 
 func TestZone_ID(t *testing.T) {
-	require.Equal(t, testZoneID, zone.ID())
-	require.Equal(t, testSubzoneID, subzone.ID())
+	require.Equal(t, testZoneID, zone.ChainId)
+	require.Equal(t, testSubzoneID, subzone.ChainId)
 }
 
 func TestValidateSubzoneForBasezone(t *testing.T) {
