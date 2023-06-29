@@ -344,12 +344,6 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 	return nil
 }
 
-//umee bank balances for a denom callback
-//umee module balance callback
-//umee collateral callback
-//umee reserves callback
-//as long as we have the above two, we ill know what the user's total balance is in u/asset and we may need these values for reward calculation
-
 // SetEpochBlockCallback records the block height of the registered zone at the epoch boundary.
 func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtypes.Query) error {
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, query.ChainId)
