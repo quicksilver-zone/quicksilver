@@ -15,6 +15,7 @@ const (
 	RouterKey = ModuleName
 
 	OsmosisParamsKey = "osmosisparams"
+	UmeeParamsKey    = "umeeparams"
 )
 
 var KeyPrefixProtocolData = []byte{0x00}
