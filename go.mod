@@ -320,6 +320,7 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 	// https://github.com/CosmWasm/wasmd/pull/938
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.40.0
+	github.com/cosmos/gogoproto => github.com/cosmos/gogoproto v1.4.8
 	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0
 	github.com/cosmos/ledger-cosmos-go v0.13.0 => github.com/cosmos/ledger-cosmos-go v0.12.1
 	// dgrijalva/jwt-go is deprecated and doesn't receive security updates
