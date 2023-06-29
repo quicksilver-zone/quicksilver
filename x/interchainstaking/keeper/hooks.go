@@ -43,7 +43,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				k.Logger(ctx).Error(
 					"encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch",
 					"error", err.Error(),
-					"zone", zone.ChainId,
+					"chain_id", zone.ChainId,
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -63,7 +63,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				k.Logger(ctx).Error(
 					"encountered a problem handling queued unbondings",
 					"error", err.Error(),
-					"zone", zone.ChainId,
+					"chain_id", zone.ChainId,
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -78,7 +78,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				k.Logger(ctx).Error(
 					"encountered a problem rebalancing",
 					"error", err.Error(),
-					"zone", zone.ChainId,
+					"chain_id", zone.ChainId,
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -87,7 +87,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			if zone.WithdrawalWaitgroup > 0 {
 				k.Logger(ctx).Error(
 					"epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!",
-					"zone", zone.ChainId,
+					"chain_id", zone.ChainId,
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -97,7 +97,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 			k.Logger(ctx).Info(
 				"withdrawing rewards",
-				"zone", zone.ChainId,
+				"chain_id", zone.ChainId,
 				"epoch_identifier", epochIdentifier,
 				"epoch_number", epochNumber,
 			)
@@ -139,7 +139,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			zone.WithdrawalWaitgroup++
 			k.Logger(ctx).Info("Incrementing waitgroup for delegation",
 				"value", zone.WithdrawalWaitgroup,
-				"zone", zone.ChainId,
+				"chain_id", zone.ChainId,
 				"epoch_identifier", epochIdentifier,
 				"epoch_number", epochNumber,
 			)

@@ -141,7 +141,6 @@ Where proposal.json contains:
   "multi_send": true,
   "liquidity_module": false,
   "deposit": "512000000uqck"
-  "is_118": true,
 }
 `),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -188,7 +187,6 @@ Where proposal.json contains:
 				proposal.LiquidityModule,
 				proposal.Decimals,
 				proposal.MessagesPerTx,
-				proposal.Is_118,
 			)
 
 			msg, err := govv1beta1.NewMsgSubmitProposal(content, deposit, from)

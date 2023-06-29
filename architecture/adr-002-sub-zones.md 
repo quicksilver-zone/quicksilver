@@ -117,7 +117,6 @@ message Zone {
 message SubzoneInfo {
       string authority = 1;
       string base_chainID = 2;
-      string chainID = 3;
 }
 ```
 The `SubzoneInfo` `authority` field is the whitelisted Quicksilver account which controls this subzone.  The `BaseChainID`

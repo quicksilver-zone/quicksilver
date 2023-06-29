@@ -32,7 +32,6 @@ func NewRegisterZoneProposal(
 	liquidityModule bool,
 	decimals int64,
 	messagePerTx int64,
-	is118 bool,
 ) *RegisterZoneProposal {
 	return &RegisterZoneProposal{
 		Title:            title,
@@ -47,7 +46,6 @@ func NewRegisterZoneProposal(
 		LiquidityModule:  liquidityModule,
 		Decimals:         decimals,
 		MessagesPerTx:    messagePerTx,
-		Is_118:           is118,
 	}
 }
 

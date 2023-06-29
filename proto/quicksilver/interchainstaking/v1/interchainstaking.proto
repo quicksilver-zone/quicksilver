@@ -48,8 +48,6 @@ message Zone {
   bool unbonding_enabled = 25;
   bool deposits_enabled = 26;
   bool return_to_sender = 27;
-  bool is_118 = 28;
-  SubzoneInfo subzoneInfo = 29;
 }
 
 message SubzoneInfo {

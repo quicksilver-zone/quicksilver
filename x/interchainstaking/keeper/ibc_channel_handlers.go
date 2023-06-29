@@ -11,8 +11,6 @@ import (
 )
 
 func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID string) error {
-	// TODO: how to handle for subzone
-
 	chainID, err := k.GetChainID(ctx, connectionID)
 	if err != nil {
 		ctx.Logger().Error(
@@ -63,7 +61,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				connectionID,
-				zone.ChainId,
+				chainID,
 				"cosmos.bank.v1beta1.Query/AllBalances",
 				bz,
 				sdk.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),
