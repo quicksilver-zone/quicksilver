@@ -26,6 +26,8 @@ message RegisterZoneProposal {
   bool deposits_enabled = 11;
   bool unbonding_enabled = 12;
   int64 decimals = 13;
+  bool is_118 = 14;
+  SubzoneInfo subzoneInfo = 15;
 }
 
 message RegisterZoneProposalWithDeposit {
@@ -46,6 +48,8 @@ message RegisterZoneProposalWithDeposit {
   bool deposits_enabled = 12 [(gogoproto.moretags) = "yaml:\"deposits_enabled\""];
   bool unbonding_enabled = 13 [(gogoproto.moretags) = "yaml:\"deposits_enabled\""];
   int64 decimals = 14 [(gogoproto.moretags) = "yaml:\"decimals\""];
+  bool is_118 = 15;
+  SubzoneInfo subzoneInfo = 16;
 }
 
 message UpdateZoneProposal {
