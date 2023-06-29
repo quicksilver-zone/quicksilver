@@ -138,13 +138,18 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	}
 	kpr.SetAddressZoneMapping(ctx, "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", perfAcctZone.ChainId)
 	kpr.SetZone(ctx, &perfAcctZone)
-	gotPerfAcctZone := kpr.GetZoneForPerformanceAccount(ctx, perfAcctZone.PerformanceAddress.Address)
+	gotPerfAcctZone, found := kpr.GetZoneForPerformanceAccount(ctx, perfAcctZone.PerformanceAddress.Address)
+	require.True(t, found)
 	require.Equal(t, &perfAcctZone, gotPerfAcctZone, "expecting a match in performance accounts")
+
 	// Try with a non-existent performance address, it should return nil.
-	gotPerfAcctZone = kpr.GetZoneForPerformanceAccount(ctx, "non-existent")
+	gotPerfAcctZone, found = kpr.GetZoneForPerformanceAccount(ctx, "non-existent")
+	require.False(t, found)
 	require.Nil(t, gotPerfAcctZone, "expecting no match in the performance account")
+
 	// Try with a non-existent performance address but that of the performance zone.
-	gotPerfAcctZone = kpr.GetZoneForPerformanceAccount(ctx, perfAcctZone.DelegationAddress.Address)
+	gotPerfAcctZone, found = kpr.GetZoneForPerformanceAccount(ctx, perfAcctZone.DelegationAddress.Address)
+	require.False(t, found)
 	require.Nil(t, gotPerfAcctZone, "expecting no match in the performance account")
 
 	// 7.1. Test delegated amounts.
@@ -171,7 +176,8 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	require.Equal(t, wantDelAmt, gotDelAmt, "expecting 17000 as the delegation amount")
 
 	// Zone for delegation account.
-	zone4Del := kpr.GetZoneForDelegateAccount(ctx, del1.DelegationAddress)
+	zone4Del, found := kpr.GetZoneForDelegateAccount(ctx, del1.DelegationAddress)
+	require.True(t, found)
 	require.NotNil(t, zone4Del, "expecting a non-nil zone back")
 	require.Equal(t, &firstZone, zone4Del, "expectign equivalent zones")
 }

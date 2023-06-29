@@ -214,6 +214,25 @@ func (k *Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*
 	return &types.QueryReceiptsResponse{Receipts: receipts}, nil
 }
 
+func (k *Keeper) TxStatus(c context.Context, req *types.QueryTxStatusRequest) (*types.QueryTxStatusResponse, error) {
+	// TODO: implement pagination
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	if req.GetTxHash() == "" {
+		return nil, status.Error(codes.InvalidArgument, "tx hash cannot be empty")
+	}
+
+	ctx := sdk.UnwrapSDKContext(c)
+
+	txReceipt, found := k.GetReceipt(ctx, types.GetReceiptKey(req.GetChainId(), req.GetTxHash()))
+	if !found {
+		return nil, status.Error(codes.NotFound, fmt.Sprintf("no receipt found matching %s", req.TxHash))
+	}
+
+	return &types.QueryTxStatusResponse{Receipt: &txReceipt}, nil
+}
+
 func (k *Keeper) ZoneWithdrawalRecords(c context.Context, req *types.QueryWithdrawalRecordsRequest) (*types.QueryWithdrawalRecordsResponse, error) {
 	// TODO: implement pagination
 	if req == nil {

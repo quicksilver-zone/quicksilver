@@ -171,7 +171,7 @@ func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 // allocated to it.
 type UserAllocation struct {
 	Address string
-	Amount  math.Int
+	Amount  sdk.Coin
 }
 
 // ZoneScore is an internal struct to track transient state for the calculation
