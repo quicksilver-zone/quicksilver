@@ -58,7 +58,7 @@ func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, val
 	return delegation, true
 }
 
-// IterateAllDelegations iterates through all the delegations.
+// IterateAllDelegations iterates through all of the delegations.
 func (k *Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
@@ -291,7 +291,7 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 
 	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
-		k.Logger(ctx).Debug("delegate account balance negative, setting outdated receipts")
+		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
 		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
 		return nil
 	}

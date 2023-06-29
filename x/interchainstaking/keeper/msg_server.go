@@ -154,8 +154,6 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO handle for subzone?
-
 	// remove leading prefix icacontroller- if passed in msg
 	portID := strings.ReplaceAll(msg.PortId, "icacontroller-", "")
 

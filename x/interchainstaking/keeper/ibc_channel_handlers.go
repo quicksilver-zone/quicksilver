@@ -44,6 +44,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 	switch {
 	// deposit address
 	case len(portParts) == 2 && portParts[1] == types.ICASuffixDeposit:
+
 		if zone.DepositAddress == nil {
 			zone.DepositAddress, err = types.NewICAAccount(address, portID)
 			if err != nil {
@@ -88,6 +89,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			if err != nil {
 				return err
 			}
+
 			k.SetAddressZoneMapping(ctx, address, zone.ChainId)
 		}
 
