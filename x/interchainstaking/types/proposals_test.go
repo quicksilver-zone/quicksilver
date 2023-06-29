@@ -236,7 +236,6 @@ func TestRegisterZoneProposal_ValidateBasic(t *testing.T) {
 				tt.fields.LiquidityModule,
 				tt.fields.Decimals,
 				tt.fields.MessagesPerTx,
-				tt.fields.Is118,
 			)
 
 			err := m.ValidateBasic()
