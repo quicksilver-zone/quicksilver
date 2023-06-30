@@ -357,6 +357,7 @@ ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAI
 ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node6,$node7\"/g" ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
 ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_0}/config/app.toml
 ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_0}/config/app.toml
+${SED} -e 's/address = "localhost:9090"/address = "0.0.0.0:9090"/g' ${CHAIN_DIR}/${CHAINID_0}/config/app.toml
 
 ${SED} -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
 ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
@@ -365,6 +366,7 @@ ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAI
 ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node5,$node7\"/g" ${CHAIN_DIR}/${CHAINID_0}a/config/config.toml
 ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_0}a/config/app.toml
 ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_0}a/config/app.toml
+${SED} -e 's/address = "localhost:9090"/address = "0.0.0.0:9090"/g' ${CHAIN_DIR}/${CHAINID_0}a/config/app.toml
 
 ${SED} -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
 ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
@@ -373,6 +375,7 @@ ${SED} -e 's/index_all_keys = false/index_all_keys = true/g' ${CHAIN_DIR}/${CHAI
 ${SED} -e "s/persistent_peers = \"\"/persistent_peers = \"$node5,$node6\"/g" ${CHAIN_DIR}/${CHAINID_0}b/config/config.toml
 ${SED} -e 's/enable = false/enable = true/g' ${CHAIN_DIR}/${CHAINID_0}b/config/app.toml
 ${SED} -e 's/swagger = false/swagger = true/g' ${CHAIN_DIR}/${CHAINID_0}b/config/app.toml
+${SED} -e 's/address = "localhost:9090"/address = "0.0.0.0:9090"/g' ${CHAIN_DIR}/${CHAINID_0}b/config/app.toml
 
 ${SED} -e 's#"tcp://127.0.0.1:26657"#"tcp://0.0.0.0:26657"#g' ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
 ${SED} -e 's/timeout_commit = "5s"/timeout_commit = "1s"/g' ${CHAIN_DIR}/${CHAINID_1}/config/config.toml
