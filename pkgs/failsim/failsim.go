@@ -27,8 +27,8 @@ func FailuresFromContext(ctx context.Context) map[uint8]map[uint8]struct{} {
 	return failures
 }
 
-// SetFailureContext retunrs a dererived context containing simulated failure
-// state. It is a map of maps containing indicated dailure hooks. The first map
+// SetFailureContext returns a derived context containing simulated failure
+// state. It is a map of maps containing indicated failure hooks. The first map
 // indexes the handler, the second map the failure hook.
 //
 // The parameter useHooks is a string that denotes specific failure hooks, as a
