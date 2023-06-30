@@ -83,7 +83,14 @@ func GetEpochHandler(
 
 		fmt.Println("check osmosis last epoch height...")
 		var height int64
-		connections := connectionManager.Get()
+		unfilteredConnections := connectionManager.Get()
+		connections := []prewards.ConnectionProtocolData{}
+		for _, ufc := range unfilteredConnections {
+			if ufc.LastEpoch > 0 {
+				connections = append(connections, ufc)
+			}
+		}
+
 		for _, con := range connections {
 			if con.ChainID == osmosisParamsManager.Get()[0].ChainID {
 				height = con.LastEpoch
