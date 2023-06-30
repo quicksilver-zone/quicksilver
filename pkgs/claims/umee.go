@@ -244,7 +244,7 @@ func UmeeClaim(
 			Key:       abciquery.Response.Key,
 			ProofOps:  abciquery.Response.ProofOps,
 			Height:    abciquery.Response.Height,
-			ProofType: "bank", // module name of proof.
+			ProofType: "leverage", // module name of proof.
 		}
 
 		chainMsg.Proofs = append(chainMsg.Proofs, &proof)
