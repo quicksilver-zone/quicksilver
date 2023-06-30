@@ -80,9 +80,7 @@ func (upd *UmeeLeverageModuleBalanceProtocolData) GetModuleBalance() (math.Int, 
 // -----------------------------------------------------
 
 type UmeeParamsProtocolData struct {
-	ChainID   string
-	BaseDenom string
-	BaseChain string
+	ChainID string
 }
 
 func (uppd UmeeParamsProtocolData) ValidateBasic() error {
@@ -90,14 +88,6 @@ func (uppd UmeeParamsProtocolData) ValidateBasic() error {
 
 	if uppd.ChainID == "" {
 		errs["ChainID"] = ErrUndefinedAttribute
-	}
-
-	if uppd.BaseChain == "" {
-		errs["BaseChain"] = ErrUndefinedAttribute
-	}
-
-	if uppd.BaseDenom == "" {
-		errs["BaseDenom"] = ErrUndefinedAttribute
 	}
 
 	if len(errs) > 0 {

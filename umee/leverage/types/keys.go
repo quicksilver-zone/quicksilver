@@ -1,6 +1,8 @@
 package types
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/ingenuity-build/quicksilver/utils"
 )
 
@@ -13,6 +15,7 @@ const (
 
 // KVStore key prefixes
 var (
+	KeyPrefixCollateralAmount    = []byte{0x04}
 	KeyPrefixReserveAmount       = []byte{0x05}
 	KeyPrefixInterestScalar      = []byte{0x08}
 	KeyPrefixAdjustedTotalBorrow = []byte{0x09}
@@ -44,8 +47,21 @@ func KeyUTokenSupply(uTokenDenom string) []byte {
 	return utils.ConcatBytes(1, KeyPrefixUtokenSupply, []byte(uTokenDenom))
 }
 
+// KeyCollateralAmountNoDenom returns the common prefix used by all collateral associated
+// with a given address.
+func KeyCollateralAmountNoDenom(addr sdk.AccAddress) []byte {
+	return utils.ConcatBytes(0, KeyPrefixCollateralAmount, address.MustLengthPrefix(addr))
+}
+
 // DenomFromKey extracts denom from a key with the form
 // prefix | denom | 0x00
 func DenomFromKey(key, prefix []byte) string {
 	return string(key[len(prefix) : len(key)-1])
+}
+
+// DenomFromKeyWithAddress extracts denom from a key with the form
+// prefix | lengthPrefixed(addr) | denom | 0x00
+func DenomFromKeyWithAddress(key, prefix []byte) string {
+	addrLength := int(key[len(prefix)])
+	return string(key[len(prefix)+addrLength+1 : len(key)-1])
 }

@@ -3,7 +3,7 @@ package umeetypes
 import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ingenuity-build/quicksilver/umee/types"
+	"github.com/ingenuity-build/quicksilver/umee/leverage/types"
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 

@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	umee "github.com/ingenuity-build/quicksilver/umee"
-	umeetypes "github.com/ingenuity-build/quicksilver/umee/types"
+	umeetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -173,9 +175,25 @@ func (u UmeeModule) IsReady() bool {
 }
 
 func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
-	//TODO:Add msd in xcclookup
-	uToken := sdk.Coin{}
-	token, err := umee.ExchangeUToken(ctx, uToken, k)
+	amount := uint64(0)
+	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
+	for _, proof := range msg.Proofs {
+		// determine denoms from keys
+		if proof.Data == nil {
+			continue
+		}
 
-	return token.Amount.Uint64(), err
+		udenom := umeetypes.DenomFromKeyWithAddress(proof.Key, addr)
+		uToken, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, proof.Data, udenom)
+		if err != nil {
+			return 0, err
+		}
+		token, err := umee.ExchangeUToken(ctx, uToken, k)
+		if err != nil {
+			return 0, err
+		}
+		amount += token.Amount.Uint64()
+	}
+
+	return amount, err
 }
