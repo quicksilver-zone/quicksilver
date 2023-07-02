@@ -4967,6 +4967,63 @@ paths:
               claim regarding the given zone (chain).
       tags:
         - Msg
+  /quicksilver/tx/v1/participationrewards/remove_protocoldata:
+    post:
+      summary: >-
+        SignalIntent defines a method for signalling voting intent for one or
+        more
+
+        validators.
+      operationId: GovRemoveProtocolData
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            description: >-
+              MsgGovRemoveProtocolDataResponse defines the
+              MsgGovRemoveProtocolData
+
+              response type.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+              description:
+                type: string
+              key:
+                type: string
+              authority:
+                type: string
+      tags:
+        - Msg
   /quicksilver/participationrewards/v1/params:
     get:
       summary: Params returns the total set of participation rewards parameters.

@@ -20,6 +20,8 @@ const (
 var (
 	_ sdk.Msg            = &MsgSubmitClaim{}
 	_ legacytx.LegacyMsg = &MsgSubmitClaim{}
+
+	_ sdk.Msg = &MsgGovRemoveProtocolData{}
 )
 
 // NewMsgSubmitClaim - construct a msg to submit a claim.
@@ -102,3 +104,22 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 
 	return nil
 }
+
+// NewMsgGovCloseChannel - construct a msg to update signalled intent.
+func NewMsgGovRemoveProtocolData(key string, fromAddress sdk.Address) *MsgGovRemoveProtocolData {
+	return &MsgGovRemoveProtocolData{Key: key, Authority: fromAddress.String()}
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgGovRemoveProtocolData) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgGovRemoveProtocolData) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{fromAddress}
+}
+
+// Validate.
+func (msg MsgGovRemoveProtocolData) ValidateBasic() error { return nil }
