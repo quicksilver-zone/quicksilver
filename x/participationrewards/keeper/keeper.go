@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -85,6 +86,10 @@ func NewKeeper(
 		ValidateProofOps:     proofValidationFn,
 		ValidateSelfProofOps: selfProofValidationFn,
 	}
+}
+
+func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
+	return sdk.MustBech32ifyAddressBytes(config.Bech32Prefix, k.accountKeeper.GetModuleAddress(govtypes.ModuleName))
 }
 
 func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
