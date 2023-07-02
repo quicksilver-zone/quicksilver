@@ -37,4 +37,4 @@ if [[ $1 == "pending" ]]; then
 fi
 
 # Start the node (remove the --pruning=nothing flag if historical queries are not needed)
-quicksilverd start --pruning=nothing  
+quicksilverd start --pruning=nothing --api.enable --api.swagger    
