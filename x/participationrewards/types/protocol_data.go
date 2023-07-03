@@ -60,6 +60,17 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 		}
 
 		return &oppd, nil
+	case ProtocolDataTypeUmeeParams:
+		uppd := UmeeParamsProtocolData{}
+		err := json.Unmarshal(data, &uppd)
+		if err != nil {
+			return nil, err
+		}
+		var blank UmeeParamsProtocolData
+		if reflect.DeepEqual(uppd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal umeeparams protocol data from empty JSON object")
+		}
+		return &uppd, nil
 	case ProtocolDataTypeUmeeReserves:
 		upd := UmeeReservesProtocolData{}
 		err := json.Unmarshal(data, &upd)
