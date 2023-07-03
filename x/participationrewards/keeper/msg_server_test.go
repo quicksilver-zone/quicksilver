@@ -142,6 +142,39 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"a",
 		},
 		{
+			"invalid_umee_denom",
+			func() {
+				address := addressutils.GenerateAccAddressForTest()
+				prefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
+				key := banktypes.CreatePrefixedAccountStoreKey(prefix, []byte("u/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
+
+				cd := sdk.Coin{
+					Denom:  "u/random",
+					Amount: math.NewInt(1000),
+				}
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: address.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeUmeeToken,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       key,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: "bank",
+						},
+					},
+				}
+			},
+			nil,
+			"a",
+		},
+		{
 			"valid_osmosis",
 			func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
@@ -248,7 +281,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			func() {
 				address := addressutils.GenerateAccAddressForTest()
 				prefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
-				key := banktypes.CreatePrefixedAccountStoreKey(prefix, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
+				key := banktypes.CreatePrefixedAccountStoreKey(prefix, []byte("u/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				cd := sdk.Coin{
 					Denom:  "u/uumee",
