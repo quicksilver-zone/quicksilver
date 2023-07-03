@@ -175,6 +175,7 @@ func NewQuicksilver(
 	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
 	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
 	app.mm.SetOrderInitGenesis(orderInitBlockers()...)
+	app.mm.SetOrderExportGenesis(orderInitBlockers()...)
 
 	app.mm.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
@@ -363,7 +364,7 @@ func (app *Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.A
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register node gRPC service for grpc-gateway.
-    nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
