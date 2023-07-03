@@ -313,8 +313,14 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 
 	balancesStore := query.Request[1:]
 	_, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	if err != nil {
+		return err
+	}
 
 	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
+	if err != nil {
+		return err
+	}
 	balanceAmount := balanceCoin.Amount
 
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeLeverageModuleBalance, denom)
