@@ -10,6 +10,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	umee "github.com/ingenuity-build/quicksilver/umee"
 	umeetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
+	"github.com/ingenuity-build/quicksilver/utils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -176,7 +177,7 @@ func (u UmeeModule) IsReady() bool {
 
 func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	amount := uint64(0)
-	_, _, err := bech32.DecodeAndConvert(msg.UserAddress)
+	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
 
 	for _, proof := range msg.Proofs {
 		// determine denoms from keys
@@ -184,7 +185,11 @@ func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubm
 			continue
 		}
 
-		udenom := umeetypes.DenomFromProofKey(proof.Key)
+		//udenom := umeetypes.DenomFromProofKey(proof.Key)
+		udenom, err := utils.DenomFromRequestKey(proof.Key, addr)
+		if err != nil {
+			return 0, err
+		}
 		uToken, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, proof.Data, udenom)
 		if err != nil {
 			return 0, err

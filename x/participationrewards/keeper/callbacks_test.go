@@ -283,7 +283,7 @@ func (suite *KeeperTestSuite) executeUmeeTotalBorrowsUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.Require().True(found, "qid: %s", qid)
 
-	data := sdk.NewDec(15)
+	data := sdk.NewDec(150000)
 	resp, err := data.Marshal()
 	suite.Require().NoError(err)
 	expectedData, err := json.Marshal(data)

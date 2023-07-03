@@ -280,8 +280,11 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"valid_umee",
 			func() {
 				address := addressutils.GenerateAccAddressForTest()
-				prefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
-				key := append(prefix, []byte("u/uumee")...)
+				bankprefix := banktypes.CreateAccountBalancesPrefix(address)
+				bankkey := append(bankprefix, []byte("u/uumee")...)
+
+				leverageprefix := umeetypes.KeyCollateralAmountNoDenom(address)
+				leveragekey := append(leverageprefix, []byte("u/uumee")...)
 
 				cd := math.NewInt(1000)
 				bz, err := cd.Marshal()
@@ -294,11 +297,18 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					ClaimType:   cmtypes.ClaimTypeUmeeToken,
 					Proofs: []*cmtypes.Proof{
 						{
-							Key:       key,
+							Key:       bankkey,
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
 							ProofType: "bank",
+						},
+						{
+							Key:       leveragekey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: "leverage",
 						},
 					},
 				}
