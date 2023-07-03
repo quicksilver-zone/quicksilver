@@ -2,11 +2,13 @@ package types
 
 import (
 	"encoding/hex"
+	"errors"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
@@ -122,4 +124,29 @@ func (msg MsgGovRemoveProtocolData) GetSigners() []sdk.AccAddress {
 }
 
 // Validate.
-func (msg MsgGovRemoveProtocolData) ValidateBasic() error { return nil }
+func (msg MsgGovRemoveProtocolData) ValidateBasic() error {
+	// check title is non-empty
+	if len(msg.Title) == 0 {
+		return errors.New("title must not be empty")
+	}
+
+	// check description is non-empty
+	if len(msg.Description) == 0 {
+		return errors.New("description must not be empty")
+	}
+
+	// check key is non-empty
+	if len(msg.Key) == 0 {
+		return errors.New("key must not be empty")
+	}
+
+	// check authority is non-empty
+	if len(msg.Authority) == 0 {
+		return errors.New("authority must not be empty")
+	}
+
+	// check authority bech32 is valid
+	_, err := addressutils.AddressFromBech32(msg.Authority, "")
+	return err
+
+}
