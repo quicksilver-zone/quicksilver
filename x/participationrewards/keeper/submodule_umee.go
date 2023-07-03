@@ -23,7 +23,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 	// umee params
 	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeParams, types.UmeeParamsKey)
 	if !found {
-		k.Logger(ctx).Error("unable to query osmosisparams in OsmosisModule hook")
+		k.Logger(ctx).Error("unable to query umeeparams in UmeeModule hook")
 		return
 	}
 
@@ -35,7 +35,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 
 	data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, paramsData.ChainID)
 	if !found {
-		k.Logger(ctx).Error(fmt.Sprintf("unable to query connection/%s in OsmosisModule hook", paramsData.ChainID))
+		k.Logger(ctx).Error(fmt.Sprintf("unable to query connection/%s in UmeeModule hook", paramsData.ChainID))
 		return
 	}
 
