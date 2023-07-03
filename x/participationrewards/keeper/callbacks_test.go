@@ -3,10 +3,11 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	umeetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -190,6 +191,7 @@ func (suite *KeeperTestSuite) executeUmeeReservesUpdateCallback() {
 	result := value.(*types.UmeeReservesProtocolData)
 	suite.Require().Equal(want, result)
 }
+
 func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
@@ -233,6 +235,7 @@ func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
 	result := value.(*types.UmeeLeverageModuleBalanceProtocolData)
 	suite.Require().Equal(want, result)
 }
+
 func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
@@ -274,6 +277,7 @@ func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
 	result := value.(*types.UmeeUTokenSupplyProtocolData)
 	suite.Require().Equal(want, result)
 }
+
 func (suite *KeeperTestSuite) executeUmeeTotalBorrowsUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
@@ -315,6 +319,7 @@ func (suite *KeeperTestSuite) executeUmeeTotalBorrowsUpdateCallback() {
 	result := value.(*types.UmeeTotalBorrowsProtocolData)
 	suite.Require().Equal(want, result)
 }
+
 func (suite *KeeperTestSuite) executeUmeeInterestScalarUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
