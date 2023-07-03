@@ -59,7 +59,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 			m.GetKeyPrefixPools(pool.PoolID),
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"osmosispoolupdate",
+			OsmosisPoolUpdateCallbackID,
 			0,
 		) // query pool data
 		return false
