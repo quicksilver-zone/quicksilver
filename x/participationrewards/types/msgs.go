@@ -62,26 +62,26 @@ func (msg MsgSubmitClaim) GetSigners() []sdk.AccAddress {
 
 // ValidateBasic implements Msg: stateless checks.
 func (msg MsgSubmitClaim) ValidateBasic() error {
-	errors := make(map[string]error)
+	errs := make(map[string]error)
 	if _, err := sdk.AccAddressFromBech32(msg.UserAddress); err != nil {
-		errors["UserAddress"] = err
+		errs["UserAddress"] = err
 	}
 
 	if msg.Zone == "" {
-		errors["Zone"] = ErrUndefinedAttribute
+		errs["Zone"] = ErrUndefinedAttribute
 	}
 
 	if msg.SrcZone == "" {
-		errors["SrcZone"] = ErrUndefinedAttribute
+		errs["SrcZone"] = ErrUndefinedAttribute
 	}
 
 	ct := int(msg.ClaimType)
 	if ct < 1 || ct >= len(cmtypes.ClaimType_value) {
-		errors["Action"] = fmt.Errorf("%w, got %d", cmtypes.ErrClaimTypeOutOfBounds, msg.ClaimType)
+		errs["Action"] = fmt.Errorf("%w, got %d", cmtypes.ErrClaimTypeOutOfBounds, msg.ClaimType)
 	}
 
 	if len(msg.Proofs) == 0 {
-		errors["Proofs"] = ErrUndefinedAttribute
+		errs["Proofs"] = ErrUndefinedAttribute
 	}
 
 	if len(msg.Proofs) > 0 {
@@ -92,16 +92,16 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 			}
 
 			pLabel := fmt.Sprintf("Proof [%s]", hex.EncodeToString(p.Key))
-			if _, ok := errors[pLabel]; ok {
+			if _, ok := errs[pLabel]; ok {
 				pLabel += fmt.Sprintf("-%d", i)
 			}
-			errors[pLabel+":"] = err
+			errs[pLabel+":"] = err
 		}
 	}
 
 	// check for errors and return
-	if len(errors) > 0 {
-		return multierror.New(errors)
+	if len(errs) > 0 {
+		return multierror.New(errs)
 	}
 
 	return nil
@@ -126,22 +126,22 @@ func (msg MsgGovRemoveProtocolData) GetSigners() []sdk.AccAddress {
 // Validate.
 func (msg MsgGovRemoveProtocolData) ValidateBasic() error {
 	// check title is non-empty
-	if len(msg.Title) == 0 {
+	if msg.Title == "" {
 		return errors.New("title must not be empty")
 	}
 
 	// check description is non-empty
-	if len(msg.Description) == 0 {
+	if msg.Description == "" {
 		return errors.New("description must not be empty")
 	}
 
 	// check key is non-empty
-	if len(msg.Key) == 0 {
+	if msg.Key == "" {
 		return errors.New("key must not be empty")
 	}
 
 	// check authority is non-empty
-	if len(msg.Authority) == 0 {
+	if msg.Authority == "" {
 		return errors.New("authority must not be empty")
 	}
 
