@@ -1,5 +1,7 @@
 {
 "deposit": "100uqck",
+"title": "register lstest-1 zone",
+"summary":  "register",
 "proposer": "",
 "messages": [{
   "@type": "/cosmos.gov.v1.MsgExecLegacyContent",
