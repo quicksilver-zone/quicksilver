@@ -279,7 +279,7 @@ func UmeeUTokenSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 		return errors.New("query request has unexpected prefix")
 	}
 
-	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixReserveAmount)
+	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixUtokenSupply)
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, denom)
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for umee utoken supply/%s", denom)
