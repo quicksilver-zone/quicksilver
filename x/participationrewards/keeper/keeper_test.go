@@ -431,7 +431,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		upd,
 	)
 	// umee test utoken supply
-	upd, _ = json.Marshal(types.UmeeInterestScalarProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeetypes.UTokenPrefix + umeeBaseDenom}})
+	upd, _ = json.Marshal(types.UmeeUTokenSupplyProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeetypes.UTokenPrefix + umeeBaseDenom}})
 	suite.addProtocolData(
 		types.ProtocolDataTypeUmeeUTokenSupply,
 		upd,
