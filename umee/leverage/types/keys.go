@@ -13,7 +13,7 @@ const (
 	StoreKey = LeverageModuleName
 )
 
-// KVStore key prefixes
+// KVStore key prefixes.
 var (
 	KeyPrefixCollateralAmount    = []byte{0x04}
 	KeyPrefixReserveAmount       = []byte{0x05}
@@ -23,27 +23,27 @@ var (
 )
 
 func KeyReserveAmount(tokenDenom string) []byte {
-	// reserveamountprefix | denom | 0x00 for null-termination
+	// reserveamountprefix | denom | 0x00 for null-termination.
 	return utils.ConcatBytes(1, KeyPrefixReserveAmount, []byte(tokenDenom))
 }
 
 // KeyAdjustedTotalBorrow returns a KVStore key for getting and setting the total ajdusted borrows for
 // a given token.
 func KeyAdjustedTotalBorrow(tokenDenom string) []byte {
-	// totalBorrowedPrefix | denom | 0x00 for null-termination
+	// totalBorrowedPrefix | denom | 0x00 for null-termination.
 	return utils.ConcatBytes(1, KeyPrefixAdjustedTotalBorrow, []byte(tokenDenom))
 }
 
 // KeyInterestScalar returns a KVStore key for getting and setting the interest scalar for a
 // given token.
 func KeyInterestScalar(tokenDenom string) []byte {
-	// interestScalarPrefix | denom | 0x00 for null-termination
+	// interestScalarPrefix | denom | 0x00 for null-termination.
 	return utils.ConcatBytes(1, KeyPrefixInterestScalar, []byte(tokenDenom))
 }
 
 // KeyUTokenSupply returns a KVStore key for getting and setting a utoken's total supply.
 func KeyUTokenSupply(uTokenDenom string) []byte {
-	// supplyprefix | denom | 0x00 for null-termination
+	// supplyprefix | denom | 0x00 for null-termination.
 	return utils.ConcatBytes(1, KeyPrefixUtokenSupply, []byte(uTokenDenom))
 }
 
@@ -54,13 +54,13 @@ func KeyCollateralAmountNoDenom(addr sdk.AccAddress) []byte {
 }
 
 // DenomFromKey extracts denom from a key with the form
-// prefix | denom | 0x00
+// prefix | denom | 0x00.
 func DenomFromKey(key, prefix []byte) string {
 	return string(key[len(prefix) : len(key)-1])
 }
 
 // DenomFromKeyWithAddress extracts denom from a key with the form
-// prefix | lengthPrefixed(addr) | denom | 0x00
+// prefix | lengthPrefixed(addr) | denom | 0x00.
 func DenomFromKeyWithAddress(key, prefix []byte) string {
 	addrLength := int(key[len(prefix)])
 	return string(key[len(prefix)+addrLength+1 : len(key)-1])
