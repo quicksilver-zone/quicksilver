@@ -50,6 +50,7 @@ type Keeper struct {
 	TransferKeeper      ibctransferkeeper.Keeper
 	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
 	Ir                  codectypes.InterfaceRegistry
+	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
 }
 
@@ -91,9 +92,21 @@ func NewKeeper(
 		IBCKeeper:           ibcKeeper,
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
+		hooks:               nil,
 
 		paramStore: ps,
 	}
+}
+
+// SetHooks set the ics hooks.
+func (k *Keeper) SetHooks(icsh types.IcsHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set epochs hooks twice")
+	}
+
+	k.hooks = icsh
+
+	return k
 }
 
 func (k *Keeper) GetGovAuthority(_ sdk.Context) string {

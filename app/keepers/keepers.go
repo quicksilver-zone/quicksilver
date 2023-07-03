@@ -609,4 +609,10 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		// insert governance hooks receivers here
 		),
 	)
+
+	appKeepers.InterchainstakingKeeper.SetHooks(
+		interchainstakingtypes.NewMultiIcsHooks(
+			appKeepers.ParticipationRewardsKeeper.Hooks(),
+		),
+	)
 }

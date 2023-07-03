@@ -1,10 +1,13 @@
 package keeper
 
 import (
+	"encoding/json"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -90,6 +93,32 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 	return nil
 }
 
+func (k *Keeper) AfterZoneCreated(ctx sdk.Context, connectionId, chainId, accountPrefix string) error {
+
+	connectionPd := types.ConnectionProtocolData{
+		ConnectionID: connectionId,
+		ChainID:      chainId,
+		LastEpoch:    0,
+		Prefix:       accountPrefix,
+	}
+
+	if err := connectionPd.ValidateBasic(); err != nil {
+		return err
+	}
+
+	connectionPdBytes, err := json.Marshal(connectionPd)
+	if err != nil {
+		return err
+	}
+
+	k.SetProtocolData(ctx, connectionPd.GenerateKey(), &types.ProtocolData{
+		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
+		Data: connectionPdBytes,
+	})
+
+	return nil
+}
+
 // ___________________________________________________________________________________________________
 
 // Hooks wrapper struct for incentives keeper.
@@ -97,7 +126,10 @@ type Hooks struct {
 	k *Keeper
 }
 
-var _ epochstypes.EpochHooks = Hooks{}
+var (
+	_ epochstypes.EpochHooks = Hooks{}
+	_ icstypes.IcsHooks      = Hooks{}
+)
 
 func (k *Keeper) Hooks() Hooks {
 	return Hooks{k}
@@ -111,4 +143,8 @@ func (h Hooks) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNu
 
 func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {
 	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
+}
+
+func (h Hooks) AfterZoneCreated(ctx sdk.Context, connectionId, chainId, accountPrefix string) error {
+	return h.k.AfterZoneCreated(ctx, connectionId, chainId, accountPrefix)
 }
