@@ -175,7 +175,7 @@ func (suite *KeeperTestSuite) executeUmeeReservesUpdateCallback() {
 	suite.Require().NoError(err)
 
 	want := &types.UmeeReservesProtocolData{
-		types.UmeeProtocolData{
+		UmeeProtocolData: types.UmeeProtocolData{
 			Denom:       umeeBaseDenom,
 			LastUpdated: ctx.BlockTime(),
 			Data:        expectedData,
@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
 	suite.Require().NoError(err)
 
 	want := &types.UmeeLeverageModuleBalanceProtocolData{
-		types.UmeeProtocolData{
+		UmeeProtocolData: types.UmeeProtocolData{
 			Denom:       umeeBaseDenom,
 			LastUpdated: ctx.BlockTime(),
 			Data:        expectedData,
@@ -259,7 +259,7 @@ func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
 	suite.Require().NoError(err)
 
 	want := &types.UmeeUTokenSupplyProtocolData{
-		types.UmeeProtocolData{
+		UmeeProtocolData: types.UmeeProtocolData{
 			Denom:       umeetypes.UTokenPrefix + umeeBaseDenom,
 			LastUpdated: ctx.BlockTime(),
 			Data:        expectedData,
@@ -300,7 +300,7 @@ func (suite *KeeperTestSuite) executeUmeeTotalBorrowsUpdateCallback() {
 	suite.Require().NoError(err)
 
 	want := &types.UmeeTotalBorrowsProtocolData{
-		types.UmeeProtocolData{
+		UmeeProtocolData: types.UmeeProtocolData{
 			Denom:       umeeBaseDenom,
 			LastUpdated: ctx.BlockTime(),
 			Data:        expectedData,
@@ -341,7 +341,7 @@ func (suite *KeeperTestSuite) executeUmeeInterestScalarUpdateCallback() {
 	suite.Require().NoError(err)
 
 	want := &types.UmeeInterestScalarProtocolData{
-		types.UmeeProtocolData{
+		UmeeProtocolData: types.UmeeProtocolData{
 			Denom:       umeeBaseDenom,
 			LastUpdated: ctx.BlockTime(),
 			Data:        expectedData,
