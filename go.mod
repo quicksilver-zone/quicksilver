@@ -36,7 +36,7 @@ require (
 	golang.org/x/tools v0.10.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230526203410-71b5a4ffd15e
 	google.golang.org/grpc v1.56.1
-	google.golang.org/protobuf v1.30.0
+	google.golang.org/protobuf v1.31.0
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/gofumpt v0.5.0
 )
