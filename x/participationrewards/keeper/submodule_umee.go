@@ -154,7 +154,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			"store/leverage/key",
-			umeetypes.KeyAdjustedTotalBorrow(borrows.Denom), //wrong key
+			umeetypes.KeyAdjustedTotalBorrow(borrows.Denom),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeTotalBorrowsUpdateCallbackID,
