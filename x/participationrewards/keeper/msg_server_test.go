@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"time"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	umeetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
-	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
