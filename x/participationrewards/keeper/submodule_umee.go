@@ -20,7 +20,6 @@ type UmeeModule struct{}
 var _ Submodule = &UmeeModule{}
 
 func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
-	//update module balance, reserves, utoken supply
 	// umee params
 	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeParams, types.UmeeParamsKey)
 	if !found {

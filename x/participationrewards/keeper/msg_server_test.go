@@ -280,11 +280,11 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"valid_umee",
 			func() {
 				address := addressutils.GenerateAccAddressForTest()
-				bankprefix := banktypes.CreateAccountBalancesPrefix(address)
-				bankkey := append(bankprefix, []byte("u/uumee")...)
+				bankkey := banktypes.CreateAccountBalancesPrefix(address)
+				bankkey = append(bankkey, []byte("u/uumee")...)
 
-				leverageprefix := umeetypes.KeyCollateralAmountNoDenom(address)
-				leveragekey := append(leverageprefix, []byte("u/uumee")...)
+				leveragekey := umeetypes.KeyCollateralAmountNoDenom(address)
+				leveragekey = append(leveragekey, []byte("u/uumee")...)
 
 				cd := math.NewInt(1000)
 				bz, err := cd.Marshal()
