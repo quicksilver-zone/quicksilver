@@ -132,7 +132,7 @@ func UmeeClaim(
 
 	//bank balance
 	for _, coin := range bankQueryResponse.Balances {
-		if len(coin.GetDenom()) >= 2 && coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
+		if len(coin.GetDenom()) < 2 || coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
 			continue
 		}
 		tuple, ok := tokens[coin.GetDenom()]
@@ -196,7 +196,7 @@ func UmeeClaim(
 
 	//leverage account balance
 	for _, coin := range leverageQueryResponse.Collateral {
-		if len(coin.GetDenom()) >= 2 && coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
+		if len(coin.GetDenom()) < 2 || coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
 			continue
 		}
 		tuple, ok := tokens[coin.GetDenom()]
