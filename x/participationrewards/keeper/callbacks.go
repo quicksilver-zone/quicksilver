@@ -159,7 +159,7 @@ func OsmosisPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, quer
 
 func UmeeReservesUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
 	reserveAmount := sdk.ZeroInt()
-	if err := k.cdc.UnmarshalInterface(response, &reserveAmount); err != nil {
+	if err := reserveAmount.Unmarshal(response); err != nil {
 		return err
 	}
 
@@ -196,7 +196,7 @@ func UmeeReservesUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, que
 
 func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
 	totalBorrows := sdk.ZeroDec()
-	if err := k.cdc.UnmarshalInterface(response, &totalBorrows); err != nil {
+	if err := totalBorrows.Unmarshal(response); err != nil {
 		return err
 	}
 
@@ -233,7 +233,7 @@ func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 
 func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
 	interestScalar := sdk.ZeroDec()
-	if err := k.cdc.UnmarshalInterface(response, &interestScalar); err != nil {
+	if err := interestScalar.Unmarshal(response); err != nil {
 		return err
 	}
 
@@ -270,7 +270,7 @@ func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byt
 
 func UmeeUTokenSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
 	supplyAmount := sdk.ZeroInt()
-	if err := k.cdc.UnmarshalInterface(response, &supplyAmount); err != nil {
+	if err := supplyAmount.Unmarshal(response); err != nil {
 		return err
 	}
 
