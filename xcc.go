@@ -118,7 +118,7 @@ func main() {
 		r := mux.NewRouter()
 		r.HandleFunc("/cache", handlers.GetCacheHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &tokenManager))
 		r.HandleFunc("/{address}/epoch", handlers.GetEpochHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &umeeParamsManager, &tokenManager))
-		r.HandleFunc("/{address}/current", handlers.GetCurrentHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &tokenManager))
+		r.HandleFunc("/{address}/current", handlers.GetCurrentHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &umeeParamsManager, &tokenManager))
 		// r.HandleFunc("/{address}/airdrop/{claimId}", handlers.AirdropHandler)
 		r.HandleFunc("/version", handlers.GetVersionHandler(Version))
 		http.Handle("/", r)

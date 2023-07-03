@@ -122,7 +122,7 @@ func GetEpochHandler(
 			chain = ""
 		}
 		if chain == "" {
-			errors["config"] = fmt.Errorf("osmosis chain ID is not set")
+			errors["config"] = fmt.Errorf("umee chain ID is not set")
 			return
 		}
 
