@@ -18,6 +18,7 @@ func GetAirdropHandler(
 	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
 	poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
 	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
+	umeeParamsManager *types.CacheManager[prewards.UmeeParamsProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
@@ -46,6 +47,21 @@ func GetAirdropHandler(
 
 		for chainID, asset := range assets {
 			response.Assets[chainID] = []types.Asset{{Type: "osmosispool", Amount: asset}}
+		}
+
+		// umee
+		messages, assets, err = claims.UmeeClaim(context.TODO(), cfg, tokensManager, vars["address"], umeeParamsManager.Get()[0].ChainID, 0)
+		if err != nil {
+			fmt.Fprintf(w, "Error: %s", err)
+			return
+		}
+
+		for _, message := range messages {
+			response.Messages = append(response.Messages, message)
+		}
+
+		for chainID, asset := range assets {
+			response.Assets[chainID] = []types.Asset{{Type: "liquid", Amount: asset}}
 		}
 
 		// liquid for all zones; config should hold osmosis chainid.

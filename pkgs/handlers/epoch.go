@@ -20,6 +20,7 @@ func GetEpochHandler(
 	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
 	poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
 	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
+	umeeParamsManager *types.CacheManager[prewards.UmeeParamsProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
@@ -118,6 +119,48 @@ func GetEpochHandler(
 
 		for chainID, asset := range assets {
 			response.Assets[chainID] = []types.Asset{{Type: "osmosispool", Amount: asset}}
+		}
+
+		// umee claim
+		chain = umeeParamsManager.Get()[0].ChainID
+		fmt.Println("check config for umee chain id...")
+		// simulate failure hook 0:
+		if _, failHere := failAt[0]; failHere {
+			chain = ""
+		}
+		if chain == "" {
+			errors["config"] = fmt.Errorf("umee chain ID is not set")
+			return
+		}
+
+		fmt.Println("check umee last epoch height...")
+		for _, con := range connections {
+			if con.ChainID == chain {
+				height = con.LastEpoch
+				break
+			}
+		}
+		// simulate failure hook 1:
+		if _, failHere := failAt[1]; failHere {
+			height = 0
+		}
+		if height == 0 {
+			errors["height"] = fmt.Errorf("fetched height is 0")
+			return
+		}
+
+		fmt.Println("fetch umee claim...")
+		messages, assets, err = claims.UmeeClaim(ctx, cfg, tokensManager, vars["address"], chain, height)
+		if err != nil {
+			errors["UmeeClaim"] = err
+		}
+
+		for _, message := range messages {
+			response.Messages = append(response.Messages, message)
+		}
+
+		for chainID, asset := range assets {
+			response.Assets[chainID] = []types.Asset{{Type: "liquid", Amount: asset}}
 		}
 
 		// liquid for all zones; config should hold osmosis chainid.

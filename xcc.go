@@ -73,6 +73,7 @@ var (
 	connectionManager    types.CacheManager[prewards.ConnectionProtocolData]
 	poolsManager         types.CacheManager[prewards.OsmosisPoolProtocolData]
 	osmosisParamsManager types.CacheManager[prewards.OsmosisParamsProtocolData]
+	umeeParamsManager    types.CacheManager[prewards.UmeeParamsProtocolData]
 	tokenManager         types.CacheManager[prewards.LiquidAllowedDenomProtocolData]
 )
 
@@ -104,6 +105,7 @@ func main() {
 
 	connectionManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeConnection/", time.Minute*5)
 	osmosisParamsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisParams/", time.Hour*24)
+	umeeParamsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeUmeeParams/", time.Hour*24)
 	poolsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", time.Minute*5)
 	tokenManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeLiquidToken/", time.Minute*5)
 	config := sdk.GetConfig()
@@ -115,8 +117,8 @@ func main() {
 	case "serve":
 		r := mux.NewRouter()
 		r.HandleFunc("/cache", handlers.GetCacheHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &tokenManager))
-		r.HandleFunc("/{address}/epoch", handlers.GetEpochHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &tokenManager))
-		r.HandleFunc("/{address}/current", handlers.GetCurrentHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &tokenManager))
+		r.HandleFunc("/{address}/epoch", handlers.GetEpochHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &umeeParamsManager, &tokenManager))
+		r.HandleFunc("/{address}/current", handlers.GetCurrentHandler(cfg, &connectionManager, &poolsManager, &osmosisParamsManager, &umeeParamsManager, &tokenManager))
 		// r.HandleFunc("/{address}/airdrop/{claimId}", handlers.AirdropHandler)
 		r.HandleFunc("/version", handlers.GetVersionHandler(Version))
 		http.Handle("/", r)

@@ -47,7 +47,7 @@ func LiquidClaim(
 
 	_, addrBytes, err := bech32.Decode(address, 51)
 	// 0:
-	err = failsim.FailureHook(failures, 0, err, "failure decosing bech32 address")
+	err = failsim.FailureHook(failures, 0, err, "failure decoding bech32 address")
 	if err != nil {
 		return nil, nil, err
 	}
