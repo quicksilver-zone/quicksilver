@@ -121,7 +121,7 @@ func UmeeClaim(
 		out := make(map[string]TokenTuple)
 		for _, i := range in {
 			if i.ChainID == chain {
-				out[i.IbcDenom] = TokenTuple{denom: leveragetypes.UTokenPrefix + i.QAssetDenom, chain: i.RegisteredZoneChainID}
+				out[leveragetypes.UTokenPrefix+i.IbcDenom] = TokenTuple{denom: i.QAssetDenom, chain: i.RegisteredZoneChainID}
 			}
 		}
 		return out
@@ -132,12 +132,12 @@ func UmeeClaim(
 
 	//bank balance
 	for _, coin := range bankQueryResponse.Balances {
-		if coin.Denom[0:2] != leveragetypes.UTokenPrefix {
+		if len(coin.GetDenom()) >= 2 && coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
 			continue
 		}
-		tuple, ok := tokens[coin.Denom]
+		tuple, ok := tokens[coin.GetDenom()]
 		if !ok {
-			fmt.Println("not dealing with token for chain", chain, coin.Denom)
+			fmt.Println("not dealing with token for chain", chain, coin.GetDenom())
 			// token is not present in list of allowed tokens, ignore.
 			continue
 		}
@@ -153,7 +153,7 @@ func UmeeClaim(
 		}
 
 		accountPrefix := banktypes.CreateAccountBalancesPrefix(umeeaddr.Bytes())
-		lookupKey := append(accountPrefix, []byte(coin.Denom)...)
+		lookupKey := append(accountPrefix, []byte(coin.GetDenom())...)
 		abciquery, err := client.ABCIQueryWithOptions(
 			context.Background(), "/store/bank/key",
 			lookupKey,
@@ -196,12 +196,12 @@ func UmeeClaim(
 
 	//leverage account balance
 	for _, coin := range leverageQueryResponse.Collateral {
-		if coin.Denom[0:2] != leveragetypes.UTokenPrefix {
+		if len(coin.GetDenom()) >= 2 && coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
 			continue
 		}
-		tuple, ok := tokens[coin.Denom]
+		tuple, ok := tokens[coin.GetDenom()]
 		if !ok {
-			fmt.Println("not dealing with token for chain", chain, coin.Denom)
+			fmt.Println("not dealing with token for chain", chain, coin.GetDenom())
 			// token is not present in list of allowed tokens, ignore.
 			continue
 		}
@@ -217,7 +217,7 @@ func UmeeClaim(
 		}
 
 		accountPrefix := leveragetypes.KeyCollateralAmountNoDenom(umeeaddr)
-		lookupKey := append(accountPrefix, []byte(coin.Denom)...)
+		lookupKey := append(accountPrefix, []byte(coin.GetDenom())...)
 		abciquery, err := client.ABCIQueryWithOptions(
 			context.Background(), "/store/leverage/key",
 			lookupKey,
