@@ -114,7 +114,7 @@ func GetEpochHandler(
 			response.Assets[chainID] = []types.Asset{{Type: "osmosispool", Amount: asset}}
 		}
 
-		//umee
+		// umee claim
 		chain = umeeParamsManager.Get()[0].ChainID
 		fmt.Println("check config for umee chain id...")
 		// simulate failure hook 0:

@@ -19,8 +19,6 @@ import (
 	"time"
 )
 
-const UmeePrefix = "u/"
-
 func UmeeClaim(
 	ctx context.Context,
 	cfg types.Config,
@@ -123,7 +121,7 @@ func UmeeClaim(
 		out := make(map[string]TokenTuple)
 		for _, i := range in {
 			if i.ChainID == chain {
-				out[i.IbcDenom] = TokenTuple{denom: UmeePrefix + i.QAssetDenom, chain: i.RegisteredZoneChainID}
+				out[i.IbcDenom] = TokenTuple{denom: leveragetypes.UTokenPrefix + i.QAssetDenom, chain: i.RegisteredZoneChainID}
 			}
 		}
 		return out
@@ -134,7 +132,7 @@ func UmeeClaim(
 
 	//bank balance
 	for _, coin := range bankQueryResponse.Balances {
-		if coin.Denom[0:2] != UmeePrefix {
+		if coin.Denom[0:2] != leveragetypes.UTokenPrefix {
 			continue
 		}
 		tuple, ok := tokens[coin.Denom]
@@ -198,7 +196,7 @@ func UmeeClaim(
 
 	//leverage account balance
 	for _, coin := range leverageQueryResponse.Collateral {
-		if coin.Denom[0:2] != UmeePrefix {
+		if coin.Denom[0:2] != leveragetypes.UTokenPrefix {
 			continue
 		}
 		tuple, ok := tokens[coin.Denom]
