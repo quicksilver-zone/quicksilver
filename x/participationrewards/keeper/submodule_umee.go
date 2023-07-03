@@ -53,7 +53,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 		}
 		reserves, _ := ireserves.(*types.UmeeReservesProtocolData)
 
-		//update reserves
+		// update reserves
 		k.IcqKeeper.MakeRequest(
 			ctx,
 			connectionData.ConnectionID,
@@ -114,9 +114,9 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 		return false
 	})
 
-	//TODO: check module spendable coins retrieval
-	//assuming that module account is not a vesting account so there
-	//will be no locked coins to subtract from the total balance
+	// TODO: check module spendable coins retrieval
+	// assuming that module account is not a vesting account so there
+	// will be no locked coins to subtract from the total balance
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeUmeeLeverageModuleBalance), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		ibalance, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeLeverageModuleBalance, data.Data)
 		if err != nil {
