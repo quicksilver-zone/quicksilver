@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"time"
 )
 
@@ -84,14 +83,9 @@ type UmeeParamsProtocolData struct {
 }
 
 func (uppd UmeeParamsProtocolData) ValidateBasic() error {
-	errs := make(map[string]error)
 
 	if uppd.ChainID == "" {
-		errs["ChainID"] = ErrUndefinedAttribute
-	}
-
-	if len(errs) > 0 {
-		return multierror.New(errs)
+		return ErrUndefinedAttribute
 	}
 
 	return nil
