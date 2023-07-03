@@ -4,6 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/ingenuity-build/quicksilver/utils"
+	"strings"
 )
 
 const (
@@ -59,9 +60,7 @@ func DenomFromKey(key, prefix []byte) string {
 	return string(key[len(prefix) : len(key)-1])
 }
 
-// DenomFromKeyWithAddress extracts denom from a key with the form
-// prefix | lengthPrefixed(addr) | denom | 0x00.
-func DenomFromKeyWithAddress(key, prefix []byte) string {
-	addrLength := int(key[len(prefix)])
-	return string(key[len(prefix)+addrLength+1 : len(key)-1])
+func DenomFromProofKey(key []byte) string {
+	keyString := string(key)
+	return keyString[strings.LastIndex(keyString, UTokenPrefix):]
 }

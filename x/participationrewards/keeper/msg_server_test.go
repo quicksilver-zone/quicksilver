@@ -281,12 +281,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			func() {
 				address := addressutils.GenerateAccAddressForTest()
 				prefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
-				key := banktypes.CreatePrefixedAccountStoreKey(prefix, []byte("u/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
+				key := append(prefix, []byte("u/uumee")...)
 
-				cd := sdk.Coin{
-					Denom:  "u/uumee",
-					Amount: math.NewInt(1000),
-				}
+				cd := math.NewInt(1000)
 				bz, err := cd.Marshal()
 				suite.Require().NoError(err)
 

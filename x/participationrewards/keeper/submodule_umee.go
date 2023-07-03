@@ -176,14 +176,15 @@ func (u UmeeModule) IsReady() bool {
 
 func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	amount := uint64(0)
-	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
+	_, _, err := bech32.DecodeAndConvert(msg.UserAddress)
+
 	for _, proof := range msg.Proofs {
 		// determine denoms from keys
 		if proof.Data == nil {
 			continue
 		}
 
-		udenom := umeetypes.DenomFromKeyWithAddress(proof.Key, addr)
+		udenom := umeetypes.DenomFromProofKey(proof.Key)
 		uToken, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, proof.Data, udenom)
 		if err != nil {
 			return 0, err
