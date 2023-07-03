@@ -1,8 +1,6 @@
 package types
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -59,9 +57,4 @@ func KeyCollateralAmountNoDenom(addr sdk.AccAddress) []byte {
 // prefix | denom | 0x00.
 func DenomFromKey(key, prefix []byte) string {
 	return string(key[len(prefix) : len(key)-1])
-}
-
-func DenomFromProofKey(key []byte) string {
-	keyString := string(key)
-	return keyString[strings.LastIndex(keyString, UTokenPrefix):]
 }

@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
-	umeetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
 	"testing"
 	"time"
+
+	umeetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
 
 	testsuite "github.com/stretchr/testify/suite"
 
@@ -406,31 +407,31 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", umeeTestConnection, umeeTestChain, 0)),
 	)
 	// umee test reserves
-	upd, _ := json.Marshal(types.UmeeReservesProtocolData{types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	upd, _ := json.Marshal(types.UmeeReservesProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
 	suite.addProtocolData(
 		types.ProtocolDataTypeUmeeReserves,
 		upd,
 	)
 	// umee test leverage module balance
-	upd, _ = json.Marshal(types.UmeeLeverageModuleBalanceProtocolData{types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	upd, _ = json.Marshal(types.UmeeLeverageModuleBalanceProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
 	suite.addProtocolData(
 		types.ProtocolDataTypeUmeeLeverageModuleBalance,
 		upd,
 	)
 	// umee test borrows
-	upd, _ = json.Marshal(types.UmeeTotalBorrowsProtocolData{types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	upd, _ = json.Marshal(types.UmeeTotalBorrowsProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
 	suite.addProtocolData(
 		types.ProtocolDataTypeUmeeTotalBorrows,
 		upd,
 	)
 	// umee test interest scalar
-	upd, _ = json.Marshal(types.UmeeInterestScalarProtocolData{types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	upd, _ = json.Marshal(types.UmeeInterestScalarProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
 	suite.addProtocolData(
 		types.ProtocolDataTypeUmeeInterestScalar,
 		upd,
 	)
 	// umee test utoken supply
-	upd, _ = json.Marshal(types.UmeeInterestScalarProtocolData{types.UmeeProtocolData{Denom: umeetypes.UTokenPrefix + umeeBaseDenom}})
+	upd, _ = json.Marshal(types.UmeeInterestScalarProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeetypes.UTokenPrefix + umeeBaseDenom}})
 	suite.addProtocolData(
 		types.ProtocolDataTypeUmeeUTokenSupply,
 		upd,

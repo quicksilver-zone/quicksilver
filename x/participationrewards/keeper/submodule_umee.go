@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -163,7 +164,6 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 
 		return false
 	})
-
 }
 
 func (u UmeeModule) IsActive() bool {
@@ -184,7 +184,6 @@ func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubm
 			continue
 		}
 
-		//udenom := umeetypes.DenomFromProofKey(proof.Key)
 		udenom, err := utils.DenomFromRequestKey(proof.Key, addr)
 		if err != nil {
 			return 0, err
