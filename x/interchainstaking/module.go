@@ -102,11 +102,11 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // AppModule implements the AppModule interface for the interchainstaking module.
 type AppModule struct {
 	AppModuleBasic
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
 // NewAppModule return a new AppModule.
-func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
+func NewAppModule(cdc codec.Codec, k *keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         k,
@@ -137,8 +137,8 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	// zanicar: this is the only I can find that clearly states that MsgServer
 	// WILL NOT expose gRPC services, and that QueryServer WILL expose gRPC
 	// services;
-	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
-	types.RegisterQueryServer(cfg.QueryServer(), &am.keeper)
+	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(*am.keeper))
+	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
 // RegisterInvariants registers the capability module's invariants.

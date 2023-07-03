@@ -22,11 +22,11 @@ var _ porttypes.IBCModule = IBCModule{}
 
 // IBCModule implements the ICS26 interface for interchain accounts controller chains.
 type IBCModule struct {
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
 // NewIBCModule creates a new IBCModule given the keeper.
-func NewIBCModule(k keeper.Keeper) IBCModule {
+func NewIBCModule(k *keeper.Keeper) IBCModule {
 	return IBCModule{
 		keeper: k,
 	}

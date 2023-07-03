@@ -68,7 +68,7 @@ func NewKeeper(
 	transferKeeper ibctransferkeeper.Keeper,
 	claimsManagerKeeper claimsmanagerkeeper.Keeper,
 	ps paramtypes.Subspace,
-) Keeper {
+) *Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -81,7 +81,7 @@ func NewKeeper(
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	return &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		scopedKeeper:        scopedKeeper,

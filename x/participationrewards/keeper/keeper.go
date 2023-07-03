@@ -40,7 +40,7 @@ type Keeper struct {
 	bankKeeper           types.BankKeeper
 	stakingKeeper        types.StakingKeeper
 	IcqKeeper            icqkeeper.Keeper
-	icsKeeper            icskeeper.Keeper
+	icsKeeper            *icskeeper.Keeper
 	epochsKeeper         epochskeeper.Keeper
 	feeCollectorName     string
 	prSubmodules         map[cmtypes.ClaimType]Submodule
@@ -58,7 +58,7 @@ func NewKeeper(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	icqk icqkeeper.Keeper,
-	icsk icskeeper.Keeper,
+	icsk *icskeeper.Keeper,
 	feeCollectorName string,
 	proofValidationFn utils.ProofOpsFn,
 	selfProofValidationFn utils.SelfProofOpsFn,

@@ -93,11 +93,10 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 	return nil
 }
 
-func (k *Keeper) AfterZoneCreated(ctx sdk.Context, connectionId, chainId, accountPrefix string) error {
-
+func (k *Keeper) AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accountPrefix string) error {
 	connectionPd := types.ConnectionProtocolData{
-		ConnectionID: connectionId,
-		ChainID:      chainId,
+		ConnectionID: connectionID,
+		ChainID:      chainID,
 		LastEpoch:    0,
 		Prefix:       accountPrefix,
 	}
@@ -145,6 +144,6 @@ func (h Hooks) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumbe
 	return h.k.AfterEpochEnd(ctx, epochIdentifier, epochNumber)
 }
 
-func (h Hooks) AfterZoneCreated(ctx sdk.Context, connectionId, chainId, accountPrefix string) error {
-	return h.k.AfterZoneCreated(ctx, connectionId, chainId, accountPrefix)
+func (h Hooks) AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accountPrefix string) error {
+	return h.k.AfterZoneCreated(ctx, connectionID, chainID, accountPrefix)
 }
