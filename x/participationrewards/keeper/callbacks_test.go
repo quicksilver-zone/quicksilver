@@ -158,7 +158,7 @@ func (suite *KeeperTestSuite) executeUmeeReservesUpdateCallback() {
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.Require().True(found, "qid: %s", qid)
 
-	data := sdk.NewInt(15)
+	data := sdk.NewInt(100000)
 	resp, err := data.Marshal()
 	suite.Require().NoError(err)
 	expectedData, err := json.Marshal(data)
@@ -196,7 +196,7 @@ func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
 
 	accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
 
-	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/bank/key", append(accountPrefix, []byte(umeetypes.UTokenPrefix+umeeBaseDenom)...), types.ModuleName)
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/bank/key", append(accountPrefix, []byte(umeeBaseDenom)...), types.ModuleName)
 
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.Require().True(found, "qid: %s", qid)
@@ -219,13 +219,13 @@ func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
 
 	want := &types.UmeeLeverageModuleBalanceProtocolData{
 		types.UmeeProtocolData{
-			Denom:       umeetypes.UTokenPrefix + umeeBaseDenom,
+			Denom:       umeeBaseDenom,
 			LastUpdated: ctx.BlockTime(),
 			Data:        expectedData,
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeLeverageModuleBalance, umeetypes.UTokenPrefix+umeeBaseDenom)
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeLeverageModuleBalance, umeeBaseDenom)
 	suite.Require().True(found)
 
 	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeLeverageModuleBalance, pd.Data)
@@ -237,7 +237,7 @@ func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
 
-	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", umeetypes.KeyUTokenSupply(umeeBaseDenom), types.ModuleName)
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", umeetypes.KeyUTokenSupply(umeetypes.UTokenPrefix+umeeBaseDenom), types.ModuleName)
 
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.Require().True(found, "qid: %s", qid)
@@ -260,13 +260,13 @@ func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
 
 	want := &types.UmeeUTokenSupplyProtocolData{
 		types.UmeeProtocolData{
-			Denom:       umeeBaseDenom,
+			Denom:       umeetypes.UTokenPrefix + umeeBaseDenom,
 			LastUpdated: ctx.BlockTime(),
 			Data:        expectedData,
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, umeeBaseDenom)
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, umeetypes.UTokenPrefix+umeeBaseDenom)
 	suite.Require().True(found)
 
 	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeUTokenSupply, pd.Data)

@@ -102,7 +102,7 @@ func (suite *KeeperTestSuite) coreTest() {
 
 	akpd = quicksilver.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
 	// added 6 in setupTestProtocolData
-	suite.Require().Equal(13, len(akpd))
+	suite.Require().Equal(14, len(akpd))
 
 	// advance the chains
 	suite.coordinator.CommitNBlocks(suite.chainA, 1)
@@ -115,6 +115,7 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.executeUmeeTotalBorrowsUpdateCallback()
 	suite.executeUmeeInterestScalarUpdateCallback()
 	suite.executeUmeeLeverageModuleBalanceUpdateCallback()
+	suite.executeUmeeUTokenSupplyUpdateCallback()
 
 	suite.setupTestDeposits()
 	suite.setupTestIntents()
@@ -411,21 +412,27 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		upd,
 	)
 	// umee test leverage module balance
-	upd, _ = json.Marshal(types.UmeeLeverageModuleBalanceProtocolData{types.UmeeProtocolData{Denom: umeetypes.UTokenPrefix + umeeBaseDenom}})
+	upd, _ = json.Marshal(types.UmeeLeverageModuleBalanceProtocolData{types.UmeeProtocolData{Denom: umeeBaseDenom}})
 	suite.addProtocolData(
 		types.ProtocolDataTypeUmeeLeverageModuleBalance,
 		upd,
 	)
-	//umee test borrows
+	// umee test borrows
 	upd, _ = json.Marshal(types.UmeeTotalBorrowsProtocolData{types.UmeeProtocolData{Denom: umeeBaseDenom}})
 	suite.addProtocolData(
 		types.ProtocolDataTypeUmeeTotalBorrows,
 		upd,
 	)
-	//umee test interest scalar
+	// umee test interest scalar
 	upd, _ = json.Marshal(types.UmeeInterestScalarProtocolData{types.UmeeProtocolData{Denom: umeeBaseDenom}})
 	suite.addProtocolData(
 		types.ProtocolDataTypeUmeeInterestScalar,
+		upd,
+	)
+	// umee test utoken supply
+	upd, _ = json.Marshal(types.UmeeInterestScalarProtocolData{types.UmeeProtocolData{Denom: umeetypes.UTokenPrefix + umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeUTokenSupply,
 		upd,
 	)
 	// osmosis params

@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"encoding/json"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	umeetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
 	"time"
 
 	"cosmossdk.io/math"
@@ -227,6 +229,39 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					Zone:        "cosmoshub-4",
 					SrcZone:     "testchain1",
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       key,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: "bank",
+						},
+					},
+				}
+			},
+			&types.MsgSubmitClaimResponse{},
+			"",
+		},
+		{
+			"valid_umee",
+			func() {
+				address := addressutils.GenerateAccAddressForTest()
+				prefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
+				key := banktypes.CreatePrefixedAccountStoreKey(prefix, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
+
+				cd := sdk.Coin{
+					Denom:  "u/uumee",
+					Amount: math.NewInt(1000),
+				}
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: address.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeUmeeToken,
 					Proofs: []*cmtypes.Proof{
 						{
 							Key:       key,
