@@ -148,5 +148,4 @@ func (msg MsgGovRemoveProtocolData) ValidateBasic() error {
 	// check authority bech32 is valid
 	_, err := addressutils.AddressFromBech32(msg.Authority, "")
 	return err
-
 }
