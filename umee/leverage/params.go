@@ -73,7 +73,7 @@ func DefaultParams() Params {
 	}
 }
 
-// validate a set of params
+// validate a set of params.
 func (p Params) Validate() error {
 	if err := validateLiquidationThreshold(p.CompleteLiquidationThreshold); err != nil {
 		return err
