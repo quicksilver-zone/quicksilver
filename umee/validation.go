@@ -52,7 +52,7 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 
 	reserveAmount := sdk.NewDecFromInt(intamount)
 
-	//get leverage module balance
+	// get leverage module balance
 	balancePD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeLeverageModuleBalance, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
@@ -70,7 +70,7 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 	}
 	moduleBalance := sdk.NewDecFromInt(intamount)
 
-	//get interest scalar
+	// get interest scalar
 	interestPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeInterestScalar, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
@@ -86,7 +86,7 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 		return sdk.ZeroDec(), err
 	}
 
-	//get total borrowed
+	// get total borrowed
 	borrowsPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeTotalBorrows, denom)
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
@@ -104,7 +104,7 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 
 	totalBorrowed := borrowAmount.Mul(interestScalar)
 
-	//get UToken supply
+	// get UToken supply
 	uTokenPD, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeUmeeUTokenSupply, types.ToUTokenDenom(denom))
 	if !ok {
 		return sdk.ZeroDec(), fmt.Errorf("unable to obtain protocol data for denom=%s", denom)
@@ -116,6 +116,10 @@ func DeriveExchangeRate(ctx sdk.Context, denom string, prKeeper ParticipationRew
 
 	utokens, _ := uTokenData.(*participationrewardstypes.UmeeUTokenSupplyProtocolData)
 	uTokenSupply, err := utokens.GetUTokenSupply()
+	if err != nil {
+		return sdk.ZeroDec(), err
+	}
+
 	// Derive effective token supply
 	tokenSupply := moduleBalance.Add(totalBorrowed).Sub(reserveAmount)
 

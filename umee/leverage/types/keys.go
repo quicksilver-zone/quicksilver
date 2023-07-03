@@ -9,7 +9,7 @@ import (
 const (
 	LeverageModuleName = "leverage"
 
-	// StoreKey defines the primary module store key
+	// StoreKey defines the primary module store key.
 	StoreKey = LeverageModuleName
 )
 
