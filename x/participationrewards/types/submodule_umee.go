@@ -1,11 +1,13 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"time"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type UmeeProtocolData struct {
@@ -83,7 +85,6 @@ type UmeeParamsProtocolData struct {
 }
 
 func (uppd UmeeParamsProtocolData) ValidateBasic() error {
-
 	if uppd.ChainID == "" {
 		return ErrUndefinedAttribute
 	}

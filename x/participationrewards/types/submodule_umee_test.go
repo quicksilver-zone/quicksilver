@@ -1,8 +1,9 @@
 package types
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestUmeeParamsProtocolData_ValidateBasic(t *testing.T) {
@@ -42,6 +43,7 @@ func TestUmeeParamsProtocolData_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
 func TestUmeeProtocolData_ValidateBasic(t *testing.T) {
 	type fields struct {
 		Denom string
