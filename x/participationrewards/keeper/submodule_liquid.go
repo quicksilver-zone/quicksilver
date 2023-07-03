@@ -19,14 +19,6 @@ var _ Submodule = &LiquidTokensModule{}
 func (m *LiquidTokensModule) Hooks(_ sdk.Context, _ *Keeper) {
 }
 
-func (m *LiquidTokensModule) IsActive() bool {
-	return true
-}
-
-func (m *LiquidTokensModule) IsReady() bool {
-	return true
-}
-
 func (m *LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	// message
 	// check denom is valid vs allowed

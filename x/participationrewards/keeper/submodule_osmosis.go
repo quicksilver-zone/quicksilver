@@ -66,14 +66,6 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
-func (m *OsmosisModule) IsActive() bool {
-	return true
-}
-
-func (m *OsmosisModule) IsReady() bool {
-	return true
-}
-
 func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	var amount uint64
 	for _, proof := range msg.Proofs {

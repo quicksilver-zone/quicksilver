@@ -166,14 +166,6 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
-func (u UmeeModule) IsActive() bool {
-	return true
-}
-
-func (u UmeeModule) IsReady() bool {
-	return true
-}
-
 func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	amount := uint64(0)
 	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
