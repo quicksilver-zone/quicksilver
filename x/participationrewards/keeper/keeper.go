@@ -89,7 +89,7 @@ func NewKeeper(
 }
 
 func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
-	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32ConsensusAddrPrefix(), k.accountKeeper.GetModuleAddress(govtypes.ModuleName))
+	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.accountKeeper.GetModuleAddress(govtypes.ModuleName))
 }
 
 func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
