@@ -280,7 +280,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 			tt.malleate()
 
-			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 
 			if tt.expectErr != "" {
@@ -330,7 +330,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 			tt.malleate()
 
-			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 
 			if tt.expectErrLsm != "" {
@@ -461,7 +461,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			}
 			suite.Require().NoError(err)
 
-			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.SignalIntent(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 			if tt.expectErr {
 				suite.Require().Error(err)

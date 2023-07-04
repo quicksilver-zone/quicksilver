@@ -111,7 +111,7 @@ type AppKeepers struct {
 	EpochsKeeper               epochskeeper.Keeper
 	MintKeeper                 mintkeeper.Keeper
 	ClaimsManagerKeeper        claimsmanagerkeeper.Keeper
-	InterchainstakingKeeper    interchainstakingkeeper.Keeper
+	InterchainstakingKeeper    *interchainstakingkeeper.Keeper
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
 	ParticipationRewardsKeeper *participationrewardskeeper.Keeper
 	AirdropKeeper              *airdropkeeper.Keeper
@@ -607,6 +607,12 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 		// insert governance hooks receivers here
+		),
+	)
+
+	appKeepers.InterchainstakingKeeper.SetHooks(
+		interchainstakingtypes.NewMultiIcsHooks(
+			appKeepers.ParticipationRewardsKeeper.Hooks(),
 		),
 	)
 }
