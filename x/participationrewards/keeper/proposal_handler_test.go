@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
@@ -42,7 +43,7 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 					Description: "A connection protocol for testing connection protocols",
 					Type:        "testtype",
 					Data:        []byte("{}"),
-					Key:         "testkey",
+					Key:         "",
 				}
 			},
 			true,
@@ -55,7 +56,7 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 					Description: "A connection protocol for testing connection protocols",
 					Type:        types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 					Data:        []byte("{}"),
-					Key:         "connection",
+					Key:         "",
 				}
 			},
 			true,
@@ -70,7 +71,7 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 					Description: "A connection protocol for testing connection protocols",
 					Type:        types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 					Data:        []byte(connpdstr),
-					Key:         "connection",
+					Key:         "",
 				}
 			},
 			true,
@@ -85,7 +86,7 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 					Description: "A connection protocol for testing connection protocols",
 					Type:        types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 					Data:        []byte(connpdstr),
-					Key:         "connection",
+					Key:         "",
 				}
 			},
 			false,
@@ -105,4 +106,51 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 			suite.Require().NoError(err)
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
+	appA := suite.GetQuicksilverApp(suite.chainA)
+
+	pd := types.ConnectionProtocolData{
+		ConnectionID: suite.path.EndpointB.ConnectionID,
+		ChainID:      suite.chainB.ChainID,
+		LastEpoch:    0,
+		Prefix:       "cosmos",
+	}
+
+	pdString, err := json.Marshal(pd)
+	suite.Require().NoError(err)
+
+	ctx := suite.chainA.GetContext()
+
+	prop := types.ProtocolData{
+		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
+		Data: pdString,
+	}
+
+	k := appA.ParticipationRewardsKeeper
+
+	k.SetProtocolData(ctx, pd.GenerateKey(), &prop)
+	// set the protocol data
+
+	_, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, string(pd.GenerateKey()))
+	suite.Require().True(found)
+
+	msgServer := keeper.NewMsgServerImpl(k)
+
+	// submit proposal
+
+	proposalMsg := types.MsgGovRemoveProtocolData{
+		Title:       "remove chain B connection string",
+		Description: "remove the protocol data",
+		Key:         string(pd.GenerateKey()),
+		Authority:   k.GetGovAuthority(ctx),
+	}
+
+	_, err = msgServer.GovRemoveProtocolData(ctx, &proposalMsg)
+
+	suite.Require().NoError(err)
+
+	_, found = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, string(pd.GenerateKey()))
+	suite.Require().True(found)
 }
