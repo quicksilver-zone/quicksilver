@@ -11,6 +11,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
+	umeetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
