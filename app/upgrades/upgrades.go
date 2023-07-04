@@ -29,6 +29,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010403rc0UpgradeName, CreateUpgradeHandler: V010403rc0UpgradeHandler},
 		{UpgradeName: V010404beta0UpgradeName, CreateUpgradeHandler: V010404beta0UpgradeHandler},
 		{UpgradeName: V010404beta1UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010404beta5UpgradeName, CreateUpgradeHandler: V010404beta5UpgradeHandler},
 	}
 }
 
