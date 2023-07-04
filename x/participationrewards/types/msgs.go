@@ -107,7 +107,7 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgGovCloseChannel - construct a msg to update signalled intent.
+// NewMsgGovRemoveProtocolData - construct a msg to update signalled intent.
 func NewMsgGovRemoveProtocolData(key string, fromAddress sdk.Address) *MsgGovRemoveProtocolData {
 	return &MsgGovRemoveProtocolData{Key: key, Authority: fromAddress.String()}
 }
