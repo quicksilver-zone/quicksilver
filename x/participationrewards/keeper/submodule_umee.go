@@ -6,11 +6,13 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	umee "github.com/ingenuity-build/quicksilver/umee"
-	umeetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
+
+	umee "github.com/ingenuity-build/quicksilver/umee-types"
+	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -21,7 +23,7 @@ type UmeeModule struct{}
 var _ Submodule = &UmeeModule{}
 
 func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
-	// umee params
+	// umee-types params
 	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeParams, types.UmeeParamsKey)
 	if !found {
 		k.Logger(ctx).Error("unable to query umeeparams in UmeeModule hook")
@@ -46,7 +48,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 		return
 	}
 
-	// umee reserves update
+	// umee-types reserves update
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeUmeeReserves), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		ireserves, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeReserves, data.Data)
 		if err != nil {
@@ -68,7 +70,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 		) // query reserve data
 		return false
 	})
-	// umee interest scalar update
+	// umee-types interest scalar update
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeUmeeInterestScalar), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		iinterest, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeInterestScalar, data.Data)
 		if err != nil {
@@ -91,7 +93,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 
 		return false
 	})
-	// umee utoken supply update
+	// umee-types utoken supply update
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeUmeeUTokenSupply), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		isupply, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeUTokenSupply, data.Data)
 		if err != nil {
@@ -141,7 +143,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 
 		return false
 	})
-	// umee total borrowed update
+	// umee-types total borrowed update
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeUmeeTotalBorrows), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		iborrows, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeTotalBorrows, data.Data)
 		if err != nil {

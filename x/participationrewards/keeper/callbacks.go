@@ -10,9 +10,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	umeetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
+	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -208,7 +208,7 @@ func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixAdjustedTotalBorrow)
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeTotalBorrows, denom)
 	if !ok {
-		return fmt.Errorf("unable to find protocol data for umee total borrows/%s", denom)
+		return fmt.Errorf("unable to find protocol data for umee-types total borrows/%s", denom)
 	}
 	iborrows, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeTotalBorrows, data.Data)
 	if err != nil {
@@ -216,7 +216,7 @@ func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 	}
 	borrows, ok := iborrows.(*types.UmeeTotalBorrowsProtocolData)
 	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for umee total borrows/%s", denom)
+		return fmt.Errorf("unable to unmarshal protocol data for umee-types total borrows/%s", denom)
 	}
 	borrows.Data, err = json.Marshal(totalBorrows)
 	if err != nil {
@@ -282,7 +282,7 @@ func UmeeUTokenSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixUtokenSupply)
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, denom)
 	if !ok {
-		return fmt.Errorf("unable to find protocol data for umee utoken supply/%s", denom)
+		return fmt.Errorf("unable to find protocol data for umee-types utoken supply/%s", denom)
 	}
 	isupply, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeUTokenSupply, data.Data)
 	if err != nil {
@@ -290,7 +290,7 @@ func UmeeUTokenSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 	}
 	supply, ok := isupply.(*types.UmeeUTokenSupplyProtocolData)
 	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for umee utoken supply/%s", denom)
+		return fmt.Errorf("unable to unmarshal protocol data for umee-types utoken supply/%s", denom)
 	}
 	supply.Data, err = json.Marshal(supplyAmount)
 	if err != nil {
@@ -326,7 +326,7 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeLeverageModuleBalance, denom)
 	if !ok {
-		return fmt.Errorf("unable to find protocol data for umee leverage module/%s", denom)
+		return fmt.Errorf("unable to find protocol data for umee-types leverage module/%s", denom)
 	}
 	ibalance, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeLeverageModuleBalance, data.Data)
 	if err != nil {
@@ -334,7 +334,7 @@ func UmeeLeverageModuleBalanceUpdateCallback(ctx sdk.Context, k *Keeper, respons
 	}
 	balance, ok := ibalance.(*types.UmeeLeverageModuleBalanceProtocolData)
 	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for umee leverage module/%s", denom)
+		return fmt.Errorf("unable to unmarshal protocol data for umee-types leverage module/%s", denom)
 	}
 	balance.Data, err = json.Marshal(balanceAmount)
 	if err != nil {
