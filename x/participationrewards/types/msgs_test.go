@@ -342,7 +342,7 @@ func TestMsgGovRemoveProtocolData_GetSigners(t *testing.T) {
 				Authority:   tt.fields.Authority,
 			}
 			if got := msg.GetSigners(); !reflect.DeepEqual(got, tt.want) {
-				err := fmt.Errorf("MsgSubmitClaim.GetSigners() = %v, want %v", got, tt.want)
+				err := fmt.Errorf("MsgGovRemoveProtocolData.GetSigners() = %v, want %v", got, tt.want)
 				require.NoError(t, err)
 			}
 		})
