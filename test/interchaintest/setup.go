@@ -1,7 +1,7 @@
 package interchaintest
 
 import (
-	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 )
 
 var (
@@ -48,24 +48,26 @@ func createConfig() (ibc.ChainConfig, error) {
 			ModifyGenesis:       nil,
 			ConfigFileOverrides: nil,
 			EncodingConfig:      nil,
-			SidecarConfigs: []ibc.SidecarConfig{
-				{
-					ProcessName:      "icq",
-					Image:            ICQImage,
-					Ports:            []string{"2112"},
-					StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
-					PreStart:         true,
-					ValidatorProcess: false,
-				},
-				{
-					ProcessName:      "xcc",
-					Image:            XccLookupImage,
-					Ports:            []string{"3033"},
-					StartCmd:         []string{"/xcc", "-a", "serve", "-f", "/var/sidecar/processes/xcc/config.yaml"},
-					PreStart:         true,
-					ValidatorProcess: false,
-				},
-			},
+			// TODO: Need add SideCar to interchain-test v7
+
+			// SidecarConfigs: []ibc.SidecarConfig{
+			// 	{
+			// 		ProcessName:      "icq",
+			// 		Image:            ICQImage,
+			// 		Ports:            []string{"2112"},
+			// 		StartCmd:         []string{"interchain-queries", "run", "--home", "/var/sidecar-processes/icq"},
+			// 		PreStart:         true,
+			// 		ValidatorProcess: false,
+			// 	},
+			// 	{
+			// 		ProcessName:      "xcc",
+			// 		Image:            XccLookupImage,
+			// 		Ports:            []string{"3033"},
+			// 		StartCmd:         []string{"/xcc", "-a", "serve", "-f", "/var/sidecar/processes/xcc/config.yaml"},
+			// 		PreStart:         true,
+			// 		ValidatorProcess: false,
+			// 	},
+			// },
 		},
 		nil
 }
