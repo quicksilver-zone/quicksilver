@@ -318,14 +318,14 @@ func V010404beta5UpgradeHandler(
 			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &wr, icstypes.WithdrawStatusQueued)
 
 			// 995c6a77a568a7c03906ce6c7d470c11daa7e506f33264360cf1fec71fc774fe
-			wr, found = appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "regen-redwood-1", "995c6a77a568a7c03906ce6c7d470c11daa7e506f33264360cf1fec71fc774fe", 3)
+			wr, found = appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "regen-redwood-1", "995c6a77a568a7c03906ce6c7d470c11daa7e506f33264360cf1fec71fc774fe", 4)
 			if !found {
 				return nil, errors.New("unable to find withdrawal record 995c6a77a568a7c03906ce6c7d470c11daa7e506f33264360cf1fec71fc774fe")
 			}
 			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &wr, icstypes.WithdrawStatusUnbond)
 
 			// 95aec506a8281c90cb45395ecc7b562248135f8643e1017db469d847db125fbd
-			wr, found = appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "uni-6", "95aec506a8281c90cb45395ecc7b562248135f8643e1017db469d847db125fbd", 3)
+			wr, found = appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "uni-6", "95aec506a8281c90cb45395ecc7b562248135f8643e1017db469d847db125fbd", 4)
 			if !found {
 				return nil, errors.New("unable to find withdrawal record 95aec506a8281c90cb45395ecc7b562248135f8643e1017db469d847db125fbd")
 			}
