@@ -10,5 +10,6 @@
   "liquidity_module": false,
   "return_to_sender": true,
   "decimals": 6,
-  "messages_per_tx": 1
+  "messages_per_tx": 1,
+  "deposit": "1000uqck"
 }

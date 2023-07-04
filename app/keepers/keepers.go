@@ -100,7 +100,7 @@ type AppKeepers struct {
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
-	GovKeeper             *govkeeper.Keeper
+	GovKeeper             govkeeper.Keeper
 	WasmKeeper            wasm.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	AuthzKeeper           authzkeeper.Keeper
@@ -518,7 +518,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		AddRoute(participationrewardstypes.RouterKey, participationrewards.NewProposalHandler(appKeepers.ParticipationRewardsKeeper))
 	// add custom proposal routes here.
 
-	appKeepers.GovKeeper = govkeeper.NewKeeper(
+	govKeeper := govkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[govtypes.StoreKey],
 		appKeepers.AccountKeeper,
@@ -527,6 +527,12 @@ func (appKeepers *AppKeepers) InitKeepers(
 		bApp.MsgServiceRouter(),
 		govConfig,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+	)
+
+	appKeepers.GovKeeper = *govKeeper.SetHooks(
+		govtypes.NewMultiGovHooks(
+		// register the governance hooks
+		),
 	)
 
 	appKeepers.GovKeeper.SetLegacyRouter(govRouter)
@@ -538,7 +544,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
-		*appKeepers.GovKeeper,
+		appKeepers.GovKeeper,
 		appKeepers.InterchainstakingKeeper,
 		appKeepers.InterchainQueryKeeper,
 		appKeepers.ParticipationRewardsKeeper,
