@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
-	"cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
+
+	"cosmossdk.io/math"
 
 	testsuite "github.com/stretchr/testify/suite"
 
