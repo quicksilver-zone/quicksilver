@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
 	"sort"
 	"time"
 
@@ -59,9 +60,9 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	}
 	// add unallocated dust.
 	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding)
-	sdkMsgs := make([]sdk.Msg, 0)
+	sdkMsgs := make([]proto.Message, 0)
 	for _, msg := range msgs {
-		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
+		sdkMsgs = append(sdkMsgs, proto.Message(msg))
 	}
 	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0))
 
@@ -233,7 +234,7 @@ WITHDRAWAL:
 		return nil
 	}
 
-	var msgs []sdk.Msg
+	var msgs []proto.Message
 	for _, valoper := range utils.Keys(valOutCoinsMap) {
 		if !valOutCoinsMap[valoper].Amount.IsZero() {
 			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: valOutCoinsMap[valoper]})

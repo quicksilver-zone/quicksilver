@@ -6,6 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/gogo/protobuf/proto"
 
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -182,7 +183,7 @@ func (k Keeper) CalcOverallScores(
 		"expected", expected,
 	)
 
-	msgs := make([]sdk.Msg, 0)
+	msgs := make([]proto.Message, 0)
 	limit := sdk.NewDec(1.0)
 	for _, reward := range rewards {
 		vs, exists := zs.ValidatorScores[reward.ValidatorAddress]

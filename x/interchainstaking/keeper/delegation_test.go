@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/gogo/protobuf/proto"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -611,7 +612,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			// refetch zone after FlushOutstandingDelegations setZone().
 			ctx = suite.chainA.GetContext()
 			if test.mockAck {
-				var msgs []sdk.Msg
+				var msgs []proto.Message
 				allocations, err := quicksilver.InterchainstakingKeeper.DeterminePlanForDelegation(ctx, &zone, test.expectedDelegation)
 				suite.Require().NoError(err)
 				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(&zone, allocations)...)
