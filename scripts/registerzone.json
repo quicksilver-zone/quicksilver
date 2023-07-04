@@ -1,12 +1,4 @@
-{
-"deposit": "100uqck",
-"title": "register lstest-1 zone",
-"summary":  "register",
-"proposer": "",
-"messages": [{
-  "@type": "/cosmos.gov.v1.MsgExecLegacyContent",
-  "content": {
-  "@type": "/quicksilver.interchainstaking.v1.RegisterZoneProposal",
+ {
   "title": "register lstest-1 zone",
   "description": "register lstest-1 zone with multisend and lsm enabled",
   "connection_id": "connection-0",
@@ -17,9 +9,6 @@
   "unbonding_enabled": true,
   "liquidity_module": false,
   "return_to_sender": true,
-  "decimals": 6
-  },
-  "authority": "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p"
-}],
-"metadata": ""
+  "decimals": 6,
+  "messages_per_tx": 1
 }

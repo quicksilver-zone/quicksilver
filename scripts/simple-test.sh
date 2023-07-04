@@ -81,8 +81,8 @@ $TZ1_1_EXEC tx bank send val2 $ICQ_ADDRESS_2 1000uatom --chain-id $CHAINID_1 -y 
 
 docker-compose up --force-recreate -d icq
 
-#echo "Register $CHAINID_1 on quicksilver..."
-cat $SCRIPT_DIR/registerzone.json | jq . -c | $QS1_EXEC tx gov submit-proposal /dev/fd/0 --from demowallet1 --chain-id $CHAINID_0 --gas 2000000 -y --keyring-backend=test
+echo "Register $CHAINID_1 on quicksilver..."
+cat $SCRIPT_DIR/registerzone.json | jq . -c | $QS1_EXEC tx gov submit-legacy-proposal register-zone /dev/fd/0 --from demowallet1 --chain-id $CHAINID_0 --gas 2000000 -y --keyring-backend=test
 sleep 3
 $QS1_EXEC tx gov vote 1 yes --from val1 --chain-id $CHAINID_0 -y --keyring-backend=test
 $QS2_EXEC tx gov vote 1 yes --from val6 --chain-id $CHAINID_0 -y --keyring-backend=test
