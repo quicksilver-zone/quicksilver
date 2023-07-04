@@ -616,9 +616,9 @@ func (appKeepers *AppKeepers) SetupHooks() {
 		),
 	)
 
-	appKeepers.GovKeeper.SetHooks(
-		govtypes.NewMultiGovHooks(
-		// insert governance hooks receivers here
-		),
-	)
+	// appKeepers.GovKeeper.SetHooks(
+	// 	govtypes.NewMultiGovHooks(
+	// 	// insert governance hooks receivers here
+	// 	),
+	// )
 }
