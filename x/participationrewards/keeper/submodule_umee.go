@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	umee "github.com/ingenuity-build/quicksilver/umee-types"
 
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 
@@ -13,7 +14,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	umee "github.com/ingenuity-build/quicksilver/umee-types"
 	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -182,9 +182,14 @@ func getDenomFromProof(proof *cmtypes.Proof, addr []byte) (string, error) {
 }
 
 func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
-	amount := uint64(0)
+	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
+	if !ok {
+		return 0, fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)
+	}
+
 	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
 
+	amount := uint64(0)
 	for _, proof := range msg.Proofs {
 		// determine denoms from keys
 		if proof.Data == nil {
@@ -195,15 +200,30 @@ func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubm
 		if err != nil {
 			return 0, err
 		}
-		uToken, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, proof.Data, udenom)
+
+		denom := umeetypes.ToTokenDenom(udenom)
+
+		data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, fmt.Sprintf("%s_%s", msg.SrcZone, denom))
+		if !found {
+			// we don't have a record for this denom, but this is okay, we don't want to submit records for every ibc denom.
+			continue
+		}
+		denomData := types.LiquidAllowedDenomProtocolData{}
+		err = json.Unmarshal(data.Data, &denomData)
 		if err != nil {
 			return 0, err
 		}
-		token, err := umee.ExchangeUToken(ctx, uToken, k)
-		if err != nil {
-			return 0, err
+		if denomData.QAssetDenom == zone.LocalDenom && denomData.IbcDenom == denom {
+			uToken, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, proof.Data, udenom)
+			if err != nil {
+				return 0, err
+			}
+			token, err := umee.ExchangeUToken(ctx, uToken, k)
+			if err != nil {
+				return 0, err
+			}
+			amount += token.Amount.Uint64()
 		}
-		amount += token.Amount.Uint64()
 	}
 
 	return amount, err
