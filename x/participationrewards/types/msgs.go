@@ -107,7 +107,7 @@ func (msg MsgSubmitClaim) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgGovRemoveProtocolData - construct a msg to update signalled intent.
+// NewMsgGovRemoveProtocolData - construct a governance proposal msg to remove protocoldata by key.
 func NewMsgGovRemoveProtocolData(key string, fromAddress sdk.Address) *MsgGovRemoveProtocolData {
 	return &MsgGovRemoveProtocolData{Key: key, Authority: fromAddress.String()}
 }
