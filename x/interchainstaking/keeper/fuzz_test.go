@@ -161,6 +161,6 @@ func (suite *FuzzingTestSuite) FuzzValsetCallback(args []byte) {
 	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
 	ctx := suite.chainA.GetContext()
 
-	err := keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: suite.chainB.ChainID})
+	err := keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: suite.chainB.ChainID})
 	suite.Require().NoError(err)
 }

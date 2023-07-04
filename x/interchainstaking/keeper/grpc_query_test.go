@@ -382,7 +382,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 					LiquidityModule: false,
 					Is_118:          true,
 				}
-				(&icsKeeper).SetZone(ctx, &zone)
+				icsKeeper.SetZone(ctx, &zone)
 				// give funds
 				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
 				// set intents
