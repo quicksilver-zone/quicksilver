@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+
 	umee "github.com/ingenuity-build/quicksilver/umee-types"
 
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
