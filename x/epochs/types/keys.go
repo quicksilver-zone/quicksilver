@@ -13,7 +13,7 @@ const (
 
 // prefix bytes for the epoch persistent store.
 const (
-	prefixEpoch = iota + 1
+	prefixEpoch = 0x01
 )
 
 const (

@@ -16,9 +16,9 @@ const (
 
 // prefix bytes for the interchainquery persistent store.
 const (
-	prefixData         = iota + 1
-	prefixQuery        = iota + 1
-	prefixLatestHeight = iota + 1
+	prefixData         = 0x01
+	prefixQuery        = 0x02
+	prefixLatestHeight = 0x03
 )
 
 var (

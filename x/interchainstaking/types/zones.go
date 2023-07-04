@@ -87,18 +87,10 @@ COINS:
 	return out
 }
 
-// decode memo
-// field_id = [
-//  0x00 = map
-//  0x01 = rts
-//  0x02 = validator intent
-// ] // will scale to future fields
-
 const (
-	FieldTypeAccountMap int = iota
-	FieldTypeReturnToSender
-	FieldTypeIntent
-	// add more here.
+	FieldTypeAccountMap     int = 0x00
+	FieldTypeReturnToSender int = 0x01
+	FieldTypeIntent         int = 0x02
 )
 
 type MemoField struct {
