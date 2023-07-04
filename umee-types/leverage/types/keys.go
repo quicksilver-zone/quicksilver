@@ -48,6 +48,13 @@ func KeyUTokenSupply(uTokenDenom string) []byte {
 	return utils.ConcatBytes(1, KeyPrefixUtokenSupply, []byte(uTokenDenom))
 }
 
+// KeyCollateralAmount returns a KVStore key for getting and setting the amount of
+// collateral stored for a user in a given denom.
+func KeyCollateralAmount(addr sdk.AccAddress, uTokenDenom string) []byte {
+	// collateralPrefix | lengthprefixed(addr) | denom | 0x00 for null-termination
+	return utils.ConcatBytes(1, KeyCollateralAmountNoDenom(addr), []byte(uTokenDenom))
+}
+
 // KeyCollateralAmountNoDenom returns the common prefix used by all collateral associated
 // with a given address.
 func KeyCollateralAmountNoDenom(addr sdk.AccAddress) []byte {

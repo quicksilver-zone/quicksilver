@@ -284,8 +284,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				bankkey := banktypes.CreateAccountBalancesPrefix(address)
 				bankkey = append(bankkey, []byte("u/uumee")...)
 
-				leveragekey := umeetypes.KeyCollateralAmountNoDenom(address)
-				leveragekey = append(leveragekey, []byte("u/uumee")...)
+				leveragekey := umeetypes.KeyCollateralAmount(address, "u/uumee")
 
 				cd := math.NewInt(1000)
 				bz, err := cd.Marshal()

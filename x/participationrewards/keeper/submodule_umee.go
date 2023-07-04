@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
@@ -168,6 +170,17 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
+func getDenomFromProof(proof *cmtypes.Proof, addr []byte) (string, error) {
+	denom, err := utils.DenomFromRequestKey(proof.Key, addr)
+	if err != nil {
+		return "", err
+	}
+	if proof.ProofType == types.ProofTypeLeverage {
+		denom = denom[:len(denom)-1]
+	}
+	return denom, err
+}
+
 func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	amount := uint64(0)
 	_, addr, err := bech32.DecodeAndConvert(msg.UserAddress)
@@ -178,7 +191,7 @@ func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubm
 			continue
 		}
 
-		udenom, err := utils.DenomFromRequestKey(proof.Key, addr)
+		udenom, err := getDenomFromProof(proof, addr)
 		if err != nil {
 			return 0, err
 		}

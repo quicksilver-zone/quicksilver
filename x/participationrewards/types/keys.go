@@ -14,8 +14,10 @@ const (
 	// RouterKey is the message route for participationrewards.
 	RouterKey = ModuleName
 
-	OsmosisParamsKey = "osmosisparams"
-	UmeeParamsKey    = "umeeparams"
+	OsmosisParamsKey  = "osmosisparams"
+	UmeeParamsKey     = "umeeparams"
+	ProofTypeBank     = "bank"
+	ProofTypeLeverage = "leverage"
 )
 
 var KeyPrefixProtocolData = []byte{0x00}
