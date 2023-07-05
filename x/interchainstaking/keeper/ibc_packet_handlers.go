@@ -315,14 +315,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 
 	zone, found := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
 
-	// since SendPacket did not prefix the denomination, we must prefix denomination here
-	sourcePrefix := ibctransfertypes.GetDenomPrefix(sMsg.SourcePort, sMsg.SourceChannel)
-	// NOTE: sourcePrefix contains the trailing "/"
-	prefixedDenom := sourcePrefix + receivedCoin.Denom
-
-	// construct the denomination trace from the full raw denomination
-	denomTrace := ibctransfertypes.ParseDenomTrace(prefixedDenom)
-
+	denomTrace := utils.DeriveIbcDenomTrace(sMsg.SourcePort, sMsg.SourceChannel, receivedCoin.Denom)
 	receivedCoin.Denom = denomTrace.IBCDenom()
 
 	if found && denomTrace.BaseDenom != zone.BaseDenom {
