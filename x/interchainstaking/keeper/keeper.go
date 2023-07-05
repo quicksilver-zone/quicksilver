@@ -52,6 +52,7 @@ type Keeper struct {
 	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
 	Ir                  codectypes.InterfaceRegistry
 	paramStore          paramtypes.Subspace
+	msgRouter           types.MessageRouter
 }
 
 // NewKeeper returns a new instance of zones Keeper.
@@ -68,6 +69,7 @@ func NewKeeper(
 	transferKeeper ibctransferkeeper.Keeper,
 	claimsManagerKeeper claimsmanagerkeeper.Keeper,
 	ps paramtypes.Subspace,
+	msgRouter types.MessageRouter,
 ) Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -94,6 +96,7 @@ func NewKeeper(
 		ClaimsManagerKeeper: claimsManagerKeeper,
 
 		paramStore: ps,
+		msgRouter:  msgRouter,
 	}
 }
 

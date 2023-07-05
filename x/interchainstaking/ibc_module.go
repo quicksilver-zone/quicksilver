@@ -12,7 +12,6 @@ import (
 
 	channeltypes "github.com/cosmos/ibc-go/v6/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v6/modules/core/05-port/types"
-	host "github.com/cosmos/ibc-go/v6/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v6/modules/core/exported"
 
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -37,13 +36,14 @@ func (im IBCModule) OnChanOpenInit(
 	ctx sdk.Context,
 	_ channeltypes.Order,
 	_ []string,
-	portID string,
-	channelID string,
-	chanCap *capabilitytypes.Capability,
+	_ string,
+	_ string,
+	_ *capabilitytypes.Capability,
 	_ channeltypes.Counterparty,
 	_ string,
 ) (string, error) {
-	return "", im.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
+	// ica capability already claimed by underlying submodule
+	return "", nil
 }
 
 // OnChanOpenTry implements the IBCModule interface.

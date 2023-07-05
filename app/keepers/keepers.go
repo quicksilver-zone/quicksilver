@@ -395,6 +395,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.TransferKeeper,
 		appKeepers.ClaimsManagerKeeper,
 		appKeepers.GetSubspace(interchainstakingtypes.ModuleName),
+		bApp.MsgServiceRouter(),
 	)
 
 	// interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
