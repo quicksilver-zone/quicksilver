@@ -315,7 +315,17 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 
 	zone, found := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
 
-	if found && receivedCoin.Denom != zone.BaseDenom {
+	// since SendPacket did not prefix the denomination, we must prefix denomination here
+	sourcePrefix := ibctransfertypes.GetDenomPrefix(sMsg.SourcePort, sMsg.SourceChannel)
+	// NOTE: sourcePrefix contains the trailing "/"
+	prefixedDenom := sourcePrefix + receivedCoin.Denom
+
+	// construct the denomination trace from the full raw denomination
+	denomTrace := ibctransfertypes.ParseDenomTrace(prefixedDenom)
+
+	receivedCoin.Denom = denomTrace.IBCDenom()
+
+	if found && denomTrace.BaseDenom != zone.BaseDenom {
 		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
 		rewardCoin := receivedCoin.SubAmount(feeAmount)
 		zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
@@ -723,6 +733,9 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 }
 
 func (k *Keeper) HandleFailedBankSend(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	// this might not be a unbond message - depends on the recipeint...
+	k.Logger(ctx).Error("failed msgSend", "msg", msg)
+
 	txHash, err := types.ParseTxMsgMemo(memo, types.MsgTypeUnbondSend)
 	if err != nil {
 		return err
@@ -1174,6 +1187,10 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 }
 
 func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.Int) sdk.Msg {
+	if !rewards.IsPositive() {
+		return &banktypes.MsgSend{}
+	}
+
 	return &banktypes.MsgSend{
 		FromAddress: zone.WithdrawalAddress.GetAddress(),
 		ToAddress:   zone.DelegationAddress.GetAddress(),
