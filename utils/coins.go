@@ -32,7 +32,7 @@ func DeriveIbcDenom(port, channel, denom string) string {
 
 func DeriveIbcDenomTrace(port, channel, denom string) ibctransfertypes.DenomTrace {
 	// generate denomination prefix
-	sourcePrefix := ibctransfertypes.GetDenomPrefix("transfer", "channel-0")
+	sourcePrefix := ibctransfertypes.GetDenomPrefix(port, channel)
 	// NOTE: sourcePrefix contains the trailing "/"
 	prefixedDenom := sourcePrefix + denom
 
