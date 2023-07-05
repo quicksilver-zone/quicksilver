@@ -26,6 +26,10 @@ func (z Zone) IsDelegateAddress(addr string) bool {
 	return z.DelegationAddress != nil && z.DelegationAddress.Address == addr
 }
 
+func (z Zone) IsWithdrawalAddress(addr string) bool {
+	return z.WithdrawalAddress != nil && z.WithdrawalAddress.Address == addr
+}
+
 func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
 	if z.DelegationAddress == nil {
 		return nil, fmt.Errorf("no delegation account set: %v", z)
