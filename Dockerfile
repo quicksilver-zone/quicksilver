@@ -1,13 +1,15 @@
-FROM golang:1.18-alpine3.15 as build
+FROM golang:1.20-alpine3.17 as build
+ARG lfs
+
+RUN apk add --no-cache gcc musl-dev
 
 COPY . /app
-COPY ./quicksilver /quicksilver
 
 WORKDIR /app
 
-RUN go build xcc.go
+RUN go build -ldflags="$lfs" -a xcc.go
 
-FROM alpine
+FROM alpine:3.17
 
 COPY --from=build /app/xcclookup /usr/local/bin/xcc
 

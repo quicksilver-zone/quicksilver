@@ -2,6 +2,16 @@
 
 xcclookup is a utility to assemble Quicksilver x/partiticipationrewards MsgSubmitClaim transactions for a user, in response to a REST request.
 
+## Build
+
+xcclookup can be built using the following:
+
+`make build`: build go binary locally
+`make build-docker-local`: build go binary locally and copy into container
+`make build-docker`: build docker container natively
+`make xbuild-docker`: build docker container for linux/amd64 using docker xbuild on a non linux/amd64 host
+
+
 ## Configuration and Installation
 
 A configuration file is specified on the command-line and should contain the following:
@@ -23,7 +33,7 @@ The config file is specified at the command line using the `-f` flag. This is pr
 
 Docker containers build from this repo are available from Docker Hub, under `quicksilverzone/xcclookup` tagged by the Git tag.
 
-A sample docker-compose.yml file for `xcckookup` is as follows:
+A sample docker-compose.yml file for `xcclookup` is as follows:
 
 ```
 version: '3.7'
