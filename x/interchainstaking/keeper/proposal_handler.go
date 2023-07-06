@@ -16,16 +16,37 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// HandleRegisterZoneProposal is a handler for executing a passed community spend proposal.
+// HandleRegisterZoneProposal is a handler for executing a register zone proposal.
 func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZoneProposal) error {
+	var (
+		baseZone types.Zone
+		found    bool
+	)
+
 	// get chain id from connection
 	chainID, err := k.GetChainID(ctx, p.ConnectionId)
 	if err != nil {
 		return fmt.Errorf("unable to obtain chain id: %w", err)
 	}
 
+	// if subzone
+	if p.SubzoneInfo != nil {
+		if chainID != p.SubzoneInfo.BaseChainID {
+			return fmt.Errorf("incorrect ID \"%s\" for subzone \"%s\"", chainID, p.SubzoneInfo.BaseChainID)
+		}
+
+		// get zone
+		baseZone, found = k.GetZone(ctx, p.SubzoneInfo.BaseChainID)
+		if !found {
+			return fmt.Errorf("unable to find base chain \"%s\" for subzone \"%s\"", chainID, p.SubzoneInfo.BaseChainID)
+		}
+
+		// set chainID to be specified unique ID
+		chainID = p.SubzoneInfo.ChainID
+	}
+
 	// get zone
-	_, found := k.GetZone(ctx, chainID)
+	_, found = k.GetZone(ctx, chainID)
 	if found {
 		return fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainID)
 	}
@@ -65,7 +86,16 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 		MessagesPerTx:      p.MessagesPerTx,
 		Is_118:             p.Is_118,
+		SubzoneInfo:        p.SubzoneInfo,
 	}
+
+	// verify subzone if setting
+	if zone.IsSubzone() {
+		if err := types.ValidateSubzoneForBasezone(*zone, baseZone); err != nil {
+			return err
+		}
+	}
+
 	k.SetZone(ctx, zone)
 
 	// generate deposit account
@@ -92,11 +122,14 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		return err
 	}
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
-	query := stakingTypes.QueryValidatorsRequest{}
-	err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
-	if err != nil {
-		return err
+	// query val set for base zone
+	if !zone.IsSubzone() {
+		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+		query := stakingTypes.QueryValidatorsRequest{}
+		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+		if err != nil {
+			return err
+		}
 	}
 
 	err = k.hooks.AfterZoneCreated(ctx, zone.ConnectionId, zone.ChainId, zone.AccountPrefix)
@@ -244,32 +277,32 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			portOwner := zone.ChainId + ".deposit"
+			portOwner := zone.ID() + ".deposit"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			// generate withdrawal account
-			portOwner = zone.ChainId + ".withdrawal"
+			portOwner = zone.ID() + ".withdrawal"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			// generate perf account
-			portOwner = zone.ChainId + ".performance"
+			portOwner = zone.ID() + ".performance"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			// generate delegate accounts
-			portOwner = zone.ChainId + ".delegate"
+			portOwner = zone.ID() + ".delegate"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 			query := stakingTypes.QueryValidatorsRequest{}
-			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
+			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
 			if err != nil {
 				return err
 			}
@@ -280,7 +313,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 	}
 	k.SetZone(ctx, &zone)
 
-	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ChainId)
+	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ID())
 
 	return nil
 }

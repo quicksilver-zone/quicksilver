@@ -2991,6 +2991,8 @@ paths:
                         type: string
                       base_chainID:
                         type: string
+                      chainID:
+                        type: string
               stats:
                 type: object
                 properties:
@@ -3280,6 +3282,8 @@ paths:
                         authority:
                           type: string
                         base_chainID:
+                          type: string
+                        chainID:
                           type: string
               stats:
                 type: array

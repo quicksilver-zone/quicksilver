@@ -15,7 +15,7 @@ import (
 func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 	// obtain and iterate all claim records for each zone
 	k.icsKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		k.Logger(ctx).Info("zones", "zone", zone.ChainId)
+		k.Logger(ctx).Info("zones", "zone", zone.ID())
 		userAllocations, remaining, icsRewardsAllocations := k.CalcUserHoldingsAllocations(ctx, zone)
 
 		if err := k.DistributeToUsersFromModule(ctx, userAllocations); err != nil {
@@ -39,7 +39,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 			return false
 		}
 
-		k.icsKeeper.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
+		k.icsKeeper.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ID())
 		return false
 	})
 
@@ -48,7 +48,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 
 // CalcUserHoldingsAllocations calculates allocations per user for a given zone, based upon claims submitted and zone.
 func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone) ([]types.UserAllocation, math.Int, []types.UserAllocation) {
-	k.Logger(ctx).Info("CalcUserHoldingsAllocations", "zone", zone.ChainId, "allocations", zone.HoldingsAllocation)
+	k.Logger(ctx).Info("CalcUserHoldingsAllocations", "zone", zone.ID(), "allocations", zone.HoldingsAllocation)
 
 	userAllocations := make([]types.UserAllocation, 0)
 	icsRewardsAllocations := make([]types.UserAllocation, 0)
@@ -66,7 +66,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	zoneAmount := math.ZeroInt()
 	userAmountsMap := make(map[string]math.Int)
 
-	k.icsKeeper.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
+	k.icsKeeper.ClaimsManagerKeeper.IterateClaims(ctx, zone.ID(), func(_ int64, claim cmtypes.Claim) (stop bool) {
 		amount := math.NewIntFromUint64(claim.Amount)
 		k.Logger(ctx).Info(
 			"claim",
@@ -89,7 +89,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	})
 
 	if zoneAmount.IsZero() {
-		k.Logger(ctx).Info("zero claims for zone", "zone", zone.ChainId)
+		k.Logger(ctx).Info("zero claims for zone", "zone", zone.ID())
 		return userAllocations, math.NewIntFromUint64(zone.HoldingsAllocation), icsRewardsAllocations
 	}
 
@@ -107,7 +107,6 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 		for _, rewardsAsset := range icsRewardsBalance {
 			icsRewardsPerAsset[rewardsAsset.Denom] = sdk.NewDecFromInt(rewardsAsset.Amount).Quo(sdk.NewDecFromInt(supply.Amount))
 		}
-
 		k.Logger(ctx).Info("ics rewards per asset", "zone", zone.ChainId, "icsrpa", icsRewardsPerAsset)
 	}
 	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset)
