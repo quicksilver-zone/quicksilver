@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
@@ -297,8 +298,14 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 			Memo: memo,
 		}
 
+		portOwner := portID
+		parts := strings.SplitAfter(portOwner, "icacontroller-")
+		if len(parts) == 2 {
+			portOwner = parts[1]
+		}
+
 		msg := &icacontrollertypes.MsgSendTx{
-			Owner:           portID,
+			Owner:           portOwner,
 			ConnectionId:    connectionID,
 			PacketData:      packetData,
 			RelativeTimeout: timeoutTimestamp,

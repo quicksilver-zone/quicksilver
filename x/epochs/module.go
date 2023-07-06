@@ -31,7 +31,7 @@ var (
 // AppModuleBasic
 // ----------------------------------------------------------------------------
 
-// AppModuleBasic implements the AppModuleBasic interface for the capability module.
+// AppModuleBasic implements the AppModuleBasic interface for the epochs module.
 type AppModuleBasic struct {
 	cdc codec.Codec
 }
@@ -41,7 +41,7 @@ func NewAppModuleBasic(cdc codec.Codec) AppModuleBasic {
 	return AppModuleBasic{cdc: cdc}
 }
 
-// Name returns the capability module's name.
+// Name returns the epochs module's name.
 func (AppModuleBasic) Name() string {
 	return types.ModuleName
 }
@@ -49,7 +49,7 @@ func (AppModuleBasic) Name() string {
 // RegisterLegacyAminoCodec registers a legacy amino codec.
 func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
-// RegisterInterfaces registers the module's interface types.
+// RegisterInterfaces registers the epochs module's interface types.
 func (a AppModuleBasic) RegisterInterfaces(_ cdctypes.InterfaceRegistry) {}
 
 // DefaultGenesis returns the capability module's default genesis state.
@@ -57,7 +57,7 @@ func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	return cdc.MustMarshalJSON(types.DefaultGenesis())
 }
 
-// ValidateGenesis performs genesis state validation for the capability module.
+// ValidateGenesis performs genesis state validation for the epochs module.
 func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingConfig, bz json.RawMessage) error {
 	var genState types.GenesisState
 	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
@@ -66,7 +66,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 	return genState.Validate()
 }
 
-// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
+// RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the epochs module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
 	if err != nil {
@@ -79,7 +79,7 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 	return nil
 }
 
-// GetQueryCmd returns the capability module's root query command.
+// GetQueryCmd returns the epochs module's root query command.
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd()
 }
@@ -88,14 +88,14 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 // AppModule
 // ----------------------------------------------------------------------------
 
-// AppModule implements the AppModule interface for the capability module.
+// AppModule implements the AppModule interface for the epochs module.
 type AppModule struct {
 	AppModuleBasic
 
 	keeper keeper.Keeper
 }
 
-// NewAppModule return a new AppModule.
+// NewAppModule returns a new AppModule.
 func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
@@ -103,12 +103,12 @@ func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 	}
 }
 
-// Name returns the capability module's name.
+// Name returns the epochs module's name.
 func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
 
-// QuerierRoute returns the capability module's query routing key.
+// QuerierRoute returns the epochs module's query routing key.
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
 // RegisterServices registers a GRPC query service to respond to the
@@ -117,10 +117,10 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), &am.keeper)
 }
 
-// RegisterInvariants registers the capability module's invariants.
+// RegisterInvariants registers the epochs module's invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// InitGenesis performs the capability module's genesis initialization It returns
+// InitGenesis performs the epochs module's genesis initialization It returns
 // no validator updates.
 func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
 	var genState types.GenesisState
@@ -131,18 +131,18 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.Ra
 	return []abci.ValidatorUpdate{}
 }
 
-// ExportGenesis returns the capability module's exported genesis state as raw JSON bytes.
+// ExportGenesis returns the epochs module's exported genesis state as raw JSON bytes.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	genState := ExportGenesis(ctx, am.keeper)
 	return cdc.MustMarshalJSON(genState)
 }
 
-// BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
+// BeginBlock executes all ABCI BeginBlock logic respective to the epochs module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 	am.keeper.BeginBlocker(ctx)
 }
 
-// EndBlock executes all ABCI EndBlock logic respective to the capability module. It
+// EndBlock executes all ABCI EndBlock logic respective to the epochs module. It
 // returns no validator updates.
 func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
@@ -155,16 +155,16 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // AppModuleSimulation functions
 
-// GenerateGenesisState creates a randomized GenState of the pool-incentives module.
+// GenerateGenesisState creates a randomized GenState of the epochs module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
 }
 
-// RegisterStoreDecoder registers a decoder for supply module's types.
+// RegisterStoreDecoder registers a decoder for epochs module's types.
 func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 }
 
-// WeightedOperations returns the all the gov module operations with their respective weights.
+// WeightedOperations returns all the epochs module operations with their respective weights.
 func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil // TODO add
 }
