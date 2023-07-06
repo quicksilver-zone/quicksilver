@@ -243,7 +243,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 			bz, err := quicksilver.AppCodec().Marshal(&queryResp)
 			suite.Require().NoError(err)
 
-			err = keeper.ValsetCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
+			err = keeper.ValsetCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
 			suite.Require().NoError(err)
 			// valset callback doesn't actually update validators, but does emit icq callbacks.
 			test.checks(suite.Require(), ctx, quicksilver, chainBVals)
@@ -264,7 +264,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallbackBadChain() {
 		bz, err := quicksilver.AppCodec().Marshal(&queryResp)
 		suite.Require().NoError(err)
 
-		err = keeper.ValsetCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
+		err = keeper.ValsetCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
 		// this should bail on a non-matching chain id.
 		suite.Require().Error(err)
 	})
@@ -283,7 +283,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallbackNilValset() {
 		bz, err := quicksilver.AppCodec().Marshal(&queryResp)
 		suite.Require().NoError(err)
 
-		err = keeper.ValsetCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
+		err = keeper.ValsetCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
 		// this should error on unmarshalling an empty slice, which is not a valid response here.
 		suite.Require().Error(err)
 	})
@@ -302,7 +302,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallbackInvalidResponse() {
 		bz, err := quicksilver.AppCodec().Marshal(&queryReq)
 		suite.Require().NoError(err)
 
-		err = keeper.ValsetCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
+		err = keeper.ValsetCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
 		// this should error on unmarshalling an empty slice, which is not a valid response here.
 		suite.Require().Error(err)
 	})
@@ -321,7 +321,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackBadChain() {
 		bz, err := quicksilver.AppCodec().Marshal(&queryResp)
 		suite.Require().NoError(err)
 
-		err = keeper.ValidatorCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
+		err = keeper.ValidatorCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
 		// this should bail on a non-matching chain id.
 		suite.Require().Error(err)
 	})
@@ -338,7 +338,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackNilValue() {
 
 		bz := []byte{}
 
-		err := keeper.ValidatorCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
+		err := keeper.ValidatorCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
 		// this should error on unmarshalling an empty slice, which is not a valid response here.
 		suite.Require().Error(err)
 	})
@@ -394,7 +394,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallback() {
 			bz, err := quicksilver.AppCodec().Marshal(&test.validator)
 			suite.Require().NoError(err)
 
-			err = keeper.ValidatorCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainID()})
+			err = keeper.ValidatorCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
 			suite.Require().NoError(err)
 
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zone.ID())
@@ -604,7 +604,7 @@ func (suite *KeeperTestSuite) TestHandleValidatorCallbackJailedWithSlashing() {
 			bz, err := quicksilver.AppCodec().Marshal(test.validator(ctx, quicksilver, zone))
 			suite.Require().NoError(err)
 
-			err = keeper.ValidatorCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainID()})
+			err = keeper.ValidatorCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: zone.ChainId})
 			suite.Require().NoError(err)
 
 			wr, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, suite.chainB.ChainID, test.withdrawal(ctx, quicksilver, zone).Txhash, test.withdrawal(ctx, quicksilver, zone).Status)
@@ -627,7 +627,7 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackBadChain() {
 		bz, err := quicksilver.AppCodec().Marshal(&queryRes)
 		suite.Require().NoError(err)
 
-		err = keeper.RewardsCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
+		err = keeper.RewardsCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
 		// this should bail on a non-matching chain id.
 		suite.Require().Error(err)
 	})
@@ -646,7 +646,7 @@ func (suite *KeeperTestSuite) TestHandleRewardsEmptyRequestCallback() {
 		bz, err := quicksilver.AppCodec().Marshal(&queryReq)
 		suite.Require().NoError(err)
 
-		err = keeper.RewardsCallback(&quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
+		err = keeper.RewardsCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
 		// this should fail because the waitgroup becomes negative.
 		suite.Require().Errorf(err, "attempted to unmarshal zero length byte slice (2)")
 	})
@@ -682,7 +682,7 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackNonDelegator() {
 
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.Require().NoError(err)
-		err = keeper.RewardsCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+		err = keeper.RewardsCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
 		//
 		suite.Require().Errorf(err, "failed attempting to withdraw rewards from non-delegation account")
 	})
@@ -711,7 +711,7 @@ func (suite *KeeperTestSuite) TestHandleRewardsCallbackEmptyResponse() {
 
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.Require().NoError(err)
-		err = keeper.RewardsCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+		err = keeper.RewardsCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
 		//
 		suite.Require().NoError(err)
 	})
@@ -745,7 +745,7 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.Require().NoError(err)
-		err = keeper.RewardsCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+		err = keeper.RewardsCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
 		//
 		suite.Require().NoError(err)
 	})
@@ -772,7 +772,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallback() {
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.Require().NoError(err)
 
-		err = keeper.AllBalancesCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+		err = keeper.AllBalancesCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
 		suite.Require().NoError(err)
 
 		// refetch zone
@@ -822,7 +822,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackWithExistingWg() {
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.Require().NoError(err)
 
-		err = keeper.AllBalancesCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+		err = keeper.AllBalancesCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
 		suite.Require().NoError(err)
 
 		// refetch zone
@@ -875,7 +875,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.Require().NoError(err)
 
-		err = keeper.AllBalancesCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+		err = keeper.AllBalancesCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
 		suite.Require().NoError(err)
 
 		// refetch zone
@@ -923,7 +923,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackExistingBalanceNowNil() {
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.Require().NoError(err)
 
-		err = keeper.AllBalancesCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+		err = keeper.AllBalancesCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
 		suite.Require().NoError(err)
 
 		// refetch zone
@@ -971,7 +971,7 @@ func (suite *KeeperTestSuite) TestAllBalancesCallbackMulti() {
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.Require().NoError(err)
 
-		err = keeper.AllBalancesCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
+		err = keeper.AllBalancesCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
 		suite.Require().NoError(err)
 
 		// refetch zone
@@ -1023,7 +1023,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallback() {
 			suite.Require().NoError(err)
 			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
 
-			err = keeper.AccountBalanceCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.Require().NoError(err)
 		}
 	})
@@ -1053,7 +1053,7 @@ func (suite *KeeperTestSuite) TestAccountBalance046Callback() {
 			suite.Require().NoError(err)
 			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
 
-			err = keeper.AccountBalanceCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.Require().NoError(err)
 		}
 	})
@@ -1082,7 +1082,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallbackMismatch() {
 			suite.Require().NoError(err)
 			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
 
-			err = keeper.AccountBalanceCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.Require().ErrorContains(err, "received coin denom qck does not match requested denom stake")
 		}
 	})
@@ -1111,7 +1111,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallbackNil() {
 			suite.Require().NoError(err)
 			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("stake")...)
 
-			err = keeper.AccountBalanceCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+			err = keeper.AccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 			suite.Require().NoError(err)
 		}
 	})
@@ -1130,7 +1130,7 @@ func TestValsetCallbackNilValidatorReqPagination(t *testing.T) {
 	ctx := suite.chainA.GetContext()
 
 	data := []byte("\x12\"\n 00000000000000000000000000000000")
-	err := keeper.ValsetCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID})
+	err := keeper.ValsetCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID})
 	suite.Require().NoError(err)
 }
 
@@ -1168,7 +1168,7 @@ func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 
 	suite.Require().NoError(err)
 
@@ -1217,7 +1217,7 @@ func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 
 	suite.Require().NoError(err)
 
@@ -1265,7 +1265,7 @@ func TestDelegationsCallbackOneMissing(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 
 	suite.Require().NoError(err)
 
@@ -1315,7 +1315,7 @@ func TestDelegationsCallbackOneAdditional(t *testing.T) {
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(zone.Validators))}}
 	bz := cdc.MustMarshal(&delegationQuery)
 
-	err := keeper.DelegationsCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err := keeper.DelegationsCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 
 	suite.Require().NoError(err)
 
@@ -1363,7 +1363,7 @@ func TestDelegationCallbackNew(t *testing.T) {
 	suite.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-	err = keeper.DelegationCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err = keeper.DelegationCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 	suite.Require().NoError(err)
 
 	suite.Require().Equal(4, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
@@ -1402,7 +1402,7 @@ func TestDelegationCallbackUpdate(t *testing.T) {
 	suite.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-	err = keeper.DelegationCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err = keeper.DelegationCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 	suite.Require().NoError(err)
 
 	suite.Require().Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
@@ -1441,7 +1441,7 @@ func TestDelegationCallbackNoOp(t *testing.T) {
 	suite.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 	ctx = suite.chainA.GetContext()
-	err = keeper.DelegationCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err = keeper.DelegationCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 	suite.Require().NoError(err)
 
 	suite.Require().Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
@@ -1480,7 +1480,7 @@ func TestDelegationCallbackRemove(t *testing.T) {
 	suite.Require().NoError(err)
 	bz := stakingtypes.GetDelegationKey(delAddr, valAddr)
 
-	err = keeper.DelegationCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
+	err = keeper.DelegationCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 	suite.Require().NoError(err)
 
 	delegationRequests := 0
@@ -1508,7 +1508,7 @@ func TestDepositIntervalCallback(t *testing.T) {
 	quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().MustUnmarshal(data, &res)
 	suite.Require().NoError(err)
 
-	err = keeper.DepositIntervalCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID})
+	err = keeper.DepositIntervalCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID})
 	suite.Require().NoError(err)
 	txQueryCount := 0
 	for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
@@ -1553,7 +1553,7 @@ func TestDepositIntervalCallbackWithExistingTxs(t *testing.T) {
 	txrC := res.TxResponses[2]
 	quicksilver.InterchainstakingKeeper.SetReceipt(ctx, icstypes.Receipt{ChainId: suite.chainB.ChainID, Sender: msgC.FromAddress, Txhash: txrC.TxHash, Amount: msgC.Amount})
 
-	err = keeper.DepositIntervalCallback(&quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID})
+	err = keeper.DepositIntervalCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID})
 	suite.Require().NoError(err)
 	txQueryCount := 0
 	for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
@@ -1590,7 +1590,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 
 		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
 
-		err = keeper.DelegationAccountBalanceCallback(&quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		err = keeper.DelegationAccountBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 
 		suite.Require().NoError(err)
 	})

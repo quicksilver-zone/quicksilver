@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -102,4 +103,33 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	}
 
 	return &types.MsgSubmitClaimResponse{}, nil
+}
+
+// MsgGovRemoveProtocolData removes a protocoldata item.
+func (k msgServer) GovRemoveProtocolData(goCtx context.Context, msg *types.MsgGovRemoveProtocolData) (*types.MsgGovRemoveProtocolDataResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+		return &types.MsgGovRemoveProtocolDataResponse{},
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	k.Keeper.DeleteProtocolData(ctx, []byte(msg.Key))
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeDeleteKeyProposal,
+			sdk.NewAttribute(types.AttributeKeyProtocolDataKey, msg.Key),
+		),
+	})
+
+	return &types.MsgGovRemoveProtocolDataResponse{}, nil
 }

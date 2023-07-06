@@ -10,11 +10,11 @@ const (
 	DefaultWithdrawalRequeueDelay = 6 * time.Hour
 
 	// setting WithdrawStatusTokenize as 0 causes the value to be omitted when (un)marshalling :/.
-	WithdrawStatusTokenize  int32 = iota + 1
-	WithdrawStatusQueued    int32 = iota + 1
-	WithdrawStatusUnbond    int32 = iota + 1
-	WithdrawStatusSend      int32 = iota + 1
-	WithdrawStatusCompleted int32 = iota + 1
+	WithdrawStatusTokenize  int32 = 1
+	WithdrawStatusQueued    int32 = 2
+	WithdrawStatusUnbond    int32 = 3
+	WithdrawStatusSend      int32 = 4
+	WithdrawStatusCompleted int32 = 5
 )
 
 // DelayCompletion updates a withdrawal record completion date to:

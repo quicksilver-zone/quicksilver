@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -51,6 +52,8 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 
 	userAllocations := make([]types.UserAllocation, 0)
 	icsRewardsAllocations := make([]types.UserAllocation, 0)
+	icsRewardsBalance := sdk.NewCoins()
+	icsRewardsPerAsset := make(map[string]sdk.Dec, 0)
 
 	supply := k.bankKeeper.GetSupply(ctx, zone.LocalDenom)
 
@@ -93,16 +96,20 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	zoneAllocation := math.NewIntFromUint64(zone.HoldingsAllocation)
 	tokensPerAsset := sdk.NewDecFromInt(zoneAllocation).Quo(sdk.NewDecFromInt(supply.Amount))
 
-	// determine ics rewards to be distributed per token.
-	icsRewardsAddr := sdk.MustAccAddressFromBech32(zone.WithdrawalAddress.Address)
-	icsRewardsBalance := k.bankKeeper.GetAllBalances(ctx, icsRewardsAddr)
-	icsRewardsPerAsset := make(map[string]sdk.Dec, len(icsRewardsBalance))
-	for _, rewardsAsset := range icsRewardsBalance {
-		icsRewardsPerAsset[rewardsAsset.Denom] = sdk.NewDecFromInt(rewardsAsset.Amount).Quo(sdk.NewDecFromInt(supply.Amount))
+	if zone.WithdrawalAddress != nil {
+		// determine ics rewards to be distributed per token.
+		icsRewardsAddr, err := addressutils.AddressFromBech32(zone.WithdrawalAddress.Address, zone.AccountPrefix)
+		if err != nil {
+			panic("unable to unmarshal withdrawal address")
+		}
+		icsRewardsBalance = k.bankKeeper.GetAllBalances(ctx, icsRewardsAddr)
+		icsRewardsPerAsset = make(map[string]sdk.Dec, len(icsRewardsBalance))
+		for _, rewardsAsset := range icsRewardsBalance {
+			icsRewardsPerAsset[rewardsAsset.Denom] = sdk.NewDecFromInt(rewardsAsset.Amount).Quo(sdk.NewDecFromInt(supply.Amount))
+		}
+		k.Logger(ctx).Info("ics rewards per asset", "zone", zone.ChainId, "icsrpa", icsRewardsPerAsset)
 	}
-
-	k.Logger(ctx).Info("tokens per asset", "zone", zone.ID(), "tpa", tokensPerAsset)
-	k.Logger(ctx).Info("ics rewards per asset", "zone", zone.ID(), "icsrpa", icsRewardsPerAsset)
+	k.Logger(ctx).Info("tokens per asset", "zone", zone.ChainId, "tpa", tokensPerAsset)
 
 	for _, address := range utils.Keys(userAmountsMap) {
 		amount := userAmountsMap[address]

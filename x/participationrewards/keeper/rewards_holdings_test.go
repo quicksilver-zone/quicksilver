@@ -136,7 +136,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 			func(ctx sdk.Context, appA *app.Quicksilver) {
 				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				zone.HoldingsAllocation = 5000
-				icsAddress := sdk.MustAccAddressFromBech32(zone.WithdrawalAddress.Address)
+				icsAddress, _ := addressutils.AddressFromBech32(zone.WithdrawalAddress.Address, "")
 				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewIntFromUint64(1500)))))
 				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewIntFromUint64(900)))))
 				suite.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", icsAddress, sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewIntFromUint64(900)))))
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 			func(ctx sdk.Context, appA *app.Quicksilver) {
 				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				zone.HoldingsAllocation = 5000
-				icsAddress := sdk.MustAccAddressFromBech32(zone.WithdrawalAddress.Address)
+				icsAddress, _ := addressutils.AddressFromBech32(zone.WithdrawalAddress.Address, "")
 				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewIntFromUint64(1500)))))
 				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewIntFromUint64(900)))))
 				suite.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", icsAddress, sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewIntFromUint64(900)))))
@@ -233,7 +233,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 				zone, _ := appA.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				zone.HoldingsAllocation = 5000
 
-				icsAddress := sdk.MustAccAddressFromBech32(zone.WithdrawalAddress.Address)
+				icsAddress, _ := addressutils.AddressFromBech32(zone.WithdrawalAddress.Address, "")
 				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewIntFromUint64(2500)))))
 				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewIntFromUint64(900)))))
 				suite.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", icsAddress, sdk.NewCoins(sdk.NewCoin("testcoin", sdk.NewIntFromUint64(900)))))
@@ -307,7 +307,7 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 
 			// distribute assets to users; check remainder (to be distributed next time!)
 			appA.ParticipationRewardsKeeper.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address)
-			icsAddress := sdk.MustAccAddressFromBech32(zone.WithdrawalAddress.Address)
+			icsAddress, _ := addressutils.AddressFromBech32(zone.WithdrawalAddress.Address, "")
 			icsBalance := appA.BankKeeper.GetAllBalances(ctx, icsAddress)
 			suite.Require().ElementsMatch(tt.icsRemainder, icsBalance)
 		})
