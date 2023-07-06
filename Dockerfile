@@ -7,7 +7,7 @@ COPY go.mod go.sum* ./
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/root/go/pkg/mod \
-    go mod download \
+    go mod download
 
 # Cosmwasm - download correct libwasmvm version
 RUN WASMVM_VERSION=$(go list -m github.com/CosmWasm/wasmvm | cut -d ' ' -f 2) && \
