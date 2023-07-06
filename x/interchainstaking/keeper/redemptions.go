@@ -3,9 +3,10 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"sort"
 	"time"
+
+	"github.com/gogo/protobuf/proto"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"

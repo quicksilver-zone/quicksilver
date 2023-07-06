@@ -1,6 +1,7 @@
 syntax = "proto3";
 package quicksilver.participationrewards.v1;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
@@ -37,3 +38,17 @@ message AddProtocolDataProposalWithDeposit {
   ];
   string deposit = 7 [(gogoproto.moretags) = "yaml:\"deposit\""];
 }
+
+message MsgGovRemoveProtocolData {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string title = 1;
+  string description = 2;
+  string key = 3 [(gogoproto.moretags) = "yaml:\"key\""];
+  string authority = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgGovRemoveProtocolDataResponse defines the MsgGovRemoveProtocolData
+// response type.
+message MsgGovRemoveProtocolDataResponse {}

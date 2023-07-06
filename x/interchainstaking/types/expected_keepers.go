@@ -37,3 +37,7 @@ type BankKeeper interface {
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 }
+
+type IcsHooks interface {
+	AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accountPrefix string) error
+}

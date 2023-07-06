@@ -3,8 +3,9 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"math"
+
+	"github.com/gogo/protobuf/proto"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -4,8 +4,9 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"time"
+
+	"github.com/gogo/protobuf/proto"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -31,7 +32,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 
-	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
 	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
@@ -51,6 +51,7 @@ type Keeper struct {
 	TransferKeeper      ibctransferkeeper.Keeper
 	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
 	Ir                  codectypes.InterfaceRegistry
+	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
 	msgRouter           types.MessageRouter
 }
@@ -70,7 +71,7 @@ func NewKeeper(
 	claimsManagerKeeper claimsmanagerkeeper.Keeper,
 	ps paramtypes.Subspace,
 	msgRouter types.MessageRouter,
-) Keeper {
+) *Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
@@ -83,7 +84,7 @@ func NewKeeper(
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	return &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		scopedKeeper:        scopedKeeper,
@@ -94,14 +95,26 @@ func NewKeeper(
 		IBCKeeper:           ibcKeeper,
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
+		hooks:               nil,
 
 		paramStore: ps,
 		msgRouter:  msgRouter,
 	}
 }
 
+// SetHooks set the ics hooks.
+func (k *Keeper) SetHooks(icsh types.IcsHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set epochs hooks twice")
+	}
+
+	k.hooks = icsh
+
+	return k
+}
+
 func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
-	return sdk.MustBech32ifyAddressBytes(config.Bech32Prefix, k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
+	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
 }
 
 // Logger returns a module-specific logger.

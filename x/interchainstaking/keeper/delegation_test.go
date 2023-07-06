@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/gogo/protobuf/proto"
 	"time"
+
+	"github.com/gogo/protobuf/proto"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"

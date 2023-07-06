@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/gogo/protobuf/proto"
 	"testing"
 	"time"
+
+	"github.com/gogo/protobuf/proto"
 
 	"cosmossdk.io/math"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
