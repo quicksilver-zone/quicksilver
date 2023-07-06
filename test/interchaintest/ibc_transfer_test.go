@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	transfertypes "github.com/cosmos/ibc-go/v6/modules/apps/transfer/types"
-	"github.com/strangelove-ventures/interchaintest/v5"
+	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v5/ibc"
 	"github.com/strangelove-ventures/interchaintest/v5/testreporter"

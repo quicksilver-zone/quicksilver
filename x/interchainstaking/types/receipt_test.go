@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"testing"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
-	abcitypes "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -20,18 +20,18 @@ func TestAttributesToMap(t *testing.T) {
 			name: "parse valid",
 			events: []abcitypes.EventAttribute{
 				{
-					Key:   []byte("sender"),
-					Value: []byte("sender"),
+					Key:   "sender",
+					Value: "sender",
 					Index: false,
 				},
 				{
-					Key:   []byte("recipient"),
-					Value: []byte("recipient"),
+					Key:   "recipient",
+					Value: "recipient",
 					Index: false,
 				},
 				{
-					Key:   []byte("amount"),
-					Value: []byte(strconv.Itoa(100)),
+					Key:   "amount",
+					Value: strconv.Itoa(100),
 					Index: false,
 				},
 			},

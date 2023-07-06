@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
 
 	"github.com/ingenuity-build/quicksilver/app"
@@ -30,7 +30,6 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		map[int64]bool{},
 		t.TempDir(),
 		5,
-		app.MakeEncodingConfig(),
 		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
