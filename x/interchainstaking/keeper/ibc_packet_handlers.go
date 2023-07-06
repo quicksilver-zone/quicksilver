@@ -316,7 +316,11 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 
 	zone, found := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
 
-	if found && receivedCoin.Denom != zone.BaseDenom {
+	denomTrace := utils.DeriveIbcDenomTrace(sMsg.SourcePort, sMsg.SourceChannel, receivedCoin.Denom)
+	receivedCoin.Denom = denomTrace.IBCDenom()
+
+	if found && denomTrace.BaseDenom != zone.BaseDenom {
+		// k.Logger(ctx).Error("got withdrawal account and NOT staking denom", "rx", receivedCoin.Denom, "trace_base_denom", denomTrace.BaseDenom, "zone_base_denom", zone.BaseDenom)
 		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
 		rewardCoin := receivedCoin.SubAmount(feeAmount)
 		zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
@@ -356,7 +360,7 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 
 	// checks here are specific to ensure future extensibility;
 	switch {
-	case sMsg.FromAddress == zone.WithdrawalAddress.GetAddress():
+	case zone.IsWithdrawalAddress(sMsg.FromAddress):
 		// WithdrawalAddress (for rewards) only send to DelegationAddresses.
 		// Target here is the DelegationAddresses.
 		return k.handleRewardsDelegation(ctx, *zone, sMsg)
@@ -724,15 +728,43 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 }
 
 func (k *Keeper) HandleFailedBankSend(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	txHash, err := types.ParseTxMsgMemo(memo, types.MsgTypeUnbondSend)
-	if err != nil {
+	sMsg, ok := msg.(*banktypes.MsgSend)
+	if !ok {
+		err := errors.New("unable to cast source message to MsgSend")
+		k.Logger(ctx).Error(err.Error())
 		return err
 	}
 
-	// valid msg type bank send
-	sendMsg, ok := msg.(*banktypes.MsgSend)
-	if !ok {
-		return errors.New("unable to unmarshal MsgSend")
+	// get zone
+	zone, err := k.GetZoneFromContext(ctx)
+	if err != nil {
+		k.Logger(ctx).Error(err.Error())
+		return err
+	}
+
+	// checks here are specific to ensure future extensibility;
+	switch {
+	case zone.IsWithdrawalAddress(sMsg.FromAddress):
+		// MsgSend from Withdrawal account to delegate account was not completed. We can ignore this.
+		k.Logger(ctx).Error("MsgSend from withdrawal account to delegate account failed")
+	case zone.IsDelegateAddress(sMsg.FromAddress):
+		return k.HandleFailedUnbondSend(ctx, sMsg, memo)
+	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.DepositAddress.Address == sMsg.FromAddress:
+		// MsgSend from deposit account to delegate account for deposit.
+		k.Logger(ctx).Error("MsgSend from deposit account to delegate account failed")
+	default:
+		err = errors.New("unexpected completed send")
+		k.Logger(ctx).Error(err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (k *Keeper) HandleFailedUnbondSend(ctx sdk.Context, sendMsg *banktypes.MsgSend, memo string) error {
+	txHash, err := types.ParseTxMsgMemo(memo, types.MsgTypeUnbondSend)
+	if err != nil {
+		return err
 	}
 
 	// get chainID for the remote zone using msg addresses (ICA acc)
@@ -1175,6 +1207,10 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 }
 
 func (k *Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.Int) sdk.Msg {
+	if !rewards.IsPositive() {
+		return &banktypes.MsgSend{}
+	}
+
 	return &banktypes.MsgSend{
 		FromAddress: zone.WithdrawalAddress.GetAddress(),
 		ToAddress:   zone.DelegationAddress.GetAddress(),

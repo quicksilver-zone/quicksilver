@@ -20,6 +20,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/app"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/utils/randomutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -31,27 +32,27 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 	tcs := []struct {
 		name             string
 		amount           sdk.Coin
-		fcAmount         sdk.Coin
-		withdrawalAmount sdk.Coin
+		fcAmount         math.Int
+		withdrawalAmount math.Int
 		feeAmount        *sdk.Dec
 	}{
 		{
 			name:             "staking denom - all goes to fc",
 			amount:           sdk.NewCoin("uatom", math.NewInt(100)),
-			fcAmount:         sdk.NewCoin("uatom", math.NewInt(100)),
-			withdrawalAmount: sdk.Coin{},
+			fcAmount:         math.NewInt(100),
+			withdrawalAmount: math.ZeroInt(),
 		},
 		{
 			name:             "non staking denom - default (2.5%) to fc, remainder to withdrawal",
 			amount:           sdk.NewCoin("ujuno", math.NewInt(100)),
-			fcAmount:         sdk.NewCoin("ujuno", math.NewInt(2)),
-			withdrawalAmount: sdk.NewCoin("ujuno", math.NewInt(98)),
+			fcAmount:         math.NewInt(2),
+			withdrawalAmount: math.NewInt(98),
 		},
 		{
 			name:             "non staking denom - non-default (9%) to fc, remainder to withdrawal",
-			amount:           sdk.NewCoin("ibc/01234567890123456789012345678901", math.NewInt(100)),
-			fcAmount:         sdk.NewCoin("ibc/01234567890123456789012345678901", math.NewInt(9)),
-			withdrawalAmount: sdk.NewCoin("ibc/01234567890123456789012345678901", math.NewInt(91)),
+			amount:           sdk.NewCoin("uakt", math.NewInt(100)),
+			fcAmount:         math.NewInt(9),
+			withdrawalAmount: math.NewInt(91),
 			feeAmount:        &nineDec, // 0.09 = 9%
 		},
 	}
@@ -63,7 +64,9 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(tc.amount))
+			ibcDenom := utils.DeriveIbcDenom("transfer", "channel-0", tc.amount.Denom)
+
+			err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ibcDenom, tc.amount.Amount)))
 			suite.Require().NoError(err)
 
 			if tc.feeAmount != nil {
@@ -101,12 +104,10 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 			suite.Require().Equal(sdk.Coins{}, txMaccBalance)
 
 			// assert that fee collector module balance is the expected value
-			suite.Require().Contains(feeMaccBalance, tc.fcAmount)
+			suite.Require().Equal(feeMaccBalance.AmountOf(ibcDenom), tc.fcAmount)
 
-			if !tc.withdrawalAmount.IsNil() {
-				// assert that zone withdrawal address balance (local chain) is the expected value
-				suite.Require().Contains(wdAccountBalance, tc.withdrawalAmount)
-			}
+			// assert that zone withdrawal address balance (local chain) is the expected value
+			suite.Require().Equal(wdAccountBalance.AmountOf(ibcDenom), tc.withdrawalAmount)
 		})
 	}
 }
@@ -1453,7 +1454,8 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 		{
 			name: "msg response with some data",
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, []byte) {
-				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				ibcDenom := utils.DeriveIbcDenom("transfer", "channel-0", "denom")
+				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ibcDenom, sdk.NewInt(100))))
 				suite.Require().NoError(err)
 				sender := addressutils.GenerateAccAddressForTest()
 				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
@@ -1480,8 +1482,8 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 				feeMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
 
 				// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
-
-				if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
+				ibcDenom := utils.DeriveIbcDenom("transfer", "channel-0", "denom")
+				if txMaccBalance2.AmountOf(ibcDenom).Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf(ibcDenom).Equal(sdk.NewInt(100)) {
 					return true
 				}
 				return false
@@ -1573,7 +1575,9 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 		{
 			name: "msg response with some data",
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, *codectypes.Any) {
-				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("denom", sdk.NewInt(100))))
+				// since SendPacket did not prefix the denomination, we must prefix denomination here
+				ibcDenom := utils.DeriveIbcDenom("transfer", "channel-0", "denom")
+				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ibcDenom, sdk.NewInt(100))))
 				suite.Require().NoError(err)
 				sender := addressutils.GenerateAccAddressForTest()
 				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
@@ -1601,8 +1605,8 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 				feeMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
 
 				// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
-
-				if txMaccBalance2.AmountOf("denom").Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf("denom").Equal(sdk.NewInt(100)) {
+				ibcDenom := utils.DeriveIbcDenom("transfer", "channel-0", "denom")
+				if txMaccBalance2.AmountOf(ibcDenom).Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf(ibcDenom).Equal(sdk.NewInt(100)) {
 					return true
 				}
 				return false
