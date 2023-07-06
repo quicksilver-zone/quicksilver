@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 )
 
 func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
@@ -23,4 +24,20 @@ func DenomFromRequestKey(query []byte, accAddr sdk.AccAddress) (string, error) {
 	}
 
 	return denom, nil
+}
+
+func DeriveIbcDenom(port, channel, denom string) string {
+	return DeriveIbcDenomTrace(port, channel, denom).IBCDenom()
+}
+
+func DeriveIbcDenomTrace(port, channel, denom string) ibctransfertypes.DenomTrace {
+	// generate denomination prefix
+	sourcePrefix := ibctransfertypes.GetDenomPrefix(port, channel)
+	// NOTE: sourcePrefix contains the trailing "/"
+	prefixedDenom := sourcePrefix + denom
+
+	// construct the denomination trace from the full raw denomination
+	denomTrace := ibctransfertypes.ParseDenomTrace(prefixedDenom)
+
+	return denomTrace
 }
