@@ -3,6 +3,7 @@ package interchainquery
 import (
 	"context"
 	"encoding/json"
+
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -157,11 +158,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // GenerateGenesisState creates a randomized GenState of the pool-incentives module.
 func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
-}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types.

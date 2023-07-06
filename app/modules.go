@@ -232,7 +232,7 @@ During begin block slashing happens after distr.BeginBlocker so that
 there is nothing left over in the validator fee pool, so as to keep the
 CanWithdrawInvariant invariant.
 NOTE: staking module is required if HistoricalEntries param > 0
-NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
+NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC).
 */
 func orderBeginBlockers() []string {
 	return []string{

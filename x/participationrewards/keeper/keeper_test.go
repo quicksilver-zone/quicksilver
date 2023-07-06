@@ -199,16 +199,16 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	// self zone
 	performanceAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
-	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "testchain1.performance")
+	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "testchain1-1.performance")
 	suite.Require().NoError(err)
 	withdrawalAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
-	withdrawalAccountOsmo, err := icstypes.NewICAAccount(withdrawalAddressOsmo, "testchain1.withdrawal")
+	withdrawalAccountOsmo, err := icstypes.NewICAAccount(withdrawalAddressOsmo, "testchain1-1.withdrawal")
 	suite.Require().NoError(err)
 	performanceAccountOsmo.WithdrawalAddress = withdrawalAddressOsmo
 
 	zoneSelf := icstypes.Zone{
 		ConnectionId:       "connection-77004",
-		ChainId:            "testchain1",
+		ChainId:            "testchain1-1",
 		AccountPrefix:      "osmo",
 		LocalDenom:         "uqosmo",
 		BaseDenom:          "uosmo",
@@ -424,7 +424,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	suite.addProtocolData(types.ProtocolDataTypeLiquidToken,
 		[]byte(fmt.Sprintf(
 			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
-			"testchain1",
+			"testchain1-1",
 			"cosmoshub-4",
 			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 			"uqatom",

@@ -297,13 +297,6 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 			Memo: memo,
 		}
 
-		//_, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
-		//if err != nil {
-		//	return err
-		//}
-
-		// TODO
-
 		msg := &icacontrollertypes.MsgSendTx{
 			Owner:           portID,
 			ConnectionId:    connectionID,
@@ -312,9 +305,12 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 		}
 		handler := k.msgRouter.Handler(msg)
 		_, err = handler(ctx, msg)
+		if err != nil {
+			return err
+		}
 	}
 
-	return err
+	return nil
 }
 
 // ---------------------------------------------------------------

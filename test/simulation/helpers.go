@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"os"
 
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	dbm "github.com/tendermint/tm-db"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/app/helpers"
@@ -70,6 +70,7 @@ func Operations(quicksilver *app.Quicksilver, cdc codec.JSONCodec, config simtyp
 		}
 	}
 
+	simState.ProposalMsgs = quicksilver.SimulationManager().GetProposalMsgs(simState)
 	return quicksilver.SimulationManager().WeightedOperations(simState)
 }
 
@@ -82,7 +83,7 @@ func CheckExportSimulation(
 ) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
-		exported, err := quicksilver.ExportAppStateAndValidators(false, nil)
+		exported, err := quicksilver.ExportAppStateAndValidators(false, nil, nil)
 		if err != nil {
 			return err
 		}
