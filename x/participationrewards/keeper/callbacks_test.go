@@ -7,9 +7,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
+	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -144,4 +147,216 @@ func (suite *KeeperTestSuite) executeSetEpochBlockCallback() {
 		query,
 	)
 	suite.Require().NoError(err)
+}
+
+func (suite *KeeperTestSuite) executeUmeeReservesUpdateCallback() {
+	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+	ctx := suite.chainA.GetContext()
+
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", umeetypes.KeyReserveAmount(umeeBaseDenom), types.ModuleName)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.Require().True(found, "qid: %s", qid)
+
+	data := sdk.NewInt(100000)
+	resp, err := data.Marshal()
+	suite.Require().NoError(err)
+	expectedData, err := json.Marshal(data)
+	suite.Require().NoError(err)
+
+	// setup for expected
+
+	err = keeper.UmeeReservesUpdateCallback(
+		ctx,
+		prk,
+		resp,
+		query,
+	)
+	suite.Require().NoError(err)
+
+	want := &types.UmeeReservesProtocolData{
+		UmeeProtocolData: types.UmeeProtocolData{
+			Denom:       umeeBaseDenom,
+			LastUpdated: ctx.BlockTime(),
+			Data:        expectedData,
+		},
+	}
+
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeReserves, umeeBaseDenom)
+	suite.Require().True(found)
+
+	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeReserves, pd.Data)
+	suite.Require().NoError(err)
+	result := value.(*types.UmeeReservesProtocolData)
+	suite.Require().Equal(want, result)
+}
+
+func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
+	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+	ctx := suite.chainA.GetContext()
+
+	accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
+
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/bank/key", append(accountPrefix, []byte(umeeBaseDenom)...), types.ModuleName)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.Require().True(found, "qid: %s", qid)
+
+	data := sdk.NewInt(1400000)
+	resp, err := data.Marshal()
+	suite.Require().NoError(err)
+	expectedData, err := json.Marshal(data)
+	suite.Require().NoError(err)
+
+	// setup for expected
+
+	err = keeper.UmeeLeverageModuleBalanceUpdateCallback(
+		ctx,
+		prk,
+		resp,
+		query,
+	)
+	suite.Require().NoError(err)
+
+	want := &types.UmeeLeverageModuleBalanceProtocolData{
+		UmeeProtocolData: types.UmeeProtocolData{
+			Denom:       umeeBaseDenom,
+			LastUpdated: ctx.BlockTime(),
+			Data:        expectedData,
+		},
+	}
+
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeLeverageModuleBalance, umeeBaseDenom)
+	suite.Require().True(found)
+
+	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeLeverageModuleBalance, pd.Data)
+	suite.Require().NoError(err)
+	result := value.(*types.UmeeLeverageModuleBalanceProtocolData)
+	suite.Require().Equal(want, result)
+}
+
+func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
+	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+	ctx := suite.chainA.GetContext()
+
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", umeetypes.KeyUTokenSupply(umeetypes.UTokenPrefix+umeeBaseDenom), types.ModuleName)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.Require().True(found, "qid: %s", qid)
+
+	data := sdk.NewInt(100000)
+	resp, err := data.Marshal()
+	suite.Require().NoError(err)
+	expectedData, err := json.Marshal(data)
+	suite.Require().NoError(err)
+
+	// setup for expected
+
+	err = keeper.UmeeUTokenSupplyUpdateCallback(
+		ctx,
+		prk,
+		resp,
+		query,
+	)
+	suite.Require().NoError(err)
+
+	want := &types.UmeeUTokenSupplyProtocolData{
+		UmeeProtocolData: types.UmeeProtocolData{
+			Denom:       umeetypes.UTokenPrefix + umeeBaseDenom,
+			LastUpdated: ctx.BlockTime(),
+			Data:        expectedData,
+		},
+	}
+
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, umeetypes.UTokenPrefix+umeeBaseDenom)
+	suite.Require().True(found)
+
+	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeUTokenSupply, pd.Data)
+	suite.Require().NoError(err)
+	result := value.(*types.UmeeUTokenSupplyProtocolData)
+	suite.Require().Equal(want, result)
+}
+
+func (suite *KeeperTestSuite) executeUmeeTotalBorrowsUpdateCallback() {
+	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+	ctx := suite.chainA.GetContext()
+
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", umeetypes.KeyAdjustedTotalBorrow(umeeBaseDenom), types.ModuleName)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.Require().True(found, "qid: %s", qid)
+
+	data := sdk.NewDec(150000)
+	resp, err := data.Marshal()
+	suite.Require().NoError(err)
+	expectedData, err := json.Marshal(data)
+	suite.Require().NoError(err)
+
+	// setup for expected
+
+	err = keeper.UmeeTotalBorrowsUpdateCallback(
+		ctx,
+		prk,
+		resp,
+		query,
+	)
+	suite.Require().NoError(err)
+
+	want := &types.UmeeTotalBorrowsProtocolData{
+		UmeeProtocolData: types.UmeeProtocolData{
+			Denom:       umeeBaseDenom,
+			LastUpdated: ctx.BlockTime(),
+			Data:        expectedData,
+		},
+	}
+
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeTotalBorrows, umeeBaseDenom)
+	suite.Require().True(found)
+
+	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeTotalBorrows, pd.Data)
+	suite.Require().NoError(err)
+	result := value.(*types.UmeeTotalBorrowsProtocolData)
+	suite.Require().Equal(want, result)
+}
+
+func (suite *KeeperTestSuite) executeUmeeInterestScalarUpdateCallback() {
+	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+	ctx := suite.chainA.GetContext()
+
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", umeetypes.KeyInterestScalar(umeeBaseDenom), types.ModuleName)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.Require().True(found, "qid: %s", qid)
+
+	data := sdk.NewDec(1)
+	resp, err := data.Marshal()
+	suite.Require().NoError(err)
+	expectedData, err := json.Marshal(data)
+	suite.Require().NoError(err)
+
+	// setup for expected
+
+	err = keeper.UmeeInterestScalarUpdateCallback(
+		ctx,
+		prk,
+		resp,
+		query,
+	)
+	suite.Require().NoError(err)
+
+	want := &types.UmeeInterestScalarProtocolData{
+		UmeeProtocolData: types.UmeeProtocolData{
+			Denom:       umeeBaseDenom,
+			LastUpdated: ctx.BlockTime(),
+			Data:        expectedData,
+		},
+	}
+
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeInterestScalar, umeeBaseDenom)
+	suite.Require().True(found)
+
+	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeInterestScalar, pd.Data)
+	suite.Require().NoError(err)
+	result := value.(*types.UmeeInterestScalarProtocolData)
+	suite.Require().Equal(want, result)
 }

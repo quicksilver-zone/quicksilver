@@ -60,6 +60,77 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 		}
 
 		return &oppd, nil
+	case ProtocolDataTypeUmeeParams:
+		uppd := UmeeParamsProtocolData{}
+		err := json.Unmarshal(data, &uppd)
+		if err != nil {
+			return nil, err
+		}
+		var blank UmeeParamsProtocolData
+		if reflect.DeepEqual(uppd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal umeeparams protocol data from empty JSON object")
+		}
+		return &uppd, nil
+	case ProtocolDataTypeUmeeReserves:
+		upd := UmeeReservesProtocolData{}
+		err := json.Unmarshal(data, &upd)
+		if err != nil {
+			return nil, fmt.Errorf("unable to unmarshal intermediary UmeeReservesProtocolData: %w", err)
+		}
+		var blank UmeeReservesProtocolData
+		if reflect.DeepEqual(upd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal UmeeReservesProtocolData from empty JSON object")
+		}
+
+		return &upd, nil
+	case ProtocolDataTypeUmeeUTokenSupply:
+		upd := UmeeUTokenSupplyProtocolData{}
+		err := json.Unmarshal(data, &upd)
+		if err != nil {
+			return nil, fmt.Errorf("unable to unmarshal intermediary UmeeUTokenSupplyProtocolData: %w", err)
+		}
+		var blank UmeeUTokenSupplyProtocolData
+		if reflect.DeepEqual(upd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal UmeeUTokenSupplyProtocolData from empty JSON object")
+		}
+
+		return &upd, nil
+	case ProtocolDataTypeUmeeTotalBorrows:
+		upd := UmeeTotalBorrowsProtocolData{}
+		err := json.Unmarshal(data, &upd)
+		if err != nil {
+			return nil, fmt.Errorf("unable to unmarshal intermediary UmeeTotalBorrowsProtocolData: %w", err)
+		}
+		var blank UmeeTotalBorrowsProtocolData
+		if reflect.DeepEqual(upd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal UmeeTotalBorrowsProtocolData from empty JSON object")
+		}
+
+		return &upd, nil
+	case ProtocolDataTypeUmeeInterestScalar:
+		upd := UmeeInterestScalarProtocolData{}
+		err := json.Unmarshal(data, &upd)
+		if err != nil {
+			return nil, fmt.Errorf("unable to unmarshal intermediary UmeeInterestScalarProtocolData: %w", err)
+		}
+		var blank UmeeInterestScalarProtocolData
+		if reflect.DeepEqual(upd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal UmeeInterestScalarProtocolData from empty JSON object")
+		}
+
+		return &upd, nil
+	case ProtocolDataTypeUmeeLeverageModuleBalance:
+		upd := UmeeLeverageModuleBalanceProtocolData{}
+		err := json.Unmarshal(data, &upd)
+		if err != nil {
+			return nil, fmt.Errorf("unable to unmarshal intermediary UmeeLeverageModuleBalanceProtocolData: %w", err)
+		}
+		var blank UmeeLeverageModuleBalanceProtocolData
+		if reflect.DeepEqual(upd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal UmeeLeverageModuleBalanceProtocolData from empty JSON object")
+		}
+
+		return &upd, nil
 	default:
 		return nil, ErrUnknownProtocolDataType
 	}
@@ -110,4 +181,6 @@ var (
 	_ ProtocolDataI = &OsmosisPoolProtocolData{}
 	_ ProtocolDataI = &OsmosisParamsProtocolData{}
 	_ ProtocolDataI = &LiquidAllowedDenomProtocolData{}
+	_ ProtocolDataI = &UmeeProtocolData{}
+	_ ProtocolDataI = &UmeeParamsProtocolData{}
 )
