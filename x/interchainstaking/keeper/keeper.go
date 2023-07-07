@@ -235,6 +235,13 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 }
 
 func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []byte) error {
+	if data == nil {
+		k.Logger(ctx).Error("expected validator state, got nil")
+		// return nil here, as if we receive nil we fail to unmarshal (as nil validators are invalid),
+		// so we can never hope to resolve this query. Possibly received a valset update from a
+		// different chain.
+		return nil
+	}
 	validator, err := k.UnmarshalValidator(data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zone.ChainId, "err", err)
