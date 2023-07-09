@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	"testing"
 	"time"
+
+	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -147,6 +148,11 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		return err
 	}
 	err = quicksilver.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), capability, chanCapName)
+	if err != nil {
+		return err
+	}
+
+	err = quicksilver.ScopedIBCKeeper.ClaimCapability(suite.chainA.GetContext(), capability, chanCapName)
 	if err != nil {
 		return err
 	}

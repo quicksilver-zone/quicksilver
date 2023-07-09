@@ -351,49 +351,23 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	if err != nil {
 		return err
 	}
+	err = quicksilver.ScopedIBCKeeper.ClaimCapability(suite.chainA.GetContext(), capability, chanCapName)
+	if err != nil {
+		return err
+	}
 
 	portPathName := host.PortPath(portID)
 	capability, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		suite.chainA.GetContext(),
 		portPathName,
 	)
-	err = quicksilver.InterchainstakingKeeper.ClaimCapability(suite.chainA.GetContext(), capability, portPathName)
 	if err != nil {
 		return err
 	}
-	/*
-			key, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-				suite.chainA.GetContext(),
-				chanCapName,
-			)
-			if err != nil {
-				return err
-			}
-			err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-				suite.chainA.GetContext(),
-				key,
-				chanCapName,
-			)
-			if err != nil {
-				return err
-			}
-
-
-		portPathName := host.PortPath(portID)
-
-		if err != nil {
-			return err
-		}
-		err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-			suite.chainA.GetContext(),
-			key,
-			portPathName,
-		)
-		if err != nil {
-			return err
-		}
-
-	*/
+	err = quicksilver.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), capability, portPathName)
+	if err != nil {
+		return err
+	}
 
 	addr := addressutils.GenerateAddressForTestWithPrefix(remotePrefix)
 	quicksilver.ICAControllerKeeper.SetInterchainAccountAddress(suite.chainA.GetContext(), connectionID, portID, addr)
