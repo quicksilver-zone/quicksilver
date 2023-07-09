@@ -5,10 +5,7 @@ import (
 	"testing"
 	"time"
 
-	testsuite "github.com/stretchr/testify/suite"
-
 	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
@@ -16,6 +13,7 @@ import (
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	testsuite "github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
@@ -340,37 +338,62 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
-	key, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+
+	chanCapName := host.ChannelCapabilityPath(portID, channelID)
+	capability, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		suite.chainA.GetContext(),
-		host.ChannelCapabilityPath(portID, channelID),
+		chanCapName,
 	)
 	if err != nil {
 		return err
 	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.ChannelCapabilityPath(portID, channelID),
-	)
+	err = quicksilver.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), capability, chanCapName)
 	if err != nil {
 		return err
 	}
 
-	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+	portPathName := host.PortPath(portID)
+	capability, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		suite.chainA.GetContext(),
-		host.PortPath(portID),
+		portPathName,
 	)
+	err = quicksilver.InterchainstakingKeeper.ClaimCapability(suite.chainA.GetContext(), capability, portPathName)
 	if err != nil {
 		return err
 	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.PortPath(portID),
-	)
-	if err != nil {
-		return err
-	}
+	/*
+			key, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+				suite.chainA.GetContext(),
+				chanCapName,
+			)
+			if err != nil {
+				return err
+			}
+			err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
+				suite.chainA.GetContext(),
+				key,
+				chanCapName,
+			)
+			if err != nil {
+				return err
+			}
+
+
+		portPathName := host.PortPath(portID)
+
+		if err != nil {
+			return err
+		}
+		err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
+			suite.chainA.GetContext(),
+			key,
+			portPathName,
+		)
+		if err != nil {
+			return err
+		}
+
+	*/
 
 	addr := addressutils.GenerateAddressForTestWithPrefix(remotePrefix)
 	quicksilver.ICAControllerKeeper.SetInterchainAccountAddress(suite.chainA.GetContext(), connectionID, portID, addr)

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	"testing"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	connectiontypes "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/ingenuity-build/quicksilver/app"
@@ -138,37 +138,30 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(ctx, connectionID, portID, channelID)
-	key, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-		ctx,
-		host.ChannelCapabilityPath(portID, channelID),
+	chanCapName := host.ChannelCapabilityPath(portID, channelID)
+	capability, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+		suite.chainA.GetContext(),
+		chanCapName,
 	)
 	if err != nil {
 		return err
 	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		ctx,
-		key,
-		host.ChannelCapabilityPath(portID, channelID),
-	)
+	err = quicksilver.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), capability, chanCapName)
 	if err != nil {
 		return err
 	}
 
-	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-		ctx,
-		host.PortPath(portID),
-	)
-	if err != nil {
-		return err
-	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		ctx,
-		key,
-		host.PortPath(portID),
-	)
-	if err != nil {
-		return err
-	}
+	/*
+		portPathName := host.PortPath(portID)
+		capability, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+			suite.chainA.GetContext(),
+			portPathName,
+		)
+		err = quicksilver.InterchainstakingKeeper.ClaimCapability(suite.chainA.GetContext(), capability, portPathName)
+		if err != nil {
+			return err
+		}
+	*/
 
 	addr, err := addressutils.EncodeAddressToBech32(remotePrefix, addressutils.GenerateAccAddressForTest())
 	if err != nil {

@@ -196,7 +196,6 @@ func NewQuicksilver(
 	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
 
 	// // add test gRPC service for testing gRPC queries in isolation
-	// // testdata.RegisterTestServiceServer(app.GRPCQueryRouter(), testdata.TestServiceImpl{})
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -239,10 +238,10 @@ func NewQuicksilver(
 		}
 	}
 
-	// Finally start the tpsCounter.
+	// Finally, start the tpsCounter.
 	app.tpsCounter = newTPSCounter(logger)
 	go func() {
-		// Unfortunately golangci-lint is so pedantic
+		// Unfortunately, golangci-lint is so pedantic
 		// so we have to ignore this error explicitly.
 		_ = app.tpsCounter.start(context.Background()) //nolint:errcheck
 	}()

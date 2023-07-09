@@ -118,16 +118,20 @@ type AppKeepers struct {
 	ParticipationRewardsKeeper *participationrewardskeeper.Keeper
 	AirdropKeeper              *airdropkeeper.Keeper
 	TokenFactoryKeeper         tokenfactorykeeper.Keeper
+
 	// 		IBC keepers
 	IBCKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 	PacketForwardKeeper *packetforwardkeeper.Keeper
+
 	// Modules
 	ICAModule           ica.AppModule
 	TransferModule      transfer.AppModule
 	PacketForwardModule packetforward.AppModule
+	ICSModule           interchainstaking.IBCModule
+
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
 	tkeys   map[string]*storetypes.TransientStoreKey
@@ -224,6 +228,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	scopedInterchainStakingKeeper := appKeepers.CapabilityKeeper.ScopeToModule(interchainstakingtypes.ModuleName)
 	scopedWasmKeeper := appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	appKeepers.CapabilityKeeper.Seal()
+
 	// TODO: Make a SetInvCheckPeriod fn on CrisisKeeper.
 	// IMO, its bad design atm that it requires this in state machine initialization
 	appKeepers.CrisisKeeper = crisiskeeper.NewKeeper(
@@ -233,6 +238,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights, appKeepers.keys[upgradetypes.StoreKey], appCodec, homePath, bApp, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
+
 	// use custom account for contracts
 	appKeepers.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
@@ -298,6 +304,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appCodec, bApp.MsgServiceRouter(),
 		appKeepers.AccountKeeper,
 	)
+
 	// Create IBC Keeper
 	appKeepers.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
@@ -307,6 +314,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.UpgradeKeeper,
 		scopedIBCKeeper,
 	)
+
 	// RouterKeeper must be created before TransferKeeper
 	appKeepers.PacketForwardKeeper = packetforwardkeeper.NewKeeper(
 		appCodec,
@@ -318,6 +326,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.IBCKeeper.ChannelKeeper,
 	)
+
 	// Create Transfer Keepers
 	appKeepers.TransferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec,
@@ -333,6 +342,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.PacketForwardKeeper.SetTransferKeeper(appKeepers.TransferKeeper)
 	appKeepers.TransferModule = transfer.NewAppModule(appKeepers.TransferKeeper)
 	appKeepers.PacketForwardModule = packetforward.NewAppModule(appKeepers.PacketForwardKeeper)
+
 	// ICA Keepers
 	appKeepers.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
 		appCodec,
@@ -341,9 +351,10 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
-		scopedICAControllerKeeper,
+		&scopedICAControllerKeeper,
 		bApp.MsgServiceRouter(),
 	)
+
 	appKeepers.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[icahosttypes.StoreKey],
@@ -352,19 +363,22 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.IBCKeeper.ChannelKeeper,
 		&appKeepers.IBCKeeper.PortKeeper,
 		appKeepers.AccountKeeper,
-		scopedICAHostKeeper,
+		&scopedICAHostKeeper,
 		bApp.MsgServiceRouter(),
 	)
+
 	appKeepers.ICAModule = ica.NewAppModule(&appKeepers.ICAControllerKeeper, &appKeepers.ICAHostKeeper)
-	icaHostIBCModule := icahost.NewIBCModule(appKeepers.ICAHostKeeper)
+
 	appKeepers.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[claimsmanagertypes.StoreKey],
 		*appKeepers.IBCKeeper,
 	)
+
 	// claimsmanagerModule := claimsmanager.NewAppModule(appCodec, appKeepers.ClaimsManagerKeeper)
 	appKeepers.InterchainQueryKeeper = interchainquerykeeper.NewKeeper(appCodec, appKeepers.keys[interchainquerytypes.StoreKey], appKeepers.IBCKeeper)
 	// interchainQueryModule := interchainquery.NewAppModule(appCodec, appKeepers.InterchainQueryKeeper)
+
 	appKeepers.InterchainstakingKeeper = interchainstakingkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[interchainstakingtypes.StoreKey],
@@ -379,8 +393,8 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.GetSubspace(interchainstakingtypes.ModuleName),
 		bApp.MsgServiceRouter(),
 	)
+
 	// interchainstakingModule := interchainstaking.NewAppModule(appCodec, app.InterchainstakingKeeper)
-	interchainstakingIBCModule := interchainstaking.NewIBCModule(appKeepers.InterchainstakingKeeper)
 	appKeepers.ParticipationRewardsKeeper = participationrewardskeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[participationrewardstypes.StoreKey],
@@ -394,13 +408,16 @@ func (appKeepers *AppKeepers) InitKeepers(
 		proofOpsFn,
 		selfProofOpsFn,
 	)
+
 	if err := appKeepers.InterchainQueryKeeper.SetCallbackHandler(interchainstakingtypes.ModuleName, appKeepers.InterchainstakingKeeper.CallbackHandler()); err != nil {
 		panic(err)
 	}
+
 	// participationrewardsModule := participationrewards.NewAppModule(appCodec, appKeepers.ParticipationRewardsKeeper)
 	if err := appKeepers.InterchainQueryKeeper.SetCallbackHandler(participationrewardstypes.ModuleName, appKeepers.ParticipationRewardsKeeper.CallbackHandler()); err != nil {
 		panic(err)
 	}
+
 	appKeepers.TokenFactoryKeeper = tokenfactorykeeper.NewKeeper(
 		appKeepers.keys[tokenfactorytypes.StoreKey],
 		appKeepers.GetSubspace(tokenfactorytypes.ModuleName),
@@ -408,6 +425,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.BankKeeper.WithMintCoinsRestriction(tokenfactorytypes.NewTokenFactoryDenomMintCoinsRestriction()),
 		appKeepers.DistrKeeper,
 	)
+
 	// Quicksilver Keepers
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 	appKeepers.ParticipationRewardsKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
@@ -437,25 +455,33 @@ func (appKeepers *AppKeepers) InitKeepers(
 		wasmOpts...,
 	)
 
-	icaControllerIBCModule := icacontroller.NewIBCMiddleware(interchainstakingIBCModule, appKeepers.ICAControllerKeeper)
-	var ibcStack porttypes.IBCModule
-	ibcStack = transfer.NewIBCModule(appKeepers.TransferKeeper)
-	ibcStack = packetforward.NewIBCMiddleware(
-		ibcStack,
+	var icaControllerStack porttypes.IBCModule
+	icaControllerStack = interchainstaking.NewIBCModule(appKeepers.InterchainstakingKeeper)
+	interchainstakingIBCModule := icaControllerStack.(interchainstaking.IBCModule)
+	icaControllerStack = icacontroller.NewIBCMiddleware(interchainstakingIBCModule, appKeepers.ICAControllerKeeper)
+
+	icaHostIBCModule := icahost.NewIBCModule(appKeepers.ICAHostKeeper)
+
+	var transferStack porttypes.IBCModule
+	transferStack = transfer.NewIBCModule(appKeepers.TransferKeeper)
+	transferStack = packetforward.NewIBCMiddleware(
+		transferStack,
 		appKeepers.PacketForwardKeeper,
 		0,
 		packetforwardkeeper.DefaultForwardTransferPacketTimeoutTimestamp,
 		packetforwardkeeper.DefaultRefundTransferPacketTimeoutTimestamp,
 	)
+
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := porttypes.NewRouter()
 	ibcRouter.
-		AddRoute(ibctransfertypes.ModuleName, ibcStack).
+		AddRoute(ibctransfertypes.ModuleName, transferStack).
 		AddRoute(wasm.ModuleName, wasm.NewIBCHandler(appKeepers.WasmKeeper, appKeepers.IBCKeeper.ChannelKeeper, appKeepers.PacketForwardKeeper)).
-		AddRoute(icacontrollertypes.SubModuleName, icaControllerIBCModule).
+		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule).
-		AddRoute(interchainstakingtypes.ModuleName, icaControllerIBCModule)
+		AddRoute(interchainstakingtypes.ModuleName+icacontrollertypes.SubModuleName, icaControllerStack)
 	appKeepers.IBCKeeper.SetRouter(ibcRouter)
+
 	// create evidence keeper with router
 	appKeepers.EvidenceKeeper = *evidencekeeper.NewKeeper(
 		appCodec,
