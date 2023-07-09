@@ -248,8 +248,13 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 		return sdkioerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
 
-	// TO DO: discuss on adding this because we are receiving err capability not found from scoppedICAController
-	k.ICAControllerKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID)) //nolint:errcheck
+	// check if capability has been claimed yet. If it's not been claimed, claim capability
+	if _, claimed := k.ICAControllerKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID)); !claimed {
+		err := k.ICAControllerKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
+		if err != nil {
+			return err
+		}
+	}
 
 	chunkSize := int(messagesPerTx)
 	if chunkSize < 1 {
