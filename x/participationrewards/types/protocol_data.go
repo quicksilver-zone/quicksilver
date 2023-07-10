@@ -131,6 +131,18 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 		}
 
 		return &upd, nil
+	case ProtocolDataTypeCrescentParams:
+		cpd := CrescentParamsProtocolData{}
+		err := json.Unmarshal(data, &cpd)
+		if err != nil {
+			return nil, fmt.Errorf("unable to unmarshal intermediary CrescentParamsProtocolData: %w", err)
+		}
+		var blank CrescentParamsProtocolData
+		if reflect.DeepEqual(cpd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal CrescentParamsProtocolData from empty JSON object")
+		}
+
+		return &cpd, nil
 	case ProtocolDataTypeCrescentPool:
 		cpd := CrescentPoolProtocolData{}
 		err := json.Unmarshal(data, &cpd)

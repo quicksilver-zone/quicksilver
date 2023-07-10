@@ -4,25 +4,16 @@ import (
 	"cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	liquiditytypes "github.com/ingenuity-build/quicksilver/crescent-types/liquidity/types"
+	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/quicksilver/utils"
+	"strings"
 	"time"
 )
 
-type PoolType int32
-
-const (
-	// POOL_TYPE_UNSPECIFIED specifies unknown pool type
-	PoolTypeUnspecified PoolType = 0
-	// POOL_TYPE_BASIC specifies the basic pool type
-	PoolTypeBasic PoolType = 1
-	// POOL_TYPE_RANGED specifies the ranged pool type
-	PoolTypeRanged PoolType = 2
-)
-
 type CrescentPoolProtocolData struct {
-	Type           PoolType
 	PoolId         uint64
-	PairId         uint64
 	ReserveAddress string
 	PoolCoinDenom  string
 	Disabled       bool
@@ -32,8 +23,44 @@ type CrescentPoolProtocolData struct {
 }
 
 func (cpd *CrescentPoolProtocolData) ValidateBasic() error {
-	//TODO implement me
-	panic("implement me")
+	errs := make(map[string]error)
+
+	if cpd.PoolId == 0 {
+		errs["PoolId"] = ErrUndefinedAttribute
+	}
+
+	if cpd.ReserveAddress == "" {
+		errs["ReserveAddress"] = ErrUndefinedAttribute
+	}
+
+	if cpd.PoolCoinDenom == "" {
+		errs["PoolCoinDenom"] = ErrUndefinedAttribute
+	}
+
+	i := 0
+	for _, ibcdenom := range utils.Keys(cpd.Denoms) {
+		el := fmt.Sprintf("Denoms[%s]", ibcdenom)
+
+		if cpd.Denoms[ibcdenom].ChainID == "" || len(strings.Split(cpd.Denoms[ibcdenom].ChainID, "-")) < 2 {
+			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrInvalidChainID)
+		}
+
+		if cpd.Denoms[ibcdenom].Denom == "" || sdk.ValidateDenom(cpd.Denoms[ibcdenom].Denom) != nil {
+			errs[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrInvalidDenom)
+		}
+
+		i++
+	}
+
+	if i == 0 {
+		errs["Zones"] = ErrUndefinedAttribute
+	}
+
+	if len(errs) > 0 {
+		return multierror.New(errs)
+	}
+
+	return nil
 }
 
 func (cpd *CrescentPoolProtocolData) GenerateKey() []byte {
@@ -59,8 +86,19 @@ type CrescentReserveAddressBalanceProtocolData struct {
 }
 
 func (crd CrescentReserveAddressBalanceProtocolData) ValidateBasic() error {
-	//TODO implement me
-	panic("implement me")
+	errs := make(map[string]error)
+
+	if crd.ReserveAddress == "" {
+		errs["ReserveAddress"] = ErrUndefinedAttribute
+	}
+	if crd.Denom == "" {
+		errs["ReserveAddress"] = ErrUndefinedAttribute
+	}
+	if len(errs) > 0 {
+		return multierror.New(errs)
+	}
+
+	return nil
 }
 
 func (crd CrescentReserveAddressBalanceProtocolData) GenerateKey() []byte {
@@ -83,8 +121,11 @@ type CrescentPoolCoinSupplyProtocolData struct {
 }
 
 func (cpd CrescentPoolCoinSupplyProtocolData) ValidateBasic() error {
-	//TODO implement me
-	panic("implement me")
+	if cpd.PoolCoinDenom == "" {
+		return ErrUndefinedAttribute
+	}
+
+	return nil
 }
 
 func (cpd CrescentPoolCoinSupplyProtocolData) GenerateKey() []byte {
