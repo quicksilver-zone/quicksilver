@@ -38,7 +38,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 				bz,
 				sdk.NewInt(-1),
 				types.ModuleName,
-				"epochblock",
+				SetEpochBlockCallbackID,
 				0,
 			)
 			return false

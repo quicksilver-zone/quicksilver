@@ -32,7 +32,7 @@ func (k Keeper) AllocateValidatorSelectionRewards(ctx sdk.Context) {
 			bz,
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"validatorselectionrewards",
+			ValidatorSelectionRewardsCallbackID,
 			0,
 		)
 		return false
