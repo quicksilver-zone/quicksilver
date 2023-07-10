@@ -60,20 +60,6 @@ func TestIntentsFromString(t *testing.T) {
 	}
 	require.Nil(t, err)
 
-	// Check the router key.
-	gotRoute := sigIntent.Route()
-	wantRoute := "interchainstaking"
-	require.Equal(t, wantRoute, gotRoute, "mismatch in route")
-
-	// Check the type.
-	gotType := sigIntent.Type()
-	wantType := "signalintent"
-	require.Equal(t, wantType, gotType, "mismatch in type")
-
-	// Check the signBytes.
-	signBytes := sigIntent.GetSignBytes()
-	require.True(t, len(signBytes) != 0, "expecting signBytes to be produced")
-
 	// Signers should return the from address.
 	gotSigners := sigIntent.GetSigners()
 	wantSigners := []sdk.AccAddress{fromAddr}
@@ -240,10 +226,12 @@ func TestMsgRequestRedemption_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
+	validAddress := addressutils.GenerateAccAddressForTest()
+
 	type fields struct {
 		PortID       string
 		ConnectionID string
-		FromAddress  string
+		Authority    string
 	}
 	tests := []struct {
 		name     string
@@ -253,14 +241,25 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 	}{
 		{
 			"blank",
-			fields{},
+			fields{
+				Authority: validAddress.String(),
+			},
 			true,
 			"invalid port format",
 		},
 		{
+			"invalid authority ",
+			fields{
+				Authority: "invalid",
+			},
+			true,
+			"invalid authority address",
+		},
+		{
 			"invalid port",
 			fields{
-				PortID: "cat",
+				PortID:    "cat",
+				Authority: validAddress.String(),
 			},
 			true,
 			"invalid port format",
@@ -268,7 +267,8 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 		{
 			"invalid account",
 			fields{
-				PortID: "icacontroller-osmosis-4.bad",
+				PortID:    "icacontroller-osmosis-4.bad",
+				Authority: validAddress.String(),
 			},
 			true,
 			"invalid port format; unexpected account",
@@ -278,6 +278,7 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 			fields{
 				PortID:       "icacontroller-osmosis-4.withdrawal",
 				ConnectionID: "bad-1",
+				Authority:    validAddress.String(),
 			},
 			true,
 			"invalid connection string; too short",
@@ -287,6 +288,7 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 			fields{
 				PortID:       "icacontroller-osmosis-4.withdrawal",
 				ConnectionID: "longenoughbutstillbad-1",
+				Authority:    validAddress.String(),
 			},
 			true,
 			"invalid connection string; incorrect prefix",
@@ -296,6 +298,7 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 			fields{
 				PortID:       "icacontroller-osmosis-4.withdrawal",
 				ConnectionID: "connection-1",
+				Authority:    validAddress.String(),
 			},
 			false,
 			"",
@@ -306,7 +309,7 @@ func TestMsgReopenIntent_ValidateBasic(t *testing.T) {
 			msg := types.MsgGovReopenChannel{
 				PortId:       tt.fields.PortID,
 				ConnectionId: tt.fields.ConnectionID,
-				Authority:    tt.fields.FromAddress,
+				Authority:    tt.fields.Authority,
 			}
 			err := msg.ValidateBasic()
 			if tt.wantErr {

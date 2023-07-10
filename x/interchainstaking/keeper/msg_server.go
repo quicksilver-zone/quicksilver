@@ -28,6 +28,12 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 
 var _ types.MsgServer = msgServer{}
 
+func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZone) (*types.MsgRegisterZoneResponse, error) {
+	// TODO
+
+	return &types.MsgRegisterZoneResponse{}, nil
+}
+
 // RequestRedemption handles MsgRequestRedemption by creating a corresponding withdrawal record queued for unbonding.
 func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
