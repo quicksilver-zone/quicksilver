@@ -183,4 +183,9 @@ var (
 	_ ProtocolDataI = &LiquidAllowedDenomProtocolData{}
 	_ ProtocolDataI = &UmeeProtocolData{}
 	_ ProtocolDataI = &UmeeParamsProtocolData{}
+	_ ProtocolDataI = &CrescentParamsProtocolData{}
+	_ ProtocolDataI = &CrescentPoolProtocolData{}
+	_ ProtocolDataI = &CrescentPairProtocolData{}
+	_ ProtocolDataI = &CrescentReserveAddressBalanceProtocolData{}
+	_ ProtocolDataI = &CrescentPoolCoinSupplyProtocolData{}
 )

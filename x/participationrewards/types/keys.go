@@ -16,6 +16,7 @@ const (
 
 	OsmosisParamsKey  = "osmosisparams"
 	UmeeParamsKey     = "umeeparams"
+	CrescentParamsKey = "crescentparams"
 	ProofTypeBank     = "bank"
 	ProofTypeLeverage = "leverage"
 )
