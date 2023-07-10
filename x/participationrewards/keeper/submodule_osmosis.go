@@ -59,19 +59,11 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 			m.GetKeyPrefixPools(pool.PoolID),
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"osmosispoolupdate",
+			OsmosisPoolUpdateCallbackID,
 			0,
 		) // query pool data
 		return false
 	})
-}
-
-func (m *OsmosisModule) IsActive() bool {
-	return true
-}
-
-func (m *OsmosisModule) IsReady() bool {
-	return true
 }
 
 func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {

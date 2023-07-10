@@ -1,13 +1,14 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
 
-	testsuite "github.com/stretchr/testify/suite"
-
 	"cosmossdk.io/math"
+
+	testsuite "github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
@@ -18,6 +19,7 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/ingenuity-build/quicksilver/app"
+	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
@@ -26,7 +28,12 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-var testAddress = addressutils.GenerateAddressForTestWithPrefix("cosmos")
+var (
+	testAddress        = addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	umeeTestConnection = "connection-77003"
+	umeeTestChain      = "umee-types-1"
+	umeeBaseDenom      = "uumee"
+)
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
@@ -95,7 +102,7 @@ func (suite *KeeperTestSuite) coreTest() {
 
 	akpd = quicksilver.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
 	// added 6 in setupTestProtocolData
-	suite.Require().Equal(7, len(akpd))
+	suite.Require().Equal(14, len(akpd))
 
 	// advance the chains
 	suite.coordinator.CommitNBlocks(suite.chainA, 1)
@@ -104,6 +111,11 @@ func (suite *KeeperTestSuite) coreTest() {
 	// callback test
 	suite.executeSetEpochBlockCallback()
 	suite.executeOsmosisPoolUpdateCallback()
+	suite.executeUmeeReservesUpdateCallback()
+	suite.executeUmeeTotalBorrowsUpdateCallback()
+	suite.executeUmeeInterestScalarUpdateCallback()
+	suite.executeUmeeLeverageModuleBalanceUpdateCallback()
+	suite.executeUmeeUTokenSupplyUpdateCallback()
 
 	suite.setupTestDeposits()
 	suite.setupTestIntents()
@@ -382,6 +394,46 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	suite.addProtocolData(
 		types.ProtocolDataTypeConnection,
 		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)),
+	)
+	// umee-types params
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeParams,
+		[]byte(fmt.Sprintf("{\"ChainID\": %q}", umeeTestChain)),
+	)
+	// umee-types test chain
+	suite.addProtocolData(
+		types.ProtocolDataTypeConnection,
+		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", umeeTestConnection, umeeTestChain, 0)),
+	)
+	// umee-types test reserves
+	upd, _ := json.Marshal(types.UmeeReservesProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeReserves,
+		upd,
+	)
+	// umee-types test leverage module balance
+	upd, _ = json.Marshal(types.UmeeLeverageModuleBalanceProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeLeverageModuleBalance,
+		upd,
+	)
+	// umee-types test borrows
+	upd, _ = json.Marshal(types.UmeeTotalBorrowsProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeTotalBorrows,
+		upd,
+	)
+	// umee-types test interest scalar
+	upd, _ = json.Marshal(types.UmeeInterestScalarProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeInterestScalar,
+		upd,
+	)
+	// umee-types test utoken supply
+	upd, _ = json.Marshal(types.UmeeUTokenSupplyProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeetypes.UTokenPrefix + umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeUTokenSupply,
+		upd,
 	)
 	// osmosis params
 	suite.addProtocolData(

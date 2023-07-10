@@ -5,14 +5,17 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
+	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
@@ -140,6 +143,39 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"a",
 		},
 		{
+			"invalid_umee_denom",
+			func() {
+				address := addressutils.GenerateAccAddressForTest()
+				prefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
+				key := banktypes.CreatePrefixedAccountStoreKey(prefix, []byte("u/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
+
+				cd := sdk.Coin{
+					Denom:  "u/random",
+					Amount: math.NewInt(1000),
+				}
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: address.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeUmeeToken,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       key,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: "bank",
+						},
+					},
+				}
+			},
+			nil,
+			"a",
+		},
+		{
 			"valid_osmosis",
 			func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
@@ -234,6 +270,45 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
 							ProofType: "bank",
+						},
+					},
+				}
+			},
+			&types.MsgSubmitClaimResponse{},
+			"",
+		},
+		{
+			"valid_umee",
+			func() {
+				address := addressutils.GenerateAccAddressForTest()
+				bankkey := banktypes.CreateAccountBalancesPrefix(address)
+				bankkey = append(bankkey, []byte("u/uumee")...)
+
+				leveragekey := umeetypes.KeyCollateralAmount(address, "u/uumee")
+
+				cd := math.NewInt(1000)
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: address.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeUmeeToken,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       bankkey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: "bank",
+						},
+						{
+							Key:       leveragekey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: "leverage",
 						},
 					},
 				}

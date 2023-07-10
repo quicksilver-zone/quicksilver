@@ -127,6 +127,41 @@ func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 			return err
 		}
 		pdi = &pd
+	case ProtocolDataTypeUmeeReserves:
+		pd := UmeeReservesProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
+	case ProtocolDataTypeUmeeInterestScalar:
+		pd := UmeeInterestScalarProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
+	case ProtocolDataTypeUmeeTotalBorrows:
+		pd := UmeeTotalBorrowsProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
+	case ProtocolDataTypeUmeeUTokenSupply:
+		pd := UmeeUTokenSupplyProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
+	case ProtocolDataTypeUmeeLeverageModuleBalance:
+		pd := UmeeLeverageModuleBalanceProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
 	case ProtocolDataTypeCrescentPool:
 		return ErrUnimplementedProtocolDataType
 	case ProtocolDataTypeSifchainPool:
