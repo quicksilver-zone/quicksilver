@@ -13,17 +13,18 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewar
 service Msg {
   rpc SubmitClaim(MsgSubmitClaim) returns (MsgSubmitClaimResponse) {
     option (google.api.http) = {
-      post: "/quicksilver/tx/v1/participationrewards/claim"
-      body: "*"
+      post : "/quicksilver/tx/v1/participationrewards/claim"
+      body : "*"
     };
   }
 
   // SignalIntent defines a method for signalling voting intent for one or more
   // validators.
-  rpc GovRemoveProtocolData(MsgGovRemoveProtocolData) returns (MsgGovRemoveProtocolDataResponse) {
+  rpc GovRemoveProtocolData(MsgGovRemoveProtocolData)
+      returns (MsgGovRemoveProtocolDataResponse) {
     option (google.api.http) = {
-      post: "/quicksilver/tx/v1/participationrewards/remove_protocoldata"
-      body: "*"
+      post : "/quicksilver/tx/v1/participationrewards/remove_protocoldata"
+      body : "*"
     };
   }
 }
@@ -38,10 +39,12 @@ message MsgSubmitClaim {
     json_name = "user_address",
     (cosmos_proto.scalar) = "cosmos.AddressString"
   ];
-  string zone = 2 [json_name = "zone"];
-  string src_zone = 3 [json_name = "src_zone"];
-  quicksilver.claimsmanager.v1.ClaimType claim_type = 4 [json_name = "claim_type"];
-  repeated quicksilver.claimsmanager.v1.Proof proofs = 5 [json_name = "proofs"];
+  string zone = 2 [ json_name = "zone" ];
+  string src_zone = 3 [ json_name = "src_zone" ];
+  quicksilver.claimsmanager.v1.ClaimType claim_type = 4
+      [ json_name = "claim_type" ];
+  repeated quicksilver.claimsmanager.v1.Proof proofs = 5
+      [ json_name = "proofs" ];
 }
 
 // MsgSubmitClaimResponse defines the MsgSubmitClaim response type.

@@ -111,7 +111,8 @@ func (m *MsgClaimResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgClaimResponse proto.InternalMessageInfo
 
-// MsgIncentivePoolSpend represents a message to send coins from one account to another.
+// MsgIncentivePoolSpend represents a message to send coins from one account to
+// another.
 type MsgIncentivePoolSpend struct {
 	Authority string                                   `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	ToAddress string                                   `protobuf:"bytes,2,opt,name=to_address,json=toAddress,proto3" json:"to_address,omitempty"`
@@ -151,7 +152,8 @@ func (m *MsgIncentivePoolSpend) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgIncentivePoolSpend proto.InternalMessageInfo
 
-// MsgIncentivePoolSpendResponse defines the MsgIncentivePoolSpend response type.
+// MsgIncentivePoolSpendResponse defines the MsgIncentivePoolSpend response
+// type.
 type MsgIncentivePoolSpendResponse struct {
 }
 

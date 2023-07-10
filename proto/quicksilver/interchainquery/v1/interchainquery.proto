@@ -45,5 +45,5 @@ message DataPoint {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable) = false
   ];
-  bytes value = 4 [(gogoproto.jsontag) = "result,omitempty"];
+  bytes value = 4 [ (gogoproto.jsontag) = "result,omitempty" ];
 }

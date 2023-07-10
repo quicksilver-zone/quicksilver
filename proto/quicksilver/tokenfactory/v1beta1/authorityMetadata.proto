@@ -12,5 +12,5 @@ message DenomAuthorityMetadata {
   option (gogoproto.equal) = true;
 
   // Can be empty for no admin, or a valid quicksilver address
-  string admin = 1 [(gogoproto.moretags) = "yaml:\"admin\""];
+  string admin = 1 [ (gogoproto.moretags) = "yaml:\"admin\"" ];
 }
