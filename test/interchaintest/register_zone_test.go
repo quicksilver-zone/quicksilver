@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/icza/dyno"
-	// istypes "github.com/ingenuity-build/quicksilver/÷x/interchainstaking/types"
+	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -103,24 +103,24 @@ func TestRegisterZone(t *testing.T) {
 		Summary:  "suma",
 	}
 
-	// message := istypes.RegisterZoneProposal{
-	// 	Title:            "register lstest-1 zone",
-	// 	Description:      "register lstest-1 zone with multisend and lsm enabled",
-	// 	ConnectionId:     "connection-0",
-	// 	BaseDenom:        "uatom",
-	// 	LocalDenom:       "uqatom",
-	// 	AccountPrefix:    "cosmos",
-	// 	DepositsEnabled:  true,
-	// 	UnbondingEnabled: true,
-	// 	LiquidityModule:  false,
-	// 	ReturnToSender:   true,
-	// 	Decimals:         6,
-	// }
+	message := istypes.RegisterZoneProposal{
+		Title:            "register lstest-1 zone",
+		Description:      "register lstest-1 zone with multisend and lsm enabled",
+		ConnectionId:     "connection-0",
+		BaseDenom:        "uatom",
+		LocalDenom:       "uqatom",
+		AccountPrefix:    "cosmos",
+		DepositsEnabled:  true,
+		UnbondingEnabled: true,
+		LiquidityModule:  false,
+		ReturnToSender:   true,
+		Decimals:         6,
+	}
 
-	// msg, err := .Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
-	// fmt.Println("Msg: ", string(msg))
-	// require.NoError(t, err)
-	// proposal.Messages = append(proposal.Messages, msg)
+	msg, err := .Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
+	fmt.Println("Msg: ", string(msg))
+	require.NoError(t, err)
+	proposal.Messages = append(proposal.Messages, msg)
 
 	proposalTx, err := quicksilverdChain.SubmitProposal(ctx, quicksilverd1User.KeyName(), proposal)
 	require.NoError(t, err, "error submitting proposal tx")
