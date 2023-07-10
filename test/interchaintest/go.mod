@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/cosmos/ibc-go/v7 v7.2.0
+	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
 	github.com/strangelove-ventures/interchaintest/v7 v7.0.0-20230628163313-cedf87f4624d
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.24.0
@@ -117,7 +118,6 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
-	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ipfs/go-cid v0.2.0 // indirect
@@ -224,7 +224,7 @@ require (
 	modernc.org/sqlite v1.23.1 // indirect
 	modernc.org/strutil v1.1.3 // indirect
 	modernc.org/token v1.0.1 // indirect
-	nhooyr.io/websocket v1.8.6 // indirect
+	nhooyr.io/websocket v1.8.7 // indirect
 	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
