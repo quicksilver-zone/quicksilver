@@ -51,36 +51,11 @@ func (cpd *CrescentPoolProtocolData) GetPool() (*liquiditytypes.Pool, error) {
 	return &poolData, nil
 }
 
-type CrescentPairProtocolData struct {
-	PairId      uint64
-	PairData    json.RawMessage
-	LastUpdated time.Time
-}
-
-func (cpd CrescentPairProtocolData) ValidateBasic() error {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (cpd CrescentPairProtocolData) GenerateKey() []byte {
-	return []byte(fmt.Sprintf("%d", cpd.PairId))
-}
-
-func (cpd CrescentPairProtocolData) GetPair() (*liquiditytypes.Pair, error) {
-	var pairData liquiditytypes.Pair
-	if len(cpd.PairData) > 0 {
-		err := json.Unmarshal(cpd.PairData, &pairData)
-		if err != nil {
-			return nil, fmt.Errorf("1: unable to unmarshal concrete PairData: %w", err)
-		}
-	}
-	return &pairData, nil
-}
-
 type CrescentReserveAddressBalanceProtocolData struct {
 	ReserveAddress string
 	Denom          string
 	Balance        json.RawMessage
+	LastUpdated    time.Time
 }
 
 func (crd CrescentReserveAddressBalanceProtocolData) ValidateBasic() error {
@@ -104,6 +79,7 @@ func (crd CrescentReserveAddressBalanceProtocolData) GetBalance() (math.Int, err
 type CrescentPoolCoinSupplyProtocolData struct {
 	PoolCoinDenom string
 	Supply        json.RawMessage
+	LastUpdated   time.Time
 }
 
 func (cpd CrescentPoolCoinSupplyProtocolData) ValidateBasic() error {

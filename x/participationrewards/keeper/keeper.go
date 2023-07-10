@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+	crescenttypes "github.com/ingenuity-build/quicksilver/crescent-types"
 	umeetypes "github.com/ingenuity-build/quicksilver/umee-types"
 
 	sdkmath "cosmossdk.io/math"
@@ -33,6 +34,7 @@ type UserAllocation struct {
 
 var _ osmosistypes.ParticipationRewardsKeeper = &Keeper{}
 var _ umeetypes.ParticipationRewardsKeeper = &Keeper{}
+var _ crescenttypes.ParticipationRewardsKeeper = &Keeper{}
 
 type Keeper struct {
 	cdc                  codec.BinaryCodec

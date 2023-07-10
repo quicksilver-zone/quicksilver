@@ -44,7 +44,7 @@ func (c CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 		return
 	}
 
-	// store reserve address spendable balance
+	// update reserve address denom balance
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeCrescentReserveAddressBalance), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		ibalance, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentReserveAddressBalance, data.Data)
 		if err != nil {
@@ -62,31 +62,7 @@ func (c CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 			append(lookupKey, []byte(balance.Denom)...),
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"spendablebalances",
-			0,
-		)
-		return false
-	})
-
-	// update pair data
-	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeCrescentPair), func(idx int64, _ []byte, data types.ProtocolData) bool {
-		ipair, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentPair, data.Data)
-		if err != nil {
-			return false
-		}
-		pair, _ := ipair.(*types.CrescentPairProtocolData)
-
-		pairKey := liquiditytypes.GetPairKey(pair.PairId)
-
-		k.IcqKeeper.MakeRequest(
-			ctx,
-			connectionData.ConnectionID,
-			connectionData.ChainID,
-			"store/liquidity/key",
-			pairKey,
-			sdk.NewInt(-1),
-			types.ModuleName,
-			"pair",
+			CrescentReserveBalanceUpdateCallbackID,
 			0,
 		)
 		return false
@@ -110,7 +86,29 @@ func (c CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 			poolKey,
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"crescentpool",
+			CrescentPoolUpdateCallbackID,
+			0,
+		)
+		return false
+	})
+
+	// update poolcoin supply
+	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeCrescentPoolCoinSupply), func(idx int64, _ []byte, data types.ProtocolData) bool {
+		isupply, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentPoolCoinSupply, data.Data)
+		if err != nil {
+			return false
+		}
+		supply, _ := isupply.(*types.CrescentPoolCoinSupplyProtocolData)
+
+		k.IcqKeeper.MakeRequest(
+			ctx,
+			connectionData.ConnectionID,
+			connectionData.ChainID,
+			icstypes.BankStoreKey,
+			append(banktypes.SupplyKey, []byte(supply.PoolCoinDenom)...),
+			sdk.NewInt(-1),
+			types.ModuleName,
+			CrescentPoolCoinSupplyUpdateCallbackID,
 			0,
 		)
 		return false

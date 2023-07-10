@@ -131,6 +131,42 @@ func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (Pro
 		}
 
 		return &upd, nil
+	case ProtocolDataTypeCrescentPool:
+		cpd := CrescentPoolProtocolData{}
+		err := json.Unmarshal(data, &cpd)
+		if err != nil {
+			return nil, fmt.Errorf("unable to unmarshal intermediary CrescentPoolProtocolData: %w", err)
+		}
+		var blank CrescentPoolProtocolData
+		if reflect.DeepEqual(cpd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal CrescentPoolProtocolData from empty JSON object")
+		}
+
+		return &cpd, nil
+	case ProtocolDataTypeCrescentPoolCoinSupply:
+		cpd := CrescentPoolCoinSupplyProtocolData{}
+		err := json.Unmarshal(data, &cpd)
+		if err != nil {
+			return nil, fmt.Errorf("unable to unmarshal intermediary CrescentPoolCoinSupplyProtocolData: %w", err)
+		}
+		var blank CrescentPoolCoinSupplyProtocolData
+		if reflect.DeepEqual(cpd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal CrescentPoolCoinSupplyProtocolData from empty JSON object")
+		}
+
+		return &cpd, nil
+	case ProtocolDataTypeCrescentReserveAddressBalance:
+		cpd := CrescentReserveAddressBalanceProtocolData{}
+		err := json.Unmarshal(data, &cpd)
+		if err != nil {
+			return nil, fmt.Errorf("unable to unmarshal intermediary CrescentReserveAddressBalanceProtocolData: %w", err)
+		}
+		var blank CrescentReserveAddressBalanceProtocolData
+		if reflect.DeepEqual(cpd, blank) {
+			return nil, fmt.Errorf("unable to unmarshal CrescentReserveAddressBalanceProtocolData from empty JSON object")
+		}
+
+		return &cpd, nil
 	default:
 		return nil, ErrUnknownProtocolDataType
 	}
@@ -185,7 +221,6 @@ var (
 	_ ProtocolDataI = &UmeeParamsProtocolData{}
 	_ ProtocolDataI = &CrescentParamsProtocolData{}
 	_ ProtocolDataI = &CrescentPoolProtocolData{}
-	_ ProtocolDataI = &CrescentPairProtocolData{}
 	_ ProtocolDataI = &CrescentReserveAddressBalanceProtocolData{}
 	_ ProtocolDataI = &CrescentPoolCoinSupplyProtocolData{}
 )

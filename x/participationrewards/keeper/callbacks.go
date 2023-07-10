@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	liquiditytypes "github.com/ingenuity-build/quicksilver/crescent-types/liquidity/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,6 +27,9 @@ const (
 	UmeeInterestScalarUpdateCallbackID        = "umeeinterestscalarupdatecallback"
 	UmeeUTokenSupplyUpdateCallbackID          = "umeeutokensupplyupdatecallback"
 	UmeeLeverageModuleBalanceUpdateCallbackID = "umeeleveragemodulebalanceupdatecallback"
+	CrescentPoolUpdateCallbackID              = "crescentpoolupdate"
+	CrescentReserveBalanceUpdateCallbackID    = "reservebalanceupdate"
+	CrescentPoolCoinSupplyUpdateCallbackID    = "poolcoinsupplyupdate"
 )
 
 // Callback wrapper struct for interchainstaking keeper.
@@ -66,7 +70,10 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback(UmeeTotalBorrowsUpdateCallbackID, Callback(UmeeTotalBorrowsUpdateCallback)).
 		AddCallback(UmeeInterestScalarUpdateCallbackID, Callback(UmeeInterestScalarUpdateCallback)).
 		AddCallback(UmeeUTokenSupplyUpdateCallbackID, Callback(UmeeUTokenSupplyUpdateCallback)).
-		AddCallback(UmeeLeverageModuleBalanceUpdateCallbackID, Callback(UmeeLeverageModuleBalanceUpdateCallback))
+		AddCallback(UmeeLeverageModuleBalanceUpdateCallbackID, Callback(UmeeLeverageModuleBalanceUpdateCallback)).
+		AddCallback(CrescentPoolUpdateCallbackID, Callback(CrescentPoolUpdateCallback)).
+		AddCallback(CrescentReserveBalanceUpdateCallbackID, Callback(CrescentReserveBalanceUpdateCallback)).
+		AddCallback(CrescentPoolCoinSupplyUpdateCallbackID, Callback(CrescentPoolCoinSupplyUpdateCallback))
 
 	return a.(Callbacks)
 }
@@ -405,5 +412,125 @@ func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtyp
 		return err
 	}
 	k.SetProtocolData(ctx, connectionData.GenerateKey(), &data)
+	return nil
+}
+
+func CrescentPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
+	var pd liquiditytypes.Pool
+	if err := k.cdc.Unmarshal(response, &pd); err != nil {
+		return err
+	}
+
+	if query.Request[0] != liquiditytypes.PoolKeyPrefix[0] {
+		return errors.New("crescent pool query request has unexpected prefix")
+	}
+
+	poolID := sdk.BigEndianToUint64(query.Request[1:])
+
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentPool, fmt.Sprintf("%d", poolID))
+	if !ok {
+		return fmt.Errorf("unable to find protocol data for crescent-types pool/%d", poolID)
+	}
+	ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentPool, data.Data)
+	if err != nil {
+		return err
+	}
+	pool, ok := ipool.(*types.CrescentPoolProtocolData)
+	if !ok {
+		return fmt.Errorf("unable to unmarshal protocol data for crescent-types pool/%d", poolID)
+	}
+	pool.PoolData, err = json.Marshal(pd)
+	if err != nil {
+		return err
+	}
+	pool.LastUpdated = ctx.BlockTime()
+	data.Data, err = json.Marshal(pool)
+	if err != nil {
+		return err
+	}
+	k.SetProtocolData(ctx, pool.GenerateKey(), &data)
+
+	return nil
+}
+
+func CrescentPoolCoinSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
+	supplyAmount := sdk.ZeroInt()
+	if err := supplyAmount.Unmarshal(response); err != nil {
+		return err
+	}
+
+	if query.Request[0] != banktypes.SupplyKey[0] {
+		return errors.New("query request has unexpected prefix")
+	}
+
+	denom := string(query.Request[1:])
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentPoolCoinSupply, denom)
+	if !ok {
+		return fmt.Errorf("unable to find protocol data for crescent-types poolcoin supply/%s", denom)
+	}
+	isupply, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentPoolCoinSupply, data.Data)
+	if err != nil {
+		return err
+	}
+	supply, ok := isupply.(*types.CrescentPoolCoinSupplyProtocolData)
+	if !ok {
+		return fmt.Errorf("unable to unmarshal protocol data for crescent-types poolcoin supply/%s", denom)
+	}
+	supply.Supply, err = json.Marshal(supplyAmount)
+	if err != nil {
+		return err
+	}
+	supply.LastUpdated = ctx.BlockTime()
+	data.Data, err = json.Marshal(supply)
+	if err != nil {
+		return err
+	}
+	k.SetProtocolData(ctx, supply.GenerateKey(), &data)
+
+	return nil
+}
+
+func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
+	if len(query.Request) < 2 {
+		k.Logger(ctx).Error("unable to unmarshal balance request, request length is too short")
+		return errors.New("account balance icq request must always have a length of at least 2 bytes")
+	}
+
+	balancesStore := query.Request[1:]
+	address, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	if err != nil {
+		return err
+	}
+
+	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
+	if err != nil {
+		return err
+	}
+
+	balanceAmount := balanceCoin.Amount
+
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, address.String()+denom)
+	if !ok {
+		return fmt.Errorf("unable to find protocol data for crescent-types reserve address coins/%s, %s", address.String(), denom)
+	}
+	ibalance, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentReserveAddressBalance, data.Data)
+	if err != nil {
+		return err
+	}
+	balance, ok := ibalance.(*types.CrescentReserveAddressBalanceProtocolData)
+	if !ok {
+		return fmt.Errorf("unable to unmarshal protocol data for reserve address coins/%s, %s", address.String(), denom)
+	}
+	balance.Balance, err = json.Marshal(balanceAmount)
+	if err != nil {
+		return err
+	}
+	balance.LastUpdated = ctx.BlockTime()
+	data.Data, err = json.Marshal(balance)
+	if err != nil {
+		return err
+	}
+	k.SetProtocolData(ctx, balance.GenerateKey(), &data)
+
 	return nil
 }

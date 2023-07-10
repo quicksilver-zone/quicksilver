@@ -68,8 +68,7 @@ enum ProtocolDataType {
   ProtocolDataTypeUmeeTotalBorrows = 10;
   ProtocolDataTypeUmeeUTokenSupply = 11;
   ProtocolDataTypeUmeeLeverageModuleBalance = 12;
-  ProtocolDataTypeCrescentPair = 13;
-  ProtocolDataTypeCrescentParams = 14;
-  ProtocolDataTypeCrescentReserveAddressBalance = 15;
-  ProtocolDataTypeCrescentPoolCoinSupply = 16;
+  ProtocolDataTypeCrescentParams = 13;
+  ProtocolDataTypeCrescentReserveAddressBalance = 14;
+  ProtocolDataTypeCrescentPoolCoinSupply = 15;
 }
