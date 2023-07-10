@@ -21,7 +21,7 @@ func GenerateValidatorsDeterministic(n int) (out []string) {
 }
 
 func TestDetermineAllocationsForRebalancing(t *testing.T) {
-	vals := GenerateDeterministicValidators(5)
+	vals := GenerateValidatorsDeterministic(5)
 
 	type testcase struct {
 		name        string
