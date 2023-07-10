@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func GenerateDeterministicValidators(n int) (out []string) {
+func GenerateValidatorsDeterministic(n int) (out []string) {
 	out = make([]string, 0, n)
 	for i := 0; i < n; i++ {
 		out = append(out, addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper"))
