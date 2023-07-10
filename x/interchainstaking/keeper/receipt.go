@@ -252,18 +252,6 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 		return err
 	}
 
-	/*
-		channelID, found := k.ICAControllerKeeper.GetActiveChannelID(ctx, connectionID, portID)
-		if !found {
-			return sdkioerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s in submittx", portID)
-		}
-
-		_, found = k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
-		if !found {
-			return sdkioerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
-		}
-	*/
-
 	chunkSize := int(messagesPerTx)
 	if chunkSize < 1 {
 		chunkSize = ICAMsgChunkSize

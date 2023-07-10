@@ -42,6 +42,8 @@ func (im IBCModule) OnChanOpenInit(
 	_ channeltypes.Counterparty,
 	_ string,
 ) (string, error) {
+	// TODO: verify that channel keeper has claimed cap
+
 	// ica capability already claimed by underlying submodule
 	return "", nil
 }
