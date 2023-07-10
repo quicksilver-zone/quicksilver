@@ -238,9 +238,9 @@ func RegisterMsgHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 }
 
 var (
-	pattern_Msg_SubmitClaim_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "participationrewards", "claim"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Msg_SubmitClaim_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "participationrewards", "claim"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Msg_GovRemoveProtocolData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "participationrewards", "remove_protocoldata"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Msg_GovRemoveProtocolData_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 2, 4}, []string{"quicksilver", "tx", "v1", "participationrewards", "remove_protocoldata"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

@@ -5,13 +5,13 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibcclienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	"github.com/tendermint/tendermint/libs/log"
+	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
@@ -57,7 +57,7 @@ func (k Keeper) StoreSelfConsensusState(ctx sdk.Context, key string) error {
 	} else {
 		// ONLY FOR TESTING - ibctesting module chains donot follow standard [chainname]-[num] structure
 		height = ibcclienttypes.Height{
-			RevisionNumber: 0, // revision number for testchain1 is 0 (because parseChainId splits on '-')
+			RevisionNumber: 0, // revision number for testchain1-1 is 0 (because parseChainId splits on '-')
 			RevisionHeight: uint64(ctx.BlockHeight() - 1),
 		}
 	}

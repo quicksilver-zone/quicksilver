@@ -9,6 +9,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/gogoproto/proto"
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -59,9 +60,9 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	}
 	// add unallocated dust.
 	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding)
-	sdkMsgs := make([]sdk.Msg, 0)
+	sdkMsgs := make([]proto.Message, 0)
 	for _, msg := range msgs {
-		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
+		sdkMsgs = append(sdkMsgs, proto.Message(msg))
 	}
 	k.AddWithdrawalRecord(ctx, zone.ID(), sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0))
 
@@ -233,7 +234,7 @@ WITHDRAWAL:
 		return nil
 	}
 
-	var msgs []sdk.Msg
+	var msgs []proto.Message
 	for _, valoper := range utils.Keys(valOutCoinsMap) {
 		if !valOutCoinsMap[valoper].Amount.IsZero() {
 			msgs = append(msgs, &stakingtypes.MsgUndelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: valoper, Amount: valOutCoinsMap[valoper]})

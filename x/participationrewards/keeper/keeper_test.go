@@ -7,16 +7,14 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-
-	testsuite "github.com/stretchr/testify/suite"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
-	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	ibctesting "github.com/cosmos/ibc-go/v7/testing"
+	testsuite "github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
@@ -211,16 +209,16 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	// self zone
 	performanceAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
-	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "testchain1.performance")
+	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "testchain1-1.performance")
 	suite.Require().NoError(err)
 	withdrawalAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
-	withdrawalAccountOsmo, err := icstypes.NewICAAccount(withdrawalAddressOsmo, "testchain1.withdrawal")
+	withdrawalAccountOsmo, err := icstypes.NewICAAccount(withdrawalAddressOsmo, "testchain1-1.withdrawal")
 	suite.Require().NoError(err)
 	performanceAccountOsmo.WithdrawalAddress = withdrawalAddressOsmo
 
 	zoneSelf := icstypes.Zone{
 		ConnectionId:       "connection-77004",
-		ChainId:            "testchain1",
+		ChainId:            "testchain1-1",
 		AccountPrefix:      "osmo",
 		LocalDenom:         "uqosmo",
 		BaseDenom:          "uosmo",
@@ -348,38 +346,37 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	quicksilver.InterchainstakingKeeper.SetConnectionForPort(suite.chainA.GetContext(), connectionID, portID)
 
 	channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(suite.chainA.GetContext())
-	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.PortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: portID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
-	key, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+
+	chanCapName := host.ChannelCapabilityPath(portID, channelID)
+	capability, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		suite.chainA.GetContext(),
-		host.ChannelCapabilityPath(portID, channelID),
+		chanCapName,
 	)
 	if err != nil {
 		return err
 	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.ChannelCapabilityPath(portID, channelID),
-	)
+	err = quicksilver.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), capability, chanCapName)
+	if err != nil {
+		return err
+	}
+	err = quicksilver.ScopedIBCKeeper.ClaimCapability(suite.chainA.GetContext(), capability, chanCapName)
 	if err != nil {
 		return err
 	}
 
-	key, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+	portPathName := host.PortPath(portID)
+	capability, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
 		suite.chainA.GetContext(),
-		host.PortPath(portID),
+		portPathName,
 	)
 	if err != nil {
 		return err
 	}
-	err = quicksilver.GetScopedIBCKeeper().ClaimCapability(
-		suite.chainA.GetContext(),
-		key,
-		host.PortPath(portID),
-	)
+	err = quicksilver.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), capability, portPathName)
 	if err != nil {
 		return err
 	}
@@ -476,7 +473,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	suite.addProtocolData(types.ProtocolDataTypeLiquidToken,
 		[]byte(fmt.Sprintf(
 			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
-			"testchain1",
+			"testchain1-1",
 			"cosmoshub-4",
 			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 			"uqatom",

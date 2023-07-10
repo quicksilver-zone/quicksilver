@@ -7,11 +7,11 @@ import (
 	"testing"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
 
 	"github.com/ingenuity-build/quicksilver/app"
@@ -30,7 +30,6 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		map[int64]bool{},
 		t.TempDir(),
 		5,
-		app.MakeEncodingConfig(),
 		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
@@ -52,10 +51,13 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 
 	// 2. Now set a zone and ensure it is retrieved.
 	zone = types.Zone{
-		ConnectionId: "conn-test",
-		ChainId:      chainID,
-		LocalDenom:   "uqck",
-		BaseDenom:    "qck",
+		ConnectionId:       "conn-test",
+		ChainId:            chainID,
+		LocalDenom:         "uqck",
+		BaseDenom:          "qck",
+		RedemptionRate:     sdk.ZeroDec(),
+		LastRedemptionRate: sdk.ZeroDec(),
+		Tvl:                sdk.ZeroDec(),
 	}
 	kpr.SetZone(ctx, &zone)
 	gotZone, ok := kpr.GetZone(ctx, chainID)
@@ -88,7 +90,10 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 					sdk.NewCoin("uqck", sdk.NewInt(700000)),
 				),
 			},
-			Is_118: true,
+			RedemptionRate:     sdk.ZeroDec(),
+			LastRedemptionRate: sdk.ZeroDec(),
+			Tvl:                sdk.ZeroDec(),
+			Is_118:             true,
 		}
 		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainID())
 		kpr.SetZone(ctx, &zone)

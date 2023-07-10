@@ -6,12 +6,14 @@ import (
 	"strconv"
 	"strings"
 
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
-	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
-	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -153,9 +155,18 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 }
 
 func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOwner string) error {
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, connectionID, portOwner, ""); err != nil { // todo: add version
+	msg := &icacontrollertypes.MsgRegisterInterchainAccount{
+		Owner:        portOwner,
+		ConnectionId: connectionID,
+		Version:      "",
+	}
+
+	handler := k.msgRouter.Handler(msg)
+	_, err := handler(ctx, msg)
+	if err != nil {
 		return err
 	}
+
 	portID, err := icatypes.NewControllerPortID(portOwner)
 	if err != nil {
 		return err

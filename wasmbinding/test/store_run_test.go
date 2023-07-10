@@ -1,6 +1,7 @@
 package wasmbinding
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"os"
 	"testing"
@@ -39,9 +40,13 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Qui
 	wasmCode, err := os.ReadFile("../testdata/hackatom.wasm")
 	require.NoError(t, err)
 
-	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
+	checksum, err := hex.DecodeString("5686AE32B4CC3811109CD4B37A80B8A99B9FF35323AA4FA0485174A8DF1E5A77")
+	require.NoError(t, err)
+
+	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) { //nolint:staticcheck // suppress deprecated type lint
 		p.RunAs = addr.String()
 		p.WASMByteCode = wasmCode
+		p.CodeHash = checksum
 	})
 
 	govAddress := govKeeper.GetGovernanceAccount(ctx).GetAddress().String()
@@ -49,7 +54,7 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Qui
 	require.NoError(t, err)
 
 	// when stored
-	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "testing123")
+	_, err = govKeeper.SubmitProposal(ctx, []sdk.Msg{msgContent}, "", "title", "description", sdk.MustAccAddressFromBech32(govAddress))
 	require.NoError(t, err)
 
 	// and proposal execute

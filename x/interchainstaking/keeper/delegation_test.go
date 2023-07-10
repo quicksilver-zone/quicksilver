@@ -5,10 +5,10 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -611,7 +611,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			// refetch zone after FlushOutstandingDelegations setZone().
 			ctx = suite.chainA.GetContext()
 			if test.mockAck {
-				var msgs []sdk.Msg
+				var msgs []proto.Message
 				allocations, err := quicksilver.InterchainstakingKeeper.DeterminePlanForDelegation(ctx, &zone, test.expectedDelegation)
 				suite.Require().NoError(err)
 				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(&zone, allocations)...)
