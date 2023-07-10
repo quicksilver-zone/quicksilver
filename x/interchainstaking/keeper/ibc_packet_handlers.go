@@ -318,7 +318,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 	channel, cfound := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, sMsg.SourcePort, sMsg.SourceChannel)
 	if !cfound {
 		k.Logger(ctx).Error("channel not found for the packet", "port", sMsg.SourcePort, "channel", sMsg.SourceChannel)
-		return errors.New("channel not fdound for the packet")
+		return errors.New("channel not found for the packet")
 	}
 
 	denomTrace := utils.DeriveIbcDenomTrace(channel.Counterparty.PortId, channel.Counterparty.ChannelId, receivedCoin.Denom)
