@@ -119,7 +119,7 @@ func (vi ValidatorIntents) Normalize() ValidatorIntents {
 
 func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations ValidatorIntents, amount sdk.Coins) map[string]sdkmath.Int {
 	input := amount[0].Amount
-	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
+	deltas := CalculateAllocationDeltas(currentAllocations, currentSum, targetAllocations)
 	minValue := deltas.MinDeltas()
 	sum := sdk.ZeroInt()
 
