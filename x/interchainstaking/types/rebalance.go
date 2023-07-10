@@ -102,7 +102,7 @@ func CalculateDeltasNew(currentAllocations map[string]sdkmath.Int, locked map[st
 	targets.Sort()
 	sources.Sort()
 
-	return
+	return targets, sources
 }
 
 type Delta struct {
@@ -113,15 +113,14 @@ type Delta struct {
 type Deltas []*Delta
 
 func (d Deltas) Sort() {
-
 	// filter zeros
-	new := make(Deltas, 0)
+	newDeltas := make(Deltas, 0)
 	for _, delta := range d {
 		if !delta.Amount.IsZero() {
-			new = append(new, delta)
+			newDeltas = append(newDeltas, delta)
 		}
 	}
-	d = new
+	d = newDeltas
 
 	// sort keys by relative value of delta
 	sort.SliceStable(d, func(i, j int) bool {
@@ -162,7 +161,8 @@ func (t RebalanceTargets) Sort() {
 	})
 }
 
-// DetermineAllocationsForRebalancing takes
+// DetermineAllocationsForRebalancing takes maps of current and locked delegations, and based upon the target allocations,
+// attempts to satisfy the target allocations in the fewest number of transformations. It returns a slice of RebalanceTargets.
 func DetermineAllocationsForRebalancing(
 	currentAllocations map[string]sdkmath.Int,
 	currentLocked map[string]bool,

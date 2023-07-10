@@ -373,17 +373,16 @@ func TestDetermineAllocationsForRebalancing(t *testing.T) {
 
 	for _, tt := range tcs {
 		t.Run(tt.name, func(t *testing.T) {
-
-			currentSum, lockedSum := func(in map[string]math.Int, locked map[string]bool) (sum, lockedsum math.Int) {
+			currentSum, lockedSum := func(in map[string]math.Int, locked map[string]bool) (sum, lockedSum math.Int) {
 				sum = math.ZeroInt()
-				lockedsum = math.ZeroInt()
+				lockedSum = math.ZeroInt()
 				for k, v := range in {
 					sum = sum.Add(v)
 					if locked[k] {
-						lockedsum = lockedsum.Add(v)
+						lockedSum = lockedSum.Add(v)
 					}
 				}
-				return
+				return sum, lockedSum
 			}(tt.allocations, tt.locked)
 
 			actual := types.DetermineAllocationsForRebalancing(

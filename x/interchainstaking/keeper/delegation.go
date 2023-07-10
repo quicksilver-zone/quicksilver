@@ -264,7 +264,7 @@ func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (out map[st
 		return false
 	})
 
-	return
+	return out, sum, locked, lockedSum
 }
 
 func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, validator string) error {
