@@ -315,7 +315,13 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 
 	zone, found := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
 
-	denomTrace := utils.DeriveIbcDenomTrace(sMsg.SourcePort, sMsg.SourceChannel, receivedCoin.Denom)
+	channel, cfound := k.IBCKeeper.ChannelKeeper.GetChannel(ctx, sMsg.SourcePort, sMsg.SourceChannel)
+	if !cfound {
+		k.Logger(ctx).Error("channel not found for the packet", "port", sMsg.SourcePort, "channel", sMsg.SourceChannel)
+		return errors.New("channel not found for the packet")
+	}
+
+	denomTrace := utils.DeriveIbcDenomTrace(channel.Counterparty.PortId, channel.Counterparty.ChannelId, receivedCoin.Denom)
 	receivedCoin.Denom = denomTrace.IBCDenom()
 
 	if found && denomTrace.BaseDenom != zone.BaseDenom {
