@@ -13,6 +13,7 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/app/keepers"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -30,6 +31,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010404beta0UpgradeName, CreateUpgradeHandler: V010404beta0UpgradeHandler},
 		{UpgradeName: V010404beta1UpgradeName, CreateUpgradeHandler: NoOpHandler},
 		{UpgradeName: V010404beta5UpgradeName, CreateUpgradeHandler: V010404beta5UpgradeHandler},
+		{UpgradeName: V010404beta7UpgradeName, CreateUpgradeHandler: V010404beta7UpgradeHandler},
 	}
 }
 
@@ -332,6 +334,47 @@ func V010404beta5UpgradeHandler(
 			}
 			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &wr, icstypes.WithdrawStatusUnbond)
 		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta7UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		const (
+			thetaUnbondingPeriod = int64(172800)
+			uniUnbondingPeriod   = int64(2419200)
+			osmoUnbondingPeriod  = int64(86400)
+			regenUnbondingPeriod = int64(1814400)
+			epochDurations       = int64(10800)
+		)
+
+		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation icstypes.RedelegationRecord) (stop bool) {
+			var UnbondingPeriod int64
+			switch redelegation.ChainId {
+			case "theta-testnet-001":
+				UnbondingPeriod = thetaUnbondingPeriod
+			case "uni-6":
+				UnbondingPeriod = uniUnbondingPeriod
+			case "osmo-test-5":
+				UnbondingPeriod = osmoUnbondingPeriod
+			case "regen-redwood-1":
+				UnbondingPeriod = regenUnbondingPeriod
+			}
+
+			epochInfo := appKeepers.EpochsKeeper.GetEpochInfo(ctx, epochtypes.EpochIdentifierEpoch)
+
+			if UnbondingPeriod < (epochInfo.CurrentEpoch-redelegation.EpochNumber)*epochDurations {
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("garbage collecting completed redelegations", "key", key, "completion", redelegation.CompletionTime)
+				appKeepers.InterchainstakingKeeper.DeleteRedelegationRecordByKey(ctx, append(icstypes.KeyPrefixRedelegationRecord, key...))
+			}
+
+			return false
+		})
 
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
