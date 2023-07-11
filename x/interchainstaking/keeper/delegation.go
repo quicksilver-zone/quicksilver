@@ -202,7 +202,7 @@ func (k *Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.
 }
 
 func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]sdkmath.Int, error) {
-	currentAllocations, currentSum, _ := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone)
 	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
 	if err != nil {
 		return nil, err
@@ -248,25 +248,23 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "", zone.MessagesPerTx)
 }
 
-func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool) {
+func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool, lockedSum sdkmath.Int) {
 	out = make(map[string]sdkmath.Int)
 	locked = make(map[string]bool)
 	sum = sdk.ZeroInt()
+	lockedSum = sdk.ZeroInt()
 
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
-		existing, found := out[delegation.ValidatorAddress]
-		if !found {
-			out[delegation.ValidatorAddress] = delegation.Amount.Amount
-			locked[delegation.ValidatorAddress] = delegation.RedelegationEnd != 0 && delegation.RedelegationEnd >= ctx.BlockTime().Unix()
-		} else {
-			out[delegation.ValidatorAddress] = existing.Add(delegation.Amount.Amount)
-			locked[delegation.ValidatorAddress] = locked[delegation.ValidatorAddress] || (delegation.RedelegationEnd != 0 && delegation.RedelegationEnd >= ctx.BlockTime().Unix())
+		out[delegation.ValidatorAddress] = delegation.Amount.Amount
+		if delegation.RedelegationEnd >= ctx.BlockTime().Unix() {
+			locked[delegation.ValidatorAddress] = true
+			lockedSum = lockedSum.Add(delegation.Amount.Amount)
 		}
 		sum = sum.Add(delegation.Amount.Amount)
 		return false
 	})
 
-	return out, sum, locked
+	return out, sum, locked, lockedSum
 }
 
 func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, validator string) error {

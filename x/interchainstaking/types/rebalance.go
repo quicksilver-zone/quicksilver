@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"math"
 	"sort"
 
@@ -57,142 +58,200 @@ func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkma
 	return deltas
 }
 
+// CalculateAllocationDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
+// Returns a slice of deltas for each of target allocations (underallocated) and source allocations (overallocated).
+func CalculateAllocationDeltas(
+	currentAllocations map[string]sdkmath.Int,
+	locked map[string]bool,
+	currentSum sdkmath.Int,
+	targetAllocations ValidatorIntents,
+) (targets, sources AllocationDeltas) {
+	targets = make(AllocationDeltas, 0)
+	sources = make(AllocationDeltas, 0)
+
+	// reduce ValidatorIntents to slice of Valoper addresses.
+	targetValopers := func(in ValidatorIntents) []string {
+		out := make([]string, 0, len(in))
+		for _, i := range in {
+			out = append(out, i.ValoperAddress)
+		}
+		return out
+	}(targetAllocations)
+
+	// create a slide of unique valopers across current and target allocations.
+	keySet := utils.Unique(append(targetValopers, utils.Keys(currentAllocations)...))
+	sort.Strings(keySet)
+
+	// for target allocations, raise the intent weight by the total delegated value to get target amount.
+	for _, valoper := range keySet {
+		current, ok := currentAllocations[valoper]
+		if !ok {
+			current = sdk.ZeroInt()
+		}
+
+		target, ok := targetAllocations.GetForValoper(valoper)
+		if !ok {
+			target = &ValidatorIntent{ValoperAddress: valoper, Weight: sdk.ZeroDec()}
+		}
+		targetAmount := target.Weight.MulInt(currentSum).TruncateInt()
+
+		// diff between target and current allocations
+		// positive == below target (target), negative == above target (source)
+		delta := targetAmount.Sub(current)
+
+		if delta.IsPositive() {
+			targets = append(targets, &AllocationDelta{Amount: delta, ValoperAddress: valoper})
+		} else {
+			if _, found := locked[valoper]; !found {
+				// only append to sources if the delegation is not locked - i.e. it doesn't have an incoming redelegation.
+				sources = append(sources, &AllocationDelta{Amount: delta.Abs(), ValoperAddress: valoper})
+			}
+		}
+	}
+
+	// sort for determinism.
+	targets.Sort()
+	sources.Sort()
+
+	return targets, sources
+}
+
+type AllocationDelta struct {
+	ValoperAddress string
+	Amount         sdkmath.Int
+}
+
+type AllocationDeltas []*AllocationDelta
+
+func (d AllocationDeltas) Sort() {
+	// filter zeros
+	newAllocationDeltas := make(AllocationDeltas, 0)
+	for _, delta := range d {
+		if !delta.Amount.IsZero() {
+			newAllocationDeltas = append(newAllocationDeltas, delta)
+		}
+	}
+	d = newAllocationDeltas
+
+	// sort keys by relative value of delta
+	sort.SliceStable(d, func(i, j int) bool {
+		// < sorts alphabetically.
+		return d[i].ValoperAddress < d[j].ValoperAddress
+	})
+
+	// sort keys by relative value of delta
+	sort.SliceStable(d, func(i, j int) bool {
+		return d[i].Amount.GT(d[j].Amount)
+	})
+}
+
 type RebalanceTarget struct {
 	Amount sdkmath.Int
 	Source string
 	Target string
 }
 
+type RebalanceTargets []*RebalanceTarget
+
+// Sort RebalanceTargets deterministically.
+func (t RebalanceTargets) Sort() {
+	// sort keys by relative value of delta
+	sort.SliceStable(t, func(i, j int) bool {
+		// < sorts alphabetically.
+		return t[i].Source < t[j].Source
+	})
+
+	// sort keys by relative value of delta
+	sort.SliceStable(t, func(i, j int) bool {
+		// < sorts alphabetically.
+		return t[i].Target < t[j].Target
+	})
+
+	// sort keys by relative value of delta
+	sort.SliceStable(t, func(i, j int) bool {
+		return t[i].Amount.LT(t[j].Amount)
+	})
+}
+
+// DetermineAllocationsForRebalancing takes maps of current and locked delegations, and based upon the target allocations,
+// attempts to satisfy the target allocations in the fewest number of transformations. It returns a slice of RebalanceTargets.
 func DetermineAllocationsForRebalancing(
 	currentAllocations map[string]sdkmath.Int,
 	currentLocked map[string]bool,
 	currentSum sdkmath.Int,
+	lockedSum sdkmath.Int,
 	targetAllocations ValidatorIntents,
-	existingRedelegations []RedelegationRecord,
 	logger log.Logger,
-) []RebalanceTarget {
-	out := make([]RebalanceTarget, 0)
-	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
+) RebalanceTargets {
+	out := make(RebalanceTargets, 0)
+	targets, sources := CalculateAllocationDeltas(currentAllocations, currentLocked, currentSum, targetAllocations)
 
-	wantToRebalance := sdk.ZeroInt()
-	canRebalanceFrom := sdk.ZeroInt()
+	// rebalanceBudget = (total_delegations - locked)/2 == 50% of (total_delegations - locked)
+	// TODO: make this 2 (max_redelegation_factor) a param.
+	rebalanceBudget := currentSum.Sub(lockedSum).Quo(sdk.NewInt(2))
 
-	totalLocked := int64(0)
-	lockedPerValidator := map[string]int64{}
-	for _, redelegation := range existingRedelegations {
-		totalLocked += redelegation.Amount
-		thisLocked, found := lockedPerValidator[redelegation.Destination]
-		if !found {
-			thisLocked = 0
-		}
-		lockedPerValidator[redelegation.Destination] = thisLocked + redelegation.Amount
-	}
-	for _, valoper := range utils.Keys(currentAllocations) {
-		// if validator already has a redelegation _to_ it, we can no longer redelegate _from_ it (transitive redelegations)
-		// remove _locked_ amount from lpv and total locked for purposes of rebalancing.
-		if currentLocked[valoper] {
-			thisLocked, found := lockedPerValidator[valoper]
-			if !found {
-				thisLocked = 0
-			}
-			totalLocked = totalLocked - thisLocked + currentAllocations[valoper].Int64()
-			lockedPerValidator[valoper] = currentAllocations[valoper].Int64()
-		}
-	}
-
-	// TODO: make these params
-	maxCanRebalanceTotal := currentSum.Sub(sdkmath.NewInt(totalLocked)).Quo(sdk.NewInt(2))
-	maxCanRebalance := sdkmath.MinInt(maxCanRebalanceTotal, currentSum.Quo(sdk.NewInt(7)))
 	if logger != nil {
-		logger.Debug("Rebalancing", "totalLocked", totalLocked, "lockedPerValidator", lockedPerValidator, "canRebalanceTotal", maxCanRebalanceTotal, "canRebalanceEpoch", maxCanRebalance)
+		logger.Debug("Rebalancing", "total", currentSum, "totalLocked", lockedSum, "rebalanceBudget", rebalanceBudget)
 	}
 
-	// deltas are sorted in CalculateDeltas; don't re-sort.
-	for _, delta := range deltas {
-		switch {
-		case delta.Weight.IsZero():
-			// do nothing
-		case delta.Weight.IsPositive():
-			// if delta > current value - locked value, truncate, as we cannot rebalance locked tokens.
-			wantToRebalance = wantToRebalance.Add(delta.Weight.TruncateInt())
-		case delta.Weight.IsNegative():
-			if delta.Weight.Abs().GT(sdk.NewDecFromInt(currentAllocations[delta.ValoperAddress].Sub(sdkmath.NewInt(lockedPerValidator[delta.ValoperAddress])))) {
-				delta.Weight = sdk.NewDecFromInt(currentAllocations[delta.ValoperAddress].Sub(sdkmath.NewInt(lockedPerValidator[delta.ValoperAddress]))).Neg()
-				if logger != nil {
-					logger.Debug("Truncated delta due to locked tokens", "valoper", delta.ValoperAddress, "delta", delta.Weight.Abs())
+TARGET:
+	// targets are validators with a delegation deficit, sorted in descending order.
+	// that is, those at the top should be satisfied first to maximise progress toward goal.
+	for _, target := range targets {
+		// amount is amount we should try to redelegate toward target. This may be constrained by the remaining redelegateBudget.
+		// if it is zero (i.e. we hit the redelegation budget) break out of the loop.
+		amount := sdkmath.MinInt(target.Amount, rebalanceBudget)
+		if amount.IsZero() {
+			break
+		}
+		sources.Sort()
+		// sources are validators with available balance to redelegate, sorted in desc order.
+		for _, source := range sources {
+			switch {
+			case source.Amount.IsZero():
+				// if source is zero, skip.
+				continue
+			case source.Amount.GTE(amount):
+				// if source >= amount, fully satisfy target.
+				out = append(out, &RebalanceTarget{Amount: amount, Target: target.ValoperAddress, Source: source.ValoperAddress})
+				source.Amount = source.Amount.Sub(amount)
+				target.Amount = target.Amount.Sub(amount)
+				rebalanceBudget = rebalanceBudget.Sub(amount)
+				continue TARGET
+			case source.Amount.LT(amount):
+				// if source < amount, partially satisfy amount.
+				out = append(out, &RebalanceTarget{Amount: source.Amount, Target: target.ValoperAddress, Source: source.ValoperAddress})
+				amount = amount.Sub(source.Amount)
+				target.Amount = target.Amount.Sub(source.Amount)
+				rebalanceBudget = rebalanceBudget.Sub(source.Amount)
+				source.Amount = source.Amount.Sub(source.Amount)
+				if amount.IsZero() || rebalanceBudget.IsZero() {
+					// if the amount is fully satisfied or the rebalanceBudget is zero, skip to next target.
+					continue TARGET
 				}
+				// otherwise, try next source.
 			}
-			canRebalanceFrom = canRebalanceFrom.Add(delta.Weight.Abs().TruncateInt())
 		}
-	}
-
-	toRebalance := sdk.MinInt(sdk.MinInt(wantToRebalance, canRebalanceFrom), maxCanRebalance)
-
-	if toRebalance.Equal(sdkmath.ZeroInt()) {
+		// we only get here if we are unable to satisfy targets due to rebalanceBudget depletion.
 		if logger != nil {
-			logger.Debug("No rebalancing this epoch")
+			logger.Info("unable to satisfy targets with available sources.")
 		}
-		return []RebalanceTarget{}
-	}
-	if logger != nil {
-		logger.Debug("Will rebalance this epoch", "amount", toRebalance)
 	}
 
-	tgtIdx := 0
-	srcIdx := len(deltas) - 1
-	for i := 0; toRebalance.GT(sdk.ZeroInt()); {
-		i++
-		if i > 20 {
-			break
-		}
-		src := deltas[srcIdx]
-		tgt := deltas[tgtIdx]
-		if src.ValoperAddress == tgt.ValoperAddress {
-			break
-		}
-		var amount sdkmath.Int
-		if src.Weight.Abs().TruncateInt().IsZero() { //nolint:gocritic
-			srcIdx--
-			continue
-		} else if src.Weight.Abs().TruncateInt().GT(toRebalance) { // amount == rebalance
-			amount = toRebalance
-		} else {
-			amount = src.Weight.Abs().TruncateInt()
-		}
-
-		if tgt.Weight.Abs().TruncateInt().IsZero() {
-			tgtIdx++
-			continue
-		} else if tgt.Weight.Abs().TruncateInt().LTE(toRebalance) {
-			amount = sdk.MinInt(amount, tgt.Weight.Abs().TruncateInt())
-		}
-
-		out = append(out, RebalanceTarget{Amount: amount, Target: tgt.ValoperAddress, Source: src.ValoperAddress})
-		deltas[srcIdx].Weight = src.Weight.Add(sdk.NewDecFromInt(amount))
-		deltas[tgtIdx].Weight = tgt.Weight.Sub(sdk.NewDecFromInt(amount))
-		toRebalance = toRebalance.Sub(amount)
-
-	}
-
-	// sort keys by relative value of delta
-	sort.SliceStable(out, func(i, j int) bool {
-		return out[i].Source < out[j].Source
-	})
-
-	sort.SliceStable(out, func(i, j int) bool {
-		return out[i].Target < out[j].Target
-	})
-
-	// sort keys by relative value of delta
-	sort.SliceStable(out, func(i, j int) bool {
-		return out[i].Amount.GT(out[j].Amount)
-	})
+	out.Sort()
 
 	return out
 }
 
-// MinDeltas returns the lowest value in a slice of Deltas.
-func MinDeltas(deltas ValidatorIntents) sdkmath.Int {
+func (d AllocationDeltas) String() (out string) {
+	for _, delta := range d {
+		out = fmt.Sprintf("%s%s:\t%d\n", out, delta.ValoperAddress, delta.Amount.Int64())
+	}
+	return out
+}
+
+// MinDelta returns the lowest value in a slice of Deltas.
+func MinDelta(deltas ValidatorIntents) sdkmath.Int {
 	minValue := sdk.NewInt(math.MaxInt64)
 	for _, intent := range deltas {
 		if minValue.GT(intent.Weight.TruncateInt()) {
@@ -203,8 +262,8 @@ func MinDeltas(deltas ValidatorIntents) sdkmath.Int {
 	return minValue
 }
 
-// MaxDeltas returns the greatest value in a slice of Deltas.
-func MaxDeltas(deltas ValidatorIntents) sdkmath.Int {
+// MaxDelta returns the greatest value in a slice of Deltas.
+func MaxDelta(deltas ValidatorIntents) sdkmath.Int {
 	maxValue := sdk.NewInt(math.MinInt64)
 	for _, intent := range deltas {
 		if maxValue.LT(intent.Weight.TruncateInt()) {
