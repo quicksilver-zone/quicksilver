@@ -13,9 +13,7 @@ const (
 	StoreKey = ModuleName
 )
 
-var (
-	PositionKeyPrefix = []byte{0xd5}
-)
+var PositionKeyPrefix = []byte{0xd5}
 
 func GetPositionKey(farmerAddr sdk.AccAddress, denom string) []byte {
 	return append(append(PositionKeyPrefix, address.MustLengthPrefix(farmerAddr)...), denom...)

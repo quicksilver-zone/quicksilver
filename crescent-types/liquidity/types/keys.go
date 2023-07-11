@@ -12,9 +12,7 @@ const (
 	StoreKey = ModuleName
 )
 
-var (
-	PoolKeyPrefix = []byte{0xab}
-)
+var PoolKeyPrefix = []byte{0xab}
 
 // GetPoolKey returns the store key to retrieve pool object from the pool id.
 func GetPoolKey(poolId uint64) []byte {

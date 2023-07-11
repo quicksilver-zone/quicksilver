@@ -1,10 +1,13 @@
 package crescenttypes
 
 import (
-	"cosmossdk.io/math"
 	"errors"
 	"fmt"
+
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	types "github.com/ingenuity-build/quicksilver/crescent-types/lpfarm"
 	"github.com/ingenuity-build/quicksilver/utils"
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"

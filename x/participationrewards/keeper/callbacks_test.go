@@ -3,12 +3,13 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
-	liquiditytypes "github.com/ingenuity-build/quicksilver/crescent-types/liquidity/types"
 	"strings"
+
+	liquiditytypes "github.com/ingenuity-build/quicksilver/crescent-types/liquidity/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"

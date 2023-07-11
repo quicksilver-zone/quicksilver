@@ -1,15 +1,18 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
+	"strings"
+	"time"
+
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	liquiditytypes "github.com/ingenuity-build/quicksilver/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
-	"strings"
-	"time"
 )
 
 type CrescentPoolProtocolData struct {
