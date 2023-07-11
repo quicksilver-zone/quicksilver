@@ -13,13 +13,10 @@ import (
 )
 
 type CrescentPoolProtocolData struct {
-	PoolId         uint64
-	ReserveAddress string
-	PoolCoinDenom  string
-	Disabled       bool
-	Denoms         map[string]DenomWithZone
-	PoolData       json.RawMessage
-	LastUpdated    time.Time
+	PoolId      uint64
+	Denoms      map[string]DenomWithZone
+	PoolData    json.RawMessage
+	LastUpdated time.Time
 }
 
 func (cpd *CrescentPoolProtocolData) ValidateBasic() error {
@@ -27,14 +24,6 @@ func (cpd *CrescentPoolProtocolData) ValidateBasic() error {
 
 	if cpd.PoolId == 0 {
 		errs["PoolId"] = ErrUndefinedAttribute
-	}
-
-	if cpd.ReserveAddress == "" {
-		errs["ReserveAddress"] = ErrUndefinedAttribute
-	}
-
-	if cpd.PoolCoinDenom == "" {
-		errs["PoolCoinDenom"] = ErrUndefinedAttribute
 	}
 
 	i := 0

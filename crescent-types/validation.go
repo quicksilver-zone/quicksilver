@@ -46,7 +46,7 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 		return sdk.ZeroInt(), err
 	}
 
-	if pool.Disabled {
+	if poolData.Disabled {
 		return sdk.ZeroInt(), errors.New(fmt.Sprintf("pool%d is disabled", pool.PoolId))
 	}
 

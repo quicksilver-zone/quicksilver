@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	liquiditytypes "github.com/ingenuity-build/quicksilver/crescent-types/liquidity/types"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -495,12 +496,13 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 		k.Logger(ctx).Error("unable to unmarshal balance request, request length is too short")
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
-
 	balancesStore := query.Request[1:]
-	address, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
+	addr, denom, err := banktypes.AddressAndDenomFromBalancesStore(balancesStore)
 	if err != nil {
 		return err
 	}
+
+	address, err := addressutils.EncodeAddressToBech32(CrescentPrefix, addr)
 
 	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
 	if err != nil {
@@ -509,9 +511,9 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 
 	balanceAmount := balanceCoin.Amount
 
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, address.String()+denom)
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, address+denom)
 	if !ok {
-		return fmt.Errorf("unable to find protocol data for crescent-types reserve address coins/%s, %s", address.String(), denom)
+		return fmt.Errorf("unable to find protocol data for crescent-types reserve address coins/%s, %s", address, denom)
 	}
 	ibalance, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentReserveAddressBalance, data.Data)
 	if err != nil {
@@ -519,7 +521,7 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 	}
 	balance, ok := ibalance.(*types.CrescentReserveAddressBalanceProtocolData)
 	if !ok {
-		return fmt.Errorf("unable to unmarshal protocol data for reserve address coins/%s, %s", address.String(), denom)
+		return fmt.Errorf("unable to unmarshal protocol data for reserve address coins/%s, %s", address, denom)
 	}
 	balance.Balance, err = json.Marshal(balanceAmount)
 	if err != nil {

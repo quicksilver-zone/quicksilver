@@ -14,6 +14,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
+const CrescentPrefix = "cre"
+
 type CrescentModule struct{}
 
 var _ Submodule = &CrescentModule{}
@@ -51,7 +53,7 @@ func (c CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 			return false
 		}
 		balance, _ := ibalance.(*types.CrescentReserveAddressBalanceProtocolData)
-		addrBytes, _ := sdk.AccAddressFromBech32(balance.ReserveAddress)
+		_, addrBytes, _ := bech32.DecodeAndConvert(balance.ReserveAddress)
 		lookupKey := banktypes.CreateAccountBalancesPrefix(addrBytes)
 
 		k.IcqKeeper.MakeRequest(
