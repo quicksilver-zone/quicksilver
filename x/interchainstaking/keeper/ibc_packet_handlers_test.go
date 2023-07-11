@@ -24,6 +24,13 @@ import (
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
+var TestChannel = channeltypes.Channel{
+	State:          channeltypes.OPEN,
+	Ordering:       channeltypes.UNORDERED,
+	Counterparty:   channeltypes.NewCounterparty("transfer", "channel-4"),
+	ConnectionHops: []string{"connection-2"},
+}
+
 func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 	nineDec := sdk.NewDecWithPrec(9, 2)
 
@@ -62,15 +69,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			counterparty := channeltypes.NewCounterparty("transfer", "channel-4")
-			channel := channeltypes.Channel{
-				State:          channeltypes.OPEN,
-				Ordering:       channeltypes.UNORDERED,
-				Counterparty:   counterparty,
-				ConnectionHops: []string{"connection-2"},
-			}
-
-			quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", channel)
+			quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", TestChannel)
 			channel, cfound := quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", "channel-0")
 			suite.Require().True(cfound)
 
@@ -1468,15 +1467,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
 				suite.Require().NoError(err)
 
-				counterparty := channeltypes.NewCounterparty("transfer", "channel-4")
-				channel := channeltypes.Channel{
-					State:          channeltypes.OPEN,
-					Ordering:       channeltypes.UNORDERED,
-					Counterparty:   counterparty,
-					ConnectionHops: []string{"connection-2"},
-				}
-
-				quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", channel)
+				quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", TestChannel)
 
 				channel, cfound := quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", "channel-0")
 				suite.Require().True(cfound)
@@ -1607,15 +1598,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
 				suite.Require().NoError(err)
 
-				counterparty := channeltypes.NewCounterparty("transfer", "channel-4")
-				channel := channeltypes.Channel{
-					State:          channeltypes.OPEN,
-					Ordering:       channeltypes.UNORDERED,
-					Counterparty:   counterparty,
-					ConnectionHops: []string{"connection-2"},
-				}
-
-				quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", channel)
+				quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", TestChannel)
 				channel, cfound := quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", "channel-0")
 				suite.Require().True(cfound)
 
