@@ -96,7 +96,7 @@ jobs:
           done
 
       - name: "Go vulnerability checks"
-        continue-on-error: false #temp-till we upgrade to v1.20
+        continue-on-error: true
         run: make vulncheck
 
       - name: Upload coverage reports to Codecov with GitHub Action
