@@ -163,7 +163,26 @@ func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 		}
 		pdi = &pd
 	case ProtocolDataTypeCrescentPool:
-		return ErrUnimplementedProtocolDataType
+		pd := CrescentPoolProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
+	case ProtocolDataTypeCrescentPoolCoinSupply:
+		pd := CrescentPoolCoinSupplyProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
+	case ProtocolDataTypeCrescentReserveAddressBalance:
+		pd := CrescentReserveAddressBalanceProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
 	case ProtocolDataTypeSifchainPool:
 		return ErrUnimplementedProtocolDataType
 	default:
