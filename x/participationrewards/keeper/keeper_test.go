@@ -38,6 +38,8 @@ var (
 	crescentTestConnection = "connection-7704"
 	crescentTestChain      = "crescent-types-1"
 	crescentBaseDenom      = "ucre"
+	cosmosIBCDenom         = "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"
+	osmosisIBCDenom        = "ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159"
 )
 
 func init() {
@@ -460,10 +462,10 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"{\"poolid\":%d,\"poolname\":%q,\"pooltype\":\"balancer\",\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
 			1,
 			"atom/osmo",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			cosmosIBCDenom,
 			"cosmoshub-4",
 			"uatom",
-			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159",
+			osmosisIBCDenom,
 			"osmosis-1",
 			"uosmo",
 		)),
@@ -484,10 +486,10 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		[]byte(fmt.Sprintf(
 			"{\"poolid\":%d,\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
 			1,
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			cosmosIBCDenom,
 			"cosmoshub-4",
 			"uatom",
-			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159",
+			osmosisIBCDenom,
 			"osmosis-1",
 			"uosmo",
 		)),
@@ -499,7 +501,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		cpd,
 	)
 	// crescent-types reserve address balance
-	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testCrescentAddress, Denom: crescentBaseDenom})
+	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testAddress, Denom: cosmosIBCDenom})
 	suite.addProtocolData(
 		types.ProtocolDataTypeCrescentReserveAddressBalance,
 		cpd,
@@ -511,7 +513,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
 			"osmosis-1",
 			"cosmoshub-4",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			cosmosIBCDenom,
 			"uqatom",
 		)),
 	)
@@ -521,7 +523,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
 			"testchain1",
 			"cosmoshub-4",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			cosmosIBCDenom,
 			"uqatom",
 		)),
 	)

@@ -20,7 +20,7 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 	poolID := position.Denom[4:]
 	pd, ok := prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeCrescentPool, poolID)
 	if !ok {
-		return sdk.ZeroInt(), fmt.Errorf("unable to obtain protocol data for poolID=%s", poolID)
+		return sdk.ZeroInt(), fmt.Errorf("unable to obtain crescent protocol data for poolID=%s", poolID)
 	}
 
 	ipool, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeCrescentPool, pd.Data)
@@ -53,6 +53,9 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 	reserveAddress := poolData.GetReserveAddress()
 
 	pd, ok = prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeCrescentReserveAddressBalance, reserveAddress.String()+poolDenom)
+	if !ok {
+		return sdk.ZeroInt(), fmt.Errorf("unable to obtain reserveaddressbalance protocoldata for address=%s, denom=%s", reserveAddress.String(), poolDenom)
+	}
 	ibalance, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeCrescentReserveAddressBalance, pd.Data)
 	if err != nil {
 		return sdk.ZeroInt(), err
@@ -65,7 +68,10 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 	}
 
 	pd, ok = prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeCrescentPoolCoinSupply, poolData.PoolCoinDenom)
-	isupply, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeCrescentReserveAddressBalance, pd.Data)
+	if !ok {
+		return sdk.ZeroInt(), fmt.Errorf("unable to obtain poolcoinsupply protocoldata for denom=%s", poolData.PoolCoinDenom)
+	}
+	isupply, err := participationrewardstypes.UnmarshalProtocolData(participationrewardstypes.ProtocolDataTypeCrescentPoolCoinSupply, pd.Data)
 	if err != nil {
 		return sdk.ZeroInt(), err
 	}

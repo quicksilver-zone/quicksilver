@@ -4,14 +4,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	liquiditytypes "github.com/ingenuity-build/quicksilver/crescent-types/liquidity/types"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	liquiditytypes "github.com/ingenuity-build/quicksilver/crescent-types/liquidity/types"
 
 	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
@@ -502,8 +500,7 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 		return err
 	}
 
-	address, err := addressutils.EncodeAddressToBech32(CrescentPrefix, addr)
-
+	address := addr.String()
 	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
 	if err != nil {
 		return err
