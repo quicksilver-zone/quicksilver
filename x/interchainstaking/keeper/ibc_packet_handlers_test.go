@@ -62,7 +62,19 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			ibcDenom := utils.DeriveIbcDenom("transfer", "channel-0", tc.amount.Denom)
+			counterparty := channeltypes.NewCounterparty("transfer", "channel-4")
+			channel := channeltypes.Channel{
+				State:          channeltypes.OPEN,
+				Ordering:       channeltypes.UNORDERED,
+				Counterparty:   counterparty,
+				ConnectionHops: []string{"connection-2"},
+			}
+
+			quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", channel)
+			channel, cfound := quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", "channel-0")
+			suite.Require().True(cfound)
+
+			ibcDenom := utils.DeriveIbcDenom(channel.Counterparty.PortId, channel.Counterparty.ChannelId, tc.amount.Denom)
 
 			err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ibcDenom, tc.amount.Amount)))
 			suite.Require().NoError(err)
