@@ -78,7 +78,7 @@ func (c CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 		}
 		pool, _ := ipool.(*types.CrescentPoolProtocolData)
 
-		poolKey := liquiditytypes.GetPoolKey(pool.PoolId)
+		poolKey := liquiditytypes.GetPoolKey(pool.PoolID)
 
 		k.IcqKeeper.MakeRequest(
 			ctx,

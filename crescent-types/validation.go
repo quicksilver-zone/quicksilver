@@ -1,4 +1,4 @@
-package crescent_types
+package crescenttypes
 
 import (
 	"cosmossdk.io/math"
@@ -47,7 +47,7 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 	}
 
 	if poolData.Disabled {
-		return sdk.ZeroInt(), errors.New(fmt.Sprintf("pool%d is disabled", pool.PoolId))
+		return sdk.ZeroInt(), errors.New(fmt.Sprintf("pool%d is disabled", pool.PoolID))
 	}
 
 	reserveAddress := poolData.GetReserveAddress()

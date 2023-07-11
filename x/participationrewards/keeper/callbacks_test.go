@@ -394,7 +394,7 @@ func (suite *KeeperTestSuite) executeCrescentPoolUpdateCallback() {
 	suite.Require().NoError(err)
 
 	want := &types.CrescentPoolProtocolData{
-		PoolId:      1,
+		PoolID:      1,
 		LastUpdated: ctx.BlockTime(),
 		PoolData:    expectedData,
 		Denoms: map[string]types.DenomWithZone{

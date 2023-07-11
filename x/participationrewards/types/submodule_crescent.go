@@ -13,7 +13,7 @@ import (
 )
 
 type CrescentPoolProtocolData struct {
-	PoolId      uint64
+	PoolID      uint64
 	Denoms      map[string]DenomWithZone
 	PoolData    json.RawMessage
 	LastUpdated time.Time
@@ -22,7 +22,7 @@ type CrescentPoolProtocolData struct {
 func (cpd *CrescentPoolProtocolData) ValidateBasic() error {
 	errs := make(map[string]error)
 
-	if cpd.PoolId == 0 {
+	if cpd.PoolID == 0 {
 		errs["PoolId"] = ErrUndefinedAttribute
 	}
 
@@ -53,7 +53,7 @@ func (cpd *CrescentPoolProtocolData) ValidateBasic() error {
 }
 
 func (cpd *CrescentPoolProtocolData) GenerateKey() []byte {
-	return []byte(fmt.Sprintf("%d", cpd.PoolId))
+	return []byte(fmt.Sprintf("%d", cpd.PoolID))
 }
 
 func (cpd *CrescentPoolProtocolData) GetPool() (*liquiditytypes.Pool, error) {

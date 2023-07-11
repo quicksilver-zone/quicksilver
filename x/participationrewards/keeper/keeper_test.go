@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.setupTestProtocolData()
 
 	akpd = quicksilver.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
-	// added 17 in setupTestProtocolData
+	// added 19 in setupTestProtocolData
 	suite.Require().Equal(19, len(akpd))
 
 	// advance the chains
