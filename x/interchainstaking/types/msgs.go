@@ -11,12 +11,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
-// interchainstaking message types.
-const (
-	TypeMsgRequestRedemption = "requestredemption"
-	TypeMsgSignalIntent      = "signalintent"
-)
-
 var (
 	_ sdk.Msg = &MsgRegisterZone{}
 	_ sdk.Msg = &MsgRequestRedemption{}
