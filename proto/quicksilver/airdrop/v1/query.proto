@@ -2,6 +2,7 @@ syntax = "proto3";
 package quicksilver.airdrop.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/query/v1/query.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -14,27 +15,33 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 service Query {
   // Params returns the total set of airdrop parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/airdrop/v1/params";
   }
   // ZoneDrop returns the details of the specified zone airdrop.
   rpc ZoneDrop(QueryZoneDropRequest) returns (QueryZoneDropResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/airdrop/v1/zonedrop/{chain_id}";
   }
   // AccountBalance returns the module account balance of the specified zone.
   rpc AccountBalance(QueryAccountBalanceRequest) returns (QueryAccountBalanceResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/airdrop/v1/accountbalance/{chain_id}";
   }
   // ZoneDrops returns all zone airdrops of the specified status.
   rpc ZoneDrops(QueryZoneDropsRequest) returns (QueryZoneDropsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/airdrop/v1/zonedrops/{status}";
   }
   // ClaimRecord returns the claim record that corresponds to the given zone and
   // address.
   rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/airdrop/v1/claimrecord/{chain_id}/{address}";
   }
   // ClaimRecords returns all the claim records of the given zone.
   rpc ClaimRecords(QueryClaimRecordsRequest) returns (QueryClaimRecordsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/airdrop/v1/claimrecords/{chain_id}";
   }
 }

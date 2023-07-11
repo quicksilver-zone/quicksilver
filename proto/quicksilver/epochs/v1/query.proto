@@ -2,6 +2,7 @@ syntax = "proto3";
 package quicksilver.epochs.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/query/v1/query.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "quicksilver/epochs/v1/genesis.proto";
@@ -12,10 +13,12 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/epochs/types";
 service Query {
   // EpochInfos provide running epochInfos
   rpc EpochInfos(QueryEpochsInfoRequest) returns (QueryEpochsInfoResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/epochs/v1/epochs";
   }
   // CurrentEpoch provide current epoch of specified identifier
   rpc CurrentEpoch(QueryCurrentEpochRequest) returns (QueryCurrentEpochResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/epochs/v1/current_epoch";
   }
 }
