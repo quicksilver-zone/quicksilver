@@ -354,6 +354,66 @@ func (s *AppTestSuite) TestV010404beta0UpgradeHandler() {
 	s.Require().True(zone.Is_118)
 }
 
+func (s *AppTestSuite) TestV010404beta7UpgradeHandler() {
+	app := s.GetQuicksilverApp(s.chainA)
+	// osmosis zone
+	zone := icstypes.Zone{
+		ConnectionId:    "connection-77002",
+		ChainId:         upgrades.OsmosisTestnetChainID,
+		AccountPrefix:   "osmo",
+		LocalDenom:      "uqosmo",
+		BaseDenom:       "uosmo",
+		MultiSend:       false,
+		LiquidityModule: true,
+	}
+
+	ctx := s.chainA.GetContext()
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	rdRecord := icstypes.RedelegationRecord{
+		ChainId:        upgrades.OsmosisTestnetChainID,
+		EpochNumber:    4,
+		Source:         "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
+		Destination:    "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
+		Amount:         3000000,
+		CompletionTime: time.Time{},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), rdRecord)
+
+	rdRecord = icstypes.RedelegationRecord{
+		ChainId:        upgrades.OsmosisTestnetChainID,
+		EpochNumber:    6,
+		Source:         "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
+		Destination:    "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
+		Amount:         3000000,
+		CompletionTime: time.Time{},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), rdRecord)
+
+	rdRecord = icstypes.RedelegationRecord{
+		ChainId:        upgrades.OsmosisTestnetChainID,
+		EpochNumber:    34,
+		Source:         "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
+		Destination:    "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
+		Amount:         3000000,
+		CompletionTime: time.Time{},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), rdRecord)
+
+	handler := upgrades.V010404beta7UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.Require().NoError(err)
+
+	_, found := app.InterchainstakingKeeper.GetRedelegationRecord(ctx, upgrades.OsmosisTestnetChainID, "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", 4)
+	s.Require().False(found)
+
+	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, upgrades.OsmosisTestnetChainID, "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", 6)
+	s.Require().False(found)
+
+	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, upgrades.OsmosisTestnetChainID, "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", 34)
+	s.Require().True(found)
+}
+
 // func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {
 //	app := s.GetQuicksilverApp(s.chainA)
 //
