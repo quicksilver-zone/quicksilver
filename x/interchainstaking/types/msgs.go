@@ -33,7 +33,7 @@ func (msg MsgRegisterZone) ValidateBasic() error {
 	}
 
 	// check valid connection id
-	if len(m.ConnectionId) < 12 || msg.ConnectionId[0:11] != "connection-" {
+	if len(msg.ConnectionId) < 12 || msg.ConnectionId[0:11] != "connection-" {
 		return fmt.Errorf("invalid connection string: %s", msg.ConnectionId)
 	}
 
