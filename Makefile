@@ -354,6 +354,10 @@ vet:
 ictest-basic: 
 	@cd test/interchaintest && go test -v -run TestBasicQuicksilverStart .
 
+# Executes register-zone tests via interchaintest
+ictest-rz: 
+	@cd test/interchaintest && go test -v -run TestRegisterZone .
+
 # Executes a basic chain upgrade test via interchaintest
 ictest-upgrade: 
 	@cd test/interchaintest && go test -v -run TestBasicQuicksilverUpgrade .
