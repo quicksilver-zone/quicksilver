@@ -35,24 +35,21 @@ message MsgRegisterZone {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string title = 1;
-  string description = 2;
-
-  string connection_id = 3 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
-  string base_denom = 4 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
-  string local_denom = 5 [ (gogoproto.moretags) = "yaml:\"local_denom\"" ];
-  string account_prefix = 6
+  string connection_id = 1 [ (gogoproto.moretags) = "yaml:\"connection_id\"" ];
+  string base_denom = 2 [ (gogoproto.moretags) = "yaml:\"base_denom\"" ];
+  string local_denom = 3 [ (gogoproto.moretags) = "yaml:\"local_denom\"" ];
+  string account_prefix = 4
       [ (gogoproto.moretags) = "yaml:\"account_prefix\"" ];
-  bool liquidity_module = 7;
-  int64 messages_per_tx = 8;
-  bool return_to_sender = 9;
-  bool deposits_enabled = 10;
-  bool unbonding_enabled = 11;
-  int64 decimals = 12;
-  bool is_118 = 13;
-  SubzoneInfo subzoneInfo = 14;
+  bool liquidity_module = 5;
+  int64 messages_per_tx = 6;
+  bool return_to_sender = 7;
+  bool deposits_enabled = 8;
+  bool unbonding_enabled = 9;
+  int64 decimals = 10;
+  bool is_118 = 11;
+  SubzoneInfo subzoneInfo = 12;
 
-  string authority = 15 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string authority = 13 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
 // MsgRegisterZoneResponse defines the MsgRegisterZone response type.
