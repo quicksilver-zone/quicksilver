@@ -2,6 +2,7 @@ syntax = "proto3";
 package quicksilver.interchainstaking.v1;
 
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "quicksilver/interchainstaking/v1/interchainstaking.proto";
 
@@ -92,6 +93,7 @@ message UpdateZoneValue {
 }
 
 message MsgGovReopenChannel {
+  option (cosmos.msg.v1.signer) = "authority";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -108,6 +110,7 @@ message MsgGovReopenChannel {
 message MsgGovReopenChannelResponse {}
 
 message MsgGovCloseChannel {
+  option (cosmos.msg.v1.signer) = "authority";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 

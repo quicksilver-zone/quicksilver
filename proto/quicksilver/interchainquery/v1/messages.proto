@@ -25,6 +25,7 @@ service Msg {
 
 // MsgSubmitQueryResponse represents a message type to fulfil a query request.
 message MsgSubmitQueryResponse {
+  option (cosmos.msg.v1.signer) = "from_address";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
   option (gogoproto.goproto_stringer) = true;

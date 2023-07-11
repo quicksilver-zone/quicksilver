@@ -2,6 +2,7 @@ syntax = "proto3";
 package quicksilver.participationrewards.v1;
 
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
@@ -40,6 +41,7 @@ message AddProtocolDataProposalWithDeposit {
 }
 
 message MsgGovRemoveProtocolData {
+  option (cosmos.msg.v1.signer) = "authority";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 

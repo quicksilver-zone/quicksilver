@@ -35,6 +35,7 @@ service Msg {
 // MsgSubmitClaim represents a message type for submitting a participation
 // claim regarding the given zone (chain).
 message MsgSubmitClaim {
+  option (cosmos.msg.v1.signer) = "user_address";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
