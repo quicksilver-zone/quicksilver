@@ -272,7 +272,6 @@ func (ac appCreator) newApp(
 	return app.NewQuicksilver(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		wasm.EnableAllProposals,
 		appOpts,
 		wasmOpts,
@@ -321,7 +320,6 @@ func (ac appCreator) appExport(
 		loadLatest,
 		map[int64]bool{},
 		homePath,
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		wasm.EnableAllProposals,
 		appOpts,
 		emptyWasmOpts,
