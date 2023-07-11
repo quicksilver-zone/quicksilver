@@ -54,7 +54,9 @@ message MsgRegisterZone {
 }
 
 // MsgRegisterZoneResponse defines the MsgRegisterZone response type.
-message MsgRegisterZoneResponse {}
+message MsgRegisterZoneResponse {
+  string zoneID = 1;
+}
 
 message RegisterZoneProposalWithDeposit {
   option (gogoproto.equal) = false;
