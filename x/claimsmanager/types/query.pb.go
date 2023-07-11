@@ -210,9 +210,11 @@ type QueryClient interface {
 	Claims(ctx context.Context, in *QueryClaimsRequest, opts ...grpc.CallOption) (*QueryClaimsResponse, error)
 	// LastEpochClaims returns all zone claims from the last epoch.
 	LastEpochClaims(ctx context.Context, in *QueryClaimsRequest, opts ...grpc.CallOption) (*QueryClaimsResponse, error)
-	// UserClaims returns all zone claims for a given address from the current epoch.
+	// UserClaims returns all zone claims for a given address from the current
+	// epoch.
 	UserClaims(ctx context.Context, in *QueryClaimsRequest, opts ...grpc.CallOption) (*QueryClaimsResponse, error)
-	// UserLastEpochClaims returns all zone claims for a given address from the last epoch.
+	// UserLastEpochClaims returns all zone claims for a given address from the
+	// last epoch.
 	UserLastEpochClaims(ctx context.Context, in *QueryClaimsRequest, opts ...grpc.CallOption) (*QueryClaimsResponse, error)
 }
 
@@ -266,9 +268,11 @@ type QueryServer interface {
 	Claims(context.Context, *QueryClaimsRequest) (*QueryClaimsResponse, error)
 	// LastEpochClaims returns all zone claims from the last epoch.
 	LastEpochClaims(context.Context, *QueryClaimsRequest) (*QueryClaimsResponse, error)
-	// UserClaims returns all zone claims for a given address from the current epoch.
+	// UserClaims returns all zone claims for a given address from the current
+	// epoch.
 	UserClaims(context.Context, *QueryClaimsRequest) (*QueryClaimsResponse, error)
-	// UserLastEpochClaims returns all zone claims for a given address from the last epoch.
+	// UserLastEpochClaims returns all zone claims for a given address from the
+	// last epoch.
 	UserLastEpochClaims(context.Context, *QueryClaimsRequest) (*QueryClaimsResponse, error)
 }
 

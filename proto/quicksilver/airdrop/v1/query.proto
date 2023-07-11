@@ -21,12 +21,15 @@ service Query {
   // ZoneDrop returns the details of the specified zone airdrop.
   rpc ZoneDrop(QueryZoneDropRequest) returns (QueryZoneDropResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/quicksilver/airdrop/v1/zonedrop/{chain_id}";
+    option (google.api.http).get =
+        "/quicksilver/airdrop/v1/zonedrop/{chain_id}";
   }
   // AccountBalance returns the module account balance of the specified zone.
-  rpc AccountBalance(QueryAccountBalanceRequest) returns (QueryAccountBalanceResponse) {
+  rpc AccountBalance(QueryAccountBalanceRequest)
+      returns (QueryAccountBalanceResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/quicksilver/airdrop/v1/accountbalance/{chain_id}";
+    option (google.api.http).get =
+        "/quicksilver/airdrop/v1/accountbalance/{chain_id}";
   }
   // ZoneDrops returns all zone airdrops of the specified status.
   rpc ZoneDrops(QueryZoneDropsRequest) returns (QueryZoneDropsResponse) {
@@ -37,12 +40,15 @@ service Query {
   // address.
   rpc ClaimRecord(QueryClaimRecordRequest) returns (QueryClaimRecordResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/quicksilver/airdrop/v1/claimrecord/{chain_id}/{address}";
+    option (google.api.http).get =
+        "/quicksilver/airdrop/v1/claimrecord/{chain_id}/{address}";
   }
   // ClaimRecords returns all the claim records of the given zone.
-  rpc ClaimRecords(QueryClaimRecordsRequest) returns (QueryClaimRecordsResponse) {
+  rpc ClaimRecords(QueryClaimRecordsRequest)
+      returns (QueryClaimRecordsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/quicksilver/airdrop/v1/claimrecords/{chain_id}";
+    option (google.api.http).get =
+        "/quicksilver/airdrop/v1/claimrecords/{chain_id}";
   }
 }
 
@@ -53,20 +59,20 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   option (gogoproto.goproto_getters) = false;
   // params defines the parameters of the module.
-  Params params = 1 [(gogoproto.nullable) = false];
+  Params params = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryZoneDropRequest is the request type for Query/ZoneDrop RPC method.
 message QueryZoneDropRequest {
   option (gogoproto.goproto_getters) = false;
   // chain_id identifies the zone.
-  string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
 }
 
 // QueryZoneDropResponse is the response type for Query/ZoneDrop RPC method.
 message QueryZoneDropResponse {
   option (gogoproto.goproto_getters) = false;
-  ZoneDrop zone_drop = 1 [(gogoproto.nullable) = false];
+  ZoneDrop zone_drop = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryAccountBalanceRequest is the request type for Query/AccountBalance RPC
@@ -74,7 +80,7 @@ message QueryZoneDropResponse {
 message QueryAccountBalanceRequest {
   option (gogoproto.goproto_getters) = false;
   // chain_id identifies the zone.
-  string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
 }
 
 // QueryAccountBalanceResponse is the response type for Query/AccountBalance RPC
@@ -82,7 +88,8 @@ message QueryAccountBalanceRequest {
 message QueryAccountBalanceResponse {
   option (gogoproto.goproto_getters) = false;
 
-  cosmos.base.v1beta1.Coin account_balance = 1 [(gogoproto.moretags) = "yaml:\"account_balance\""];
+  cosmos.base.v1beta1.Coin account_balance = 1
+      [ (gogoproto.moretags) = "yaml:\"account_balance\"" ];
 }
 
 // QueryZoneDropsRequest is the request type for Query/ZoneDrops RPC method.
@@ -100,7 +107,7 @@ message QueryZoneDropsRequest {
 message QueryZoneDropsResponse {
   option (gogoproto.goproto_getters) = false;
 
-  repeated ZoneDrop zone_drops = 1 [(gogoproto.nullable) = false];
+  repeated ZoneDrop zone_drops = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
@@ -108,8 +115,8 @@ message QueryZoneDropsResponse {
 message QueryClaimRecordRequest {
   option (gogoproto.goproto_getters) = false;
 
-  string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
-  string address = 2 [(gogoproto.moretags) = "yaml:\"address\""];
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  string address = 2 [ (gogoproto.moretags) = "yaml:\"address\"" ];
 }
 
 // QueryClaimRecordResponse is the response type for Query/ClaimRecord RPC
@@ -117,7 +124,8 @@ message QueryClaimRecordRequest {
 message QueryClaimRecordResponse {
   option (gogoproto.goproto_getters) = false;
 
-  ClaimRecord claim_record = 1 [(gogoproto.moretags) = "yaml:\"claim_record\""];
+  ClaimRecord claim_record = 1
+      [ (gogoproto.moretags) = "yaml:\"claim_record\"" ];
 }
 
 // QueryClaimRecordsRequest is the request type for Query/ClaimRecords RPC
@@ -125,7 +133,7 @@ message QueryClaimRecordResponse {
 message QueryClaimRecordsRequest {
   option (gogoproto.goproto_getters) = false;
 
-  string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
@@ -134,6 +142,6 @@ message QueryClaimRecordsRequest {
 message QueryClaimRecordsResponse {
   option (gogoproto.goproto_getters) = false;
 
-  repeated ClaimRecord claim_records = 1 [(gogoproto.nullable) = false];
+  repeated ClaimRecord claim_records = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

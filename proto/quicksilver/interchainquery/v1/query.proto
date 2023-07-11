@@ -18,7 +18,8 @@ service QuerySrvr {
   // Params returns the total set of minting parameters.
   rpc Queries(QueryRequestsRequest) returns (QueryRequestsResponse) {
     option (cosmos.query.v1.module_query_safe) = true;
-    option (google.api.http).get = "/quicksilver/interchainquery/v1/queries/{chain_id}";
+    option (google.api.http).get =
+        "/quicksilver/interchainquery/v1/queries/{chain_id}";
   }
 }
 
@@ -31,7 +32,8 @@ message QueryRequestsRequest {
 // QueryParamsResponse is the response type for the Query/Params RPC method.
 message QueryRequestsResponse {
   // params defines the parameters of the module.
-  repeated quicksilver.interchainquery.v1.Query queries = 1 [(gogoproto.nullable) = false];
+  repeated quicksilver.interchainquery.v1.Query queries = 1
+      [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
