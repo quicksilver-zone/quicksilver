@@ -2,6 +2,7 @@ syntax = "proto3";
 package quicksilver.tokenfactory.v1beta1;
 
 import "gogoproto/gogo.proto";
+import "cosmos/query/v1/query.proto";
 import "google/api/annotations.proto";
 import "quicksilver/tokenfactory/v1beta1/authorityMetadata.proto";
 import "quicksilver/tokenfactory/v1beta1/params.proto";
@@ -13,6 +14,7 @@ service Query {
   // Params defines a gRPC query method that returns the tokenfactory module's
   // parameters.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/tokenfactory/v1beta1/params";
   }
 
@@ -20,6 +22,7 @@ service Query {
   // DenomAuthorityMetadata for a particular denom.
   rpc DenomAuthorityMetadata(QueryDenomAuthorityMetadataRequest)
       returns (QueryDenomAuthorityMetadataResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/tokenfactory/v1beta1/denoms/{denom}/authority_metadata";
   }
@@ -28,6 +31,7 @@ service Query {
   // denominations created by a specific admin/creator.
   rpc DenomsFromCreator(QueryDenomsFromCreatorRequest)
       returns (QueryDenomsFromCreatorResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/tokenfactory/v1beta1/denoms_from_creator/{creator}";
   }

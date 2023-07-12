@@ -2,6 +2,7 @@ syntax = "proto3";
 package quicksilver.interchainstaking.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/query/v1/query.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -13,17 +14,20 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/
 service Query {
   // Zones provides meta data on connected zones.
   rpc Zones(QueryZonesRequest) returns (QueryZonesResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones";
   }
 
   // Zone provides meta data on a specific zone.
   rpc Zone(QueryZoneRequest) returns (QueryZoneResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zone/{chain_id}";
   }
 
   rpc ZoneValidators(QueryZoneValidatorsRequest)
       returns (QueryZoneValidatorsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/validators";
   }
@@ -31,6 +35,7 @@ service Query {
   // DepositAccount provides data on the deposit address for a connected zone.
   rpc DepositAccount(QueryDepositAccountForChainRequest)
       returns (QueryDepositAccountForChainResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/deposit_address";
   }
@@ -39,6 +44,7 @@ service Query {
   // zone.
   rpc DelegatorIntent(QueryDelegatorIntentRequest)
       returns (QueryDelegatorIntentResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/delegator_intent/"
         "{delegator_address}";
@@ -47,6 +53,7 @@ service Query {
   // DelegatorIntents provides data on the intent of the delegator for all zones
   rpc DelegatorIntents(QueryDelegatorIntentsRequest)
       returns (QueryDelegatorIntentsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/delegator_intents/"
         "{delegator_address}";
@@ -54,17 +61,20 @@ service Query {
 
   // Delegations provides data on the delegations for the given zone.
   rpc Delegations(QueryDelegationsRequest) returns (QueryDelegationsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/delegations";
   }
 
   // Delegations provides data on the delegations for the given zone.
   rpc Receipts(QueryReceiptsRequest) returns (QueryReceiptsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/receipts";
   }
 
   rpc TxStatus(QueryTxStatusRequest) returns (QueryTxStatusResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/deposits/{tx_hash}";
   }
@@ -72,6 +82,7 @@ service Query {
   // WithdrawalRecords provides data on the active withdrawals.
   rpc ZoneWithdrawalRecords(QueryWithdrawalRecordsRequest)
       returns (QueryWithdrawalRecordsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records/"
         "{delegator_address}";
@@ -80,6 +91,7 @@ service Query {
   // WithdrawalRecords provides data on the active withdrawals.
   rpc WithdrawalRecords(QueryWithdrawalRecordsRequest)
       returns (QueryWithdrawalRecordsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records";
   }
@@ -87,6 +99,7 @@ service Query {
   // WithdrawalRecords provides data on the active withdrawals.
   rpc UserWithdrawalRecords(QueryUserWithdrawalRecordsRequest)
       returns (QueryWithdrawalRecordsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/users/"
                                    "{user_address}/withdrawal_records";
   }
@@ -94,6 +107,7 @@ service Query {
   // UnbondingRecords provides data on the active unbondings.
   rpc UnbondingRecords(QueryUnbondingRecordsRequest)
       returns (QueryUnbondingRecordsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/zones/{chain_id}/unbonding_records";
   }
@@ -101,6 +115,7 @@ service Query {
   // RedelegationRecords provides data on the active unbondings.
   rpc RedelegationRecords(QueryRedelegationRecordsRequest)
       returns (QueryRedelegationRecordsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/"
                                    "{chain_id}/redelegation_records";
   }
@@ -109,6 +124,7 @@ service Query {
   // different host chains.
   rpc MappedAccounts(QueryMappedAccountsRequest)
       returns (QueryMappedAccountsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/interchainstaking/v1/mapped_addresses/{address}";
   }

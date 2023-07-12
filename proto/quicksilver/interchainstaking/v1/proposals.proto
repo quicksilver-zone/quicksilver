@@ -132,6 +132,7 @@ message UpdateZoneValue {
 }
 
 message MsgGovReopenChannel {
+  option (cosmos.msg.v1.signer) = "authority";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -148,6 +149,7 @@ message MsgGovReopenChannel {
 message MsgGovReopenChannelResponse {}
 
 message MsgGovCloseChannel {
+  option (cosmos.msg.v1.signer) = "authority";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 

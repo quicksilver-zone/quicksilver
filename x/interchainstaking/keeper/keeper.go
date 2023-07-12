@@ -99,8 +99,7 @@ func NewKeeper(
 
 		paramStore: ps,
 		msgRouter:  msgRouter,
-
-		authority: authority,
+		authority:  authority,
 	}
 }
 
