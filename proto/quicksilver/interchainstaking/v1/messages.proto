@@ -36,6 +36,13 @@ service Msg {
     };
   }
 
+  rpc UpdateZone(MsgUpdateZone) returns (MsgUpdateZoneResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/interchainstaking/update_zone"
+      body : "*"
+    };
+  }
+
   rpc GovCloseChannel(MsgGovCloseChannel) returns (MsgGovCloseChannelResponse) {
     option (google.api.http) = {
       post : "/quicksilver/tx/v1/interchainstaking/close_channel"
