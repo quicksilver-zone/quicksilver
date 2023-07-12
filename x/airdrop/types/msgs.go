@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 
 	sdkioerrors "cosmossdk.io/errors"
@@ -8,8 +10,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
@@ -21,20 +21,14 @@ const (
 )
 
 var (
-	_ sdk.Msg            = &MsgClaim{}
-	_ legacytx.LegacyMsg = &MsgClaim{}
+	_ sdk.Msg = &MsgClaim{}
+	_ sdk.Msg = &MsgIncentivePoolSpend{}
 )
 
 // NewMsgClaim constructs a msg to claim from a zone airdrop.
 func NewMsgClaim(chainID string, action int64, fromAddress sdk.Address) *MsgClaim {
 	return &MsgClaim{ChainId: chainID, Action: action, Address: fromAddress.String()}
 }
-
-// Route implements Msg.
-func (msg MsgClaim) Route() string { return RouterKey }
-
-// Type implements Msg.
-func (msg MsgClaim) Type() string { return TypeMsgClaim }
 
 // ValidateBasic implements Msg.
 func (msg MsgClaim) ValidateBasic() error {
@@ -101,12 +95,6 @@ func NewMsgIncentivePoolSpend(authority, toAddress sdk.Address, amt sdk.Coins) *
 	}
 }
 
-// Route implements Msg.
-func (msg MsgIncentivePoolSpend) Route() string { return RouterKey }
-
-// Type implements Msg.
-func (msg MsgIncentivePoolSpend) Type() string { return TypeMsgClaim }
-
 // ValidateBasic implements Msg.
 func (msg MsgIncentivePoolSpend) ValidateBasic() error {
 	from, err := sdk.AccAddressFromBech32(msg.Authority)
@@ -141,6 +129,79 @@ func (msg MsgIncentivePoolSpend) GetSignBytes() []byte {
 
 // GetSigners implements Msg.
 func (msg MsgIncentivePoolSpend) GetSigners() []sdk.AccAddress {
-	address, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{address}
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// ValidateBasic implements Msg.
+func (msg MsgRegisterZoneDrop) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid from address: %s", err)
+	}
+
+	if msg.ZoneDrop == nil {
+		return errors.New("proposal must contain a valid ZoneDrop")
+	}
+
+	if len(msg.ClaimRecords) == 0 {
+		return errors.New("update must contain valid ClaimRecords")
+	}
+
+	if err := msg.ZoneDrop.ValidateBasic(); err != nil {
+		return err
+	}
+
+	// decompress claim records
+	crsb, err := Decompress(msg.ClaimRecords)
+	if err != nil {
+		return err
+	}
+
+	// unmarshal json
+	var crs ClaimRecords
+	if err := json.Unmarshal(crsb, &crs); err != nil {
+		return err
+	}
+
+	sumMax := uint64(0)
+	// validate ClaimRecords and process
+	for i, cr := range crs {
+		if err := cr.ValidateBasic(); err != nil {
+			return fmt.Errorf("claim record %d, %w", i, err)
+		}
+		if len(cr.ActionsCompleted) != 0 {
+			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: contains completed actions", i)
+		}
+
+		if cr.ChainId != msg.ZoneDrop.ChainId {
+			return fmt.Errorf("invalid zonedrop proposal claim record [%d]: chainID missmatch, expected %q got %q",
+				i,
+				msg.ZoneDrop.ChainId,
+				cr.ChainId,
+			)
+		}
+
+		sumMax += cr.MaxAllocation
+	}
+
+	// check allocations
+	if sumMax > msg.ZoneDrop.Allocation {
+		return fmt.Errorf("sum of claim records max allocations (%v) exceed zone airdrop allocation (%v)", sumMax, msg.ZoneDrop.Allocation)
+	}
+
+	return nil
+}
+
+// GetSignBytes implements Msg.
+func (msg MsgRegisterZoneDrop) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners implements Msg.
+func (msg MsgRegisterZoneDrop) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
 }

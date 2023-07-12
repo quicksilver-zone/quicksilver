@@ -9,6 +9,8 @@ import (
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
 )
 
+type ClaimRecords []ClaimRecord
+
 func (zd *ZoneDrop) ValidateBasic() error {
 	errs := make(map[string]error)
 
