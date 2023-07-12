@@ -46,10 +46,10 @@ func UmeeClaim(
 	if err != nil {
 		return nil, nil, err
 	}
-	umeeaddr, err := sdk.AccAddressFromBech32(umeeAddress)
-	if err != nil {
-		return nil, nil, err
-	}
+	//umeeaddr, err := sdk.AccAddressFromBech32(umeeAddress)
+	//if err != nil {
+	//	return nil, nil, err
+	//}
 	// 1:
 	err = failsim.FailureHook(failures, 1, err, "failure encoding umee address")
 	if err != nil {
@@ -152,7 +152,7 @@ func UmeeClaim(
 			}
 		}
 
-		accountPrefix := banktypes.CreateAccountBalancesPrefix(umeeaddr.Bytes())
+		accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
 		lookupKey := append(accountPrefix, []byte(coin.GetDenom())...)
 		abciquery, err := client.ABCIQueryWithOptions(
 			context.Background(), "/store/bank/key",
@@ -216,7 +216,7 @@ func UmeeClaim(
 			}
 		}
 
-		lookupKey := leveragetypes.KeyCollateralAmount(umeeaddr, coin.GetDenom())
+		lookupKey := leveragetypes.KeyCollateralAmount(addrBytes, coin.GetDenom())
 		abciquery, err := client.ABCIQueryWithOptions(
 			context.Background(), "/store/leverage/key",
 			lookupKey,
