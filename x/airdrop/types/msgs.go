@@ -15,14 +15,10 @@ import (
 
 // airdrop message types.
 
-const (
-	TypeMsgClaim              = "claim"
-	TypeMsgIncentivePoolSpend = "incentive-pool-spend"
-)
-
 var (
 	_ sdk.Msg = &MsgClaim{}
 	_ sdk.Msg = &MsgIncentivePoolSpend{}
+	_ sdk.Msg = &MsgRegisterZoneDrop{}
 )
 
 // NewMsgClaim constructs a msg to claim from a zone airdrop.
