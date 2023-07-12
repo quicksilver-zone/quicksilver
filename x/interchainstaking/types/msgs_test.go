@@ -217,7 +217,103 @@ func TestMsgRegisterZone_ValidateBasic(t *testing.T) {
 
 			err := m.ValidateBasic()
 			if tt.wantErr {
-				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgUpdateZone_ValidateBasic(t *testing.T) {
+	testAddress := addressutils.GenerateAccAddressForTest().String()
+	validZoneID := "zone-1"
+
+	type fields struct {
+		Authority string
+		ZoneID    string
+		Changes   []*types.UpdateZoneValue
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			name: "test valid",
+			fields: fields{
+				Authority: testAddress,
+				ZoneID:    validZoneID,
+				Changes: []*types.UpdateZoneValue{
+					{
+						Key:   types.UpdateZoneKeyBaseDenom,
+						Value: "",
+					},
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid authority",
+			fields: fields{
+				Authority: "",
+				ZoneID:    validZoneID,
+				Changes: []*types.UpdateZoneValue{
+					{
+						Key:   types.UpdateZoneKeyBaseDenom,
+						Value: "",
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid zone ID empty",
+			fields: fields{
+				Authority: testAddress,
+				ZoneID:    "",
+				Changes: []*types.UpdateZoneValue{
+					{
+						Key:   types.UpdateZoneKeyBaseDenom,
+						Value: "",
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid update Key",
+			fields: fields{
+				Authority: testAddress,
+				ZoneID:    validZoneID,
+				Changes: []*types.UpdateZoneValue{
+					{
+						Key:   "invalid",
+						Value: "",
+					},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid no updates",
+			fields: fields{
+				Authority: testAddress,
+				ZoneID:    validZoneID,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := types.MsgUpdateZone{
+				Authority: tt.fields.Authority,
+				ZoneID:    tt.fields.ZoneID,
+				Changes:   tt.fields.Changes,
+			}
+
+			err := m.ValidateBasic()
+			if tt.wantErr {
 				require.Error(t, err)
 				return
 			}

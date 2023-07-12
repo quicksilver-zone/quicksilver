@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
@@ -182,6 +183,162 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 }
 
 func (k msgServer) UpdateZone(goCtx context.Context, msg *types.MsgUpdateZone) (*types.MsgUpdateZoneResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority() != msg.Authority {
+		return &types.MsgUpdateZoneResponse{},
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(), msg.Authority,
+			)
+	}
+
+	zone, found := k.GetZone(ctx, msg.ZoneID)
+	if !found {
+		return &types.MsgUpdateZoneResponse{}, fmt.Errorf("unable to get registered zone for zone id: %s", msg.ZoneID)
+	}
+
+	for _, change := range msg.Changes {
+		switch change.Key {
+		case types.UpdateZoneKeyBaseDenom:
+			if err := sdk.ValidateDenom(change.Value); err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+			if k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.IsPositive() {
+				return &types.MsgUpdateZoneResponse{}, errors.New("zone has assets minted, cannot update base_denom without potentially losing assets")
+			}
+			zone.BaseDenom = change.Value
+
+		case types.UpdateZoneKeyLocalDenom:
+			if err := sdk.ValidateDenom(change.Value); err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+			if k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.IsPositive() {
+				return &types.MsgUpdateZoneResponse{}, errors.New("zone has assets minted, cannot update local_denom without potentially losing assets")
+			}
+			zone.LocalDenom = change.Value
+
+		case types.UpdateZoneKeyLiquidityModule:
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+			zone.LiquidityModule = boolValue
+
+		case types.UpdateZoneKeyUnbondingEnabled:
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+			zone.UnbondingEnabled = boolValue
+
+		case types.UpdateZoneKeyDepositsEnabled:
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+			zone.DepositsEnabled = boolValue
+
+		case types.UpdateZoneKeyReturnToSender:
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+			zone.ReturnToSender = boolValue
+
+		case types.UpdateZoneKeyMessagesPerTx:
+			intVal, err := strconv.Atoi(change.Value)
+			if err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+			if intVal < 1 {
+				return &types.MsgUpdateZoneResponse{}, fmt.Errorf("invalid value for messages_per_tx: %d", intVal)
+			}
+			zone.MessagesPerTx = int64(intVal)
+
+		case types.UpdateZoneKeyAccountPrefix:
+			zone.AccountPrefix = change.Value
+
+		case types.UpdateZoneKeyIs118:
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+			zone.Is_118 = boolValue
+
+		case types.UpdateZoneKeyConnectionID:
+			if !strings.HasPrefix(change.Value, types.ConnectionPrefix) {
+				return &types.MsgUpdateZoneResponse{}, errors.New("unexpected connection format")
+			}
+			if zone.DepositAddress != nil || zone.DelegationAddress != nil || zone.PerformanceAddress != nil || zone.WithdrawalAddress != nil {
+				return &types.MsgUpdateZoneResponse{}, errors.New("zone already intialised, cannot update connection_id")
+			}
+			if k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount.IsPositive() {
+				return &types.MsgUpdateZoneResponse{}, errors.New("zone has assets minted, cannot update connection_id without potentially losing assets")
+			}
+
+			connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, change.Value)
+			if !found {
+				return &types.MsgUpdateZoneResponse{}, errors.New("unable to fetch connection")
+			}
+
+			clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
+			if !found {
+				return &types.MsgUpdateZoneResponse{}, errors.New("unable to fetch client state")
+			}
+
+			tmClientState, ok := clientState.(*tmclienttypes.ClientState)
+			if !ok {
+				return &types.MsgUpdateZoneResponse{}, errors.New("error unmarshaling client state")
+			}
+
+			if tmClientState.Status(ctx, k.IBCKeeper.ClientKeeper.ClientStore(ctx, connection.ClientId), k.IBCKeeper.Codec()) != ibcexported.Active {
+				return &types.MsgUpdateZoneResponse{}, errors.New("new connection client state is not active")
+			}
+
+			zone.ConnectionId = change.Value
+
+			k.SetZone(ctx, &zone)
+
+			// generate deposit account
+			portOwner := zone.ID() + ".deposit"
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+
+			// generate withdrawal account
+			portOwner = zone.ID() + ".withdrawal"
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+
+			// generate perf account
+			portOwner = zone.ID() + ".performance"
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+
+			// generate delegate accounts
+			portOwner = zone.ID() + ".delegate"
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+
+			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+			query := stakingTypes.QueryValidatorsRequest{}
+			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+			if err != nil {
+				return &types.MsgUpdateZoneResponse{}, err
+			}
+
+		default:
+			return &types.MsgUpdateZoneResponse{}, fmt.Errorf("unexpected key '%s'", change.Key)
+		}
+	}
+	k.SetZone(ctx, &zone)
+
+	k.Logger(ctx).Info("applied changes to zone", "changes", msg.Changes, "zone", zone.ID())
+
 	return &types.MsgUpdateZoneResponse{}, nil
 }
 

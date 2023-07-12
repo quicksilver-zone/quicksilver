@@ -22,7 +22,7 @@ var (
 )
 
 const (
-	connectionPrefix = "connection-"
+	ConnectionPrefix = "connection-"
 
 	UpdateZoneKeyBaseDenom        = "base_denom"
 	UpdateZoneKeyLocalDenom       = "local_denom"
@@ -44,7 +44,7 @@ func (msg MsgRegisterZone) ValidateBasic() error {
 	}
 
 	// check valid connection id
-	if len(msg.ConnectionID) < 12 || msg.ConnectionID[0:11] != connectionPrefix {
+	if len(msg.ConnectionID) < 12 || msg.ConnectionID[0:11] != ConnectionPrefix {
 		return fmt.Errorf("invalid connection string: %s", msg.ConnectionID)
 	}
 
@@ -80,7 +80,7 @@ func (msg MsgRegisterZone) ValidateBasic() error {
 }
 
 // GetSigners Implements Msg.
-func (msg MsgUpdateZone) GetSigners() []sdk.AccAddress {
+func (msg MsgRegisterZone) GetSigners() []sdk.AccAddress {
 	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{authority}
 }
@@ -92,6 +92,14 @@ func (msg MsgUpdateZone) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Authority)
 	if err != nil {
 		return errors.New("invalid authority address")
+	}
+
+	if msg.ZoneID == "" {
+		return errors.New("zoneID cannot be empty")
+	}
+
+	if len(msg.Changes) == 0 {
+		return errors.New("message must contain non-zero amount of zone changes")
 	}
 
 	// verify that key is supported
@@ -116,7 +124,7 @@ func (msg MsgUpdateZone) ValidateBasic() error {
 }
 
 // GetSigners Implements Msg.
-func (msg MsgRegisterZone) GetSigners() []sdk.AccAddress {
+func (msg MsgUpdateZone) GetSigners() []sdk.AccAddress {
 	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
 	return []sdk.AccAddress{authority}
 }
