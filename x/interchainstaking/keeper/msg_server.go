@@ -41,23 +41,31 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	)
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority() != msg.Authority {
+		return &types.MsgRegisterZoneResponse{},
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(), msg.Authority,
+			)
+	}
 
 	// get chain id from connection
 	chainID, err := k.GetChainID(ctx, msg.ConnectionId)
 	if err != nil {
-		return nil, fmt.Errorf("unable to obtain chain id: %w", err)
+		return &types.MsgRegisterZoneResponse{}, fmt.Errorf("unable to obtain chain id: %w", err)
 	}
 
 	// if subzone
 	if msg.SubzoneInfo != nil {
 		if chainID != msg.SubzoneInfo.BaseChainID {
-			return nil, fmt.Errorf("incorrect ID \"%s\" for subzone \"%s\"", chainID, msg.SubzoneInfo.BaseChainID)
+			return &types.MsgRegisterZoneResponse{}, fmt.Errorf("incorrect ID \"%s\" for subzone \"%s\"", chainID, msg.SubzoneInfo.BaseChainID)
 		}
 
 		// get zone
 		baseZone, found = k.GetZone(ctx, msg.SubzoneInfo.BaseChainID)
 		if !found {
-			return nil, fmt.Errorf("unable to find base chain \"%s\" for subzone \"%s\"", chainID, msg.SubzoneInfo.BaseChainID)
+			return &types.MsgRegisterZoneResponse{}, fmt.Errorf("unable to find base chain \"%s\" for subzone \"%s\"", chainID, msg.SubzoneInfo.BaseChainID)
 		}
 
 		// set chainID to be specified unique ID
@@ -67,26 +75,26 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	// get zone
 	_, found = k.GetZone(ctx, chainID)
 	if found {
-		return nil, fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainID)
+		return &types.MsgRegisterZoneResponse{}, fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainID)
 	}
 
 	connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, msg.ConnectionId)
 	if !found {
-		return nil, errors.New("unable to fetch connection")
+		return &types.MsgRegisterZoneResponse{}, errors.New("unable to fetch connection")
 	}
 
 	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, connection.ClientId)
 	if !found {
-		return nil, errors.New("unable to fetch client state")
+		return &types.MsgRegisterZoneResponse{}, errors.New("unable to fetch client state")
 	}
 
 	tmClientState, ok := clientState.(*tmclienttypes.ClientState)
 	if !ok {
-		return nil, errors.New("error unmarshaling client state")
+		return &types.MsgRegisterZoneResponse{}, errors.New("error unmarshaling client state")
 	}
 
 	if tmClientState.Status(ctx, k.IBCKeeper.ClientKeeper.ClientStore(ctx, connection.ClientId), k.IBCKeeper.Codec()) != ibcexported.Active {
-		return nil, errors.New("client state is not active")
+		return &types.MsgRegisterZoneResponse{}, errors.New("client state is not active")
 	}
 
 	zone := &types.Zone{
@@ -111,7 +119,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	// verify subzone if setting
 	if zone.IsSubzone() {
 		if err := types.ValidateSubzoneForBasezone(*zone, baseZone); err != nil {
-			return nil, err
+			return &types.MsgRegisterZoneResponse{}, err
 		}
 	}
 
@@ -120,25 +128,25 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	// generate deposit account
 	portOwner := chainID + ".deposit"
 	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
-		return nil, err
+		return &types.MsgRegisterZoneResponse{}, err
 	}
 
-	// generate withdrawal account
+	// generate the withdrawal account
 	portOwner = chainID + ".withdrawal"
 	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 		return nil, err
 	}
 
-	// generate perf account
+	// generate the perf account
 	portOwner = chainID + ".performance"
 	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
-		return nil, err
+		return &types.MsgRegisterZoneResponse{}, err
 	}
 
 	// generate delegate accounts
 	portOwner = chainID + ".delegate"
 	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
-		return nil, err
+		return &types.MsgRegisterZoneResponse{}, err
 	}
 
 	// query val set for base zone
@@ -147,13 +155,13 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		query := stakingTypes.QueryValidatorsRequest{}
 		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
 		if err != nil {
-			return nil, err
+			return &types.MsgRegisterZoneResponse{}, err
 		}
 	}
 
 	err = k.hooks.AfterZoneCreated(ctx, zone.ConnectionId, zone.ChainId, zone.AccountPrefix)
 	if err != nil {
-		return nil, err
+		return &types.MsgRegisterZoneResponse{}, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -347,11 +355,11 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// checking msg authority is the gov module address
-	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+	if k.Keeper.GetGovAuthority() != msg.Authority {
 		return &types.MsgGovCloseChannelResponse{},
 			govtypes.ErrInvalidSigner.Wrapf(
 				"invalid authority: expected %s, got %s",
-				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+				k.Keeper.GetGovAuthority(), msg.Authority,
 			)
 	}
 
