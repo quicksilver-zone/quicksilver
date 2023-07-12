@@ -200,7 +200,7 @@ func TestMsgRegisterZone_ValidateBasic(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			m := types.MsgRegisterZone{
-				ConnectionId:     tt.fields.ConnectionID,
+				ConnectionID:     tt.fields.ConnectionID,
 				BaseDenom:        tt.fields.BaseDenom,
 				LocalDenom:       tt.fields.LocalDenom,
 				AccountPrefix:    tt.fields.AccountPrefix,

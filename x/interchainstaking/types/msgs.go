@@ -14,6 +14,7 @@ import (
 
 var (
 	_ sdk.Msg = &MsgRegisterZone{}
+	_ sdk.Msg = &MsgUpdateZone{}
 	_ sdk.Msg = &MsgRequestRedemption{}
 	_ sdk.Msg = &MsgSignalIntent{}
 	_ sdk.Msg = &MsgGovCloseChannel{}
@@ -22,6 +23,17 @@ var (
 
 const (
 	connectionPrefix = "connection-"
+
+	UpdateZoneKeyBaseDenom        = "base_denom"
+	UpdateZoneKeyLocalDenom       = "local_denom"
+	UpdateZoneKeyLiquidityModule  = "liquidity_module"
+	UpdateZoneKeyUnbondingEnabled = "unbonding_enabled"
+	UpdateZoneKeyDepositsEnabled  = "deposits_enabled"
+	UpdateZoneKeyReturnToSender   = "return_to_sender"
+	UpdateZoneKeyMessagesPerTx    = "messages_per_tx"
+	UpdateZoneKeyAccountPrefix    = "account_prefix"
+	UpdateZoneKeyIs118            = "is_118"
+	UpdateZoneKeyConnectionID     = "connection_id"
 )
 
 // ValidateBasic Implements Msg.
@@ -32,8 +44,8 @@ func (msg MsgRegisterZone) ValidateBasic() error {
 	}
 
 	// check valid connection id
-	if len(msg.ConnectionId) < 12 || msg.ConnectionId[0:11] != connectionPrefix {
-		return fmt.Errorf("invalid connection string: %s", msg.ConnectionId)
+	if len(msg.ConnectionID) < 12 || msg.ConnectionID[0:11] != connectionPrefix {
+		return fmt.Errorf("invalid connection string: %s", msg.ConnectionID)
 	}
 
 	// validate local denominations
@@ -62,6 +74,42 @@ func (msg MsgRegisterZone) ValidateBasic() error {
 
 	if msg.Decimals == 0 {
 		return errors.New("decimals field is mandatory")
+	}
+
+	return nil
+}
+
+// GetSigners Implements Msg.
+func (msg MsgUpdateZone) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+//----------------------------------------------------------------
+
+// ValidateBasic Implements Msg.
+func (msg MsgUpdateZone) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return errors.New("invalid authority address")
+	}
+
+	// verify that key is supported
+	for _, change := range msg.Changes {
+		switch change.Key {
+		case UpdateZoneKeyBaseDenom:
+		case UpdateZoneKeyLocalDenom:
+		case UpdateZoneKeyLiquidityModule:
+		case UpdateZoneKeyUnbondingEnabled:
+		case UpdateZoneKeyDepositsEnabled:
+		case UpdateZoneKeyReturnToSender:
+		case UpdateZoneKeyMessagesPerTx:
+		case UpdateZoneKeyAccountPrefix:
+		case UpdateZoneKeyIs118:
+		case UpdateZoneKeyConnectionID:
+		default:
+			return fmt.Errorf("unexpected update key '%s'", change.Key)
+		}
 	}
 
 	return nil

@@ -51,7 +51,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	}
 
 	// get chain id from connection
-	chainID, err := k.GetChainID(ctx, msg.ConnectionId)
+	chainID, err := k.GetChainID(ctx, msg.ConnectionID)
 	if err != nil {
 		return &types.MsgRegisterZoneResponse{}, fmt.Errorf("unable to obtain chain id: %w", err)
 	}
@@ -78,7 +78,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		return &types.MsgRegisterZoneResponse{}, fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainID)
 	}
 
-	connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, msg.ConnectionId)
+	connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, msg.ConnectionID)
 	if !found {
 		return &types.MsgRegisterZoneResponse{}, errors.New("unable to fetch connection")
 	}
@@ -99,7 +99,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 
 	zone := &types.Zone{
 		ChainId:            chainID,
-		ConnectionId:       msg.ConnectionId,
+		ConnectionId:       msg.ConnectionID,
 		LocalDenom:         msg.LocalDenom,
 		BaseDenom:          msg.BaseDenom,
 		AccountPrefix:      msg.AccountPrefix,
@@ -171,7 +171,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		),
 		sdk.NewEvent(
 			types.EventTypeRegisterZone,
-			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
+			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionID),
 			sdk.NewAttribute(types.AttributeKeyChainID, chainID),
 		),
 	})
@@ -179,6 +179,10 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	return &types.MsgRegisterZoneResponse{
 		ZoneID: chainID,
 	}, nil
+}
+
+func (k msgServer) UpdateZone(goCtx context.Context, msg *types.MsgUpdateZone) (*types.MsgUpdateZoneResponse, error) {
+	return &types.MsgUpdateZoneResponse{}, nil
 }
 
 // RequestRedemption handles MsgRequestRedemption by creating a corresponding withdrawal record queued for unbonding.

@@ -497,6 +497,10 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 	// TODO: add tests
 }
 
+func (suite *KeeperTestSuite) TestUpdateZone() {
+	// TODO: add tests
+}
+
 func (suite *KeeperTestSuite) GovReopenChannel() {
 	// TODO: add tests
 }
