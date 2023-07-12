@@ -20,6 +20,10 @@ var (
 	_ sdk.Msg = &MsgGovReopenChannel{}
 )
 
+const (
+	connectionPrefix = "connection-"
+)
+
 // ValidateBasic Implements Msg.
 func (msg MsgRegisterZone) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Authority)
@@ -28,7 +32,7 @@ func (msg MsgRegisterZone) ValidateBasic() error {
 	}
 
 	// check valid connection id
-	if len(msg.ConnectionId) < 12 || msg.ConnectionId[0:11] != "connection-" {
+	if len(msg.ConnectionId) < 12 || msg.ConnectionId[0:11] != connectionPrefix {
 		return fmt.Errorf("invalid connection string: %s", msg.ConnectionId)
 	}
 

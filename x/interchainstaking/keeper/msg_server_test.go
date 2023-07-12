@@ -494,13 +494,13 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 }
 
 func (suite *KeeperTestSuite) TestRegisterZone() {
-	// TODO
+	// TODO: add tests
 }
 
 func (suite *KeeperTestSuite) GovReopenChannel() {
-	// TODO
+	// TODO: add tests
 }
 
 func (suite *KeeperTestSuite) GovCloseChannel() {
-	// TODO
+	// TODO: add tests
 }
