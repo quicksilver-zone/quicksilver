@@ -249,12 +249,13 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 	}
 
 	// check if capability has been claimed yet. If it's not been claimed, claim capability
-	if _, claimed := k.ICAControllerKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID)); !claimed {
-		err := k.ICAControllerKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
-		if err != nil {
-			return err
-		}
-	}
+	// if _, claimed := k.ICAControllerKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID)); !claimed {
+	// 	err := k.ICAControllerKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+	k.ICAControllerKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
 
 	chunkSize := int(messagesPerTx)
 	if chunkSize < 1 {
