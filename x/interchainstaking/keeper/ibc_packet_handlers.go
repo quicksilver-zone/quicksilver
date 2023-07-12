@@ -314,8 +314,11 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 	receivedCoin := sMsg.Token
 
 	zone, found := k.GetZoneForWithdrawalAccount(ctx, sMsg.Sender)
+	if !found {
+		return fmt.Errorf("zone not found for withdrawal account %s", sMsg.Sender)
+	}
 
-	var channel *channeltypes.IdentifiedChannel = nil
+	var channel *channeltypes.IdentifiedChannel
 	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(ic channeltypes.IdentifiedChannel) bool {
 		if ic.Counterparty.ChannelId == sMsg.SourceChannel && ic.Counterparty.PortId == sMsg.SourcePort && len(ic.ConnectionHops) == 1 && ic.ConnectionHops[0] == zone.ConnectionId {
 			channel = &ic
