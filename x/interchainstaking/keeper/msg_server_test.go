@@ -492,3 +492,15 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestRegisterZone() {
+	// TODO
+}
+
+func (suite *KeeperTestSuite) GovReopenChannel() {
+	// TODO
+}
+
+func (suite *KeeperTestSuite) GovCloseChannel() {
+	// TODO
+}
