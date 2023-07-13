@@ -13,8 +13,8 @@ func (z *Zone) IsSubzone() bool {
 	return z.SubzoneInfo != nil
 }
 
-// ChainID returns the ID of the running chain for the given zone.
-func (z *Zone) ChainID() string {
+// BaseChainID returns the ID of the running chain for the given zone.
+func (z *Zone) BaseChainID() string {
 	if z.IsSubzone() {
 		return z.SubzoneInfo.BaseChainID
 	}
@@ -22,8 +22,8 @@ func (z *Zone) ChainID() string {
 	return z.ChainId
 }
 
-// ID returns the unique identifier for the given zone.
-func (z *Zone) ID() string {
+// ZoneID returns the unique identifier for the given zone.
+func (z *Zone) ZoneID() string {
 	return z.ChainId
 }
 
@@ -54,7 +54,7 @@ func ValidateSubzoneForBasezone(subZone, baseZone Zone) error {
 		return fmt.Errorf("all subzone info must be populated: %w", ErrInvalidSubzoneForBasezone)
 	}
 
-	if err := ValidateSubzoneID(subZone.SubzoneInfo.ChainID, baseZone.ID()); err != nil {
+	if err := ValidateSubzoneID(subZone.SubzoneInfo.ChainID, baseZone.ZoneID()); err != nil {
 		return errors.Join(err, ErrInvalidSubzoneForBasezone)
 	}
 
@@ -62,11 +62,11 @@ func ValidateSubzoneForBasezone(subZone, baseZone Zone) error {
 		return fmt.Errorf("connection IDs must be identical for subzone and basezone: %w", ErrInvalidSubzoneForBasezone)
 	}
 
-	if subZone.SubzoneInfo.BaseChainID != baseZone.ChainID() {
+	if subZone.SubzoneInfo.BaseChainID != baseZone.BaseChainID() {
 		return fmt.Errorf("incorrect basechainID for subzone: %w", ErrInvalidSubzoneForBasezone)
 	}
 
-	if subZone.SubzoneInfo.ChainID == baseZone.ChainID() {
+	if subZone.SubzoneInfo.ChainID == baseZone.BaseChainID() {
 		return fmt.Errorf("subzone chainID must be unique: %w", ErrInvalidSubzoneForBasezone)
 	}
 

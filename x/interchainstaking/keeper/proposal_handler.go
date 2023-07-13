@@ -128,7 +128,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	if !zone.IsSubzone() {
 		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 		query := stakingTypes.QueryValidatorsRequest{}
-		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.BaseChainID(), query, sdkmath.NewInt(period))
 		if err != nil {
 			return err
 		}
@@ -288,32 +288,32 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			portOwner := zone.ID() + ".deposit"
+			portOwner := zone.ZoneID() + ".deposit"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			// generate withdrawal account
-			portOwner = zone.ID() + ".withdrawal"
+			portOwner = zone.ZoneID() + ".withdrawal"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			// generate perf account
-			portOwner = zone.ID() + ".performance"
+			portOwner = zone.ZoneID() + ".performance"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			// generate delegate accounts
-			portOwner = zone.ID() + ".delegate"
+			portOwner = zone.ZoneID() + ".delegate"
 			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
 				return err
 			}
 
 			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 			query := stakingTypes.QueryValidatorsRequest{}
-			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.BaseChainID(), query, sdkmath.NewInt(period))
 			if err != nil {
 				return err
 			}
@@ -324,7 +324,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 	}
 	k.SetZone(ctx, &zone)
 
-	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ID())
+	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ZoneID())
 
 	return nil
 }

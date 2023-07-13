@@ -74,14 +74,14 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		return nil
 	}
 
-	if err := zone.ValidateCoinsForZone(assets, k.GetValidatorAddresses(ctx, zone.ChainID())); err != nil {
+	if err := zone.ValidateCoinsForZone(assets, k.GetValidatorAddresses(ctx, zone.BaseChainID())); err != nil {
 		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before.
 		// That is okay, we'll catch it next round!)
 		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
 		return fmt.Errorf("unable to validate coins. Ignoring. senderAddress=%q", senderAddress)
 	}
 
-	k.Logger(ctx).Info("found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", senderAccAddress.String(), "chain id", zone.ID(), "assets", assets, "hash", hash)
+	k.Logger(ctx).Info("found new deposit tx", "deposit_address", zone.DepositAddress.GetAddress(), "senderAddress", senderAddress, "local", senderAccAddress.String(), "chain id", zone.ZoneID(), "assets", assets, "hash", hash)
 
 	var (
 		memoIntent    types.ValidatorIntents
@@ -104,16 +104,16 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 
 	// update state
 	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, &zone, assets, memoIntent); err != nil {
-		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ID(), "err", err.Error())
-		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ID(), err)
+		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ZoneID(), "err", err.Error())
+		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ZoneID(), err)
 	}
 	if err := k.MintAndSendQAsset(ctx, senderAccAddress, senderAddress, &zone, assets, memoRTS, mappedAddress); err != nil {
-		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ID(), "err", err)
-		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ID(), err)
+		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ZoneID(), "err", err)
+		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ZoneID(), err)
 	}
 	if err := k.TransferToDelegate(ctx, &zone, assets, hash); err != nil {
-		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ID(), "err", err)
-		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ID(), err)
+		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ZoneID(), "err", err)
+		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ZoneID(), err)
 	}
 
 	// create receipt
@@ -185,7 +185,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	setMappedAddress := true
 	if mappedAddress == nil && !zone.Is_118 && !zone.ReturnToSender && !memoRTS {
 		var found bool
-		mappedAddress, found = k.GetRemoteAddressMap(ctx, sender, zone.ID())
+		mappedAddress, found = k.GetRemoteAddressMap(ctx, sender, zone.ZoneID())
 		if !found {
 			// if not found, skip minting and refund assets
 			msg := &bankTypes.MsgSend{FromAddress: zone.DepositAddress.GetAddress(), ToAddress: senderAddress, Amount: assets}
@@ -208,7 +208,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	case mappedAddress != nil && !zone.Is_118:
 		// set mapped account
 		if setMappedAddress {
-			k.SetAddressMapPair(ctx, sender, mappedAddress, zone.ID())
+			k.SetAddressMapPair(ctx, sender, mappedAddress, zone.ZoneID())
 		}
 
 		// set send to mapped account
@@ -313,13 +313,13 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 
 func (k Keeper) NilReceipt(ctx sdk.Context, zone *types.Zone, txhash string) {
 	t := ctx.BlockTime()
-	r := types.Receipt{ChainId: zone.ID(), Sender: "", Txhash: txhash, Amount: sdk.Coins{}, FirstSeen: &t, Completed: &t}
+	r := types.Receipt{ChainId: zone.ZoneID(), Sender: "", Txhash: txhash, Amount: sdk.Coins{}, FirstSeen: &t, Completed: &t}
 	k.SetReceipt(ctx, r)
 }
 
 func (k Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
 	t := ctx.BlockTime()
-	return &types.Receipt{ChainId: zone.ID(), Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t}
+	return &types.Receipt{ChainId: zone.ZoneID(), Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t}
 }
 
 // GetReceipt returns receipt for the given key.
@@ -378,7 +378,7 @@ func (k *Keeper) AllReceipts(ctx sdk.Context) []types.Receipt {
 // IterateZoneReceipts iterates through receipts of the given zone.
 func (k *Keeper) IterateZoneReceipts(ctx sdk.Context, zone *types.Zone, fn func(index int64, receiptInfo types.Receipt) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
-	iterator := sdk.KVStorePrefixIterator(store, []byte(zone.ID()))
+	iterator := sdk.KVStorePrefixIterator(store, []byte(zone.ZoneID()))
 	defer iterator.Close()
 
 	i := int64(0)

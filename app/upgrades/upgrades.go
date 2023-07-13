@@ -65,7 +65,7 @@ func V010402rc1UpgradeHandler(
 						Tombstoned:      val.Tombstoned,
 						JailedSince:     val.JailedSince,
 					}
-					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone.ChainID(), newVal)
+					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone.BaseChainID(), newVal)
 					if err != nil {
 						panic(err)
 					}
@@ -241,7 +241,7 @@ func V010402rc6UpgradeHandler(
 				appKeepers.InterchainstakingKeeper.ICQKeeper.MakeRequest(
 					ctx,
 					zone.ConnectionId,
-					zone.ID(),
+					zone.ZoneID(),
 					"cosmos.staking.v1beta1.Query/DelegatorDelegations",
 					bz,
 					sdk.NewInt(-1),

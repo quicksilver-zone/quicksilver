@@ -40,7 +40,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 		return err
 	}
 
-	ctx.Logger().Info("found matching address", "chain", zone.ChainID(), "address", address, "port", portID)
+	ctx.Logger().Info("found matching address", "chain", zone.BaseChainID(), "address", address, "port", portID)
 	portParts := strings.Split(portID, ".")
 
 	switch {
@@ -52,7 +52,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 				return err
 			}
 
-			k.SetAddressZoneMapping(ctx, address, zone.ChainID())
+			k.SetAddressZoneMapping(ctx, address, zone.BaseChainID())
 
 			balanceQuery := bankTypes.QueryAllBalancesRequest{Address: address}
 			bz, err := k.GetCodec().Marshal(&balanceQuery)
@@ -63,7 +63,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				connectionID,
-				zone.ID(),
+				zone.ZoneID(),
 				"cosmos.bank.v1beta1.Query/AllBalances",
 				bz,
 				sdk.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),
@@ -80,7 +80,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			if err != nil {
 				return err
 			}
-			k.SetAddressZoneMapping(ctx, address, zone.ChainID())
+			k.SetAddressZoneMapping(ctx, address, zone.BaseChainID())
 		}
 
 	// delegation addresses
@@ -90,7 +90,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			if err != nil {
 				return err
 			}
-			k.SetAddressZoneMapping(ctx, address, zone.ChainID())
+			k.SetAddressZoneMapping(ctx, address, zone.BaseChainID())
 		}
 
 	// performance address
@@ -101,7 +101,7 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 			if err != nil {
 				return err
 			}
-			k.SetAddressZoneMapping(ctx, address, zone.ChainID())
+			k.SetAddressZoneMapping(ctx, address, zone.BaseChainID())
 		}
 
 		// emit this periodic query the first time, but not subsequently.

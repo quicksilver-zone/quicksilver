@@ -784,7 +784,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ID(),
+					zone.ZoneID(),
 					delegatorAddress,
 					distribution,
 					testAddress,
@@ -980,7 +980,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ID(),
+					zone.ZoneID(),
 					delegatorAddress,
 					distribution,
 					testAddress,
@@ -1059,7 +1059,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 				icsKeeper.SetUnbondingRecord(
 					ctx,
 					types.UnbondingRecord{
-						ChainId:       zone.ID(),
+						ChainId:       zone.ZoneID(),
 						EpochNumber:   1,
 						Validator:     icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 						RelatedTxhash: []string{"ABC012"},
@@ -1134,7 +1134,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 				icsKeeper.SetRedelegationRecord(
 					ctx,
 					types.RedelegationRecord{
-						ChainId:     zone.ID(),
+						ChainId:     zone.ZoneID(),
 						EpochNumber: 1,
 						Source:      icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
 						Destination: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
@@ -1228,7 +1228,7 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 				}
 				icsKeeper.SetZone(ctx, &zone)
 
-				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ID())
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ZoneID())
 			},
 			&types.QueryMappedAccountsRequest{Address: "cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn"},
 			false,
@@ -1251,7 +1251,7 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 				}
 				icsKeeper.SetZone(ctx, &zone)
 
-				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ID())
+				icsKeeper.SetRemoteAddressMap(ctx, usrAddress1, randomutils.GenerateRandomBytes(32), zone.ZoneID())
 
 				zone2 := types.Zone{
 					ConnectionId:    "connection-77891",
