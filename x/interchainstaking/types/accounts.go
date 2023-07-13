@@ -42,3 +42,19 @@ func (a *ICAAccount) DecrementBalanceWaitgroup() error {
 	a.BalanceWaitgroup--
 	return nil
 }
+
+func (z *Zone) DepositPortOwner() string {
+	return z.ZoneID() + ".deposit"
+}
+
+func (z *Zone) WithdrawalPortOwner() string {
+	return z.ZoneID() + ".withdrawal"
+}
+
+func (z *Zone) DelegatePortOwner() string {
+	return z.ZoneID() + ".delegate"
+}
+
+func (z *Zone) PerformancePortOwner() string {
+	return z.ZoneID() + ".performance"
+}

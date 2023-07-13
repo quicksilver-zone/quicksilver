@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/json"
+	"github.com/ingenuity-build/quicksilver/proofs"
 	"time"
 
 	"cosmossdk.io/math"
@@ -14,7 +15,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/app"
 	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
@@ -494,8 +494,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 
 			appA := suite.GetQuicksilverApp(suite.chainA)
 			// override disabled proof verification; lets test actual proofs :)
-			appA.ParticipationRewardsKeeper.ValidateProofOps = utils.ValidateProofOps
-			appA.ParticipationRewardsKeeper.ValidateSelfProofOps = utils.ValidateSelfProofOps
+			appA.ParticipationRewardsKeeper.ValidateProofOps = proofs.ValidateProofOps
+			appA.ParticipationRewardsKeeper.ValidateSelfProofOps = proofs.ValidateSelfProofOps
 
 			suite.coordinator.CommitNBlocks(suite.chainA, 3)
 			ctx := suite.chainA.GetContext()

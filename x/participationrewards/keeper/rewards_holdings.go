@@ -39,7 +39,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 			return false
 		}
 
-		k.icsKeeper.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ZoneID())
+		k.icsKeeper.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone)
 		return false
 	})
 

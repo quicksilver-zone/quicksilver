@@ -288,26 +288,22 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			portOwner := zone.ZoneID() + ".deposit"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
 				return err
 			}
 
 			// generate withdrawal account
-			portOwner = zone.ZoneID() + ".withdrawal"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
 				return err
 			}
 
 			// generate perf account
-			portOwner = zone.ZoneID() + ".performance"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
 				return err
 			}
 
 			// generate delegate accounts
-			portOwner = zone.ZoneID() + ".delegate"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
 				return err
 			}
 
