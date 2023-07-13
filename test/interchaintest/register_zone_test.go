@@ -52,9 +52,9 @@ func TestRegisterZone(t *testing.T) {
 				GasPrices:      "0.00stake",
 				GasAdjustment:  1.3,
 				TrustingPeriod: "504h",
-				// EncodingConfig: WasmClientEncoding(),
-				NoHostMount:   true,
-				ModifyGenesis: modifyGenesisShortProposals(votingPeriod, maxDepositPeriod),
+				EncodingConfig: quicksilverEncoding(),
+				NoHostMount:    true,
+				ModifyGenesis:  modifyGenesisShortProposals(votingPeriod, maxDepositPeriod),
 			},
 		},
 	})
@@ -117,7 +117,7 @@ func TestRegisterZone(t *testing.T) {
 		Decimals:         6,
 	}
 
-	msg, err := .Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
+	msg, err := quicksilverd.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
 	fmt.Println("Msg: ", string(msg))
 	require.NoError(t, err)
 	proposal.Messages = append(proposal.Messages, msg)
