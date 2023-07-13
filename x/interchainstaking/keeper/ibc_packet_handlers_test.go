@@ -518,7 +518,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 				}
 			},
 			message: banktypes.MsgSend{},
-			memo:    "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			memo:    "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 			err:     true,
 		},
 		{
@@ -545,7 +545,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 			message: banktypes.MsgSend{
 				Amount: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
 			},
-			memo: "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			memo: "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 			err:  false,
 		},
 		{
@@ -587,7 +587,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 			message: banktypes.MsgSend{
 				Amount: sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(15000000))),
 			},
-			memo: "d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
+			memo: "unbondSend/d786f7d4c94247625c2882e921a790790eb77a00d0534d5c3154d0a9c5ab68f5",
 			err:  false,
 		},
 	}
@@ -625,14 +625,14 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 			}
 
 			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icstypes.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
-				if withdrawal.Txhash == test.memo {
+				if withdrawal.Txhash == test.memo[11:] {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
 			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icstypes.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
-				if withdrawal.Txhash != test.memo {
+				if withdrawal.Txhash != test.memo[11:] {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
@@ -674,7 +674,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 				{Amount: sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000)))},
 				{Amount: sdk.NewCoins(sdk.NewCoin(v2+"2", sdk.NewInt(1000000)))},
 			},
-			memo: "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			memo: "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 			err:  false,
 		},
 		{
@@ -700,7 +700,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 				{Amount: sdk.NewCoins(sdk.NewCoin(v2+"1", sdk.NewInt(1500000)))},
 				{Amount: sdk.NewCoins(sdk.NewCoin(v1+"2", sdk.NewInt(1000000)))},
 			},
-			memo: "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			memo: "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 			err:  false,
 		},
 	}
@@ -741,14 +741,14 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 			}
 
 			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icstypes.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
-				if withdrawal.Txhash == test.memo {
+				if withdrawal.Txhash == test.memo[11:] {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
 			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icstypes.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
-				if withdrawal.Txhash != test.memo {
+				if withdrawal.Txhash != test.memo[11:] {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false

@@ -438,7 +438,6 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 			// if we can't burn the coins, fail.
 			return err
 		}
-		k.SetWithdrawalRecord(ctx, withdrawalRecord)
 		k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
 	} else {
 
@@ -457,7 +456,6 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 						// if we can't burn the coins, fail.
 						return err
 					}
-					k.SetWithdrawalRecord(ctx, withdrawalRecord)
 					k.Logger(ctx).Info("burned coins post-withdrawal", "coins", withdrawalRecord.BurnAmount)
 				}
 				break
