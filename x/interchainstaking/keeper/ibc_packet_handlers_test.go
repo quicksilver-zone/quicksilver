@@ -624,15 +624,18 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 				suite.Require().NoError(err)
 			}
 
+			hash, err := icstypes.ParseTxMsgMemo(test.memo, icstypes.MsgTypeUnbondSend)
+			suite.Require().NoError(err)
+
 			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icstypes.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
-				if withdrawal.Txhash == test.memo[11:] {
+				if withdrawal.Txhash == hash {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
 			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icstypes.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
-				if withdrawal.Txhash != test.memo[11:] {
+				if withdrawal.Txhash != hash {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
@@ -740,15 +743,18 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 				}
 			}
 
+			hash, err := icstypes.ParseTxMsgMemo(test.memo, icstypes.MsgTypeUnbondSend)
+			suite.Require().NoError(err)
+
 			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icstypes.WithdrawStatusSend, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
-				if withdrawal.Txhash == test.memo[11:] {
+				if withdrawal.Txhash == hash {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
 			})
 
 			quicksilver.InterchainstakingKeeper.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, icstypes.WithdrawStatusCompleted, func(idx int64, withdrawal icstypes.WithdrawalRecord) bool {
-				if withdrawal.Txhash != test.memo[11:] {
+				if withdrawal.Txhash != hash {
 					suite.Require().Fail("unexpected withdrawal record; status should be Completed.")
 				}
 				return false
