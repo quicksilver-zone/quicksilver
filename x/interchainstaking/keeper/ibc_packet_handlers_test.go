@@ -28,8 +28,8 @@ import (
 var TestChannel = channeltypes.Channel{
 	State:          channeltypes.OPEN,
 	Ordering:       channeltypes.UNORDERED,
-	Counterparty:   channeltypes.NewCounterparty("transfer", "channel-4"),
-	ConnectionHops: []string{"connection-2"},
+	Counterparty:   channeltypes.NewCounterparty("transfer", "channel-0"),
+	ConnectionHops: []string{"connection-0"},
 }
 
 func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
@@ -1464,24 +1464,23 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 		{
 			name: "msg response with some data",
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, []byte) {
-				sender := addressutils.GenerateAccAddressForTest()
-				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
-				suite.Require().NoError(err)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				if !found {
+					suite.Fail("unable to retrieve zone for test")
+				}
+				sender := zone.WithdrawalAddress.Address
 
 				quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", TestChannel)
 
-				channel, cfound := quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", "channel-0")
-				suite.Require().True(cfound)
-
-				ibcDenom := utils.DeriveIbcDenom(channel.Counterparty.PortId, channel.Counterparty.ChannelId, "denom")
-				err = quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ibcDenom, sdk.NewInt(100))))
+				ibcDenom := utils.DeriveIbcDenom("transfer", "channel-0", zone.BaseDenom)
+				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ibcDenom, sdk.NewInt(100))))
 				suite.Require().NoError(err)
 
 				transferMsg := ibctransfertypes.MsgTransfer{
 					SourcePort:    "transfer",
 					SourceChannel: "channel-0",
-					Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
-					Sender:        senderAddr,
+					Token:         sdk.NewCoin(zone.BaseDenom, sdk.NewInt(100)),
+					Sender:        sender,
 					Receiver:      quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
 				}
 				response := ibctransfertypes.MsgTransferResponse{
@@ -1492,16 +1491,17 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 				return []proto.Message{&transferMsg}, respBytes
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				if !found {
+					suite.Fail("unable to retrieve zone for test")
+				}
+
 				txMacc := quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
 				feeMacc := quicksilver.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 				txMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
 				feeMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
 
-				// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
-				channel, cfound := quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", "channel-0")
-				suite.Require().True(cfound)
-
-				ibcDenom := utils.DeriveIbcDenom(channel.Counterparty.PortId, channel.Counterparty.ChannelId, "denom")
+				ibcDenom := utils.DeriveIbcDenom("transfer", "channel-0", zone.BaseDenom)
 				if txMaccBalance2.AmountOf(ibcDenom).Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf(ibcDenom).Equal(sdk.NewInt(100)) {
 					return true
 				}
@@ -1577,7 +1577,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 			packet := channeltypes.Packet{
 				Data: packetBytes,
 			}
-
+			ctx = suite.chainA.GetContext()
 			suite.Require().NoError(quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
 
 			suite.Require().True(test.assertStatements(ctx, quicksilver))
@@ -1594,24 +1594,23 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 		{
 			name: "msg response with some data",
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, *codectypes.Any) {
-				// since SendPacket did not prefix the denomination, we must prefix denomination here
-				sender := addressutils.GenerateAccAddressForTest()
-				senderAddr, err := sdk.Bech32ifyAddressBytes("cosmos", sender)
-				suite.Require().NoError(err)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				if !found {
+					suite.Fail("unable to retrieve zone for test")
+				}
+				sender := zone.WithdrawalAddress.Address
 
 				quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", TestChannel)
-				channel, cfound := quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", "channel-0")
-				suite.Require().True(cfound)
 
-				ibcDenom := utils.DeriveIbcDenom(channel.Counterparty.PortId, channel.Counterparty.ChannelId, "denom")
-				err = quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ibcDenom, sdk.NewInt(100))))
+				ibcDenom := utils.DeriveIbcDenom("transfer", "channel-0", zone.BaseDenom)
+				err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ibcDenom, sdk.NewInt(100))))
 				suite.Require().NoError(err)
 
 				transferMsg := ibctransfertypes.MsgTransfer{
 					SourcePort:    "transfer",
 					SourceChannel: "channel-0",
-					Token:         sdk.NewCoin("denom", sdk.NewInt(100)),
-					Sender:        senderAddr,
+					Token:         sdk.NewCoin(zone.BaseDenom, sdk.NewInt(100)),
+					Sender:        sender,
 					Receiver:      quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
 				}
 				response := ibctransfertypes.MsgTransferResponse{
@@ -1623,16 +1622,17 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 				return []proto.Message{&transferMsg}, anyResponse
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				if !found {
+					suite.Fail("unable to retrieve zone for test")
+				}
+
 				txMacc := quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
 				feeMacc := quicksilver.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
 				txMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
 				feeMaccBalance2 := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
 
-				// assert that ics module balance is now 100denom less than before HandleMsgTransfer()
-				channel, cfound := quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", "channel-0")
-				suite.Require().True(cfound)
-
-				ibcDenom := utils.DeriveIbcDenom(channel.Counterparty.PortId, channel.Counterparty.ChannelId, "denom")
+				ibcDenom := utils.DeriveIbcDenom("transfer", "channel-0", zone.BaseDenom)
 				if txMaccBalance2.AmountOf(ibcDenom).Equal(sdk.ZeroInt()) && feeMaccBalance2.AmountOf(ibcDenom).Equal(sdk.NewInt(100)) {
 					return true
 				}

@@ -49,7 +49,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 		return outWeights
 	}
 
-	maxValue := MaxDeltas(deltas)
+	maxValue := MaxDelta(deltas)
 	sum = sdk.ZeroInt()
 
 	// drop all deltas such that the maximum value is zero, and invert.
