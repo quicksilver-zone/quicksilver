@@ -607,7 +607,6 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			test.setStatements(ctx, quicksilver)
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 			suite.Require().True(found)
-			// before := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
 			err := quicksilver.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone, test.delAddrBalance)
 			// refetch zone after FlushOutstandingDelegations setZone().
 			ctx = suite.chainA.GetContext()
