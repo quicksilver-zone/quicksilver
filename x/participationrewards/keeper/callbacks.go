@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -457,6 +456,13 @@ func CrescentPoolCoinSupplyUpdateCallback(ctx sdk.Context, k *Keeper, response [
 	supplyAmount := sdk.ZeroInt()
 	if err := supplyAmount.Unmarshal(response); err != nil {
 		return err
+	} else if !supplyAmount.IsPositive() {
+		return errors.New("PoolCoinSupply must be positive")
+	}
+
+	if len(query.Request) < 2 {
+		k.Logger(ctx).Error("unable to unmarshal crescent poolcoinsupply request, request length is too short")
+		return errors.New("coinsupply request must always have a length of at least 2 bytes")
 	}
 
 	if query.Request[0] != banktypes.SupplyKey[0] {

@@ -45,7 +45,7 @@ func (cpd *CrescentPoolProtocolData) ValidateBasic() error {
 	}
 
 	if i == 0 {
-		errs["Zones"] = ErrUndefinedAttribute
+		errs["Denoms"] = ErrUndefinedAttribute
 	}
 
 	if len(errs) > 0 {
@@ -83,8 +83,11 @@ func (crd CrescentReserveAddressBalanceProtocolData) ValidateBasic() error {
 	if crd.ReserveAddress == "" {
 		errs["ReserveAddress"] = ErrUndefinedAttribute
 	}
+	if _, err := sdk.AccAddressFromBech32(crd.ReserveAddress); err != nil {
+		errs["ReserveAddress"] = ErrInvalidBech32
+	}
 	if crd.Denom == "" {
-		errs["ReserveAddress"] = ErrUndefinedAttribute
+		errs["Denom"] = ErrUndefinedAttribute
 	}
 	if len(errs) > 0 {
 		return multierror.New(errs)
@@ -113,8 +116,8 @@ type CrescentPoolCoinSupplyProtocolData struct {
 }
 
 func (cpd CrescentPoolCoinSupplyProtocolData) ValidateBasic() error {
-	if cpd.PoolCoinDenom == "" {
-		return ErrUndefinedAttribute
+	if len(cpd.PoolCoinDenom) < 4 || cpd.PoolCoinDenom[0:4] != "pool" {
+		return ErrInvalidAssetName
 	}
 
 	return nil
