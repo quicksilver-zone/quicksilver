@@ -419,7 +419,12 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 // if no other withdrawal records exist for this triple (i.e. no further withdrawal from this delegator account for this user (i.e. different validator))
 // then burn the withdrawal_record's burn_amount.
 func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
-	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ChainId, memo, types.WithdrawStatusSend)
+	txHash, err := types.ParseTxMsgMemo(memo, types.MsgTypeUnbondSend)
+	if err != nil {
+		return err
+	}
+
+	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ChainId, txHash, types.WithdrawStatusSend)
 	if !found {
 		return errors.New("no matching withdrawal record found")
 	}
