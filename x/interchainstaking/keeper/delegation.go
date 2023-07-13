@@ -280,7 +280,6 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, delAddrBalance sdk.Coin) error {
 	var pendingAmount sdk.Coins
 	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
-	var coinsToFlush sdk.Coins
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
 		if (receiptInfo.FirstSeen.After(exclusionTime) || receiptInfo.FirstSeen.Equal(exclusionTime)) && receiptInfo.Completed == nil {
 			pendingAmount = pendingAmount.Add(receiptInfo.Amount...)
@@ -288,8 +287,7 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 		return false
 	})
 
-	var hasNeg bool
-	coinsToFlush, hasNeg = sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
+	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
 		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
 		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
