@@ -620,7 +620,6 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					suite.Require().NoError(err)
 				}
 			}
-			// fmt.Println(before, after)
 			suite.Require().NoError(err)
 			isCorrect := test.assertStatements(ctx, quicksilver)
 			suite.Require().True(isCorrect)
