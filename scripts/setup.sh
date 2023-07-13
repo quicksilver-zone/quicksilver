@@ -481,9 +481,9 @@ fi
 jq '.app_state.epochs.epochs = [{"identifier": "epoch","start_time": "0001-01-01T00:00:00Z","duration": "240s","current_epoch": "0","current_epoch_start_time": "0001-01-01T00:00:00Z","epoch_counting_started": false,"current_epoch_start_height": "0"}]' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
 jq '.app_state.interchainstaking.params.deposit_interval = 25' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
 jq '.app_state.mint.params.epoch_identifier = "epoch"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
-jq '.app_state.gov.deposit_params.min_deposit = [{"denom": "uqck", "amount": "100"}]' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
-jq '.app_state.gov.deposit_params.max_deposit_period = "10s"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
-jq '.app_state.gov.voting_params.voting_period = "10s"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
+jq '.app_state.gov.params.min_deposit = [{"denom": "uqck", "amount": "100"}]' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
+jq '.app_state.gov.params.max_deposit_period = "10s"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
+jq '.app_state.gov.params.voting_period = "10s"' ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json > ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json.new && mv ./${CHAIN_DIR}/${CHAINID_0}/config/genesis.json{.new,}
 
 cp ./${CHAIN_DIR}/${CHAINID_0}{,a}/config/genesis.json
 cp ./${CHAIN_DIR}/${CHAINID_0}{,b}/config/genesis.json
