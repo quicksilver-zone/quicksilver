@@ -3,10 +3,11 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -117,6 +118,25 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				"delegations",
 				0,
 			)
+
+			addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
+			if err != nil {
+				k.Logger(ctx).Error("cannot decode bech32 delegation addr")
+				return false
+			}
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zone.ConnectionId,
+				zone.ChainId,
+				types.BankStoreKey,
+				append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
+				sdk.NewInt(-1),
+				types.ModuleName,
+				"delegationaccountbalance",
+				0,
+			)
+			// increment waitgroup; decremented in delegationaccountbalance callback
+			zone.WithdrawalWaitgroup++
 
 			rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.DelegationAddress.Address}
 			bz = k.cdc.MustMarshal(&rewardsQuery)
