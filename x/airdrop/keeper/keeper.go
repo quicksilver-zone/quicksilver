@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	"github.com/ingenuity-build/quicksilver/proofs"
 
 	"github.com/cometbft/cometbft/libs/log"

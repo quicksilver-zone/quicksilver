@@ -5,9 +5,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"github.com/ingenuity-build/quicksilver/proofs"
 	"strings"
 	"time"
+
+	"github.com/ingenuity-build/quicksilver/proofs"
 
 	sdkioerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"

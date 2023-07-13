@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/ingenuity-build/quicksilver/proofs"
 	"sort"
 	"strings"
+
+	"github.com/ingenuity-build/quicksilver/proofs"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

@@ -2,8 +2,9 @@ package keeper_test
 
 import (
 	"encoding/json"
-	"github.com/ingenuity-build/quicksilver/proofs"
 	"time"
+
+	"github.com/ingenuity-build/quicksilver/proofs"
 
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"

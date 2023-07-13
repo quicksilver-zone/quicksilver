@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/ingenuity-build/quicksilver/proofs"
 
 	sdkmath "cosmossdk.io/math"
