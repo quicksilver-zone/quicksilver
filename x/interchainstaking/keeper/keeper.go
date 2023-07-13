@@ -208,7 +208,7 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		}
 		validatorsReq.Pagination.Key = validatorsRes.Pagination.NextKey
 		k.Logger(ctx).Debug("Found pagination nextKey in valset; resubmitting...")
-		err = k.EmitValSetQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validatorsReq, sdkmath.NewInt(-1))
+		err = k.EmitValSetQuery(ctx, icqQuery.ConnectionId, &zone, validatorsReq, sdkmath.NewInt(-1))
 		if err != nil {
 			return nil
 		}
@@ -475,7 +475,7 @@ func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) 
 	return nil
 }
 
-func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, zoneID string, validatorsReq stakingtypes.QueryValidatorsRequest, period sdkmath.Int) error {
+func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID string, zone *types.Zone, validatorsReq stakingtypes.QueryValidatorsRequest, period sdkmath.Int) error {
 	bz, err := k.cdc.Marshal(&validatorsReq)
 	if err != nil {
 		return errors.New("failed to marshal valset pagination request")
@@ -484,7 +484,7 @@ func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, zoneID string, v
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		connectionID,
-		zoneID,
+		zone.BaseChainID(),
 		"cosmos.staking.v1beta1.Query/Validators",
 		bz,
 		period,
