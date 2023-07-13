@@ -116,7 +116,8 @@ type CrescentPoolCoinSupplyProtocolData struct {
 }
 
 func (cpd CrescentPoolCoinSupplyProtocolData) ValidateBasic() error {
-	if len(cpd.PoolCoinDenom) < 4 || cpd.PoolCoinDenom[0:4] != "pool" {
+	// poolcoindenom is always pool{poolid}
+	if len(cpd.PoolCoinDenom) <= 4 || cpd.PoolCoinDenom[0:4] != "pool" {
 		return ErrInvalidAssetName
 	}
 
