@@ -2,7 +2,6 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 
@@ -13,172 +12,47 @@ func NewProtocolData(datatype string, data json.RawMessage) *ProtocolData {
 	return &ProtocolData{Type: datatype, Data: data}
 }
 
+func unmarshalProtocolData(cpd, blank ProtocolDataI, data json.RawMessage) (ProtocolDataI, error) {
+	err := json.Unmarshal(data, cpd)
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal intermediary %s: %w", reflect.TypeOf(cpd).Name(), err)
+	}
+	if reflect.DeepEqual(cpd, blank) {
+		return nil, fmt.Errorf("unable to unmarshal %s from empty JSON object", reflect.TypeOf(cpd).Name())
+	}
+	return cpd, nil
+}
+
 func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (ProtocolDataI, error) {
 	switch datatype {
 	case ProtocolDataTypeConnection:
-		cpd := ConnectionProtocolData{}
-		err := json.Unmarshal(data, &cpd)
-		if err != nil {
-			return nil, err
-		}
-		var blank ConnectionProtocolData
-		if reflect.DeepEqual(cpd, blank) {
-			return nil, errors.New("unable to unmarshal connection protocol data from empty JSON object")
-		}
-		return &cpd, nil
+		return unmarshalProtocolData(&ConnectionProtocolData{}, &ConnectionProtocolData{}, data)
 	case ProtocolDataTypeOsmosisParams:
-		oppd := OsmosisParamsProtocolData{}
-		err := json.Unmarshal(data, &oppd)
-		if err != nil {
-			return nil, err
-		}
-		var blank OsmosisParamsProtocolData
-		if reflect.DeepEqual(oppd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal osmosisparams protocol data from empty JSON object")
-		}
-		return &oppd, nil
+		return unmarshalProtocolData(&OsmosisParamsProtocolData{}, &OsmosisParamsProtocolData{}, data)
 	case ProtocolDataTypeLiquidToken:
-		ladpd := LiquidAllowedDenomProtocolData{}
-		err := json.Unmarshal(data, &ladpd)
-		if err != nil {
-			return nil, err
-		}
-		var blank LiquidAllowedDenomProtocolData
-		if reflect.DeepEqual(ladpd, blank) {
-			return nil, errors.New("unable to unmarshal liquid protocol data from empty JSON object")
-		}
-		return &ladpd, nil
+		return unmarshalProtocolData(&LiquidAllowedDenomProtocolData{}, &LiquidAllowedDenomProtocolData{}, data)
 	case ProtocolDataTypeOsmosisPool:
-		oppd := OsmosisPoolProtocolData{}
-		err := json.Unmarshal(data, &oppd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary osmosisPoolProtocolData: %w", err)
-		}
-		var blank OsmosisPoolProtocolData
-		if reflect.DeepEqual(oppd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal osmosispool protocol data from empty JSON object")
-		}
-
-		return &oppd, nil
+		return unmarshalProtocolData(&OsmosisPoolProtocolData{}, &OsmosisPoolProtocolData{}, data)
 	case ProtocolDataTypeUmeeParams:
-		uppd := UmeeParamsProtocolData{}
-		err := json.Unmarshal(data, &uppd)
-		if err != nil {
-			return nil, err
-		}
-		var blank UmeeParamsProtocolData
-		if reflect.DeepEqual(uppd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal umeeparams protocol data from empty JSON object")
-		}
-		return &uppd, nil
+		return unmarshalProtocolData(&UmeeParamsProtocolData{}, &UmeeParamsProtocolData{}, data)
 	case ProtocolDataTypeUmeeReserves:
-		upd := UmeeReservesProtocolData{}
-		err := json.Unmarshal(data, &upd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary UmeeReservesProtocolData: %w", err)
-		}
-		var blank UmeeReservesProtocolData
-		if reflect.DeepEqual(upd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal UmeeReservesProtocolData from empty JSON object")
-		}
-
-		return &upd, nil
+		return unmarshalProtocolData(&UmeeReservesProtocolData{}, &UmeeReservesProtocolData{}, data)
 	case ProtocolDataTypeUmeeUTokenSupply:
-		upd := UmeeUTokenSupplyProtocolData{}
-		err := json.Unmarshal(data, &upd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary UmeeUTokenSupplyProtocolData: %w", err)
-		}
-		var blank UmeeUTokenSupplyProtocolData
-		if reflect.DeepEqual(upd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal UmeeUTokenSupplyProtocolData from empty JSON object")
-		}
-
-		return &upd, nil
+		return unmarshalProtocolData(&UmeeUTokenSupplyProtocolData{}, &UmeeUTokenSupplyProtocolData{}, data)
 	case ProtocolDataTypeUmeeTotalBorrows:
-		upd := UmeeTotalBorrowsProtocolData{}
-		err := json.Unmarshal(data, &upd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary UmeeTotalBorrowsProtocolData: %w", err)
-		}
-		var blank UmeeTotalBorrowsProtocolData
-		if reflect.DeepEqual(upd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal UmeeTotalBorrowsProtocolData from empty JSON object")
-		}
-
-		return &upd, nil
+		return unmarshalProtocolData(&UmeeTotalBorrowsProtocolData{}, &UmeeTotalBorrowsProtocolData{}, data)
 	case ProtocolDataTypeUmeeInterestScalar:
-		upd := UmeeInterestScalarProtocolData{}
-		err := json.Unmarshal(data, &upd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary UmeeInterestScalarProtocolData: %w", err)
-		}
-		var blank UmeeInterestScalarProtocolData
-		if reflect.DeepEqual(upd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal UmeeInterestScalarProtocolData from empty JSON object")
-		}
-
-		return &upd, nil
+		return unmarshalProtocolData(&UmeeInterestScalarProtocolData{}, &UmeeInterestScalarProtocolData{}, data)
 	case ProtocolDataTypeUmeeLeverageModuleBalance:
-		upd := UmeeLeverageModuleBalanceProtocolData{}
-		err := json.Unmarshal(data, &upd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary UmeeLeverageModuleBalanceProtocolData: %w", err)
-		}
-		var blank UmeeLeverageModuleBalanceProtocolData
-		if reflect.DeepEqual(upd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal UmeeLeverageModuleBalanceProtocolData from empty JSON object")
-		}
-
-		return &upd, nil
+		return unmarshalProtocolData(&UmeeLeverageModuleBalanceProtocolData{}, &UmeeLeverageModuleBalanceProtocolData{}, data)
 	case ProtocolDataTypeCrescentParams:
-		cpd := CrescentParamsProtocolData{}
-		err := json.Unmarshal(data, &cpd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary CrescentParamsProtocolData: %w", err)
-		}
-		var blank CrescentParamsProtocolData
-		if reflect.DeepEqual(cpd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal CrescentParamsProtocolData from empty JSON object")
-		}
-
-		return &cpd, nil
+		return unmarshalProtocolData(&CrescentParamsProtocolData{}, &CrescentParamsProtocolData{}, data)
 	case ProtocolDataTypeCrescentPool:
-		cpd := CrescentPoolProtocolData{}
-		err := json.Unmarshal(data, &cpd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary CrescentPoolProtocolData: %w", err)
-		}
-		var blank CrescentPoolProtocolData
-		if reflect.DeepEqual(cpd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal CrescentPoolProtocolData from empty JSON object")
-		}
-
-		return &cpd, nil
+		return unmarshalProtocolData(&CrescentPoolProtocolData{}, &CrescentPoolProtocolData{}, data)
 	case ProtocolDataTypeCrescentPoolCoinSupply:
-		cpd := CrescentPoolCoinSupplyProtocolData{}
-		err := json.Unmarshal(data, &cpd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary CrescentPoolCoinSupplyProtocolData: %w", err)
-		}
-		var blank CrescentPoolCoinSupplyProtocolData
-		if reflect.DeepEqual(cpd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal CrescentPoolCoinSupplyProtocolData from empty JSON object")
-		}
-
-		return &cpd, nil
+		return unmarshalProtocolData(&CrescentPoolCoinSupplyProtocolData{}, &CrescentPoolCoinSupplyProtocolData{}, data)
 	case ProtocolDataTypeCrescentReserveAddressBalance:
-		cpd := CrescentReserveAddressBalanceProtocolData{}
-		err := json.Unmarshal(data, &cpd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary CrescentReserveAddressBalanceProtocolData: %w", err)
-		}
-		var blank CrescentReserveAddressBalanceProtocolData
-		if reflect.DeepEqual(cpd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal CrescentReserveAddressBalanceProtocolData from empty JSON object")
-		}
-
-		return &cpd, nil
+		return unmarshalProtocolData(&CrescentReserveAddressBalanceProtocolData{}, &CrescentReserveAddressBalanceProtocolData{}, data)
 	default:
 		return nil, ErrUnknownProtocolDataType
 	}
