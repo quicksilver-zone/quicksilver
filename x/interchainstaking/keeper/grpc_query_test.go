@@ -260,7 +260,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 			"DelegatorIntent_Valid_Intents",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				// give funds
 				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
 				// set intents
@@ -270,7 +270,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 						Delegator: testAddress,
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
-								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+								ValoperAddress: icsKeeper.GetValidators(ctx, &zone)[0].ValoperAddress,
 								Weight:         sdk.OneDec(),
 							},
 						},
@@ -299,15 +299,15 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Intent.Intents))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Intent.Intents))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -343,8 +343,8 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 			false,
 			func(intents []*types.DelegatorIntentsResponse) {
 				for _, intent := range intents {
-					suite.Require().Equal(intent.ChainId, suite.chainB.ChainID)
-					suite.Require().Equal(len(intent.Intent.Intents), 0)
+					suite.Equal(intent.ChainId, suite.chainB.ChainID)
+					suite.Equal(len(intent.Intent.Intents), 0)
 				}
 			},
 		},
@@ -352,7 +352,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 			"DelegatorIntent_Valid_Intents across multiple zones",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				// give funds
 				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
 				// set intents
@@ -361,7 +361,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 						Delegator: testAddress,
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
-								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+								ValoperAddress: icsKeeper.GetValidators(ctx, &zone)[0].ValoperAddress,
 								Weight:         sdk.OneDec(),
 							},
 						},
@@ -385,13 +385,16 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 				icsKeeper.SetZone(ctx, &zone)
 				// give funds
 				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
+
+				chainBZone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
 				// set intents
 				intents = []types.DelegatorIntent{
 					{
 						Delegator: testAddress,
 						Intents: types.ValidatorIntents{
 							&types.ValidatorIntent{
-								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+								ValoperAddress: icsKeeper.GetValidators(ctx, &chainBZone)[0].ValoperAddress,
 								Weight:         sdk.OneDec(),
 							},
 						},
@@ -493,7 +496,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 				// TODO: set standardized delegations for keeper_test package
 				delegation := types.Delegation{
 					DelegationAddress: testAddress,
-					ValidatorAddress:  icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+					ValidatorAddress:  icsKeeper.GetValidators(ctx, &zone)[0].ValoperAddress,
 					Amount:            sdk.NewCoin("denom", sdk.NewInt(15000)),
 				}
 				icsKeeper.SetDelegation(ctx, &zone, delegation)
@@ -772,11 +775,11 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 
 				distribution := []*types.Distribution{
 					{
-						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+						Valoper: icsKeeper.GetValidators(ctx, &zone)[0].ValoperAddress,
 						Amount:  10000000,
 					},
 					{
-						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
+						Valoper: icsKeeper.GetValidators(ctx, &zone)[1].ValoperAddress,
 						Amount:  20000000,
 					},
 				}
@@ -872,15 +875,15 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 			"UserWithdrawalRecords_Valid_Records",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				distribution := []*types.Distribution{
 					{
-						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+						Valoper: icsKeeper.GetValidators(ctx, &zone)[0].ValoperAddress,
 						Amount:  10000000,
 					},
 					{
-						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
+						Valoper: icsKeeper.GetValidators(ctx, &zone)[1].ValoperAddress,
 						Amount:  20000000,
 					},
 				}
@@ -964,15 +967,15 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 			"WithdrawalRecords_Valid_Records",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				distribution := []*types.Distribution{
 					{
-						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+						Valoper: icsKeeper.GetValidators(ctx, &zone)[0].ValoperAddress,
 						Amount:  10000000,
 					},
 					{
-						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
+						Valoper: icsKeeper.GetValidators(ctx, &zone)[1].ValoperAddress,
 						Amount:  20000000,
 					},
 				}
@@ -1054,14 +1057,14 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 			"UnbondingRecords_Valid_Records",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				icsKeeper.SetUnbondingRecord(
 					ctx,
 					types.UnbondingRecord{
 						ChainId:       zone.ZoneID(),
 						EpochNumber:   1,
-						Validator:     icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+						Validator:     icsKeeper.GetValidators(ctx, &zone)[0].ValoperAddress,
 						RelatedTxhash: []string{"ABC012"},
 					},
 				)
@@ -1129,15 +1132,15 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 			"RedelegationRecords_Valid_Records",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				icsKeeper.SetRedelegationRecord(
 					ctx,
 					types.RedelegationRecord{
 						ChainId:     zone.ZoneID(),
 						EpochNumber: 1,
-						Source:      icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
-						Destination: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+						Source:      icsKeeper.GetValidators(ctx, &zone)[1].ValoperAddress,
+						Destination: icsKeeper.GetValidators(ctx, &zone)[0].ValoperAddress,
 						Amount:      10000000,
 					})
 			},
@@ -1160,12 +1163,12 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 				suite.Require().Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Redelegations))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Redelegations))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})

@@ -344,13 +344,13 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 	return nil
 }
 
-func (k *Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone) error {
+func (k *Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone *types.Zone) error {
 	k.Logger(ctx).Info("Initialize performance delegations")
 
-	delegations := k.GetAllPerformanceDelegations(ctx, &zone)
+	delegations := k.GetAllPerformanceDelegations(ctx, zone)
 	var validatorsToDelegate []string
 OUTER:
-	for _, v := range k.GetActiveValidators(ctx, zone.BaseChainID()) {
+	for _, v := range k.GetActiveValidators(ctx, zone) {
 		for _, d := range delegations {
 			if d.ValidatorAddress == v.ValoperAddress {
 				continue OUTER
@@ -515,9 +515,9 @@ func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) (float64, e
 }
 
 // DefaultAggregateIntents determines the default aggregate intent (for epoch 0).
-func (k *Keeper) DefaultAggregateIntents(ctx sdk.Context, chainID string) types.ValidatorIntents {
+func (k *Keeper) DefaultAggregateIntents(ctx sdk.Context, zone *types.Zone) types.ValidatorIntents {
 	out := make(types.ValidatorIntents, 0)
-	k.IterateValidators(ctx, chainID, func(index int64, validator types.Validator) (stop bool) {
+	k.IterateValidators(ctx, zone, func(index int64, validator types.Validator) (stop bool) {
 		if validator.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
 			if !validator.Jailed && !validator.Tombstoned && validator.Status == stakingtypes.BondStatusBonded {
 				out = append(out, &types.ValidatorIntent{ValoperAddress: validator.GetValoperAddress(), Weight: sdk.OneDec()})

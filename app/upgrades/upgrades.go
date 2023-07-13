@@ -65,7 +65,7 @@ func V010402rc1UpgradeHandler(
 						Tombstoned:      val.Tombstoned,
 						JailedSince:     val.JailedSince,
 					}
-					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone.BaseChainID(), newVal)
+					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone, newVal)
 					if err != nil {
 						panic(err)
 					}
@@ -94,10 +94,10 @@ func V010402rc3UpgradeHandler(
 			}
 
 			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("rege-redwood-1")))
-			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, OsmosisTestnetChainID)
+			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, &icstypes.Zone{ChainId: OsmosisTestnetChainID})
 			for _, val := range vals {
 				valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")
-				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, OsmosisTestnetChainID, valoper)
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, &icstypes.Zone{ChainId: OsmosisTestnetChainID}, valoper)
 			}
 		}
 
@@ -234,7 +234,7 @@ func V010402rc6UpgradeHandler(
 		if isTestnet(ctx) || isTest(ctx) {
 			// for each zone, trigger an icq request to update all delegations.
 			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-				vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+				vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone)
 				delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 				bz := appKeepers.InterchainstakingKeeper.GetCodec().MustMarshal(&delegationQuery)
 

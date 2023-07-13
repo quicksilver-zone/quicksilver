@@ -102,7 +102,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				"epoch_number", epochNumber,
 			)
 
-			vals := k.GetValidators(ctx, zone.BaseChainID())
+			vals := k.GetValidators(ctx, zone)
 			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 			bz := k.cdc.MustMarshal(&delegationQuery)
 

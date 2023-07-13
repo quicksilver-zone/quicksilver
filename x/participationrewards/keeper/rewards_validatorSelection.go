@@ -43,7 +43,7 @@ func (k Keeper) AllocateValidatorSelectionRewards(ctx sdk.Context) {
 // zone validator scores.
 func (k Keeper) getZoneScores(
 	ctx sdk.Context,
-	zone icstypes.Zone,
+	zone *icstypes.Zone,
 	delegatorRewards distrtypes.QueryDelegationTotalRewardsResponse,
 ) (*types.ZoneScore, error) {
 	k.Logger(ctx).Info(
@@ -72,10 +72,10 @@ func (k Keeper) getZoneScores(
 // CalcDistributionScores calculates the validator distribution scores for the
 // given zone based on the normalized voting power of the validators; scoring
 // favours smaller validators for decentralization purposes.
-func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *types.ZoneScore) error {
+func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone *icstypes.Zone, zs *types.ZoneScore) error {
 	k.Logger(ctx).Info("calculate distribution scores", "zone", zone.ZoneID())
 
-	zoneValidators := k.icsKeeper.GetValidators(ctx, zone.BaseChainID())
+	zoneValidators := k.icsKeeper.GetValidators(ctx, zone)
 	if len(zoneValidators) == 0 {
 		return fmt.Errorf("zone %v has no validators", zone.BaseChainID())
 	}
@@ -153,7 +153,7 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 // resetting zone performance scoring for the next epoch.
 func (k Keeper) CalcOverallScores(
 	ctx sdk.Context,
-	zone icstypes.Zone,
+	zone *icstypes.Zone,
 	delegatorRewards distrtypes.QueryDelegationTotalRewardsResponse,
 	zs *types.ZoneScore,
 ) error {
@@ -201,7 +201,7 @@ func (k Keeper) CalcOverallScores(
 		// calculate and set overall score
 		vs.Score = vs.DistributionScore.Mul(vs.PerformanceScore)
 		k.Logger(ctx).Info("overall score", "validator", vs.ValoperAddress, "overall", vs.Score)
-		if err := k.icsKeeper.SetValidator(ctx, zone.ChainId, *(vs.Validator)); err != nil {
+		if err := k.icsKeeper.SetValidator(ctx, zone, *(vs.Validator)); err != nil {
 			k.Logger(ctx).Error("unable to set score for validator", "validator", vs.ValoperAddress)
 		}
 
@@ -222,7 +222,7 @@ func (k Keeper) CalcOverallScores(
 	}
 
 	// update zone with validator scores
-	k.icsKeeper.SetZone(ctx, &zone)
+	k.icsKeeper.SetZone(ctx, zone)
 
 	return nil
 }

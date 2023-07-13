@@ -185,7 +185,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	if err != nil {
 		return err
 	}
-	val, found := k.GetValidator(ctx, query.ChainId, valAddrBytes)
+	val, found := k.GetValidator(ctx, &zone, valAddrBytes)
 	if !found {
 		err := fmt.Errorf("unable to get validator: %s", delegation.ValidatorAddress)
 		k.Logger(ctx).Error(err.Error())
@@ -207,7 +207,7 @@ func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqt
 	}
 
 	// initialize performance delegations
-	if err := k.UpdatePerformanceDelegations(ctx, zone); err != nil {
+	if err := k.UpdatePerformanceDelegations(ctx, &zone); err != nil {
 		k.Logger(ctx).Info(err.Error())
 		return err
 	}
@@ -466,7 +466,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	if !ok {
 		return errors.New("cannot assert type of tx")
 	}
-	return k.HandleReceiptTransaction(ctx, txtx, hashStr, zone)
+	return k.HandleReceiptTransaction(ctx, txtx, hashStr, &zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.

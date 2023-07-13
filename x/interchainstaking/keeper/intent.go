@@ -198,7 +198,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	}
 
 	if updateWithCoin {
-		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount, k.GetValidatorAddresses(ctx, zone.BaseChainID()))
+		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount, k.GetValidatorAddresses(ctx, zone))
 	}
 
 	if updateWithMemo {
@@ -214,7 +214,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	return nil
 }
 
-func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, intents []*types.ValidatorIntent) error {
+func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone *types.Zone, intents []*types.ValidatorIntent) error {
 	errMap := make(map[string]error)
 
 	for i, intent := range intents {
@@ -223,7 +223,7 @@ func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, in
 		if err != nil {
 			return err
 		}
-		_, found := k.GetValidator(ctx, zone.BaseChainID(), valAddrBytes)
+		_, found := k.GetValidator(ctx, zone, valAddrBytes)
 		if !found {
 			errMap[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
 		}

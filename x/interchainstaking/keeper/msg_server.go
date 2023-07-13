@@ -124,7 +124,7 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 		return nil, err
 	}
 
-	if err := k.validateValidatorIntents(ctx, zone, intents); err != nil {
+	if err := k.validateValidatorIntents(ctx, &zone, intents); err != nil {
 		return nil, err
 	}
 

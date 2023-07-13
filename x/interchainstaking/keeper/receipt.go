@@ -28,7 +28,7 @@ const (
 	ICATimeout      = time.Hour * 6
 )
 
-func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash string, zone types.Zone) error {
+func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash string, zone *types.Zone) error {
 	k.Logger(ctx).Info("Deposit receipt.", "ischeck", ctx.IsCheckTx(), "isrecheck", ctx.IsReCheckTx())
 	memo := txn.Body.Memo
 
@@ -51,7 +51,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 
 			if sender != senderAddress {
 				k.Logger(ctx).Error("sender mismatch", "expected", senderAddress, "received", sender)
-				k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
+				k.NilReceipt(ctx, zone, hash) // nil receipt will stop this hash being submitted again
 				return nil
 			}
 
@@ -64,17 +64,17 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 
 	if senderAddress == Unset {
 		k.Logger(ctx).Error("no sender found. Ignoring.")
-		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
+		k.NilReceipt(ctx, zone, hash) // nil receipt will stop this hash being submitted again
 		return nil
 	}
 	senderAccAddress, err := addressutils.AccAddressFromBech32(senderAddress, zone.GetAccountPrefix())
 	if err != nil {
 		k.Logger(ctx).Error("unable to decode sender address. Ignoring.", "senderAddress", senderAddress, "error", err)
-		k.NilReceipt(ctx, &zone, hash) // nil receipt will stop this hash being submitted again
+		k.NilReceipt(ctx, zone, hash) // nil receipt will stop this hash being submitted again
 		return nil
 	}
 
-	if err := zone.ValidateCoinsForZone(assets, k.GetValidatorAddresses(ctx, zone.BaseChainID())); err != nil {
+	if err := zone.ValidateCoinsForZone(assets, k.GetValidatorAddresses(ctx, zone)); err != nil {
 		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before.
 		// That is okay, we'll catch it next round!)
 		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
@@ -99,25 +99,25 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		}
 		memoRTS = memoFields.RTS()
 		mappedAddress, _ = memoFields.AccountMap()
-		memoIntent, _ = memoFields.Intent(assets, &zone)
+		memoIntent, _ = memoFields.Intent(assets, zone)
 	}
 
 	// update state
-	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, &zone, assets, memoIntent); err != nil {
+	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, zone, assets, memoIntent); err != nil {
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ZoneID(), "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ZoneID(), err)
 	}
-	if err := k.MintAndSendQAsset(ctx, senderAccAddress, senderAddress, &zone, assets, memoRTS, mappedAddress); err != nil {
+	if err := k.MintAndSendQAsset(ctx, senderAccAddress, senderAddress, zone, assets, memoRTS, mappedAddress); err != nil {
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ZoneID(), "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ZoneID(), err)
 	}
-	if err := k.TransferToDelegate(ctx, &zone, assets, hash); err != nil {
+	if err := k.TransferToDelegate(ctx, zone, assets, hash); err != nil {
 		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ZoneID(), "err", err)
 		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ZoneID(), err)
 	}
 
 	// create receipt
-	receipt := k.NewReceipt(ctx, &zone, senderAddress, hash, assets)
+	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, assets)
 	k.SetReceipt(ctx, *receipt)
 
 	return nil
