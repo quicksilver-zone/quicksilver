@@ -784,7 +784,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ZoneID(),
+					&zone,
 					delegatorAddress,
 					distribution,
 					testAddress,
@@ -888,7 +888,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ChainId,
+					&zone,
 					delegatorAddress,
 					distribution,
 					testAddress,
@@ -980,7 +980,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				// set records
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
-					zone.ZoneID(),
+					&zone,
 					delegatorAddress,
 					distribution,
 					testAddress,
