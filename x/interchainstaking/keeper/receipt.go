@@ -243,19 +243,10 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 		return sdkioerrors.Wrapf(icatypes.ErrActiveChannelNotFound, "failed to retrieve active channel for port %s in submittx", portID)
 	}
 
-	chanCap, found := k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
+	_, found = k.scopedKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID))
 	if !found {
 		return sdkioerrors.Wrap(channeltypes.ErrChannelCapabilityNotFound, "module does not own channel capability")
 	}
-
-	// check if capability has been claimed yet. If it's not been claimed, claim capability
-	// if _, claimed := k.ICAControllerKeeper.GetCapability(ctx, host.ChannelCapabilityPath(portID, channelID)); !claimed {
-	// 	err := k.ICAControllerKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
-	k.ICAControllerKeeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
 
 	chunkSize := int(messagesPerTx)
 	if chunkSize < 1 {
@@ -297,7 +288,6 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 		msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
 
 		_, err = msgServer.SendTx(ctx, msg)
-		// _, err = k.ICAControllerKeeper.SendTx(ctx, chanCap, connectionID, portID, packetData, timeoutTimestamp)
 		if err != nil {
 			return err
 		}
