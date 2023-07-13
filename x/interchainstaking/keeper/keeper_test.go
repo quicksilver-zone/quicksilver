@@ -177,7 +177,10 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		return fmt.Errorf("Claim %s not found", host.ChannelCapabilityPath(portID, channelID))
 	}
 
-	quicksilver.InterchainstakingKeeper.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), chancap, host.ChannelCapabilityPath(portID, channelID))
+	err = quicksilver.InterchainstakingKeeper.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), chancap, host.ChannelCapabilityPath(portID, channelID))
+	if err != nil {
+		return err
+	}
 
 	addr, err := addressutils.EncodeAddressToBech32(remotePrefix, addressutils.GenerateAccAddressForTest())
 	if err != nil {

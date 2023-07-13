@@ -356,7 +356,10 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 		return fmt.Errorf("Claim %s not found", host.ChannelCapabilityPath(portID, channelID))
 	}
 
-	quicksilver.InterchainstakingKeeper.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), chancap, host.ChannelCapabilityPath(portID, channelID))
+	err = quicksilver.InterchainstakingKeeper.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), chancap, host.ChannelCapabilityPath(portID, channelID))
+	if err != nil {
+		return err
+	}
 
 	addr := addressutils.GenerateAddressForTestWithPrefix(remotePrefix)
 	quicksilver.ICAControllerKeeper.SetInterchainAccountAddress(suite.chainA.GetContext(), connectionID, portID, addr)
