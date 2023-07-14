@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/icza/dyno"
 	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/strangelove-ventures/interchaintest/v7"
@@ -103,7 +104,7 @@ func TestRegisterZone(t *testing.T) {
 		Summary:  "suma",
 	}
 
-	message := istypes.RegisterZoneProposal{
+	content := istypes.RegisterZoneProposal{
 		Title:            "register lstest-1 zone",
 		Description:      "register lstest-1 zone with multisend and lsm enabled",
 		ConnectionId:     "connection-0",
@@ -117,11 +118,14 @@ func TestRegisterZone(t *testing.T) {
 		Decimals:         6,
 	}
 
+	message := govv1.MsgExecLegacyContent{
+		Content:   content,
+		Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
+	}
 	msg, err := quicksilverd.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
 	fmt.Println("Msg: ", string(msg))
 	require.NoError(t, err)
 	proposal.Messages = append(proposal.Messages, msg)
-
 	proposalTx, err := quicksilverdChain.SubmitProposal(ctx, quicksilverd1User.KeyName(), proposal)
 	require.NoError(t, err, "error submitting proposal tx")
 

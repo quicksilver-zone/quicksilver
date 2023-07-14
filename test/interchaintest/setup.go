@@ -2,6 +2,7 @@ package interchaintest
 
 import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -82,6 +83,6 @@ func quicksilverEncoding() *testutil.TestEncodingConfig {
 
 	// register custom types
 	istypes.RegisterInterfaces(cfg.InterfaceRegistry)
-
+	govv1.RegisterInterfaces(cfg.InterfaceRegistry)
 	return &cfg
 }
