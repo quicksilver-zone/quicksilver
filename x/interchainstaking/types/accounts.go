@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -44,17 +45,17 @@ func (a *ICAAccount) DecrementBalanceWaitgroup() error {
 }
 
 func (z *Zone) DepositPortOwner() string {
-	return z.ZoneID() + ".deposit"
+	return fmt.Sprintf("%s.%s", z.ZoneID(), ICASuffixDeposit)
 }
 
 func (z *Zone) WithdrawalPortOwner() string {
-	return z.ZoneID() + ".withdrawal"
+	return fmt.Sprintf("%s.%s", z.ZoneID(), ICASuffixWithdrawal)
 }
 
 func (z *Zone) DelegatePortOwner() string {
-	return z.ZoneID() + ".delegate"
+	return fmt.Sprintf("%s.%s", z.ZoneID(), ICASuffixDelegate)
 }
 
 func (z *Zone) PerformancePortOwner() string {
-	return z.ZoneID() + ".performance"
+	return fmt.Sprintf("%s.%s", z.ZoneID(), ICASuffixPerformance)
 }
