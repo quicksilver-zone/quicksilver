@@ -86,8 +86,8 @@ func (crd CrescentReserveAddressBalanceProtocolData) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(crd.ReserveAddress); err != nil {
 		errs["ReserveAddress"] = ErrInvalidBech32
 	}
-	if crd.Denom == "" {
-		errs["Denom"] = ErrUndefinedAttribute
+	if err := sdk.ValidateDenom(crd.Denom); err != nil {
+		errs["Denom"] = ErrInvalidDenom
 	}
 	if len(errs) > 0 {
 		return multierror.New(errs)
