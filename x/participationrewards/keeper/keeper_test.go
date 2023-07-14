@@ -45,6 +45,14 @@ func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	return path
 }
 
+func newICAPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
+	path := ibctesting.NewPath(chainA, chainB)
+	path.EndpointA.ChannelConfig.PortID = icatypes.HostPortID
+	path.EndpointB.ChannelConfig.PortID = icatypes.HostPortID
+
+	return path
+}
+
 type KeeperTestSuite struct {
 	testsuite.Suite
 
@@ -72,7 +80,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1)) // convenience and readability
 	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2)) // convenience and readability
 
-	suite.path = newQuicksilverPath(suite.chainA, suite.chainB)
+	suite.path = newICAPath(suite.chainA, suite.chainB)
 	suite.coordinator.SetupConnections(suite.path)
 
 	suite.coordinator.CurrentTime = time.Now().UTC()
@@ -338,6 +346,17 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 		key,
 		host.PortPath(portID),
 	)
+	if err != nil {
+		return err
+	}
+
+	// Claim chancap for ICAController scopedKeeper
+	chancap, found := quicksilver.InterchainstakingKeeper.ScopedKeeper().GetCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(portID, channelID))
+	if !found {
+		return fmt.Errorf("Claim %s not found", host.ChannelCapabilityPath(portID, channelID))
+	}
+
+	err = quicksilver.InterchainstakingKeeper.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), chancap, host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return err
 	}

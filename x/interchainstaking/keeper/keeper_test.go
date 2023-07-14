@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -166,6 +167,17 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 		key,
 		host.PortPath(portID),
 	)
+	if err != nil {
+		return err
+	}
+
+	// Claim chancap for ICAController scopedKeeper
+	chancap, found := quicksilver.InterchainstakingKeeper.ScopedKeeper().GetCapability(suite.chainA.GetContext(), host.ChannelCapabilityPath(portID, channelID))
+	if !found {
+		return fmt.Errorf("Claim %s not found", host.ChannelCapabilityPath(portID, channelID))
+	}
+
+	err = quicksilver.InterchainstakingKeeper.ICAControllerKeeper.ClaimCapability(suite.chainA.GetContext(), chancap, host.ChannelCapabilityPath(portID, channelID))
 	if err != nil {
 		return err
 	}
