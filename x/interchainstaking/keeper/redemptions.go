@@ -272,7 +272,7 @@ func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error 
 }
 
 func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]math.Int, error) {
-	currentAllocations, currentSum, _ := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone)
 	availablePerValidator, _, err := k.GetUnlockedTokensForZone(ctx, zone)
 	if err != nil {
 		return nil, err
