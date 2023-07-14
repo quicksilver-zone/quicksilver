@@ -9,8 +9,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	leverage "github.com/ingenuity-build/quicksilver/umee/leverage"
-	leveragetypes "github.com/ingenuity-build/quicksilver/umee/leverage/types"
+	leverage "github.com/ingenuity-build/quicksilver/umee-types/leverage"
+	leveragetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
@@ -186,7 +186,7 @@ func UmeeClaim(
 			Key:       abciquery.Response.Key,
 			ProofOps:  abciquery.Response.ProofOps,
 			Height:    abciquery.Response.Height,
-			ProofType: "bank", // module name of proof.
+			ProofType: prewards.ProofTypeBank, // module name of proof.
 		}
 
 		chainMsg.Proofs = append(chainMsg.Proofs, &proof)
@@ -216,14 +216,13 @@ func UmeeClaim(
 			}
 		}
 
-		accountPrefix := leveragetypes.KeyCollateralAmountNoDenom(umeeaddr)
-		lookupKey := append(accountPrefix, []byte(coin.GetDenom())...)
+		lookupKey := leveragetypes.KeyCollateralAmount(umeeaddr, coin.GetDenom())
 		abciquery, err := client.ABCIQueryWithOptions(
 			context.Background(), "/store/leverage/key",
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 		)
-		fmt.Println("Querying for value", "prefix", accountPrefix) // debug?
+		fmt.Println("Querying for value", "prefix", lookupKey) // debug?
 		// 7:
 		err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", tuple.denom, chain))
 		if err != nil {
@@ -250,7 +249,7 @@ func UmeeClaim(
 			Key:       abciquery.Response.Key,
 			ProofOps:  abciquery.Response.ProofOps,
 			Height:    abciquery.Response.Height,
-			ProofType: "leverage", // module name of proof.
+			ProofType: prewards.ProofTypeLeverage, // module name of proof.
 		}
 
 		chainMsg.Proofs = append(chainMsg.Proofs, &proof)
