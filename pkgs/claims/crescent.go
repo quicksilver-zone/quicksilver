@@ -250,7 +250,7 @@ OUTER:
 						Key:       abciquery.Response.Key,
 						ProofOps:  abciquery.Response.ProofOps,
 						Height:    abciquery.Response.Height,
-						ProofType: "position", // module name of proof.
+						ProofType: prewards.ProofTypePosition,
 					}
 
 					chainMsg.Proofs = append(chainMsg.Proofs, &proof)
