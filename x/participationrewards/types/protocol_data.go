@@ -14,7 +14,7 @@ func NewProtocolData(datatype string, data json.RawMessage) *ProtocolData {
 
 func unmarshalProtocolData[V ProtocolDataI](data json.RawMessage) (ProtocolDataI, error) {
 	var cpd, blank V
-	json.Unmarshal([]byte(`{}`), &blank)
+	_ = json.Unmarshal([]byte(`{}`), &blank)
 	err := json.Unmarshal(data, &cpd)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unmarshal intermediary %s: %w", reflect.TypeOf(cpd).Name(), err)
