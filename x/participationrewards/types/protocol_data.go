@@ -12,8 +12,10 @@ func NewProtocolData(datatype string, data json.RawMessage) *ProtocolData {
 	return &ProtocolData{Type: datatype, Data: data}
 }
 
-func unmarshalProtocolData(cpd, blank ProtocolDataI, data json.RawMessage) (ProtocolDataI, error) {
-	err := json.Unmarshal(data, cpd)
+func unmarshalProtocolData[V ProtocolDataI](data json.RawMessage) (ProtocolDataI, error) {
+	var cpd, blank V
+	json.Unmarshal([]byte(`{}`), &blank)
+	err := json.Unmarshal(data, &cpd)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unmarshal intermediary %s: %w", reflect.TypeOf(cpd).Name(), err)
 	}
@@ -26,33 +28,33 @@ func unmarshalProtocolData(cpd, blank ProtocolDataI, data json.RawMessage) (Prot
 func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (ProtocolDataI, error) {
 	switch datatype {
 	case ProtocolDataTypeConnection:
-		return unmarshalProtocolData(&ConnectionProtocolData{}, &ConnectionProtocolData{}, data)
+		return unmarshalProtocolData[*ConnectionProtocolData](data)
 	case ProtocolDataTypeOsmosisParams:
-		return unmarshalProtocolData(&OsmosisParamsProtocolData{}, &OsmosisParamsProtocolData{}, data)
+		return unmarshalProtocolData[*OsmosisParamsProtocolData](data)
 	case ProtocolDataTypeLiquidToken:
-		return unmarshalProtocolData(&LiquidAllowedDenomProtocolData{}, &LiquidAllowedDenomProtocolData{}, data)
+		return unmarshalProtocolData[*LiquidAllowedDenomProtocolData](data)
 	case ProtocolDataTypeOsmosisPool:
-		return unmarshalProtocolData(&OsmosisPoolProtocolData{}, &OsmosisPoolProtocolData{}, data)
+		return unmarshalProtocolData[*OsmosisPoolProtocolData](data)
 	case ProtocolDataTypeUmeeParams:
-		return unmarshalProtocolData(&UmeeParamsProtocolData{}, &UmeeParamsProtocolData{}, data)
+		return unmarshalProtocolData[*UmeeParamsProtocolData](data)
 	case ProtocolDataTypeUmeeReserves:
-		return unmarshalProtocolData(&UmeeReservesProtocolData{}, &UmeeReservesProtocolData{}, data)
+		return unmarshalProtocolData[*UmeeReservesProtocolData](data)
 	case ProtocolDataTypeUmeeUTokenSupply:
-		return unmarshalProtocolData(&UmeeUTokenSupplyProtocolData{}, &UmeeUTokenSupplyProtocolData{}, data)
+		return unmarshalProtocolData[*UmeeUTokenSupplyProtocolData](data)
 	case ProtocolDataTypeUmeeTotalBorrows:
-		return unmarshalProtocolData(&UmeeTotalBorrowsProtocolData{}, &UmeeTotalBorrowsProtocolData{}, data)
+		return unmarshalProtocolData[*UmeeTotalBorrowsProtocolData](data)
 	case ProtocolDataTypeUmeeInterestScalar:
-		return unmarshalProtocolData(&UmeeInterestScalarProtocolData{}, &UmeeInterestScalarProtocolData{}, data)
+		return unmarshalProtocolData[*UmeeInterestScalarProtocolData](data)
 	case ProtocolDataTypeUmeeLeverageModuleBalance:
-		return unmarshalProtocolData(&UmeeLeverageModuleBalanceProtocolData{}, &UmeeLeverageModuleBalanceProtocolData{}, data)
+		return unmarshalProtocolData[*UmeeLeverageModuleBalanceProtocolData](data)
 	case ProtocolDataTypeCrescentParams:
-		return unmarshalProtocolData(&CrescentParamsProtocolData{}, &CrescentParamsProtocolData{}, data)
+		return unmarshalProtocolData[*CrescentParamsProtocolData](data)
 	case ProtocolDataTypeCrescentPool:
-		return unmarshalProtocolData(&CrescentPoolProtocolData{}, &CrescentPoolProtocolData{}, data)
+		return unmarshalProtocolData[*CrescentPoolProtocolData](data)
 	case ProtocolDataTypeCrescentPoolCoinSupply:
-		return unmarshalProtocolData(&CrescentPoolCoinSupplyProtocolData{}, &CrescentPoolCoinSupplyProtocolData{}, data)
+		return unmarshalProtocolData[*CrescentPoolCoinSupplyProtocolData](data)
 	case ProtocolDataTypeCrescentReserveAddressBalance:
-		return unmarshalProtocolData(&CrescentReserveAddressBalanceProtocolData{}, &CrescentReserveAddressBalanceProtocolData{}, data)
+		return unmarshalProtocolData[*CrescentReserveAddressBalanceProtocolData](data)
 	default:
 		return nil, ErrUnknownProtocolDataType
 	}
