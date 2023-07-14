@@ -516,7 +516,7 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 	balanceAmount := balanceCoin.Amount
 
 	if balanceAmount.IsNegative() {
-		return errors.New("CrescentReserveAddressaccount balance cannot be negative")
+		return errors.New("CrescentReserveAddress account balance cannot be negative")
 	}
 
 	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, address+denom)
