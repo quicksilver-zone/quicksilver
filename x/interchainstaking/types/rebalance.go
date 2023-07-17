@@ -12,52 +12,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils"
 )
 
-// CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
-// Positive delta represents current allocation is below target, and vice versa.
-func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations ValidatorIntents) ValidatorIntents {
-	deltas := make(ValidatorIntents, 0)
-
-	targetValopers := func(in ValidatorIntents) []string {
-		out := make([]string, 0, len(in))
-		for _, i := range in {
-			out = append(out, i.ValoperAddress)
-		}
-		return out
-	}(targetAllocations)
-
-	keySet := utils.Unique(append(targetValopers, utils.Keys(currentAllocations)...))
-	sort.Strings(keySet)
-	// for target allocations, raise the intent weight by the total delegated value to get target amount
-	for _, valoper := range keySet {
-		current, ok := currentAllocations[valoper]
-		if !ok {
-			current = sdk.ZeroInt()
-		}
-
-		target, ok := targetAllocations.GetForValoper(valoper)
-		if !ok {
-			target = &ValidatorIntent{ValoperAddress: valoper, Weight: sdk.ZeroDec()}
-		}
-		targetAmount := target.Weight.MulInt(currentSum).TruncateInt()
-		// diff between target and current allocations
-		// positive == below target, negative == above target
-		delta := targetAmount.Sub(current)
-		deltas = append(deltas, &ValidatorIntent{Weight: sdk.NewDecFromInt(delta), ValoperAddress: valoper})
-	}
-
-	// sort keys by relative value of delta
-	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].ValoperAddress > deltas[j].ValoperAddress
-	})
-
-	// sort keys by relative value of delta
-	sort.SliceStable(deltas, func(i, j int) bool {
-		return deltas[i].Weight.GT(deltas[j].Weight)
-	})
-
-	return deltas
-}
-
 // CalculateAllocationDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
 // Returns a slice of deltas for each of target allocations (underallocated) and source allocations (overallocated).
 func CalculateAllocationDeltas(
