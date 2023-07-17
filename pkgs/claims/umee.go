@@ -100,6 +100,9 @@ func UmeeClaim(
 	}
 	bankQueryResponse := banktypes.QueryAllBalancesResponse{}
 	err = marshaler.Unmarshal(abciquery.Response.Value, &bankQueryResponse)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	leveragequery := leverage.QueryAccountBalances{Address: umeeAddress}
 	bytes = marshaler.MustMarshal(&leveragequery)
@@ -117,6 +120,9 @@ func UmeeClaim(
 	}
 	leverageQueryResponse := leverage.QueryAccountBalancesResponse{}
 	err = marshaler.Unmarshal(abciquery.Response.Value, &leverageQueryResponse)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
 	tokens := func(in []prewards.LiquidAllowedDenomProtocolData) map[string]TokenTuple {

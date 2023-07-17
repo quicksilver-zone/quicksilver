@@ -186,7 +186,7 @@ func OsmosisClaim(
 
 	pools := poolMap{}
 	for _, pool := range poolsManager.Get() {
-		for chain := range pool.Zones {
+		for chain := range pool.Denoms {
 			if _, ok := pools[chain]; !ok {
 				pools[chain] = make([]osmogamm.PoolI, 0)
 			}
