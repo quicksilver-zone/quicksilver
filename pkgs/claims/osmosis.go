@@ -11,14 +11,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	osmogamm "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	"github.com/ingenuity-build/xcclookup/internal/multierror"
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
+	osmogamm "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
+	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 type poolMap map[string][]osmogamm.PoolI

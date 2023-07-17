@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
+
+	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 type CacheOutput struct {
@@ -23,9 +24,7 @@ func GetCacheHandler(
 	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
 ) func(http.ResponseWriter, *http.Request) {
-
 	return func(w http.ResponseWriter, req *http.Request) {
-
 		out := CacheOutput{Connections: connectionManager.Get(), OsmosisPools: poolsManager.Get(), OsmosisParams: osmosisParamsManager.Get(), Tokens: tokensManager.Get()}
 
 		jsonOut, err := json.Marshal(out)

@@ -9,10 +9,11 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	"github.com/ingenuity-build/xcclookup/pkgs/handlers"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
 	"gopkg.in/yaml.v3"
+
+	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 const (

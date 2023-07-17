@@ -3,20 +3,22 @@ package claims
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/cosmos/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
+	"github.com/ingenuity-build/xcclookup/pkgs/types"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
 	leverage "github.com/ingenuity-build/quicksilver/umee-types/leverage"
 	leveragetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
-	"github.com/ingenuity-build/xcclookup/pkgs/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	"time"
 )
 
 func UmeeClaim(
@@ -130,7 +132,7 @@ func UmeeClaim(
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
 
-	//bank balance
+	// bank balance
 	for _, coin := range bankQueryResponse.Balances {
 		if len(coin.GetDenom()) < 2 || coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
 			continue
@@ -194,7 +196,7 @@ func UmeeClaim(
 		msg[tuple.chain] = chainMsg
 	}
 
-	//leverage account balance
+	// leverage account balance
 	for _, coin := range leverageQueryResponse.Collateral {
 		if len(coin.GetDenom()) < 2 || coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
 			continue
