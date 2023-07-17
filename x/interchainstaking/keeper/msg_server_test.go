@@ -496,7 +496,87 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 }
 
 func (suite *KeeperTestSuite) TestRegisterZone() {
-	// TODO: add tests
+	var msg *icstypes.MsgRegisterZone
+
+	testAccount, err := addressutils.AccAddressFromBech32(testAddress, "")
+	suite.Require().NoError(err)
+
+	tests := []struct {
+		name      string
+		malleate  func()
+		expectErr string
+	}{
+		{
+			"invalid: duplicate zone",
+			func() {
+				suite.Require().NoError(err)
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo:      nil,
+				}
+			},
+			"invalid chain id",
+		},
+		{
+			"invalid: incorrect authority",
+			func() {
+				suite.Require().NoError(err)
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        "invalid",
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo:      nil,
+				}
+			},
+			"invalid authority",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			ctx := suite.chainA.GetContext()
+
+			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+
+			tt.malleate()
+
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.RegisterZone(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+
+			if tt.expectErr != "" {
+				suite.ErrorContains(err, tt.expectErr)
+				suite.T().Logf("Error: %v", err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestUpdateZone() {

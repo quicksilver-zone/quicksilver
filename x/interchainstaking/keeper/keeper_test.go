@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 
 	"cosmossdk.io/math"
@@ -75,10 +77,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (suite *KeeperTestSuite) setupTestZones() {
-	proposal := &icstypes.RegisterZoneProposal{
-		Title:            "register zone A",
-		Description:      "register zone A",
-		ConnectionId:     suite.path.EndpointA.ConnectionID,
+	msg := &icstypes.MsgRegisterZone{
+		Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+		ConnectionID:     suite.path.EndpointA.ConnectionID,
 		LocalDenom:       "uqatom",
 		BaseDenom:        "uatom",
 		AccountPrefix:    "cosmos",
@@ -94,11 +95,12 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 
-	err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
-	suite.Require().NoError(err)
+	msgSrv := icskeeper.NewMsgServerImpl(*quicksilver.InterchainstakingKeeper)
+	_, err := msgSrv.RegisterZone(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+	suite.NoError(err)
 
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
 	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: ctx.BlockTime()})
