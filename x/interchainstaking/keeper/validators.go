@@ -9,9 +9,9 @@ import (
 )
 
 // GetValidators returns validators by chainID.
-func (k Keeper) GetValidators(ctx sdk.Context, chainID string) []types.Validator {
+func (k Keeper) GetValidators(ctx sdk.Context, zone *types.Zone) []types.Validator {
 	var validators []types.Validator
-	k.IterateValidators(ctx, chainID, func(_ int64, validator types.Validator) (stop bool) {
+	k.IterateValidators(ctx, zone, func(_ int64, validator types.Validator) (stop bool) {
 		validators = append(validators, validator)
 		return false
 	})
@@ -19,9 +19,9 @@ func (k Keeper) GetValidators(ctx sdk.Context, chainID string) []types.Validator
 }
 
 // GetValidatorAddresses returns a slice of validator addresses by chainID.
-func (k Keeper) GetValidatorAddresses(ctx sdk.Context, chainID string) []string {
+func (k Keeper) GetValidatorAddresses(ctx sdk.Context, zone *types.Zone) []string {
 	var validators []string
-	k.IterateValidators(ctx, chainID, func(_ int64, validator types.Validator) (stop bool) {
+	k.IterateValidators(ctx, zone, func(_ int64, validator types.Validator) (stop bool) {
 		validators = append(validators, validator.ValoperAddress)
 		return false
 	})
@@ -29,9 +29,9 @@ func (k Keeper) GetValidatorAddresses(ctx sdk.Context, chainID string) []string 
 }
 
 // GetActiveValidators returns validators by chainID where status = BONDED.
-func (k Keeper) GetActiveValidators(ctx sdk.Context, chainID string) []types.Validator {
+func (k Keeper) GetActiveValidators(ctx sdk.Context, zone *types.Zone) []types.Validator {
 	var validators []types.Validator
-	k.IterateValidators(ctx, chainID, func(_ int64, validator types.Validator) (stop bool) {
+	k.IterateValidators(ctx, zone, func(_ int64, validator types.Validator) (stop bool) {
 		if validator.Status == stakingtypes.BondStatusBonded {
 			validators = append(validators, validator)
 		}
@@ -40,10 +40,10 @@ func (k Keeper) GetActiveValidators(ctx sdk.Context, chainID string) []types.Val
 	return validators
 }
 
-// GetValidators returns validators by chainID.
-func (k Keeper) GetValidator(ctx sdk.Context, chainID string, address []byte) (types.Validator, bool) {
+// GetValidators returns validators by zone.
+func (k Keeper) GetValidator(ctx sdk.Context, zone *types.Zone, address []byte) (types.Validator, bool) {
 	val := types.Validator{}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(chainID))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(zone.BaseChainID()))
 	bz := store.Get(address)
 	if len(bz) == 0 {
 		return val, false
@@ -54,8 +54,8 @@ func (k Keeper) GetValidator(ctx sdk.Context, chainID string, address []byte) (t
 }
 
 // SetValidator sets a validators.
-func (k Keeper) SetValidator(ctx sdk.Context, chainID string, val types.Validator) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(chainID))
+func (k Keeper) SetValidator(ctx sdk.Context, zone *types.Zone, val types.Validator) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(zone.BaseChainID()))
 	bz := k.cdc.MustMarshal(&val)
 	valAddr, err := val.GetAddressBytes()
 	if err != nil {
@@ -66,16 +66,16 @@ func (k Keeper) SetValidator(ctx sdk.Context, chainID string, val types.Validato
 }
 
 // DeleteValidator deletes a validator.
-func (k Keeper) DeleteValidator(ctx sdk.Context, chainID string, address []byte) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(chainID))
+func (k Keeper) DeleteValidator(ctx sdk.Context, zone *types.Zone, address []byte) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(zone.BaseChainID()))
 	store.Delete(address)
 }
 
 // IterateValidators iterates through validators.
-func (k Keeper) IterateValidators(ctx sdk.Context, chainID string, fn func(index int64, validator types.Validator) (stop bool)) {
+func (k Keeper) IterateValidators(ctx sdk.Context, zone *types.Zone, fn func(index int64, validator types.Validator) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), nil)
 
-	iterator := sdk.KVStorePrefixIterator(store, types.GetZoneValidatorsKey(chainID))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetZoneValidatorsKey(zone.BaseChainID()))
 	defer iterator.Close()
 
 	i := int64(0)

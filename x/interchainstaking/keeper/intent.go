@@ -16,9 +16,9 @@ import (
 
 func (k *Keeper) getStoreKey(zone *types.Zone, snapshot bool) []byte {
 	if snapshot {
-		return append(types.KeyPrefixSnapshotIntent, []byte(zone.ID())...)
+		return append(types.KeyPrefixSnapshotIntent, []byte(zone.ZoneID())...)
 	}
-	return append(types.KeyPrefixIntent, []byte(zone.ID())...)
+	return append(types.KeyPrefixIntent, []byte(zone.ZoneID())...)
 }
 
 // GetDelegatorIntent returns intent info by zone and delegator.
@@ -107,7 +107,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 
 		// grab offchain asset value, and raise the users' base value by this amount.
 		// currently ignoring base value (locally held assets)
-		k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ID(), delIntent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
+		k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ZoneID(), delIntent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
 			balance.Amount = balance.Amount.Add(sdkmath.NewIntFromUint64(data.Amount))
 			// claim amounts are in zone.baseDenom - but given weights are all relative to one another this okay.
 			k.Logger(ctx).Error(
@@ -158,7 +158,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 	k.Logger(ctx).Info(
 		"aggregates",
 		"agg", newAggregate,
-		"chain", zone.ID(),
+		"chain", zone.ZoneID(),
 	)
 
 	zone.AggregateIntent = newAggregate
@@ -185,7 +185,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	claimAmt := sdkmath.ZeroInt()
 
 	// grab offchain asset value, and raise the users' base value by this amount.
-	k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ID(), delegator.String(), func(index int64, claim prtypes.Claim) (stop bool) {
+	k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ZoneID(), delegator.String(), func(index int64, claim prtypes.Claim) (stop bool) {
 		claimAmt = claimAmt.Add(sdkmath.NewIntFromUint64(claim.Amount))
 		k.Logger(ctx).Error("Update intents - found claim for user", "user", delIntent.Delegator, "claim amount", claim.Amount, "new balance", claimAmt)
 		return false
@@ -198,7 +198,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	}
 
 	if updateWithCoin {
-		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount, k.GetValidatorAddresses(ctx, zone.ChainID()))
+		delIntent = zone.UpdateIntentWithCoins(delIntent, baseBalance, inAmount, k.GetValidatorAddresses(ctx, zone))
 	}
 
 	if updateWithMemo {
@@ -214,7 +214,7 @@ func (k *Keeper) UpdateDelegatorIntent(ctx sdk.Context, delegator sdk.AccAddress
 	return nil
 }
 
-func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, intents []*types.ValidatorIntent) error {
+func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone *types.Zone, intents []*types.ValidatorIntent) error {
 	errMap := make(map[string]error)
 
 	for i, intent := range intents {
@@ -223,7 +223,7 @@ func (k msgServer) validateValidatorIntents(ctx sdk.Context, zone types.Zone, in
 		if err != nil {
 			return err
 		}
-		_, found := k.GetValidator(ctx, zone.ChainID(), valAddrBytes)
+		_, found := k.GetValidator(ctx, zone, valAddrBytes)
 		if !found {
 			errMap[fmt.Sprintf("intent[%v]", i)] = fmt.Errorf("unable to find valoper %s", intent.ValoperAddress)
 		}

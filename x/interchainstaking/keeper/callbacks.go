@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ingenuity-build/quicksilver/proofs"
+
 	sdkioerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +26,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -184,7 +185,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 	if err != nil {
 		return err
 	}
-	val, found := k.GetValidator(ctx, query.ChainId, valAddrBytes)
+	val, found := k.GetValidator(ctx, &zone, valAddrBytes)
 	if !found {
 		err := fmt.Errorf("unable to get validator: %s", delegation.ValidatorAddress)
 		k.Logger(ctx).Error(err.Error())
@@ -206,7 +207,7 @@ func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqt
 	}
 
 	// initialize performance delegations
-	if err := k.UpdatePerformanceDelegations(ctx, zone); err != nil {
+	if err := k.UpdatePerformanceDelegations(ctx, &zone); err != nil {
 		k.Logger(ctx).Info(err.Error())
 		return err
 	}
@@ -353,7 +354,7 @@ func checkTMStateValidity(
 	// - assert header timestamp is not past the trusting period
 	// - assert header timestamp is past latest stored consensus state timestamp
 	// - assert that a TrustLevel proportion of TrustedValidators signed new Commit
-	err = utils.Verify(
+	err = proofs.Verify(
 		&signedHeader,
 		tmTrustedValidators, tmSignedHeader, tmValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),
@@ -465,7 +466,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	if !ok {
 		return errors.New("cannot assert type of tx")
 	}
-	return k.HandleReceiptTransaction(ctx, txtx, hashStr, zone)
+	return k.HandleReceiptTransaction(ctx, txtx, hashStr, &zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.

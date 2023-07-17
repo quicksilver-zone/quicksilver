@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"invalid - too many locked tokens",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
 					DestinationAddress: addr,
@@ -237,7 +237,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				}
 
 				ctx := suite.chainA.GetContext()
-				zoneVals := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				zoneVals := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, &zone)
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetRedelegationRecord(ctx, icstypes.RedelegationRecord{
 					ChainId:        suite.chainB.ChainID,
 					EpochNumber:    1,
@@ -267,9 +269,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetParams(ctx, params)
 
 			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			// disable LSM
 			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -284,12 +286,12 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 
 			if tt.expectErr != "" {
-				suite.Require().ErrorContains(err, tt.expectErr)
-				suite.Require().Nil(res)
+				suite.ErrorContains(err, tt.expectErr)
+				suite.Nil(res)
 				suite.T().Logf("Error: %v", err)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(res)
+				suite.NoError(err)
+				suite.NotNil(res)
 			}
 		})
 
@@ -306,18 +308,18 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetParams(ctx, params)
 
 			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			// enable LSM
 			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			suite.True(found)
 			zone.LiquidityModule = true
 			zone.UnbondingEnabled = true
 			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
 
-			validators := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, suite.chainB.ChainID)
+			validators := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, &zone)
 			for _, delegation := range func(zone icstypes.Zone) []icstypes.Delegation {
 				out := make([]icstypes.Delegation, 0)
 				for _, valoper := range validators {
@@ -334,12 +336,12 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 
 			if tt.expectErrLsm != "" {
-				suite.Require().Errorf(err, tt.expectErrLsm)
-				suite.Require().Nil(res)
+				suite.Errorf(err, tt.expectErrLsm)
+				suite.Nil(res)
 				suite.T().Logf("Error: %v", err)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(res)
+				suite.NoError(err)
+				suite.NotNil(res)
 			}
 		})
 

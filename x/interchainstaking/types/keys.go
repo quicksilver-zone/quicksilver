@@ -108,7 +108,7 @@ func GetDelegationKey(zone *Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress
 
 // GetDelegationsKey gets the prefix for a delegator for all validators.
 func GetDelegationsKey(zone *Zone, delAddr sdk.AccAddress) []byte {
-	return append(append(KeyPrefixDelegation, []byte(zone.ID())...), delAddr.Bytes()...)
+	return append(append(KeyPrefixDelegation, []byte(zone.ZoneID())...), delAddr.Bytes()...)
 }
 
 // GetPerformanceDelegationKey gets the key for delegator bond with validator.
@@ -119,7 +119,7 @@ func GetPerformanceDelegationKey(zone *Zone, delAddr sdk.AccAddress, valAddr sdk
 
 // GetPerformanceDelegationsKey gets the prefix for a delegator for all validators.
 func GetPerformanceDelegationsKey(zone *Zone, delAddr sdk.AccAddress) []byte {
-	return append(append(KeyPrefixPerformanceDelegation, []byte(zone.ChainID())...), delAddr.Bytes()...)
+	return append(append(KeyPrefixPerformanceDelegation, []byte(zone.BaseChainID())...), delAddr.Bytes()...)
 }
 
 func GetReceiptKey(chainID, txhash string) string {
