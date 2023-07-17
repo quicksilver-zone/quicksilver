@@ -127,26 +127,22 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	k.SetZone(ctx, zone)
 
 	// generate deposit account
-	portOwner := chainID + ".deposit"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
 	// generate the withdrawal account
-	portOwner = chainID + ".withdrawal"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
 		return nil, err
 	}
 
 	// generate the perf account
-	portOwner = chainID + ".performance"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
 	// generate delegate accounts
-	portOwner = chainID + ".delegate"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
@@ -154,7 +150,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	if !zone.IsSubzone() {
 		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 		query := stakingTypes.QueryValidatorsRequest{}
-		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
 		if err != nil {
 			return &types.MsgRegisterZoneResponse{}, err
 		}
@@ -301,32 +297,28 @@ func (k msgServer) UpdateZone(goCtx context.Context, msg *types.MsgUpdateZone) (
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			portOwner := zone.ID() + ".deposit"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate withdrawal account
-			portOwner = zone.ID() + ".withdrawal"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate perf account
-			portOwner = zone.ID() + ".performance"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate delegate accounts
-			portOwner = zone.ID() + ".delegate"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 			query := stakingTypes.QueryValidatorsRequest{}
-			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+			err := k.EmitValSetQuery(ctx, zone.ConnectionId, &zone, query, sdkmath.NewInt(period))
 			if err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
@@ -337,7 +329,7 @@ func (k msgServer) UpdateZone(goCtx context.Context, msg *types.MsgUpdateZone) (
 	}
 	k.SetZone(ctx, &zone)
 
-	k.Logger(ctx).Info("applied changes to zone", "changes", msg.Changes, "zone", zone.ID())
+	k.Logger(ctx).Info("applied changes to zone", "changes", msg.Changes, "zone", zone.ZoneID())
 
 	return &types.MsgUpdateZoneResponse{}, nil
 }
