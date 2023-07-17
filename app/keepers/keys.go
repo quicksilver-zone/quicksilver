@@ -8,6 +8,8 @@ import (
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
+	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
@@ -21,9 +23,6 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
-
-	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
@@ -42,17 +41,17 @@ func KVStoreKeys() []string {
 		authtypes.StoreKey,
 		banktypes.StoreKey,
 		stakingtypes.StoreKey,
-		crisistypes.StoreKey,
 		distrtypes.StoreKey,
 		slashingtypes.StoreKey,
 		govtypes.StoreKey,
 		paramstypes.StoreKey,
-		consensusparamtypes.StoreKey,
 		upgradetypes.StoreKey,
 		evidencetypes.StoreKey,
 		capabilitytypes.StoreKey,
 		feegrant.StoreKey,
 		authzkeeper.StoreKey,
+		consensusparamtypes.StoreKey,
+		crisistypes.StoreKey,
 		// ibc keys
 		ibcexported.StoreKey,
 		ibctransfertypes.StoreKey,

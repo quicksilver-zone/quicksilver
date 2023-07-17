@@ -56,7 +56,7 @@ func NewCreateDenomCmd() *cobra.Command {
 				args[0],
 			)
 
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever), msg)
 		},
 	}
 
@@ -91,7 +91,7 @@ func NewMintCmd() *cobra.Command {
 				amount,
 			)
 
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever), msg)
 		},
 	}
 
@@ -126,7 +126,7 @@ func NewBurnCmd() *cobra.Command {
 				amount,
 			)
 
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever), msg)
 		},
 	}
 
@@ -191,7 +191,7 @@ func NewChangeAdminCmd() *cobra.Command {
 				args[1],
 			)
 
-			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf, msg)
+			return tx.GenerateOrBroadcastTxWithFactory(clientCtx, txf.WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever), msg)
 		},
 	}
 

@@ -3,6 +3,7 @@ package quicksilver.interchainstaking.v1;
 
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "quicksilver/interchainstaking/v1/proposals.proto";
@@ -11,6 +12,8 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/
 
 // Msg defines the interchainstaking Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   // RequestRedemption defines a method for requesting burning of qAssets for
   // native assets.
   rpc RequestRedemption(MsgRequestRedemption)
@@ -50,6 +53,7 @@ service Msg {
 // MsgRequestRedemption represents a message type to request a burn of qAssets
 // for native assets.
 message MsgRequestRedemption {
+  option (cosmos.msg.v1.signer) = "from_address";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -63,6 +67,7 @@ message MsgRequestRedemption {
 // MsgSignalIntent represents a message type for signalling voting intent for
 // one or more validators.
 message MsgSignalIntent {
+  option (cosmos.msg.v1.signer) = "from_address";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 

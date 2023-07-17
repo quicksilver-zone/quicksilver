@@ -25,7 +25,7 @@ type Keeper struct {
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 	govKeeper     govkeeper.Keeper
-	icsKeeper     icskeeper.Keeper
+	icsKeeper     *icskeeper.Keeper
 	icqKeeper     icqkeeper.Keeper
 	prKeeper      *prkeeper.Keeper
 
@@ -46,7 +46,7 @@ func NewKeeper(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	gk govkeeper.Keeper,
-	icsk icskeeper.Keeper,
+	icsk *icskeeper.Keeper,
 	icqk icqkeeper.Keeper,
 	prk *prkeeper.Keeper,
 	pofn utils.ProofOpsFn,

@@ -11,7 +11,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 )
 
-// VerifyNonAdjacent is identical to VerifyNonAdjacent in tendermint/tendermint/light/verifier.go, with the exception that
+// VerifyNonAdjacent is identical to VerifyNonAdjacent in cometbft/cometbft/light/verifier.go, with the exception that
 // it does not attempt to validate that the block is _newer_ than the current consensus state.
 func VerifyNonAdjacent(
 	trustedHeader *types.SignedHeader, // height=X

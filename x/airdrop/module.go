@@ -114,6 +114,11 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
+// QuerierRoute returns the airdrop module's querier route name.
+func (AppModule) QuerierRoute() string {
+	return types.QuerierRoute
+}
+
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {

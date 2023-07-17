@@ -5,12 +5,10 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-
-	"github.com/cosmos/gogoproto/proto"
-
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -24,7 +22,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	// get test zone
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.Require().True(found)
-	zoneValidatorAddresses := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+	zoneValidatorAddresses := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainID())
 
 	performanceDelegations := icsKeeper.GetAllPerformanceDelegations(ctx, &zone)
 	suite.Require().Len(performanceDelegations, 4)

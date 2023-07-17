@@ -6,7 +6,6 @@ package balancer
 import (
 	context "context"
 	fmt "fmt"
-	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
 	grpc "google.golang.org/grpc"

@@ -2,17 +2,31 @@ syntax = "proto3";
 package quicksilver.participationrewards.v1;
 
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "quicksilver/claimsmanager/v1/claimsmanager.proto";
+import "quicksilver/participationrewards/v1/proposals.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
 
 // Msg defines the participationrewards Msg service.
 service Msg {
+  option (cosmos.msg.v1.service) = true;
+
   rpc SubmitClaim(MsgSubmitClaim) returns (MsgSubmitClaimResponse) {
     option (google.api.http) = {
       post : "/quicksilver/tx/v1/participationrewards/claim"
+      body : "*"
+    };
+  }
+
+  // SignalIntent defines a method for signalling voting intent for one or more
+  // validators.
+  rpc GovRemoveProtocolData(MsgGovRemoveProtocolData)
+      returns (MsgGovRemoveProtocolDataResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/participationrewards/remove_protocoldata"
       body : "*"
     };
   }
@@ -21,6 +35,7 @@ service Msg {
 // MsgSubmitClaim represents a message type for submitting a participation
 // claim regarding the given zone (chain).
 message MsgSubmitClaim {
+  option (cosmos.msg.v1.signer) = "user_address";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 

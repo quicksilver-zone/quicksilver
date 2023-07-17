@@ -2,6 +2,7 @@ syntax = "proto3";
 package quicksilver.claimsmanager.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/query/v1/query.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
@@ -13,12 +14,14 @@ option go_package = "github.com/ingenuity-build/quicksilver/x/claimsmanager/type
 service Query {
   // Claims returns all zone claims from the current epoch.
   rpc Claims(QueryClaimsRequest) returns (QueryClaimsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/claimsmanager/v1/claims/{chain_id}";
   }
 
   // LastEpochClaims returns all zone claims from the last epoch.
   rpc LastEpochClaims(QueryClaimsRequest) returns (QueryClaimsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/claimsmanager/v1/previous_epoch_claims/{chain_id}";
   }
@@ -26,6 +29,7 @@ service Query {
   // UserClaims returns all zone claims for a given address from the current
   // epoch.
   rpc UserClaims(QueryClaimsRequest) returns (QueryClaimsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/claimsmanager/v1/user/{address}/claims";
   }
@@ -33,6 +37,7 @@ service Query {
   // UserLastEpochClaims returns all zone claims for a given address from the
   // last epoch.
   rpc UserLastEpochClaims(QueryClaimsRequest) returns (QueryClaimsResponse) {
+    option (cosmos.query.v1.module_query_safe) = true;
     option (google.api.http).get =
         "/quicksilver/claimsmanager/v1/user/{address}/previous_epoch_claims";
   }

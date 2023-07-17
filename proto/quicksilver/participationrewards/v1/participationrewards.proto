@@ -63,4 +63,10 @@ enum ProtocolDataType {
   ProtocolDataTypeOsmosisPool = 4;
   ProtocolDataTypeCrescentPool = 5;
   ProtocolDataTypeSifchainPool = 6;
+  ProtocolDataTypeUmeeParams = 7;
+  ProtocolDataTypeUmeeReserves = 8;
+  ProtocolDataTypeUmeeInterestScalar = 9;
+  ProtocolDataTypeUmeeTotalBorrows = 10;
+  ProtocolDataTypeUmeeUTokenSupply = 11;
+  ProtocolDataTypeUmeeLeverageModuleBalance = 12;
 }

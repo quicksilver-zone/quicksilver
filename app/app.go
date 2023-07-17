@@ -13,8 +13,13 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -33,17 +38,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	dbm "github.com/cometbft/cometbft-db"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
-	tmos "github.com/cometbft/cometbft/libs/os"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
-
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 
 	"github.com/ingenuity-build/quicksilver/app/keepers"
 	"github.com/ingenuity-build/quicksilver/docs"
@@ -121,7 +120,6 @@ func NewQuicksilver(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *Quicksilver {
 	encodingConfig := MakeEncodingConfig()
-
 	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
@@ -167,7 +165,7 @@ func NewQuicksilver(
 
 	/****  Module Options ****/
 
-	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
+	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment,
 	// we prefer to be more strict in what arguments the modules expect.
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
@@ -193,7 +191,6 @@ func NewQuicksilver(
 	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
 
 	// // add test gRPC service for testing gRPC queries in isolation
-	// // testdata.RegisterTestServiceServer(app.GRPCQueryRouter(), testdata.TestServiceImpl{})
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -236,10 +233,10 @@ func NewQuicksilver(
 		}
 	}
 
-	// Finally start the tpsCounter.
+	// Finally, start the tpsCounter.
 	app.tpsCounter = newTPSCounter(logger)
 	go func() {
-		// Unfortunately golangci-lint is so pedantic
+		// Unfortunately, golangci-lint is so pedantic
 		// so we have to ignore this error explicitly.
 		_ = app.tpsCounter.start(context.Background()) //nolint:errcheck
 	}()

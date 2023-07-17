@@ -127,6 +127,41 @@ func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 			return err
 		}
 		pdi = &pd
+	case ProtocolDataTypeUmeeReserves:
+		pd := UmeeReservesProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
+	case ProtocolDataTypeUmeeInterestScalar:
+		pd := UmeeInterestScalarProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
+	case ProtocolDataTypeUmeeTotalBorrows:
+		pd := UmeeTotalBorrowsProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
+	case ProtocolDataTypeUmeeUTokenSupply:
+		pd := UmeeUTokenSupplyProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
+	case ProtocolDataTypeUmeeLeverageModuleBalance:
+		pd := UmeeLeverageModuleBalanceProtocolData{}
+		err := json.Unmarshal(data, &pd)
+		if err != nil {
+			return err
+		}
+		pdi = &pd
 	case ProtocolDataTypeCrescentPool:
 		return ErrUnimplementedProtocolDataType
 	case ProtocolDataTypeSifchainPool:
@@ -143,7 +178,7 @@ func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
 // allocated to it.
 type UserAllocation struct {
 	Address string
-	Amount  math.Int
+	Amount  sdk.Coin
 }
 
 // ZoneScore is an internal struct to track transient state for the calculation

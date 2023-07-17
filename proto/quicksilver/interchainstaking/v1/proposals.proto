@@ -2,7 +2,9 @@ syntax = "proto3";
 package quicksilver.interchainstaking.v1;
 
 import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 import "gogoproto/gogo.proto";
+import "quicksilver/interchainstaking/v1/interchainstaking.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
 
@@ -27,6 +29,7 @@ message RegisterZoneProposal {
   bool unbonding_enabled = 12;
   int64 decimals = 13;
   bool is_118 = 14;
+  SubzoneInfo subzoneInfo = 15;
 }
 
 message RegisterZoneProposalWithDeposit {
@@ -53,6 +56,7 @@ message RegisterZoneProposalWithDeposit {
       [ (gogoproto.moretags) = "yaml:\"deposits_enabled\"" ];
   int64 decimals = 14 [ (gogoproto.moretags) = "yaml:\"decimals\"" ];
   bool is_118 = 15;
+  SubzoneInfo subzoneInfo = 16;
 }
 
 message UpdateZoneProposal {
@@ -89,6 +93,7 @@ message UpdateZoneValue {
 }
 
 message MsgGovReopenChannel {
+  option (cosmos.msg.v1.signer) = "authority";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
@@ -105,6 +110,7 @@ message MsgGovReopenChannel {
 message MsgGovReopenChannelResponse {}
 
 message MsgGovCloseChannel {
+  option (cosmos.msg.v1.signer) = "authority";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 

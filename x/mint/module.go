@@ -103,6 +103,11 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the mint module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
+// QuerierRoute returns the mint module's querier route name.
+func (AppModule) QuerierRoute() string {
+	return types.QuerierRoute
+}
+
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -146,11 +151,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // GenerateGenesisState creates a randomized GenState of the mint module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simulation.RandomizedGenState(simState)
-}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
-	return nil
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.

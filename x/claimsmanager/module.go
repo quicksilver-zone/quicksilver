@@ -108,6 +108,11 @@ func NewAppModule(cdc codec.Codec, k keeper.Keeper) AppModule {
 // RegisterInvariants registers the claimsmanager module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
+// QuerierRoute returns the claimsmanager module's querier route name.
+func (AppModule) QuerierRoute() string {
+	return types.QuerierRoute
+}
+
 // RegisterServices registers a gRPC query service to respond to the
 // module-specific gRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {

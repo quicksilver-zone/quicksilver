@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
@@ -39,7 +40,7 @@ type Keeper struct {
 	bankKeeper           types.BankKeeper
 	stakingKeeper        types.StakingKeeper
 	IcqKeeper            icqkeeper.Keeper
-	icsKeeper            icskeeper.Keeper
+	icsKeeper            *icskeeper.Keeper
 	epochsKeeper         epochskeeper.Keeper
 	feeCollectorName     string
 	prSubmodules         map[cmtypes.ClaimType]Submodule
@@ -57,7 +58,7 @@ func NewKeeper(
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
 	icqk icqkeeper.Keeper,
-	icsk icskeeper.Keeper,
+	icsk *icskeeper.Keeper,
 	feeCollectorName string,
 	proofValidationFn utils.ProofOpsFn,
 	selfProofValidationFn utils.SelfProofOpsFn,
@@ -85,6 +86,10 @@ func NewKeeper(
 		ValidateProofOps:     proofValidationFn,
 		ValidateSelfProofOps: selfProofValidationFn,
 	}
+}
+
+func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
+	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.accountKeeper.GetModuleAddress(govtypes.ModuleName))
 }
 
 func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
@@ -154,5 +159,6 @@ func LoadSubmodules() map[cmtypes.ClaimType]Submodule {
 	out := make(map[cmtypes.ClaimType]Submodule, 0)
 	out[cmtypes.ClaimTypeLiquidToken] = &LiquidTokensModule{}
 	out[cmtypes.ClaimTypeOsmosisPool] = &OsmosisModule{}
+	out[cmtypes.ClaimTypeUmeeToken] = &UmeeModule{}
 	return out
 }

@@ -3,10 +3,11 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -43,7 +44,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				k.Logger(ctx).Error(
 					"encountered a problem aggregating intents; leaving aggregated intents unchanged since last epoch",
 					"error", err.Error(),
-					"chain_id", zone.ChainId,
+					"zone", zone.ID(),
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -63,7 +64,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				k.Logger(ctx).Error(
 					"encountered a problem handling queued unbondings",
 					"error", err.Error(),
-					"chain_id", zone.ChainId,
+					"zone", zone.ID(),
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -78,7 +79,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				k.Logger(ctx).Error(
 					"encountered a problem rebalancing",
 					"error", err.Error(),
-					"chain_id", zone.ChainId,
+					"zone", zone.ID(),
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -87,7 +88,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			if zone.WithdrawalWaitgroup > 0 {
 				k.Logger(ctx).Error(
 					"epoch waitgroup was unexpected > 0; this means we did not process the previous epoch!",
-					"chain_id", zone.ChainId,
+					"zone", zone.ID(),
 					"epoch_identifier", epochIdentifier,
 					"epoch_number", epochNumber,
 				)
@@ -97,19 +98,19 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			// OnChanOpenAck calls SetWithdrawalAddress (see ibc_module.go)
 			k.Logger(ctx).Info(
 				"withdrawing rewards",
-				"chain_id", zone.ChainId,
+				"zone", zone.ID(),
 				"epoch_identifier", epochIdentifier,
 				"epoch_number", epochNumber,
 			)
 
-			vals := k.GetValidators(ctx, zone.ChainId)
+			vals := k.GetValidators(ctx, zone.ChainID())
 			delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 			bz := k.cdc.MustMarshal(&delegationQuery)
 
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				zone.ConnectionId,
-				zone.ChainId,
+				zone.ChainID(),
 				"cosmos.staking.v1beta1.Query/DelegatorDelegations",
 				bz,
 				sdk.NewInt(-1),
@@ -118,13 +119,32 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				0,
 			)
 
+			addressBytes, err := addressutils.AccAddressFromBech32(zone.DelegationAddress.Address, zone.AccountPrefix)
+			if err != nil {
+				k.Logger(ctx).Error("cannot decode bech32 delegation addr")
+				return false
+			}
+			k.ICQKeeper.MakeRequest(
+				ctx,
+				zone.ConnectionId,
+				zone.ChainId,
+				types.BankStoreKey,
+				append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zone.BaseDenom)...),
+				sdk.NewInt(-1),
+				types.ModuleName,
+				"delegationaccountbalance",
+				0,
+			)
+			// increment waitgroup; decremented in delegationaccountbalance callback
+			zone.WithdrawalWaitgroup++
+
 			rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.DelegationAddress.Address}
 			bz = k.cdc.MustMarshal(&rewardsQuery)
 
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				zone.ConnectionId,
-				zone.ChainId,
+				zone.ChainID(),
 				"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
 				bz,
 				sdk.NewInt(-1),
@@ -139,7 +159,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 			zone.WithdrawalWaitgroup++
 			k.Logger(ctx).Info("Incrementing waitgroup for delegation",
 				"value", zone.WithdrawalWaitgroup,
-				"chain_id", zone.ChainId,
+				"zone", zone.ID(),
 				"epoch_identifier", epochIdentifier,
 				"epoch_number", epochNumber,
 			)

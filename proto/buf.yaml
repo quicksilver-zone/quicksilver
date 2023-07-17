@@ -1,12 +1,12 @@
 version: v1
 name: buf.build/ingenuity-build/quicksilver
 deps:
-  - buf.build/cosmos/cosmos-sdk:v0.47.3
-  - buf.build/cosmos/ibc:v7.2.0
+  - buf.build/cosmos/cosmos-sdk
+  - buf.build/cosmos/ibc
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis
-  - buf.build/cosmos/ics23:b1abd8678aab07165efd453c96796a179eb3131f
+  - buf.build/cosmos/ics23
 breaking:
   use:
     - FILE
