@@ -9,7 +9,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	"github.com/cosmos/cosmos-sdk/x/feegrant"
@@ -51,7 +50,6 @@ func KVStoreKeys() []string {
 		feegrant.StoreKey,
 		authzkeeper.StoreKey,
 		consensusparamtypes.StoreKey,
-		crisistypes.StoreKey,
 		// ibc keys
 		ibcexported.StoreKey,
 		ibctransfertypes.StoreKey,
