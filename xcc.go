@@ -110,6 +110,7 @@ func main() {
 	umeeParamsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeUmeeParams/", time.Hour*24)
 	crescentParamsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeCrescentParams/", time.Hour*24)
 	osmosisPoolsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", time.Minute*5)
+	crescentPoolsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeCrescentPool/", time.Minute*5)
 	tokenManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeLiquidToken/", time.Minute*5)
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
