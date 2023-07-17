@@ -50,14 +50,6 @@ func newQuicksilverPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
 	return path
 }
 
-func newICAPath(chainA, chainB *ibctesting.TestChain) *ibctesting.Path {
-	path := ibctesting.NewPath(chainA, chainB)
-	path.EndpointA.ChannelConfig.PortID = icatypes.HostPortID
-	path.EndpointB.ChannelConfig.PortID = icatypes.HostPortID
-
-	return path
-}
-
 type KeeperTestSuite struct {
 	testsuite.Suite
 
