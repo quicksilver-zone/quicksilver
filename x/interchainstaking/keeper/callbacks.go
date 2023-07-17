@@ -555,6 +555,9 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 		return err
 	}
 
+	zone.WithdrawalWaitgroup--
+	k.SetZone(ctx, &zone)
+
 	return k.FlushOutstandingDelegations(ctx, &zone, coin)
 }
 
