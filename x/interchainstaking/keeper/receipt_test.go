@@ -39,14 +39,14 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 	// rr is 1.0
-	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, &zone)
 	suite.Require().NoError(err)
 
 	after := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, math.NewInt(1000000)), after)
 
 	zone.RedemptionRate = sdk.NewDecWithPrec(12, 1)
-	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash2, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash2, &zone)
 	suite.Require().NoError(err)
 
 	after2 := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
@@ -76,9 +76,9 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
-	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, &zone)
 	// suite.Require().ErrorContains(err, "no sender found. Ignoring")
-	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ID(), hash))
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ZoneID(), hash))
 	suite.Require().True(found)                  // check nilReceipt is found for hash
 	suite.Require().Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
 	suite.Require().Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
@@ -108,9 +108,9 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
-	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, &zone)
 	// suite.Require().ErrorContains(err, "no sender found. Ignoring")
-	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ID(), hash))
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ZoneID(), hash))
 	suite.Require().True(found)                  // check nilReceipt is found for hash
 	suite.Require().Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
 	suite.Require().Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
@@ -144,7 +144,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptMixedMessageTypeGood() {
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
-	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, &zone)
 	suite.Require().NoError(err)
 
 	after := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
@@ -178,9 +178,9 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMixedSender() { // 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
-	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, &zone)
 	// suite.Require().ErrorContains(err, "sender mismatch: expected")
-	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ID(), hash))
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ZoneID(), hash))
 	suite.Require().True(found)                  // check nilReceipt is found for hash
 	suite.Require().Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
 	suite.Require().Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
@@ -210,7 +210,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadDenom() {
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
-	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
+	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, &zone)
 	suite.Require().ErrorContains(err, "unable to validate coins. Ignoring")
 
 	after := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
@@ -293,13 +293,13 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 	suite.Require().NoError(err)
 	suite.Require().Equal(2, len(out))
 
-	receipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ID(), hash1))
+	receipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ZoneID(), hash1))
 	suite.Require().True(found)
 	suite.Require().Equal(receipt1, &receipt)
 	now := ctx.BlockTime().Add(time.Second)
 	receipt.Completed = &now
 	icsKeeper.SetReceipt(ctx, receipt)
-	icsKeeper.DeleteReceipt(ctx, types.GetReceiptKey(zone.ID(), hash2))
+	icsKeeper.DeleteReceipt(ctx, types.GetReceiptKey(zone.ZoneID(), hash2))
 
 	out, err = icsKeeper.UserZoneReceipts(ctx, &zone, account1)
 	suite.Require().NoError(err)
@@ -308,7 +308,7 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 
 	icsKeeper.SetReceiptsCompleted(ctx, &zone, now, now)
 
-	receipt, found = icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ID(), hash3))
+	receipt, found = icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ZoneID(), hash3))
 	suite.Require().True(found)
 
 	suite.Require().Equal(&now, receipt.Completed)

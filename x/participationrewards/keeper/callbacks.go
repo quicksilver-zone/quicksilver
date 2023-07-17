@@ -85,7 +85,7 @@ func ValidatorSelectionRewardsCallback(ctx sdk.Context, k *Keeper, response []by
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	zs, err := k.getZoneScores(ctx, zone, delegatorRewards)
+	zs, err := k.getZoneScores(ctx, &zone, delegatorRewards)
 	if err != nil {
 		return err
 	}

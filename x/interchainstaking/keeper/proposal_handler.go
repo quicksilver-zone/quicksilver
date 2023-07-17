@@ -130,7 +130,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	if !zone.IsSubzone() {
 		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 		query := stakingTypes.QueryValidatorsRequest{}
-		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
 		if err != nil {
 			return err
 		}
@@ -292,32 +292,28 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			portOwner := zone.ID() + ".deposit"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
 				return err
 			}
 
 			// generate withdrawal account
-			portOwner = zone.ID() + ".withdrawal"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
 				return err
 			}
 
 			// generate perf account
-			portOwner = zone.ID() + ".performance"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
 				return err
 			}
 
 			// generate delegate accounts
-			portOwner = zone.ID() + ".delegate"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
 				return err
 			}
 
 			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 			query := stakingTypes.QueryValidatorsRequest{}
-			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+			err := k.EmitValSetQuery(ctx, zone.ConnectionId, &zone, query, sdkmath.NewInt(period))
 			if err != nil {
 				return err
 			}
@@ -328,7 +324,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 	}
 	k.SetZone(ctx, &zone)
 
-	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ID())
+	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ZoneID())
 
 	return nil
 }

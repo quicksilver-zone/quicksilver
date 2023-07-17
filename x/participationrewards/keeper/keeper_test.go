@@ -142,7 +142,7 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.Require().True(found)
 
 	valRewards := make(map[string]sdk.Dec)
-	for _, val := range quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID) {
+	for _, val := range quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), &zone) {
 		valRewards[val.ValoperAddress] = sdk.NewDec(100000000)
 	}
 
@@ -304,7 +304,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		},
 	}
 	for _, cosmosVal := range cosmosVals {
-		quicksilver.InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zoneCosmos.ChainId, cosmosVal)
+		quicksilver.InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), &zoneCosmos, cosmosVal)
 	}
 
 	withdrawalAddress := addressutils.GenerateAddressForTestWithPrefix("osmo")
@@ -538,7 +538,7 @@ func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender, hash strin
 	t := time.Now().Add(-time.Hour)
 	t2 := time.Now().Add(-5 * time.Minute)
 	receipt := icstypes.Receipt{
-		ChainId:   zone.ID(),
+		ChainId:   zone.ZoneID(),
 		Sender:    sender,
 		Txhash:    hash,
 		Amount:    coins,
@@ -566,7 +566,7 @@ func (suite *KeeperTestSuite) setupTestIntents() {
 	// chainB
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
 	suite.Require().True(found)
-	vals := quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID)
+	vals := quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), &zone)
 
 	suite.addIntent(
 		testAddress,

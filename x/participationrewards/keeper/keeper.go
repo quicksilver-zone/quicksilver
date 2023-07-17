@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/ingenuity-build/quicksilver/proofs"
+
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,7 +16,6 @@ import (
 
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
-	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
@@ -44,8 +45,8 @@ type Keeper struct {
 	epochsKeeper         epochskeeper.Keeper
 	feeCollectorName     string
 	prSubmodules         map[cmtypes.ClaimType]Submodule
-	ValidateProofOps     utils.ProofOpsFn
-	ValidateSelfProofOps utils.SelfProofOpsFn
+	ValidateProofOps     proofs.ProofOpsFn
+	ValidateSelfProofOps proofs.SelfProofOpsFn
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -60,8 +61,8 @@ func NewKeeper(
 	icqk icqkeeper.Keeper,
 	icsk *icskeeper.Keeper,
 	feeCollectorName string,
-	proofValidationFn utils.ProofOpsFn,
-	selfProofValidationFn utils.SelfProofOpsFn,
+	proofValidationFn proofs.ProofOpsFn,
+	selfProofValidationFn proofs.SelfProofOpsFn,
 ) *Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
