@@ -109,7 +109,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
 	// once sorted alphabetically on valoper.
 
-	vals := GenerateValidatorsDeterministic(4)
+	vals := addressutils.GenerateValidatorsDeterministic(4)
 
 	tc := []struct {
 		current  map[string]sdkmath.Int
