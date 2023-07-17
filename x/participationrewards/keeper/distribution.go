@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/multierror"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
