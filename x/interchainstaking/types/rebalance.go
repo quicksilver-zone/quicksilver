@@ -104,6 +104,7 @@ func CalculateAllocationDeltas(
 		} else {
 			if _, found := locked[valoper]; !found {
 				// only append to sources if the delegation is not locked - i.e. it doesn't have an incoming redelegation.
+				// TODO: this needs to be locked amounts for unbonding purposes. Redelegations do not care about amounts, but unbondings do.
 				sources = append(sources, &AllocationDelta{Amount: delta.Abs(), ValoperAddress: valoper})
 			}
 		}
@@ -123,26 +124,82 @@ type AllocationDelta struct {
 
 type AllocationDeltas []*AllocationDelta
 
-func (d AllocationDeltas) Sort() {
+func (deltas AllocationDeltas) Sort() {
 	// filter zeros
 	newAllocationDeltas := make(AllocationDeltas, 0)
-	for _, delta := range d {
+	for _, delta := range deltas {
 		if !delta.Amount.IsZero() {
 			newAllocationDeltas = append(newAllocationDeltas, delta)
 		}
 	}
-	d = newAllocationDeltas
+	deltas = newAllocationDeltas
 
 	// sort keys by relative value of delta
-	sort.SliceStable(d, func(i, j int) bool {
+	sort.SliceStable(deltas, func(i, j int) bool {
 		// < sorts alphabetically.
-		return d[i].ValoperAddress < d[j].ValoperAddress
+		return deltas[i].ValoperAddress < deltas[j].ValoperAddress
 	})
 
 	// sort keys by relative value of delta
-	sort.SliceStable(d, func(i, j int) bool {
-		return d[i].Amount.GT(d[j].Amount)
+	sort.SliceStable(deltas, func(i, j int) bool {
+		return deltas[i].Amount.GT(deltas[j].Amount)
 	})
+}
+
+func (deltas AllocationDeltas) Sum() (sum sdkmath.Int) {
+	sum = sdkmath.ZeroInt()
+	for _, delta := range deltas {
+		sum = sum.Add(delta.Amount)
+	}
+	return sum
+}
+
+func (deltas AllocationDeltas) GetForValoper(valoper string) (out *AllocationDelta, found bool) {
+	for _, delta := range deltas {
+		if delta.ValoperAddress == valoper {
+			return delta, true
+		}
+	}
+	return out, false
+}
+
+// Render AllocationDeltas as a string.
+func (deltas AllocationDeltas) String() (out string) {
+	for _, delta := range deltas {
+		out = fmt.Sprintf("%s%s:\t%d\n", out, delta.ValoperAddress, delta.Amount.Int64())
+	}
+	return out
+}
+
+// MinDelta returns the lowest value in a slice of AllocationDeltas.
+func (deltas AllocationDeltas) MinDelta() sdkmath.Int {
+	minValue := sdk.NewInt(math.MaxInt64)
+	for _, delta := range deltas {
+		if minValue.GT(delta.Amount) {
+			minValue = delta.Amount
+		}
+	}
+
+	return minValue
+}
+
+// MaxDelta returns the greatest value in a slice of AllocationDeltas.
+func (deltas AllocationDeltas) MaxDelta() sdkmath.Int {
+	maxValue := sdk.NewInt(math.MinInt64)
+	for _, delta := range deltas {
+		if maxValue.LT(delta.Amount) {
+			maxValue = delta.Amount
+		}
+	}
+
+	return maxValue
+}
+
+// Negate the values of all the AllocationDeltas.
+func (deltas *AllocationDeltas) Negate() {
+	for _, delta := range *deltas {
+		delta.Amount = delta.Amount.Neg()
+	}
 }
 
 type RebalanceTarget struct {
@@ -241,35 +298,4 @@ TARGET:
 	out.Sort()
 
 	return out
-}
-
-func (d AllocationDeltas) String() (out string) {
-	for _, delta := range d {
-		out = fmt.Sprintf("%s%s:\t%d\n", out, delta.ValoperAddress, delta.Amount.Int64())
-	}
-	return out
-}
-
-// MinDelta returns the lowest value in a slice of Deltas.
-func MinDelta(deltas ValidatorIntents) sdkmath.Int {
-	minValue := sdk.NewInt(math.MaxInt64)
-	for _, intent := range deltas {
-		if minValue.GT(intent.Weight.TruncateInt()) {
-			minValue = intent.Weight.TruncateInt()
-		}
-	}
-
-	return minValue
-}
-
-// MaxDelta returns the greatest value in a slice of Deltas.
-func MaxDelta(deltas ValidatorIntents) sdkmath.Int {
-	maxValue := sdk.NewInt(math.MinInt64)
-	for _, intent := range deltas {
-		if maxValue.LT(intent.Weight.TruncateInt()) {
-			maxValue = intent.Weight.TruncateInt()
-		}
-	}
-
-	return maxValue
 }
