@@ -18,8 +18,6 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
-	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
-	crisistypes "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
@@ -106,7 +104,6 @@ type AppKeepers struct {
 	AuthzKeeper           authzkeeper.Keeper
 	ParamsKeeper          paramskeeper.Keeper
 	CapabilityKeeper      *capabilitykeeper.Keeper
-	CrisisKeeper          *crisiskeeper.Keeper
 	UpgradeKeeper         *upgradekeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
@@ -148,7 +145,6 @@ func NewAppKeepers(
 	skipUpgradeHeights map[int64]bool,
 	mock bool,
 	homePath string,
-	invCheckPeriod uint,
 	appOpts servertypes.AppOptions,
 	wasmDir string,
 	wasmConfig wasm.Config,
@@ -177,7 +173,6 @@ func NewAppKeepers(
 		skipUpgradeHeights,
 		mock,
 		homePath,
-		invCheckPeriod,
 		appOpts,
 		wasmDir,
 		wasmConfig,
@@ -198,7 +193,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	skipUpgradeHeights map[int64]bool,
 	mock bool,
 	homePath string,
-	invCheckPeriod uint,
 	_ servertypes.AppOptions,
 	wasmDir string,
 	wasmConfig wasm.Config,
@@ -229,12 +223,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	scopedInterchainStakingKeeper := appKeepers.CapabilityKeeper.ScopeToModule(interchainstakingtypes.ModuleName)
 	scopedWasmKeeper := appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	appKeepers.CapabilityKeeper.Seal()
-
-	// TODO: Make a SetInvCheckPeriod fn on CrisisKeeper.
-	// IMO, its bad design atm that it requires this in state machine initialization
-	appKeepers.CrisisKeeper = crisiskeeper.NewKeeper(
-		appCodec, appKeepers.keys[crisistypes.StoreKey], invCheckPeriod, appKeepers.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-	)
 
 	appKeepers.UpgradeKeeper = upgradekeeper.NewKeeper(
 		skipUpgradeHeights, appKeepers.keys[upgradetypes.StoreKey], appCodec, homePath, bApp, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -554,7 +542,6 @@ func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legac
 	paramsKeeper.Subspace(distrtypes.ModuleName)
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName)
-	paramsKeeper.Subspace(crisistypes.ModuleName)
 	// ibc subspaces
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName)

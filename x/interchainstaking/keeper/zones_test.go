@@ -29,7 +29,6 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		true,
 		map[int64]bool{},
 		t.TempDir(),
-		5,
 		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
