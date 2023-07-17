@@ -8,6 +8,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.46.13
 	github.com/golangci/golangci-lint v1.53.3
 	github.com/gorilla/mux v1.8.0
+	github.com/ingenuity-build/multierror v0.1.0
 	github.com/ingenuity-build/quicksilver v1.4.4-rc0.0.20230714122729-b3501d922206
 	github.com/tendermint/tendermint v0.34.28
 	golang.org/x/tools v0.11.0

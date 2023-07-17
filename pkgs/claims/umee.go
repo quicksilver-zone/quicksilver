@@ -11,9 +11,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	leverage "github.com/ingenuity-build/quicksilver/umee-types/leverage"
 	leveragetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
@@ -88,7 +89,7 @@ func UmeeClaim(
 
 	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
 	abciquery, err := client.ABCIQueryWithOptions(
-		context.Background(),
+		ctx,
 		"/cosmos.bank.v1beta1.Query/AllBalances",
 		bytes,
 		rpcclient.ABCIQueryOptions{Height: height},
@@ -108,7 +109,7 @@ func UmeeClaim(
 	bytes = marshaler.MustMarshal(&leveragequery)
 	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
 	abciquery, err = client.ABCIQueryWithOptions(
-		context.Background(),
+		ctx,
 		"/umee/leverage/v1/account_balances",
 		bytes,
 		rpcclient.ABCIQueryOptions{Height: height},
@@ -133,7 +134,7 @@ func UmeeClaim(
 			}
 		}
 		return out
-	}(tokensManager.Get())
+	}(tokensManager.Get(ctx))
 
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
@@ -163,7 +164,8 @@ func UmeeClaim(
 		accountPrefix := banktypes.CreateAccountBalancesPrefix(umeeaddr.Bytes())
 		lookupKey := append(accountPrefix, []byte(coin.GetDenom())...)
 		abciquery, err := client.ABCIQueryWithOptions(
-			context.Background(), "/store/bank/key",
+			ctx,
+			"/store/bank/key",
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 		)
@@ -226,7 +228,8 @@ func UmeeClaim(
 
 		lookupKey := leveragetypes.KeyCollateralAmount(umeeaddr, coin.GetDenom())
 		abciquery, err := client.ABCIQueryWithOptions(
-			context.Background(), "/store/leverage/key",
+			ctx,
+			"/store/leverage/key",
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 		)

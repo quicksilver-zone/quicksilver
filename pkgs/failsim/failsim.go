@@ -21,7 +21,11 @@ func FailuresFromContext(ctx context.Context) map[uint8]map[uint8]struct{} {
 	failuresAny := ctx.Value(KeyFailSim)
 	if failuresAny != nil {
 		fmt.Println("nothing in context")
-		failures = failuresAny.(map[uint8]map[uint8]struct{})
+		var ok bool
+		failures, ok = failuresAny.(map[uint8]map[uint8]struct{})
+		if !ok {
+			fmt.Println("error building failures")
+		}
 	}
 	fmt.Printf("FailuresFromContext: %v\n", failures)
 	return failures
