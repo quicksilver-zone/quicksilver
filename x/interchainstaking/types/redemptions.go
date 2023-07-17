@@ -55,12 +55,13 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	deltas := append(overAllocated, underAllocated...)
 	deltas.Sort()
 
-	maxValue := deltas[0].Amount
+	maxValue := deltas.MaxDelta()
 	sum = sdk.ZeroInt()
 
 	// drop all deltas such that the maximum value is zero, and invert.
 	for idx := range deltas {
 		deltas[idx].Amount = deltas[idx].Amount.Add(maxValue)
+		// sum here instead of calling Sum() later to save looping over slice again.
 		sum = sum.Add(deltas[idx].Amount.Abs())
 	}
 

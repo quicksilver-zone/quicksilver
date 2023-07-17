@@ -133,6 +133,7 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 	// raise all deltas such that the minimum value is zero.
 	for idx := range deltas {
 		deltas[idx].Amount = deltas[idx].Amount.Add(largestSource)
+		// sum here instead of calling Sum() later to save looping over slice again.
 		sum = sum.Add(deltas[idx].Amount)
 	}
 
