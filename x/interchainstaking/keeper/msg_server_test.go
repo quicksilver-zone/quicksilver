@@ -499,7 +499,7 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 	var msg *icstypes.MsgRegisterZone
 
 	testAccount, err := addressutils.AccAddressFromBech32(testAddress, "")
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	tests := []struct {
 		name      string
@@ -509,7 +509,6 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 		{
 			"invalid: duplicate zone",
 			func() {
-				suite.Require().NoError(err)
 				msg = &icstypes.MsgRegisterZone{
 					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
 					ConnectionID:     suite.path.EndpointA.ConnectionID,
@@ -528,9 +527,28 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 			"invalid chain id",
 		},
 		{
+			"invalid: unknown connectionID",
+			func() {
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     "invalid",
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo:      nil,
+				}
+			},
+			"unable to obtain chain id",
+		},
+		{
 			"invalid: incorrect authority",
 			func() {
-				suite.Require().NoError(err)
 				msg = &icstypes.MsgRegisterZone{
 					Authority:        "invalid",
 					ConnectionID:     suite.path.EndpointA.ConnectionID,
@@ -547,6 +565,57 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 				}
 			},
 			"invalid authority",
+		},
+		{
+			"invalid: invalid subzone info: ID mismatch",
+			func() {
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo: &icstypes.SubzoneInfo{
+						Authority:   "test",
+						BaseChainID: "invalid",
+						ChainID:     "test-1",
+					},
+				}
+			},
+			"incorrect ID",
+		},
+		{
+			"invalid: invalid subzone info: subzone ID taken",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo: &icstypes.SubzoneInfo{
+						Authority:   "test",
+						BaseChainID: zone.BaseChainID(),
+						ChainID:     zone.BaseChainID(),
+					},
+				}
+			},
+			"subzone ID already exists",
 		},
 	}
 
