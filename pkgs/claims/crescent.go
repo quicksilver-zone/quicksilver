@@ -138,7 +138,7 @@ OUTER:
 						assets[chain] = sdk.Coins{}
 					}
 
-					farmerAddr, err := sdk.AccAddressFromBech32(position.Farmer)
+					farmerAddr, err := sdk.GetFromBech32(position.Farmer, "cre")
 
 					if err != nil {
 						if errors == nil {
