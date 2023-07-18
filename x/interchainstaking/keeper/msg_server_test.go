@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -1253,7 +1255,7 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 			"capability not found",
 		},
 		{
-			"invalid: invalid connection state",
+			"valid close",
 			func() {
 				msg = &icstypes.MsgGovCloseChannel{
 					ChannelId: "channel-4",
@@ -1261,7 +1263,7 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
 				}
 			},
-			"invalid connection state",
+			"",
 		},
 	}
 
@@ -1289,6 +1291,11 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 			} else {
 				suite.NoError(err)
 				suite.NotNil(res)
+
+				// verify channel is found but closed
+				channel, found := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetChannel(ctx, msg.PortId, msg.ChannelId)
+				suite.True(found)
+				suite.Equal(channeltypes.CLOSED, channel.State)
 			}
 		})
 	}
