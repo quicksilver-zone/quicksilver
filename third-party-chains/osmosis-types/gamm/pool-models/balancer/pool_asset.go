@@ -2,6 +2,7 @@ package balancer
 
 import (
 	"fmt"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	"sort"
 	"strings"
 
@@ -10,8 +11,6 @@ import (
 	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
 )
 
 type poolAssetPretty struct {

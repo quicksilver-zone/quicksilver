@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	gamm2 "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/internal/cfmm_common"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
-var _ gamm.PoolI = &Pool{}
+var _ gamm2.PoolI = &Pool{}
 
 // NewStableswapPool returns a stableswap pool
 // Invariants that are assumed to be satisfied and not checked:
@@ -25,14 +25,14 @@ func NewStableswapPool(poolId uint64, stableswapPoolParams PoolParams, initialLi
 	if len(scalingFactors) == 0 {
 		scalingFactors = []uint64{1, 1}
 	} else if scalingFactors[0] == 0 || scalingFactors[1] == 0 {
-		return Pool{}, gamm.ErrInvalidStableswapScalingFactors
+		return Pool{}, gamm2.ErrInvalidStableswapScalingFactors
 	}
 
 	pool := Pool{
-		Address:            gamm.NewPoolAddress(poolId).String(),
+		Address:            gamm2.NewPoolAddress(poolId).String(),
 		Id:                 poolId,
 		PoolParams:         stableswapPoolParams,
-		TotalShares:        sdk.NewCoin(gamm.GetPoolShareDenom(poolId), gamm.InitPoolSharesSupply),
+		TotalShares:        sdk.NewCoin(gamm2.GetPoolShareDenom(poolId), gamm2.InitPoolSharesSupply),
 		PoolLiquidity:      initialLiquidity,
 		ScalingFactor:      scalingFactors,
 		FuturePoolGovernor: futureGovernor,
@@ -190,7 +190,7 @@ func (p Pool) CalcOutAmtGivenIn(ctx sdk.Context, tokenIn sdk.Coins, tokenOutDeno
 	// we ignore the decimal component, as token out amount must round down
 	tokenOutAmt := outAmtDec.TruncateInt()
 	if !tokenOutAmt.IsPositive() {
-		return sdk.Coin{}, sdkioerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Coin{}, sdkioerrors.Wrapf(gamm2.ErrInvalidMathApprox, "token amount must be positive")
 	}
 	return sdk.NewCoin(tokenOutDenom, tokenOutAmt), nil
 }
@@ -221,7 +221,7 @@ func (p Pool) CalcInAmtGivenOut(ctx sdk.Context, tokenOut sdk.Coins, tokenInDeno
 	tokenInAmt := amt.Ceil().TruncateInt()
 
 	if !tokenInAmt.IsPositive() {
-		return sdk.Coin{}, sdkioerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Coin{}, sdkioerrors.Wrapf(gamm2.ErrInvalidMathApprox, "token amount must be positive")
 	}
 	return sdk.NewCoin(tokenInDenom, tokenInAmt), nil
 }
@@ -298,11 +298,11 @@ func (p *Pool) PokePool(blockTime time.Time) {}
 // TODO: move commented test for this function from x/gamm/keeper/pool_service_test.go once a pool_test.go file has been created for stableswap
 func (p *Pool) SetStableSwapScalingFactors(ctx sdk.Context, scalingFactors []uint64, scalingFactorGovernor string) error {
 	if scalingFactorGovernor != p.ScalingFactorGovernor {
-		return gamm.ErrNotScalingFactorGovernor
+		return gamm2.ErrNotScalingFactorGovernor
 	}
 
 	if len(scalingFactors) != p.PoolLiquidity.Len() {
-		return gamm.ErrInvalidStableswapScalingFactors
+		return gamm2.ErrInvalidStableswapScalingFactors
 	}
 
 	p.ScalingFactor = scalingFactors

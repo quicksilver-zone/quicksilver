@@ -3,9 +3,9 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
-
-	crescenttypes "github.com/ingenuity-build/quicksilver/crescent-types"
-	umeetypes "github.com/ingenuity-build/quicksilver/umee-types"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/umee-types"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -16,7 +16,6 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
-	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"

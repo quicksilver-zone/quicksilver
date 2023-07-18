@@ -3,13 +3,13 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
+	osmosislockuptypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
-	osmosislockuptypes "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"

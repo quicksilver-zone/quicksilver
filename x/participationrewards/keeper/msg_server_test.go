@@ -2,6 +2,9 @@ package keeper_test
 
 import (
 	"encoding/json"
+	types2 "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
+	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
 	"time"
 
 	"cosmossdk.io/math"
@@ -14,9 +17,6 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	lpfarm "github.com/ingenuity-build/quicksilver/crescent-types/lpfarm"
-	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
-	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
@@ -68,8 +68,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
 				osmoAddress := addressutils.GenerateAddressForTestWithPrefix("osmo")
-				lockedResp := osmolockup.LockedResponse{
-					Lock: &osmolockup.PeriodLock{
+				lockedResp := lockup.LockedResponse{
+					Lock: &lockup.PeriodLock{
 						ID:       1,
 						Owner:    osmoAddress,
 						Duration: time.Hour * 72,
@@ -108,8 +108,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
 				osmoAddress := addressutils.MustEncodeAddressToBech32("osmo", userAddress)
-				lockedResp := osmolockup.LockedResponse{
-					Lock: &osmolockup.PeriodLock{
+				lockedResp := lockup.LockedResponse{
+					Lock: &lockup.PeriodLock{
 						ID:       1,
 						Owner:    osmoAddress,
 						Duration: time.Hour * 72,
@@ -185,9 +185,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
 
-				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
+				key := types2.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool7"}
+				cd := types2.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool7"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
@@ -219,9 +219,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
 
-				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
+				key := types2.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
+				cd := types2.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
@@ -253,9 +253,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
 
-				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
+				key := types2.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(-1), Denom: "pool1"}
+				cd := types2.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(-1), Denom: "pool1"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
@@ -283,7 +283,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
 				osmoAddress := addressutils.MustEncodeAddressToBech32("osmo", userAddress)
-				locked := &osmolockup.PeriodLock{
+				locked := &lockup.PeriodLock{
 					ID:       1,
 					Owner:    osmoAddress,
 					Duration: time.Hour * 72,
@@ -428,9 +428,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
 
-				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
+				key := types2.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
+				cd := types2.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 

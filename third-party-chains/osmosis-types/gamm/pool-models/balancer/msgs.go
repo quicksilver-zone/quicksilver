@@ -4,8 +4,7 @@ import (
 	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
+	gamm2 "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 )
 
 const (
@@ -13,8 +12,8 @@ const (
 )
 
 var (
-	_ sdk.Msg            = &MsgCreateBalancerPool{}
-	_ gamm.CreatePoolMsg = &MsgCreateBalancerPool{}
+	_ sdk.Msg             = &MsgCreateBalancerPool{}
+	_ gamm2.CreatePoolMsg = &MsgCreateBalancerPool{}
 )
 
 func NewMsgCreateBalancerPool(
@@ -31,7 +30,7 @@ func NewMsgCreateBalancerPool(
 	}
 }
 
-func (msg MsgCreateBalancerPool) Route() string { return gamm.RouterKey }
+func (msg MsgCreateBalancerPool) Route() string { return gamm2.RouterKey }
 func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreateBalancerPool }
 func (msg MsgCreateBalancerPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -50,7 +49,7 @@ func (msg MsgCreateBalancerPool) ValidateBasic() error {
 	}
 
 	// validation for future owner
-	if err = gamm.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
+	if err = gamm2.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
 		return err
 	}
 
@@ -95,7 +94,7 @@ func (msg MsgCreateBalancerPool) InitialLiquidity() sdk.Coins {
 	return coins
 }
 
-func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (gamm.PoolI, error) {
+func (msg MsgCreateBalancerPool) CreatePool(ctx sdk.Context, poolID uint64) (gamm2.PoolI, error) {
 	poolI, err := NewBalancerPool(poolID, *msg.PoolParams, msg.PoolAssets, msg.FuturePoolGovernor, ctx.BlockTime())
 	return &poolI, err
 }

@@ -2,12 +2,12 @@ package osmosistypes
 
 import (
 	"fmt"
+	osmosislockuptypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 	"strings"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	osmosislockuptypes "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	"github.com/ingenuity-build/quicksilver/utils"
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )

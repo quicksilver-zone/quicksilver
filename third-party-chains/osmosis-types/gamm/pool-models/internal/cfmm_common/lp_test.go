@@ -1,17 +1,16 @@
 package cfmm_common_test
 
 import (
+	gammtypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+	balancer2 "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
+	stableswap2 "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	gammtypes "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/balancer"
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/internal/cfmm_common"
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/stableswap"
 )
 
 // a helper function used to multiply coins
@@ -34,43 +33,43 @@ func TestCalcExitPool(t *testing.T) {
 		sdk.NewInt64Coin("bar", 1000000000),
 	)
 
-	threeBalancerPoolAssets := []balancer.PoolAsset{
+	threeBalancerPoolAssets := []balancer2.PoolAsset{
 		{Token: sdk.NewInt64Coin("foo", 2000000000), Weight: sdk.NewIntFromUint64(5)},
 		{Token: sdk.NewInt64Coin("bar", 3000000000), Weight: sdk.NewIntFromUint64(5)},
 		{Token: sdk.NewInt64Coin("baz", 4000000000), Weight: sdk.NewIntFromUint64(5)},
 	}
 
 	// create these pools used for testing
-	twoAssetPool, err := stableswap.NewStableswapPool(
+	twoAssetPool, err := stableswap2.NewStableswapPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.ZeroDec()},
+		stableswap2.PoolParams{ExitFee: sdk.ZeroDec()},
 		twoStablePoolAssets,
 		[]uint64{1, 1},
 		"",
 	)
 	require.NoError(t, err)
 
-	threeAssetPool, err := balancer.NewBalancerPool(
+	threeAssetPool, err := balancer2.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+		balancer2.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),
 	)
 	require.NoError(t, err)
 
-	twoAssetPoolWithExitFee, err := stableswap.NewStableswapPool(
+	twoAssetPoolWithExitFee, err := stableswap2.NewStableswapPool(
 		1,
-		stableswap.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
+		stableswap2.PoolParams{ExitFee: sdk.MustNewDecFromStr("0.0001")},
 		twoStablePoolAssets,
 		[]uint64{1, 1},
 		"",
 	)
 	require.NoError(t, err)
 
-	threeAssetPoolWithExitFee, err := balancer.NewBalancerPool(
+	threeAssetPoolWithExitFee, err := balancer2.NewBalancerPool(
 		1,
-		balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.MustNewDecFromStr("0.0002")},
+		balancer2.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.MustNewDecFromStr("0.0002")},
 		threeBalancerPoolAssets,
 		"",
 		time.Now(),
@@ -140,7 +139,7 @@ func TestCalcExitPool(t *testing.T) {
 func TestMaximalExactRatioJoin(t *testing.T) {
 	emptyContext := sdk.Context{}
 
-	balancerPoolAsset := []balancer.PoolAsset{
+	balancerPoolAsset := []balancer2.PoolAsset{
 		{Token: sdk.NewInt64Coin("foo", 100), Weight: sdk.NewIntFromUint64(5)},
 		{Token: sdk.NewInt64Coin("bar", 100), Weight: sdk.NewIntFromUint64(5)},
 	}
@@ -155,9 +154,9 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 		{
 			name: "two asset pool, same tokenIn ratio",
 			pool: func() gammtypes.PoolI {
-				balancerPool, err := balancer.NewBalancerPool(
+				balancerPool, err := balancer2.NewBalancerPool(
 					1,
-					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+					balancer2.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
 					balancerPoolAsset,
 					"",
 					time.Now(),
@@ -172,9 +171,9 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 		{
 			name: "two asset pool, different tokenIn ratio with pool",
 			pool: func() gammtypes.PoolI {
-				balancerPool, err := balancer.NewBalancerPool(
+				balancerPool, err := balancer2.NewBalancerPool(
 					1,
-					balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+					balancer2.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
 					balancerPoolAsset,
 					"",
 					time.Now(),
@@ -189,9 +188,9 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		balancerPool, err := balancer.NewBalancerPool(
+		balancerPool, err := balancer2.NewBalancerPool(
 			1,
-			balancer.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
+			balancer2.PoolParams{SwapFee: sdk.ZeroDec(), ExitFee: sdk.ZeroDec()},
 			balancerPoolAsset,
 			"",
 			time.Now(),

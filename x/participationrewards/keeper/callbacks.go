@@ -4,16 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	types2 "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	liquiditytypes "github.com/ingenuity-build/quicksilver/crescent-types/liquidity/types"
-
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -416,12 +415,12 @@ func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtyp
 }
 
 func CrescentPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	var pd liquiditytypes.Pool
+	var pd types2.Pool
 	if err := k.cdc.Unmarshal(response, &pd); err != nil {
 		return err
 	}
 
-	if query.Request[0] != liquiditytypes.PoolKeyPrefix[0] {
+	if query.Request[0] != types2.PoolKeyPrefix[0] {
 		return errors.New("crescent pool query request has unexpected prefix")
 	}
 
