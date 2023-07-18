@@ -33,6 +33,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010404beta5UpgradeName, CreateUpgradeHandler: V010404beta5UpgradeHandler},
 		{UpgradeName: V010404beta7UpgradeName, CreateUpgradeHandler: V010404beta7UpgradeHandler},
 		{UpgradeName: V010404rc0UpgradeName, CreateUpgradeHandler: V010404rc0UpgradeHandler},
+		{UpgradeName: V010404beta8UpgradeName, CreateUpgradeHandler: V010404beta8UpgradeHandler},
 	}
 }
 
@@ -438,6 +439,25 @@ func V010404rc0UpgradeHandler(
 			return false
 		})
 
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta8UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) || isDevnet(ctx) {
+			appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+				if (record.Status == icstypes.WithdrawStatusSend) || record.Requeued || ((record.CompletionTime != time.Time{}) && (record.CompletionTime.Before(ctx.BlockTime()))) {
+					record.Acknowledged = true
+				}
+				appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				return false
+			})
+		}
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }
