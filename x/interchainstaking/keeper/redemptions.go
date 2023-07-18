@@ -281,6 +281,6 @@ func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone,
 	if err != nil {
 		return nil, err
 	}
-	allocations := types.DetermineAllocationsForUndelegation(currentAllocations, currentSum, targetAllocations, availablePerValidator, amount)
+	allocations := types.DetermineAllocationsForUndelegation(currentAllocations, map[string]bool{}, currentSum, targetAllocations, availablePerValidator, amount)
 	return allocations, nil
 }
