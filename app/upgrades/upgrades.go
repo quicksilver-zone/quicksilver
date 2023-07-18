@@ -454,6 +454,11 @@ func V010404beta8UpgradeHandler(
 				if (record.Status == icstypes.WithdrawStatusSend) || record.Requeued || ((record.CompletionTime != time.Time{}) && (record.CompletionTime.Before(ctx.BlockTime()))) {
 					record.Acknowledged = true
 				}
+
+				if (record.ChainId == "elgafar-1") && (record.CompletionTime == time.Time{}) {
+					record.Acknowledged = true
+				}
+
 				appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
 				return false
 			})
