@@ -617,6 +617,33 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 			},
 			"subzone ID already exists",
 		},
+		{
+			"invalid: invalid subzone info: invalid subzone authority info",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo: &icstypes.SubzoneInfo{
+						Authority:   "",
+						BaseChainID: zone.BaseChainID(),
+						ChainID:     "test-1234",
+					},
+				}
+			},
+			"all subzone info must be populated",
+		},
 	}
 
 	for _, tt := range tests {
