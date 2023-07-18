@@ -252,6 +252,25 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"",
 			"unable to satisfy unbond request; delegations may be locked",
 		},
+		{
+			"invalid - unbonding is disabled",
+			func() {
+				ctx := suite.chainA.GetContext()
+
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
+				suite.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					DestinationAddress: addr,
+					FromAddress:        testAddress,
+				}
+				params := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetParams(ctx)
+				params.UnbondingEnabled = false
+				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetParams(ctx, params)
+			},
+			"unbonding is currently disabled",
+			"unbonding is currently disabled",
+		},
 	}
 
 	for _, tt := range tests {
@@ -1125,10 +1144,81 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 	}
 }
 
-func (suite *KeeperTestSuite) GovReopenChannel() {
-	// TODO: add tests
+func (suite *KeeperTestSuite) TestGovReopenChannel() {
+	var msg *icstypes.MsgGovReopenChannel
+
+	testAccount, err := addressutils.AccAddressFromBech32(testAddress, "")
+	suite.NoError(err)
+
+	tests := []struct {
+		name      string
+		malleate  func()
+		expectErr string
+	}{
+		{
+			"invalid: invalid connection ID",
+			func() {
+				msg = &icstypes.MsgGovReopenChannel{
+					ConnectionId: "invalid",
+					PortId:       "",
+					Authority:    "",
+				}
+			},
+			"unable to obtain chain id",
+		},
+		{
+			"invalid: invalid connection ID",
+			func() {
+				msg = &icstypes.MsgGovReopenChannel{
+					ConnectionId: suite.path.EndpointA.ConnectionID,
+					PortId:       "",
+					Authority:    "",
+				}
+			},
+			"chainID / connectionID mismatch",
+		},
+		{
+			"invalid: existing active channel",
+			func() {
+				msg = &icstypes.MsgGovReopenChannel{
+					ConnectionId: suite.path.EndpointA.ConnectionID,
+					PortId:       "testchain2-1.delegate",
+					Authority:    "",
+				}
+			},
+			"existing active channel",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			ctx := suite.chainA.GetContext()
+
+			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+
+			tt.malleate()
+
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.GovReopenChannel(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+
+			if tt.expectErr != "" {
+				suite.ErrorContains(err, tt.expectErr)
+				suite.T().Logf("Error: %v", err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+			}
+		})
+	}
 }
 
-func (suite *KeeperTestSuite) GovCloseChannel() {
+func (suite *KeeperTestSuite) TestGovCloseChannel() {
 	// TODO: add tests
 }

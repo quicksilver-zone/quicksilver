@@ -11,13 +11,11 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
