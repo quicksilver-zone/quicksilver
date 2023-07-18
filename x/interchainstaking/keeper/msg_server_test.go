@@ -1220,5 +1220,76 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 }
 
 func (suite *KeeperTestSuite) TestGovCloseChannel() {
-	// TODO: add tests
+	var msg *icstypes.MsgGovCloseChannel
+
+	testAccount, err := addressutils.AccAddressFromBech32(testAddress, "")
+	suite.NoError(err)
+
+	tests := []struct {
+		name      string
+		malleate  func()
+		expectErr string
+	}{
+		{
+			"invalid: invalid authority",
+			func() {
+				msg = &icstypes.MsgGovCloseChannel{
+					ChannelId: "",
+					PortId:    "",
+					Authority: "invalid",
+				}
+			},
+			"invalid authority",
+		},
+		{
+			"invalid: capability not found",
+			func() {
+				msg = &icstypes.MsgGovCloseChannel{
+					ChannelId: "invalid",
+					PortId:    "invalid",
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+				}
+			},
+			"capability not found",
+		},
+		{
+			"invalid: invalid connection state",
+			func() {
+				msg = &icstypes.MsgGovCloseChannel{
+					ChannelId: "channel-4",
+					PortId:    "icacontroller-testchain2-1.deposit",
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+				}
+			},
+			"invalid connection state",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			ctx := suite.chainA.GetContext()
+
+			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+
+			tt.malleate()
+
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.GovCloseChannel(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+
+			if tt.expectErr != "" {
+				suite.ErrorContains(err, tt.expectErr)
+				suite.T().Logf("Error: %v", err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+			}
+		})
+	}
 }
