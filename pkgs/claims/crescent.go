@@ -83,7 +83,7 @@ func CrescentClaim(
 	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
 	abciquery, err := client.ABCIQueryWithOptions(
 		context.Background(),
-		"/crescent/lpfarm/v1beta1/positions/{farmer}",
+		"/crescent.lpfarm.v1beta1.Query/Positions",
 		bytes,
 		rpcclient.ABCIQueryOptions{Height: height},
 	)

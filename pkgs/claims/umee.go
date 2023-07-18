@@ -104,7 +104,7 @@ func UmeeClaim(
 	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
 	abciquery, err = client.ABCIQueryWithOptions(
 		context.Background(),
-		"/umee/leverage/v1/account_balances",
+		"/umee.leverage.v1.Query/AccountBalances",
 		bytes,
 		rpcclient.ABCIQueryOptions{Height: height},
 	)
