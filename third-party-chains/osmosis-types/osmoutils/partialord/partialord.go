@@ -1,8 +1,9 @@
 package partialord
 
 import (
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils/partialord/internal/dag"
 	"sort"
+
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils/partialord/internal/dag"
 )
 
 type PartialOrdering struct {

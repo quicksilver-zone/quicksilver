@@ -2,6 +2,7 @@ package stableswap
 
 import (
 	"errors"
+
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
 

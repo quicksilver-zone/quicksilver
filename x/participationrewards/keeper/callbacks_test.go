@@ -3,10 +3,11 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
+
 	types2 "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	types3 "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
-	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"

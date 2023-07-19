@@ -3,9 +3,10 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"strings"
 	"time"
+
+	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 
 	"cosmossdk.io/math"
 

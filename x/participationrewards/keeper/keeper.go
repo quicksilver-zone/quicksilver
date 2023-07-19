@@ -3,6 +3,7 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/umee-types"

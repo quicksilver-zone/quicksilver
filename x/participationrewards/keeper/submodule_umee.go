@@ -3,8 +3,9 @@ package keeper
 import (
 	"encoding/json"
 	"fmt"
+
 	umee "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types"
-	types2 "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+	leveragetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
 
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 
@@ -64,7 +65,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			"store/leverage/key",
-			types2.KeyReserveAmount(reserves.Denom),
+			leveragetypes.KeyReserveAmount(reserves.Denom),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeReservesUpdateCallbackID,
@@ -86,7 +87,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			"store/leverage/key",
-			types2.KeyInterestScalar(interest.Denom),
+			leveragetypes.KeyInterestScalar(interest.Denom),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeInterestScalarUpdateCallbackID,
@@ -109,7 +110,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			"store/leverage/key",
-			types2.KeyUTokenSupply(supply.Denom),
+			leveragetypes.KeyUTokenSupply(supply.Denom),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeUTokenSupplyUpdateCallbackID,
@@ -126,7 +127,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			return false
 		}
 		balance, _ := ibalance.(*types.UmeeLeverageModuleBalanceProtocolData)
-		accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(types2.LeverageModuleName))
+		accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(leveragetypes.LeverageModuleName))
 
 		// update leverage module balance
 		k.IcqKeeper.MakeRequest(
@@ -157,7 +158,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			"store/leverage/key",
-			types2.KeyAdjustedTotalBorrow(borrows.Denom),
+			leveragetypes.KeyAdjustedTotalBorrow(borrows.Denom),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeTotalBorrowsUpdateCallbackID,
@@ -199,7 +200,7 @@ func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubm
 			return 0, err
 		}
 
-		denom := types2.ToTokenDenom(udenom)
+		denom := leveragetypes.ToTokenDenom(udenom)
 
 		data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, fmt.Sprintf("%s_%s", msg.SrcZone, denom))
 		if !found {

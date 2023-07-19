@@ -2,6 +2,7 @@ package umeetypes
 
 import (
 	"fmt"
+
 	"github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

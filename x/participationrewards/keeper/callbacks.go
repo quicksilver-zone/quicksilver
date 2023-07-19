@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	types2 "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
+
+	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
 
@@ -415,12 +416,12 @@ func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtyp
 }
 
 func CrescentPoolUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
-	var pd types2.Pool
+	var pd liquiditytypes.Pool
 	if err := k.cdc.Unmarshal(response, &pd); err != nil {
 		return err
 	}
 
-	if query.Request[0] != types2.PoolKeyPrefix[0] {
+	if query.Request[0] != liquiditytypes.PoolKeyPrefix[0] {
 		return errors.New("crescent pool query request has unexpected prefix")
 	}
 

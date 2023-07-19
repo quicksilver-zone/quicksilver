@@ -1,12 +1,13 @@
 package cfmm_common_test
 
 import (
+	"testing"
+	"time"
+
 	gammtypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	balancer2 "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
 	stableswap2 "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
-	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 

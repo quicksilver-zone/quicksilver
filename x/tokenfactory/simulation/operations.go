@@ -1,8 +1,9 @@
 package simulation
 
 import (
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
 	"math/rand"
+
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"

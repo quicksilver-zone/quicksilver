@@ -2,6 +2,7 @@ package cfmm_common
 
 import (
 	"errors"
+
 	gamm2 "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
 

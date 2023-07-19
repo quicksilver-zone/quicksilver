@@ -2,6 +2,7 @@ package crescenttypes
 
 import (
 	"fmt"
+
 	"github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
 
 	"cosmossdk.io/math"

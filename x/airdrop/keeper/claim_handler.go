@@ -3,6 +3,7 @@ package keeper
 import (
 	"errors"
 	"fmt"
+
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
 	osmosislockuptypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 

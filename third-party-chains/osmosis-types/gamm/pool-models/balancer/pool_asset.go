@@ -2,9 +2,10 @@ package balancer
 
 import (
 	"fmt"
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	"sort"
 	"strings"
+
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 
 	"gopkg.in/yaml.v2"
 

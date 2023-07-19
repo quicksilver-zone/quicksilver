@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
 	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 

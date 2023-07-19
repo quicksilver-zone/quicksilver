@@ -3,9 +3,10 @@ package keeper_test
 import (
 	"encoding/json"
 	"fmt"
-	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
 	"testing"
 	"time"
+
+	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
 
 	"cosmossdk.io/math"
 
