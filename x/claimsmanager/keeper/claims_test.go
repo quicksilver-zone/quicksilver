@@ -104,6 +104,7 @@ func (s *KeeperTestSuite) TestKeeper_NewClaim() {
 
 func (s *KeeperTestSuite) TestKeeper_ClaimStore() {
 	k := s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper
+	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
 
 	testClaims[0].ChainId = s.chainB.ChainID
 	testClaims[1].ChainId = s.chainB.ChainID
@@ -146,8 +147,11 @@ func (s *KeeperTestSuite) TestKeeper_ClaimStore() {
 	claims = k.AllZoneClaims(s.chainA.GetContext(), "cosmoshub-4")
 	s.Require().Equal(2, len(claims))
 
+	zone, found := icsKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+	s.Require().True(found)
+
 	// archive (last epoch)
-	k.ArchiveAndGarbageCollectClaims(s.chainA.GetContext(), s.chainB.ChainID)
+	k.ArchiveAndGarbageCollectClaims(s.chainA.GetContext(), &zone)
 
 	getClaim, found = k.GetLastEpochClaim(s.chainA.GetContext(), s.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
 	s.Require().True(found)
@@ -184,8 +188,11 @@ func (s *KeeperTestSuite) TestKeeper_ClaimStore() {
 	claims = k.AllZoneClaims(s.chainA.GetContext(), "cosmoshub-4")
 	s.Require().Equal(0, len(claims))
 
+	zone, found = icsKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+	s.Require().True(found)
+
 	// we archive current claims (none) to ensure the last epoch claims are correctly set
-	k.ArchiveAndGarbageCollectClaims(s.chainA.GetContext(), s.chainB.ChainID)
+	k.ArchiveAndGarbageCollectClaims(s.chainA.GetContext(), &zone)
 
 	// we expect none as claims have been archived
 	claims = k.AllZoneClaims(s.chainA.GetContext(), s.chainB.ChainID)

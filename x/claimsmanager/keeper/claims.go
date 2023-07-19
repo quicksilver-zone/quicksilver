@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func (k Keeper) NewClaim(address, chainID string, module types.ClaimType, srcChainID string, amount uint64) types.Claim {
@@ -282,11 +283,11 @@ func (k Keeper) ClearLastEpochClaims(ctx sdk.Context, chainID string) {
 }
 
 // ArchiveAndGarbageCollectClaims deletes all the last epoch claims and moves the current epoch claims to the last epoch store.
-func (k Keeper) ArchiveAndGarbageCollectClaims(ctx sdk.Context, chainID string) {
-	k.ClearLastEpochClaims(ctx, chainID)
+func (k Keeper) ArchiveAndGarbageCollectClaims(ctx sdk.Context, zone *icstypes.Zone) {
+	k.ClearLastEpochClaims(ctx, zone.ZoneID())
 
 	store := ctx.KVStore(k.storeKey)
-	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaim(chainID))
+	iterator := sdk.KVStorePrefixIterator(store, types.GetPrefixClaim(zone.ZoneID()))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

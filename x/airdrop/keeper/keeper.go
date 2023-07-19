@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/ingenuity-build/quicksilver/proofs"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -10,7 +12,6 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
@@ -29,7 +30,7 @@ type Keeper struct {
 	icqKeeper     icqkeeper.Keeper
 	prKeeper      *prkeeper.Keeper
 
-	ValidateProofOps utils.ProofOpsFn
+	ValidateProofOps proofs.ProofOpsFn
 
 	// the address capable of executing authority-scoped messages (ex. params, props). Typically, this
 	// should be the x/gov module account.
@@ -49,7 +50,7 @@ func NewKeeper(
 	icsk *icskeeper.Keeper,
 	icqk icqkeeper.Keeper,
 	prk *prkeeper.Keeper,
-	pofn utils.ProofOpsFn,
+	pofn proofs.ProofOpsFn,
 	authority string,
 ) *Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {

@@ -90,8 +90,6 @@ type Quicksilver struct {
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
 
-	invCheckPeriod uint
-
 	// the module manager
 	mm *module.Manager
 
@@ -112,7 +110,6 @@ func NewQuicksilver(
 	loadLatest bool,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
-	invCheckPeriod uint,
 	enabledProposals []wasm.ProposalType,
 	appOpts servertypes.AppOptions,
 	wasmOpts []wasm.Option,
@@ -136,7 +133,6 @@ func NewQuicksilver(
 		cdc:               legacyAmino,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
-		invCheckPeriod:    invCheckPeriod,
 	}
 
 	wasmDir := filepath.Join(homePath, "data")
@@ -154,7 +150,6 @@ func NewQuicksilver(
 		skipUpgradeHeights,
 		mock,
 		homePath,
-		invCheckPeriod,
 		appOpts,
 		wasmDir,
 		wasmConfig,
@@ -175,7 +170,6 @@ func NewQuicksilver(
 	app.mm.SetOrderInitGenesis(orderInitBlockers()...)
 	app.mm.SetOrderExportGenesis(orderInitBlockers()...)
 
-	app.mm.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 

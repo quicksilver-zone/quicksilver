@@ -7,9 +7,10 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ingenuity-build/quicksilver/proofs"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
@@ -54,7 +55,7 @@ func (k msgServer) SubmitQueryResponse(goCtx context.Context, msg *types.MsgSubm
 
 	pathParts := strings.Split(q.QueryType, "/")
 	if pathParts[len(pathParts)-1] == "key" {
-		if err := utils.ValidateProofOps(ctx, k.IBCKeeper, q.ConnectionId, q.ChainId, msg.Height, pathParts[1], q.Request, msg.Result, msg.ProofOps); err != nil {
+		if err := proofs.ValidateProofOps(ctx, k.IBCKeeper, q.ConnectionId, q.ChainId, msg.Height, pathParts[1], q.Request, msg.Result, msg.ProofOps); err != nil {
 			k.Logger(ctx).Error("failed to validate proofops", "id", q.Id, "type", q.QueryType)
 			return nil, err
 		}

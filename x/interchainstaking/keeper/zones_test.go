@@ -28,8 +28,7 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		io.Discard,
 		true,
 		map[int64]bool{},
-		app.DefaultNodeHome,
-		5,
+		t.TempDir(),
 		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
@@ -95,7 +94,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 			Tvl:                sdk.ZeroDec(),
 			Is_118:             true,
 		}
-		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainID())
+		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.BaseChainID())
 		kpr.SetZone(ctx, &zone)
 		gotZone, ok := kpr.GetZone(ctx, chainID)
 		require.True(t, ok, "expected to retrieve the correct zone")

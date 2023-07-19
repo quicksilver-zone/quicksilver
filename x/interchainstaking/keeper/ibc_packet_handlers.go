@@ -426,7 +426,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 		return err
 	}
 
-	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ID(), txHash, types.WithdrawStatusSend)
+	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ZoneID(), txHash, types.WithdrawStatusSend)
 	if !found {
 		return errors.New("no matching withdrawal record found")
 	}
@@ -482,7 +482,7 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
 
-	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
 }
 
 func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
@@ -501,7 +501,7 @@ func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 }
 
 func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) error {
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ID(), types.WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ZoneID(), types.WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		if ctx.BlockTime().After(withdrawal.CompletionTime) && !withdrawal.CompletionTime.Equal(time.Time{}) { // completion date has passed.
 			k.Logger(ctx).Info("found completed unbonding")
 			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
@@ -537,7 +537,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	if !found {
 		return fmt.Errorf("zone for delegate account %s not found", tsMsg.DelegatorAddress)
 	}
-	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ID(), memo, types.WithdrawStatusTokenize)
+	withdrawalRecord, found := k.GetWithdrawalRecord(ctx, zone.ZoneID(), memo, types.WithdrawStatusTokenize)
 	if !found {
 		return errors.New("no matching withdrawal record found")
 	}
@@ -549,7 +549,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 			if len(withdrawalRecord.Distribution) == len(withdrawalRecord.Amount) {
 				// we just added the last tokens
 				k.Logger(ctx).Info("Found matching withdrawal; marking for send")
-				k.DeleteWithdrawalRecord(ctx, zone.ID(), memo, types.WithdrawStatusTokenize)
+				k.DeleteWithdrawalRecord(ctx, zone.ZoneID(), memo, types.WithdrawStatusTokenize)
 				withdrawalRecord.Status = types.WithdrawStatusSend
 				sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.Address, ToAddress: withdrawalRecord.Recipient, Amount: withdrawalRecord.Amount}
 				err = k.SubmitTx(ctx, []cosmosproto.Message{sendMsg}, zone.DelegationAddress, memo, zone.MessagesPerTx)
@@ -586,12 +586,12 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg proto.Message, compl
 
 	if completion.IsZero() {
 		// a zero completion time can only happen when the validator is unbonded; this means the redelegation has _already_ completed and can be removed.
-		k.DeleteRedelegationRecord(ctx, zone.ID(), redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+		k.DeleteRedelegationRecord(ctx, zone.ZoneID(), redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	} else {
 
-		record, found := k.GetRedelegationRecord(ctx, zone.ID(), redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+		record, found := k.GetRedelegationRecord(ctx, zone.ZoneID(), redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 		if !found {
-			k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ID(), "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
+			k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ZoneID(), "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
 			return fmt.Errorf("unable to find redelegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 		}
 
@@ -624,7 +624,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg proto.Message, compl
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
-		zone.ID(),
+		zone.ZoneID(),
 		"store/staking/key",
 		data,
 		sdk.NewInt(-1),
@@ -635,8 +635,8 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg proto.Message, compl
 
 	srcDelegation, found := k.GetDelegation(ctx, zone, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorSrcAddress)
 	if !found {
-		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ID(), "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
-		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ID(), redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ZoneID(), "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
+		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ZoneID(), redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
 	srcDelegation.Amount = srcDelegation.Amount.Sub(redelegateMsg.Amount)
 
@@ -652,7 +652,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg proto.Message, compl
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
-		zone.ID(),
+		zone.ZoneID(),
 		"store/staking/key",
 		data,
 		sdk.NewInt(-1),
@@ -679,7 +679,7 @@ func (k *Keeper) HandleFailedBeginRedelegate(ctx sdk.Context, msg sdk.Msg, memo 
 	if !found {
 		return fmt.Errorf("zone for delegate account %s not found", redelegateMsg.DelegatorAddress)
 	}
-	k.DeleteRedelegationRecord(ctx, zone.ID(), redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+	k.DeleteRedelegationRecord(ctx, zone.ZoneID(), redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	k.Logger(ctx).Error("Cleaning up redelegation record")
 	return nil
 }
@@ -702,17 +702,17 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	if !found {
 		return fmt.Errorf("zone for delegate account %s not found", undelegateMsg.DelegatorAddress)
 	}
-	ubr, found := k.GetUnbondingRecord(ctx, zone.ID(), undelegateMsg.ValidatorAddress, epochNumber)
+	ubr, found := k.GetUnbondingRecord(ctx, zone.ZoneID(), undelegateMsg.ValidatorAddress, epochNumber)
 	if !found {
 		return fmt.Errorf("unbonding record for %s not found for epoch %d", undelegateMsg.ValidatorAddress, epochNumber)
 	}
 
 	for _, hash := range ubr.RelatedTxhash {
-		k.Logger(ctx).Info("MsgUndelegate", "del", undelegateMsg.DelegatorAddress, "val", undelegateMsg.ValidatorAddress, "hash", hash, "chain", zone.ID())
+		k.Logger(ctx).Info("MsgUndelegate", "del", undelegateMsg.DelegatorAddress, "val", undelegateMsg.ValidatorAddress, "hash", hash, "chain", zone.ZoneID())
 
-		record, found := k.GetWithdrawalRecord(ctx, zone.ID(), hash, types.WithdrawStatusUnbond)
+		record, found := k.GetWithdrawalRecord(ctx, zone.ZoneID(), hash, types.WithdrawStatusUnbond)
 		if !found {
-			return fmt.Errorf("unable to lookup withdrawal record; chain: %s, hash: %s", zone.ID(), hash)
+			return fmt.Errorf("unable to lookup withdrawal record; chain: %s, hash: %s", zone.ZoneID(), hash)
 		}
 		if completion.After(record.CompletionTime) {
 			record.CompletionTime = completion
@@ -736,7 +736,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
-		zone.ID(),
+		zone.ZoneID(),
 		"store/staking/key",
 		data,
 		sdk.NewInt(-1),
@@ -823,15 +823,15 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 	if !found {
 		return fmt.Errorf("zone for delegate account %s not found", undelegateMsg.DelegatorAddress)
 	}
-	ubr, found := k.GetUnbondingRecord(ctx, zone.ID(), undelegateMsg.ValidatorAddress, epochNumber)
+	ubr, found := k.GetUnbondingRecord(ctx, zone.ZoneID(), undelegateMsg.ValidatorAddress, epochNumber)
 	if !found {
-		return fmt.Errorf("cannot find unbonding record for %s/%s/%d", zone.ID(), undelegateMsg.ValidatorAddress, epochNumber)
+		return fmt.Errorf("cannot find unbonding record for %s/%s/%d", zone.ZoneID(), undelegateMsg.ValidatorAddress, epochNumber)
 	}
 
 	for _, hash := range ubr.RelatedTxhash {
-		wdr, found := k.GetWithdrawalRecord(ctx, zone.ID(), hash, types.WithdrawStatusUnbond)
+		wdr, found := k.GetWithdrawalRecord(ctx, zone.ZoneID(), hash, types.WithdrawStatusUnbond)
 		if !found {
-			return fmt.Errorf("cannot find withdrawal record for %s/%s", zone.ID(), hash)
+			return fmt.Errorf("cannot find withdrawal record for %s/%s", zone.ZoneID(), hash)
 		}
 		if len(wdr.Distribution) == 1 {
 			// sanity check
@@ -861,7 +861,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 			k.SetWithdrawalRecord(ctx, wdr)
 			// create a new record with the failed amount
 			newWdr := types.WithdrawalRecord{
-				ChainId:      zone.ID(),
+				ChainId:      zone.ZoneID(),
 				Delegator:    wdr.Delegator,
 				Recipient:    wdr.Recipient,
 				Distribution: nil,
@@ -875,7 +875,7 @@ func (k *Keeper) HandleFailedUndelegate(ctx sdk.Context, msg sdk.Msg, memo strin
 		}
 	}
 
-	k.DeleteUnbondingRecord(ctx, zone.ID(), undelegateMsg.ValidatorAddress, epochNumber)
+	k.DeleteUnbondingRecord(ctx, zone.ZoneID(), undelegateMsg.ValidatorAddress, epochNumber)
 	k.Logger(ctx).Error("Cleaning up redelegation record")
 	return nil
 }
@@ -935,7 +935,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg proto.Message, memo string)
 			}
 		}
 	default:
-		receipt, found := k.GetReceipt(ctx, types.GetReceiptKey(zone.ID(), memo))
+		receipt, found := k.GetReceipt(ctx, types.GetReceiptKey(zone.ZoneID(), memo))
 		if !found {
 			return fmt.Errorf("unable to find receipt for hash %s", memo)
 		}
@@ -989,7 +989,7 @@ func (k *Keeper) GetValidatorForToken(ctx sdk.Context, amount sdk.Coin) (string,
 		return "", err
 	}
 
-	for _, val := range k.GetValidatorAddresses(ctx, zone.ChainID()) {
+	for _, val := range k.GetValidatorAddresses(ctx, zone) {
 		if strings.HasPrefix(amount.Denom, val) {
 			// match!
 			return val, nil
@@ -1031,7 +1031,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				zone.ConnectionId,
-				zone.ID(),
+				zone.ZoneID(),
 				"store/staking/key",
 				data,
 				sdk.NewInt(-1),
@@ -1059,7 +1059,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 		k.ICQKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
-			zone.ID(),
+			zone.ZoneID(),
 			"store/staking/key",
 			data,
 			sdk.NewInt(-1),
@@ -1098,7 +1098,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
-	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainID(), query, sdkmath.NewInt(period))
+	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
 	if err != nil {
 		return err
 	}
@@ -1151,7 +1151,7 @@ func (k *Keeper) TriggerRedemptionRate(ctx sdk.Context, zone *types.Zone) error 
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		zone.ConnectionId,
-		zone.ID(),
+		zone.ZoneID(),
 		"cosmos.bank.v1beta1.Query/AllBalances",
 		bz,
 		sdk.NewInt(int64(-1)),

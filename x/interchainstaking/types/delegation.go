@@ -119,14 +119,22 @@ func (vi ValidatorIntents) Normalize() ValidatorIntents {
 
 func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations ValidatorIntents, amount sdk.Coins) map[string]sdkmath.Int {
 	input := amount[0].Amount
-	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
-	minValue := MinDelta(deltas)
+	deltas, sources := CalculateAllocationDeltas(currentAllocations, map[string]bool{}, currentSum, targetAllocations)
+	// take targets and sources, and flip that shit.
+	// sources -> negate -> join -> sort.
+	largestSource := sources.MaxDelta()
+
+	// negate all values in sources.
+	sources.Negate()
+	deltas = append(deltas, sources...)
+
 	sum := sdk.ZeroInt()
 
 	// raise all deltas such that the minimum value is zero.
 	for idx := range deltas {
-		deltas[idx].Weight = deltas[idx].Weight.Add(sdk.NewDecFromInt(minValue.Abs()))
-		sum = sum.Add(deltas[idx].Weight.TruncateInt())
+		deltas[idx].Amount = deltas[idx].Amount.Add(largestSource)
+		// sum here instead of calling Sum() later to save looping over slice again.
+		sum = sum.Add(deltas[idx].Amount)
 	}
 
 	// unequalSplit is the portion of input that should be distributed in attempt to make targets == 0
@@ -134,17 +142,23 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 
 	if !unequalSplit.IsZero() {
 		for idx := range deltas {
-			deltas[idx].Weight = deltas[idx].Weight.QuoInt(sum).MulInt(unequalSplit)
+			deltas[idx].Amount = sdk.NewDecFromInt(deltas[idx].Amount).QuoInt(sum).MulInt(unequalSplit).TruncateInt()
 		}
 	}
 
 	// equalSplit is the portion of input that should be distributed equally across all validators, once targets are zero.
 	equalSplit := sdk.NewDecFromInt(input.Sub(unequalSplit))
 
+	// replace this portion with allocation proportional to targetAllocations!
 	if !equalSplit.IsZero() {
-		each := equalSplit.Quo(sdk.NewDec(int64(len(deltas))))
-		for idx := range deltas {
-			deltas[idx].Weight = deltas[idx].Weight.Add(each)
+		for _, targetAllocation := range targetAllocations.Sort() {
+			delta, found := deltas.GetForValoper(targetAllocation.GetValoperAddress())
+			if found {
+				delta.Amount = delta.Amount.Add(equalSplit.Mul(targetAllocation.Weight).TruncateInt())
+			} else {
+				delta = &AllocationDelta{ValoperAddress: targetAllocation.GetValoperAddress(), Amount: equalSplit.Mul(targetAllocation.Weight).TruncateInt()}
+				deltas = append(deltas, delta)
+			}
 		}
 	}
 
@@ -154,8 +168,8 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 	outSum := sdk.ZeroInt()
 	outWeights := make(map[string]sdkmath.Int)
 	for _, delta := range deltas {
-		outWeights[delta.ValoperAddress] = delta.Weight.TruncateInt()
-		outSum = outSum.Add(delta.Weight.TruncateInt())
+		outWeights[delta.ValoperAddress] = delta.Amount
+		outSum = outSum.Add(delta.Amount)
 	}
 	dust := input.Sub(outSum)
 	outWeights[deltas[0].ValoperAddress] = outWeights[deltas[0].ValoperAddress].Add(dust)

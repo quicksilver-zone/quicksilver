@@ -51,7 +51,6 @@ func NewAppConstructor(_ EncodingConfig, chainID string) network.AppConstructor 
 			true,
 			map[int64]bool{},
 			DefaultNodeHome,
-			0,
 			wasm.EnableAllProposals,
 			EmptyAppOptions{},
 			GetWasmOpts(EmptyAppOptions{}),
