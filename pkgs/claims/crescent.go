@@ -3,15 +3,15 @@ package claims
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	liquiditytypes "github.com/ingenuity-build/quicksilver/crescent-types/liquidity/types"
-	lpfarmtypes "github.com/ingenuity-build/quicksilver/crescent-types/lpfarm"
+	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	lpfarmtypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
@@ -38,13 +38,13 @@ func CrescentClaim(
 	}
 	fmt.Println("simulate failures:", failures)
 
-	_, addrBytes, err := bech32.DecodeNoLimit(address)
+	addrBytes, err := addressutils.AccAddressFromBech32(address, "")
 	// 0:
 	err = failsim.FailureHook(failures, 0, err, "failure decoding bech32 address")
 	if err != nil {
 		return nil, nil, err
 	}
-	crescentAddress, err := bech32.Encode("cre", addrBytes)
+	crescentAddress, err := addressutils.EncodeAddressToBech32("cre", addrBytes)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -138,7 +138,7 @@ OUTER:
 						assets[chain] = sdk.Coins{}
 					}
 
-					farmerAddr, err := sdk.GetFromBech32(position.Farmer, "cre")
+					farmerAddr, err := addressutils.AddressFromBech32(position.Farmer, "")
 
 					if err != nil {
 						if errors == nil {
@@ -189,7 +189,7 @@ OUTER:
 					err = failsim.FailureHook(failures, 10, err, "ABCIQuery: pool response")
 
 					// fetch reserveAddress balance
-					_, reserveAddrBytes, err := bech32.DecodeNoLimit(poolResponse.ReserveAddress)
+					reserveAddrBytes, err := addressutils.AddressFromBech32(poolResponse.ReserveAddress, "")
 
 					accountPrefix := banktypes.CreateAccountBalancesPrefix(reserveAddrBytes)
 					lookupKey := append(accountPrefix, []byte(tuple.denom)...)

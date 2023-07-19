@@ -3,14 +3,14 @@ package claims
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/btcutil/bech32"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	leverage "github.com/ingenuity-build/quicksilver/umee-types/leverage"
-	leveragetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
+	leverage "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage"
+	leveragetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
@@ -36,20 +36,17 @@ func UmeeClaim(
 	}
 	fmt.Println("simulate failures:", failures)
 
-	_, addrBytes, err := bech32.DecodeNoLimit(address)
+	addrBytes, err := addressutils.AccAddressFromBech32(address, "")
 	// 0:
 	err = failsim.FailureHook(failures, 0, err, "failure decoding bech32 address")
 	if err != nil {
 		return nil, nil, err
 	}
-	umeeAddress, err := bech32.Encode("umee", addrBytes)
+	umeeAddress, err := addressutils.EncodeAddressToBech32("umee", addrBytes)
 	if err != nil {
 		return nil, nil, err
 	}
-	umeeaddr, err := sdk.GetFromBech32(umeeAddress, "umee")
-	if err != nil {
-		return nil, nil, err
-	}
+
 	// 1:
 	err = failsim.FailureHook(failures, 1, err, "failure encoding umee address")
 	if err != nil {
@@ -152,7 +149,7 @@ func UmeeClaim(
 			}
 		}
 
-		accountPrefix := banktypes.CreateAccountBalancesPrefix(umeeaddr)
+		accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
 		lookupKey := append(accountPrefix, []byte(coin.GetDenom())...)
 		abciquery, err := client.ABCIQueryWithOptions(
 			context.Background(), "/store/bank/key",
