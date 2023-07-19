@@ -11,13 +11,11 @@ import (
 	"strings"
 
 	sdkmath "cosmossdk.io/math"
-
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -67,6 +65,12 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 		baseZone, found = k.GetZone(ctx, msg.SubzoneInfo.BaseChainID)
 		if !found {
 			return &types.MsgRegisterZoneResponse{}, fmt.Errorf("unable to find base chain \"%s\" for subzone \"%s\"", chainID, msg.SubzoneInfo.BaseChainID)
+		}
+
+		// check if subzone ID already is taken
+		_, found = k.GetZone(ctx, msg.SubzoneInfo.ChainID)
+		if found {
+			return &types.MsgRegisterZoneResponse{}, fmt.Errorf("subzone ID already exists \"%s\"", msg.SubzoneInfo.ChainID)
 		}
 
 		// set chainID to be specified unique ID
