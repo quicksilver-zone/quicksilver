@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	"sort"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -11,17 +10,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func GenerateValidatorsDeterministic(n int) (out []string) {
-	out = make([]string, 0, n)
-	for i := 0; i < n; i++ {
-		out = append(out, addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper"))
-	}
-	sort.Strings(out)
-	return out
-}
-
 func TestDetermineAllocationsForRebalancing(t *testing.T) {
-	vals := GenerateValidatorsDeterministic(5)
+	vals := addressutils.GenerateValidatorsDeterministic(5)
 
 	type testcase struct {
 		name        string
