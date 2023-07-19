@@ -4,10 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	types2 "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
-	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,6 +14,9 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	"github.com/ingenuity-build/quicksilver/app"
+	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
+	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
@@ -186,9 +185,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
 
-				key := types2.GetPositionKey(addr, cosmosIBCDenom)
+				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := types2.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool7"}
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool7"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
@@ -220,9 +219,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
 
-				key := types2.GetPositionKey(addr, cosmosIBCDenom)
+				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := types2.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
@@ -254,9 +253,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
 
-				key := types2.GetPositionKey(addr, cosmosIBCDenom)
+				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := types2.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(-1), Denom: "pool1"}
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(-1), Denom: "pool1"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
@@ -429,9 +428,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
 
-				key := types2.GetPositionKey(addr, cosmosIBCDenom)
+				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
 
-				cd := types2.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
 				bz, err := prk.GetCodec().Marshal(&cd)
 				suite.Require().NoError(err)
 
