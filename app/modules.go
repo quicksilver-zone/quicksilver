@@ -140,7 +140,6 @@ var (
 func appModules(
 	app *Quicksilver,
 	encodingConfig EncodingConfig,
-	skipGenesisInvariants bool,
 ) []module.AppModule {
 	appCodec := encodingConfig.Marshaler
 	// NOTE: Any module instantiated in the module manager that is later modified
