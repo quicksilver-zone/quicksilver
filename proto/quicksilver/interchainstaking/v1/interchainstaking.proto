@@ -95,6 +95,7 @@ message WithdrawalRecord {
     (gogoproto.stdtime) = true
   ];
   bool requeued = 10;
+  bool acknowledged = 11;
 }
 
 message UnbondingRecord {
