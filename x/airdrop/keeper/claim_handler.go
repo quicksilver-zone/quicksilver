@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
+	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
 	osmosislockuptypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 
 	sdkmath "cosmossdk.io/math"
