@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
+	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"

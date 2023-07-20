@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
+	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
 	"github.com/ingenuity-build/quicksilver/utils"
 	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
@@ -16,7 +16,7 @@ type ParticipationRewardsKeeper interface {
 	GetProtocolData(ctx sdk.Context, pdType participationrewardstypes.ProtocolDataType, key string) (participationrewardstypes.ProtocolData, bool)
 }
 
-func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, position types.Position, chainID string) (math.Int, error) {
+func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, position lpfarm.Position, chainID string) (math.Int, error) {
 	farmingAmount := position.FarmingAmount
 
 	poolID := position.Denom[4:]
