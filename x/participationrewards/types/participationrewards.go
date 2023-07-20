@@ -7,8 +7,8 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/multierror"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 

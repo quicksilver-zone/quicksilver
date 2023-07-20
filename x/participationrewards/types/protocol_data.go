@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/multierror"
 )
 
 func NewProtocolData(datatype string, data json.RawMessage) *ProtocolData {

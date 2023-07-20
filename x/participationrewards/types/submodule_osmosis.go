@@ -11,8 +11,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/multierror"
 	"github.com/ingenuity-build/quicksilver/utils"
 )
 
