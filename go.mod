@@ -19,6 +19,7 @@ require (
 	github.com/golangci/golangci-lint v1.53.3
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/ingenuity-build/multierror v0.1.0
 	github.com/iqlusioninc/liquidity-staking-module v1.0.0
 	github.com/prometheus/client_golang v1.16.0
 	github.com/rakyll/statik v0.1.7
