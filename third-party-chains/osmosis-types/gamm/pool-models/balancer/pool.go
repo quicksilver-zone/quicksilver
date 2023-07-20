@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	gamm2 "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
 
 	sdkioerrors "cosmossdk.io/errors"
@@ -29,8 +29,8 @@ const (
 )
 
 var (
-	_ gamm2.PoolI                  = &Pool{}
-	_ gamm2.PoolAmountOutExtension = &Pool{}
+	_ gamm.PoolI                  = &Pool{}
+	_ gamm.PoolAmountOutExtension = &Pool{}
 )
 
 // NewPool returns a weighted CPMM pool with the provided parameters, and initial assets.
@@ -40,7 +40,7 @@ var (
 // * FutureGovernor is valid
 // * poolID doesn't already exist
 func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []PoolAsset, futureGovernor string, blockTime time.Time) (Pool, error) {
-	poolAddr := gamm2.NewPoolAddress(poolId)
+	poolAddr := gamm.NewPoolAddress(poolId)
 
 	// pool thats created up to ensuring the assets and params are valid.
 	// We assume that FuturePoolGovernor is valid.
@@ -49,7 +49,7 @@ func NewBalancerPool(poolId uint64, balancerPoolParams PoolParams, assets []Pool
 		Id:                 poolId,
 		PoolParams:         PoolParams{},
 		TotalWeight:        sdk.ZeroInt(),
-		TotalShares:        sdk.NewCoin(gamm2.GetPoolShareDenom(poolId), gamm2.InitPoolSharesSupply),
+		TotalShares:        sdk.NewCoin(gamm.GetPoolShareDenom(poolId), gamm.InitPoolSharesSupply),
 		PoolAssets:         nil,
 		FuturePoolGovernor: futureGovernor,
 	}
@@ -224,7 +224,7 @@ func (p Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	}
 
 	if len(p.PoolAssets) == 0 {
-		return -1, PoolAsset{}, sdkioerrors.Wrapf(gamm2.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
+		return -1, PoolAsset{}, sdkioerrors.Wrapf(gamm.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
 	}
 
 	i := sort.Search(len(p.PoolAssets), func(i int) bool {
@@ -235,11 +235,11 @@ func (p Pool) getPoolAssetAndIndex(denom string) (int, PoolAsset, error) {
 	})
 
 	if i < 0 || i >= len(p.PoolAssets) {
-		return -1, PoolAsset{}, sdkioerrors.Wrapf(gamm2.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
+		return -1, PoolAsset{}, sdkioerrors.Wrapf(gamm.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
 	}
 
 	if p.PoolAssets[i].Token.Denom != denom {
-		return -1, PoolAsset{}, sdkioerrors.Wrapf(gamm2.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
+		return -1, PoolAsset{}, sdkioerrors.Wrapf(gamm.ErrDenomNotFoundInPool, fmt.Sprintf(formatNoPoolAssetFoundErrFormat, denom))
 	}
 
 	return i, p.PoolAssets[i], nil
@@ -504,7 +504,7 @@ func (p Pool) CalcOutAmtGivenIn(
 	// We ignore the decimal component, as we round down the token amount out.
 	tokenAmountOutInt := tokenAmountOut.TruncateInt()
 	if !tokenAmountOutInt.IsPositive() {
-		return sdk.Coin{}, sdkioerrors.Wrapf(gamm2.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Coin{}, sdkioerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
 	}
 
 	return sdk.NewCoin(tokenOutDenom, tokenAmountOutInt), nil
@@ -561,7 +561,7 @@ func (p Pool) CalcInAmtGivenOut(
 	tokenInAmt := tokenAmountInBeforeFee.Ceil().TruncateInt()
 
 	if !tokenInAmt.IsPositive() {
-		return sdk.Coin{}, sdkioerrors.Wrapf(gamm2.ErrInvalidMathApprox, "token amount must be positive")
+		return sdk.Coin{}, sdkioerrors.Wrapf(gamm.ErrInvalidMathApprox, "token amount must be positive")
 	}
 	return sdk.NewCoin(tokenInDenom, tokenInAmt), nil
 }
@@ -884,7 +884,7 @@ func (p *Pool) CalcTokenInShareAmountOut(
 	).Ceil().TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkioerrors.Wrapf(gamm2.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
 	}
 
 	return tokenInAmount, nil
@@ -911,7 +911,7 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 	).TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkioerrors.Wrapf(gamm2.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
 	}
 
 	poolAssetIn.Token.Amount = poolAssetIn.Token.Amount.Add(tokenInAmount)
@@ -943,11 +943,11 @@ func (p *Pool) ExitSwapExactAmountOut(
 	).TruncateInt()
 
 	if !sharesIn.IsPositive() {
-		return sdk.Int{}, sdkioerrors.Wrapf(gamm2.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
+		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
 	}
 
 	if sharesIn.GT(shareInMaxAmount) {
-		return sdk.Int{}, sdkioerrors.Wrapf(gamm2.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
+		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
 	}
 
 	if err := p.exitPool(ctx, sdk.NewCoins(tokenOut), sharesIn); err != nil {

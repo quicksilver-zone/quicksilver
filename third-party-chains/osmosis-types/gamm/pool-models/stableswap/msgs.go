@@ -4,7 +4,8 @@ import (
 	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	gamm2 "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 )
 
 const (
@@ -13,8 +14,8 @@ const (
 )
 
 var (
-	_ sdk.Msg             = &MsgCreateStableswapPool{}
-	_ gamm2.CreatePoolMsg = &MsgCreateStableswapPool{}
+	_ sdk.Msg            = &MsgCreateStableswapPool{}
+	_ gamm.CreatePoolMsg = &MsgCreateStableswapPool{}
 )
 
 func NewMsgCreateStableswapPool(
@@ -33,7 +34,7 @@ func NewMsgCreateStableswapPool(
 	}
 }
 
-func (msg MsgCreateStableswapPool) Route() string { return gamm2.RouterKey }
+func (msg MsgCreateStableswapPool) Route() string { return gamm.RouterKey }
 func (msg MsgCreateStableswapPool) Type() string  { return TypeMsgCreateStableswapPool }
 func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
@@ -49,17 +50,17 @@ func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	// validation for pool initial liquidity
 	// TO DO: expand this check to accommodate multi-asset pools for stableswap
 	if len(msg.InitialPoolLiquidity) < 2 {
-		return gamm2.ErrTooFewPoolAssets
+		return gamm.ErrTooFewPoolAssets
 	} else if len(msg.InitialPoolLiquidity) > 2 {
-		return gamm2.ErrTooManyPoolAssets
+		return gamm.ErrTooManyPoolAssets
 	}
 	// valid scaling factor lengths are 0, or one factor for each asset
 	if len(msg.ScalingFactors) != 0 && len(msg.ScalingFactors) != len(msg.InitialPoolLiquidity) {
-		return gamm2.ErrInvalidScalingFactors
+		return gamm.ErrInvalidScalingFactors
 	}
 
 	// validation for future owner
-	if err = gamm2.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
+	if err = gamm.ValidateFutureGovernor(msg.FuturePoolGovernor); err != nil {
 		return err
 	}
 
@@ -96,7 +97,7 @@ func (msg MsgCreateStableswapPool) InitialLiquidity() sdk.Coins {
 	return msg.InitialPoolLiquidity
 }
 
-func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (gamm2.PoolI, error) {
+func (msg MsgCreateStableswapPool) CreatePool(ctx sdk.Context, poolId uint64) (gamm.PoolI, error) {
 	stableswapPool, err := NewStableswapPool(poolId, *msg.PoolParams, msg.InitialPoolLiquidity, msg.ScalingFactors, msg.FuturePoolGovernor)
 	if err != nil {
 		return nil, err
@@ -119,7 +120,7 @@ func NewMsgStableSwapAdjustScalingFactors(
 }
 
 func (msg MsgStableSwapAdjustScalingFactors) Route() string {
-	return gamm2.RouterKey
+	return gamm.RouterKey
 }
 
 func (msg MsgStableSwapAdjustScalingFactors) Type() string { return TypeMsgCreateStableswapPool }
