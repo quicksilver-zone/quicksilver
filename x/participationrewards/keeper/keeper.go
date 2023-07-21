@@ -5,21 +5,25 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
 	"github.com/tendermint/tendermint/libs/log"
 
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
-	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
+	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
+	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
+	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // UserAllocation is an internal keeper struct to track transient state for
@@ -30,7 +34,11 @@ type UserAllocation struct {
 	Amount  sdkmath.Int
 }
 
-var _ osmosistypes.ParticipationRewardsKeeper = &Keeper{}
+var (
+	_ osmosistypes.ParticipationRewardsKeeper  = &Keeper{}
+	_ umeetypes.ParticipationRewardsKeeper     = &Keeper{}
+	_ crescenttypes.ParticipationRewardsKeeper = &Keeper{}
+)
 
 type Keeper struct {
 	cdc                  codec.BinaryCodec
@@ -160,5 +168,6 @@ func LoadSubmodules() map[cmtypes.ClaimType]Submodule {
 	out[cmtypes.ClaimTypeLiquidToken] = &LiquidTokensModule{}
 	out[cmtypes.ClaimTypeOsmosisPool] = &OsmosisModule{}
 	out[cmtypes.ClaimTypeUmeeToken] = &UmeeModule{}
+	out[cmtypes.ClaimTypeCrescentPool] = &CrescentModule{}
 	return out
 }
