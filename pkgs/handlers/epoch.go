@@ -19,9 +19,11 @@ func GetEpochHandler(
 	ctx context.Context,
 	cfg types.Config,
 	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
-	poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
+	osmosisPoolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
+	crescentPoolsManager *types.CacheManager[prewards.CrescentPoolProtocolData],
 	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
 	umeeParamsManager *types.CacheManager[prewards.UmeeParamsProtocolData],
+	crescentParamsManager *types.CacheManager[prewards.CrescentParamsProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
@@ -107,7 +109,7 @@ func GetEpochHandler(
 		}
 
 		fmt.Println("fetch osmosis claim...")
-		messages, assets, err := claims.OsmosisClaim(ctx, cfg, poolsManager, tokensManager, vars["address"], chain, height)
+		messages, assets, err := claims.OsmosisClaim(ctx, cfg, osmosisPoolsManager, tokensManager, vars["address"], chain, height)
 		if err != nil {
 			errors["OsmosisClaim"] = err
 		}
@@ -160,6 +162,48 @@ func GetEpochHandler(
 
 		for chainID, asset := range assets {
 			response.Assets[chainID] = []types.Asset{{Type: "liquid", Amount: asset}}
+		}
+
+		// crescent claim
+		chain = crescentParamsManager.Get(ctx)[0].ChainID
+		fmt.Println("check config for crescent chain id...")
+		// simulate failure hook 0:
+		if _, failHere := failAt[0]; failHere {
+			chain = ""
+		}
+		if chain == "" {
+			errors["config"] = fmt.Errorf("crescent chain ID is not set")
+			return
+		}
+
+		fmt.Println("check crescent last epoch height...")
+		for _, con := range connections {
+			if con.ChainID == chain {
+				height = con.LastEpoch
+				break
+			}
+		}
+		// simulate failure hook 1:
+		if _, failHere := failAt[1]; failHere {
+			height = 0
+		}
+		if height == 0 {
+			errors["height"] = fmt.Errorf("fetched height is 0")
+			return
+		}
+
+		fmt.Println("fetch crescent claim...")
+		messages, assets, err = claims.CrescentClaim(ctx, cfg, crescentPoolsManager, tokensManager, vars["address"], chain, height)
+		if err != nil {
+			errors["CrescentClaim"] = err
+		}
+
+		for _, message := range messages {
+			response.Messages = append(response.Messages, message)
+		}
+
+		for chainID, asset := range assets {
+			response.Assets[chainID] = []types.Asset{{Type: "crescentpool", Amount: asset}}
 		}
 
 		// liquid for all zones; config should hold osmosis chainid.

@@ -12,15 +12,14 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/multierror"
+	osmogamm "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
+	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/client"
 
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
-
-	osmogamm "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 type poolMap map[string][]osmogamm.PoolI
@@ -199,16 +198,17 @@ func OsmosisClaim(
 	fmt.Println("got relevant tokens...")
 
 	pools := poolMap{}
+
 	for _, pool := range poolsManager.Get(ctx) {
-		for chain := range pool.Denoms {
-			if _, ok := pools[chain]; !ok {
-				pools[chain] = make([]osmogamm.PoolI, 0)
+		for _, denom := range pool.Denoms {
+			if _, ok := pools[denom.ChainID]; !ok {
+				pools[denom.ChainID] = make([]osmogamm.PoolI, 0)
 			}
 			poolData, err := pool.GetPool()
 			if err != nil {
 				return nil, nil, err
 			}
-			pools[chain] = append(pools[chain], poolData)
+			pools[denom.ChainID] = append(pools[denom.ChainID], poolData)
 		}
 	}
 
