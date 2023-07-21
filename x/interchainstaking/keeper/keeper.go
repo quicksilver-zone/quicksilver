@@ -73,11 +73,15 @@ func NewKeeper(
 	}
 
 	if addr := accountKeeper.GetModuleAddress(types.EscrowModuleAccount); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+		panic(fmt.Sprintf("%s escrow account has not been set", types.EscrowModuleAccount))
 	}
 
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
+	}
+
+	if ibcKeeper == nil {
+		panic("ibcKeeper is nil")
 	}
 
 	return &Keeper{

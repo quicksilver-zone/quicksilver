@@ -12,7 +12,6 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
-	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 )
 
 type Keeper struct {
@@ -25,7 +24,6 @@ type Keeper struct {
 	govKeeper     types.GovKeeper
 	ibcKeeper     *ibckeeper.Keeper
 	icsKeeper     types.InterchainStakingKeeper
-	icqKeeper     icqkeeper.Keeper
 	prKeeper      types.ParticipationRewardsKeeper
 
 	ValidateProofOps utils.ProofOpsFn
@@ -47,7 +45,6 @@ func NewKeeper(
 	gk types.GovKeeper,
 	ibcKeeper *ibckeeper.Keeper,
 	icsk types.InterchainStakingKeeper,
-	icqk icqkeeper.Keeper,
 	prk types.ParticipationRewardsKeeper,
 	pofn utils.ProofOpsFn,
 	authority string,
@@ -61,6 +58,10 @@ func NewKeeper(
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
+	if ibcKeeper == nil {
+		panic("ibcKeeper is nil")
+	}
+
 	return &Keeper{
 		cdc:              cdc,
 		storeKey:         key,
@@ -71,7 +72,6 @@ func NewKeeper(
 		govKeeper:        gk,
 		ibcKeeper:        ibcKeeper,
 		icsKeeper:        icsk,
-		icqKeeper:        icqk,
 		prKeeper:         prk,
 		ValidateProofOps: pofn,
 		authority:        authority,
