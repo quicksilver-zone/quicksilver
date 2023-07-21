@@ -6,15 +6,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	prkeeper "github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 )
 
 type Keeper struct {
@@ -24,10 +22,11 @@ type Keeper struct {
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
-	govKeeper     govkeeper.Keeper
-	icsKeeper     *icskeeper.Keeper
+	govKeeper     types.GovKeeper
+	ibcKeeper     *ibckeeper.Keeper
+	icsKeeper     types.InterchainStakingKeeper
 	icqKeeper     icqkeeper.Keeper
-	prKeeper      *prkeeper.Keeper
+	prKeeper      types.ParticipationRewardsKeeper
 
 	ValidateProofOps utils.ProofOpsFn
 
@@ -45,10 +44,11 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
-	gk govkeeper.Keeper,
-	icsk *icskeeper.Keeper,
+	gk types.GovKeeper,
+	ibcKeeper *ibckeeper.Keeper,
+	icsk types.InterchainStakingKeeper,
 	icqk icqkeeper.Keeper,
-	prk *prkeeper.Keeper,
+	prk types.ParticipationRewardsKeeper,
 	pofn utils.ProofOpsFn,
 	authority string,
 ) *Keeper {
@@ -69,6 +69,7 @@ func NewKeeper(
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		govKeeper:        gk,
+		ibcKeeper:        ibcKeeper,
 		icsKeeper:        icsk,
 		icqKeeper:        icqk,
 		prKeeper:         prk,

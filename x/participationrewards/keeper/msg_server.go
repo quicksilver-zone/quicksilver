@@ -77,7 +77,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 		} else {
 			if err := k.ValidateProofOps(
 				ctx,
-				&k.icsKeeper.IBCKeeper,
+				k.icsKeeper.IBCKeeper,
 				connectionData.ConnectionID,
 				connectionData.ChainID,
 				proof.Height,

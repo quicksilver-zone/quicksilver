@@ -251,7 +251,7 @@ func (k *Keeper) verifyOsmosisLP(ctx sdk.Context, proofs []*cmtypes.Proof, cr ty
 		// validate proof tx
 		if err := k.ValidateProofOps(
 			ctx,
-			&k.icsKeeper.IBCKeeper,
+			k.ibcKeeper,
 			osmoZone.ConnectionId,
 			osmoZone.ChainId,
 			proof.Height,

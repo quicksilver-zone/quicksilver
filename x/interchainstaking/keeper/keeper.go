@@ -45,7 +45,7 @@ type Keeper struct {
 	ICQKeeper           interchainquerykeeper.Keeper
 	AccountKeeper       types.AccountKeeper
 	BankKeeper          types.BankKeeper
-	IBCKeeper           ibckeeper.Keeper
+	IBCKeeper           *ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
 	Ir                  codectypes.InterfaceRegistry
@@ -63,7 +63,7 @@ func NewKeeper(
 	icaControllerKeeper icacontrollerkeeper.Keeper,
 	scopedKeeper *capabilitykeeper.ScopedKeeper,
 	icqKeeper interchainquerykeeper.Keeper,
-	ibcKeeper ibckeeper.Keeper,
+	ibcKeeper *ibckeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
 	claimsManagerKeeper claimsmanagerkeeper.Keeper,
 	ps paramtypes.Subspace,
