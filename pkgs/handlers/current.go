@@ -16,9 +16,11 @@ import (
 func GetCurrentHandler(
 	cfg types.Config,
 	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
-	poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
+	osmosisPoolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
+	crescentPoolsManager *types.CacheManager[prewards.CrescentPoolProtocolData],
 	osmosisParamsManager *types.CacheManager[prewards.OsmosisParamsProtocolData],
 	umeeParamsManager *types.CacheManager[prewards.UmeeParamsProtocolData],
+	crescentParamsManager *types.CacheManager[prewards.CrescentParamsProtocolData],
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
@@ -35,7 +37,7 @@ func GetCurrentHandler(
 			return
 		}
 
-		_, assets, err := claims.OsmosisClaim(context.TODO(), cfg, poolsManager, tokensManager, vars["address"], chain, 0)
+		_, assets, err := claims.OsmosisClaim(context.TODO(), cfg, osmosisPoolsManager, tokensManager, vars["address"], chain, 0)
 		if err != nil {
 			fmt.Fprintf(w, "Error: %s", err)
 			return
@@ -54,6 +56,17 @@ func GetCurrentHandler(
 
 		for chainID, asset := range assets {
 			response.Assets[chainID] = []types.Asset{{Type: "liquid", Amount: asset}}
+		}
+
+		// crescent claim
+		_, assets, err = claims.CrescentClaim(context.TODO(), cfg, crescentPoolsManager, tokensManager, vars["address"], crescentParamsManager.Get()[0].ChainID, 0)
+		if err != nil {
+			fmt.Fprintf(w, "Error: %s", err)
+			return
+		}
+
+		for chainID, asset := range assets {
+			response.Assets[chainID] = []types.Asset{{Type: "crescentpool", Amount: asset}}
 		}
 
 		// liquid for all zones; config should hold osmosis chainid.

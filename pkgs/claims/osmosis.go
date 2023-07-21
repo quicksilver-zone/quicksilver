@@ -184,16 +184,17 @@ func OsmosisClaim(
 	fmt.Println("got relevant tokens...")
 
 	pools := poolMap{}
+
 	for _, pool := range poolsManager.Get() {
-		for chain := range pool.Zones {
-			if _, ok := pools[chain]; !ok {
-				pools[chain] = make([]osmogamm.PoolI, 0)
+		for _, denom := range pool.Denoms {
+			if _, ok := pools[denom.ChainID]; !ok {
+				pools[denom.ChainID] = make([]osmogamm.PoolI, 0)
 			}
 			poolData, err := pool.GetPool()
 			if err != nil {
 				return nil, nil, err
 			}
-			pools[chain] = append(pools[chain], poolData)
+			pools[denom.ChainID] = append(pools[denom.ChainID], poolData)
 		}
 	}
 
