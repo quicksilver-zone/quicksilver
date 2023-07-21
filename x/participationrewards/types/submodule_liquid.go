@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/multierror"
 )
 
 // LiquidAllowedDenomProtocolData defines protocol state to track off-chain
