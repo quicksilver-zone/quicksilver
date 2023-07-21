@@ -8,9 +8,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/balancer"
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/stableswap"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
 )
 
 var (

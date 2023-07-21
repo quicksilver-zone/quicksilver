@@ -5,18 +5,23 @@ import (
 	"fmt"
 	"strings"
 
+	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+	leveragetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
+
+var PoolCoinDenom = "pool1"
 
 func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
@@ -56,8 +61,8 @@ func (suite *KeeperTestSuite) executeOsmosisPoolUpdateCallback() {
 		PoolData:    expectedData,
 		PoolType:    "balancer",
 		Denoms: map[string]types.DenomWithZone{
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3": {ChainID: "cosmoshub-4", Denom: "uatom"},
-			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159": {ChainID: "osmosis-1", Denom: "uosmo"},
+			cosmosIBCDenom:  {ChainID: "cosmoshub-4", Denom: "uatom"},
+			osmosisIBCDenom: {ChainID: "osmosis-1", Denom: "uosmo"},
 		},
 	}
 
@@ -153,7 +158,7 @@ func (suite *KeeperTestSuite) executeUmeeReservesUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
 
-	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", umeetypes.KeyReserveAmount(umeeBaseDenom), types.ModuleName)
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", leveragetypes.KeyReserveAmount(umeeBaseDenom), types.ModuleName)
 
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
@@ -195,7 +200,7 @@ func (suite *KeeperTestSuite) executeUmeeLeverageModuleBalanceUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
 
-	accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
+	accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(leveragetypes.LeverageModuleName))
 
 	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/bank/key", append(accountPrefix, []byte(umeeBaseDenom)...), types.ModuleName)
 
@@ -239,7 +244,7 @@ func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
 
-	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", umeetypes.KeyUTokenSupply(umeetypes.UTokenPrefix+umeeBaseDenom), types.ModuleName)
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", leveragetypes.KeyUTokenSupply(leveragetypes.UTokenPrefix+umeeBaseDenom), types.ModuleName)
 
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
@@ -262,13 +267,13 @@ func (suite *KeeperTestSuite) executeUmeeUTokenSupplyUpdateCallback() {
 
 	want := &types.UmeeUTokenSupplyProtocolData{
 		UmeeProtocolData: types.UmeeProtocolData{
-			Denom:       umeetypes.UTokenPrefix + umeeBaseDenom,
+			Denom:       leveragetypes.UTokenPrefix + umeeBaseDenom,
 			LastUpdated: ctx.BlockTime(),
 			Data:        expectedData,
 		},
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, umeetypes.UTokenPrefix+umeeBaseDenom)
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeUmeeUTokenSupply, leveragetypes.UTokenPrefix+umeeBaseDenom)
 	suite.True(found)
 
 	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeUTokenSupply, pd.Data)
@@ -281,7 +286,7 @@ func (suite *KeeperTestSuite) executeUmeeTotalBorrowsUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
 
-	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", umeetypes.KeyAdjustedTotalBorrow(umeeBaseDenom), types.ModuleName)
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", leveragetypes.KeyAdjustedTotalBorrow(umeeBaseDenom), types.ModuleName)
 
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
@@ -323,7 +328,7 @@ func (suite *KeeperTestSuite) executeUmeeInterestScalarUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
 
-	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", umeetypes.KeyInterestScalar(umeeBaseDenom), types.ModuleName)
+	qid := icqkeeper.GenerateQueryHash(umeeTestConnection, umeeTestChain, "store/leverage/key", leveragetypes.KeyInterestScalar(umeeBaseDenom), types.ModuleName)
 
 	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
 	suite.True(found, "qid: %s", qid)
@@ -359,4 +364,135 @@ func (suite *KeeperTestSuite) executeUmeeInterestScalarUpdateCallback() {
 	suite.NoError(err)
 	result := value.(*types.UmeeInterestScalarProtocolData)
 	suite.Equal(want, result)
+}
+
+func (suite *KeeperTestSuite) executeCrescentPoolUpdateCallback() {
+	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+	ctx := suite.chainA.GetContext()
+
+	qid := icqkeeper.GenerateQueryHash(crescentTestConnection, crescentTestChain, "store/liquidity/key", liquiditytypes.GetPoolKey(1), types.ModuleName)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.Require().True(found, "qid: %s", qid)
+
+	var err error
+	poolResponse := liquiditytypes.Pool{Type: 0, Id: 1, PairId: 7, Creator: testCrescentAddress, ReserveAddress: testAddress, PoolCoinDenom: PoolCoinDenom, Disabled: false}
+	resp, _ := prk.GetCodec().Marshal(&poolResponse)
+
+	// setup for expected
+	var pdi liquiditytypes.Pool
+	err = prk.GetCodec().Unmarshal(resp, &pdi)
+	suite.Require().NoError(err)
+	expectedData, err := json.Marshal(pdi)
+	suite.Require().NoError(err)
+
+	err = keeper.CrescentPoolUpdateCallback(
+		ctx,
+		prk,
+		resp,
+		query,
+	)
+	suite.Require().NoError(err)
+
+	want := &types.CrescentPoolProtocolData{
+		PoolID:      1,
+		LastUpdated: ctx.BlockTime(),
+		PoolData:    expectedData,
+		Denoms: map[string]types.DenomWithZone{
+			cosmosIBCDenom:  {ChainID: "cosmoshub-4", Denom: "uatom"},
+			osmosisIBCDenom: {ChainID: "osmosis-1", Denom: "uosmo"},
+		},
+	}
+
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeCrescentPool, "1")
+	suite.Require().True(found)
+
+	icpd, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentPool, pd.Data)
+	suite.Require().NoError(err)
+	cpd := icpd.(*types.CrescentPoolProtocolData)
+	suite.Require().Equal(want, cpd)
+}
+
+func (suite *KeeperTestSuite) executeCrescentPoolCoinSupplyUpdateCallback() {
+	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+	ctx := suite.chainA.GetContext()
+
+	qid := icqkeeper.GenerateQueryHash(crescentTestConnection, crescentTestChain, "store/bank/key", append(banktypes.SupplyKey, []byte(PoolCoinDenom)...), types.ModuleName)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.Require().True(found, "qid: %s", qid)
+
+	data := sdk.NewInt(100000)
+	resp, err := data.Marshal()
+	suite.Require().NoError(err)
+	expectedData, err := json.Marshal(data)
+	suite.Require().NoError(err)
+
+	// setup for expected
+
+	err = keeper.CrescentPoolCoinSupplyUpdateCallback(
+		ctx,
+		prk,
+		resp,
+		query,
+	)
+	suite.Require().NoError(err)
+
+	want := &types.CrescentPoolCoinSupplyProtocolData{
+		PoolCoinDenom: PoolCoinDenom,
+		LastUpdated:   ctx.BlockTime(),
+		Supply:        expectedData,
+	}
+
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeCrescentPoolCoinSupply, PoolCoinDenom)
+	suite.Require().True(found)
+
+	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentPoolCoinSupply, pd.Data)
+	suite.Require().NoError(err)
+	result := value.(*types.CrescentPoolCoinSupplyProtocolData)
+	suite.Require().Equal(want, result)
+}
+
+func (suite *KeeperTestSuite) executeCrescentReserveBalanceUpdateCallback() {
+	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+	ctx := suite.chainA.GetContext()
+
+	_, addr, _ := bech32.DecodeAndConvert(testAddress)
+	accountPrefix := banktypes.CreateAccountBalancesPrefix(addr)
+
+	qid := icqkeeper.GenerateQueryHash(crescentTestConnection, crescentTestChain, "store/bank/key", append(accountPrefix, []byte(cosmosIBCDenom)...), types.ModuleName)
+
+	query, found := prk.IcqKeeper.GetQuery(ctx, qid)
+	suite.Require().True(found, "qid: %s", qid)
+
+	data := sdk.NewInt(1000000)
+	resp, err := data.Marshal()
+	suite.Require().NoError(err)
+	expectedData, err := json.Marshal(data)
+	suite.Require().NoError(err)
+
+	// setup for expected
+
+	err = keeper.CrescentReserveBalanceUpdateCallback(
+		ctx,
+		prk,
+		resp,
+		query,
+	)
+	suite.Require().NoError(err)
+
+	want := &types.CrescentReserveAddressBalanceProtocolData{
+		ReserveAddress: testAddress,
+		Denom:          cosmosIBCDenom,
+		LastUpdated:    ctx.BlockTime(),
+		Balance:        expectedData,
+	}
+
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, testAddress+cosmosIBCDenom)
+	suite.Require().True(found)
+
+	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentReserveAddressBalance, pd.Data)
+	suite.Require().NoError(err)
+	result := value.(*types.CrescentReserveAddressBalanceProtocolData)
+	suite.Require().Equal(want, result)
 }

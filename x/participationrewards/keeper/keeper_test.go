@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+
 	"cosmossdk.io/math"
 
 	testsuite "github.com/stretchr/testify/suite"
@@ -19,7 +21,6 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
@@ -29,10 +30,16 @@ import (
 )
 
 var (
-	testAddress        = addressutils.GenerateAddressForTestWithPrefix("cosmos")
-	umeeTestConnection = "connection-77003"
-	umeeTestChain      = "umee-types-1"
-	umeeBaseDenom      = "uumee"
+	testAddress         = addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	testCrescentAddress = addressutils.GenerateAddressForTestWithPrefix("cre")
+	umeeTestConnection  = "connection-77003"
+	umeeTestChain       = "umee-types-1"
+	umeeBaseDenom       = "uumee"
+
+	crescentTestConnection = "connection-7704"
+	crescentTestChain      = "crescent-types-1"
+	cosmosIBCDenom         = "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"
+	osmosisIBCDenom        = "ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159"
 )
 
 func init() {
@@ -101,8 +108,8 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.setupTestProtocolData()
 
 	akpd = quicksilver.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
-	// added 6 in setupTestProtocolData
-	suite.Equal(14, len(akpd))
+	// added 19 in setupTestProtocolData
+	suite.Equal(19, len(akpd))
 
 	// advance the chains
 	suite.coordinator.CommitNBlocks(suite.chainA, 1)
@@ -116,6 +123,9 @@ func (suite *KeeperTestSuite) coreTest() {
 	suite.executeUmeeInterestScalarUpdateCallback()
 	suite.executeUmeeLeverageModuleBalanceUpdateCallback()
 	suite.executeUmeeUTokenSupplyUpdateCallback()
+	suite.executeCrescentPoolUpdateCallback()
+	suite.executeCrescentPoolCoinSupplyUpdateCallback()
+	suite.executeCrescentReserveBalanceUpdateCallback()
 
 	suite.setupTestDeposits()
 	suite.setupTestIntents()
@@ -452,15 +462,50 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"{\"poolid\":%d,\"poolname\":%q,\"pooltype\":\"balancer\",\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
 			1,
 			"atom/osmo",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			cosmosIBCDenom,
 			"cosmoshub-4",
 			"uatom",
-			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159",
+			osmosisIBCDenom,
 			"osmosis-1",
 			"uosmo",
 		)),
 	)
-
+	// crescent params
+	suite.addProtocolData(
+		types.ProtocolDataTypeCrescentParams,
+		[]byte(fmt.Sprintf("{\"ChainID\": %q}", crescentTestChain)),
+	)
+	// crescent test chain
+	suite.addProtocolData(
+		types.ProtocolDataTypeConnection,
+		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", crescentTestConnection, crescentTestChain, 0)),
+	)
+	// crescent test pool
+	suite.addProtocolData(
+		types.ProtocolDataTypeCrescentPool,
+		[]byte(fmt.Sprintf(
+			"{\"poolid\":%d,\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
+			1,
+			cosmosIBCDenom,
+			"cosmoshub-4",
+			"uatom",
+			osmosisIBCDenom,
+			"osmosis-1",
+			"uosmo",
+		)),
+	)
+	// crescent-types test supply
+	cpd, _ := json.Marshal(types.CrescentPoolCoinSupplyProtocolData{PoolCoinDenom: PoolCoinDenom})
+	suite.addProtocolData(
+		types.ProtocolDataTypeCrescentPoolCoinSupply,
+		cpd,
+	)
+	// crescent-types reserve address balance
+	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testAddress, Denom: cosmosIBCDenom})
+	suite.addProtocolData(
+		types.ProtocolDataTypeCrescentReserveAddressBalance,
+		cpd,
+	)
 	// atom (cosmoshub) on osmosis
 	suite.addProtocolData(
 		types.ProtocolDataTypeLiquidToken,
@@ -468,7 +513,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
 			"osmosis-1",
 			"cosmoshub-4",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			cosmosIBCDenom,
 			"uqatom",
 		)),
 	)
@@ -478,7 +523,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
 			"testchain1",
 			"cosmoshub-4",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			cosmosIBCDenom,
 			"uqatom",
 		)),
 	)
