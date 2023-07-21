@@ -21,32 +21,32 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 
 	// get test zone
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 	zoneValidatorAddresses := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 
 	performanceDelegations := icsKeeper.GetAllPerformanceDelegations(ctx, &zone)
-	suite.Require().Len(performanceDelegations, 4)
+	suite.Len(performanceDelegations, 4)
 
 	performanceDelegationPointers := icsKeeper.GetAllPerformanceDelegationsAsPointer(ctx, &zone)
 	for i, pdp := range performanceDelegationPointers {
-		suite.Require().Equal(performanceDelegations[i], *pdp)
+		suite.Equal(performanceDelegations[i], *pdp)
 	}
 
 	// update performance delegation
 	updateDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
-	suite.Require().True(found)
-	suite.Require().Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
+	suite.True(found)
+	suite.Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
 
 	updateDelegation.Amount.Amount = sdkmath.NewInt(10000)
 	icsKeeper.SetPerformanceDelegation(ctx, &zone, updateDelegation)
 
 	updatedDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
-	suite.Require().True(found)
-	suite.Require().Equal(updateDelegation, updatedDelegation)
+	suite.True(found)
+	suite.Equal(updateDelegation, updatedDelegation)
 
 	// check that there are no delegations
 	delegations := icsKeeper.GetAllDelegations(ctx, &zone)
-	suite.Require().Len(delegations, 0)
+	suite.Len(delegations, 0)
 
 	// set delegations
 	icsKeeper.SetDelegation(
@@ -79,12 +79,12 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 
 	// check for delegations set above
 	delegations = icsKeeper.GetAllDelegations(ctx, &zone)
-	suite.Require().Len(delegations, 3)
+	suite.Len(delegations, 3)
 
 	// load and match pointers
 	delegationPointers := icsKeeper.GetAllDelegationsAsPointer(ctx, &zone)
 	for i, dp := range delegationPointers {
-		suite.Require().Equal(delegations[i], *dp)
+		suite.Equal(delegations[i], *dp)
 	}
 
 	// get delegations for delegation address and match

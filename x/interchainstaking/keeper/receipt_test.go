@@ -24,33 +24,33 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {
 
 	// get test zone
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
 
 	msg := banktypes.MsgSend{FromAddress: fromAddress, ToAddress: zone.DepositAddress.Address, Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1000000)))}
 	anymsg, err := codectypes.NewAnyWithValue(&msg)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	transaction := &tx.Tx{Body: &tx.TxBody{Messages: []*codectypes.Any{anymsg}}}
 	hash := randomutils.GenerateRandomHashAsHex(64)
 	hash2 := randomutils.GenerateRandomHashAsHex(64)
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 	// rr is 1.0
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	after := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, math.NewInt(1000000)), after)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, math.NewInt(1000000)), after)
 
 	zone.RedemptionRate = sdk.NewDecWithPrec(12, 1)
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash2, zone)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	after2 := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, math.NewInt(1833333)), after2)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, math.NewInt(1833333)), after2)
 }
 
 func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
@@ -62,22 +62,22 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 
 	// get test zone
 	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
 
 	msg := banktypes.MsgSend{FromAddress: fromAddress, ToAddress: zone.DelegationAddress.Address, Amount: sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(1000000)))}
 	anymsg, err := codectypes.NewAnyWithValue(&msg)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	transaction := &tx.Tx{Body: &tx.TxBody{Messages: []*codectypes.Any{anymsg}}}
 	hash := randomutils.GenerateRandomHashAsHex(64)
 
 	before := suite.GetQuicksilverApp(suite.chainA).BankKeeper.GetSupply(ctx, zone.LocalDenom)
-	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
+	suite.Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
-	// suite.Require().ErrorContains(err, "no sender found. Ignoring")
+	// suite.ErrorContains(err, "no sender found. Ignoring")
 	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash))
 	suite.Require().True(found)                  // check nilReceipt is found for hash
 	suite.Require().Equal("", nilReceipt.Sender) // check nilReceipt has empty sender

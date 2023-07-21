@@ -71,12 +71,12 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 
 			quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", TestChannel)
 			channel, cfound := quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.GetChannel(ctx, "transfer", "channel-0")
-			suite.Require().True(cfound)
+			suite.True(cfound)
 
 			ibcDenom := utils.DeriveIbcDenom(channel.Counterparty.PortId, channel.Counterparty.ChannelId, tc.amount.Denom)
 
 			err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(ibcDenom, tc.amount.Amount)))
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			if tc.feeAmount != nil {
 				params := quicksilver.InterchainstakingKeeper.GetParams(ctx)
@@ -85,10 +85,10 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 			}
 
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			suite.True(found)
 
 			sender := zone.WithdrawalAddress.Address
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			txMacc := quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName)
 			feeMacc := quicksilver.AccountKeeper.GetModuleAddress(authtypes.FeeCollectorName)
@@ -100,23 +100,23 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 				Sender:        sender,
 				Receiver:      quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName).String(),
 			}
-			suite.Require().NoError(quicksilver.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
+			suite.NoError(quicksilver.InterchainstakingKeeper.HandleMsgTransfer(ctx, &transferMsg))
 
 			txMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, txMacc)
 			feeMaccBalance := quicksilver.BankKeeper.GetAllBalances(ctx, feeMacc)
 			fmt.Println(feeMaccBalance)
 			zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			wdAccountBalance := quicksilver.BankKeeper.GetAllBalances(ctx, zoneAddress)
 
 			// assert that ics module balance is nil
-			suite.Require().Equal(sdk.Coins{}, txMaccBalance)
+			suite.Equal(sdk.Coins{}, txMaccBalance)
 
 			// assert that fee collector module balance is the expected value
-			suite.Require().Equal(feeMaccBalance.AmountOf(ibcDenom), tc.fcAmount)
+			suite.Equal(feeMaccBalance.AmountOf(ibcDenom), tc.fcAmount)
 
 			// assert that zone withdrawal address balance (local chain) is the expected value
-			suite.Require().Equal(wdAccountBalance.AmountOf(ibcDenom), tc.withdrawalAmount)
+			suite.Equal(wdAccountBalance.AmountOf(ibcDenom), tc.withdrawalAmount)
 		})
 	}
 }

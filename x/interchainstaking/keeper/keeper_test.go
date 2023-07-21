@@ -93,24 +93,24 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	ctx := suite.chainA.GetContext()
 
 	err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
 	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: ctx.BlockTime()})
 	quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0"})
-	suite.Require().NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
-	suite.Require().NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
-	suite.Require().NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
-	suite.Require().NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
 	for i := range vals {
-		suite.Require().NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
+		suite.NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
 	}
 
 	suite.coordinator.CommitNBlocks(suite.chainA, 2)
@@ -132,7 +132,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icatypes.PortID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
 
 	// channel, found := quicksilver.IBCKeeper.ChannelKeeper.GetChannel(ctx, portID, channelID)
-	// suite.Require().True(found)
+	// suite.True(found)
 	// fmt.Printf("DEBUG: channel >>>\n%v\n<<<\n", channel)
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, portID, channelID, 1)
@@ -187,11 +187,11 @@ func (suite *KeeperTestSuite) giveFunds(ctx sdk.Context, denom string, amount in
 		),
 	)
 	err := quicksilver.MintKeeper.MintCoins(ctx, balance)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 	addr, err := addressutils.AccAddressFromBech32(address, "")
-	suite.Require().NoError(err)
+	suite.NoError(err)
 	err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, balance)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 }
 
 func (suite *KeeperTestSuite) TestGetDelegatedAmount() {

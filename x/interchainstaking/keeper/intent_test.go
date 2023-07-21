@@ -23,12 +23,12 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 
 	// get test zone
 	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 	zoneValidatorAddresses := icsKeeper.GetValidators(ctx, zone.ChainId)
 
 	// check that there are no intents
 	intents := icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	suite.Require().Len(intents, 0)
+	suite.Len(intents, 0)
 
 	// set intents for testAddress
 	icsKeeper.SetDelegatorIntent(
@@ -110,7 +110,7 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 
 	// check for intents set above
 	intents = icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	suite.Require().Len(intents, 3)
+	suite.Len(intents, 3)
 
 	// delete intent for testAddress
 	icsKeeper.DeleteDelegatorIntent(ctx, &zone, testAddress, false)

@@ -61,15 +61,15 @@ func (suite *KeeperTestSuite) TestKeeper_Zones() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Zones))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Zones))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -123,11 +123,11 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidators() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
+			suite.NoError(err)
+			suite.NotNil(resp)
 			suite.Require().Equal(tt.expectLength, len(resp.Validators))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")

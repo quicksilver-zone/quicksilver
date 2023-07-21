@@ -241,10 +241,10 @@ func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 
 			queryResp := test.valset(chainBVals)
 			bz, err := quicksilver.AppCodec().Marshal(&queryResp)
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			err = keeper.ValsetCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			// valset callback doesn't actually update validators, but does emit icq callbacks.
 			test.checks(suite.Require(), ctx, quicksilver, chainBVals)
 		})
@@ -262,7 +262,7 @@ func (suite *KeeperTestSuite) TestHandleValsetCallbackBadChain() {
 
 		queryResp := stakingtypes.QueryValidatorsResponse{Validators: []stakingtypes.Validator{}}
 		bz, err := quicksilver.AppCodec().Marshal(&queryResp)
-		suite.Require().NoError(err)
+		suite.NoError(err)
 
 		err = keeper.ValsetCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: "badchain"})
 		// this should bail on a non-matching chain id.
