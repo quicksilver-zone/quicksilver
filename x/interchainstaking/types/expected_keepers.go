@@ -41,3 +41,6 @@ type BankKeeper interface {
 type IcsHooks interface {
 	AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accountPrefix string) error
 }
+
+type ClaimsManagerKeeper interface {
+}

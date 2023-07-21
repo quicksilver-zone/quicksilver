@@ -31,7 +31,6 @@ import (
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
-	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -47,7 +46,7 @@ type Keeper struct {
 	BankKeeper          types.BankKeeper
 	IBCKeeper           *ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
-	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
+	ClaimsManagerKeeper types.ClaimsManagerKeeper
 	Ir                  codectypes.InterfaceRegistry
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
@@ -65,7 +64,7 @@ func NewKeeper(
 	icqKeeper interchainquerykeeper.Keeper,
 	ibcKeeper *ibckeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
-	claimsManagerKeeper claimsmanagerkeeper.Keeper,
+	claimsManagerKeeper types.ClaimsManagerKeeper,
 	ps paramtypes.Subspace,
 ) *Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
