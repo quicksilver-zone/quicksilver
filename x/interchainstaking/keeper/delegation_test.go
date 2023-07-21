@@ -89,10 +89,10 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 
 	// get delegations for delegation address and match
 	addr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.GetAddress())
-	suite.Require().NoError(err)
+	suite.NoError(err)
 	dds := icsKeeper.GetDelegatorDelegations(ctx, &zone, addr)
-	suite.Require().Len(dds, 3)
-	suite.Require().Equal(delegations, dds)
+	suite.Len(dds, 3)
+	suite.Equal(delegations, dds)
 }
 
 type delegationUpdate struct {
@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) TestUpdateDelegation() {
 			qApp := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 			zone, found := qApp.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			suite.True(found)
 
 			if tt.delegation != nil {
 				qApp.InterchainstakingKeeper.SetDelegation(ctx, &zone, *tt.delegation)
@@ -210,12 +210,12 @@ func (suite *KeeperTestSuite) TestUpdateDelegation() {
 
 			for _, update := range tt.updates {
 				err := qApp.InterchainstakingKeeper.UpdateDelegationRecordForAddress(ctx, update.delegation.DelegationAddress, update.delegation.ValidatorAddress, update.delegation.Amount, &zone, update.absolute)
-				suite.Require().NoError(err)
+				suite.NoError(err)
 			}
 
 			actual, found := qApp.InterchainstakingKeeper.GetDelegation(ctx, &zone, tt.expected.DelegationAddress, tt.expected.ValidatorAddress)
-			suite.Require().True(found)
-			suite.Require().Equal(tt.expected, actual)
+			suite.True(found)
+			suite.Equal(tt.expected, actual)
 		})
 	}
 }
@@ -229,29 +229,29 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 		ctx := suite.chainA.GetContext()
 
 		zone, found := qApp.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.Require().True(found)
+		suite.True(found)
 
 		delegator := addressutils.GenerateAccAddressForTest()
 		validator := addressutils.GenerateValAddressForTest()
 
 		_, found = qApp.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegator.String(), validator.String())
-		suite.Require().False(found)
+		suite.False(found)
 
 		newDelegation := types.NewDelegation(delegator.String(), validator.String(), sdk.NewCoin("uatom", sdk.NewInt(5000)))
 		qApp.InterchainstakingKeeper.SetDelegation(ctx, &zone, newDelegation)
 
 		fetchedDelegation, found := qApp.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegator.String(), validator.String())
-		suite.Require().True(found)
-		suite.Require().Equal(newDelegation, fetchedDelegation)
+		suite.True(found)
+		suite.Equal(newDelegation, fetchedDelegation)
 
 		allDelegations := qApp.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)
-		suite.Require().Len(allDelegations, 1)
+		suite.Len(allDelegations, 1)
 
 		err := qApp.InterchainstakingKeeper.RemoveDelegation(ctx, &zone, newDelegation)
-		suite.Require().NoError(err)
+		suite.NoError(err)
 
 		allDelegations2 := qApp.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)
-		suite.Require().Len(allDelegations2, 0)
+		suite.Len(allDelegations2, 0)
 	})
 }
 
@@ -315,7 +315,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
@@ -324,7 +324,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					return false
 				})
 
-				suite.Require().Equal(0, count)
+				suite.Equal(0, count)
 				return true
 			},
 		},
@@ -368,14 +368,14 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
 					return false
 				})
-				suite.Require().Equal(1, count)
+				suite.Equal(1, count)
 				return true
 			},
 		},
@@ -420,14 +420,14 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
 					return false
 				})
-				suite.Require().Equal(1, count)
+				suite.Equal(1, count)
 				return true
 			},
 			mockAck:            true,
@@ -474,14 +474,14 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
 					return false
 				})
-				suite.Require().Equal(0, count)
+				suite.Equal(0, count)
 				return true
 			},
 			mockAck:            true,
@@ -528,14 +528,14 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
 					return false
 				})
-				suite.Require().Equal(1, count)
+				suite.Equal(1, count)
 				return true
 			},
 			// zero delegation balance must mean that we cannot delegate anything.
@@ -580,14 +580,14 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
 					return false
 				})
-				suite.Require().Equal(0, count)
+				suite.Equal(0, count)
 				return true
 			},
 			// delegation balance == 100, which equals the value of the second receipt.
@@ -606,23 +606,23 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 
 			test.setStatements(ctx, quicksilver)
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			suite.True(found)
 			err := quicksilver.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone, test.delAddrBalance)
 			// refetch zone after FlushOutstandingDelegations setZone().
 			ctx = suite.chainA.GetContext()
 			if test.mockAck {
 				var msgs []sdk.Msg
 				allocations, err := quicksilver.InterchainstakingKeeper.DeterminePlanForDelegation(ctx, &zone, test.expectedDelegation)
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msgs = append(msgs, quicksilver.InterchainstakingKeeper.PrepareDelegationMessagesForCoins(&zone, allocations)...)
 				for _, msg := range msgs {
 					err := quicksilver.InterchainstakingKeeper.HandleDelegate(ctx, msg, "batch/1577836910")
-					suite.Require().NoError(err)
+					suite.NoError(err)
 				}
 			}
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			isCorrect := test.assertStatements(ctx, quicksilver)
-			suite.Require().True(isCorrect)
+			suite.True(isCorrect)
 		})
 	}
 }

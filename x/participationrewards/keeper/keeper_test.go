@@ -96,13 +96,13 @@ func (suite *KeeperTestSuite) coreTest() {
 	// test ProtocolData
 	akpd := quicksilver.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
 	// initially we expect one - the 'local' chain
-	suite.Require().Equal(1, len(akpd))
+	suite.Equal(1, len(akpd))
 
 	suite.setupTestProtocolData()
 
 	akpd = quicksilver.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
 	// added 6 in setupTestProtocolData
-	suite.Require().Equal(14, len(akpd))
+	suite.Equal(14, len(akpd))
 
 	// advance the chains
 	suite.coordinator.CommitNBlocks(suite.chainA, 1)
@@ -129,19 +129,19 @@ func (suite *KeeperTestSuite) coreTest() {
 	ctx := suite.chainA.GetContext()
 
 	quicksilver.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		suite.Require().NoError(quicksilver.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
-		suite.Require().NoError(quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+		suite.NoError(quicksilver.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+		suite.NoError(quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
 		return false
 	})
 
 	_, found := quicksilver.ClaimsManagerKeeper.GetLastEpochClaim(ctx, "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
-	suite.Require().True(found)
+	suite.True(found)
 
 	quicksilver.EpochsKeeper.AfterEpochEnd(suite.chainA.GetContext(), epochtypes.EpochIdentifierEpoch, 3)
 
 	// zone for remote chain
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	valRewards := make(map[string]sdk.Dec)
 	for _, val := range quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID) {
@@ -199,23 +199,23 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), "07-tendermint-0", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
 
 	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: suite.chainA.GetContext().BlockTime()})
-	suite.Require().NoError(suite.setupChannelForICA(suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
 
 	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	for i := range vals {
-		suite.Require().NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
+		suite.NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
 	}
 
 	// self zone
 	performanceAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
 	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "testchain1.performance")
-	suite.Require().NoError(err)
+	suite.NoError(err)
 	withdrawalAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
 	withdrawalAccountOsmo, err := icstypes.NewICAAccount(withdrawalAddressOsmo, "testchain1.withdrawal")
-	suite.Require().NoError(err)
+	suite.NoError(err)
 	performanceAccountOsmo.WithdrawalAddress = withdrawalAddressOsmo
 
 	zoneSelf := icstypes.Zone{
@@ -261,12 +261,12 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	// cosmos zone
 	performanceAddressCosmos := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	performanceAccountCosmos, err := icstypes.NewICAAccount(performanceAddressCosmos, "cosmoshub-4.performance")
-	suite.Require().NoError(err)
+	suite.NoError(err)
 	performanceAccountCosmos.WithdrawalAddress = addressutils.GenerateAddressForTestWithPrefix("cosmos")
 
 	withdrawalAddressCosmos := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	withdrawalAccountCosmos, err := icstypes.NewICAAccount(withdrawalAddressCosmos, "cosmoshub-4.withdrawal")
-	suite.Require().NoError(err)
+	suite.NoError(err)
 	performanceAccountOsmo.WithdrawalAddress = withdrawalAddressCosmos
 
 	zoneCosmos := icstypes.Zone{
@@ -505,7 +505,7 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 
 	// add deposit to chainB zone
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	suite.addReceipt(
 		&zone,
@@ -516,7 +516,7 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 
 	// add deposit to cosmos zone
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), "cosmoshub-4")
-	suite.Require().True(found)
+	suite.True(found)
 
 	suite.addReceipt(
 		&zone,
@@ -527,7 +527,7 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 
 	// add deposit to osmosis zone
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), "osmosis-1")
-	suite.Require().True(found)
+	suite.True(found)
 
 	suite.addReceipt(
 		&zone,
@@ -568,7 +568,7 @@ func (suite *KeeperTestSuite) setupTestIntents() {
 
 	// chainB
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 	vals := quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID)
 
 	suite.addIntent(

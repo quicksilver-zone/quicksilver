@@ -67,11 +67,11 @@ func (suite *KeeperTestSuite) TestAllocateLockupRewards() {
 			allocation := tt.getAllocation(ctx, appA)
 
 			if err := appA.ParticipationRewardsKeeper.AllocateLockupRewards(ctx, math.NewInt(allocation)); err != nil {
-				suite.Require().True((err != nil) == tt.wantErr)
+				suite.True((err != nil) == tt.wantErr)
 				return
 			}
 			finalBalance := appA.ParticipationRewardsKeeper.GetModuleBalance(ctx).Int64()
-			suite.Require().Equal(initialBalance-finalBalance, allocation)
+			suite.Equal(initialBalance-finalBalance, allocation)
 		})
 	}
 }
