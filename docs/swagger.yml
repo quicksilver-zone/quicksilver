@@ -764,6 +764,7 @@ paths:
                         - ClaimTypeOsmosisPool
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
+                        - ClaimTypeUmeeToken
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -923,6 +924,7 @@ paths:
                         - ClaimTypeOsmosisPool
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
+                        - ClaimTypeUmeeToken
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -1084,6 +1086,7 @@ paths:
                         - ClaimTypeOsmosisPool
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
+                        - ClaimTypeUmeeToken
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -1245,6 +1248,7 @@ paths:
                         - ClaimTypeOsmosisPool
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
+                        - ClaimTypeUmeeToken
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -1688,8 +1692,12 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
 
-                     Example 3: Pack and unpack a message in Python.
+                    Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -1699,7 +1707,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                     Example 4: Pack and unpack a message in Go
+                    Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -1727,10 +1735,8 @@ paths:
                     name "y.z".
 
 
-
                     JSON
 
-                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -1999,8 +2005,12 @@ paths:
                         if (any.is(Foo.class)) {
                           foo = any.unpack(Foo.class);
                         }
+                        // or ...
+                        if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                          foo = any.unpack(Foo.getDefaultInstance());
+                        }
 
-                     Example 3: Pack and unpack a message in Python.
+                    Example 3: Pack and unpack a message in Python.
 
                         foo = Foo(...)
                         any = Any()
@@ -2010,7 +2020,7 @@ paths:
                           any.Unpack(foo)
                           ...
 
-                     Example 4: Pack and unpack a message in Go
+                    Example 4: Pack and unpack a message in Go
 
                          foo := &pb.Foo{...}
                          any, err := anypb.New(foo)
@@ -2038,10 +2048,8 @@ paths:
                     name "y.z".
 
 
-
                     JSON
 
-                    ====
 
                     The JSON representation of an `Any` value uses the regular
 
@@ -2640,6 +2648,8 @@ paths:
                       type: string
                       format: date-time
                     requeued:
+                      type: boolean
+                    acknowledged:
                       type: boolean
               pagination:
                 type: object
@@ -4419,6 +4429,8 @@ paths:
                       format: date-time
                     requeued:
                       type: boolean
+                    acknowledged:
+                      type: boolean
               pagination:
                 type: object
                 properties:
@@ -4609,6 +4621,8 @@ paths:
                       type: string
                       format: date-time
                     requeued:
+                      type: boolean
+                    acknowledged:
                       type: boolean
               pagination:
                 type: object
@@ -4918,6 +4932,7 @@ paths:
                   - ClaimTypeOsmosisPool
                   - ClaimTypeCrescentPool
                   - ClaimTypeSifchainPool
+                  - ClaimTypeUmeeToken
                 default: ClaimTypeUndefined
                 title: '- ClaimTypeUndefined: Undefined action (per protobuf spec)'
               proofs:

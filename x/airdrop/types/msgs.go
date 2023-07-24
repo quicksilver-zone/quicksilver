@@ -6,12 +6,9 @@ import (
 	"fmt"
 
 	sdkioerrors "cosmossdk.io/errors"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/ingenuity-build/multierror"
 )
 
 // airdrop message types.
