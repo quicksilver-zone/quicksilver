@@ -10,6 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	ibctmmigrations "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/migrations"
 
 	"github.com/ingenuity-build/quicksilver/app/keepers"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
@@ -34,6 +36,8 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010404beta7UpgradeName, CreateUpgradeHandler: V010404beta7UpgradeHandler},
 		{UpgradeName: V010404rc0UpgradeName, CreateUpgradeHandler: V010404rc0UpgradeHandler},
 		{UpgradeName: V010404beta8UpgradeName, CreateUpgradeHandler: V010404beta8UpgradeHandler},
+		{UpgradeName: IBCv6tov7UpgradeName, CreateUpgradeHandler: IBCv6tov7UpgradeHandler},
+		{UpgradeName: IBCv7tov71UpgradeName, CreateUpgradeHandler: IBCv7tov71UpgradeHandler},
 	}
 }
 
@@ -462,6 +466,42 @@ func V010404beta8UpgradeHandler(
 				appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
 				return false
 			})
+		}
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func IBCv6tov7UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) || isDevnet(ctx) {
+			cdc := appKeepers.InterchainstakingKeeper.GetCodec()
+
+			// prune expired tendermint consensus states to save storage space
+			_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, cdc, appKeepers.IBCKeeper.ClientKeeper)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func IBCv7tov71UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) || isDevnet(ctx) {
+			// explicitly update the IBC 02-client params, adding the localhost client type
+			params := appKeepers.IBCKeeper.ClientKeeper.GetParams(ctx)
+			params.AllowedClients = append(params.AllowedClients, ibcexported.Localhost)
+			appKeepers.IBCKeeper.ClientKeeper.SetParams(ctx, params)
+
 		}
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
