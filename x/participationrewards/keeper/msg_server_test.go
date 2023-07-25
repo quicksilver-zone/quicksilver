@@ -317,6 +317,36 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"",
 		},
 		{
+			"valid_osmosis_bank_proof",
+			func() {
+				userAddress := addressutils.GenerateAccAddressForTest()
+				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
+				bankkey = append(bankkey, []byte("gamm/1")...)
+
+				cd := math.NewInt(10000000)
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: userAddress.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "osmosis-1",
+					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       bankkey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    0,
+							ProofType: types.ProofTypeBank,
+						},
+					},
+				}
+			},
+			&types.MsgSubmitClaimResponse{},
+			"",
+		},
+		{
 			"valid_liquid",
 			func() {
 				address := addressutils.GenerateAccAddressForTest()

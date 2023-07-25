@@ -8,7 +8,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
 	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
-	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -86,7 +85,7 @@ func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 				return 0, err
 			}
 			poolID, _ := strconv.Atoi(poolDenom[strings.LastIndex(poolDenom, "/")+1:])
-			lock = osmolockup.NewPeriodLock(uint64(poolID), addr, math.MaxUint64, time.Time{}, sdk.NewCoins(coin))
+			lock = osmolockup.NewPeriodLock(uint64(poolID), addr, time.Hour, time.Time{}, sdk.NewCoins(coin))
 		} else {
 			lock = osmolockup.PeriodLock{}
 			err := k.cdc.Unmarshal(proof.Data, &lock)
