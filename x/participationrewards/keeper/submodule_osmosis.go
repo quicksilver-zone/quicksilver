@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
-	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 	"strconv"
 	"strings"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
+	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
