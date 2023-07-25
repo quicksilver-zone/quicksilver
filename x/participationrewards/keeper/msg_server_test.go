@@ -482,6 +482,35 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			},
 			want: &types.MsgSubmitClaimResponse{},
 		},
+		{
+			name: "valid_crescent_bank_proof",
+			malleate: func() {
+				userAddress := addressutils.GenerateAccAddressForTest()
+				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
+				bankkey = append(bankkey, []byte("pool1")...)
+
+				cd := math.NewInt(1000)
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: userAddress.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeCrescentPool,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       bankkey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: types.ProofTypeBank,
+						},
+					},
+				}
+			},
+			want: &types.MsgSubmitClaimResponse{},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
