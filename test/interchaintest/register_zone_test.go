@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/icza/dyno"
 	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -25,7 +26,7 @@ const (
 	maxDepositPeriod = "10s"
 )
 
-// Spin up a quicksilverd chain, push a contract, and get that contract code from chain
+// Spin up a quicksilverd chain, push a contract, and get that contract code from chain. Submit a proposal to register zones and query zones.
 func TestRegisterZone(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
@@ -40,6 +41,7 @@ func TestRegisterZone(t *testing.T) {
 
 	ctx := context.Background()
 
+	// Get both chains
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
 			ChainConfig: ibc.ChainConfig{
@@ -58,17 +60,33 @@ func TestRegisterZone(t *testing.T) {
 				ModifyGenesis:  modifyGenesisShortProposals(votingPeriod, maxDepositPeriod),
 			},
 		},
+		{
+			Name:    "juno",
+			Version: "v14.1.0",
+		},
 	})
 
 	t.Logf("Calling cf.Chains")
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
-	quicksilverd := chains[0]
+	quicksilverd, juno := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
+	// Get a relayer instance
+	r := interchaintest.NewBuiltinRelayerFactory(ibc.Hermes, zaptest.NewLogger(t)).Build(t, client, network)
+
+	// Build the network; spin up the chains and configure the relayer
 	t.Logf("NewInterchain")
 	ic := interchaintest.NewInterchain().
-		AddChain(quicksilverd)
+		AddChain(quicksilverd).
+		AddChain(juno).
+		AddRelayer(r, "rly").
+		AddLink(interchaintest.InterchainLink{
+			Chain1:  quicksilverd,
+			Chain2:  juno,
+			Relayer: r,
+			Path:    pathQuicksilverJuno,
+		})
 
 	t.Logf("Interchain build options")
 	require.NoError(t, ic.Build(ctx, eRep, interchaintest.InterchainBuildOptions{
@@ -85,21 +103,56 @@ func TestRegisterZone(t *testing.T) {
 
 	// Create and Fund User Wallets
 	fundAmount := int64(10_000_000_000)
-	users := interchaintest.GetAndFundTestUsers(t, ctx, "default", int64(fundAmount), quicksilverd)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, "default", int64(fundAmount), quicksilverd, juno)
 	quicksilverd1User := users[0]
+	juno1User := users[1]
 
-	err = testutil.WaitForBlocks(ctx, 10, quicksilverd)
+	err = testutil.WaitForBlocks(ctx, 10, quicksilverd, juno)
 	require.NoError(t, err)
 
 	quicksilverd1UserBalInitial, err := quicksilverd.GetBalance(ctx, quicksilverd1User.FormattedAddress(), quicksilverd.Config().Denom)
 	require.NoError(t, err)
 	require.Equal(t, fundAmount, quicksilverd1UserBalInitial)
 
-	quicksilverdChain := quicksilverd.(*cosmos.CosmosChain)
+	juno1UserBalInitial, err := juno.GetBalance(ctx, juno1User.FormattedAddress(), juno.Config().Denom)
+	require.NoError(t, err)
+	require.Equal(t, fundAmount, juno1UserBalInitial)
+
+	// Generate a new IBC path
+	err = r.GeneratePath(ctx, eRep, quicksilverd.Config().ChainID, juno.Config().ChainID, pathQuicksilverJuno)
+	require.NoError(t, err)
+
+	// Create new clients
+	err = r.CreateClients(ctx, eRep, pathQuicksilverJuno, ibc.CreateClientOptions{TrustingPeriod: "330h"})
+	require.NoError(t, err)
+
+	// Create a new connection
+	err = r.CreateConnections(ctx, eRep, pathQuicksilverJuno)
+	require.NoError(t, err)
+
+	// Create a new channel
+	err = r.CreateChannel(ctx, eRep, pathQuicksilverJuno, ibc.DefaultChannelOpts())
+	require.NoError(t, err)
+
+	// Query for the newly created channel
+	quickChannels, err := r.GetChannels(ctx, eRep, quicksilverd.Config().ChainID)
+	require.NoError(t, err)
+	fmt.Println("Channel", quickChannels)
+
+	// Start the relayer and set the cleanup function.
+	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverJuno))
+	t.Cleanup(
+		func() {
+			err := r.StopRelayer(ctx, eRep)
+			if err != nil {
+				panic(fmt.Errorf("an error occurred while stopping the relayer: %s", err))
+			}
+		},
+	)
 
 	proposal := cosmos.TxProposalv1{
 		Metadata: "none",
-		Deposit:  "500000000" + quicksilverdChain.Config().Denom, // greater than min deposit
+		Deposit:  "500000000" + quicksilverd.Config().Denom, // greater than min deposit
 		Title:    "title",
 		Summary:  "suma",
 	}
@@ -118,31 +171,37 @@ func TestRegisterZone(t *testing.T) {
 		Decimals:         6,
 	}
 
+	check, err := cdctypes.NewAnyWithValue(&content)
+
 	message := govv1.MsgExecLegacyContent{
-		Content:   content,
+		Content:   check,
 		Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
 	}
 	msg, err := quicksilverd.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
 	fmt.Println("Msg: ", string(msg))
 	require.NoError(t, err)
 	proposal.Messages = append(proposal.Messages, msg)
-	proposalTx, err := quicksilverdChain.SubmitProposal(ctx, quicksilverd1User.KeyName(), proposal)
+
+	// Submit Proposal
+	proposalTx, err := quicksilverd.SubmitProposal(ctx, quicksilverd1User.KeyName(), proposal)
 	require.NoError(t, err, "error submitting proposal tx")
 
 	height, err := quicksilverd.Height(ctx)
 	require.NoError(t, err, "error fetching height before submit upgrade proposal")
 
-	err = quicksilverdChain.VoteOnProposalAllValidators(ctx, proposalTx.ProposalID, cosmos.ProposalVoteYes)
+	err = quicksilverd.VoteOnProposalAllValidators(ctx, proposalTx.ProposalID, cosmos.ProposalVoteYes)
 	require.NoError(t, err, "failed to submit votes")
 
-	_, err = cosmos.PollForProposalStatus(ctx, quicksilverdChain, height, height+heightDelta, proposalTx.ProposalID, cosmos.ProposalStatusPassed)
+	_, err = cosmos.PollForProposalStatus(ctx, quicksilverd, height, height+heightDelta, proposalTx.ProposalID, cosmos.ProposalStatusPassed)
 	require.NoError(t, err, "proposal status did not change to passed in expected number of blocks")
 
 	err = testutil.WaitForBlocks(ctx, 2, quicksilverd)
 	require.NoError(t, err)
 
-	address, _, err := quicksilverdChain.Validators[0].ExecQuery(ctx, "interchainstaking zones --output=json | jq .zones[0].deposit_address.address -r")
-	require.Equal(t, nil, address)
+	stdout, _, err := quicksilverd.Validators[0].ExecQuery(ctx, "interchainstaking", "zones", "--output=json")
+
+	t.Logf("zones: %s", stdout)
+	// TODO: Need address not nil
 	require.NoError(t, err)
 }
 
