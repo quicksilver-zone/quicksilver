@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	umee "github.com/ingenuity-build/quicksilver/umee-types"
+	umee "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types"
+	leveragetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
 
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 
@@ -15,7 +16,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	umeetypes "github.com/ingenuity-build/quicksilver/umee-types/leverage/types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
@@ -65,7 +65,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			"store/leverage/key",
-			umeetypes.KeyReserveAmount(reserves.Denom),
+			leveragetypes.KeyReserveAmount(reserves.Denom),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeReservesUpdateCallbackID,
@@ -87,7 +87,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			"store/leverage/key",
-			umeetypes.KeyInterestScalar(interest.Denom),
+			leveragetypes.KeyInterestScalar(interest.Denom),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeInterestScalarUpdateCallbackID,
@@ -110,7 +110,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			"store/leverage/key",
-			umeetypes.KeyUTokenSupply(supply.Denom),
+			leveragetypes.KeyUTokenSupply(supply.Denom),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeUTokenSupplyUpdateCallbackID,
@@ -120,16 +120,14 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 		return false
 	})
 
-	// TODO: check module spendable coins retrieval
-	// assuming that module account is not a vesting account so there
-	// will be no locked coins to subtract from the total balance
+	// umee-types leverage module balance update
 	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeUmeeLeverageModuleBalance), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		ibalance, err := types.UnmarshalProtocolData(types.ProtocolDataTypeUmeeLeverageModuleBalance, data.Data)
 		if err != nil {
 			return false
 		}
 		balance, _ := ibalance.(*types.UmeeLeverageModuleBalanceProtocolData)
-		accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
+		accountPrefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(leveragetypes.LeverageModuleName))
 
 		// update leverage module balance
 		k.IcqKeeper.MakeRequest(
@@ -160,7 +158,7 @@ func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 			connectionData.ConnectionID,
 			connectionData.ChainID,
 			"store/leverage/key",
-			umeetypes.KeyAdjustedTotalBorrow(borrows.Denom),
+			leveragetypes.KeyAdjustedTotalBorrow(borrows.Denom),
 			sdk.NewInt(-1),
 			types.ModuleName,
 			UmeeTotalBorrowsUpdateCallbackID,
@@ -202,7 +200,7 @@ func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubm
 			return 0, err
 		}
 
-		denom := umeetypes.ToTokenDenom(udenom)
+		denom := leveragetypes.ToTokenDenom(udenom)
 
 		data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, fmt.Sprintf("%s_%s", msg.SrcZone, denom))
 		if !found {
