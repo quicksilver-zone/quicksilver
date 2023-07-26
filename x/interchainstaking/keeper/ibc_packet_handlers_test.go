@@ -767,6 +767,115 @@ func (s *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	s.Require().False(found)
 }
 
+func (s *KeeperTestSuite) TestReceiveAckForBeginRedelegate() {
+	tests := []struct {
+		name          string
+		setStatements func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any, icstypes.RedelegationRecord)
+	}{
+		{
+			name: "msg response with redeleagtion record found",
+			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any, icstypes.RedelegationRecord) {
+				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				if !found {
+					s.Fail("unable to retrieve zone for test")
+				}
+
+				// create redelegation record
+				record := icstypes.RedelegationRecord{
+					ChainId:     s.chainB.ChainID,
+					EpochNumber: 1,
+					Source:      zone.Validators[0].ValoperAddress,
+					Destination: zone.Validators[1].ValoperAddress,
+					Amount:      1000,
+				}
+
+				app.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+
+				redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: zone.Validators[0].ValoperAddress, ValidatorDstAddress: zone.Validators[1].ValoperAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
+
+				response := stakingtypes.MsgBeginRedelegateResponse{
+					CompletionTime: ctx.BlockTime().Add(1 * time.Hour),
+				}
+				anyresponse, _ := codectypes.NewAnyWithValue(&response)
+				return []sdk.Msg{redelegate}, anyresponse, record
+			},
+		},
+		{
+			name: "msg response with redeleagtion record not found",
+			setStatements: func(ctx sdk.Context, app *app.Quicksilver) ([]sdk.Msg, *codectypes.Any, icstypes.RedelegationRecord) {
+				zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+				if !found {
+					s.Fail("unable to retrieve zone for test")
+				}
+
+				// create redelegation record
+				record := icstypes.RedelegationRecord{
+					ChainId:     s.chainB.ChainID,
+					EpochNumber: 1,
+					Source:      zone.Validators[0].ValoperAddress,
+					Destination: zone.Validators[1].ValoperAddress,
+					Amount:      1000,
+				}
+
+				redelegate := &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: record.Source, ValidatorDstAddress: record.Destination, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(record.Amount))}
+
+				response := stakingtypes.MsgBeginRedelegateResponse{
+					CompletionTime: ctx.BlockTime().Add(1 * time.Hour),
+				}
+				anyresponse, _ := codectypes.NewAnyWithValue(&response)
+				return []sdk.Msg{redelegate}, anyresponse, record
+			},
+		},
+	}
+
+	for _, test := range tests {
+		s.Run(test.name, func() {
+			s.SetupTest()
+			s.setupTestZones()
+
+			app := s.GetQuicksilverApp(s.chainA)
+			ctx := s.chainA.GetContext()
+
+			msg, anyResp, record := test.setStatements(ctx, app)
+
+			txMsgData := &sdk.TxMsgData{
+				Data:         []*sdk.MsgData{},
+				MsgResponses: []*codectypes.Any{anyResp},
+			}
+
+			ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+
+			acknowledgement := channeltypes.Acknowledgement{
+				Response: &channeltypes.Acknowledgement_Result{
+					Result: ackData,
+				},
+			}
+
+			pdBytes, err := icatypes.SerializeCosmosTx(icatypes.ModuleCdc, msg)
+			s.NoError(err)
+			packetData := icatypes.InterchainAccountPacketData{
+				Type: icatypes.EXECUTE_TX,
+				Data: pdBytes,
+				Memo: fmt.Sprintf("rebalance/%d", 1),
+			}
+
+			packetBytes, err := icatypes.ModuleCdc.MarshalJSON(&packetData)
+			s.NoError(err)
+			packet := channeltypes.Packet{
+				Data: packetBytes,
+			}
+
+			s.NoError(app.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, icatypes.ModuleCdc.MustMarshalJSON(&acknowledgement)))
+
+			got, found := app.InterchainstakingKeeper.GetRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
+			s.True(found)
+
+			s.NotEqual(record.CompletionTime, got.CompletionTime)
+
+		})
+	}
+}
+
 func (s *KeeperTestSuite) Test_v045Callback() {
 	tests := []struct {
 		name             string

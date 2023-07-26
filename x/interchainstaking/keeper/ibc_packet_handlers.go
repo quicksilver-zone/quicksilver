@@ -745,7 +745,13 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	record, found := k.GetRedelegationRecord(ctx, zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	if !found {
 		k.Logger(ctx).Error("unable to find redelegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch", epochNumber)
-		return fmt.Errorf("unable to find redelegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
+		k.Logger(ctx).Error("creating the redelegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch", epochNumber)
+		record = types.RedelegationRecord{
+			ChainId:     zone.ChainId,
+			EpochNumber: epochNumber,
+			Source:      redelegateMsg.ValidatorSrcAddress,
+			Destination: redelegateMsg.ValidatorDstAddress,
+		}
 	}
 	k.Logger(ctx).Info("updating redelegation record with completion time", "completion", completion)
 	record.CompletionTime = completion
