@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
@@ -643,4 +644,70 @@ func (s *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	s.Require().True(found)
 
 	s.Require().Equal(sdk.NewDecWithPrec(676666666666666667, 18), zone.RedemptionRate)
+}
+
+func (s *KeeperTestSuite) TestRemoveDuplicates() {
+	testCases := []struct {
+		input    icskeeper.RebalanceTargets
+		expected icskeeper.RebalanceTargets
+	}{
+		// Test case with empty input
+		{
+			input:    icskeeper.RebalanceTargets{},
+			expected: icskeeper.RebalanceTargets{},
+		},
+		// Test case with no duplicates
+		{
+			input: icskeeper.RebalanceTargets{
+				{Amount: math.NewInt(100), Source: "A", Target: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u"},
+				{Amount: math.NewInt(200), Source: "cosmosvaloper13x4pynlp86prhcmtns742kgsgu7pjtzj4djh7s", Target: "cosmosvaloper103agss48504gkk3la5xcg5kxplaf6ttnuv234h"},
+				{Amount: math.NewInt(300), Source: "E", Target: "F"},
+			},
+			expected: icskeeper.RebalanceTargets{
+				{Amount: math.NewInt(100), Source: "A", Target: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u"},
+				{Amount: math.NewInt(200), Source: "cosmosvaloper13x4pynlp86prhcmtns742kgsgu7pjtzj4djh7s", Target: "cosmosvaloper103agss48504gkk3la5xcg5kxplaf6ttnuv234h"},
+				{Amount: math.NewInt(300), Source: "E", Target: "F"},
+			},
+		},
+		// Test case with duplicates
+		{
+			input: icskeeper.RebalanceTargets{
+				{Amount: math.NewInt(100), Source: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag", Target: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u"},
+				{Amount: math.NewInt(200), Source: "cosmosvaloper13x4pynlp86prhcmtns742kgsgu7pjtzj4djh7s", Target: "cosmosvaloper103agss48504gkk3la5xcg5kxplaf6ttnuv234h"},
+				{Amount: math.NewInt(100), Source: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag", Target: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u"},
+				{Amount: math.NewInt(200), Source: "cosmosvaloper13x4pynlp86prhcmtns742kgsgu7pjtzj4djh7s", Target: "cosmosvaloper103agss48504gkk3la5xcg5kxplaf6ttnuv234h"},
+			},
+			expected: icskeeper.RebalanceTargets{
+				{Amount: math.NewInt(100), Source: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag", Target: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u"},
+				{Amount: math.NewInt(200), Source: "cosmosvaloper13x4pynlp86prhcmtns742kgsgu7pjtzj4djh7s", Target: "cosmosvaloper103agss48504gkk3la5xcg5kxplaf6ttnuv234h"},
+			},
+		},
+		// Test case with different combinations of Amount, Source, and Target
+		{
+			input: icskeeper.RebalanceTargets{
+				{Amount: math.NewInt(100), Source: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag", Target: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u"},
+				{Amount: math.NewInt(100), Source: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u", Target: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag"},
+				{Amount: math.NewInt(200), Source: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag", Target: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u"},
+				{Amount: math.NewInt(100), Source: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag", Target: "cosmosvaloper13x4pynlp86prhcmtns742kgsgu7pjtzj4djh7s"},
+			},
+			expected: icskeeper.RebalanceTargets{
+				{Amount: math.NewInt(100), Source: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag", Target: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u"},
+				{Amount: math.NewInt(100), Source: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u", Target: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag"},
+				{Amount: math.NewInt(200), Source: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag", Target: "cosmosvaloper1u6ddcsjueax884l3tfrs66497c7g86skn7pa0u"},
+				{Amount: math.NewInt(100), Source: "cosmosvaloper1ul2me6vukg2vac2p6ltxmqlaa7jywdgt8q76ag", Target: "cosmosvaloper13x4pynlp86prhcmtns742kgsgu7pjtzj4djh7s"},
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		s.SetupTest()
+		s.setupTestZones()
+
+		got := tc.input.RemoveDuplicates()
+
+		if !reflect.DeepEqual(got, tc.expected) {
+			s.Fail("got: %v\nexpected: %v", got, tc.expected)
+
+		}
+	}
 }

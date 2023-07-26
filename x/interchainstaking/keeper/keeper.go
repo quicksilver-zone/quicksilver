@@ -497,7 +497,7 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
 	currentAllocations, currentSum := k.GetDelegationMap(ctx, &zone)
 	targetAllocations := zone.GetAggregateIntentOrDefault()
-	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId))
+	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId)).RemoveDuplicates()
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingTypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
@@ -523,7 +523,23 @@ type RebalanceTarget struct {
 	Target string
 }
 
-func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents, existingRedelegations []types.RedelegationRecord) []RebalanceTarget {
+type RebalanceTargets []RebalanceTarget
+
+func (rb RebalanceTargets) RemoveDuplicates() RebalanceTargets {
+	encountered := make(map[string]bool)
+	result := make(RebalanceTargets, 0)
+
+	for _, r := range rb {
+		key := fmt.Sprintf("%v-%s-%s", r.Amount.String(), r.Source, r.Target)
+		if !encountered[key] {
+			encountered[key] = true
+			result = append(result, r)
+		}
+	}
+	return result
+}
+
+func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents, existingRedelegations []types.RedelegationRecord) RebalanceTargets {
 	out := make([]RebalanceTarget, 0)
 	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
 
