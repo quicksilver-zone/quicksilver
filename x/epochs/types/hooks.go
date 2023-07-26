@@ -3,9 +3,9 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
 
-	"github.com/ingenuity-build/quicksilver/osmosis-types/osmoutils"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type EpochHooks interface {
