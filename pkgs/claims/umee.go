@@ -3,6 +3,8 @@ package claims
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,10 +15,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
-	"time"
 )
 
 func UmeeClaim(
@@ -83,7 +85,7 @@ func UmeeClaim(
 
 	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
 	abciquery, err := client.ABCIQueryWithOptions(
-		context.Background(),
+		ctx,
 		"/cosmos.bank.v1beta1.Query/AllBalances",
 		bytes,
 		rpcclient.ABCIQueryOptions{Height: height},
@@ -95,13 +97,16 @@ func UmeeClaim(
 	}
 	bankQueryResponse := banktypes.QueryAllBalancesResponse{}
 	err = marshaler.Unmarshal(abciquery.Response.Value, &bankQueryResponse)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	leveragequery := leverage.QueryAccountBalances{Address: umeeAddress}
 	bytes = marshaler.MustMarshal(&leveragequery)
 	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
 	abciquery, err = client.ABCIQueryWithOptions(
-		context.Background(),
-		"/umee.leverage.v1.Query/AccountBalances",
+		ctx,
+		"/umee/leverage/v1/account_balances",
 		bytes,
 		rpcclient.ABCIQueryOptions{Height: height},
 	)
@@ -112,6 +117,9 @@ func UmeeClaim(
 	}
 	leverageQueryResponse := leverage.QueryAccountBalancesResponse{}
 	err = marshaler.Unmarshal(abciquery.Response.Value, &leverageQueryResponse)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// add GetFiltered to CacheManager, to allow filtered lookups on a single field == value
 	tokens := func(in []prewards.LiquidAllowedDenomProtocolData) map[string]TokenTuple {
@@ -122,12 +130,12 @@ func UmeeClaim(
 			}
 		}
 		return out
-	}(tokensManager.Get())
+	}(tokensManager.Get(ctx))
 
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
 
-	//bank balance
+	// bank balance
 	for _, coin := range bankQueryResponse.Balances {
 		if len(coin.GetDenom()) < 2 || coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
 			continue
@@ -152,7 +160,8 @@ func UmeeClaim(
 		accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
 		lookupKey := append(accountPrefix, []byte(coin.GetDenom())...)
 		abciquery, err := client.ABCIQueryWithOptions(
-			context.Background(), "/store/bank/key",
+			ctx,
+			"/store/bank/key",
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 		)
@@ -191,7 +200,7 @@ func UmeeClaim(
 		msg[tuple.chain] = chainMsg
 	}
 
-	//leverage account balance
+	// leverage account balance
 	for _, coin := range leverageQueryResponse.Collateral {
 		if len(coin.GetDenom()) < 2 || coin.GetDenom()[0:2] != leveragetypes.UTokenPrefix {
 			continue
@@ -215,7 +224,8 @@ func UmeeClaim(
 
 		lookupKey := leveragetypes.KeyCollateralAmount(addrBytes, coin.GetDenom())
 		abciquery, err := client.ABCIQueryWithOptions(
-			context.Background(), "/store/leverage/key",
+			ctx,
+			"/store/leverage/key",
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 		)

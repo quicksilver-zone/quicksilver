@@ -1,6 +1,7 @@
 package types
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,9 +14,9 @@ type Data[T any] struct {
 }
 
 type CacheManagerI[T any] interface {
-	Init(url string, updateTime time.Duration)
-	Fetch()
-	Get() []T
+	Init(ctx context.Context, url string, updateTime time.Duration)
+	Fetch(ctx context.Context)
+	Get(ctx context.Context) []T
 }
 
 var _ CacheManagerI[any] = &CacheManager[any]{}
@@ -27,15 +28,20 @@ type CacheManager[T any] struct {
 	duration    time.Duration
 }
 
-func (c *CacheManager[T]) Init(url string, updateInterval time.Duration) {
+func (c *CacheManager[T]) Init(ctx context.Context, url string, updateInterval time.Duration) {
 	c.url = url
 	c.duration = updateInterval
-	c.Fetch()
+	c.Fetch(ctx)
 }
 
-func (c *CacheManager[T]) Fetch() {
+func (c *CacheManager[T]) Fetch(ctx context.Context) {
 	fmt.Println("Fetching and caching " + c.url)
-	response, err := http.Get(c.url)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.url, http.NoBody)
+	if err != nil {
+		panic(err)
+	}
+
+	response, err := http.DefaultClient.Do(req)
 	if err != nil {
 		panic(err)
 	}
@@ -57,9 +63,9 @@ func (c *CacheManager[T]) Fetch() {
 	c.lastUpdated = time.Now()
 }
 
-func (c CacheManager[T]) Get() []T {
+func (c CacheManager[T]) Get(ctx context.Context) []T {
 	if time.Now().After(c.lastUpdated.Add(c.duration)) {
-		c.Fetch()
+		c.Fetch(ctx)
 	}
 	return c.cache
 }

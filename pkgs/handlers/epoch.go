@@ -7,15 +7,16 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/ingenuity-build/xcclookup/internal/multierror"
+	"github.com/ingenuity-build/multierror"
+	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+
 	"github.com/ingenuity-build/xcclookup/pkgs/claims"
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
-
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func GetEpochHandler(
+	ctx context.Context,
 	cfg types.Config,
 	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
 	osmosisPoolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
@@ -26,8 +27,6 @@ func GetEpochHandler(
 	tokensManager *types.CacheManager[prewards.LiquidAllowedDenomProtocolData],
 ) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		ctx := context.Background()
-
 		// simFailure hooks: 0-1
 		if useHooks := req.Header.Get("x-simulate-failure"); useHooks != "" {
 			fctx, err := failsim.SetFailureContext(ctx, useHooks)
@@ -48,7 +47,7 @@ func GetEpochHandler(
 
 		errors := make(map[string]error)
 		vars := mux.Vars(req)
-		chain := osmosisParamsManager.Get()[0].ChainID
+		chain := osmosisParamsManager.Get(ctx)[0].ChainID
 		response := types.Response{
 			Messages: make([]prewards.MsgSubmitClaim, 0),
 			Assets:   make(map[string][]types.Asset),
@@ -86,8 +85,8 @@ func GetEpochHandler(
 
 		fmt.Println("check osmosis last epoch height...")
 		var height int64
-		unfilteredConnections := connectionManager.Get()
-		connections := []prewards.ConnectionProtocolData{}
+		unfilteredConnections := connectionManager.Get(ctx)
+		var connections []prewards.ConnectionProtocolData
 		for _, ufc := range unfilteredConnections {
 			if ufc.LastEpoch > 0 {
 				connections = append(connections, ufc)
@@ -95,7 +94,7 @@ func GetEpochHandler(
 		}
 
 		for _, con := range connections {
-			if con.ChainID == osmosisParamsManager.Get()[0].ChainID {
+			if con.ChainID == osmosisParamsManager.Get(ctx)[0].ChainID {
 				height = con.LastEpoch
 				break
 			}
@@ -124,7 +123,7 @@ func GetEpochHandler(
 		}
 
 		// umee claim
-		chain = umeeParamsManager.Get()[0].ChainID
+		chain = umeeParamsManager.Get(ctx)[0].ChainID
 		fmt.Println("check config for umee chain id...")
 		// simulate failure hook 0:
 		if _, failHere := failAt[0]; failHere {
@@ -166,7 +165,7 @@ func GetEpochHandler(
 		}
 
 		// crescent claim
-		chain = crescentParamsManager.Get()[0].ChainID
+		chain = crescentParamsManager.Get(ctx)[0].ChainID
 		fmt.Println("check config for crescent chain id...")
 		// simulate failure hook 0:
 		if _, failHere := failAt[0]; failHere {

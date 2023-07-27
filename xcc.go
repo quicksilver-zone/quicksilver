@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
@@ -10,33 +11,34 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/gorilla/mux"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	"gopkg.in/yaml.v3"
+
 	"github.com/ingenuity-build/xcclookup/pkgs/handlers"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
-	"gopkg.in/yaml.v3"
 )
 
 const (
-	// Bech32Prefix defines the Bech32 prefix used for EthAccounts
+	// Bech32Prefix defines the Bech32 prefix used for EthAccounts.
 	Bech32Prefix = "quick"
 
-	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address
+	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address.
 	Bech32PrefixAccAddr = Bech32Prefix
-	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key
+	// Bech32PrefixAccPub defines the Bech32 prefix of an account's public key.
 	Bech32PrefixAccPub = Bech32Prefix + sdk.PrefixPublic
-	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address
+	// Bech32PrefixValAddr defines the Bech32 prefix of a validator's operator address.
 	Bech32PrefixValAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator
-	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key
+	// Bech32PrefixValPub defines the Bech32 prefix of a validator's operator public key.
 	Bech32PrefixValPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
-	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address
+	// Bech32PrefixConsAddr defines the Bech32 prefix of a consensus node address.
 	Bech32PrefixConsAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus
-	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key
+	// Bech32PrefixConsPub defines the Bech32 prefix of a consensus node public key.
 	Bech32PrefixConsPub = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
 )
 
 var (
 	GitCommit string
-	Version   string = "development"
-	Logo             = `
+	Version   = "development"
+	Logo      = `
                                .........                                        
                        ..::-----------------::..                                
                    ..::---------------------------.                             
@@ -105,13 +107,14 @@ func main() {
 		fmt.Printf("Error parsing config file: %s\n", err)
 	}
 
-	connectionManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeConnection/", time.Minute*5)
-	osmosisParamsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisParams/", time.Hour*24)
-	umeeParamsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeUmeeParams/", time.Hour*24)
-	crescentParamsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeCrescentParams/", time.Hour*24)
-	osmosisPoolsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", time.Minute*5)
-	crescentPoolsManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeCrescentPool/", time.Minute*5)
-	tokenManager.Init(cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeLiquidToken/", time.Minute*5)
+	ctx := context.Background()
+	connectionManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeConnection/", time.Minute*5)
+	osmosisParamsManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisParams/", time.Hour*24)
+	umeeParamsManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeUmeeParams/", time.Hour*24)
+	crescentParamsManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeCrescentParams/", time.Hour*24)
+	osmosisPoolsManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeOsmosisPool/", time.Minute*5)
+	crescentPoolsManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeCrescentPool/", time.Minute*5)
+	tokenManager.Init(ctx, cfg.SourceLcd+"/quicksilver/participationrewards/v1/protocoldata/ProtocolDataTypeLiquidToken/", time.Minute*5)
 	config := sdk.GetConfig()
 	config.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
@@ -120,17 +123,24 @@ func main() {
 	switch action {
 	case "serve":
 		r := mux.NewRouter()
-		r.HandleFunc("/cache", handlers.GetCacheHandler(cfg, &connectionManager, &osmosisPoolsManager, &osmosisParamsManager, &tokenManager))
-		r.HandleFunc("/{address}/epoch", handlers.GetEpochHandler(cfg, &connectionManager, &osmosisPoolsManager, &crescentPoolsManager, &osmosisParamsManager, &umeeParamsManager, &crescentParamsManager, &tokenManager))
-		r.HandleFunc("/{address}/current", handlers.GetCurrentHandler(cfg, &connectionManager, &osmosisPoolsManager, &crescentPoolsManager, &osmosisParamsManager, &umeeParamsManager, &crescentParamsManager, &tokenManager))
+		r.HandleFunc("/cache", handlers.GetCacheHandler(ctx, cfg, &connectionManager, &osmosisPoolsManager, &osmosisParamsManager, &tokenManager))
+		r.HandleFunc("/{address}/epoch", handlers.GetEpochHandler(ctx, cfg, &connectionManager, &osmosisPoolsManager, &crescentPoolsManager, &osmosisParamsManager, &umeeParamsManager, &crescentParamsManager, &tokenManager))
+		r.HandleFunc("/{address}/current", handlers.GetCurrentHandler(ctx, cfg, &connectionManager, &osmosisPoolsManager, &crescentPoolsManager, &osmosisParamsManager, &umeeParamsManager, &crescentParamsManager, &tokenManager))
 		// r.HandleFunc("/{address}/airdrop/{claimId}", handlers.AirdropHandler)
 		r.HandleFunc("/version", handlers.GetVersionHandler(Version))
 		http.Handle("/", r)
 
-		if err := http.ListenAndServe(":8090", nil); err != nil {
+		server := &http.Server{
+			Addr:              ":8090",
+			Handler:           r,
+			ReadHeaderTimeout: 10 * time.Second,
+		}
+
+		if err := server.ListenAndServe(); err != nil {
 			fmt.Printf("Error: %v\n", err.Error())
 			return
 		}
+
 	case "autoxcc":
 		// connect to DB to fetch addresses.
 		// periodically requery this list.

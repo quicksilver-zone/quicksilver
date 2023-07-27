@@ -4,8 +4,8 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/multierror"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	"github.com/ingenuity-build/xcclookup/internal/multierror"
 	tmhttp "github.com/tendermint/tendermint/rpc/client/http"
 	libclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
 )
@@ -26,7 +26,7 @@ func NewRPCClient(addr string, timeout time.Duration) (*tmhttp.HTTP, error) {
 type Response struct {
 	Messages []prewards.MsgSubmitClaim `json:"messages"`
 	Assets   map[string][]Asset        `json:"assets"`
-	Errors   multierror.Errors         `json:"errors,omitempty"`
+	Errors   multierror.MultiError     `json:"errors,omitempty"`
 }
 
 type Asset struct {

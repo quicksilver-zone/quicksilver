@@ -11,12 +11,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
+	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
 
 type TokenTuple struct {
@@ -92,7 +93,7 @@ func LiquidClaim(
 
 	// query for AllBalances; then iterate, match against accepted balances and requery with proof.
 	abciquery, err := client.ABCIQueryWithOptions(
-		context.Background(),
+		ctx,
 		"/cosmos.bank.v1beta1.Query/AllBalances",
 		bytes,
 		rpcclient.ABCIQueryOptions{Height: height},
@@ -119,7 +120,7 @@ func LiquidClaim(
 			}
 		}
 		return out
-	}(tokensManager.Get())
+	}(tokensManager.Get(ctx))
 
 	msg := map[string]prewards.MsgSubmitClaim{}
 	assets := map[string]sdk.Coins{}
@@ -146,7 +147,8 @@ func LiquidClaim(
 		accountPrefix := banktypes.CreateAccountBalancesPrefix(sdkAddr)
 		lookupKey := append(accountPrefix, []byte(coin.Denom)...)
 		abciquery, err := client.ABCIQueryWithOptions(
-			context.Background(), "/store/bank/key",
+			ctx,
+			"/store/bank/key",
 			lookupKey,
 			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 		)

@@ -7,13 +7,14 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+
 	"github.com/ingenuity-build/xcclookup/pkgs/claims"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
-
-	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func GetAirdropHandler(
+	ctx context.Context,
 	cfg types.Config,
 	connectionManager *types.CacheManager[prewards.ConnectionProtocolData],
 	poolsManager *types.CacheManager[prewards.OsmosisPoolProtocolData],
@@ -24,18 +25,26 @@ func GetAirdropHandler(
 	return func(w http.ResponseWriter, req *http.Request) {
 		vars := mux.Vars(req)
 		var err error
-		chain := osmosisParamsManager.Get()[0].ChainID
+		chain := osmosisParamsManager.Get(ctx)[0].ChainID
 
 		response := types.Response{Messages: make([]prewards.MsgSubmitClaim, 0), Assets: make(map[string][]types.Asset)}
 		// osmosis
-		connections := connectionManager.Get()
+		connections := connectionManager.Get(ctx)
 
 		if chain == "" {
 			fmt.Fprintf(w, "Error: osmosis chain ID unset")
 			return
 		}
 
-		messages, assets, err := claims.OsmosisClaim(context.TODO(), cfg, poolsManager, tokensManager, vars["address"], chain, 0)
+		messages, assets, err := claims.OsmosisClaim(
+			ctx,
+			cfg,
+			poolsManager,
+			tokensManager,
+			vars["address"],
+			chain,
+			0,
+		)
 		if err != nil {
 			fmt.Fprintf(w, "Error: %s", err)
 			return
@@ -50,7 +59,14 @@ func GetAirdropHandler(
 		}
 
 		// umee
-		messages, assets, err = claims.UmeeClaim(context.TODO(), cfg, tokensManager, vars["address"], umeeParamsManager.Get()[0].ChainID, 0)
+		messages, assets, err = claims.UmeeClaim(
+			ctx,
+			cfg,
+			tokensManager,
+			vars["address"],
+			umeeParamsManager.Get(ctx)[0].ChainID,
+			0,
+		)
 		if err != nil {
 			fmt.Fprintf(w, "Error: %s", err)
 			return
@@ -66,7 +82,14 @@ func GetAirdropHandler(
 
 		// liquid for all zones; config should hold osmosis chainid.
 		for _, con := range connections {
-			liquidMessages, assets, err := claims.LiquidClaim(context.TODO(), cfg, tokensManager, vars["address"], con, 0)
+			liquidMessages, assets, err := claims.LiquidClaim(
+				ctx,
+				cfg,
+				tokensManager,
+				vars["address"],
+				con,
+				0,
+			)
 			if err != nil {
 				fmt.Fprintf(w, "Error: %s", err)
 				return

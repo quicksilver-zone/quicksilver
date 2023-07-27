@@ -11,14 +11,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	osmogamm "github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
+	"github.com/ingenuity-build/multierror"
+	osmogamm "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	"github.com/ingenuity-build/xcclookup/internal/multierror"
+	rpcclient "github.com/tendermint/tendermint/rpc/client"
+
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 )
 
 type poolMap map[string][]osmogamm.PoolI
@@ -83,7 +84,11 @@ func OsmosisClaim(
 	if height == 0 {
 		blockRequest := tmservice.GetLatestBlockRequest{}
 		bytes := marshaler.MustMarshal(&blockRequest)
-		abciquery, err := client.ABCIQuery(context.Background(), "/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock", bytes)
+		abciquery, err := client.ABCIQuery(
+			ctx,
+			"/cosmos.base.tendermint.v1beta1.Service/GetLatestBlock",
+			bytes,
+		)
 		// 4:
 		err = failsim.FailureHook(failures, 4, err, "ABCIQuery: GetLatestBlock")
 		if err != nil {
@@ -118,7 +123,11 @@ func OsmosisClaim(
 	} else {
 		blockRequest := tmservice.GetBlockByHeightRequest{Height: height}
 		bytes := marshaler.MustMarshal(&blockRequest)
-		abciquery, err := client.ABCIQuery(context.Background(), "/cosmos.base.tendermint.v1beta1.Service/GetBlockByHeight", bytes)
+		abciquery, err := client.ABCIQuery(
+			ctx,
+			"/cosmos.base.tendermint.v1beta1.Service/GetBlockByHeight",
+			bytes,
+		)
 		// 4: (hook numbering reset as this is a different execution path)
 		err = failsim.FailureHook(failures, 4, err, "ABCIQuery: GetBlockByHeight")
 		if err != nil {
@@ -154,7 +163,12 @@ func OsmosisClaim(
 	bytes := marshaler.MustMarshal(&query)
 	fmt.Println("prepared account lockup query...")
 
-	abciquery, err := client.ABCIQueryWithOptions(context.Background(), "/osmosis.lockup.Query/AccountLockedPastTime", bytes, rpcclient.ABCIQueryOptions{Height: height})
+	abciquery, err := client.ABCIQueryWithOptions(
+		ctx,
+		"/osmosis.lockup.Query/AccountLockedPastTime",
+		bytes,
+		rpcclient.ABCIQueryOptions{Height: height},
+	)
 	// 7:
 	err = failsim.FailureHook(failures, 6, err, "ABCIQuery: AccountLockedPastTime")
 	if err != nil {
@@ -180,12 +194,12 @@ func OsmosisClaim(
 			}
 		}
 		return out
-	}(tokensManager.Get())
+	}(tokensManager.Get(ctx))
 	fmt.Println("got relevant tokens...")
 
 	pools := poolMap{}
 
-	for _, pool := range poolsManager.Get() {
+	for _, pool := range poolsManager.Get(ctx) {
 		for _, denom := range pool.Denoms {
 			if _, ok := pools[denom.ChainID]; !ok {
 				pools[denom.ChainID] = make([]osmogamm.PoolI, 0)
@@ -230,7 +244,8 @@ OUTER:
 					lockupKey := append(osmolockup.KeyPrefixPeriodLock, append(osmolockup.KeyIndexSeparator, sdk.Uint64ToBigEndian(lockup.ID)...)...)
 
 					abciquery, err := client.ABCIQueryWithOptions(
-						context.Background(), "/store/lockup/key",
+						ctx,
+						"/store/lockup/key",
 						lockupKey,
 						rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
 					)
