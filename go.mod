@@ -9,7 +9,7 @@ require (
 	github.com/golangci/golangci-lint v1.53.3
 	github.com/gorilla/mux v1.8.0
 	github.com/ingenuity-build/multierror v0.1.0
-	github.com/ingenuity-build/quicksilver v1.4.4-rc0.0.20230721130241-9baf8c3dad1e
+	github.com/ingenuity-build/quicksilver v1.4.4-beta.9
 	github.com/tendermint/tendermint v0.34.29
 	golang.org/x/tools v0.11.0
 	gopkg.in/yaml.v3 v3.0.1
