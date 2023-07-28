@@ -1771,8 +1771,8 @@ github.com/influxdata/usage-client v0.0.0-20160829180054-6d3895376368/go.mod h1:
 github.com/informalsystems/tm-load-test v1.3.0/go.mod h1:OQ5AQ9TbT5hKWBNIwsMjn6Bf4O0U4b1kRc+0qZlQJKw=
 github.com/ingenuity-build/multierror v0.1.0 h1:nS+YE/+ujwtl09kNWsIMNu8TUjs9PKrtnP5x45txxOs=
 github.com/ingenuity-build/multierror v0.1.0/go.mod h1:ZU6BORie0gkg/hhdTvEH979RsaCE2Wdsxph9AISVmac=
-github.com/ingenuity-build/quicksilver v1.4.4-rc0.0.20230721130241-9baf8c3dad1e h1:0LK4wS52MF/Ef5JxlJwIZ3OiBeqOAabTWcTKTnsjeRw=
-github.com/ingenuity-build/quicksilver v1.4.4-rc0.0.20230721130241-9baf8c3dad1e/go.mod h1:po0GZnfbw41emsiQOp4j3yY4geMjC/n9kBCMyd6mcIE=
+github.com/ingenuity-build/quicksilver v1.4.4-beta.9 h1:l6DuGvnSs3ICBVsMNC1GsDIW495EKMThT8+Vq8LodaY=
+github.com/ingenuity-build/quicksilver v1.4.4-beta.9/go.mod h1:po0GZnfbw41emsiQOp4j3yY4geMjC/n9kBCMyd6mcIE=
 github.com/intel/goresctrl v0.2.0/go.mod h1:+CZdzouYFn5EsxgqAQTEzMfwKwuc0fVdMrT9FCCAVRQ=
 github.com/iqlusioninc/liquidity-staking-module v1.0.0 h1:JBzhf0+3KhCFG6u+yzq6V7BNBjUhmtxH2CYl9ODLVFo=
 github.com/iqlusioninc/liquidity-staking-module v1.0.0/go.mod h1:mwk+aB4Pk52O0Wp4LF5gCYKSu01c8wgrcRsMnOFiVwQ=
