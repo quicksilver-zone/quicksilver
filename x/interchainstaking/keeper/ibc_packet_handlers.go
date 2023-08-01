@@ -502,7 +502,7 @@ func (k *Keeper) GCCompletedRedelegations(ctx sdk.Context) error {
 
 func (k *Keeper) HandleMaturedUnbondings(ctx sdk.Context, zone *types.Zone) error {
 	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ZoneID(), types.WithdrawStatusUnbond, func(idx int64, withdrawal types.WithdrawalRecord) bool {
-		if ctx.BlockTime().After(withdrawal.CompletionTime) && !withdrawal.CompletionTime.Equal(time.Time{}) { // completion date has passed.
+		if ctx.BlockTime().After(withdrawal.CompletionTime) && withdrawal.Acknowledged { // completion date has passed.
 			k.Logger(ctx).Info("found completed unbonding")
 			sendMsg := &banktypes.MsgSend{FromAddress: zone.DelegationAddress.GetAddress(), ToAddress: withdrawal.Recipient, Amount: sdk.Coins{withdrawal.Amount[0]}}
 			err := k.SubmitTx(ctx, []cosmosproto.Message{sendMsg}, zone.DelegationAddress, types.TxUnbondSendMemo(withdrawal.Txhash), zone.MessagesPerTx)
@@ -714,6 +714,9 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 		if !found {
 			return fmt.Errorf("unable to lookup withdrawal record; chain: %s, hash: %s", zone.ZoneID(), hash)
 		}
+
+		record.Acknowledged = true
+
 		if completion.After(record.CompletionTime) {
 			record.CompletionTime = completion
 		}

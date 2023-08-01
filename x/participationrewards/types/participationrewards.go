@@ -5,9 +5,10 @@ import (
 	"fmt"
 
 	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/multierror"
+
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -111,63 +112,9 @@ func (pd *ProtocolData) ValidateBasic() error {
 
 // validateProtocolData unmarshals to appropriate concrete type and validate.
 func validateProtocolData(data json.RawMessage, pdt ProtocolDataType) error {
-	var pdi ProtocolDataI
-	switch pdt {
-	case ProtocolDataTypeLiquidToken:
-		pd := LiquidAllowedDenomProtocolData{}
-		err := json.Unmarshal(data, &pd)
-		if err != nil {
-			return err
-		}
-		pdi = &pd
-	case ProtocolDataTypeOsmosisPool:
-		pd := OsmosisPoolProtocolData{}
-		err := json.Unmarshal(data, &pd)
-		if err != nil {
-			return err
-		}
-		pdi = &pd
-	case ProtocolDataTypeUmeeReserves:
-		pd := UmeeReservesProtocolData{}
-		err := json.Unmarshal(data, &pd)
-		if err != nil {
-			return err
-		}
-		pdi = &pd
-	case ProtocolDataTypeUmeeInterestScalar:
-		pd := UmeeInterestScalarProtocolData{}
-		err := json.Unmarshal(data, &pd)
-		if err != nil {
-			return err
-		}
-		pdi = &pd
-	case ProtocolDataTypeUmeeTotalBorrows:
-		pd := UmeeTotalBorrowsProtocolData{}
-		err := json.Unmarshal(data, &pd)
-		if err != nil {
-			return err
-		}
-		pdi = &pd
-	case ProtocolDataTypeUmeeUTokenSupply:
-		pd := UmeeUTokenSupplyProtocolData{}
-		err := json.Unmarshal(data, &pd)
-		if err != nil {
-			return err
-		}
-		pdi = &pd
-	case ProtocolDataTypeUmeeLeverageModuleBalance:
-		pd := UmeeLeverageModuleBalanceProtocolData{}
-		err := json.Unmarshal(data, &pd)
-		if err != nil {
-			return err
-		}
-		pdi = &pd
-	case ProtocolDataTypeCrescentPool:
-		return ErrUnimplementedProtocolDataType
-	case ProtocolDataTypeSifchainPool:
-		return ErrUnimplementedProtocolDataType
-	default:
-		return ErrUnknownProtocolDataType
+	pdi, err := UnmarshalProtocolData(pdt, data)
+	if err != nil {
+		return err
 	}
 
 	return pdi.ValidateBasic()

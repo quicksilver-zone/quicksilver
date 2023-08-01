@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/multierror"
 )
 
 func TestErrorsDeterminism(t *testing.T) {

@@ -1,6 +1,6 @@
 package types
 
-import "github.com/ingenuity-build/quicksilver/internal/multierror"
+import "github.com/ingenuity-build/multierror"
 
 // ValidateBasic performs stateless validation for Proof.
 func (p *Proof) ValidateBasic() error {

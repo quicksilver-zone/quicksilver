@@ -16,4 +16,5 @@ var (
 	ErrInvalidChainID                = sdkioerrors.Register(ModuleName, 11, "invalid chain id")
 	ErrInvalidDenom                  = sdkioerrors.Register(ModuleName, 12, "invalid denom")
 	ErrCannotUnmarshal               = sdkioerrors.Register(ModuleName, 13, "unable to unmarshal")
+	ErrInvalidBech32                 = sdkioerrors.Register(ModuleName, 14, "invalid bech32")
 )

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/ingenuity-build/quicksilver/proofs"
-
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,7 +13,10 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
-	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
+	"github.com/ingenuity-build/quicksilver/proofs"
+	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
+	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
+	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
@@ -31,7 +32,11 @@ type UserAllocation struct {
 	Amount  sdkmath.Int
 }
 
-var _ osmosistypes.ParticipationRewardsKeeper = &Keeper{}
+var (
+	_ osmosistypes.ParticipationRewardsKeeper  = &Keeper{}
+	_ umeetypes.ParticipationRewardsKeeper     = &Keeper{}
+	_ crescenttypes.ParticipationRewardsKeeper = &Keeper{}
+)
 
 type Keeper struct {
 	cdc                  codec.BinaryCodec
@@ -161,5 +166,6 @@ func LoadSubmodules() map[cmtypes.ClaimType]Submodule {
 	out[cmtypes.ClaimTypeLiquidToken] = &LiquidTokensModule{}
 	out[cmtypes.ClaimTypeOsmosisPool] = &OsmosisModule{}
 	out[cmtypes.ClaimTypeUmeeToken] = &UmeeModule{}
+	out[cmtypes.ClaimTypeCrescentPool] = &CrescentModule{}
 	return out
 }

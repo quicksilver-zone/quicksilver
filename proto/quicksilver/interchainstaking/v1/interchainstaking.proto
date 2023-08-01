@@ -95,6 +95,7 @@ message WithdrawalRecord {
   google.protobuf.Timestamp completion_time = 9
       [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
   bool requeued = 10;
+  bool acknowledged = 11;
 }
 
 message UnbondingRecord {
