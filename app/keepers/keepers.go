@@ -374,7 +374,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[claimsmanagertypes.StoreKey],
-		*appKeepers.IBCKeeper,
+		appKeepers.IBCKeeper,
 	)
 
 	// claimsmanagerModule := claimsmanager.NewAppModule(appCodec, appKeepers.ClaimsManagerKeeper)
@@ -391,7 +391,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.ICAControllerKeeper,
 		&scopedInterchainStakingKeeper,
 		appKeepers.InterchainQueryKeeper,
-		*appKeepers.IBCKeeper,
+		appKeepers.IBCKeeper,
 		appKeepers.TransferKeeper,
 		appKeepers.ClaimsManagerKeeper,
 		appKeepers.GetSubspace(interchainstakingtypes.ModuleName),
@@ -408,8 +408,10 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
-		appKeepers.InterchainQueryKeeper,
+		appKeepers.IBCKeeper,
+		&appKeepers.InterchainQueryKeeper,
 		appKeepers.InterchainstakingKeeper,
+		appKeepers.ClaimsManagerKeeper,
 		authtypes.FeeCollectorName,
 		proofOpsFn,
 		selfProofOpsFn,
@@ -533,8 +535,8 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
 		appKeepers.GovKeeper,
+		appKeepers.IBCKeeper,
 		appKeepers.InterchainstakingKeeper,
-		appKeepers.InterchainQueryKeeper,
 		appKeepers.ParticipationRewardsKeeper,
 		proofOpsFn,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),

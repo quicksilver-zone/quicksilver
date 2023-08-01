@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					},
 				}
 				bz, err := lockedResp.Marshal()
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
@@ -122,7 +122,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					},
 				}
 				bz, err := lockedResp.Marshal()
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
@@ -155,7 +155,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					Amount: math.NewInt(1000),
 				}
 				bz, err := cd.Marshal()
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -295,7 +295,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					),
 				}
 				bz, err := locked.Marshal()
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
@@ -357,7 +357,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					Amount: math.NewInt(0),
 				}
 				bz, err := cd.Marshal()
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -389,7 +389,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					Amount: math.NewInt(0),
 				}
 				bz, err := cd.Marshal()
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -421,7 +421,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 
 				cd := math.NewInt(1000)
 				bz, err := cd.Marshal()
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -525,15 +525,15 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			k := keeper.NewMsgServerImpl(appA.ParticipationRewardsKeeper)
 			resp, err := k.SubmitClaim(sdk.WrapSDKContext(ctx), &msg)
 			if tt.wantErr != "" {
-				suite.Require().Errorf(err, tt.wantErr)
-				suite.Require().Nil(resp)
+				suite.Errorf(err, tt.wantErr)
+				suite.Nil(resp)
 				suite.T().Logf("Error: %v", err)
 				return
 			}
 
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.want, resp)
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.want, resp)
 		})
 	}
 }
@@ -589,8 +589,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 		{
 			"local_callback_value_invalid_denom",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
-				suite.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
 			},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
@@ -627,8 +627,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 		{
 			"local_callback_value_valid_denom",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				suite.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
-				suite.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
 
 				// add uqatom to the list of allowed denoms for this zone
 				rawPd := types.LiquidAllowedDenomProtocolData{
@@ -639,7 +639,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 				}
 
 				blob, err := json.Marshal(rawPd)
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				pd := types.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)], blob)
 
 				appA.ParticipationRewardsKeeper.SetProtocolData(ctx, rawPd.GenerateKey(), pd)
@@ -699,7 +699,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			tt.malleate(ctx, appA)
 			suite.coordinator.CommitNBlocks(suite.chainA, 3)
 			ctx = suite.chainA.GetContext()
-			suite.Require().NoError(appA.ClaimsManagerKeeper.StoreSelfConsensusState(ctx, "epoch"))
+			suite.NoError(appA.ClaimsManagerKeeper.StoreSelfConsensusState(ctx, "epoch"))
 			suite.coordinator.CommitNBlocks(suite.chainA, 1)
 
 			ctx = suite.chainA.GetContext()
@@ -712,22 +712,22 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			k := keeper.NewMsgServerImpl(appA.ParticipationRewardsKeeper)
 			resp, err := k.SubmitClaim(sdk.WrapSDKContext(ctx), msg)
 			if tt.wantErr != "" {
-				suite.Require().Errorf(err, tt.wantErr)
-				suite.Require().Nil(resp)
+				suite.Errorf(err, tt.wantErr)
+				suite.Nil(resp)
 				suite.T().Logf("Error: %v", err)
 				return
 			}
 
 			for _, expectedClaim := range tt.claims {
 				actualClaim, found := appA.ClaimsManagerKeeper.GetClaim(ctx, expectedClaim.ChainId, expectedClaim.UserAddress, expectedClaim.Module, expectedClaim.SourceChainId)
-				suite.Require().True(found)
-				suite.Require().Equal(expectedClaim.Amount, actualClaim.Amount)
+				suite.True(found)
+				suite.Equal(expectedClaim.Amount, actualClaim.Amount)
 
 			}
 
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.want, resp)
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.want, resp)
 		})
 	}
 }

@@ -25,6 +25,10 @@ type Keeper struct {
 
 // NewKeeper returns a new instance of zones Keeper.
 func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, ibcKeeper *ibckeeper.Keeper) Keeper {
+	if ibcKeeper == nil {
+		panic("ibcKeeper is nil")
+	}
+
 	return Keeper{
 		cdc:       cdc,
 		storeKey:  storeKey,

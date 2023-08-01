@@ -23,12 +23,12 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 
 	// get test zone
 	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 	zoneValidatorAddresses := icsKeeper.GetValidators(ctx, zone.ChainId)
 
 	// check that there are no intents
 	intents := icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	suite.Require().Len(intents, 0)
+	suite.Len(intents, 0)
 
 	// set intents for testAddress
 	icsKeeper.SetDelegatorIntent(
@@ -110,14 +110,14 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 
 	// check for intents set above
 	intents = icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	suite.Require().Len(intents, 3)
+	suite.Len(intents, 3)
 
 	// delete intent for testAddress
 	icsKeeper.DeleteDelegatorIntent(ctx, &zone, testAddress, false)
 
 	// check intents
 	intents = icsKeeper.AllDelegatorIntents(ctx, &zone, false)
-	suite.Require().Len(intents, 2)
+	suite.Len(intents, 2)
 
 	suite.T().Logf("intents:\n%+v\n", intents)
 
@@ -134,12 +134,12 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 		),
 		nil,
 	)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	// load and match pointers
 	intentsPointers := icsKeeper.AllDelegatorIntentsAsPointer(ctx, &zone, false)
 	for i, ip := range intentsPointers {
-		suite.Require().Equal(intents[i], *ip)
+		suite.Equal(intents[i], *ip)
 	}
 
 	suite.T().Logf("intents:\n%+v\n", intentsPointers)
@@ -322,7 +322,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			ctx := suite.chainA.GetContext()
 			icsKeeper := quicksilver.InterchainstakingKeeper
 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			suite.True(found)
 
 			// give each user some funds
 			for addrString, balance := range tt.balances() {
@@ -337,11 +337,11 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 
 			// refresh zone to pull new aggregate
 			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			suite.True(found)
 
 			actual, err := icsKeeper.GetAggregateIntentOrDefault(ctx, &zone)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tt.expected(ctx, quicksilver, zone), actual)
+			suite.NoError(err)
+			suite.Equal(tt.expected(ctx, quicksilver, zone), actual)
 		})
 	}
 }
@@ -431,13 +431,13 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 			ctx := suite.chainA.GetContext()
 // 			icsKeeper := quicksilver.InterchainstakingKeeper
 // 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-// 			suite.Require().True(found)
+// 			suite.True(found)
 
 // 			// give each user some funds
 // 			for addrString, balance := range tt.balances(zone.LocalDenom) {
 // 				quicksilver.MintKeeper.MintCoins(ctx, balance)
 // 				addr, err := utils.AccAddressFromBech32(addrString, "")
-// 				suite.Require().NoError(err)
+// 				suite.NoError(err)
 // 				quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, balance)
 // 			}
 
@@ -453,10 +453,10 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 
 // 			// refresh zone to pull new aggregate
 // 			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-// 			suite.Require().True(found)
+// 			suite.True(found)
 
 // 			actual := zone.GetAggregateIntentOrDefault()
-// 			suite.Require().Equal(tt.expected(zone), actual)
+// 			suite.Equal(tt.expected(zone), actual)
 // 		})
 // 	}
 // }
