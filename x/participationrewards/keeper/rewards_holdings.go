@@ -39,7 +39,7 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 			return false
 		}
 
-		k.icsKeeper.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
+		k.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
 		return false
 	})
 
@@ -66,7 +66,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	zoneAmount := math.ZeroInt()
 	userAmountsMap := make(map[string]math.Int)
 
-	k.icsKeeper.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
+	k.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
 		amount := math.NewIntFromUint64(claim.Amount)
 		k.Logger(ctx).Info(
 			"claim",
