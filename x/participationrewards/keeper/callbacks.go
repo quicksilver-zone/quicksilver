@@ -14,6 +14,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )

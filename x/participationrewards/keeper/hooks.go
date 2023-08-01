@@ -30,7 +30,7 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 				return false
 			}
 
-			k.icsKeeper.ICQKeeper.MakeRequest(
+			k.IcqKeeper.MakeRequest(
 				ctx,
 				connectionData.ConnectionID,
 				connectionData.ChainID,

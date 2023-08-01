@@ -7,10 +7,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
-func (k Keeper) NewClaim(address, chainID string, module types.ClaimType, srcChainID string, amount uint64) types.Claim {
-	return types.Claim{UserAddress: address, ChainId: chainID, Module: module, SourceChainId: srcChainID, Amount: amount}
-}
-
 // GetClaim returns claim.
 func (k Keeper) GetClaim(ctx sdk.Context, chainID, address string, module types.ClaimType, srcChainID string) (types.Claim, bool) {
 	data := types.Claim{}
