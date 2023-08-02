@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -22,6 +21,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -319,7 +319,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 
 	var channel *channeltypes.IdentifiedChannel
 	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(ic channeltypes.IdentifiedChannel) bool {
-		if ic.Counterparty.ChannelId == sMsg.SourceChannel && ic.Counterparty.PortId == sMsg.SourcePort && len(ic.ConnectionHops) == 1 && ic.ConnectionHops[0] == zone.ConnectionId {
+		if ic.Counterparty.ChannelId == sMsg.SourceChannel && ic.Counterparty.PortId == sMsg.SourcePort && len(ic.ConnectionHops) == 1 && ic.ConnectionHops[0] == zone.ConnectionId && ic.State == channeltypes.OPEN {
 			channel = &ic
 			return true
 		}
@@ -332,6 +332,8 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 	}
 
 	denomTrace := utils.DeriveIbcDenomTrace(channel.PortId, channel.ChannelId, receivedCoin.Denom)
+	k.Logger(ctx).Error("debug", "portid", channel.PortId, "channelId", channel.ChannelId, "denom", receivedCoin.Denom, "counterparty", channel.Counterparty, "denomTrace", denomTrace, "ibcDenom", denomTrace.IBCDenom())
+
 	receivedCoin.Denom = denomTrace.IBCDenom()
 
 	if found && denomTrace.BaseDenom != zone.BaseDenom {
