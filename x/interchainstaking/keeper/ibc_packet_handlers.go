@@ -332,7 +332,6 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 	}
 
 	denomTrace := utils.DeriveIbcDenomTrace(channel.PortId, channel.ChannelId, receivedCoin.Denom)
-
 	receivedCoin.Denom = denomTrace.IBCDenom()
 
 	if found && denomTrace.BaseDenom != zone.BaseDenom {
@@ -350,6 +349,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 		}
 		receivedCoin = sdk.NewCoin(receivedCoin.Denom, feeAmount)
 	}
+
 	balance := sdk.NewCoins(receivedCoin)
 	k.Logger(ctx).Info("distributing collected fees to stakers", "amount", balance)
 	return k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, balance)
