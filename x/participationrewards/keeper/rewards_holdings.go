@@ -33,10 +33,12 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 			}
 		}
 
-		if err := k.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address); err != nil {
-			k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
-			// we might want to do a soft fail here so that all zones are not affected...
-			return false
+		if zone.WithdrawalAddress != nil {
+			if err := k.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address); err != nil {
+				k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
+				// we might want to do a soft fail here so that all zones are not affected...
+				return false
+			}
 		}
 
 		k.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone.ChainId)
