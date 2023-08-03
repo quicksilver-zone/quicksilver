@@ -6,23 +6,16 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/ingenuity-build/multierror"
 
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
-// participationrewars message types.
-const (
-	TypeMsgSubmitClaim = "submitclaim"
-)
-
 var (
-	_ sdk.Msg            = &MsgSubmitClaim{}
-	_ legacytx.LegacyMsg = &MsgSubmitClaim{}
-
+	_ sdk.Msg = &MsgSubmitClaim{}
 	_ sdk.Msg = &MsgGovRemoveProtocolData{}
+	_ sdk.Msg = &MsgAddProtocolData{}
 )
 
 // NewMsgSubmitClaim - construct a msg to submit a claim.
@@ -46,12 +39,6 @@ func NewMsgSubmitClaim(
 func (msg MsgSubmitClaim) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
-
-// Route implements LegacyMsg.
-func (msg MsgSubmitClaim) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (msg MsgSubmitClaim) Type() string { return TypeMsgSubmitClaim }
 
 // GetSigners implements Msg.
 func (msg MsgSubmitClaim) GetSigners() []sdk.AccAddress {
@@ -146,5 +133,31 @@ func (msg MsgGovRemoveProtocolData) ValidateBasic() error {
 
 	// check authority bech32 is valid
 	_, err := addressutils.AddressFromBech32(msg.Authority, "")
+	return err
+}
+
+// GetSigners Implements Msg.
+func (msg MsgAddProtocolData) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+// Validate Implements Msg.
+func (msg MsgAddProtocolData) ValidateBasic() error {
+	pdtv, exists := ProtocolDataType_value[msg.Type]
+	if !exists {
+		return ErrUnknownProtocolDataType
+	}
+
+	pd, err := UnmarshalProtocolData(ProtocolDataType(pdtv), msg.Data)
+	if err != nil {
+		return err
+	}
+
+	if err := pd.ValidateBasic(); err != nil {
+		return err
+	}
+
+	_, err = addressutils.AddressFromBech32(msg.Authority, "")
 	return err
 }

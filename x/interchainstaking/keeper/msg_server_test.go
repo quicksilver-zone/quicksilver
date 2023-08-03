@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -252,6 +254,25 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"",
 			"unable to satisfy unbond request; delegations may be locked",
 		},
+		{
+			"invalid - unbonding is disabled",
+			func() {
+				ctx := suite.chainA.GetContext()
+
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
+				suite.Require().NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					DestinationAddress: addr,
+					FromAddress:        testAddress,
+				}
+				params := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetParams(ctx)
+				params.UnbondingEnabled = false
+				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetParams(ctx, params)
+			},
+			"unbonding is currently disabled",
+			"unbonding is currently disabled",
+		},
 	}
 
 	for _, tt := range tests {
@@ -490,6 +511,791 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				suite.Require().True(found)
 
 				suite.Require().Equal(weight, valIntent.Weight)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestRegisterZone() {
+	var msg *icstypes.MsgRegisterZone
+
+	testAccount, err := addressutils.AccAddressFromBech32(testAddress, "")
+	suite.NoError(err)
+
+	tests := []struct {
+		name      string
+		malleate  func()
+		expectErr string
+	}{
+		{
+			"invalid: duplicate zone",
+			func() {
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo:      nil,
+				}
+			},
+			"invalid chain id",
+		},
+		{
+			"invalid: unknown connectionID",
+			func() {
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     "invalid",
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo:      nil,
+				}
+			},
+			"unable to obtain chain id",
+		},
+		{
+			"invalid: incorrect authority",
+			func() {
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        "invalid",
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo:      nil,
+				}
+			},
+			"invalid authority",
+		},
+		{
+			"invalid: invalid subzone info: ID mismatch",
+			func() {
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo: &icstypes.SubzoneInfo{
+						Authority:   "test",
+						BaseChainID: "invalid",
+						ChainID:     "test-1",
+					},
+				}
+			},
+			"incorrect ID",
+		},
+		{
+			"invalid: invalid subzone info: subzone ID taken",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo: &icstypes.SubzoneInfo{
+						Authority:   "test",
+						BaseChainID: zone.BaseChainID(),
+						ChainID:     zone.BaseChainID(),
+					},
+				}
+			},
+			"subzone ID already exists",
+		},
+		{
+			"invalid: invalid subzone info: invalid subzone authority info",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo: &icstypes.SubzoneInfo{
+						Authority:   "",
+						BaseChainID: zone.BaseChainID(),
+						ChainID:     "test-1234",
+					},
+				}
+			},
+			"all subzone info must be populated",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			ctx := suite.chainA.GetContext()
+
+			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+
+			tt.malleate()
+
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.RegisterZone(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+
+			if tt.expectErr != "" {
+				suite.ErrorContains(err, tt.expectErr)
+				suite.T().Logf("Error: %v", err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestUpdateZone() {
+	var msg *icstypes.MsgUpdateZone
+
+	tests := []struct {
+		name      string
+		malleate  func()
+		expectErr string
+	}{
+		{
+			"invalid: incorrect authority",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: "invalid",
+					ZoneID:    zone.BaseChainID(),
+					Changes:   nil,
+				}
+			},
+			"invalid authority",
+		},
+		{
+			"invalid: zone does not exist",
+			func() {
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    "invalid",
+					Changes:   nil,
+				}
+			},
+			"unable to get registered zone for zone id",
+		},
+		{
+			"valid: no changes",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes:   nil,
+				}
+			},
+			"",
+		},
+		{
+			"valid: update base denom",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyBaseDenom,
+							Value: "valid",
+						},
+					},
+				}
+			},
+			"",
+		},
+		{
+			"invalid: update base denom: invalid denom",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyBaseDenom,
+							Value: "",
+						},
+					},
+				}
+			},
+			"invalid denom",
+		},
+		{
+			"valid: update local denom",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyLocalDenom,
+							Value: "valid",
+						},
+					},
+				}
+			},
+			"",
+		},
+		{
+			"invalid: update local denom: invalid denom",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyLocalDenom,
+							Value: "",
+						},
+					},
+				}
+			},
+			"invalid denom",
+		},
+		{
+			"valid: update liquidity module",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyLiquidityModule,
+							Value: "true",
+						},
+					},
+				}
+			},
+			"",
+		},
+		{
+			"invalid: update liquidity module: invalid syntax",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyLiquidityModule,
+							Value: "",
+						},
+					},
+				}
+			},
+			"invalid syntax",
+		},
+		{
+			"valid: update unbonding enabled",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyUnbondingEnabled,
+							Value: "true",
+						},
+					},
+				}
+			},
+			"",
+		},
+		{
+			"invalid: update unbonding enabled: invalid syntax",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyUnbondingEnabled,
+							Value: "",
+						},
+					},
+				}
+			},
+			"invalid syntax",
+		},
+		{
+			"valid: update deposits enabled",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyDepositsEnabled,
+							Value: "true",
+						},
+					},
+				}
+			},
+			"",
+		},
+		{
+			"invalid: update deposits enabled: invalid syntax",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyDepositsEnabled,
+							Value: "",
+						},
+					},
+				}
+			},
+			"invalid syntax",
+		},
+		{
+			"valid: update return to sender",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyReturnToSender,
+							Value: "true",
+						},
+					},
+				}
+			},
+			"",
+		},
+		{
+			"invalid: update return to sender: invalid syntax",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyReturnToSender,
+							Value: "",
+						},
+					},
+				}
+			},
+			"invalid syntax",
+		},
+		{
+			"valid: update messages per tx",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyMessagesPerTx,
+							Value: "10",
+						},
+					},
+				}
+			},
+			"",
+		},
+		{
+			"invalid: update messages per tx: invalid syntax",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyMessagesPerTx,
+							Value: "",
+						},
+					},
+				}
+			},
+			"invalid syntax",
+		},
+		{
+			"valid: update account prefix",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyAccountPrefix,
+							Value: "test",
+						},
+					},
+				}
+			},
+			"",
+		},
+		{
+			"valid: update is 188",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyIs118,
+							Value: "false",
+						},
+					},
+				}
+			},
+			"",
+		},
+		{
+			"invalid: update is 188 invalid syntax",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyIs118,
+							Value: "",
+						},
+					},
+				}
+			},
+			"invalid syntax",
+		},
+		{
+			"invalid: update connection ID: already initialised",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyConnectionID,
+							Value: "connection-10",
+						},
+					},
+				}
+			},
+			"zone already intialised",
+		},
+		{
+			"invalid: update connection ID invalid syntax",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   icstypes.UpdateZoneKeyConnectionID,
+							Value: "",
+						},
+					},
+				}
+			},
+			"unexpected connection format",
+		},
+		{
+			"invalid: unknown key",
+			func() {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				suite.True(found)
+
+				msg = &icstypes.MsgUpdateZone{
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ZoneID:    zone.BaseChainID(),
+					Changes: []*icstypes.UpdateZoneValue{
+						{
+							Key:   "invalid",
+							Value: "",
+						},
+					},
+				}
+			},
+			"unexpected key",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			tt.malleate()
+
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.UpdateZone(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+
+			if tt.expectErr != "" {
+				suite.ErrorContains(err, tt.expectErr)
+				suite.T().Logf("Error: %v", err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGovReopenChannel() {
+	var msg *icstypes.MsgGovReopenChannel
+
+	testAccount, err := addressutils.AccAddressFromBech32(testAddress, "")
+	suite.NoError(err)
+
+	tests := []struct {
+		name      string
+		malleate  func()
+		expectErr string
+	}{
+		{
+			"invalid: invalid connection ID",
+			func() {
+				msg = &icstypes.MsgGovReopenChannel{
+					ConnectionId: "invalid",
+					PortId:       "",
+					Authority:    "",
+				}
+			},
+			"unable to obtain chain id",
+		},
+		{
+			"invalid: invalid connection ID",
+			func() {
+				msg = &icstypes.MsgGovReopenChannel{
+					ConnectionId: suite.path.EndpointA.ConnectionID,
+					PortId:       "",
+					Authority:    "",
+				}
+			},
+			"chainID / connectionID mismatch",
+		},
+		{
+			"invalid: existing active channel",
+			func() {
+				msg = &icstypes.MsgGovReopenChannel{
+					ConnectionId: suite.path.EndpointA.ConnectionID,
+					PortId:       "testchain2-1.delegate",
+					Authority:    "",
+				}
+			},
+			"existing active channel",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			ctx := suite.chainA.GetContext()
+
+			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+
+			tt.malleate()
+
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.GovReopenChannel(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+
+			if tt.expectErr != "" {
+				suite.ErrorContains(err, tt.expectErr)
+				suite.T().Logf("Error: %v", err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGovCloseChannel() {
+	var msg *icstypes.MsgGovCloseChannel
+
+	testAccount, err := addressutils.AccAddressFromBech32(testAddress, "")
+	suite.NoError(err)
+
+	tests := []struct {
+		name      string
+		malleate  func()
+		expectErr string
+	}{
+		{
+			"invalid: invalid authority",
+			func() {
+				msg = &icstypes.MsgGovCloseChannel{
+					ChannelId: "",
+					PortId:    "",
+					Authority: "invalid",
+				}
+			},
+			"invalid authority",
+		},
+		{
+			"invalid: capability not found",
+			func() {
+				msg = &icstypes.MsgGovCloseChannel{
+					ChannelId: "invalid",
+					PortId:    "invalid",
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+				}
+			},
+			"capability not found",
+		},
+		{
+			"valid close",
+			func() {
+				msg = &icstypes.MsgGovCloseChannel{
+					ChannelId: "channel-4",
+					PortId:    "icacontroller-testchain2-1.deposit",
+					Authority: suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+				}
+			},
+			"",
+		},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			ctx := suite.chainA.GetContext()
+
+			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			suite.NoError(err)
+
+			tt.malleate()
+
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			res, err := msgSrv.GovCloseChannel(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+
+			if tt.expectErr != "" {
+				suite.ErrorContains(err, tt.expectErr)
+				suite.T().Logf("Error: %v", err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(res)
+
+				// verify channel is found but closed
+				channel, found := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetChannel(ctx, msg.PortId, msg.ChannelId)
+				suite.True(found)
+				suite.Equal(channeltypes.CLOSED, channel.State)
 			}
 		})
 	}
