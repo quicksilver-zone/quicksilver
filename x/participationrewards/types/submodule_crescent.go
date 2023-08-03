@@ -3,19 +3,17 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"strings"
 	"time"
-
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/multierror"
-
+	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 type CrescentPoolProtocolData struct {
