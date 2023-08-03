@@ -317,7 +317,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"",
 		},
 		{
-			"valid_osmosis_bank_proof",
+			"valid_osmosis_unbonded_gamm",
 			func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
 				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
