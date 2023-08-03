@@ -84,7 +84,10 @@ func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 			if err != nil {
 				return 0, err
 			}
-			poolID, _ := strconv.Atoi(poolDenom[strings.LastIndex(poolDenom, "/")+1:])
+			poolID, err := strconv.Atoi(poolDenom[strings.LastIndex(poolDenom, "/")+1:])
+			if err != nil {
+				return 0, err
+			}
 			lock = osmolockup.NewPeriodLock(uint64(poolID), addr, time.Hour, time.Time{}, sdk.NewCoins(coin))
 		} else {
 			lock = osmolockup.PeriodLock{}
