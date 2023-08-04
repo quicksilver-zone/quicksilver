@@ -10,8 +10,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
-type ClaimRecords []types.ClaimRecord
-
 // HandleRegisterZoneDropProposal is a handler for executing a passed airdrop proposal.
 func HandleRegisterZoneDropProposal(ctx sdk.Context, k *Keeper, p *types.RegisterZoneDropProposal) error {
 	if err := p.ValidateBasic(); err != nil {
@@ -34,7 +32,7 @@ func HandleRegisterZoneDropProposal(ctx sdk.Context, k *Keeper, p *types.Registe
 	}
 
 	// unmarshal json
-	var crs ClaimRecords
+	var crs types.ClaimRecords
 	if err := json.Unmarshal(crsb, &crs); err != nil {
 		return err
 	}

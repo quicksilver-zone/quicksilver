@@ -7,6 +7,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "quicksilver/claimsmanager/v1/claimsmanager.proto";
+import "quicksilver/airdrop/v1/proposals.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
 
@@ -25,6 +26,14 @@ service Msg {
       returns (MsgIncentivePoolSpendResponse) {
     option (google.api.http) = {
       post : "/quicksilver/tx/v1/airdrop/incentive_pool_spend"
+      body : "*"
+    };
+  }
+
+  rpc RegisterZoneDrop(MsgRegisterZoneDrop)
+      returns (MsgRegisterZoneDropResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/airdrop/register_zone_drop"
       body : "*"
     };
   }

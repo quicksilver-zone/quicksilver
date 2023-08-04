@@ -21,12 +21,17 @@ service Msg {
     };
   }
 
-  // SignalIntent defines a method for signalling voting intent for one or more
-  // validators.
   rpc GovRemoveProtocolData(MsgGovRemoveProtocolData)
       returns (MsgGovRemoveProtocolDataResponse) {
     option (google.api.http) = {
       post : "/quicksilver/tx/v1/participationrewards/remove_protocoldata"
+      body : "*"
+    };
+  }
+
+  rpc AddProtocolData(MsgAddProtocolData) returns (MsgAddProtocolDataResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/participationrewards/add_protocoldata"
       body : "*"
     };
   }

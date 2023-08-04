@@ -19,6 +19,8 @@ import (
 )
 
 // HandleRegisterZoneProposal is a handler for executing a register zone proposal.
+//
+// Deprecated: use the message server variant of these functions.
 func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZoneProposal) error {
 	var (
 		baseZone types.Zone
@@ -177,7 +179,9 @@ func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOw
 	return nil
 }
 
-// HandleUpdateZoneProposal is a handler for executing a passed community spend proposal.
+// HandleUpdateZoneProposal is a handler for executing a passed handle update zone proposal.
+//
+// Deprecated: use the message server variant of these functions.
 func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZoneProposal) error {
 	zone, found := k.GetZone(ctx, p.ChainId)
 	if !found {

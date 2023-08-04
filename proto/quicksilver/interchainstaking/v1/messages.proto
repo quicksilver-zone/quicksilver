@@ -32,8 +32,20 @@ service Msg {
     };
   }
 
-  // SignalIntent defines a method for signalling voting intent for one or more
-  // validators.
+  rpc RegisterZone(MsgRegisterZone) returns (MsgRegisterZoneResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/interchainstaking/register_zone"
+      body : "*"
+    };
+  }
+
+  rpc UpdateZone(MsgUpdateZone) returns (MsgUpdateZoneResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/interchainstaking/update_zone"
+      body : "*"
+    };
+  }
+
   rpc GovCloseChannel(MsgGovCloseChannel) returns (MsgGovCloseChannelResponse) {
     option (google.api.http) = {
       post : "/quicksilver/tx/v1/interchainstaking/close_channel"

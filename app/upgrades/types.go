@@ -33,6 +33,8 @@ const (
 	V010404rc0UpgradeName   = "v1.4.4-rc.0"
 	V010404beta8UpgradeName = "v1.4.4-beta.8"
 	V010404rc1UpgradeName   = "v1.4.4-rc.1"
+	IBCv6tov7UpgradeName    = "ibc-v6-to-v7"
+	IBCv7tov71UpgradeName   = "ibc-v7-to-v71"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal
@@ -46,26 +48,26 @@ type Upgrade struct {
 	// CreateUpgradeHandler defines the function that creates an upgrade handler
 	CreateUpgradeHandler func(*module.Manager, module.Configurator, *keepers.AppKeepers) upgradetypes.UpgradeHandler
 
-	// Store upgrades, should be used for any new modules introduced, new modules deleted, or store names renamed.
+	// StoreUpgrades should be used for any new modules introduced, new modules deleted, or store names renamed.
 	StoreUpgrades storetypes.StoreUpgrades
 }
 
-//nolint:all //function useful for writing network specific upgrade handlers
+//nolint:all //function useful for writing network-specific upgrade handlers
 func isTest(ctx sdk.Context) bool {
 	return ctx.ChainID() == TestChainID
 }
 
-//nolint:all //function useful for writing network specific upgrade handlers
+//nolint:all //function useful for writing network-specific upgrade handlers
 func isDevnet(ctx sdk.Context) bool {
 	return ctx.ChainID() == DevnetChainID
 }
 
-//nolint:all //function useful for writing network specific upgrade handlers
+//nolint:all //function useful for writing network-specific upgrade handlers
 func isTestnet(ctx sdk.Context) bool {
 	return ctx.ChainID() == RhyeChainID
 }
 
-//nolint:all //function useful for writing network specific upgrade handlers
+//nolint:all //function useful for writing network-specific upgrade handlers
 func isMainnet(ctx sdk.Context) bool {
 	return ctx.ChainID() == ProductionChainID
 }

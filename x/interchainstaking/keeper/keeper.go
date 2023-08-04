@@ -19,7 +19,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -52,6 +51,7 @@ type Keeper struct {
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
 	msgRouter           types.MessageRouter
+	authority           string
 }
 
 // NewKeeper returns a new instance of zones Keeper.
@@ -69,6 +69,7 @@ func NewKeeper(
 	claimsManagerKeeper claimsmanagerkeeper.Keeper,
 	ps paramtypes.Subspace,
 	msgRouter types.MessageRouter,
+	authority string,
 ) *Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -97,6 +98,7 @@ func NewKeeper(
 
 		paramStore: ps,
 		msgRouter:  msgRouter,
+		authority:  authority,
 	}
 }
 
@@ -111,8 +113,8 @@ func (k *Keeper) SetHooks(icsh types.IcsHooks) *Keeper {
 	return k
 }
 
-func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
-	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
+func (k *Keeper) GetGovAuthority() string {
+	return k.authority
 }
 
 // Logger returns a module-specific logger.
