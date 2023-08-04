@@ -6,15 +6,14 @@ import (
 	"strings"
 	"time"
 
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/multierror"
-
+	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 type CrescentPoolProtocolData struct {
@@ -85,7 +84,7 @@ func (crd CrescentReserveAddressBalanceProtocolData) ValidateBasic() error {
 	if crd.ReserveAddress == "" {
 		errs["ReserveAddress"] = ErrUndefinedAttribute
 	}
-	if _, err := sdk.AccAddressFromBech32(crd.ReserveAddress); err != nil {
+	if _, err := addressutils.AccAddressFromBech32(crd.ReserveAddress, ""); err != nil {
 		errs["ReserveAddress"] = ErrInvalidBech32
 	}
 	if err := sdk.ValidateDenom(crd.Denom); err != nil {
