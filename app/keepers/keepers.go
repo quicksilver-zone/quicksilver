@@ -53,11 +53,10 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
+	"github.com/ingenuity-build/quicksilver/utils"
 	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v7/router"
 	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v7/router/keeper"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
-
-	"github.com/ingenuity-build/quicksilver/proofs"
 
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/wasmbinding"
@@ -200,13 +199,13 @@ func (appKeepers *AppKeepers) InitKeepers(
 	wasmOpts []wasm.Option,
 ) {
 	// Add 'normal' keepers
-	proofOpsFn := proofs.ValidateProofOps
+	proofOpsFn := utils.ValidateProofOps
 	if mock {
-		proofOpsFn = proofs.MockProofOps
+		proofOpsFn = utils.MockProofOps
 	}
-	selfProofOpsFn := proofs.ValidateSelfProofOps
+	selfProofOpsFn := utils.ValidateSelfProofOps
 	if mock {
-		selfProofOpsFn = proofs.MockSelfProofOps
+		selfProofOpsFn = utils.MockSelfProofOps
 	}
 
 	appKeepers.ParamsKeeper = appKeepers.initParamsKeeper(appCodec, cdc, appKeepers.keys[paramstypes.StoreKey], appKeepers.tkeys[paramstypes.TStoreKey])
@@ -361,7 +360,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[claimsmanagertypes.StoreKey],
-		*appKeepers.IBCKeeper,
+		appKeepers.IBCKeeper,
 	)
 
 	// claimsmanagerModule := claimsmanager.NewAppModule(appCodec, appKeepers.ClaimsManagerKeeper)
@@ -376,7 +375,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.ICAControllerKeeper,
 		&scopedInterchainStakingKeeper,
 		appKeepers.InterchainQueryKeeper,
-		*appKeepers.IBCKeeper,
+		appKeepers.IBCKeeper,
 		appKeepers.TransferKeeper,
 		appKeepers.ClaimsManagerKeeper,
 		appKeepers.GetSubspace(interchainstakingtypes.ModuleName),
@@ -392,8 +391,10 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
-		appKeepers.InterchainQueryKeeper,
+		appKeepers.IBCKeeper,
+		&appKeepers.InterchainQueryKeeper,
 		appKeepers.InterchainstakingKeeper,
+		appKeepers.ClaimsManagerKeeper,
 		authtypes.FeeCollectorName,
 		proofOpsFn,
 		selfProofOpsFn,
@@ -517,9 +518,9 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
-		*appKeepers.GovKeeper,
+		appKeepers.GovKeeper,
+		appKeepers.IBCKeeper,
 		appKeepers.InterchainstakingKeeper,
-		appKeepers.InterchainQueryKeeper,
 		appKeepers.ParticipationRewardsKeeper,
 		proofOpsFn,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),

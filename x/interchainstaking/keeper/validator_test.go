@@ -17,14 +17,14 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
 		ctx := suite.chainA.GetContext()
 
 		zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		suite.Require().True(found)
+		suite.True(found)
 
 		validator := addressutils.GenerateValAddressForTest()
 
 		valAddrBytes, err := addressutils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
-		suite.Require().NoError(err)
+		suite.NoError(err)
 		_, found = app.InterchainstakingKeeper.GetValidator(ctx, &zone, valAddrBytes)
-		suite.Require().False(found)
+		suite.False(found)
 
 		count := len(app.InterchainstakingKeeper.GetValidators(ctx, &zone))
 
@@ -40,15 +40,15 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
 
 		count2 := len(app.InterchainstakingKeeper.GetValidators(ctx, &zone))
 
-		suite.Require().Equal(count+1, count2)
+		suite.Equal(count+1, count2)
 
 		fetchedValidator, found := app.InterchainstakingKeeper.GetValidator(ctx, &zone, valAddrBytes)
-		suite.Require().True(found)
-		suite.Require().Equal(newValidator, fetchedValidator)
+		suite.True(found)
+		suite.Equal(newValidator, fetchedValidator)
 
 		app.InterchainstakingKeeper.DeleteValidator(ctx, &zone, valAddrBytes)
 
 		count3 := len(app.InterchainstakingKeeper.GetValidators(ctx, &zone))
-		suite.Require().Equal(count, count3)
+		suite.Equal(count, count3)
 	})
 }

@@ -3,9 +3,10 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+
+	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 // ChannelKeeper defines the expected IBC channel keeper.
@@ -40,4 +41,9 @@ type BankKeeper interface {
 
 type IcsHooks interface {
 	AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accountPrefix string) error
+}
+
+type ClaimsManagerKeeper interface {
+	IterateLastEpochUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
+	SetClaim(ctx sdk.Context, claim *claimsmanagertypes.Claim)
 }

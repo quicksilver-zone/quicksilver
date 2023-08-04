@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 			qs := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 			osmoParamsJSON, err := json.Marshal(tt.osmosisParams)
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			data := types.ProtocolData{
 				Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisParams)],
 				Data: osmoParamsJSON,
@@ -94,7 +94,7 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 
 			for _, pool := range tt.osmosisPools {
 				poolJSON, err := json.Marshal(pool)
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				data := types.ProtocolData{
 					Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)],
 					Data: poolJSON,
@@ -102,8 +102,8 @@ func (suite *KeeperTestSuite) TestCalcTokenValues() {
 				qs.ParticipationRewardsKeeper.SetProtocolData(ctx, pool.GenerateKey(), &data)
 			}
 			tvs, err := qs.ParticipationRewardsKeeper.CalcTokenValues(ctx)
-			suite.Require().NoError(err)
-			suite.Require().Equal(tt.expectedTvs, tvs)
+			suite.NoError(err)
+			suite.Equal(tt.expectedTvs, tvs)
 		})
 	}
 }

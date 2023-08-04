@@ -39,6 +39,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010404rc1UpgradeName, CreateUpgradeHandler: V010404rc1UpgradeHandler},
 		{UpgradeName: IBCv6tov7UpgradeName, CreateUpgradeHandler: IBCv6tov7UpgradeHandler},
 		{UpgradeName: IBCv7tov71UpgradeName, CreateUpgradeHandler: IBCv7tov71UpgradeHandler},
+		{UpgradeName: V010404beta9UpgradeName, CreateUpgradeHandler: V010404beta9UpgradeHandler},
 	}
 }
 
@@ -506,6 +507,33 @@ func V010404rc1UpgradeHandler(
 				appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
 				return false
 			})
+		}
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta9UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTest(ctx) || isDevnet(ctx) {
+
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, JunoTestnetChainID)
+			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, &icstypes.Zone{ChainId: JunoTestnetChainID})
+			for _, val := range vals {
+				valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "junovaloper")
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, &icstypes.Zone{ChainId: JunoTestnetChainID}, valoper)
+			}
+
+			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
+			if !exists {
+				panic("connection protocol data type not found")
+			}
+
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte(JunoTestnetChainID)))
+
 		}
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}

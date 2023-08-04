@@ -98,12 +98,12 @@ func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 			k := appA.ParticipationRewardsKeeper
 			err := keeper.HandleAddProtocolDataProposal(suite.chainA.GetContext(), k, &prop)
 			if tt.wantErr {
-				suite.Require().Error(err)
+				suite.Error(err)
 				suite.T().Logf("Error: %v", err)
 				return
 			}
 
-			suite.Require().NoError(err)
+			suite.NoError(err)
 		})
 	}
 }
@@ -119,7 +119,7 @@ func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
 	}
 
 	pdString, err := json.Marshal(pd)
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	ctx := suite.chainA.GetContext()
 
@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
 	// set the protocol data
 
 	_, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, string(pd.GenerateKey()))
-	suite.Require().True(found)
+	suite.True(found)
 
 	msgServer := keeper.NewMsgServerImpl(k)
 
@@ -149,8 +149,8 @@ func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
 
 	_, err = msgServer.GovRemoveProtocolData(ctx, &proposalMsg)
 
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	_, found = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, string(pd.GenerateKey()))
-	suite.Require().True(found)
+	suite.True(found)
 }
