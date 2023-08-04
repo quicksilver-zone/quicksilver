@@ -11,6 +11,6 @@ RUN go build -ldflags="$lfs" -a xcc.go
 
 FROM alpine:3.17
 
-COPY --from=build /app/xcclookup /usr/local/bin/xcc
+COPY --from=build /app/xcc /usr/local/bin/xcc
 
 ENTRYPOINT xcc
