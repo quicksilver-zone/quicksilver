@@ -16,7 +16,7 @@ func (k *Keeper) GetRemoteAddressMap(ctx sdk.Context, localAddress []byte, chain
 }
 
 // IterateUserMappedAccounts iterates over all the user mapped accounts.
-func (k Keeper) IterateUserMappedAccounts(ctx sdk.Context, localAddress []byte, fn func(index int64, chainID string, remoteAddressBytes []byte) (stop bool)) {
+func (k *Keeper) IterateUserMappedAccounts(ctx sdk.Context, localAddress []byte, fn func(index int64, chainID string, remoteAddressBytes []byte) (stop bool)) {
 	// noop
 	if fn == nil {
 		return
