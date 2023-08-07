@@ -8,6 +8,9 @@ import (
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	leveragetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,10 +18,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
-	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 var PoolCoinDenom = "pool1"

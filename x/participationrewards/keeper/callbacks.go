@@ -4,20 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 const (
