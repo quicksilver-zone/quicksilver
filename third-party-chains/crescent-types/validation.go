@@ -15,7 +15,7 @@ type ParticipationRewardsKeeper interface {
 	GetProtocolData(ctx sdk.Context, pdType participationrewardstypes.ProtocolDataType, key string) (participationrewardstypes.ProtocolData, bool)
 }
 
-func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, position lpfarm.Position, chainID string) (math.Int, error) {
+func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewardsKeeper, position lpfarm.Position) (math.Int, error) {
 	farmingAmount := position.FarmingAmount
 
 	poolID := position.Denom[4:]
