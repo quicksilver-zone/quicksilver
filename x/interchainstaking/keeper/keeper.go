@@ -27,11 +27,12 @@ import (
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-
 	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+
+	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -66,7 +67,6 @@ func NewKeeper(
 	ibcKeeper *ibckeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
 	claimsManagerKeeper types.ClaimsManagerKeeper,
-	epochsKeeper types.EpochsKeeper,
 	ps paramtypes.Subspace,
 ) *Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
@@ -96,7 +96,6 @@ func NewKeeper(
 		IBCKeeper:           ibcKeeper,
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
-		EpochsKeeper:        epochsKeeper,
 		hooks:               nil,
 
 		paramStore: ps,
@@ -116,6 +115,10 @@ func (k *Keeper) SetHooks(icsh types.IcsHooks) *Keeper {
 
 func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
 	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
+}
+
+func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
+	k.EpochsKeeper = &epochsKeeper
 }
 
 // Logger returns a module-specific logger.

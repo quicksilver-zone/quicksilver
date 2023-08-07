@@ -30,7 +30,6 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 		k.Logger(ctx).Info("handling epoch end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 
 		k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
-
 			if err := k.HandleMaturedUnbondings(ctx, zone); err != nil {
 				k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err.Error())
 			}

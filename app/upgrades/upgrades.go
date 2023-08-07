@@ -549,9 +549,7 @@ func V010404beta10UpgradeHandler(
 					appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusQueued)
 				}
 				return false
-
 			})
-
 		}
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}

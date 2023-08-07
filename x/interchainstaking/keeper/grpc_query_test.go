@@ -793,7 +793,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 					"ABC012",
 					types.WithdrawStatusQueued,
 					time.Time{},
-					icsKeeper.EpochsKeeper.GetEpochInfo(ctx,epochstypes.EpochIdentifierEpoch).CurrentEpoch,
+					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
 			},
 			&types.QueryWithdrawalRecordsRequest{
@@ -898,7 +898,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 					"ABC012",
 					types.WithdrawStatusQueued,
 					time.Time{},
-					icsKeeper.EpochsKeeper.GetEpochInfo(ctx,epochstypes.EpochIdentifierEpoch).CurrentEpoch,
+					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
 			},
 			&types.QueryUserWithdrawalRecordsRequest{
@@ -991,7 +991,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 					"ABC012",
 					types.WithdrawStatusQueued,
 					time.Time{},
-					icsKeeper.EpochsKeeper.GetEpochInfo(ctx,epochstypes.EpochIdentifierEpoch).CurrentEpoch,
+					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
 			},
 			&types.QueryWithdrawalRecordsRequest{},
