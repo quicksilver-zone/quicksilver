@@ -364,6 +364,11 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unbonding currently disabled for zone %s", zone.ZoneID())
 	}
 
+	// TODO check sub-zone
+	if zone.IsSubzone() && (msg.FromAddress != zone.SubzoneInfo.Authority) {
+		return nil, types.ErrInvalidSubzoneAuthority
+	}
+
 	// does destination address match the prefix registered against the zone?
 	if _, err := addressutils.AccAddressFromBech32(msg.DestinationAddress, zone.AccountPrefix); err != nil {
 		return nil, fmt.Errorf("destination address %s does not match expected prefix %s [%w]", msg.DestinationAddress, zone.AccountPrefix, err)
@@ -426,6 +431,11 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 	zone, ok := k.GetZone(ctx, msg.ChainId)
 	if !ok {
 		return nil, fmt.Errorf("invalid chain id \"%s\"", msg.ChainId)
+	}
+
+	// TODO check sub-zone
+	if zone.IsSubzone() && (msg.FromAddress != zone.SubzoneInfo.Authority) {
+		return nil, types.ErrInvalidSubzoneAuthority
 	}
 
 	// validate intents (aggregated errors)
