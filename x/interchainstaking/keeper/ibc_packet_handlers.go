@@ -23,12 +23,11 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
-
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 type TypedMsg struct {
@@ -321,7 +320,7 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 
 	var channel *channeltypes.IdentifiedChannel
 	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(ic channeltypes.IdentifiedChannel) bool {
-		if ic.Counterparty.ChannelId == sMsg.SourceChannel && ic.Counterparty.PortId == sMsg.SourcePort && len(ic.ConnectionHops) == 1 && ic.ConnectionHops[0] == zone.ConnectionId {
+		if ic.Counterparty.ChannelId == sMsg.SourceChannel && ic.Counterparty.PortId == sMsg.SourcePort && len(ic.ConnectionHops) == 1 && ic.ConnectionHops[0] == zone.ConnectionId && ic.State == channeltypes.OPEN {
 			channel = &ic
 			return true
 		}

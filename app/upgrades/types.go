@@ -35,6 +35,7 @@ const (
 	V010404rc1UpgradeName   = "v1.4.4-rc.1"
 	IBCv6tov7UpgradeName    = "ibc-v6-to-v7"
 	IBCv7tov71UpgradeName   = "ibc-v7-to-v71"
+	V010404beta9UpgradeName = "v1.4.4-beta.9"
 )
 
 // Upgrade defines a struct containing necessary fields that a SoftwareUpgradeProposal

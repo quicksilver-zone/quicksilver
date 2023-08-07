@@ -93,10 +93,9 @@ func (s *KeeperTestSuite) TestKeeper_NewClaim() {
 		},
 	}
 
-	k := s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			got := k.NewClaim(tt.args.address, tt.args.chainID, tt.args.module, tt.args.srcChainID, tt.args.amount)
+			got := types.NewClaim(tt.args.address, tt.args.chainID, tt.args.module, tt.args.srcChainID, tt.args.amount)
 			s.Require().Equal(tt.want, got)
 		})
 	}

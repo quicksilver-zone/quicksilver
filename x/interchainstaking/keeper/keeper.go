@@ -19,7 +19,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -28,12 +27,10 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-
 	"github.com/ingenuity-build/quicksilver/utils"
-	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -46,13 +43,14 @@ type Keeper struct {
 	ICQKeeper           interchainquerykeeper.Keeper
 	AccountKeeper       types.AccountKeeper
 	BankKeeper          types.BankKeeper
-	IBCKeeper           ibckeeper.Keeper
+	IBCKeeper           *ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
-	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
+	ClaimsManagerKeeper types.ClaimsManagerKeeper
 	Ir                  codectypes.InterfaceRegistry
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
 	msgRouter           types.MessageRouter
+	authority           string
 }
 
 // NewKeeper returns a new instance of zones Keeper.
@@ -65,22 +63,27 @@ func NewKeeper(
 	icaControllerKeeper icacontrollerkeeper.Keeper,
 	scopedKeeper *capabilitykeeper.ScopedKeeper,
 	icqKeeper interchainquerykeeper.Keeper,
-	ibcKeeper ibckeeper.Keeper,
+	ibcKeeper *ibckeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
-	claimsManagerKeeper claimsmanagerkeeper.Keeper,
+	claimsManagerKeeper types.ClaimsManagerKeeper,
 	ps paramtypes.Subspace,
 	msgRouter types.MessageRouter,
+	authority string,
 ) *Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
 	if addr := accountKeeper.GetModuleAddress(types.EscrowModuleAccount); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+		panic(fmt.Sprintf("%s escrow account has not been set", types.EscrowModuleAccount))
 	}
 
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
+	}
+
+	if ibcKeeper == nil {
+		panic("ibcKeeper is nil")
 	}
 
 	return &Keeper{
@@ -98,6 +101,7 @@ func NewKeeper(
 
 		paramStore: ps,
 		msgRouter:  msgRouter,
+		authority:  authority,
 	}
 }
 
@@ -112,8 +116,8 @@ func (k *Keeper) SetHooks(icsh types.IcsHooks) *Keeper {
 	return k
 }
 
-func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
-	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
+func (k *Keeper) GetGovAuthority() string {
+	return k.authority
 }
 
 // Logger returns a module-specific logger.

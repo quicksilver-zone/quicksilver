@@ -4,6 +4,8 @@ import (
 	"testing"
 	"time"
 
+	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+
 	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 
 	"cosmossdk.io/math"
@@ -75,10 +77,9 @@ func (suite *KeeperTestSuite) SetupTest() {
 }
 
 func (suite *KeeperTestSuite) setupTestZones() {
-	proposal := &icstypes.RegisterZoneProposal{
-		Title:            "register zone A",
-		Description:      "register zone A",
-		ConnectionId:     suite.path.EndpointA.ConnectionID,
+	msg := &icstypes.MsgRegisterZone{
+		Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+		ConnectionID:     suite.path.EndpointA.ConnectionID,
 		LocalDenom:       "uqatom",
 		BaseDenom:        "uatom",
 		AccountPrefix:    "cosmos",
@@ -94,25 +95,26 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 
-	err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
-	suite.Require().NoError(err)
+	msgSrv := icskeeper.NewMsgServerImpl(*quicksilver.InterchainstakingKeeper)
+	_, err := msgSrv.RegisterZone(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+	suite.NoError(err)
 
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
 	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: ctx.BlockTime()})
-	quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0"})
-	suite.Require().NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
-	suite.Require().NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
-	suite.Require().NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
-	suite.Require().NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
+	quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0", State: connectiontypes.OPEN})
+	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
 	for i := range vals {
-		suite.Require().NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
+		suite.NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
 	}
 
 	suite.coordinator.CommitNBlocks(suite.chainA, 2)
@@ -134,13 +136,14 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: portID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
 
 	// channel, found := quicksilver.IBCKeeper.ChannelKeeper.GetChannel(ctx, portID, channelID)
-	// suite.Require().True(found)
+	// suite.True(found)
 	// fmt.Printf("DEBUG: channel >>>\n%v\n<<<\n", channel)
 
 	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, portID, channelID, 1)
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(ctx, connectionID, portID, channelID)
+
 	chanCapName := host.ChannelCapabilityPath(portID, channelID)
-	capability, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+	capability, err := quicksilver.ScopedIBCKeeper.NewCapability(
 		suite.chainA.GetContext(),
 		chanCapName,
 	)
@@ -151,23 +154,6 @@ func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, conne
 	if err != nil {
 		return err
 	}
-
-	err = quicksilver.ScopedIBCKeeper.ClaimCapability(suite.chainA.GetContext(), capability, chanCapName)
-	if err != nil {
-		return err
-	}
-
-	/*
-		portPathName := host.PortPath(portID)
-		capability, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
-			suite.chainA.GetContext(),
-			portPathName,
-		)
-		err = quicksilver.InterchainstakingKeeper.ClaimCapability(suite.chainA.GetContext(), capability, portPathName)
-		if err != nil {
-			return err
-		}
-	*/
 
 	addr, err := addressutils.EncodeAddressToBech32(remotePrefix, addressutils.GenerateAccAddressForTest())
 	if err != nil {
@@ -325,15 +311,15 @@ func (suite *KeeperTestSuite) TestGetUnbondingAmount() {
 			ctx := suite.chainA.GetContext()
 			icsKeeper := quicksilver.InterchainstakingKeeper
 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			suite.True(found)
 
 			for _, record := range tt.records(zone) {
 				icsKeeper.SetWithdrawalRecord(ctx, record)
 			}
 
 			actual := icsKeeper.GetUnbondingAmount(ctx, &zone)
-			suite.Require().Equal(tt.expected, actual.Amount)
-			suite.Require().Equal(zone.BaseDenom, actual.Denom)
+			suite.Equal(tt.expected, actual.Amount)
+			suite.Equal(zone.BaseDenom, actual.Denom)
 		})
 	}
 }

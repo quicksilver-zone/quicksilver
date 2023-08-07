@@ -8,33 +8,132 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/ingenuity-build/multierror"
 )
 
-// interchainstaking message types.
-const (
-	TypeMsgRequestRedemption = "requestredemption"
-	TypeMsgSignalIntent      = "signalintent"
+var (
+	_ sdk.Msg = &MsgRegisterZone{}
+	_ sdk.Msg = &MsgUpdateZone{}
+	_ sdk.Msg = &MsgRequestRedemption{}
+	_ sdk.Msg = &MsgSignalIntent{}
+	_ sdk.Msg = &MsgGovCloseChannel{}
+	_ sdk.Msg = &MsgGovReopenChannel{}
 )
 
-var (
-	_ sdk.Msg            = &MsgRequestRedemption{}
-	_ sdk.Msg            = &MsgSignalIntent{}
-	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
-	_ legacytx.LegacyMsg = &MsgSignalIntent{}
+const (
+	ConnectionPrefix = "connection-"
+
+	UpdateZoneKeyBaseDenom        = "base_denom"
+	UpdateZoneKeyLocalDenom       = "local_denom"
+	UpdateZoneKeyLiquidityModule  = "liquidity_module"
+	UpdateZoneKeyUnbondingEnabled = "unbonding_enabled"
+	UpdateZoneKeyDepositsEnabled  = "deposits_enabled"
+	UpdateZoneKeyReturnToSender   = "return_to_sender"
+	UpdateZoneKeyMessagesPerTx    = "messages_per_tx"
+	UpdateZoneKeyAccountPrefix    = "account_prefix"
+	UpdateZoneKeyIs118            = "is_118"
+	UpdateZoneKeyConnectionID     = "connection_id"
 )
+
+// ValidateBasic Implements Msg.
+func (msg MsgRegisterZone) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return errors.New("invalid authority address")
+	}
+
+	// check valid connection id
+	if len(msg.ConnectionID) < 12 || msg.ConnectionID[0:11] != ConnectionPrefix {
+		return fmt.Errorf("invalid connection string: %s", msg.ConnectionID)
+	}
+
+	// validate local denominations
+	if err := sdk.ValidateDenom(msg.LocalDenom); err != nil {
+		return err
+	}
+
+	// validate base denom
+	if err := sdk.ValidateDenom(msg.BaseDenom); err != nil {
+		return err
+	}
+
+	// validate account prefix
+	if len(msg.AccountPrefix) < 2 {
+		return errors.New("account prefix must be at least 2 characters") // ki is shortest to date.
+	}
+
+	// validate messages_per_tx
+	if msg.MessagesPerTx < 1 {
+		return errors.New("messages_per_tx must be a positive non-zero integer")
+	}
+
+	if msg.LiquidityModule {
+		return errors.New("liquidity module is unsupported")
+	}
+
+	if msg.Decimals == 0 {
+		return errors.New("decimals field is mandatory")
+	}
+
+	return nil
+}
+
+// GetSigners Implements Msg.
+func (msg MsgRegisterZone) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+//----------------------------------------------------------------
+
+// ValidateBasic Implements Msg.
+func (msg MsgUpdateZone) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return errors.New("invalid authority address")
+	}
+
+	if msg.ZoneID == "" {
+		return errors.New("zoneID cannot be empty")
+	}
+
+	if len(msg.Changes) == 0 {
+		return errors.New("message must contain non-zero amount of zone changes")
+	}
+
+	// verify that key is supported
+	for _, change := range msg.Changes {
+		switch change.Key {
+		case UpdateZoneKeyBaseDenom:
+		case UpdateZoneKeyLocalDenom:
+		case UpdateZoneKeyLiquidityModule:
+		case UpdateZoneKeyUnbondingEnabled:
+		case UpdateZoneKeyDepositsEnabled:
+		case UpdateZoneKeyReturnToSender:
+		case UpdateZoneKeyMessagesPerTx:
+		case UpdateZoneKeyAccountPrefix:
+		case UpdateZoneKeyIs118:
+		case UpdateZoneKeyConnectionID:
+		default:
+			return fmt.Errorf("unexpected update key '%s'", change.Key)
+		}
+	}
+
+	return nil
+}
+
+// GetSigners Implements Msg.
+func (msg MsgUpdateZone) GetSigners() []sdk.AccAddress {
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
+}
+
+//----------------------------------------------------------------
 
 // NewMsgRequestRedemption - construct a msg to request redemption.
 func NewMsgRequestRedemption(value sdk.Coin, destinationAddress string, fromAddress sdk.Address) *MsgRequestRedemption {
 	return &MsgRequestRedemption{Value: value, DestinationAddress: destinationAddress, FromAddress: fromAddress.String()}
 }
-
-// Route Implements Msg.
-func (msg MsgRequestRedemption) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (msg MsgRequestRedemption) Type() string { return TypeMsgRequestRedemption }
 
 // ValidateBasic Implements Msg.
 func (msg MsgRequestRedemption) ValidateBasic() error {
@@ -65,11 +164,6 @@ func (msg MsgRequestRedemption) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// GetSignBytes Implements Msg.
-func (msg MsgRequestRedemption) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }
 
 // GetSigners Implements Msg.
@@ -135,12 +229,6 @@ func NewMsgSignalIntent(chainID, intents string, fromAddress sdk.Address) *MsgSi
 	return &MsgSignalIntent{ChainId: chainID, Intents: intents, FromAddress: fromAddress.String()}
 }
 
-// Route Implements Msg.
-func (msg MsgSignalIntent) Route() string { return RouterKey }
-
-// Type Implements Msg.
-func (msg MsgSignalIntent) Type() string { return TypeMsgSignalIntent }
-
 // ValidateBasic Implements Msg.
 func (msg MsgSignalIntent) ValidateBasic() error {
 	errm := make(map[string]error)
@@ -182,54 +270,51 @@ func (msg MsgSignalIntent) ValidateBasic() error {
 	return nil
 }
 
-// GetSignBytes Implements Msg.
-func (msg MsgSignalIntent) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners Implements Msg.
 func (msg MsgSignalIntent) GetSigners() []sdk.AccAddress {
 	fromAddress, _ := sdk.AccAddressFromBech32(msg.FromAddress)
 	return []sdk.AccAddress{fromAddress}
 }
 
-// NewMsgGovCloseChannel - construct a msg to update signalled intent.
+// NewMsgGovCloseChannel - construct a msg to update signaled intent.
 func NewMsgGovCloseChannel(channelID, portName string, fromAddress sdk.Address) *MsgGovCloseChannel {
 	return &MsgGovCloseChannel{ChannelId: channelID, PortId: portName, Authority: fromAddress.String()}
 }
 
-// GetSignBytes Implements Msg.
-func (msg MsgGovCloseChannel) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners Implements Msg.
 func (msg MsgGovCloseChannel) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{fromAddress}
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
 }
 
 // check channel id is correct format. validate port name?
-func (msg MsgGovCloseChannel) ValidateBasic() error { return nil }
+func (msg MsgGovCloseChannel) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return errors.New("invalid authority address")
+	}
+
+	return nil
+}
 
 // NewMsgGovReopenChannel - construct a msg to update signalled intent.
 func NewMsgGovReopenChannel(connectionID, portName string, fromAddress sdk.Address) *MsgGovReopenChannel {
 	return &MsgGovReopenChannel{ConnectionId: connectionID, PortId: portName, Authority: fromAddress.String()}
 }
 
-// GetSignBytes Implements Msg.
-func (msg MsgGovReopenChannel) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
 // GetSigners Implements Msg.
 func (msg MsgGovReopenChannel) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{fromAddress}
+	authority, _ := sdk.AccAddressFromBech32(msg.Authority)
+	return []sdk.AccAddress{authority}
 }
 
 // check channel id is correct format. validate port name?
 func (msg MsgGovReopenChannel) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		return errors.New("invalid authority address")
+	}
+
 	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
 	parts := strings.Split(msg.PortId, ".")
 	if len(parts) != 2 {
@@ -249,4 +334,24 @@ func (msg MsgGovReopenChannel) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgRequestRedemption) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgRegisterZone) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgGovReopenChannel) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgGovCloseChannel) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
 }

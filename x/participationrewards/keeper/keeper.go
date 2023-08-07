@@ -11,16 +11,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
-	"github.com/ingenuity-build/quicksilver/proofs"
 	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
 	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
 	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types"
+	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
-	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -39,19 +38,23 @@ var (
 )
 
 type Keeper struct {
-	cdc                  codec.BinaryCodec
-	storeKey             storetypes.StoreKey
-	paramSpace           paramtypes.Subspace
-	accountKeeper        types.AccountKeeper
-	bankKeeper           types.BankKeeper
-	stakingKeeper        types.StakingKeeper
-	IcqKeeper            icqkeeper.Keeper
-	icsKeeper            *icskeeper.Keeper
-	epochsKeeper         epochskeeper.Keeper
+	cdc           codec.BinaryCodec
+	storeKey      storetypes.StoreKey
+	paramSpace    paramtypes.Subspace
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
+
+	IBCKeeper           *ibckeeper.Keeper
+	IcqKeeper           types.InterchainQueryKeeper
+	icsKeeper           types.InterchainStakingKeeper
+	epochsKeeper        epochskeeper.Keeper
+	ClaimsManagerKeeper types.ClaimsManagerKeeper
+
 	feeCollectorName     string
 	prSubmodules         map[cmtypes.ClaimType]Submodule
-	ValidateProofOps     proofs.ProofOpsFn
-	ValidateSelfProofOps proofs.SelfProofOpsFn
+	ValidateProofOps     utils.ProofOpsFn
+	ValidateSelfProofOps utils.SelfProofOpsFn
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -63,11 +66,13 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
-	icqk icqkeeper.Keeper,
-	icsk *icskeeper.Keeper,
+	ibcKeeper *ibckeeper.Keeper,
+	icqk types.InterchainQueryKeeper,
+	icsk types.InterchainStakingKeeper,
+	cmk types.ClaimsManagerKeeper,
 	feeCollectorName string,
-	proofValidationFn proofs.ProofOpsFn,
-	selfProofValidationFn proofs.SelfProofOpsFn,
+	proofValidationFn utils.ProofOpsFn,
+	selfProofValidationFn utils.SelfProofOpsFn,
 ) *Keeper {
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
@@ -85,8 +90,10 @@ func NewKeeper(
 		accountKeeper:        ak,
 		bankKeeper:           bk,
 		stakingKeeper:        sk,
+		IBCKeeper:            ibcKeeper,
 		IcqKeeper:            icqk,
 		icsKeeper:            icsk,
+		ClaimsManagerKeeper:  cmk,
 		feeCollectorName:     feeCollectorName,
 		prSubmodules:         LoadSubmodules(),
 		ValidateProofOps:     proofValidationFn,

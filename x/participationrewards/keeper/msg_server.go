@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
@@ -65,7 +67,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 		if msg.SrcZone == ctx.ChainID() {
 			if err := k.ValidateSelfProofOps(
 				ctx,
-				k.icsKeeper.ClaimsManagerKeeper,
+				k.ClaimsManagerKeeper,
 				"epoch",
 				proof.ProofType,
 				proof.Key,
@@ -77,7 +79,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 		} else {
 			if err := k.ValidateProofOps(
 				ctx,
-				&k.icsKeeper.IBCKeeper,
+				k.IBCKeeper,
 				connectionData.ConnectionID,
 				connectionData.ChainID,
 				proof.Height,
@@ -98,14 +100,14 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 		if err != nil {
 			return nil, fmt.Errorf("claim validation failed: %w", err)
 		}
-		claim := k.icsKeeper.ClaimsManagerKeeper.NewClaim(msg.UserAddress, zone.ZoneID(), msg.ClaimType, msg.SrcZone, amount)
-		k.icsKeeper.ClaimsManagerKeeper.SetClaim(ctx, &claim)
+		claim := claimsmanagertypes.NewClaim(msg.UserAddress, zone.ChainId, msg.ClaimType, msg.SrcZone, amount)
+		k.ClaimsManagerKeeper.SetClaim(ctx, &claim)
 	}
 
 	return &types.MsgSubmitClaimResponse{}, nil
 }
 
-// MsgGovRemoveProtocolData removes a protocoldata item.
+// GovRemoveProtocolData removes a protocoldata item.
 func (k msgServer) GovRemoveProtocolData(goCtx context.Context, msg *types.MsgGovRemoveProtocolData) (*types.MsgGovRemoveProtocolDataResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -132,4 +134,37 @@ func (k msgServer) GovRemoveProtocolData(goCtx context.Context, msg *types.MsgGo
 	})
 
 	return &types.MsgGovRemoveProtocolDataResponse{}, nil
+}
+
+// AddProtocolData adds a protocoldata item.
+func (k msgServer) AddProtocolData(goCtx context.Context, msg *types.MsgAddProtocolData) (*types.MsgAddProtocolDataResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+		return &types.MsgAddProtocolDataResponse{},
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	protocolData := types.NewProtocolData(msg.Type, msg.Data)
+	if err := msg.ValidateBasic(); err != nil {
+		return &types.MsgAddProtocolDataResponse{}, err
+	}
+
+	pdtv, exists := types.ProtocolDataType_value[msg.Type]
+	if !exists {
+		return &types.MsgAddProtocolDataResponse{}, types.ErrUnknownProtocolDataType
+	}
+
+	pd, err := types.UnmarshalProtocolData(types.ProtocolDataType(pdtv), msg.Data)
+	if err != nil {
+		return &types.MsgAddProtocolDataResponse{}, err
+	}
+
+	k.SetProtocolData(ctx, pd.GenerateKey(), protocolData)
+
+	return &types.MsgAddProtocolDataResponse{}, nil
 }

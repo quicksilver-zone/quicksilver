@@ -5,6 +5,8 @@ package types
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
@@ -62,8 +64,86 @@ func (m *RegisterZoneDropProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RegisterZoneDropProposal proto.InternalMessageInfo
 
+type MsgRegisterZoneDrop struct {
+	Authority    string    `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	ZoneDrop     *ZoneDrop `protobuf:"bytes,2,opt,name=zone_drop,json=zoneDrop,proto3" json:"zone_drop,omitempty" yaml:"zone_drop"`
+	ClaimRecords []byte    `protobuf:"bytes,3,opt,name=claim_records,json=claimRecords,proto3" json:"claim_records,omitempty" yaml:"claim_records"`
+}
+
+func (m *MsgRegisterZoneDrop) Reset()         { *m = MsgRegisterZoneDrop{} }
+func (m *MsgRegisterZoneDrop) String() string { return proto.CompactTextString(m) }
+func (*MsgRegisterZoneDrop) ProtoMessage()    {}
+func (*MsgRegisterZoneDrop) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d5ca18fdf9feef37, []int{1}
+}
+func (m *MsgRegisterZoneDrop) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRegisterZoneDrop) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRegisterZoneDrop.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRegisterZoneDrop) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRegisterZoneDrop.Merge(m, src)
+}
+func (m *MsgRegisterZoneDrop) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRegisterZoneDrop) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRegisterZoneDrop.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRegisterZoneDrop proto.InternalMessageInfo
+
+// MsgRegisterZoneDropResponse defines the MsgRegisterZoneDrop response type.
+type MsgRegisterZoneDropResponse struct {
+}
+
+func (m *MsgRegisterZoneDropResponse) Reset()         { *m = MsgRegisterZoneDropResponse{} }
+func (m *MsgRegisterZoneDropResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRegisterZoneDropResponse) ProtoMessage()    {}
+func (*MsgRegisterZoneDropResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_d5ca18fdf9feef37, []int{2}
+}
+func (m *MsgRegisterZoneDropResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRegisterZoneDropResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRegisterZoneDropResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRegisterZoneDropResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRegisterZoneDropResponse.Merge(m, src)
+}
+func (m *MsgRegisterZoneDropResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRegisterZoneDropResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRegisterZoneDropResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRegisterZoneDropResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*RegisterZoneDropProposal)(nil), "quicksilver.airdrop.v1.RegisterZoneDropProposal")
+	proto.RegisterType((*MsgRegisterZoneDrop)(nil), "quicksilver.airdrop.v1.MsgRegisterZoneDrop")
+	proto.RegisterType((*MsgRegisterZoneDropResponse)(nil), "quicksilver.airdrop.v1.MsgRegisterZoneDropResponse")
 }
 
 func init() {
@@ -71,28 +151,35 @@ func init() {
 }
 
 var fileDescriptor_d5ca18fdf9feef37 = []byte{
-	// 331 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x90, 0x3f, 0x4b, 0xc3, 0x40,
-	0x18, 0xc6, 0x73, 0xfe, 0xc3, 0xa6, 0x15, 0x24, 0x04, 0x09, 0x1d, 0x92, 0x10, 0x44, 0xba, 0x98,
-	0x50, 0x05, 0x87, 0x82, 0x4b, 0xf1, 0x03, 0x94, 0xb8, 0x75, 0x29, 0x69, 0x72, 0xc4, 0x17, 0xaf,
-	0x79, 0xcf, 0xbb, 0x4b, 0xb1, 0xfd, 0x04, 0x8e, 0x8e, 0x8e, 0xfd, 0x38, 0x8e, 0x1d, 0x9d, 0x8a,
-	0xb4, 0x8b, 0x73, 0xf1, 0x03, 0x48, 0x93, 0xb6, 0x54, 0xd0, 0xed, 0x9e, 0x7b, 0x7e, 0xcf, 0x3d,
-	0xc7, 0xa3, 0x5f, 0x3c, 0xe5, 0x10, 0x3f, 0x4a, 0x60, 0x43, 0x2a, 0x82, 0x08, 0x44, 0x22, 0x90,
-	0x07, 0xc3, 0x66, 0xc0, 0x05, 0x72, 0x94, 0x11, 0x93, 0x3e, 0x17, 0xa8, 0xd0, 0x38, 0xdb, 0xe1,
-	0xfc, 0x35, 0xe7, 0x0f, 0x9b, 0x75, 0x33, 0xc5, 0x14, 0x0b, 0x24, 0x58, 0x9d, 0x4a, 0xba, 0x7e,
-	0xfe, 0xcf, 0xab, 0x9b, 0x60, 0x41, 0x79, 0xdf, 0x44, 0xb7, 0x42, 0x9a, 0x82, 0x54, 0x54, 0x74,
-	0x31, 0xa3, 0x77, 0x02, 0x79, 0x67, 0xdd, 0x6b, 0x98, 0xfa, 0xa1, 0x02, 0xc5, 0xa8, 0x45, 0x5c,
-	0xd2, 0xa8, 0x84, 0xa5, 0x30, 0x5c, 0xbd, 0x9a, 0x50, 0x19, 0x0b, 0xe0, 0x0a, 0x30, 0xb3, 0xf6,
-	0x0a, 0x6f, 0xf7, 0xca, 0xb8, 0xd7, 0x2b, 0x63, 0xcc, 0x68, 0x6f, 0xd5, 0x63, 0xed, 0xbb, 0xa4,
-	0x51, 0xbd, 0x72, 0xfd, 0xbf, 0x3f, 0xef, 0x6f, 0x4a, 0xdb, 0xe6, 0x72, 0xe6, 0x9c, 0x8e, 0xa2,
-	0x01, 0x6b, 0x79, 0xdb, 0xb0, 0x17, 0x1e, 0x8f, 0xd7, 0xbe, 0x71, 0xab, 0x9f, 0xc4, 0x2c, 0x82,
-	0x41, 0x4f, 0xd0, 0x18, 0x45, 0x22, 0xad, 0x03, 0x97, 0x34, 0x6a, 0x6d, 0x6b, 0x39, 0x73, 0xcc,
-	0x32, 0xf6, 0xcb, 0xf6, 0xc2, 0x5a, 0xa1, 0xc3, 0x52, 0xb6, 0x6a, 0x2f, 0x13, 0x47, 0x7b, 0x9b,
-	0x38, 0xda, 0xd7, 0xc4, 0xd1, 0xda, 0x9d, 0xf7, 0xb9, 0x4d, 0xa6, 0x73, 0x9b, 0x7c, 0xce, 0x6d,
-	0xf2, 0xba, 0xb0, 0xb5, 0xe9, 0xc2, 0xd6, 0x3e, 0x16, 0xb6, 0xd6, 0xbd, 0x49, 0x41, 0x3d, 0xe4,
-	0x7d, 0x3f, 0xc6, 0x41, 0x00, 0x59, 0x4a, 0xb3, 0x1c, 0xd4, 0xe8, 0xb2, 0x9f, 0x03, 0x4b, 0x82,
-	0xdd, 0x45, 0x9f, 0xb7, 0x9b, 0xaa, 0x11, 0xa7, 0xb2, 0x7f, 0x54, 0xec, 0x79, 0xfd, 0x13, 0x00,
-	0x00, 0xff, 0xff, 0x01, 0xdc, 0x6d, 0xbe, 0xcd, 0x01, 0x00, 0x00,
+	// 440 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x92, 0xc1, 0x6b, 0xd4, 0x40,
+	0x14, 0xc6, 0x33, 0xad, 0x8a, 0x3b, 0x5d, 0x41, 0x62, 0xa8, 0xb1, 0x62, 0x12, 0x82, 0xc8, 0x22,
+	0x34, 0xa1, 0x0a, 0x3d, 0x14, 0x3c, 0xb8, 0x78, 0x15, 0x4a, 0x7a, 0xeb, 0x65, 0xc9, 0x26, 0xc3,
+	0x74, 0x30, 0xc9, 0x1b, 0xe7, 0x4d, 0x16, 0xd3, 0xa3, 0xa7, 0x1e, 0x3d, 0x7a, 0xdc, 0x3f, 0xc1,
+	0x83, 0x7f, 0x84, 0xc7, 0xe2, 0xc9, 0x53, 0x91, 0xdd, 0x83, 0x9e, 0x8b, 0x17, 0x6f, 0xb2, 0x99,
+	0xb4, 0xdd, 0x4a, 0x3d, 0x78, 0xe8, 0x2d, 0x5f, 0xbe, 0xef, 0xf1, 0xbd, 0xdf, 0xf0, 0xe8, 0x93,
+	0xb7, 0xb5, 0xc8, 0xde, 0xa0, 0x28, 0x26, 0x4c, 0xc5, 0xa9, 0x50, 0xb9, 0x02, 0x19, 0x4f, 0xb6,
+	0x62, 0xa9, 0x40, 0x02, 0xa6, 0x05, 0x46, 0x52, 0x81, 0x06, 0x7b, 0x7d, 0x29, 0x17, 0x75, 0xb9,
+	0x68, 0xb2, 0xb5, 0xe1, 0x70, 0xe0, 0xd0, 0x46, 0xe2, 0xc5, 0x97, 0x49, 0x6f, 0x3c, 0xc8, 0x00,
+	0x4b, 0xc0, 0x91, 0x31, 0x8c, 0xe8, 0xac, 0xfb, 0x46, 0xc5, 0x25, 0xf2, 0x45, 0x4f, 0x89, 0xbc,
+	0x33, 0x1e, 0xff, 0x63, 0x93, 0xb3, 0xb2, 0x36, 0x15, 0xfe, 0x22, 0xd4, 0x4d, 0x18, 0x17, 0xa8,
+	0x99, 0xda, 0x87, 0x8a, 0xbd, 0x52, 0x20, 0x77, 0xbb, 0x5d, 0x6d, 0x87, 0xde, 0xd4, 0x42, 0x17,
+	0xcc, 0x25, 0x01, 0x19, 0xf4, 0x12, 0x23, 0xec, 0x80, 0xae, 0xe5, 0x0c, 0x33, 0x25, 0xa4, 0x16,
+	0x50, 0xb9, 0x2b, 0xad, 0xb7, 0xfc, 0xcb, 0xde, 0xa3, 0xbd, 0x43, 0xa8, 0xd8, 0x68, 0xd1, 0xe3,
+	0xae, 0x06, 0x64, 0xb0, 0xf6, 0x2c, 0x88, 0xae, 0x06, 0x8e, 0xce, 0x4a, 0x87, 0xce, 0xe9, 0x89,
+	0x7f, 0xb7, 0x49, 0xcb, 0x62, 0x27, 0x3c, 0x1f, 0x0e, 0x93, 0xdb, 0x87, 0x9d, 0x6f, 0xbf, 0xa0,
+	0x77, 0xb2, 0x22, 0x15, 0xe5, 0x48, 0xb1, 0x0c, 0x54, 0x8e, 0xee, 0x8d, 0x80, 0x0c, 0xfa, 0x43,
+	0xf7, 0xf4, 0xc4, 0x77, 0xcc, 0xd8, 0x25, 0x3b, 0x4c, 0xfa, 0xad, 0x4e, 0x8c, 0xdc, 0xe9, 0x1f,
+	0x4d, 0x7d, 0xeb, 0xe3, 0xd4, 0xb7, 0x7e, 0x4e, 0x7d, 0x2b, 0xfc, 0x4d, 0xe8, 0xbd, 0xd7, 0xc8,
+	0xff, 0x26, 0xb7, 0xb7, 0x69, 0x2f, 0xad, 0xf5, 0x01, 0x28, 0xa1, 0x1b, 0x43, 0x3d, 0x74, 0xbf,
+	0x7e, 0xde, 0x74, 0xba, 0x27, 0x7f, 0x99, 0xe7, 0x8a, 0x21, 0xee, 0x69, 0x25, 0x2a, 0x9e, 0x5c,
+	0x44, 0x2f, 0x13, 0xaf, 0x5c, 0x17, 0xf1, 0xea, 0x7f, 0x11, 0xaf, 0x1f, 0x75, 0xb4, 0xef, 0x7f,
+	0x7c, 0x7a, 0x7a, 0xb1, 0x6b, 0xf8, 0x88, 0x3e, 0xbc, 0x02, 0x3d, 0x61, 0x28, 0xa1, 0x42, 0x36,
+	0xdc, 0xfd, 0x32, 0xf3, 0xc8, 0xf1, 0xcc, 0x23, 0xdf, 0x67, 0x1e, 0xf9, 0x30, 0xf7, 0xac, 0xe3,
+	0xb9, 0x67, 0x7d, 0x9b, 0x7b, 0xd6, 0xfe, 0x36, 0x17, 0xfa, 0xa0, 0x1e, 0x47, 0x19, 0x94, 0xb1,
+	0xa8, 0x38, 0xab, 0x6a, 0xa1, 0x9b, 0xcd, 0x71, 0x2d, 0x8a, 0x3c, 0x5e, 0x3e, 0xb6, 0x77, 0xe7,
+	0xe7, 0xa6, 0x1b, 0xc9, 0x70, 0x7c, 0xab, 0x3d, 0xb5, 0xe7, 0x7f, 0x02, 0x00, 0x00, 0xff, 0xff,
+	0x82, 0x61, 0xa6, 0x8c, 0x1c, 0x03, 0x00, 0x00,
 }
 
 func (m *RegisterZoneDropProposal) Marshal() (dAtA []byte, err error) {
@@ -151,6 +238,78 @@ func (m *RegisterZoneDropProposal) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgRegisterZoneDrop) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRegisterZoneDrop) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRegisterZoneDrop) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ClaimRecords) > 0 {
+		i -= len(m.ClaimRecords)
+		copy(dAtA[i:], m.ClaimRecords)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.ClaimRecords)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.ZoneDrop != nil {
+		{
+			size, err := m.ZoneDrop.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintProposals(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRegisterZoneDropResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRegisterZoneDropResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRegisterZoneDropResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintProposals(dAtA []byte, offset int, v uint64) int {
 	offset -= sovProposals(v)
 	base := offset
@@ -184,6 +343,36 @@ func (m *RegisterZoneDropProposal) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovProposals(uint64(l))
 	}
+	return n
+}
+
+func (m *MsgRegisterZoneDrop) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	if m.ZoneDrop != nil {
+		l = m.ZoneDrop.Size()
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.ClaimRecords)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgRegisterZoneDropResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -356,6 +545,208 @@ func (m *RegisterZoneDropProposal) Unmarshal(dAtA []byte) error {
 				m.ClaimRecords = []byte{}
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRegisterZoneDrop) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRegisterZoneDrop: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRegisterZoneDrop: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ZoneDrop", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ZoneDrop == nil {
+				m.ZoneDrop = &ZoneDrop{}
+			}
+			if err := m.ZoneDrop.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClaimRecords", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ClaimRecords = append(m.ClaimRecords[:0], dAtA[iNdEx:postIndex]...)
+			if m.ClaimRecords == nil {
+				m.ClaimRecords = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRegisterZoneDropResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRegisterZoneDropResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRegisterZoneDropResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipProposals(dAtA[iNdEx:])

@@ -14,9 +14,9 @@ func (suite *KeeperTestSuite) TestKeeper_Params() {
 			Params: types.DefaultParams(),
 		}
 		got, err := k.Params(suite.chainA.GetContext(), &types.QueryParamsRequest{})
-		suite.Require().NoError(err)
-		suite.Require().NotNil(got)
-		suite.Require().Equal(want, *got)
+		suite.NoError(err)
+		suite.NotNil(got)
+		suite.Equal(want, *got)
 	})
 }
 
@@ -36,8 +36,8 @@ func (suite *KeeperTestSuite) TestKeeper_ProtocolData() {
 				Key:  suite.chainB.ChainID,
 			},
 		)
-		suite.Require().NoError(err)
-		suite.Require().NotNil(got)
-		suite.Require().Equal(want, *got)
+		suite.NoError(err)
+		suite.NotNil(got)
+		suite.Equal(want, *got)
 	})
 }

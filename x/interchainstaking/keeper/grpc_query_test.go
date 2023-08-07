@@ -61,15 +61,15 @@ func (suite *KeeperTestSuite) TestKeeper_Zones() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Zones))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Zones))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -123,15 +123,15 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidators() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Validators))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Validators))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -191,14 +191,14 @@ func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
+			suite.NoError(err)
+			suite.NotNil(resp)
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -409,12 +409,12 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 			},
 			false,
 			func(intents []*types.DelegatorIntentsResponse) {
-				suite.Require().Equal(len(intents), 2)
-				suite.Require().Equal(intents[0].ChainId, "cosmoshub-4")
-				suite.Require().Equal(intents[1].ChainId, suite.chainB.ChainID)
+				suite.Equal(len(intents), 2)
+				suite.Equal(intents[0].ChainId, "cosmoshub-4")
+				suite.Equal(intents[1].ChainId, suite.chainB.ChainID)
 				for _, intent := range intents {
-					suite.Require().Equal(intent.Intent.Delegator, testAddress)
-					suite.Require().Equal(len(intent.Intent.Intents), 1)
+					suite.Equal(intent.Intent.Delegator, testAddress)
+					suite.Equal(len(intent.Intent.Intents), 1)
 				}
 			},
 		},
@@ -432,15 +432,15 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
+			suite.NoError(err)
+			suite.NotNil(resp)
 			tt.verify(resp.Intents)
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -490,7 +490,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 			"Delegations_Valid_Delegations",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				// set delegation
 				// TODO: set standardized delegations for keeper_test package
@@ -519,15 +519,15 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Delegations))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Delegations))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -577,7 +577,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 			"Receipts_Valid_Receipts",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				// set receipts
 				receipt := icsKeeper.NewReceipt(
@@ -609,15 +609,15 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Receipts))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Receipts))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -632,7 +632,7 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 	testReceiptHash := "testReceiptHash#01"
 
 	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	testReceipt := icsKeeper.NewReceipt(
 		ctx,
@@ -712,15 +712,15 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().EqualValues(tt.want, resp)
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.EqualValues(tt.want, resp)
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -771,7 +771,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 			"ZoneWithdrawalRecords_Valid_Records",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				distribution := []*types.Distribution{
 					{
@@ -817,15 +817,15 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Withdrawals))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Withdrawals))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -920,15 +920,15 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Withdrawals))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Withdrawals))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -1010,15 +1010,15 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Withdrawals))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Withdrawals))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -1085,15 +1085,15 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Unbondings))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Unbondings))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -1160,7 +1160,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
 			suite.NoError(err)
@@ -1286,15 +1286,15 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.RemoteAddressMap))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.RemoteAddressMap))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
