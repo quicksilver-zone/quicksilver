@@ -382,7 +382,7 @@ The following is performed at the end of every epoch:
   4. Calculate user validator selection rewards;
   5. Distribute validator selection rewards;
 * Calculate qAsset holdings:
-  1. Obtain qAssets held by account (locally and off-chain via claims / Poof of
+  1. Obtain qAssets held by account (locally and off-chain via claims / Proof of
      Posession);
   2. Calculate user proportion (cap at 2%);
   3. Normalize and distribute allocation;

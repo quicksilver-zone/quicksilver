@@ -2,8 +2,10 @@ package interchaintest
 
 import (
 	"context"
-	"cosmossdk.io/math"
+	math "cosmossdk.io/math"
+	"encoding/json"
 	"fmt"
+	cosmosproto "github.com/cosmos/gogoproto/proto"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
@@ -15,16 +17,12 @@ import (
 	"testing"
 )
 
-// TestQuicksilverJunoIBCTransfer spins up a Quicksilver and Juno network, initializes an IBC connection between them,
-// and sends an ICS20 token transfer from Quicksilver->Juno and then back from Juno->Quicksilver.
-func TestQuicksilverJunoIBCTransfer(t *testing.T) {
+func TestQuicksilverE2E(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-
 	t.Parallel()
-
-	// Create chain factory with Quicksilver and Juno
+	// Create chain factory with Quicksilver
 	numVals := 3
 	numFullNodes := 3
 
@@ -48,7 +46,6 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 			//},
 		},
 	})
-
 	// Get chains from the chain factory
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
@@ -71,7 +68,6 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 			Relayer: r,
 			Path:    pathQuicksilverJuno,
 		})
-
 	rep := testreporter.NewNopReporter()
 	eRep := rep.RelayerExecReporter(t)
 
@@ -87,7 +83,6 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
 	})
 	require.NoError(t, err)
-
 	// Generate a new IBC path
 	err = r.GeneratePath(ctx, eRep, quicksilver.Config().ChainID, juno.Config().ChainID, "test-path")
 	require.NoError(t, err)
@@ -114,7 +109,6 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-
 	// Start the relayer
 	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverJuno))
 	t.Cleanup(
@@ -125,7 +119,6 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 			}
 		},
 	)
-
 	// Create some user accounts on both chains
 	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, juno)
 
@@ -207,4 +200,70 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	junoUpdateBal, err = juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
 	require.Equal(t, int64(0), junoUpdateBal)
+
+	height1, err := quicksilver.Height(ctx)
+	require.NoError(t, err)
+
+	//Creating a proposal on Quicksilver
+	messages := []cosmosproto.Message{}
+	//messages, _ := json.Marshal(map[string]any{
+	//
+	//	"@type":             "/quicksilver.interchainstaking.v1.RegisterZoneProposal",
+	//	"title":             "register lstest-1 zone",
+	//	"description":       "register lstest-1 zone with multisend and lsm enabled",
+	//	"connection_id":     "connection-0",
+	//	"base_denom":        "uatom",
+	//	"local_denom":       "uqatom",
+	//	"account_prefix":    "cosmos",
+	//	"deposits_enabled":  true,
+	//	"unbonding_enabled": true,
+	//	"liquidity_module":  false,
+	//	"return_to_sender":  true,
+	//	"decimals":          6,
+	//})
+
+	//Appending proposal data in messages
+	//messages = append(messages)
+	txProposal, err := quicksilver.BuildProposal(messages, "RegisterZone Proposal For Juno", "Juno <-> Quicksilver", "", "1000_000")
+	require.NoError(t, err)
+
+	//Submitting a proposal on Quicksilver
+	tx, err := quicksilver.SubmitProposal(ctx, t.Name(), txProposal)
+	require.NoError(t, err)
+	require.NoError(t, tx.Validate())
+
+	//Voting on the proposal
+	err = quicksilver.VoteOnProposalAllValidators(ctx, tx.ProposalID, cosmos.ProposalVoteYes)
+	require.NoError(t, err, "Failed to submit votes")
+
+	height2, err := quicksilver.Height(ctx)
+	require.NoError(t, err, "error fetching height before upgrade")
+
+	//Checking the proposal with matching ID and status.
+	_, err = cosmos.PollForProposalStatus(ctx, quicksilver, height1, height2, tx.ProposalID, cosmos.ProposalStatusPassed)
+	require.NoError(t, err, "Proposal status did not change to passed in expected number of blocks")
+
+	// TODO:
+	//1. Query Zones
+
+	queryZone := []string{
+		quicksilver.Config().Bin, "q", "interchainstaking", "zones",
+		"--chain-id", quicksilver.Config().ChainID,
+		"--home", quicksilver.HomeDir(),
+		"--node", quicksilver.GetRPCAddress(),
+	}
+	//stdout, _, err := quicksilver.getFullNode().ExecQuery(ctx ,["quicksilverd", "q", "interchainstaking", "zones"])
+	stdout, _, err := quicksilver.Exec(ctx, queryZone, nil)
+	var res any
+	err = json.Unmarshal([]byte(stdout), res)
+	require.NotEmpty(t, res)
+	require.NoError(t, err)
+
+	//2. GetInterchainAccountAddress
+
+	//3. NewICAAccount(address, portID) - deposit , withdrawl , delegation , performance
+	//4. SetAddressZoneMapping- deposit , withdrawl , delegation , performance
+	//4. Set Zone
+
+	//5.
 }
