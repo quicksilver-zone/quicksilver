@@ -510,6 +510,10 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 	}
 
 	address, err := addressutils.EncodeAddressToBech32("cre", addr)
+	if err != nil {
+		return err
+	}
+
 	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
 	if err != nil {
 		return err
