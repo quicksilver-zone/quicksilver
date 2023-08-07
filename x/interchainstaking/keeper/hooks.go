@@ -30,6 +30,11 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 		k.Logger(ctx).Info("handling epoch end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 
 		k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+
+			if err := k.HandleMaturedUnbondings(ctx, zone); err != nil {
+				k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err.Error())
+			}
+
 			k.Logger(ctx).Info(
 				"taking a snapshot of delegator intents",
 				"epoch_identifier", epochIdentifier,
@@ -55,6 +60,14 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				// This shouldn't happen in normal operation, but can if the zone was registered right on the epoch boundary.
 				return false
 			}
+
+			k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(idx int64, record types.WithdrawalRecord) bool {
+				if (record.Status == types.WithdrawStatusUnbond) && !record.Acknowledged && record.EpochNumber < epochNumber {
+					record.Requeued = true
+					k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusQueued)
+				}
+				return false
+			})
 
 			if err := k.HandleQueuedUnbondings(ctx, zone, epochNumber); err != nil {
 				// we can and need not panic here; logging the error is sufficient.

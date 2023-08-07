@@ -36,6 +36,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010404beta8UpgradeName, CreateUpgradeHandler: V010404beta8UpgradeHandler},
 		{UpgradeName: V010404rc1UpgradeName, CreateUpgradeHandler: V010404rc1UpgradeHandler},
 		{UpgradeName: V010404beta9UpgradeName, CreateUpgradeHandler: V010404beta9UpgradeHandler},
+		{UpgradeName: V010404beta10UpgradeName, CreateUpgradeHandler: V010404beta10UpgradeHandler},
 	}
 }
 
@@ -529,6 +530,27 @@ func V010404beta9UpgradeHandler(
 			}
 
 			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte(JunoTestnetChainID)))
+
+		}
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta10UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTest(ctx) || isDevnet(ctx) || isTestnet(ctx) {
+			appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+				if (record.Status == icstypes.WithdrawStatusUnbond) && !record.Acknowledged && record.EpochNumber < appKeepers.EpochsKeeper.GetEpochInfo(ctx, epochtypes.EpochIdentifierEpoch).CurrentEpoch {
+					record.Requeued = true
+					appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &record, icstypes.WithdrawStatusQueued)
+				}
+				return false
+
+			})
 
 		}
 		return mm.RunMigrations(ctx, configurator, fromVM)
