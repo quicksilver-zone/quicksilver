@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 
 	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 
