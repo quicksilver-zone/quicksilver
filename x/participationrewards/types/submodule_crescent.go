@@ -3,7 +3,6 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 
 	"cosmossdk.io/math"
@@ -12,13 +11,12 @@ import (
 
 	"github.com/ingenuity-build/multierror"
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 type CrescentPoolProtocolData struct {
 	PoolID      uint64
-	Denoms      map[string]DenomWithZone
+	Denom       string
 	PoolData    json.RawMessage
 	LastUpdated time.Time
 }
@@ -30,23 +28,8 @@ func (cpd *CrescentPoolProtocolData) ValidateBasic() error {
 		errs["PoolId"] = ErrUndefinedAttribute
 	}
 
-	i := 0
-	for _, ibcdenom := range utils.Keys(cpd.Denoms) {
-		el := fmt.Sprintf("Denoms[%s]", ibcdenom)
-
-		if cpd.Denoms[ibcdenom].ChainID == "" || len(strings.Split(cpd.Denoms[ibcdenom].ChainID, "-")) < 2 {
-			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrInvalidChainID)
-		}
-
-		if cpd.Denoms[ibcdenom].Denom == "" || sdk.ValidateDenom(cpd.Denoms[ibcdenom].Denom) != nil {
-			errs[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrInvalidDenom)
-		}
-
-		i++
-	}
-
-	if i == 0 {
-		errs["Denoms"] = ErrUndefinedAttribute
+	if err := sdk.ValidateDenom(cpd.Denom); err != nil {
+		errs["Denom"] = ErrInvalidDenom
 	}
 
 	if len(errs) > 0 {

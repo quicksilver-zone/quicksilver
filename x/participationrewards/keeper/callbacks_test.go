@@ -8,6 +8,9 @@ import (
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	leveragetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,10 +18,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
-	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 var PoolCoinDenom = "pool1"
@@ -376,7 +375,7 @@ func (suite *KeeperTestSuite) executeCrescentPoolUpdateCallback() {
 	suite.Require().True(found, "qid: %s", qid)
 
 	var err error
-	poolResponse := liquiditytypes.Pool{Type: 0, Id: 1, PairId: 7, Creator: testCrescentAddress, ReserveAddress: testAddress, PoolCoinDenom: PoolCoinDenom, Disabled: false}
+	poolResponse := liquiditytypes.Pool{Type: 0, Id: 1, PairId: 7, Creator: testCrescentAddress, ReserveAddress: testCrescentAddress, PoolCoinDenom: PoolCoinDenom, Disabled: false}
 	resp, _ := prk.GetCodec().Marshal(&poolResponse)
 
 	// setup for expected
@@ -398,10 +397,7 @@ func (suite *KeeperTestSuite) executeCrescentPoolUpdateCallback() {
 		PoolID:      1,
 		LastUpdated: ctx.BlockTime(),
 		PoolData:    expectedData,
-		Denoms: map[string]types.DenomWithZone{
-			cosmosIBCDenom:  {ChainID: "cosmoshub-4", Denom: "uatom"},
-			osmosisIBCDenom: {ChainID: "osmosis-1", Denom: "uosmo"},
-		},
+		Denom:       cosmosIBCDenom,
 	}
 
 	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeCrescentPool, "1")
@@ -457,7 +453,7 @@ func (suite *KeeperTestSuite) executeCrescentReserveBalanceUpdateCallback() {
 	prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
 	ctx := suite.chainA.GetContext()
 
-	_, addr, _ := bech32.DecodeAndConvert(testAddress)
+	_, addr, _ := bech32.DecodeAndConvert(testCrescentAddress)
 	accountPrefix := banktypes.CreateAccountBalancesPrefix(addr)
 
 	qid := icqkeeper.GenerateQueryHash(crescentTestConnection, crescentTestChain, "store/bank/key", append(accountPrefix, []byte(cosmosIBCDenom)...), types.ModuleName)
@@ -482,13 +478,13 @@ func (suite *KeeperTestSuite) executeCrescentReserveBalanceUpdateCallback() {
 	suite.Require().NoError(err)
 
 	want := &types.CrescentReserveAddressBalanceProtocolData{
-		ReserveAddress: testAddress,
+		ReserveAddress: testCrescentAddress,
 		Denom:          cosmosIBCDenom,
 		LastUpdated:    ctx.BlockTime(),
 		Balance:        expectedData,
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, testAddress+cosmosIBCDenom)
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, testCrescentAddress+cosmosIBCDenom)
 	suite.Require().True(found)
 
 	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentReserveAddressBalance, pd.Data)
