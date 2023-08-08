@@ -31,3 +31,6 @@ scripts/wallets.sh
 
 # Coverage
 coverage.txt
+
+go.work
+go.work.sum
