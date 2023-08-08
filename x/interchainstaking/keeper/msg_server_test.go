@@ -373,6 +373,8 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 	tests := []struct {
 		name             string
 		malleate         func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent
+		fromAddress      string
+		zoneID           string
 		expected         []sdk.Dec
 		failsValidations bool
 		expectErr        bool
@@ -389,6 +391,8 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
+			testAddress,
+			testzoneID,
 			[]sdk.Dec{},
 			true,
 			false,
@@ -405,9 +409,29 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
+			testAddress,
+			testzoneID,
 			[]sdk.Dec{},
 			true,
 			false,
+		},
+		{
+			"invalid - invalid authority for subzone",
+			func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent {
+				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
+				suite.NoError(err)
+
+				return &icstypes.MsgSignalIntent{
+					ChainId:     subzoneID,
+					Intents:     fmt.Sprintf("1.0%s", val1.String()),
+					FromAddress: testAddress,
+				}
+			},
+			subzoneID,
+			testzoneID,
+			[]sdk.Dec{},
+			false,
+			true,
 		},
 		{
 			"invalid - chain id",
@@ -421,6 +445,8 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
+			testAddress,
+			testzoneID,
 			[]sdk.Dec{},
 			false,
 			true,
@@ -437,6 +463,8 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
+			testAddress,
+			testzoneID,
 			[]sdk.Dec{sdk.NewDecWithPrec(1, 0)},
 			false,
 			false,
@@ -457,6 +485,58 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 					FromAddress: testAddress,
 				}
 			},
+			testAddress,
+			testzoneID,
+			[]sdk.Dec{
+				sdk.NewDecWithPrec(5, 1),
+				sdk.NewDecWithPrec(2, 1),
+				sdk.NewDecWithPrec(3, 1),
+			},
+			false,
+			false,
+		},
+		{
+			"valid - single weight  for subzone",
+			func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), subzoneID)
+				suite.True(found)
+
+				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
+				suite.NoError(err)
+
+				return &icstypes.MsgSignalIntent{
+					ChainId:     zone.ZoneID(),
+					Intents:     fmt.Sprintf("1.0%s", val1.String()),
+					FromAddress: zone.SubzoneInfo.Authority,
+				}
+			},
+			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+			subzoneID,
+			[]sdk.Dec{sdk.NewDecWithPrec(1, 0)},
+			false,
+			false,
+		},
+		{
+			"valid - multi weight for subzone",
+			func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent {
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), subzoneID)
+				suite.True(found)
+
+				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
+				suite.NoError(err)
+				val2, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[1].Address.String())
+				suite.NoError(err)
+				val3, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[2].Address.String())
+				suite.NoError(err)
+
+				return &icstypes.MsgSignalIntent{
+					ChainId:     zone.ZoneID(),
+					Intents:     fmt.Sprintf("0.5%s,0.2%s,0.3%s", val1.String(), val2.String(), val3.String()),
+					FromAddress: zone.SubzoneInfo.Authority,
+				}
+			},
+			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+			subzoneID,
 			[]sdk.Dec{
 				sdk.NewDecWithPrec(5, 1),
 				sdk.NewDecWithPrec(2, 1),
@@ -489,17 +569,18 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			if tt.expectErr {
 				suite.Error(err)
 				suite.Nil(res)
-			} else {
-				suite.NoError(err)
-				suite.NotNil(res)
+				return
 			}
+
+			suite.NoError(err)
+			suite.NotNil(res)
 
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			icsKeeper := quicksilver.InterchainstakingKeeper
-			zone, found := icsKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
+			zone, found := icsKeeper.GetZone(suite.chainA.GetContext(), tt.zoneID)
 			suite.True(found)
 
-			intent, found := icsKeeper.GetDelegatorIntent(suite.chainA.GetContext(), &zone, testAddress, false)
+			intent, found := icsKeeper.GetDelegatorIntent(suite.chainA.GetContext(), &zone, tt.fromAddress, false)
 			suite.True(found)
 			intents := intent.GetIntents()
 
