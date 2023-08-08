@@ -483,7 +483,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			want: &types.MsgSubmitClaimResponse{},
 		},
 		{
-			name: "valid_crescent_bank_proof",
+			name: "valid_crescent_unbonded_pool_coin",
 			malleate: func() {
 				userAddress := addressutils.GenerateAccAddressForTest()
 				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
