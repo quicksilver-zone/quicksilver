@@ -374,7 +374,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.ICAControllerKeeper,
-		&scopedInterchainStakingKeeper,
 		appKeepers.InterchainQueryKeeper,
 		*appKeepers.IBCKeeper,
 		appKeepers.TransferKeeper,
