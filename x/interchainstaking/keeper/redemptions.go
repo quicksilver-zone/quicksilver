@@ -12,6 +12,7 @@ import (
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -63,7 +64,8 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	for _, msg := range msgs {
 		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
 	}
-	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0))
+
+	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0), k.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch)
 
 	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx)
 }
@@ -92,6 +94,7 @@ func (k *Keeper) queueRedemption(
 		hash,
 		types.WithdrawStatusQueued,
 		time.Time{},
+		k.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 	)
 
 	return nil

@@ -7,6 +7,7 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 
 	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
 // ChannelKeeper defines the expected IBC channel keeper.
@@ -46,4 +47,8 @@ type IcsHooks interface {
 type ClaimsManagerKeeper interface {
 	IterateLastEpochUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
 	SetClaim(ctx sdk.Context, claim *claimsmanagertypes.Claim)
+}
+
+type EpochsKeeper interface {
+	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
 }
