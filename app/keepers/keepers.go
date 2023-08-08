@@ -438,6 +438,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	// Quicksilver Keepers
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 	appKeepers.ParticipationRewardsKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
+	appKeepers.InterchainstakingKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
