@@ -24,7 +24,11 @@ import (
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-var testAddress = addressutils.GenerateAccAddressForTest().String()
+var (
+	testAddress = addressutils.GenerateAccAddressForTest().String()
+	testzoneID  string
+	subzoneID   string
+)
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
@@ -95,17 +99,19 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	_, err := msgSrv.RegisterZone(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 	suite.NoError(err)
 
-	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+	testzoneID = suite.chainB.ChainID
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 	suite.True(found)
 
-	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
+	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", &tmclienttypes.ClientState{ChainId: testzoneID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
 	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: ctx.BlockTime()})
-	quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0", State: connectiontypes.OPEN})
-	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
-	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
-	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
-	suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
-	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+	quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0", State: connectiontypes.OPEN, Versions: []*connectiontypes.Version{connectiontypes.DefaultIBCVersion}})
+	suite.NoError(suite.setupChannelForICA(ctx, testzoneID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(ctx, testzoneID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(ctx, testzoneID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(ctx, testzoneID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
+	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 	suite.True(found)
 
 	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
@@ -115,6 +121,29 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	suite.coordinator.CommitNBlocks(suite.chainA, 2)
 	suite.coordinator.CommitNBlocks(suite.chainB, 2)
+
+	// set up subzone
+	subzoneID = zone.ZoneID() + "#subzone-1"
+	msg = &icstypes.MsgRegisterZone{
+		Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+		ConnectionID:     suite.path.EndpointA.ConnectionID,
+		LocalDenom:       "usqatom",
+		BaseDenom:        "uatom",
+		AccountPrefix:    "cosmos",
+		ReturnToSender:   false,
+		UnbondingEnabled: false,
+		LiquidityModule:  true,
+		DepositsEnabled:  true,
+		Decimals:         6,
+		Is_118:           true,
+		SubzoneInfo: &icstypes.SubzoneInfo{
+			Authority:   suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+			BaseChainID: zone.ZoneID(),
+			ChainID:     subzoneID,
+		},
+	}
+	_, err = msgSrv.RegisterZone(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+	suite.NoError(err)
 }
 
 func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, chainID, connectionID, accountSuffix, remotePrefix string) error {
@@ -224,7 +253,7 @@ func (suite *KeeperTestSuite) TestGetDelegatedAmount() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 			icsKeeper := quicksilver.InterchainstakingKeeper
-			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := icsKeeper.GetZone(ctx, testzoneID)
 			suite.True(found)
 
 			for _, delegation := range tt.delegations(ctx, quicksilver, &zone) {
@@ -306,7 +335,7 @@ func (suite *KeeperTestSuite) TestGetUnbondingAmount() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 			icsKeeper := quicksilver.InterchainstakingKeeper
-			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := icsKeeper.GetZone(ctx, testzoneID)
 			suite.True(found)
 
 			for _, record := range tt.records(zone) {
@@ -471,7 +500,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 			icsKeeper := quicksilver.InterchainstakingKeeper
-			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := icsKeeper.GetZone(ctx, testzoneID)
 			suite.True(found)
 
 			for _, record := range tt.records(ctx, quicksilver, &zone) {
@@ -499,7 +528,7 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 	icsKeeper := quicksilver.InterchainstakingKeeper
-	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
@@ -518,7 +547,7 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	suite.Equal(sdk.OneDec(), zone.RedemptionRate)
 	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
 
-	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found = icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 	suite.Equal(sdk.OneDec(), zone.RedemptionRate)
 
@@ -532,7 +561,7 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationB)
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
 
-	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found = icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 	suite.Equal(sdk.NewDecWithPrec(101, 2), zone.RedemptionRate)
 
@@ -544,14 +573,14 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationA)
 	icsKeeper.SetDelegation(ctx, &zone, delegationB)
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
-	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found = icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 	// should be capped at 2% increase. (1.01*1.02 == 1.0302)
 	suite.Equal(sdk.NewDecWithPrec(10302, 4), zone.RedemptionRate)
 
 	// add nothing, still cap at 2%
 	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
-	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found = icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 	// should be capped at 2% increase. (1.01*1.02*1.02 == 1.050804)
 	suite.Equal(sdk.NewDecWithPrec(1050804, 6), zone.RedemptionRate)
@@ -565,7 +594,7 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 
 	// remove > 5%, cap at -5%
 	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
-	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found = icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	suite.Equal(sdk.NewDecWithPrec(9982638, 7), zone.RedemptionRate)
@@ -578,7 +607,7 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 	icsKeeper := quicksilver.InterchainstakingKeeper
-	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetAllValidators(suite.chainB.GetContext())
@@ -597,7 +626,7 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	suite.Equal(sdk.OneDec(), zone.RedemptionRate)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
-	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found = icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 	suite.Equal(sdk.OneDec(), zone.RedemptionRate)
 
@@ -610,7 +639,7 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
-	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found = icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 	suite.Equal(sdk.NewDecWithPrec(101, 2), zone.RedemptionRate)
 
@@ -623,13 +652,13 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
-	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found = icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 	suite.Equal(sdk.NewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
 
 	// add nothing, no change
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
-	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found = icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 	suite.Equal(sdk.NewDecWithPrec(1176666666666666667, 18), zone.RedemptionRate)
 
@@ -640,7 +669,7 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	icsKeeper.SetDelegation(ctx, &zone, delegationB)
 	icsKeeper.SetDelegation(ctx, &zone, delegationC)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
-	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found = icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	suite.Equal(sdk.NewDecWithPrec(676666666666666667, 18), zone.RedemptionRate)

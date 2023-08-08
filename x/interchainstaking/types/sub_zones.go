@@ -28,7 +28,7 @@ func (z *Zone) ZoneID() string {
 }
 
 func ValidateSubzoneID(subZoneID, baseZoneID string) error {
-	const delimiter = "|"
+	const delimiter = "#"
 	subzoneIDParts := strings.Split(subZoneID, delimiter)
 
 	if len(subzoneIDParts) != 2 {

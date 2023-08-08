@@ -51,7 +51,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 				zone.RedemptionRate = sdk.MustNewDecFromStr("0.95")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
@@ -70,7 +70,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.05")
 				zone.RedemptionRate = sdk.MustNewDecFromStr("1.1")
@@ -90,7 +90,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.1")
 				zone.RedemptionRate = sdk.MustNewDecFromStr("1.05")
@@ -124,7 +124,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 				zone.RedemptionRate = sdk.MustNewDecFromStr("0.99999")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
@@ -143,7 +143,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.049999")
 				zone.RedemptionRate = sdk.MustNewDecFromStr("1.099999")
@@ -163,7 +163,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 					FromAddress:        testAddress,
 				}
 
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 				zone.UnbondingEnabled = false
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
@@ -239,11 +239,11 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				}
 
 				ctx := suite.chainA.GetContext()
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 				zoneVals := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, &zone)
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetRedelegationRecord(ctx, icstypes.RedelegationRecord{
-					ChainId:        suite.chainB.ChainID,
+					ChainId:        testzoneID,
 					EpochNumber:    1,
 					Source:         zoneVals[0],
 					Destination:    zoneVals[1],
@@ -295,7 +295,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			suite.NoError(err)
 
 			// disable LSM
-			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
 			suite.True(found)
 			zone.LiquidityModule = false
 			zone.UnbondingEnabled = true
@@ -334,7 +334,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			suite.NoError(err)
 
 			// enable LSM
-			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
 			suite.True(found)
 			zone.LiquidityModule = true
 			zone.UnbondingEnabled = true
@@ -384,7 +384,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId:     suite.chainB.ChainID,
+					ChainId:     testzoneID,
 					Intents:     fmt.Sprintf("0.3%s", val1.String()),
 					FromAddress: testAddress,
 				}
@@ -400,7 +400,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId:     suite.chainB.ChainID,
+					ChainId:     testzoneID,
 					Intents:     fmt.Sprintf("3.0%s", val1.String()),
 					FromAddress: testAddress,
 				}
@@ -432,7 +432,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId:     suite.chainB.ChainID,
+					ChainId:     testzoneID,
 					Intents:     fmt.Sprintf("1.0%s", val1.String()),
 					FromAddress: testAddress,
 				}
@@ -452,7 +452,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId:     suite.chainB.ChainID,
+					ChainId:     testzoneID,
 					Intents:     fmt.Sprintf("0.5%s,0.2%s,0.3%s", val1.String(), val2.String(), val3.String()),
 					FromAddress: testAddress,
 				}
@@ -496,7 +496,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			icsKeeper := quicksilver.InterchainstakingKeeper
-			zone, found := icsKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+			zone, found := icsKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 			suite.True(found)
 
 			intent, found := icsKeeper.GetDelegatorIntent(suite.chainA.GetContext(), &zone, testAddress, false)
@@ -614,7 +614,7 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 		{
 			"invalid: invalid subzone info: subzone ID taken",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgRegisterZone{
@@ -641,7 +641,7 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 		{
 			"invalid: invalid subzone info: invalid subzone authority info",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgRegisterZone{
@@ -707,7 +707,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: incorrect authority",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -732,7 +732,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"valid: no changes",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -746,7 +746,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"valid: update base denom",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -765,7 +765,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: update base denom: invalid denom",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -784,7 +784,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"valid: update local denom",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -803,7 +803,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: update local denom: invalid denom",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -822,7 +822,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"valid: update liquidity module",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -841,7 +841,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: update liquidity module: invalid syntax",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -860,7 +860,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"valid: update unbonding enabled",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -879,7 +879,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: update unbonding enabled: invalid syntax",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -898,7 +898,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"valid: update deposits enabled",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -917,7 +917,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: update deposits enabled: invalid syntax",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -936,7 +936,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"valid: update return to sender",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -955,7 +955,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: update return to sender: invalid syntax",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -974,7 +974,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"valid: update messages per tx",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -993,7 +993,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: update messages per tx: invalid syntax",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -1012,7 +1012,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"valid: update account prefix",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -1031,7 +1031,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"valid: update is 188",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -1050,7 +1050,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: update is 188 invalid syntax",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -1069,7 +1069,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: update connection ID: already initialised",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -1088,7 +1088,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: update connection ID invalid syntax",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
@@ -1107,7 +1107,7 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 		{
 			"invalid: unknown key",
 			func() {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
+				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
 
 				msg = &icstypes.MsgUpdateZone{
