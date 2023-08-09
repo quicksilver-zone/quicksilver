@@ -36,7 +36,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -56,7 +56,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(subzoneAddress, "")
 				suite.NoError(err)
 				zoneID = subzoneID
-				denom = "usqatom"
+				denom = subzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = subzoneID
-				denom = "usqatom"
+				denom = subzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -96,7 +96,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -121,7 +121,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -147,7 +147,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -193,7 +193,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -218,7 +218,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -244,7 +244,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -269,7 +269,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -289,7 +289,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -309,7 +309,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("bob", addressutils.GenerateAccAddressForTest())
@@ -329,7 +329,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -349,7 +349,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
@@ -382,7 +382,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
-				denom = "uqatom"
+				denom = testzoneLocalDenom
 			},
 			func() {
 				ctx := suite.chainA.GetContext()

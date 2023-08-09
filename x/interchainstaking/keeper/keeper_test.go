@@ -31,6 +31,11 @@ var (
 	subzoneID      string
 )
 
+const (
+	testzoneLocalDenom = "uqatom"
+	subzoneLocalDenom  = "usqatom"
+)
+
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
 }
