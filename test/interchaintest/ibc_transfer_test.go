@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
@@ -126,7 +127,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	require.Equal(t, genesisWalletAmount, junoOrigBal)
 
 	// Compose an IBC transfer and send from Quicksilver -> Juno
-	const transferAmount = int64(1_000)
+	transferAmount := math.NewInt(1000)
 	transfer := ibc.WalletAmount{
 		Address: junoUserAddr,
 		Denom:   quicksilver.Config().Denom,
@@ -153,7 +154,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	// Assert that the funds are no longer present in user acc on Juno and are in the user acc on Juno
 	quicksilverUpdateBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, quicksilverOrigBal-transferAmount, quicksilverUpdateBal)
+	require.True(t, quicksilverUpdateBal.Equal(quicksilverOrigBal.Sub(transferAmount)))
 
 	junoUpdateBal, err := juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)

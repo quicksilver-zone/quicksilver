@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/icza/dyno"
@@ -103,8 +104,8 @@ func TestRegisterZone(t *testing.T) {
 	})
 
 	// Create and Fund User Wallets
-	fundAmount := int64(10_000_000_000)
-	users := interchaintest.GetAndFundTestUsers(t, ctx, "default", int64(fundAmount), quicksilverd, juno)
+	fundAmount := math.NewInt(10_000_000_000)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, "default", fundAmount.Int64(), quicksilverd, juno)
 	quicksilverd1User := users[0]
 	juno1User := users[1]
 
