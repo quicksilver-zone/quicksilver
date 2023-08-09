@@ -2,11 +2,17 @@ package interchaintest
 
 import (
 	"context"
-	math "cosmossdk.io/math"
 	"encoding/json"
 	"fmt"
-	cosmosproto "github.com/cosmos/gogoproto/proto"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"strings"
+
+	math "cosmossdk.io/math"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"testing"
+
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -14,7 +20,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-	"testing"
 )
 
 func TestQuicksilverE2E(t *testing.T) {
@@ -205,32 +210,48 @@ func TestQuicksilverE2E(t *testing.T) {
 	require.NoError(t, err)
 
 	//Creating a proposal on Quicksilver
-	messages := []cosmosproto.Message{}
-	//messages, _ := json.Marshal(map[string]any{
-	//
-	//	"@type":             "/quicksilver.interchainstaking.v1.RegisterZoneProposal",
-	//	"title":             "register lstest-1 zone",
-	//	"description":       "register lstest-1 zone with multisend and lsm enabled",
-	//	"connection_id":     "connection-0",
-	//	"base_denom":        "uatom",
-	//	"local_denom":       "uqatom",
-	//	"account_prefix":    "cosmos",
-	//	"deposits_enabled":  true,
-	//	"unbonding_enabled": true,
-	//	"liquidity_module":  false,
-	//	"return_to_sender":  true,
-	//	"decimals":          6,
-	//})
+	messages := istypes.RegisterZoneProposal{
+
+		Title:            "register lstest-1 zone",
+		Description:      "register lstest-1 zone ",
+		ConnectionId:     "connection-0",
+		BaseDenom:        "ujuno",
+		LocalDenom:       "uqjuno",
+		AccountPrefix:    "juno",
+		DepositsEnabled:  true,
+		UnbondingEnabled: true,
+		LiquidityModule:  false,
+		ReturnToSender:   true,
+		Decimals:         6,
+	}
+	check, err := cdctypes.NewAnyWithValue(&messages)
+
+	message := govv1.MsgExecLegacyContent{
+		Content:   check,
+		Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
+	}
+	msg, err := quicksilver.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
+	fmt.Println("Msg: ", string(msg))
+	require.NoError(t, err)
 
 	//Appending proposal data in messages
 	//messages = append(messages)
-	txProposal, err := quicksilver.BuildProposal(messages, "RegisterZone Proposal For Juno", "Juno <-> Quicksilver", "", "1000_000")
+	//txProposal, err := quicksilver.BuildProposal(messages, "RegisterZone Proposal For Juno", "Juno <-> Quicksilver", "", "1000_000")
+	var propType cosmos.TxProposalv1
+	propType.Metadata = ""
+	propType.Title = "Adding Juno as a Zone"
+	propType.Summary = ""
+
+	propType.Messages = append(propType.Messages, msg)
+
 	require.NoError(t, err)
 
 	//Submitting a proposal on Quicksilver
-	tx, err := quicksilver.SubmitProposal(ctx, t.Name(), txProposal)
+	tx, err := quicksilver.SubmitProposal(ctx, users[0].KeyName(), propType)
+
+	//require.NoError(t, tx.Validate())
+
 	require.NoError(t, err)
-	require.NoError(t, tx.Validate())
 
 	//Voting on the proposal
 	err = quicksilver.VoteOnProposalAllValidators(ctx, tx.ProposalID, cosmos.ProposalVoteYes)
@@ -243,27 +264,66 @@ func TestQuicksilverE2E(t *testing.T) {
 	_, err = cosmos.PollForProposalStatus(ctx, quicksilver, height1, height2, tx.ProposalID, cosmos.ProposalStatusPassed)
 	require.NoError(t, err, "Proposal status did not change to passed in expected number of blocks")
 
-	// TODO:
-	//1. Query Zones
+	stdout, _, err := quicksilver.Validators[0].ExecQuery(ctx, "interchainstaking", "zones")
 
-	queryZone := []string{
-		quicksilver.Config().Bin, "q", "interchainstaking", "zones",
+	require.NotEmpty(t, stdout)
+	require.NoError(t, err)
+	var zones istypes.Zone
+	err = json.Unmarshal([]byte(stdout), &zones)
+
+	//Deposit Address Check
+	depositAddress := zones.DepositAddress
+	queryICA := []string{
+		quicksilver.Config().Bin, "query", "intertx", "interchainaccounts", connections[0].ID, depositAddress.Address,
 		"--chain-id", quicksilver.Config().ChainID,
 		"--home", quicksilver.HomeDir(),
 		"--node", quicksilver.GetRPCAddress(),
 	}
-	//stdout, _, err := quicksilver.getFullNode().ExecQuery(ctx ,["quicksilverd", "q", "interchainstaking", "zones"])
-	stdout, _, err := quicksilver.Exec(ctx, queryZone, nil)
-	var res any
-	err = json.Unmarshal([]byte(stdout), res)
-	require.NotEmpty(t, res)
+	stdout, _, err = quicksilver.Exec(ctx, queryICA, nil)
 	require.NoError(t, err)
+	parts := strings.SplitN(string(stdout), ":", 2)
+	icaAddr := strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
 
-	//2. GetInterchainAccountAddress
+	//Withdrawl Address Check
+	withdralAddress := zones.WithdrawalAddress
+	queryICA = []string{
+		quicksilver.Config().Bin, "query", "intertx", "interchainaccounts", connections[0].ID, withdralAddress.Address,
+		"--chain-id", quicksilver.Config().ChainID,
+		"--home", quicksilver.HomeDir(),
+		"--node", quicksilver.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilver.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts = strings.SplitN(string(stdout), ":", 2)
+	icaAddr = strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
 
-	//3. NewICAAccount(address, portID) - deposit , withdrawl , delegation , performance
-	//4. SetAddressZoneMapping- deposit , withdrawl , delegation , performance
-	//4. Set Zone
+	//Delegation Address Check
+	delegationAddress := zones.DelegationAddress
+	queryICA = []string{
+		quicksilver.Config().Bin, "query", "intertx", "interchainaccounts", connections[0].ID, delegationAddress.Address,
+		"--chain-id", quicksilver.Config().ChainID,
+		"--home", quicksilver.HomeDir(),
+		"--node", quicksilver.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilver.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts = strings.SplitN(string(stdout), ":", 2)
+	icaAddr = strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
 
-	//5.
+	//Performance Address Check
+	performanceAddress := zones.DelegationAddress
+	queryICA = []string{
+		quicksilver.Config().Bin, "query", "intertx", "interchainaccounts", connections[0].ID, performanceAddress.Address,
+		"--chain-id", quicksilver.Config().ChainID,
+		"--home", quicksilver.HomeDir(),
+		"--node", quicksilver.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilver.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts = strings.SplitN(string(stdout), ":", 2)
+	icaAddr = strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
 }
