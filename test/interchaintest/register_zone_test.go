@@ -9,7 +9,6 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/icza/dyno"
-	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -17,6 +16,8 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
+
+	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	// simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 )
 
