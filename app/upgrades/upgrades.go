@@ -568,6 +568,38 @@ func V010404beta10UpgradeHandler(
 				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, SommelierChainID, valoper)
 			}
 
+			// remove protocol datas
+			appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), func(index int64, key []byte, data prtypes.ProtocolData) (stop bool) {
+				prefixedKey := append(prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), key...)
+				pd, err := prtypes.UnmarshalProtocolData(prtypes.ProtocolDataTypeLiquidToken, data.Data)
+				if err != nil {
+					panic(err)
+				}
+				pdData, ok := pd.(*prtypes.LiquidAllowedDenomProtocolData)
+				if ok {
+					if pdData.ChainID == StargazeTestnetChainID || pdData.ChainID == SommelierChainID || pdData.ChainID == OsmosisTestnetChainID || pdData.RegisteredZoneChainID == StargazeTestnetChainID || pdData.RegisteredZoneChainID == SommelierChainID || pdData.RegisteredZoneChainID == OsmosisTestnetChainID {
+						appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prefixedKey)
+					}
+				}
+				return false
+			})
+
+			appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeOsmosisParams), func(index int64, key []byte, data prtypes.ProtocolData) (stop bool) {
+				prefixedKey := append(prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeOsmosisParams), key...)
+				pd, err := prtypes.UnmarshalProtocolData(prtypes.ProtocolDataTypeOsmosisParams, data.Data)
+				if err != nil {
+					panic(err)
+				}
+
+				pdData, ok := pd.(*prtypes.OsmosisParamsProtocolData)
+				if ok {
+					if pdData.ChainID == OsmosisTestnetChainID {
+						appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prefixedKey)
+					}
+				}
+				return false
+			})
+
 			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
 			if !exists {
 				panic("connection protocol data type not found")
