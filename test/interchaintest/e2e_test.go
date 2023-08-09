@@ -268,11 +268,11 @@ func TestQuicksilverE2E(t *testing.T) {
 
 	require.NotEmpty(t, stdout)
 	require.NoError(t, err)
-	var zones istypes.Zone
+	var zones []istypes.Zone
 	err = json.Unmarshal([]byte(stdout), &zones)
 
 	//Deposit Address Check
-	depositAddress := zones.DepositAddress
+	depositAddress := zones[0].DepositAddress
 	queryICA := []string{
 		quicksilver.Config().Bin, "query", "intertx", "interchainaccounts", connections[0].ID, depositAddress.Address,
 		"--chain-id", quicksilver.Config().ChainID,
@@ -286,7 +286,7 @@ func TestQuicksilverE2E(t *testing.T) {
 	require.NotEmpty(t, icaAddr)
 
 	//Withdrawl Address Check
-	withdralAddress := zones.WithdrawalAddress
+	withdralAddress := zones[0].WithdrawalAddress
 	queryICA = []string{
 		quicksilver.Config().Bin, "query", "intertx", "interchainaccounts", connections[0].ID, withdralAddress.Address,
 		"--chain-id", quicksilver.Config().ChainID,
@@ -300,7 +300,7 @@ func TestQuicksilverE2E(t *testing.T) {
 	require.NotEmpty(t, icaAddr)
 
 	//Delegation Address Check
-	delegationAddress := zones.DelegationAddress
+	delegationAddress := zones[0].DelegationAddress
 	queryICA = []string{
 		quicksilver.Config().Bin, "query", "intertx", "interchainaccounts", connections[0].ID, delegationAddress.Address,
 		"--chain-id", quicksilver.Config().ChainID,
@@ -314,7 +314,7 @@ func TestQuicksilverE2E(t *testing.T) {
 	require.NotEmpty(t, icaAddr)
 
 	//Performance Address Check
-	performanceAddress := zones.DelegationAddress
+	performanceAddress := zones[0].DelegationAddress
 	queryICA = []string{
 		quicksilver.Config().Bin, "query", "intertx", "interchainaccounts", connections[0].ID, performanceAddress.Address,
 		"--chain-id", quicksilver.Config().ChainID,
