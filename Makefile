@@ -369,9 +369,11 @@ ictest-ibc: ictest-deps
 # Executes TestInterchainStaking tests via interchaintest
 ictest-interchainstaking: ictest-deps
 	@cd test/interchaintest && go test -v -run TestInterchainStaking .
+ictest-registerzone: ictest-deps
+	@cd test/interchaintest && go test -v -run TestQuicksilverE2E .
 
 # Executes all tests via interchaintest after compiling a local image as quicksilver:local
-ictest-all: ictest-setup ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
+ictest-all: ictest-setup ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking ictest-registerzone
 
 ictest-setup: ictest-build ictest-deps
 
