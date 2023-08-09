@@ -50,7 +50,7 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	}
 
 	// get chain id from connection
-	chainID, err := k.GetChainID(ctx, msg.ConnectionID)
+	chainID, err := k.GetChainIDFromConnection(ctx, msg.ConnectionID)
 	if err != nil {
 		return &types.MsgRegisterZoneResponse{}, fmt.Errorf("unable to obtain chain id: %w", err)
 	}
@@ -131,22 +131,22 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	k.SetZone(ctx, zone)
 
 	// generate deposit account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), zone.ZoneID()); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
 	// generate the withdrawal account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner(), zone.ZoneID()); err != nil {
 		return nil, err
 	}
 
 	// generate the perf account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner(), zone.ZoneID()); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
 	// generate delegate accounts
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner(), zone.ZoneID()); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
@@ -164,6 +164,8 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	if err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
+
+	// set zone <-> port + connection mapping
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -301,22 +303,22 @@ func (k msgServer) UpdateZone(goCtx context.Context, msg *types.MsgUpdateZone) (
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), zone.ZoneID()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate withdrawal account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner(), zone.ZoneID()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate perf account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner(), zone.ZoneID()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate delegate accounts
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner(), zone.ZoneID()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
@@ -364,7 +366,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 		return nil, fmt.Errorf("unbonding currently disabled for zone %s", zone.ZoneID())
 	}
 
-	// TODO check sub-zone
+	// check sub-zone
 	if zone.IsSubzone() && (msg.FromAddress != zone.SubzoneInfo.Authority) {
 		return nil, types.ErrInvalidSubzoneAuthority
 	}
@@ -485,7 +487,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 	// portId and connectionId format validated in validateBasic, so not duplicated here.
 
 	// assert chainId matches connectionId
-	chainID, err := k.GetChainID(ctx, msg.ConnectionId)
+	chainID, err := k.GetChainIDFromConnection(ctx, msg.ConnectionId)
 	if err != nil {
 		return nil, fmt.Errorf("unable to obtain chain id: %w", err)
 	}
@@ -494,11 +496,12 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		return nil, fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", chainID, parts[0])
 	}
 
-	if _, found := k.GetZone(ctx, chainID); !found {
+	zone, found := k.GetZone(ctx, chainID)
+	if !found {
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
 	}
 
-	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
+	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID, zone.ZoneID()); err != nil {
 		return &types.MsgGovReopenChannelResponse{}, err
 	}
 

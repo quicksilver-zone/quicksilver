@@ -38,9 +38,9 @@ func (k *Keeper) SetZone(ctx sdk.Context, zone *types.Zone) {
 }
 
 // DeleteZone delete zone info.
-func (k *Keeper) DeleteZone(ctx sdk.Context, chainID string) {
+func (k *Keeper) DeleteZone(ctx sdk.Context, zone *types.Zone) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
-	store.Delete([]byte(chainID))
+	store.Delete([]byte(zone.ZoneID()))
 }
 
 // IterateZones iterate through zones.
@@ -467,7 +467,7 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 				return false
 			})
 
-			k.DeleteZone(ctx, zone.ZoneID())
+			k.DeleteZone(ctx, zone)
 
 		}
 		return false

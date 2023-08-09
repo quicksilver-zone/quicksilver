@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestKeeper_Zones() {
 			},
 			&types.QueryZonesRequest{},
 			false,
-			1,
+			2, // zone and subzone
 		},
 	}
 

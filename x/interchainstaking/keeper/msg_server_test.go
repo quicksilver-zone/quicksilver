@@ -15,13 +15,17 @@ import (
 )
 
 func (suite *KeeperTestSuite) TestRequestRedemption() {
-	var msg icstypes.MsgRequestRedemption
-
-	testAccount, err := addressutils.AccAddressFromBech32(testAddress, "")
-	suite.NoError(err)
+	var (
+		msg         icstypes.MsgRequestRedemption
+		zoneID      string
+		testAccount sdk.AccAddress
+		err         error
+		denom       string
+	)
 
 	tests := []struct {
 		name         string
+		init         func()
 		malleate     func()
 		expectErr    string
 		expectErrLsm string
@@ -29,10 +33,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -41,12 +51,58 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"",
 		},
 		{
-			"valid - full claim (discounted)",
+			"valid - full claim for subzone",
+			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(subzoneAddress, "")
+				suite.NoError(err)
+				zoneID = subzoneID
+				denom = "usqatom"
+			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(10000000)),
+					DestinationAddress: addr,
+					FromAddress:        subzoneAddress,
+				}
+			},
+			"",
+			"",
+		},
+		{
+			"invalid - incorrect authority for subzone",
+			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = subzoneID
+				denom = "usqatom"
+			},
+			func() {
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
+				suite.NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin(denom, sdk.NewInt(10000000)),
+					DestinationAddress: addr,
+					FromAddress:        testAddress,
+				}
+			},
+			"invalid authority for subzone",
+			"invalid authority for subzone",
+		},
+		{
+			"valid - full claim (discounted)",
+			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
+				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
+				suite.NoError(err)
+				msg = icstypes.MsgRequestRedemption{
+					Value:              sdk.NewCoin(denom, sdk.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -62,10 +118,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim (interest)",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -82,10 +144,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim (interest)",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -102,10 +170,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - partial claim",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -116,10 +190,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - partial claim (discounted)",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -135,10 +215,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - partial claim (interest)",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -155,10 +241,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - unbonding not enabled for zone",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(5000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -174,6 +266,12 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - wrong denom",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
@@ -188,10 +286,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - insufficient funds",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(1000000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(1000000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -202,10 +306,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - bad prefix",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("bob", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					Value:              sdk.NewCoin(denom, sdk.OneInt()),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -216,10 +326,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - bad from address",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
+					Value:              sdk.NewCoin(denom, sdk.OneInt()),
 					DestinationAddress: addr,
 					FromAddress:        addr,
 				}
@@ -230,10 +346,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - too many locked tokens",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -257,12 +379,18 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - unbonding is disabled",
 			func() {
+				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
+				suite.NoError(err)
+				zoneID = testzoneID
+				denom = "uqatom"
+			},
+			func() {
 				ctx := suite.chainA.GetContext()
 
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.Require().NoError(err)
 				msg = icstypes.MsgRequestRedemption{
-					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
+					Value:              sdk.NewCoin(denom, sdk.NewInt(10000000)),
 					DestinationAddress: addr,
 					FromAddress:        testAddress,
 				}
@@ -282,29 +410,36 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		suite.Run(tt.name, func() {
 			suite.SetupTest()
 			suite.setupTestZones()
+			tt.init()
 
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			params := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetParams(ctx)
+			params := quicksilver.InterchainstakingKeeper.GetParams(ctx)
 			params.UnbondingEnabled = true
-			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetParams(ctx, params)
+			quicksilver.InterchainstakingKeeper.SetParams(ctx, params)
 
-			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(10000000))))
 			suite.NoError(err)
-			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(10000000))))
 			suite.NoError(err)
+
+			quicksilver.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+				_ = zone
+				return false
+			})
 
 			// disable LSM
-			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zoneID)
 			suite.True(found)
 			zone.LiquidityModule = false
 			zone.UnbondingEnabled = true
-			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
+			quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 			tt.malleate()
 
-			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
-			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
+			msgSrv := icskeeper.NewMsgServerImpl(*quicksilver.InterchainstakingKeeper)
+			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(ctx), &msg)
 
 			if tt.expectErr != "" {
 				suite.ErrorContains(err, tt.expectErr)
@@ -322,25 +457,28 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			suite.SetupTest()
 			suite.setupTestZones()
 
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			params := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetParams(ctx)
-			params.UnbondingEnabled = true
-			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetParams(ctx, params)
+			tt.init()
 
-			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			params := quicksilver.InterchainstakingKeeper.GetParams(ctx)
+			params.UnbondingEnabled = true
+			quicksilver.InterchainstakingKeeper.SetParams(ctx, params)
+
+			err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
 			suite.NoError(err)
-			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
 			suite.NoError(err)
 
 			// enable LSM
-			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zoneID)
 			suite.True(found)
 			zone.LiquidityModule = true
 			zone.UnbondingEnabled = true
-			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
+			quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-			validators := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, &zone)
+			validators := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, &zone)
 			for _, delegation := range func(zone icstypes.Zone) []icstypes.Delegation {
 				out := make([]icstypes.Delegation, 0)
 				for _, valoper := range validators {
@@ -348,13 +486,13 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				}
 				return out
 			}(zone) {
-				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+				quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
 			}
 
 			tt.malleate()
 
-			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
-			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
+			msgSrv := icskeeper.NewMsgServerImpl(*quicksilver.InterchainstakingKeeper)
+			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(ctx), &msg)
 
 			if tt.expectErrLsm != "" {
 				suite.Errorf(err, tt.expectErrLsm)
@@ -507,10 +645,10 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				return &icstypes.MsgSignalIntent{
 					ChainId:     zone.ZoneID(),
 					Intents:     fmt.Sprintf("1.0%s", val1.String()),
-					FromAddress: zone.SubzoneInfo.Authority,
+					FromAddress: subzoneAddress,
 				}
 			},
-			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+			subzoneAddress,
 			subzoneID,
 			[]sdk.Dec{sdk.NewDecWithPrec(1, 0)},
 			false,
@@ -532,10 +670,10 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				return &icstypes.MsgSignalIntent{
 					ChainId:     zone.ZoneID(),
 					Intents:     fmt.Sprintf("0.5%s,0.2%s,0.3%s", val1.String(), val2.String(), val3.String()),
-					FromAddress: zone.SubzoneInfo.Authority,
+					FromAddress: subzoneAddress,
 				}
 			},
-			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+			subzoneAddress,
 			subzoneID,
 			[]sdk.Dec{
 				sdk.NewDecWithPrec(5, 1),
@@ -711,7 +849,7 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 					Decimals:         6,
 					Is_118:           true,
 					SubzoneInfo: &icstypes.SubzoneInfo{
-						Authority:   "test",
+						Authority:   subzoneAddress,
 						BaseChainID: zone.BaseChainID(),
 						ChainID:     zone.BaseChainID(),
 					},
@@ -764,7 +902,7 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 			tt.malleate()
 
 			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
-			res, err := msgSrv.RegisterZone(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+			res, err := msgSrv.RegisterZone(sdk.WrapSDKContext(ctx), msg)
 
 			if tt.expectErr != "" {
 				suite.ErrorContains(err, tt.expectErr)
@@ -1213,8 +1351,10 @@ func (suite *KeeperTestSuite) TestUpdateZone() {
 
 			tt.malleate()
 
+			ctx := suite.chainA.GetContext()
+
 			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
-			res, err := msgSrv.UpdateZone(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+			res, err := msgSrv.UpdateZone(sdk.WrapSDKContext(ctx), msg)
 
 			if tt.expectErr != "" {
 				suite.ErrorContains(err, tt.expectErr)

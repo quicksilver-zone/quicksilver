@@ -430,7 +430,25 @@ func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramStore.SetParamSet(ctx, &params)
 }
 
-func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
+func (k *Keeper) SetZoneIDForPortConnection(ctx sdk.Context, portID, connectionID, zoneID string) {
+	key := fmt.Sprintf("%s-%s", portID, connectionID)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortConnectionZone)
+	bz := []byte(zoneID)
+	store.Set([]byte(key), bz)
+}
+
+func (k *Keeper) GetZoneIDFromPortConnection(ctx sdk.Context, portID, connectionID string) (string, error) {
+	key := fmt.Sprintf("%s-%s", portID, connectionID)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortConnectionZone)
+	bz := store.Get([]byte(key))
+	if len(bz) == 0 {
+		return "", fmt.Errorf("unable to find zone for port connection %s-%s", portID, connectionID)
+	}
+
+	return string(bz), nil
+}
+
+func (k *Keeper) GetChainIDFromConnection(ctx sdk.Context, connectionID string) (string, error) {
 	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 	if !found {
 		return "", fmt.Errorf("invalid connection id, \"%s\" not found", connectionID)
@@ -453,7 +471,7 @@ func (k *Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
 		return "", errors.New("connectionID not in context")
 	}
 
-	return k.GetChainID(ctx, connectionID.(string))
+	return k.GetChainIDFromConnection(ctx, connectionID.(string))
 }
 
 func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {

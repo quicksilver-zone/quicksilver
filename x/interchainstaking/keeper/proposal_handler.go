@@ -28,7 +28,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	)
 
 	// get chain id from connection
-	chainID, err := k.GetChainID(ctx, p.ConnectionId)
+	chainID, err := k.GetChainIDFromConnection(ctx, p.ConnectionId)
 	if err != nil {
 		return fmt.Errorf("unable to obtain chain id: %w", err)
 	}
@@ -103,26 +103,22 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	k.SetZone(ctx, zone)
 
 	// generate deposit account
-	portOwner := chainID + ".deposit"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), zone.ZoneID()); err != nil {
 		return err
 	}
 
 	// generate withdrawal account
-	portOwner = chainID + ".withdrawal"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner(), zone.ZoneID()); err != nil {
 		return err
 	}
 
 	// generate perf account
-	portOwner = chainID + ".performance"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner(), zone.ZoneID()); err != nil {
 		return err
 	}
 
 	// generate delegate accounts
-	portOwner = chainID + ".delegate"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner(), zone.ZoneID()); err != nil {
 		return err
 	}
 
@@ -156,7 +152,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	return nil
 }
 
-func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOwner string) error {
+func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOwner, zoneID string) error {
 	msg := &icacontrollertypes.MsgRegisterInterchainAccount{
 		Owner:        portOwner,
 		ConnectionId: connectionID,
@@ -175,6 +171,7 @@ func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOw
 	}
 
 	k.SetConnectionForPort(ctx, connectionID, portID)
+	k.SetZoneIDForPortConnection(ctx, portID, connectionID, zoneID)
 
 	return nil
 }
@@ -292,22 +289,22 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), zone.ZoneID()); err != nil {
 				return err
 			}
 
 			// generate withdrawal account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner(), zone.ZoneID()); err != nil {
 				return err
 			}
 
 			// generate perf account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner(), zone.ZoneID()); err != nil {
 				return err
 			}
 
 			// generate delegate accounts
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner(), zone.ZoneID()); err != nil {
 				return err
 			}
 
