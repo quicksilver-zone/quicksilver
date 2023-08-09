@@ -67,12 +67,6 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 			return &types.MsgRegisterZoneResponse{}, fmt.Errorf("unable to find base chain \"%s\" for subzone \"%s\"", chainID, msg.SubzoneInfo.BaseChainID)
 		}
 
-		// check if subzone ID already is taken
-		_, found = k.GetZone(ctx, msg.SubzoneInfo.ChainID)
-		if found {
-			return &types.MsgRegisterZoneResponse{}, fmt.Errorf("subzone ID already exists \"%s\"", msg.SubzoneInfo.ChainID)
-		}
-
 		// set chainID to be specified unique ID
 		chainID = msg.SubzoneInfo.ChainID
 	}

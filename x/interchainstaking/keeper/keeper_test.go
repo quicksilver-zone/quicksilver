@@ -127,11 +127,27 @@ func (suite *KeeperTestSuite) setupTestZones() {
 
 	suite.coordinator.CommitNBlocks(suite.chainA, 2)
 	suite.coordinator.CommitNBlocks(suite.chainB, 2)
+}
+
+func (suite *KeeperTestSuite) setupSubzoneForTest() {
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
+	suite.True(found)
+
+	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
+	for i := range vals {
+		suite.NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
+	}
+
+	suite.coordinator.CommitNBlocks(suite.chainA, 2)
+	suite.coordinator.CommitNBlocks(suite.chainB, 2)
 
 	// set up subzone
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	subzoneID = zone.ZoneID() + "#subzone-1"
-	msg = &icstypes.MsgRegisterZone{
+	msg := &icstypes.MsgRegisterZone{
 		Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
 		ConnectionID:     suite.path.EndpointA.ConnectionID,
 		LocalDenom:       "usqatom",
@@ -149,7 +165,9 @@ func (suite *KeeperTestSuite) setupTestZones() {
 			ChainID:     subzoneID,
 		},
 	}
-	_, err = msgSrv.RegisterZone(sdk.WrapSDKContext(ctx), msg)
+
+	msgSrv := icskeeper.NewMsgServerImpl(*quicksilver.InterchainstakingKeeper)
+	_, err := msgSrv.RegisterZone(sdk.WrapSDKContext(ctx), msg)
 	suite.NoError(err)
 
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, subzoneID)
@@ -159,9 +177,12 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
 	suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
 	suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
+
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, subzoneID)
 	suite.True(found)
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	suite.coordinator.CommitNBlocks(suite.chainA, 2)
+	suite.coordinator.CommitNBlocks(suite.chainB, 2)
 }
 
 func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, zoneID, connectionID, accountSuffix, remotePrefix string) error {

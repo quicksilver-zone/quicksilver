@@ -47,7 +47,7 @@ func (suite *KeeperTestSuite) TestKeeper_Zones() {
 			},
 			&types.QueryZonesRequest{},
 			false,
-			2, // zone and subzone
+			1, // zone and subzone
 		},
 	}
 
@@ -1176,6 +1176,8 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 }
 
 func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
+	suite.setupTestZones()
+
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	usrAddress1, _ := addressutils.AccAddressFromBech32("cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn", "cosmos")
 	ctx := suite.chainA.GetContext()
@@ -1218,7 +1220,6 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 			"MappedAccounts_ValidRecord_Request",
 			func() {
 				// setup zones
-				suite.setupTestZones()
 				zone := types.Zone{
 					ConnectionId:    "connection-77881",
 					ChainId:         "evmos_9001-1",

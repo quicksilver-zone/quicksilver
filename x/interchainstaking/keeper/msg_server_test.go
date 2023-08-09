@@ -17,10 +17,10 @@ import (
 func (suite *KeeperTestSuite) TestRequestRedemption() {
 	var (
 		msg         icstypes.MsgRequestRedemption
-		zoneID      string
 		testAccount sdk.AccAddress
-		err         error
+		zoneID      string
 		denom       string
+		err         error
 	)
 
 	tests := []struct {
@@ -33,6 +33,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -53,14 +56,25 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim for subzone",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+				suite.setupSubzoneForTest()
+
 				testAccount, err = addressutils.AccAddressFromBech32(subzoneAddress, "")
 				suite.NoError(err)
 				zoneID = subzoneID
 				denom = subzoneLocalDenom
+
+				quicksilver := suite.GetQuicksilverApp(suite.chainA)
+				ctx := suite.chainA.GetContext()
+
+				_, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zoneID)
+				suite.True(found)
 			},
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
 				suite.NoError(err)
+
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin(denom, sdk.NewInt(10000000)),
 					DestinationAddress: addr,
@@ -73,6 +87,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - incorrect authority for subzone",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = subzoneID
@@ -93,6 +110,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim (discounted)",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -118,6 +138,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim (interest)",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -144,6 +167,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - full claim (interest)",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -170,6 +196,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - partial claim",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -190,6 +219,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - partial claim (discounted)",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -215,6 +247,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"valid - partial claim (interest)",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -241,6 +276,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - unbonding not enabled for zone",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -266,6 +304,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - wrong denom",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -286,6 +327,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - insufficient funds",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -306,6 +350,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - bad prefix",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -326,6 +373,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - bad from address",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -346,6 +396,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - too many locked tokens",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -379,6 +432,9 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		{
 			"invalid - unbonding is disabled",
 			func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
 				zoneID = testzoneID
@@ -408,8 +464,6 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 		// run tests with LSM disabled.
 		suite.Run(tt.name, func() {
-			suite.SetupTest()
-			suite.setupTestZones()
 			tt.init()
 
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
@@ -419,7 +473,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			params.UnbondingEnabled = true
 			quicksilver.InterchainstakingKeeper.SetParams(ctx, params)
 
-			err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(10000000))))
+			err = quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(10000000))))
 			suite.NoError(err)
 			err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(10000000))))
 			suite.NoError(err)
@@ -855,7 +909,7 @@ func (suite *KeeperTestSuite) TestRegisterZone() {
 					},
 				}
 			},
-			"subzone ID already exists",
+			"invalid chain id",
 		},
 		{
 			"invalid: invalid subzone info: invalid subzone authority info",
