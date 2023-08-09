@@ -1,10 +1,12 @@
 package interchaintest
 
 import (
+  "testing"
 	"context"
 	"cosmossdk.io/math"
 	"fmt"
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+
+  transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -12,7 +14,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
-	"testing"
 )
 
 // TestQuicksilverJunoIBCTransfer spins up a Quicksilver and Juno network, initializes an IBC connection between them,
