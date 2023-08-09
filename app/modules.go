@@ -112,7 +112,6 @@ var (
 		participationrewards.AppModuleBasic{},
 		airdrop.AppModuleBasic{},
 		tokenfactory.AppModuleBasic{},
-		ibctm.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 	)
 	// module account permissions.

@@ -87,7 +87,6 @@ type AppKeepers struct {
 	ScopedTransferKeeper                 capabilitykeeper.ScopedKeeper
 	ScopedICAControllerKeeper            capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper                  capabilitykeeper.ScopedKeeper
-	ScopedInterchainStakingAccountKeeper capabilitykeeper.ScopedKeeper
 	scopedWasmKeeper                     capabilitykeeper.ScopedKeeper // TODO: we can use this for testing
 
 	// "Normal" keepers
@@ -220,7 +219,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	scopedTransferKeeper := appKeepers.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedICAControllerKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := appKeepers.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	scopedInterchainStakingKeeper := appKeepers.CapabilityKeeper.ScopeToModule(interchainstakingtypes.ModuleName)
 	scopedWasmKeeper := appKeepers.CapabilityKeeper.ScopeToModule(wasm.ModuleName)
 	appKeepers.CapabilityKeeper.Seal()
 
@@ -489,7 +487,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(appKeepers.ParamsKeeper)).
 		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(appKeepers.UpgradeKeeper)).
-		AddRoute(ibcexported.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(appKeepers.IBCKeeper.ClientKeeper)).
 		AddRoute(interchainstakingtypes.RouterKey, interchainstaking.NewProposalHandler(appKeepers.InterchainstakingKeeper)).
 		AddRoute(participationrewardstypes.RouterKey, participationrewards.NewProposalHandler(appKeepers.ParticipationRewardsKeeper))
@@ -532,7 +529,6 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.ScopedIBCKeeper = scopedIBCKeeper
 	appKeepers.ScopedTransferKeeper = scopedTransferKeeper
 	appKeepers.ScopedICAControllerKeeper = scopedICAControllerKeeper
-	appKeepers.ScopedInterchainStakingAccountKeeper = scopedInterchainStakingKeeper
 	appKeepers.ScopedICAHostKeeper = scopedICAHostKeeper
 	appKeepers.scopedWasmKeeper = scopedWasmKeeper
 }
