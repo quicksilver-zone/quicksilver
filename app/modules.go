@@ -3,6 +3,8 @@ package app
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	consensus "github.com/cosmos/cosmos-sdk/x/consensus"
+	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -100,6 +102,7 @@ var (
 		evidence.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		transfer.AppModuleBasic{},
+		consensus.AppModuleBasic{},	
 		packetforward.AppModuleBasic{},
 		ica.AppModuleBasic{},
 		ibctm.AppModuleBasic{},
@@ -159,6 +162,7 @@ func appModules(
 		staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
 		upgrade.NewAppModule(app.UpgradeKeeper),
 		evidence.NewAppModule(app.EvidenceKeeper),
+		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		authzmodule.NewAppModule(appCodec, app.AuthzKeeper, app.AccountKeeper, app.BankKeeper, app.interfaceRegistry),
@@ -260,6 +264,7 @@ func orderBeginBlockers() []string {
 		vestingtypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		wasm.ModuleName,
+		consensusparamtypes.ModuleName,
 	}
 }
 
@@ -302,6 +307,7 @@ func orderEndBlockers() []string {
 		airdroptypes.ModuleName,
 		tokenfactorytypes.ModuleName,
 		wasm.ModuleName,
+		consensusparamtypes.ModuleName,
 		// currently no-op.
 	}
 }
@@ -346,5 +352,6 @@ func orderInitBlockers() []string {
 		tokenfactorytypes.ModuleName,
 		// wasmd
 		wasm.ModuleName,
+		consensusparamtypes.ModuleName,
 	}
 }
