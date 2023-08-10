@@ -374,6 +374,8 @@ ictest-registerzone: ictest-deps
 
 # Executes all tests via interchaintest after compiling a local image as quicksilver:local
 ictest-all: ictest-setup ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking ictest-registerzone
+ictest-rz: ictest-setup   ictest-registerzone
+
 
 ictest-setup: ictest-build ictest-deps
 

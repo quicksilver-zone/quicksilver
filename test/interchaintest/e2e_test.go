@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
 	"strings"
+	"time"
 
 	math "cosmossdk.io/math"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -16,7 +18,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
-	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
 	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
@@ -33,6 +34,11 @@ func TestQuicksilverE2E(t *testing.T) {
 
 	config, err := createConfig()
 	require.NoError(t, err)
+
+	// Create relayer factory to utilize the go-relayer
+	client, network := interchaintest.DockerSetup(t)
+
+	ctx := context.Background()
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
@@ -57,9 +63,6 @@ func TestQuicksilverE2E(t *testing.T) {
 
 	quicksilver, juno := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
-	// Create relayer factory to utilize the go-relayer
-	client, network := interchaintest.DockerSetup(t)
-
 	r := interchaintest.NewBuiltinRelayerFactory(ibc.CosmosRly, zaptest.NewLogger(t)).Build(t, client, network)
 
 	// Create a new Interchain object which describes the chains, relayers, and IBC connections we want to use
@@ -73,34 +76,36 @@ func TestQuicksilverE2E(t *testing.T) {
 			Relayer: r,
 			Path:    pathQuicksilverJuno,
 		})
-	rep := testreporter.NewNopReporter()
+
+	// Log location
+	f, err := interchaintest.CreateLogFile(fmt.Sprintf("%d.json", time.Now().Unix()))
+	require.NoError(t, err)
+	rep := testreporter.NewReporter(f)
 	eRep := rep.RelayerExecReporter(t)
 
-	ctx := context.Background()
-
-	err = ic.Build(ctx, eRep, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: false,
-
-		// This can be used to write to the block database which will index all block data e.g. txs, msgs, events, etc.
+	// Build interchain
+	require.NoError(t, ic.Build(ctx, eRep, interchaintest.InterchainBuildOptions{
+		TestName:  t.Name(),
+		Client:    client,
+		NetworkID: network,
 		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
-	})
-	require.NoError(t, err)
+
+		SkipPathCreation: false},
+	),
+	)
 	// Generate a new IBC path
-	err = r.GeneratePath(ctx, eRep, quicksilver.Config().ChainID, juno.Config().ChainID, "test-path")
+	err = r.GeneratePath(ctx, eRep, quicksilver.Config().ChainID, juno.Config().ChainID, pathQuicksilverJuno)
 	require.NoError(t, err)
 
 	// Create new clients
-	err = r.CreateClients(ctx, eRep, "test-path", ibc.CreateClientOptions{TrustingPeriod: "330h"})
+	err = r.CreateClients(ctx, eRep, pathQuicksilverJuno, ibc.CreateClientOptions{TrustingPeriod: "330h"})
 	require.NoError(t, err)
 
 	err = testutil.WaitForBlocks(ctx, 2, quicksilver, juno)
 	require.NoError(t, err)
 
 	// Create a new connection
-	err = r.CreateConnections(ctx, eRep, "test-path")
+	err = r.CreateConnections(ctx, eRep, pathQuicksilverJuno)
 	require.NoError(t, err)
 
 	err = testutil.WaitForBlocks(ctx, 2, quicksilver, juno)
@@ -110,6 +115,15 @@ func TestQuicksilverE2E(t *testing.T) {
 	connections, err := r.GetConnections(ctx, eRep, quicksilver.Config().ChainID)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(connections))
+
+	// Create a new channel
+	err = r.CreateChannel(ctx, eRep, pathQuicksilverJuno, ibc.DefaultChannelOpts())
+	require.NoError(t, err)
+
+	// Query for the newly created channel
+	quickChannels, err := r.GetChannels(ctx, eRep, quicksilver.Config().ChainID)
+	require.NoError(t, err)
+	fmt.Println("Channel", quickChannels)
 
 	t.Cleanup(func() {
 		_ = ic.Close()
@@ -125,7 +139,7 @@ func TestQuicksilverE2E(t *testing.T) {
 		},
 	)
 	// Create some user accounts on both chains
-	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, juno)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, "testing", genesisWalletAmount, quicksilver, juno)
 
 	// Wait a few blocks for relayer to start and for user accounts to be created
 	err = testutil.WaitForBlocks(ctx, 5, quicksilver, juno)
@@ -153,9 +167,6 @@ func TestQuicksilverE2E(t *testing.T) {
 		Denom:   quicksilver.Config().Denom,
 		Amount:  transferAmount,
 	}
-
-	quickChannels, err := r.GetChannels(ctx, eRep, quicksilver.Config().ChainID)
-	require.NoError(t, err)
 
 	transferTx, err := quicksilver.SendIBCTransfer(ctx, quickChannels[0].ChannelID, quickUserAddr, transfer, ibc.TransferOptions{})
 	require.NoError(t, err)

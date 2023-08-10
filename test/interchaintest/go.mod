@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	cosmossdk.io/math v1.0.1
+	github.com/cosmos/cosmos-sdk v0.47.4
 	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/ingenuity-build/quicksilver v1.3.2
 	github.com/strangelove-ventures/interchaintest/v7 v7.0.0-20230802153316-8e02aef8573a
@@ -11,11 +12,10 @@ require (
 	go.uber.org/zap v1.25.0
 )
 
-require github.com/cosmos/cosmos-sdk v0.47.4
-
 require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
+	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845 // indirect
 	golang.org/x/time v0.3.0 // indirect
 )
 
@@ -131,7 +131,6 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
-	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/ingenuity-build/multierror v0.1.0 // indirect
@@ -256,6 +255,7 @@ replace (
 	github.com/ingenuity-build => ../../
 	github.com/ingenuity-build/quicksilver => /Users/rohitprasad/go/src/github.com/quicksilver
 	github.com/iqlusioninc/liquidity-staking-module => github.com/notional-labs/liquidity-staking-module v0.0.3-0.20230629091513-34a6c6a866df
-	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
+	//github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.37.2
+
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 )
