@@ -15,7 +15,7 @@ import (
 	"golang.org/x/exp/maps"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -28,8 +28,7 @@ func newQuicksilver(t *testing.T) *app.Quicksilver {
 		io.Discard,
 		true,
 		map[int64]bool{},
-		app.DefaultNodeHome,
-		5,
+		t.TempDir(),
 		wasm.EnableAllProposals,
 		app.EmptyAppOptions{},
 		app.GetWasmOpts(app.EmptyAppOptions{}),
@@ -77,7 +76,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	indexToZone := make(map[int64]types.Zone, nzones)
 	for i := 0; i < nzones; i++ {
 		chainID := fmt.Sprintf("%s%d", chainIDPrefix, i)
-		delegationAddr := utils.GenerateAccAddressForTestWithPrefix("cosmos")
+		delegationAddr := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 		zone := types.Zone{
 			ConnectionId: "conn-test",
 			ChainId:      chainID,
@@ -93,8 +92,9 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 			RedemptionRate:     sdk.ZeroDec(),
 			LastRedemptionRate: sdk.ZeroDec(),
 			Tvl:                sdk.ZeroDec(),
+			Is_118:             true,
 		}
-		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.ChainId)
+		kpr.SetAddressZoneMapping(ctx, delegationAddr, zone.BaseChainID())
 		kpr.SetZone(ctx, &zone)
 		gotZone, ok := kpr.GetZone(ctx, chainID)
 		require.True(t, ok, "expected to retrieve the correct zone")
@@ -142,13 +142,18 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	}
 	kpr.SetAddressZoneMapping(ctx, "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", perfAcctZone.ChainId)
 	kpr.SetZone(ctx, &perfAcctZone)
-	gotPerfAcctZone := kpr.GetZoneForPerformanceAccount(ctx, perfAcctZone.PerformanceAddress.Address)
+	gotPerfAcctZone, found := kpr.GetZoneForPerformanceAccount(ctx, perfAcctZone.PerformanceAddress.Address)
+	require.True(t, found)
 	require.Equal(t, &perfAcctZone, gotPerfAcctZone, "expecting a match in performance accounts")
+
 	// Try with a non-existent performance address, it should return nil.
-	gotPerfAcctZone = kpr.GetZoneForPerformanceAccount(ctx, "non-existent")
+	gotPerfAcctZone, found = kpr.GetZoneForPerformanceAccount(ctx, "non-existent")
+	require.False(t, found)
 	require.Nil(t, gotPerfAcctZone, "expecting no match in the performance account")
+
 	// Try with a non-existent performance address but that of the performance zone.
-	gotPerfAcctZone = kpr.GetZoneForPerformanceAccount(ctx, perfAcctZone.DelegationAddress.Address)
+	gotPerfAcctZone, found = kpr.GetZoneForPerformanceAccount(ctx, perfAcctZone.DelegationAddress.Address)
+	require.False(t, found)
 	require.Nil(t, gotPerfAcctZone, "expecting no match in the performance account")
 
 	// 7.1. Test delegated amounts.
@@ -175,7 +180,8 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	require.Equal(t, wantDelAmt, gotDelAmt, "expecting 17000 as the delegation amount")
 
 	// Zone for delegation account.
-	zone4Del := kpr.GetZoneForDelegateAccount(ctx, del1.DelegationAddress)
+	zone4Del, found := kpr.GetZoneForDelegateAccount(ctx, del1.DelegationAddress)
+	require.True(t, found)
 	require.NotNil(t, zone4Del, "expecting a non-nil zone back")
 	require.Equal(t, &firstZone, zone4Del, "expectign equivalent zones")
 }

@@ -4,29 +4,29 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func (s *KeeperTestSuite) TestStoreGetDeleteValidator() {
-	s.Run("validator - store / get / delete", func() {
-		s.SetupTest()
-		s.setupTestZones()
+func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
+	suite.Run("validator - store / get / delete", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
 
-		app := s.GetQuicksilverApp(s.chainA)
-		ctx := s.chainA.GetContext()
+		app := suite.GetQuicksilverApp(suite.chainA)
+		ctx := suite.chainA.GetContext()
 
-		zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-		s.Require().True(found)
+		zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.True(found)
 
-		validator := utils.GenerateValAddressForTest()
+		validator := addressutils.GenerateValAddressForTest()
 
-		valAddrBytes, err := utils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
-		s.Require().NoError(err)
-		_, found = app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
-		s.Require().False(found)
+		valAddrBytes, err := addressutils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
+		suite.NoError(err)
+		_, found = app.InterchainstakingKeeper.GetValidator(ctx, &zone, valAddrBytes)
+		suite.False(found)
 
-		count := len(app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId))
+		count := len(app.InterchainstakingKeeper.GetValidators(ctx, &zone))
 
 		newValidator := types.Validator{
 			ValoperAddress:  validator.String(),
@@ -36,19 +36,19 @@ func (s *KeeperTestSuite) TestStoreGetDeleteValidator() {
 			Status:          stakingtypes.BondStatusBonded,
 			Score:           sdk.NewDec(0),
 		}
-		app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newValidator)
+		app.InterchainstakingKeeper.SetValidator(ctx, &zone, newValidator)
 
-		count2 := len(app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId))
+		count2 := len(app.InterchainstakingKeeper.GetValidators(ctx, &zone))
 
-		s.Require().Equal(count+1, count2)
+		suite.Equal(count+1, count2)
 
-		fetchedValidator, found := app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
-		s.Require().True(found)
-		s.Require().Equal(newValidator, fetchedValidator)
+		fetchedValidator, found := app.InterchainstakingKeeper.GetValidator(ctx, &zone, valAddrBytes)
+		suite.True(found)
+		suite.Equal(newValidator, fetchedValidator)
 
-		app.InterchainstakingKeeper.DeleteValidator(ctx, zone.ChainId, valAddrBytes)
+		app.InterchainstakingKeeper.DeleteValidator(ctx, &zone, valAddrBytes)
 
-		count3 := len(app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId))
-		s.Require().Equal(count, count3)
+		count3 := len(app.InterchainstakingKeeper.GetValidators(ctx, &zone))
+		suite.Equal(count, count3)
 	})
 }

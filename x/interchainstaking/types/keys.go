@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -56,6 +57,8 @@ var (
 	KeyPrefixRequeuedWithdrawalRecordSeq = []byte{0x0a}
 	KeyPrefixAddressZoneMapping          = []byte{0x0b}
 	KeyPrefixValidatorsInfo              = []byte{0x0c}
+	KeyPrefixRemoteAddress               = []byte{0x0d}
+	KeyPrefixLocalAddress                = []byte{0x0e}
 
 	// fill in missing 0d - 0f before adding 0x11!
 	KeyPrefixRedelegationRecord = []byte{0x10}
@@ -87,6 +90,16 @@ func ParseStakingDelegationKey(key []byte) (sdk.AccAddress, sdk.ValAddress, erro
 	return delAddr, valAddr, nil
 }
 
+// GetRemoteAddressKey gets the prefix for a remote address mapping.
+func GetRemoteAddressKey(localAddress []byte, chainID string) []byte {
+	return append(append(KeyPrefixRemoteAddress, localAddress...), []byte(chainID)...)
+}
+
+// GetLocalAddressKey gets the prefix for a local address mapping.
+func GetLocalAddressKey(remoteAddress []byte, chainID string) []byte {
+	return append(append(KeyPrefixLocalAddress, []byte(chainID)...), remoteAddress...)
+}
+
 // GetDelegationKey gets the key for delegator bond with validator.
 // VALUE: staking/Delegation.
 func GetDelegationKey(zone *Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress) []byte {
@@ -95,7 +108,7 @@ func GetDelegationKey(zone *Zone, delAddr sdk.AccAddress, valAddr sdk.ValAddress
 
 // GetDelegationsKey gets the prefix for a delegator for all validators.
 func GetDelegationsKey(zone *Zone, delAddr sdk.AccAddress) []byte {
-	return append(append(KeyPrefixDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
+	return append(append(KeyPrefixDelegation, []byte(zone.ZoneID())...), delAddr.Bytes()...)
 }
 
 // GetPerformanceDelegationKey gets the key for delegator bond with validator.
@@ -106,11 +119,11 @@ func GetPerformanceDelegationKey(zone *Zone, delAddr sdk.AccAddress, valAddr sdk
 
 // GetPerformanceDelegationsKey gets the prefix for a delegator for all validators.
 func GetPerformanceDelegationsKey(zone *Zone, delAddr sdk.AccAddress) []byte {
-	return append(append(KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...), delAddr.Bytes()...)
+	return append(append(KeyPrefixPerformanceDelegation, []byte(zone.BaseChainID())...), delAddr.Bytes()...)
 }
 
 func GetReceiptKey(chainID, txhash string) string {
-	return fmt.Sprintf("%s/%s", chainID, txhash)
+	return fmt.Sprintf("%s/%s", chainID, strings.ToUpper(txhash))
 }
 
 // GetRedelegationKey gets the redelegation key.
@@ -140,4 +153,9 @@ func GetUnbondingKey(chainID, validator string, epochNumber int64) []byte {
 // GetZoneValidatorsKey gets the validators key prefix for a given chain.
 func GetZoneValidatorsKey(chainID string) []byte {
 	return append(KeyPrefixValidatorsInfo, []byte(chainID)...)
+}
+
+// GetRemoteAddressPrefix gets the prefix for a remote address mapping.
+func GetRemoteAddressPrefix(locaAddress []byte) []byte {
+	return append(KeyPrefixRemoteAddress, locaAddress...)
 }

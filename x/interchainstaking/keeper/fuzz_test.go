@@ -8,7 +8,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -52,7 +52,7 @@ func FuzzZones(f *testing.F) {
 
 	for _, seed := range seeds {
 		bz, err := app.AppCodec().Marshal(seed)
-		suite.Require().NoError(err)
+		suite.NoError(err)
 		f.Add(bz)
 	}
 
@@ -94,7 +94,7 @@ func FuzzZones(f *testing.F) {
 
 func FuzzValsetCallback(f *testing.F) {
 	// 1. Generate the seeds.
-	newVal := utils.GenerateValAddressForTest()
+	newVal := addressutils.GenerateValAddressForTest()
 	valSetFuncs := []func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse{
 		func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
 			val := in[0]
@@ -145,7 +145,7 @@ func FuzzValsetCallback(f *testing.F) {
 		queryRes := valFunc(chainBVals)
 		app := suite.GetQuicksilverApp(suite.chainA)
 		bz, err := app.AppCodec().Marshal(&queryRes)
-		suite.Require().NoError(err)
+		suite.NoError(err)
 		f.Add(bz)
 	}
 
@@ -156,11 +156,11 @@ func FuzzValsetCallback(f *testing.F) {
 	})
 }
 
-func (s *FuzzingTestSuite) FuzzValsetCallback(args []byte) {
-	app := s.GetQuicksilverApp(s.chainA)
+func (suite *FuzzingTestSuite) FuzzValsetCallback(args []byte) {
+	app := suite.GetQuicksilverApp(suite.chainA)
 	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-	ctx := s.chainA.GetContext()
+	ctx := suite.chainA.GetContext()
 
-	err := keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: s.chainB.ChainID})
-	s.Require().NoError(err)
+	err := keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: suite.chainB.ChainID})
+	suite.NoError(err)
 }

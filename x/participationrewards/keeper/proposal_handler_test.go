@@ -1,14 +1,15 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (s *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
-	appA := s.GetQuicksilverApp(s.chainA)
+func (suite *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
+	appA := suite.GetQuicksilverApp(suite.chainA)
 
 	prop := types.AddProtocolDataProposal{}
 	tests := []struct {
@@ -42,7 +43,7 @@ func (s *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 					Description: "A connection protocol for testing connection protocols",
 					Type:        "testtype",
 					Data:        []byte("{}"),
-					Key:         "testkey",
+					Key:         "",
 				}
 			},
 			true,
@@ -55,7 +56,7 @@ func (s *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 					Description: "A connection protocol for testing connection protocols",
 					Type:        types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 					Data:        []byte("{}"),
-					Key:         "connection",
+					Key:         "",
 				}
 			},
 			true,
@@ -70,7 +71,7 @@ func (s *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 					Description: "A connection protocol for testing connection protocols",
 					Type:        types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 					Data:        []byte(connpdstr),
-					Key:         "connection",
+					Key:         "",
 				}
 			},
 			true,
@@ -78,31 +79,78 @@ func (s *KeeperTestSuite) TestHandleAddProtocolDataProposal() {
 		{
 			"valid_prop",
 			func() {
-				connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d, \"prefix\": \"cosmos\"}", s.path.EndpointB.ConnectionID, s.chainB.ChainID, 0)
+				connpdstr := fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d, \"prefix\": \"cosmos\"}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)
 
 				prop = types.AddProtocolDataProposal{
 					Title:       "Add connection protocol for test chain B",
 					Description: "A connection protocol for testing connection protocols",
 					Type:        types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
 					Data:        []byte(connpdstr),
-					Key:         "connection",
+					Key:         "",
 				}
 			},
 			false,
 		},
 	}
 	for _, tt := range tests {
-		s.Run(tt.name, func() {
+		suite.Run(tt.name, func() {
 			tt.malleate()
 			k := appA.ParticipationRewardsKeeper
-			err := keeper.HandleAddProtocolDataProposal(s.chainA.GetContext(), k, &prop)
+			err := keeper.HandleAddProtocolDataProposal(suite.chainA.GetContext(), k, &prop)
 			if tt.wantErr {
-				s.Require().Error(err)
-				s.T().Logf("Error: %v", err)
+				suite.Error(err)
+				suite.T().Logf("Error: %v", err)
 				return
 			}
 
-			s.Require().NoError(err)
+			suite.NoError(err)
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestHandleRemoveProtocolDataProposal() {
+	appA := suite.GetQuicksilverApp(suite.chainA)
+
+	pd := types.ConnectionProtocolData{
+		ConnectionID: suite.path.EndpointB.ConnectionID,
+		ChainID:      suite.chainB.ChainID,
+		LastEpoch:    0,
+		Prefix:       "cosmos",
+	}
+
+	pdString, err := json.Marshal(pd)
+	suite.NoError(err)
+
+	ctx := suite.chainA.GetContext()
+
+	prop := types.ProtocolData{
+		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
+		Data: pdString,
+	}
+
+	k := appA.ParticipationRewardsKeeper
+
+	k.SetProtocolData(ctx, pd.GenerateKey(), &prop)
+	// set the protocol data
+
+	_, found := k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, string(pd.GenerateKey()))
+	suite.True(found)
+
+	msgServer := keeper.NewMsgServerImpl(k)
+
+	// submit proposal
+
+	proposalMsg := types.MsgGovRemoveProtocolData{
+		Title:       "remove chain B connection string",
+		Description: "remove the protocol data",
+		Key:         string(pd.GenerateKey()),
+		Authority:   k.GetGovAuthority(ctx),
+	}
+
+	_, err = msgServer.GovRemoveProtocolData(ctx, &proposalMsg)
+
+	suite.NoError(err)
+
+	_, found = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, string(pd.GenerateKey()))
+	suite.True(found)
 }

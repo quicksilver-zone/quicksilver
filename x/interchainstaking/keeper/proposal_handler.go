@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"strings"
 
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
@@ -18,16 +18,39 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-// HandleRegisterZoneProposal is a handler for executing a passed community spend proposal.
+// HandleRegisterZoneProposal is a handler for executing a register zone proposal.
+//
+// Deprecated: use the message server variant of these functions.
 func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZoneProposal) error {
+	var (
+		baseZone types.Zone
+		found    bool
+	)
+
 	// get chain id from connection
 	chainID, err := k.GetChainID(ctx, p.ConnectionId)
 	if err != nil {
 		return fmt.Errorf("unable to obtain chain id: %w", err)
 	}
 
+	// if subzone
+	if p.SubzoneInfo != nil {
+		if chainID != p.SubzoneInfo.BaseChainID {
+			return fmt.Errorf("incorrect ID \"%s\" for subzone \"%s\"", chainID, p.SubzoneInfo.BaseChainID)
+		}
+
+		// get zone
+		baseZone, found = k.GetZone(ctx, p.SubzoneInfo.BaseChainID)
+		if !found {
+			return fmt.Errorf("unable to find base chain \"%s\" for subzone \"%s\"", chainID, p.SubzoneInfo.BaseChainID)
+		}
+
+		// set chainID to be specified unique ID
+		chainID = p.SubzoneInfo.ChainID
+	}
+
 	// get zone
-	_, found := k.GetZone(ctx, chainID)
+	_, found = k.GetZone(ctx, chainID)
 	if found {
 		return fmt.Errorf("invalid chain id, zone for \"%s\" already registered", chainID)
 	}
@@ -66,7 +89,17 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		Decimals:           p.Decimals,
 		UnbondingPeriod:    int64(tmClientState.UnbondingPeriod),
 		MessagesPerTx:      p.MessagesPerTx,
+		Is_118:             p.Is_118,
+		SubzoneInfo:        p.SubzoneInfo,
 	}
+
+	// verify subzone if setting
+	if zone.IsSubzone() {
+		if err := types.ValidateSubzoneForBasezone(*zone, baseZone); err != nil {
+			return err
+		}
+	}
+
 	k.SetZone(ctx, zone)
 
 	// generate deposit account
@@ -93,9 +126,17 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 		return err
 	}
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
-	query := stakingTypes.QueryValidatorsRequest{}
-	err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
+	// query val set for base zone
+	if !zone.IsSubzone() {
+		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+		query := stakingTypes.QueryValidatorsRequest{}
+		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
+		if err != nil {
+			return err
+		}
+	}
+
+	err = k.hooks.AfterZoneCreated(ctx, zone.ConnectionId, zone.ChainId, zone.AccountPrefix)
 	if err != nil {
 		return err
 	}
@@ -116,13 +157,18 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 }
 
 func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOwner string) error {
-	msgServer := icacontrollerkeeper.NewMsgServerImpl(&k.ICAControllerKeeper)
-	msgRegisterInterchainAccount := icacontrollertypes.NewMsgRegisterInterchainAccount(connectionID, portOwner, "") // todo: add version
+	msg := &icacontrollertypes.MsgRegisterInterchainAccount{
+		Owner:        portOwner,
+		ConnectionId: connectionID,
+		Version:      "",
+	}
 
-	_, err := msgServer.RegisterInterchainAccount(ctx, msgRegisterInterchainAccount)
+	handler := k.msgRouter.Handler(msg)
+	_, err := handler(ctx, msg)
 	if err != nil {
 		return err
 	}
+
 	portID, err := icatypes.NewControllerPortID(portOwner)
 	if err != nil {
 		return err
@@ -133,7 +179,9 @@ func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOw
 	return nil
 }
 
-// HandleUpdateZoneProposal is a handler for executing a passed community spend proposal.
+// HandleUpdateZoneProposal is a handler for executing a passed handle update zone proposal.
+//
+// Deprecated: use the message server variant of these functions.
 func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZoneProposal) error {
 	zone, found := k.GetZone(ctx, p.ChainId)
 	if !found {
@@ -202,6 +250,13 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 		case "account_prefix":
 			zone.AccountPrefix = change.Value
 
+		case "is_118":
+			boolValue, err := strconv.ParseBool(change.Value)
+			if err != nil {
+				return err
+			}
+			zone.Is_118 = boolValue
+
 		case "connection_id":
 			if !strings.HasPrefix(change.Value, "connection-") {
 				return errors.New("unexpected connection format")
@@ -237,32 +292,28 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			portOwner := zone.ChainId + ".deposit"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
 				return err
 			}
 
 			// generate withdrawal account
-			portOwner = zone.ChainId + ".withdrawal"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
 				return err
 			}
 
 			// generate perf account
-			portOwner = zone.ChainId + ".performance"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
 				return err
 			}
 
 			// generate delegate accounts
-			portOwner = zone.ChainId + ".delegate"
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
 				return err
 			}
 
 			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 			query := stakingTypes.QueryValidatorsRequest{}
-			err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone.ChainId, query, sdkmath.NewInt(period))
+			err := k.EmitValSetQuery(ctx, zone.ConnectionId, &zone, query, sdkmath.NewInt(period))
 			if err != nil {
 				return err
 			}
@@ -273,7 +324,7 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 	}
 	k.SetZone(ctx, &zone)
 
-	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ChainId)
+	k.Logger(ctx).Info("applied changes to zone", "changes", p.Changes, "zone", zone.ZoneID())
 
 	return nil
 }

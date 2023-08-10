@@ -2,9 +2,12 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/multierror"
 )
+
+func NewClaim(address, chainID string, module ClaimType, srcChainID string, amount uint64) Claim {
+	return Claim{UserAddress: address, ChainId: chainID, Module: module, SourceChainId: srcChainID, Amount: amount}
+}
 
 // ValidateBasic performs stateless validation of a Claim.
 func (c *Claim) ValidateBasic() error {

@@ -12,7 +12,6 @@ import (
 
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	host "github.com/cosmos/ibc-go/v7/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 
 	"github.com/ingenuity-build/quicksilver/utils"
@@ -22,11 +21,11 @@ var _ porttypes.IBCModule = IBCModule{}
 
 // IBCModule implements the ICS26 interface for interchain accounts controller chains.
 type IBCModule struct {
-	keeper keeper.Keeper
+	keeper *keeper.Keeper
 }
 
 // NewIBCModule creates a new IBCModule given the keeper.
-func NewIBCModule(k keeper.Keeper) IBCModule {
+func NewIBCModule(k *keeper.Keeper) IBCModule {
 	return IBCModule{
 		keeper: k,
 	}
@@ -34,16 +33,19 @@ func NewIBCModule(k keeper.Keeper) IBCModule {
 
 // OnChanOpenInit implements the IBCModule interface.
 func (im IBCModule) OnChanOpenInit(
-	ctx sdk.Context,
+	_ sdk.Context,
 	_ channeltypes.Order,
 	_ []string,
-	portID string,
-	channelID string,
-	chanCap *capabilitytypes.Capability,
+	_ string,
+	_ string,
+	_ *capabilitytypes.Capability,
 	_ channeltypes.Counterparty,
 	_ string,
 ) (string, error) {
-	return "", im.keeper.ClaimCapability(ctx, chanCap, host.ChannelCapabilityPath(portID, channelID))
+	// TODO: verify that channel keeper has claimed cap
+
+	// ica capability already claimed by underlying submodule
+	return "", nil
 }
 
 // OnChanOpenTry implements the IBCModule interface.

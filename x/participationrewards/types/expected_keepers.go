@@ -1,8 +1,15 @@
 package types
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/cosmos/gogoproto/proto"
+	ibctmtypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+
+	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 // AccountKeeper defines the contract required for account APIs.
@@ -20,6 +27,8 @@ type AccountKeeper interface {
 // dependencies.
 type BankKeeper interface {
 	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SendCoins(ctx sdk.Context, senderModule sdk.AccAddress, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
@@ -29,4 +38,41 @@ type BankKeeper interface {
 // StakingKeeper defines the contract for staking APIs.
 type StakingKeeper interface {
 	BondDenom(ctx sdk.Context) string
+}
+
+type ClaimsManagerKeeper interface {
+	ArchiveAndGarbageCollectClaims(ctx sdk.Context, zone *interchainstakingtypes.Zone)
+	IterateClaims(ctx sdk.Context, chainID string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
+	IterateLastEpochUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
+	GetSelfConsensusState(ctx sdk.Context, key string) (ibctmtypes.ConsensusState, bool)
+	SetClaim(ctx sdk.Context, claim *claimsmanagertypes.Claim)
+}
+
+type InterchainQueryKeeper interface {
+	MakeRequest(
+		ctx sdk.Context,
+		connectionID,
+		chainID,
+		queryType string,
+		request []byte,
+		period sdkmath.Int,
+		module string,
+		callbackID string,
+		ttl uint64,
+	)
+	GetQuery(ctx sdk.Context, id string) (interchainquerytypes.Query, bool)
+}
+
+type InterchainStakingKeeper interface {
+	SubmitTx(ctx sdk.Context, msgs []proto.Message, account *interchainstakingtypes.ICAAccount, memo string, messagesPerTx int64) error
+	IterateZones(ctx sdk.Context, fn func(index int64, zone *interchainstakingtypes.Zone) (stop bool))
+	GetZone(ctx sdk.Context, chainID string) (interchainstakingtypes.Zone, bool)
+	SetZone(ctx sdk.Context, zone *interchainstakingtypes.Zone)
+	AllDelegatorIntents(ctx sdk.Context, zone *interchainstakingtypes.Zone, snapshot bool) []interchainstakingtypes.DelegatorIntent
+	SetDelegatorIntent(ctx sdk.Context, zone *interchainstakingtypes.Zone, intent interchainstakingtypes.DelegatorIntent, snapshot bool)
+	GetDelegatedAmount(ctx sdk.Context, zone *interchainstakingtypes.Zone) sdk.Coin
+	GetDelegationsInProcess(ctx sdk.Context, zone *interchainstakingtypes.Zone) sdkmath.Int
+	IterateDelegatorIntents(ctx sdk.Context, zone *interchainstakingtypes.Zone, snapshot bool, fn func(index int64, intent interchainstakingtypes.DelegatorIntent) (stop bool))
+	GetValidators(ctx sdk.Context, zone *interchainstakingtypes.Zone) []interchainstakingtypes.Validator
+	SetValidator(ctx sdk.Context, zone *interchainstakingtypes.Zone, val interchainstakingtypes.Validator) error
 }

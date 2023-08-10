@@ -8,12 +8,14 @@ import (
 	"path/filepath"
 	"time"
 
+	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	dbm "github.com/cometbft/cometbft-db"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cometbft/cometbft/libs/log"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -30,15 +32,13 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/ingenuity-build/quicksilver/app"
 	quicksilverconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	servercfg "github.com/ingenuity-build/quicksilver/server/config"
@@ -251,6 +251,19 @@ func (ac appCreator) newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+
+	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
+	if chainID == "" {
+		// fallback to genesis chain-id
+		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		if err != nil {
+			panic(err)
+		}
+
+		chainID = appGenesis.ChainID
+	}
+
 	var wasmOpts []wasm.Option
 	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
@@ -259,7 +272,6 @@ func (ac appCreator) newApp(
 	return app.NewQuicksilver(
 		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		wasm.EnableAllProposals,
 		appOpts,
 		wasmOpts,
@@ -273,11 +285,11 @@ func (ac appCreator) newApp(
 		baseapp.SetTrace(cast.ToBool(appOpts.Get(server.FlagTrace))),
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
+		baseapp.SetChainID(chainID),
 	)
 }
 
-func addModuleInitFlags(startCmd *cobra.Command) {
-	crisis.AddModuleInitFlags(startCmd)
+func addModuleInitFlags(_ *cobra.Command) {
 }
 
 func (ac appCreator) appExport(
@@ -308,7 +320,6 @@ func (ac appCreator) appExport(
 		loadLatest,
 		map[int64]bool{},
 		homePath,
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		wasm.EnableAllProposals,
 		appOpts,
 		emptyWasmOpts,

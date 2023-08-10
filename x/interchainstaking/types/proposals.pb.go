@@ -6,7 +6,8 @@ package types
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
 	math "math"
@@ -25,19 +26,21 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 type RegisterZoneProposal struct {
-	Title            string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Description      string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	ConnectionId     string `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
-	BaseDenom        string `protobuf:"bytes,4,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty" yaml:"base_denom"`
-	LocalDenom       string `protobuf:"bytes,5,opt,name=local_denom,json=localDenom,proto3" json:"local_denom,omitempty" yaml:"local_denom"`
-	AccountPrefix    string `protobuf:"bytes,6,opt,name=account_prefix,json=accountPrefix,proto3" json:"account_prefix,omitempty" yaml:"account_prefix"`
-	MultiSend        bool   `protobuf:"varint,7,opt,name=multi_send,json=multiSend,proto3" json:"multi_send,omitempty"`
-	LiquidityModule  bool   `protobuf:"varint,8,opt,name=liquidity_module,json=liquidityModule,proto3" json:"liquidity_module,omitempty"`
-	MessagesPerTx    int64  `protobuf:"varint,9,opt,name=messages_per_tx,json=messagesPerTx,proto3" json:"messages_per_tx,omitempty"`
-	ReturnToSender   bool   `protobuf:"varint,10,opt,name=return_to_sender,json=returnToSender,proto3" json:"return_to_sender,omitempty"`
-	DepositsEnabled  bool   `protobuf:"varint,11,opt,name=deposits_enabled,json=depositsEnabled,proto3" json:"deposits_enabled,omitempty"`
-	UnbondingEnabled bool   `protobuf:"varint,12,opt,name=unbonding_enabled,json=unbondingEnabled,proto3" json:"unbonding_enabled,omitempty"`
-	Decimals         int64  `protobuf:"varint,13,opt,name=decimals,proto3" json:"decimals,omitempty"`
+	Title            string       `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Description      string       `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	ConnectionId     string       `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	BaseDenom        string       `protobuf:"bytes,4,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty" yaml:"base_denom"`
+	LocalDenom       string       `protobuf:"bytes,5,opt,name=local_denom,json=localDenom,proto3" json:"local_denom,omitempty" yaml:"local_denom"`
+	AccountPrefix    string       `protobuf:"bytes,6,opt,name=account_prefix,json=accountPrefix,proto3" json:"account_prefix,omitempty" yaml:"account_prefix"`
+	MultiSend        bool         `protobuf:"varint,7,opt,name=multi_send,json=multiSend,proto3" json:"multi_send,omitempty"`
+	LiquidityModule  bool         `protobuf:"varint,8,opt,name=liquidity_module,json=liquidityModule,proto3" json:"liquidity_module,omitempty"`
+	MessagesPerTx    int64        `protobuf:"varint,9,opt,name=messages_per_tx,json=messagesPerTx,proto3" json:"messages_per_tx,omitempty"`
+	ReturnToSender   bool         `protobuf:"varint,10,opt,name=return_to_sender,json=returnToSender,proto3" json:"return_to_sender,omitempty"`
+	DepositsEnabled  bool         `protobuf:"varint,11,opt,name=deposits_enabled,json=depositsEnabled,proto3" json:"deposits_enabled,omitempty"`
+	UnbondingEnabled bool         `protobuf:"varint,12,opt,name=unbonding_enabled,json=unbondingEnabled,proto3" json:"unbonding_enabled,omitempty"`
+	Decimals         int64        `protobuf:"varint,13,opt,name=decimals,proto3" json:"decimals,omitempty"`
+	Is_118           bool         `protobuf:"varint,14,opt,name=is_118,json=is118,proto3" json:"is_118,omitempty"`
+	SubzoneInfo      *SubzoneInfo `protobuf:"bytes,15,opt,name=subzoneInfo,proto3" json:"subzoneInfo,omitempty"`
 }
 
 func (m *RegisterZoneProposal) Reset()      { *m = RegisterZoneProposal{} }
@@ -72,28 +75,200 @@ func (m *RegisterZoneProposal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RegisterZoneProposal proto.InternalMessageInfo
 
+type MsgRegisterZone struct {
+	Authority        string       `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	ConnectionID     string       `protobuf:"bytes,2,opt,name=connectionID,proto3" json:"connectionID,omitempty" yaml:"connection_id"`
+	BaseDenom        string       `protobuf:"bytes,3,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty" yaml:"base_denom"`
+	LocalDenom       string       `protobuf:"bytes,4,opt,name=local_denom,json=localDenom,proto3" json:"local_denom,omitempty" yaml:"local_denom"`
+	AccountPrefix    string       `protobuf:"bytes,5,opt,name=account_prefix,json=accountPrefix,proto3" json:"account_prefix,omitempty" yaml:"account_prefix"`
+	LiquidityModule  bool         `protobuf:"varint,6,opt,name=liquidity_module,json=liquidityModule,proto3" json:"liquidity_module,omitempty"`
+	MessagesPerTx    int64        `protobuf:"varint,7,opt,name=messages_per_tx,json=messagesPerTx,proto3" json:"messages_per_tx,omitempty"`
+	ReturnToSender   bool         `protobuf:"varint,8,opt,name=return_to_sender,json=returnToSender,proto3" json:"return_to_sender,omitempty"`
+	DepositsEnabled  bool         `protobuf:"varint,9,opt,name=deposits_enabled,json=depositsEnabled,proto3" json:"deposits_enabled,omitempty"`
+	UnbondingEnabled bool         `protobuf:"varint,10,opt,name=unbonding_enabled,json=unbondingEnabled,proto3" json:"unbonding_enabled,omitempty"`
+	Decimals         int64        `protobuf:"varint,11,opt,name=decimals,proto3" json:"decimals,omitempty"`
+	Is_118           bool         `protobuf:"varint,12,opt,name=is_118,json=is118,proto3" json:"is_118,omitempty"`
+	SubzoneInfo      *SubzoneInfo `protobuf:"bytes,13,opt,name=subzoneInfo,proto3" json:"subzoneInfo,omitempty"`
+}
+
+func (m *MsgRegisterZone) Reset()         { *m = MsgRegisterZone{} }
+func (m *MsgRegisterZone) String() string { return proto.CompactTextString(m) }
+func (*MsgRegisterZone) ProtoMessage()    {}
+func (*MsgRegisterZone) Descriptor() ([]byte, []int) {
+	return fileDescriptor_04d034c830a7acfe, []int{1}
+}
+func (m *MsgRegisterZone) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRegisterZone) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRegisterZone.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRegisterZone) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRegisterZone.Merge(m, src)
+}
+func (m *MsgRegisterZone) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRegisterZone) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRegisterZone.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRegisterZone proto.InternalMessageInfo
+
+// MsgRegisterZoneResponse defines the MsgRegisterZone response type.
+type MsgRegisterZoneResponse struct {
+	ZoneID string `protobuf:"bytes,1,opt,name=zoneID,proto3" json:"zoneID,omitempty"`
+}
+
+func (m *MsgRegisterZoneResponse) Reset()         { *m = MsgRegisterZoneResponse{} }
+func (m *MsgRegisterZoneResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRegisterZoneResponse) ProtoMessage()    {}
+func (*MsgRegisterZoneResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_04d034c830a7acfe, []int{2}
+}
+func (m *MsgRegisterZoneResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRegisterZoneResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRegisterZoneResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRegisterZoneResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRegisterZoneResponse.Merge(m, src)
+}
+func (m *MsgRegisterZoneResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRegisterZoneResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRegisterZoneResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRegisterZoneResponse proto.InternalMessageInfo
+
+func (m *MsgRegisterZoneResponse) GetZoneID() string {
+	if m != nil {
+		return m.ZoneID
+	}
+	return ""
+}
+
+type MsgUpdateZone struct {
+	Authority string             `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	ZoneID    string             `protobuf:"bytes,2,opt,name=zoneID,proto3" json:"zoneID,omitempty" yaml:"zone_id"`
+	Changes   []*UpdateZoneValue `protobuf:"bytes,3,rep,name=changes,proto3" json:"changes,omitempty" yaml:"changes"`
+}
+
+func (m *MsgUpdateZone) Reset()         { *m = MsgUpdateZone{} }
+func (m *MsgUpdateZone) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateZone) ProtoMessage()    {}
+func (*MsgUpdateZone) Descriptor() ([]byte, []int) {
+	return fileDescriptor_04d034c830a7acfe, []int{3}
+}
+func (m *MsgUpdateZone) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateZone) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateZone.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateZone) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateZone.Merge(m, src)
+}
+func (m *MsgUpdateZone) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateZone) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateZone.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateZone proto.InternalMessageInfo
+
+// MsgRegisterZoneResponse defines the MsgRegisterZone response type.
+type MsgUpdateZoneResponse struct {
+}
+
+func (m *MsgUpdateZoneResponse) Reset()         { *m = MsgUpdateZoneResponse{} }
+func (m *MsgUpdateZoneResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateZoneResponse) ProtoMessage()    {}
+func (*MsgUpdateZoneResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_04d034c830a7acfe, []int{4}
+}
+func (m *MsgUpdateZoneResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateZoneResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateZoneResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateZoneResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateZoneResponse.Merge(m, src)
+}
+func (m *MsgUpdateZoneResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateZoneResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateZoneResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateZoneResponse proto.InternalMessageInfo
+
 type RegisterZoneProposalWithDeposit struct {
-	Title            string `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty" yaml:"title"`
-	Description      string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description"`
-	ConnectionId     string `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
-	BaseDenom        string `protobuf:"bytes,4,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty" yaml:"base_denom"`
-	LocalDenom       string `protobuf:"bytes,5,opt,name=local_denom,json=localDenom,proto3" json:"local_denom,omitempty" yaml:"local_denom"`
-	AccountPrefix    string `protobuf:"bytes,6,opt,name=account_prefix,json=accountPrefix,proto3" json:"account_prefix,omitempty" yaml:"account_prefix"`
-	MultiSend        bool   `protobuf:"varint,7,opt,name=multi_send,json=multiSend,proto3" json:"multi_send,omitempty" yaml:"multi_send"`
-	LiquidityModule  bool   `protobuf:"varint,8,opt,name=liquidity_module,json=liquidityModule,proto3" json:"liquidity_module,omitempty" yaml:"liquidity_module"`
-	Deposit          string `protobuf:"bytes,9,opt,name=deposit,proto3" json:"deposit,omitempty" yaml:"deposit"`
-	MessagesPerTx    int64  `protobuf:"varint,10,opt,name=messages_per_tx,json=messagesPerTx,proto3" json:"messages_per_tx,omitempty"`
-	ReturnToSender   bool   `protobuf:"varint,11,opt,name=return_to_sender,json=returnToSender,proto3" json:"return_to_sender,omitempty" yaml:"return_to_sender"`
-	DepositsEnabled  bool   `protobuf:"varint,12,opt,name=deposits_enabled,json=depositsEnabled,proto3" json:"deposits_enabled,omitempty" yaml:"deposits_enabled"`
-	UnbondingEnabled bool   `protobuf:"varint,13,opt,name=unbonding_enabled,json=unbondingEnabled,proto3" json:"unbonding_enabled,omitempty" yaml:"deposits_enabled"`
-	Decimals         int64  `protobuf:"varint,14,opt,name=decimals,proto3" json:"decimals,omitempty" yaml:"decimals"`
+	Title            string       `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty" yaml:"title"`
+	Description      string       `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description"`
+	ConnectionId     string       `protobuf:"bytes,3,opt,name=connection_id,json=connectionId,proto3" json:"connection_id,omitempty" yaml:"connection_id"`
+	BaseDenom        string       `protobuf:"bytes,4,opt,name=base_denom,json=baseDenom,proto3" json:"base_denom,omitempty" yaml:"base_denom"`
+	LocalDenom       string       `protobuf:"bytes,5,opt,name=local_denom,json=localDenom,proto3" json:"local_denom,omitempty" yaml:"local_denom"`
+	AccountPrefix    string       `protobuf:"bytes,6,opt,name=account_prefix,json=accountPrefix,proto3" json:"account_prefix,omitempty" yaml:"account_prefix"`
+	MultiSend        bool         `protobuf:"varint,7,opt,name=multi_send,json=multiSend,proto3" json:"multi_send,omitempty" yaml:"multi_send"`
+	LiquidityModule  bool         `protobuf:"varint,8,opt,name=liquidity_module,json=liquidityModule,proto3" json:"liquidity_module,omitempty" yaml:"liquidity_module"`
+	Deposit          string       `protobuf:"bytes,9,opt,name=deposit,proto3" json:"deposit,omitempty" yaml:"deposit"`
+	MessagesPerTx    int64        `protobuf:"varint,10,opt,name=messages_per_tx,json=messagesPerTx,proto3" json:"messages_per_tx,omitempty"`
+	ReturnToSender   bool         `protobuf:"varint,11,opt,name=return_to_sender,json=returnToSender,proto3" json:"return_to_sender,omitempty" yaml:"return_to_sender"`
+	DepositsEnabled  bool         `protobuf:"varint,12,opt,name=deposits_enabled,json=depositsEnabled,proto3" json:"deposits_enabled,omitempty" yaml:"deposits_enabled"`
+	UnbondingEnabled bool         `protobuf:"varint,13,opt,name=unbonding_enabled,json=unbondingEnabled,proto3" json:"unbonding_enabled,omitempty" yaml:"deposits_enabled"`
+	Decimals         int64        `protobuf:"varint,14,opt,name=decimals,proto3" json:"decimals,omitempty" yaml:"decimals"`
+	Is_118           bool         `protobuf:"varint,15,opt,name=is_118,json=is118,proto3" json:"is_118,omitempty"`
+	SubzoneInfo      *SubzoneInfo `protobuf:"bytes,16,opt,name=subzoneInfo,proto3" json:"subzoneInfo,omitempty"`
 }
 
 func (m *RegisterZoneProposalWithDeposit) Reset()         { *m = RegisterZoneProposalWithDeposit{} }
 func (m *RegisterZoneProposalWithDeposit) String() string { return proto.CompactTextString(m) }
 func (*RegisterZoneProposalWithDeposit) ProtoMessage()    {}
 func (*RegisterZoneProposalWithDeposit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_04d034c830a7acfe, []int{1}
+	return fileDescriptor_04d034c830a7acfe, []int{5}
 }
 func (m *RegisterZoneProposalWithDeposit) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -132,7 +307,7 @@ type UpdateZoneProposal struct {
 func (m *UpdateZoneProposal) Reset()      { *m = UpdateZoneProposal{} }
 func (*UpdateZoneProposal) ProtoMessage() {}
 func (*UpdateZoneProposal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_04d034c830a7acfe, []int{2}
+	return fileDescriptor_04d034c830a7acfe, []int{6}
 }
 func (m *UpdateZoneProposal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -173,7 +348,7 @@ func (m *UpdateZoneProposalWithDeposit) Reset()         { *m = UpdateZoneProposa
 func (m *UpdateZoneProposalWithDeposit) String() string { return proto.CompactTextString(m) }
 func (*UpdateZoneProposalWithDeposit) ProtoMessage()    {}
 func (*UpdateZoneProposalWithDeposit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_04d034c830a7acfe, []int{3}
+	return fileDescriptor_04d034c830a7acfe, []int{7}
 }
 func (m *UpdateZoneProposalWithDeposit) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -213,7 +388,7 @@ func (m *UpdateZoneValue) Reset()         { *m = UpdateZoneValue{} }
 func (m *UpdateZoneValue) String() string { return proto.CompactTextString(m) }
 func (*UpdateZoneValue) ProtoMessage()    {}
 func (*UpdateZoneValue) Descriptor() ([]byte, []int) {
-	return fileDescriptor_04d034c830a7acfe, []int{4}
+	return fileDescriptor_04d034c830a7acfe, []int{8}
 }
 func (m *UpdateZoneValue) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -268,7 +443,7 @@ func (m *MsgGovReopenChannel) Reset()         { *m = MsgGovReopenChannel{} }
 func (m *MsgGovReopenChannel) String() string { return proto.CompactTextString(m) }
 func (*MsgGovReopenChannel) ProtoMessage()    {}
 func (*MsgGovReopenChannel) Descriptor() ([]byte, []int) {
-	return fileDescriptor_04d034c830a7acfe, []int{5}
+	return fileDescriptor_04d034c830a7acfe, []int{9}
 }
 func (m *MsgGovReopenChannel) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -305,7 +480,7 @@ func (m *MsgGovReopenChannelResponse) Reset()         { *m = MsgGovReopenChannel
 func (m *MsgGovReopenChannelResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgGovReopenChannelResponse) ProtoMessage()    {}
 func (*MsgGovReopenChannelResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_04d034c830a7acfe, []int{6}
+	return fileDescriptor_04d034c830a7acfe, []int{10}
 }
 func (m *MsgGovReopenChannelResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -346,7 +521,7 @@ func (m *MsgGovCloseChannel) Reset()         { *m = MsgGovCloseChannel{} }
 func (m *MsgGovCloseChannel) String() string { return proto.CompactTextString(m) }
 func (*MsgGovCloseChannel) ProtoMessage()    {}
 func (*MsgGovCloseChannel) Descriptor() ([]byte, []int) {
-	return fileDescriptor_04d034c830a7acfe, []int{7}
+	return fileDescriptor_04d034c830a7acfe, []int{11}
 }
 func (m *MsgGovCloseChannel) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -383,7 +558,7 @@ func (m *MsgGovCloseChannelResponse) Reset()         { *m = MsgGovCloseChannelRe
 func (m *MsgGovCloseChannelResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgGovCloseChannelResponse) ProtoMessage()    {}
 func (*MsgGovCloseChannelResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_04d034c830a7acfe, []int{8}
+	return fileDescriptor_04d034c830a7acfe, []int{12}
 }
 func (m *MsgGovCloseChannelResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -414,6 +589,10 @@ var xxx_messageInfo_MsgGovCloseChannelResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*RegisterZoneProposal)(nil), "quicksilver.interchainstaking.v1.RegisterZoneProposal")
+	proto.RegisterType((*MsgRegisterZone)(nil), "quicksilver.interchainstaking.v1.MsgRegisterZone")
+	proto.RegisterType((*MsgRegisterZoneResponse)(nil), "quicksilver.interchainstaking.v1.MsgRegisterZoneResponse")
+	proto.RegisterType((*MsgUpdateZone)(nil), "quicksilver.interchainstaking.v1.MsgUpdateZone")
+	proto.RegisterType((*MsgUpdateZoneResponse)(nil), "quicksilver.interchainstaking.v1.MsgUpdateZoneResponse")
 	proto.RegisterType((*RegisterZoneProposalWithDeposit)(nil), "quicksilver.interchainstaking.v1.RegisterZoneProposalWithDeposit")
 	proto.RegisterType((*UpdateZoneProposal)(nil), "quicksilver.interchainstaking.v1.UpdateZoneProposal")
 	proto.RegisterType((*UpdateZoneProposalWithDeposit)(nil), "quicksilver.interchainstaking.v1.UpdateZoneProposalWithDeposit")
@@ -429,68 +608,82 @@ func init() {
 }
 
 var fileDescriptor_04d034c830a7acfe = []byte{
-	// 963 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x56, 0x4f, 0x6f, 0xe3, 0xc4,
-	0x1b, 0x4e, 0xfa, 0x37, 0x99, 0xfc, 0x69, 0x77, 0x36, 0xfb, 0xfb, 0x79, 0xbb, 0x34, 0x8e, 0xe6,
-	0xb0, 0x0a, 0x5a, 0x36, 0xa1, 0x50, 0x01, 0x5a, 0x09, 0x69, 0xc9, 0xfe, 0x81, 0x1e, 0x56, 0xaa,
-	0xdc, 0x05, 0xa4, 0x72, 0xb0, 0x1c, 0xfb, 0xc5, 0x19, 0xd5, 0x99, 0xf1, 0x7a, 0xc6, 0x51, 0xf3,
-	0x0d, 0xf6, 0xc8, 0x05, 0x89, 0x63, 0x3f, 0x04, 0x1f, 0x02, 0x71, 0x5a, 0x71, 0x42, 0x02, 0x45,
-	0xa8, 0xbd, 0x70, 0x25, 0x57, 0x2e, 0xc8, 0x33, 0x76, 0xe3, 0x26, 0x41, 0x3d, 0x20, 0x16, 0x24,
-	0x6e, 0xf3, 0x3e, 0xcf, 0xfb, 0xbe, 0x33, 0x7e, 0xfc, 0xbc, 0xf6, 0xa0, 0xb7, 0x5f, 0xc4, 0xd4,
-	0x3d, 0x11, 0x34, 0x18, 0x41, 0xd4, 0xa5, 0x4c, 0x42, 0xe4, 0x0e, 0x1c, 0xca, 0x84, 0x74, 0x4e,
-	0x28, 0xf3, 0xbb, 0xa3, 0xbd, 0x6e, 0x18, 0xf1, 0x90, 0x0b, 0x27, 0x10, 0x9d, 0x30, 0xe2, 0x92,
-	0xe3, 0x56, 0xae, 0xa2, 0xb3, 0x50, 0xd1, 0x19, 0xed, 0xed, 0xdc, 0x76, 0xb9, 0x18, 0x72, 0x61,
-	0xab, 0xfc, 0xae, 0x0e, 0x74, 0xf1, 0x4e, 0xc3, 0xe7, 0x3e, 0xd7, 0x78, 0xb2, 0xd2, 0x28, 0xf9,
-	0x79, 0x0d, 0x35, 0x2c, 0xf0, 0xa9, 0x90, 0x10, 0x1d, 0x73, 0x06, 0x87, 0xe9, 0x96, 0xb8, 0x81,
-	0xd6, 0x25, 0x95, 0x01, 0x18, 0xc5, 0x56, 0xb1, 0x5d, 0xb6, 0x74, 0x80, 0x5b, 0xa8, 0xe2, 0x81,
-	0x70, 0x23, 0x1a, 0x4a, 0xca, 0x99, 0xb1, 0xa2, 0xb8, 0x3c, 0x84, 0x3f, 0x44, 0x35, 0x97, 0x33,
-	0x06, 0x6e, 0x12, 0xd9, 0xd4, 0x33, 0x56, 0x93, 0x9c, 0x9e, 0x31, 0x9d, 0x98, 0x8d, 0xb1, 0x33,
-	0x0c, 0x1e, 0x90, 0x2b, 0x34, 0xb1, 0xaa, 0xb3, 0xf8, 0xc0, 0xc3, 0xfb, 0x08, 0xf5, 0x1d, 0x01,
-	0xb6, 0x07, 0x8c, 0x0f, 0x8d, 0x35, 0x55, 0x7b, 0x6b, 0x3a, 0x31, 0x6f, 0xe8, 0xda, 0x19, 0x47,
-	0xac, 0x72, 0x12, 0x3c, 0x4e, 0xd6, 0xf8, 0x7d, 0x54, 0x09, 0xb8, 0xeb, 0x04, 0x69, 0xd9, 0xba,
-	0x2a, 0xfb, 0xdf, 0x74, 0x62, 0x62, 0x5d, 0x96, 0x23, 0x89, 0x85, 0x54, 0xa4, 0x0b, 0x1f, 0xa2,
-	0xba, 0xe3, 0xba, 0x3c, 0x66, 0xd2, 0x0e, 0x23, 0xf8, 0x92, 0x9e, 0x1a, 0x1b, 0xaa, 0xf6, 0xf6,
-	0x74, 0x62, 0xde, 0xd2, 0xb5, 0x57, 0x79, 0x62, 0xd5, 0x52, 0xe0, 0x50, 0xc5, 0x78, 0x17, 0xa1,
-	0x61, 0x1c, 0x48, 0x6a, 0x0b, 0x60, 0x9e, 0xb1, 0xd9, 0x2a, 0xb6, 0x4b, 0x56, 0x59, 0x21, 0x47,
-	0xc0, 0x3c, 0xfc, 0x26, 0xda, 0x0e, 0xe8, 0x8b, 0x98, 0x7a, 0x54, 0x8e, 0xed, 0x21, 0xf7, 0xe2,
-	0x00, 0x8c, 0x92, 0x4a, 0xda, 0xba, 0xc4, 0x9f, 0x29, 0x18, 0xdf, 0x45, 0x5b, 0x43, 0x10, 0xc2,
-	0xf1, 0x41, 0xd8, 0x21, 0x44, 0xb6, 0x3c, 0x35, 0xca, 0xad, 0x62, 0x7b, 0xd5, 0xaa, 0x65, 0xf0,
-	0x21, 0x44, 0xcf, 0x4f, 0x71, 0x1b, 0x6d, 0x47, 0x20, 0xe3, 0x88, 0xd9, 0x92, 0xab, 0x5d, 0x21,
-	0x32, 0x90, 0x6a, 0x59, 0xd7, 0xf8, 0x73, 0x7e, 0xa4, 0xd0, 0x64, 0x73, 0x0f, 0x42, 0x2e, 0xa8,
-	0x14, 0x36, 0x30, 0xa7, 0x1f, 0x80, 0x67, 0x54, 0xf4, 0xe6, 0x19, 0xfe, 0x44, 0xc3, 0xf8, 0x1e,
-	0xba, 0x11, 0xb3, 0x3e, 0x67, 0x1e, 0x65, 0xfe, 0x65, 0x6e, 0x55, 0xe5, 0x6e, 0x5f, 0x12, 0x59,
-	0xf2, 0x0e, 0x2a, 0x79, 0xe0, 0xd2, 0xa1, 0x13, 0x08, 0xa3, 0xa6, 0x8e, 0x78, 0x19, 0x3f, 0xa8,
-	0xbe, 0x3c, 0x33, 0x0b, 0xdf, 0x9c, 0x99, 0x85, 0x5f, 0xcf, 0xcc, 0x02, 0xf9, 0x69, 0x03, 0x99,
-	0xcb, 0xec, 0xf5, 0x39, 0x95, 0x83, 0xc7, 0xfa, 0x08, 0xf8, 0xee, 0x15, 0xa7, 0xf5, 0xb6, 0xa7,
-	0x13, 0xb3, 0xaa, 0xa5, 0x57, 0x30, 0xc9, 0xbc, 0xf7, 0xc1, 0x12, 0xef, 0xe5, 0x5f, 0x72, 0x8e,
-	0x24, 0xff, 0x6d, 0x4f, 0xee, 0x2f, 0x7a, 0x32, 0x7f, 0xe0, 0x19, 0x47, 0xf2, 0x56, 0x7d, 0xfa,
-	0x67, 0x56, 0xed, 0xdd, 0x99, 0x4e, 0xcc, 0xff, 0xa7, 0xa7, 0x9e, 0xcb, 0x20, 0x8b, 0x3e, 0x7e,
-	0x0b, 0x6d, 0xa6, 0xee, 0x52, 0xfe, 0x2d, 0xf7, 0xf0, 0x74, 0x62, 0xd6, 0xb3, 0x77, 0xa4, 0x08,
-	0x62, 0x65, 0x29, 0xcb, 0x5c, 0x8f, 0x96, 0xb9, 0xfe, 0xc9, 0x12, 0xd7, 0x57, 0xe6, 0x4f, 0x37,
-	0x9f, 0x41, 0x16, 0x46, 0xe2, 0xe9, 0x92, 0x91, 0xa8, 0xce, 0xb7, 0x99, 0xcf, 0x20, 0x8b, 0xf3,
-	0xf2, 0xc9, 0xb2, 0x79, 0xa9, 0x5d, 0xdf, 0x68, 0x71, 0x98, 0xba, 0xb9, 0x61, 0xaa, 0x27, 0x4f,
-	0xde, 0xbb, 0x39, 0x9d, 0x98, 0x5b, 0x59, 0x03, 0xcd, 0x90, 0xdc, 0x84, 0x95, 0x5e, 0x66, 0xd3,
-	0xf5, 0xf5, 0x0a, 0xc2, 0x9f, 0x86, 0x9e, 0x23, 0xe1, 0xca, 0xa7, 0xfb, 0xef, 0x1f, 0xa8, 0x0e,
-	0x2a, 0xa9, 0x3f, 0xcf, 0x6c, 0x96, 0x72, 0x67, 0xce, 0x18, 0x62, 0x6d, 0xaa, 0xe5, 0x81, 0x87,
-	0x6d, 0x94, 0x2c, 0x99, 0x0f, 0xc2, 0x58, 0x6b, 0xad, 0xb6, 0x2b, 0xef, 0xec, 0x75, 0xae, 0xfb,
-	0x95, 0x75, 0x66, 0x0f, 0xf6, 0x99, 0x13, 0xc4, 0x90, 0x77, 0x51, 0xda, 0x4b, 0x6f, 0x90, 0xac,
-	0xe6, 0xbe, 0x3a, 0xdf, 0xaf, 0xa0, 0xdd, 0x45, 0x5d, 0x5e, 0xef, 0x37, 0xe7, 0xdf, 0x26, 0x51,
-	0x7e, 0x2c, 0xd7, 0xaf, 0x1d, 0xcb, 0x9c, 0xc9, 0xbe, 0x40, 0x5b, 0x73, 0xfb, 0xe0, 0x16, 0x5a,
-	0x3d, 0x81, 0x71, 0xaa, 0x5d, 0x7d, 0x3a, 0x31, 0x91, 0x6e, 0x73, 0x02, 0x63, 0x62, 0x25, 0x54,
-	0xa2, 0xef, 0x28, 0x49, 0x4d, 0x15, 0xcb, 0xe9, 0xab, 0x60, 0x62, 0x69, 0x9a, 0xfc, 0x5e, 0x44,
-	0x37, 0x9f, 0x09, 0xff, 0x63, 0x3e, 0xb2, 0x80, 0x87, 0xc0, 0x1e, 0x0d, 0x1c, 0xc6, 0xe0, 0x1f,
-	0xbb, 0x7d, 0xdc, 0x43, 0x9b, 0x21, 0x8f, 0x64, 0x52, 0xb8, 0x36, 0xaf, 0x51, 0x4a, 0x10, 0x6b,
-	0x23, 0x59, 0x1d, 0x78, 0xf8, 0x3d, 0x54, 0x76, 0x62, 0x39, 0xe0, 0x11, 0x95, 0xe3, 0x54, 0x52,
-	0xe3, 0x87, 0x6f, 0xef, 0x37, 0xd2, 0x5b, 0xd7, 0x47, 0x9e, 0x17, 0x81, 0x10, 0x47, 0x32, 0xa2,
-	0xcc, 0xb7, 0x66, 0xa9, 0x39, 0x69, 0x77, 0xd1, 0x9d, 0x25, 0x0f, 0x6f, 0x81, 0x08, 0x39, 0x13,
-	0x40, 0x7e, 0x2b, 0x22, 0xac, 0xf9, 0x47, 0x01, 0x17, 0xf0, 0x57, 0xb5, 0xd9, 0x47, 0xc8, 0xd5,
-	0x2d, 0x66, 0xc2, 0xe4, 0xfe, 0x0a, 0x33, 0x8e, 0x58, 0xe5, 0x34, 0x78, 0xfd, 0x92, 0xbc, 0x81,
-	0x76, 0x16, 0x1f, 0x39, 0x53, 0xa4, 0x77, 0xfc, 0xdd, 0x79, 0xb3, 0xf8, 0xea, 0xbc, 0x59, 0xfc,
-	0xe5, 0xbc, 0x59, 0xfc, 0xea, 0xa2, 0x59, 0x78, 0x75, 0xd1, 0x2c, 0xfc, 0x78, 0xd1, 0x2c, 0x1c,
-	0x3f, 0xf4, 0xa9, 0x1c, 0xc4, 0xfd, 0x8e, 0xcb, 0x87, 0x5d, 0xca, 0x7c, 0x60, 0x31, 0x95, 0xe3,
-	0xfb, 0xfd, 0x98, 0x06, 0x5e, 0x37, 0x7f, 0xcf, 0x3e, 0x5d, 0x72, 0xd3, 0x96, 0xe3, 0x10, 0x44,
-	0x7f, 0x43, 0x5d, 0x88, 0xdf, 0xfd, 0x23, 0x00, 0x00, 0xff, 0xff, 0x97, 0x4e, 0xb4, 0x0d, 0x97,
-	0x0b, 0x00, 0x00,
+	// 1189 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x57, 0xcd, 0x6f, 0x1b, 0x45,
+	0x14, 0xb7, 0xe3, 0xf8, 0x6b, 0x6c, 0xc7, 0xe9, 0x36, 0x69, 0xb6, 0x29, 0xf5, 0x5a, 0x73, 0xa8,
+	0x4c, 0x4b, 0x6d, 0x5c, 0x22, 0x88, 0x2a, 0x90, 0x8a, 0x9b, 0x16, 0x72, 0x88, 0x88, 0x36, 0x05,
+	0xa4, 0x70, 0x58, 0xad, 0x77, 0xa7, 0xeb, 0x51, 0xd6, 0x33, 0xdb, 0x9d, 0xdd, 0x28, 0xe6, 0xc8,
+	0xa9, 0xdc, 0xb8, 0x20, 0x71, 0xcc, 0x95, 0x1b, 0x07, 0xfe, 0x03, 0x38, 0x20, 0x4e, 0x15, 0x27,
+	0x4e, 0x16, 0x4a, 0x0e, 0x70, 0xe0, 0xe4, 0x7f, 0x00, 0xb4, 0x33, 0xbb, 0xf6, 0xfa, 0x23, 0x8d,
+	0x4b, 0x54, 0x8a, 0xc4, 0x6d, 0xdf, 0xc7, 0xef, 0xcd, 0xec, 0xd3, 0xef, 0xfd, 0xde, 0x2e, 0x78,
+	0xf3, 0x89, 0x8f, 0x8d, 0x03, 0x86, 0xed, 0x43, 0xe4, 0x36, 0x30, 0xf1, 0x90, 0x6b, 0x74, 0x74,
+	0x4c, 0x98, 0xa7, 0x1f, 0x60, 0x62, 0x35, 0x0e, 0x9b, 0x0d, 0xc7, 0xa5, 0x0e, 0x65, 0xba, 0xcd,
+	0xea, 0x8e, 0x4b, 0x3d, 0x2a, 0x55, 0x63, 0x88, 0xfa, 0x14, 0xa2, 0x7e, 0xd8, 0x5c, 0xbf, 0x6a,
+	0x50, 0xd6, 0xa5, 0x4c, 0xe3, 0xf9, 0x0d, 0x61, 0x08, 0xf0, 0xfa, 0x9a, 0xb0, 0x1a, 0x5d, 0xc6,
+	0x6b, 0x77, 0x99, 0x15, 0x06, 0x56, 0x2c, 0x6a, 0x51, 0x01, 0x08, 0x9e, 0x42, 0xef, 0xe6, 0xb9,
+	0xb7, 0x9b, 0xbe, 0x00, 0x47, 0xc2, 0x1f, 0xd3, 0x60, 0x45, 0x45, 0x16, 0x66, 0x1e, 0x72, 0xf7,
+	0x29, 0x41, 0xbb, 0xe1, 0x5b, 0x48, 0x2b, 0x20, 0xed, 0x61, 0xcf, 0x46, 0x72, 0xb2, 0x9a, 0xac,
+	0xe5, 0x55, 0x61, 0x48, 0x55, 0x50, 0x30, 0x11, 0x33, 0x5c, 0xec, 0x78, 0x98, 0x12, 0x79, 0x81,
+	0xc7, 0xe2, 0x2e, 0xe9, 0x3d, 0x50, 0x32, 0x28, 0x21, 0xc8, 0x08, 0x2c, 0x0d, 0x9b, 0x72, 0x2a,
+	0xc8, 0x69, 0xc9, 0x83, 0xbe, 0xb2, 0xd2, 0xd3, 0xbb, 0xf6, 0x5d, 0x38, 0x16, 0x86, 0x6a, 0x71,
+	0x64, 0x6f, 0x9b, 0xd2, 0x06, 0x00, 0x6d, 0x9d, 0x21, 0xcd, 0x44, 0x84, 0x76, 0xe5, 0x45, 0x8e,
+	0x5d, 0x1d, 0xf4, 0x95, 0x4b, 0x02, 0x3b, 0x8a, 0x41, 0x35, 0x1f, 0x18, 0x5b, 0xc1, 0xb3, 0xf4,
+	0x0e, 0x28, 0xd8, 0xd4, 0xd0, 0xed, 0x10, 0x96, 0xe6, 0xb0, 0x2b, 0x83, 0xbe, 0x22, 0x09, 0x58,
+	0x2c, 0x08, 0x55, 0xc0, 0x2d, 0x01, 0xbc, 0x07, 0x96, 0x74, 0xc3, 0xa0, 0x3e, 0xf1, 0x34, 0xc7,
+	0x45, 0x8f, 0xf1, 0x91, 0x9c, 0xe1, 0xd8, 0xab, 0x83, 0xbe, 0xb2, 0x2a, 0xb0, 0xe3, 0x71, 0xa8,
+	0x96, 0x42, 0xc7, 0x2e, 0xb7, 0xa5, 0xeb, 0x00, 0x74, 0x7d, 0xdb, 0xc3, 0x1a, 0x43, 0xc4, 0x94,
+	0xb3, 0xd5, 0x64, 0x2d, 0xa7, 0xe6, 0xb9, 0x67, 0x0f, 0x11, 0x53, 0x7a, 0x1d, 0x2c, 0xdb, 0xf8,
+	0x89, 0x8f, 0x4d, 0xec, 0xf5, 0xb4, 0x2e, 0x35, 0x7d, 0x1b, 0xc9, 0x39, 0x9e, 0x54, 0x1e, 0xfa,
+	0x77, 0xb8, 0x5b, 0xba, 0x01, 0xca, 0x5d, 0xc4, 0x98, 0x6e, 0x21, 0xa6, 0x39, 0xc8, 0xd5, 0xbc,
+	0x23, 0x39, 0x5f, 0x4d, 0xd6, 0x52, 0x6a, 0x29, 0x72, 0xef, 0x22, 0xf7, 0xd1, 0x91, 0x54, 0x03,
+	0xcb, 0x2e, 0xf2, 0x7c, 0x97, 0x68, 0x1e, 0xe5, 0xa7, 0x22, 0x57, 0x06, 0xbc, 0xe4, 0x92, 0xf0,
+	0x3f, 0xa2, 0x7b, 0xdc, 0x1b, 0x1c, 0x6e, 0x22, 0x87, 0x32, 0xec, 0x31, 0x0d, 0x11, 0xbd, 0x6d,
+	0x23, 0x53, 0x2e, 0x88, 0xc3, 0x23, 0xff, 0x03, 0xe1, 0x96, 0x6e, 0x81, 0x4b, 0x3e, 0x69, 0x53,
+	0x62, 0x62, 0x62, 0x0d, 0x73, 0x8b, 0x3c, 0x77, 0x79, 0x18, 0x88, 0x92, 0xd7, 0x41, 0xce, 0x44,
+	0x06, 0xee, 0xea, 0x36, 0x93, 0x4b, 0xfc, 0x8a, 0x43, 0x5b, 0x5a, 0x05, 0x19, 0xcc, 0xb4, 0x66,
+	0x73, 0x53, 0x5e, 0xe2, 0xe8, 0x34, 0x66, 0xcd, 0xe6, 0xa6, 0xf4, 0x11, 0x28, 0x30, 0xbf, 0xfd,
+	0x39, 0x25, 0x68, 0x9b, 0x3c, 0xa6, 0x72, 0xb9, 0x9a, 0xac, 0x15, 0xee, 0xdc, 0xae, 0x9f, 0x37,
+	0x23, 0xf5, 0xbd, 0x11, 0x48, 0x8d, 0x57, 0xb8, 0x5b, 0x7c, 0x7a, 0xac, 0x24, 0xbe, 0x39, 0x56,
+	0x12, 0x7f, 0x1c, 0x2b, 0x09, 0xf8, 0x6d, 0x1a, 0x94, 0x77, 0x98, 0x15, 0x67, 0xb2, 0xf4, 0x36,
+	0xc8, 0xeb, 0xbe, 0xd7, 0xa1, 0x2e, 0xf6, 0x7a, 0x82, 0xc5, 0x2d, 0xf9, 0x97, 0xef, 0x6f, 0xaf,
+	0x84, 0x83, 0xf6, 0xbe, 0x69, 0xba, 0x88, 0xb1, 0x3d, 0xcf, 0xc5, 0xc4, 0x52, 0x47, 0xa9, 0xd2,
+	0xbb, 0x20, 0x4e, 0xc9, 0x2d, 0x41, 0xf2, 0x39, 0x09, 0xbc, 0x35, 0x41, 0xe0, 0xd4, 0x3f, 0x23,
+	0xf0, 0xe2, 0x05, 0x08, 0x9c, 0x7e, 0x41, 0x02, 0xcf, 0x62, 0x68, 0x66, 0x6e, 0x86, 0x66, 0xe7,
+	0x65, 0x68, 0x6e, 0x6e, 0x86, 0xe6, 0x5f, 0x80, 0xa1, 0x60, 0x0e, 0x86, 0x16, 0xce, 0x64, 0x68,
+	0xf1, 0x39, 0x0c, 0x2d, 0x5d, 0x98, 0xa1, 0x57, 0x9e, 0x86, 0xec, 0xfc, 0xe2, 0xf7, 0xef, 0x6e,
+	0x8e, 0xf8, 0x05, 0x9b, 0x60, 0x6d, 0x82, 0xaa, 0x2a, 0x62, 0x0e, 0x25, 0x0c, 0x49, 0x57, 0x40,
+	0x86, 0xc3, 0xb7, 0x42, 0xd5, 0x0d, 0x2d, 0xf8, 0x67, 0x12, 0x94, 0x76, 0x98, 0xf5, 0xb1, 0x63,
+	0xea, 0x1e, 0xba, 0x10, 0xb9, 0x6f, 0x0e, 0x4f, 0x10, 0xb4, 0x96, 0x06, 0x7d, 0x65, 0x49, 0xf0,
+	0x24, 0xf0, 0x73, 0x42, 0x87, 0x19, 0x92, 0x06, 0xb2, 0x46, 0x47, 0x27, 0x16, 0x62, 0x72, 0xaa,
+	0x9a, 0xaa, 0x15, 0xee, 0x34, 0xcf, 0xef, 0xc6, 0xe8, 0x8a, 0x9f, 0xe8, 0xb6, 0x8f, 0xe2, 0xf5,
+	0xc3, 0x5a, 0x50, 0x8d, 0xaa, 0x9e, 0xd9, 0xa1, 0x35, 0xb0, 0x3a, 0xf6, 0xb6, 0x51, 0x7f, 0xe0,
+	0x0f, 0x59, 0xa0, 0xcc, 0xda, 0x56, 0x9f, 0x62, 0xaf, 0xb3, 0x25, 0xf8, 0x22, 0xdd, 0x18, 0x5b,
+	0x5c, 0xad, 0xe5, 0x41, 0x5f, 0x29, 0x8a, 0x0b, 0x70, 0x37, 0x8c, 0x56, 0xd9, 0xe6, 0x8c, 0x55,
+	0x16, 0x1f, 0xb9, 0x58, 0x10, 0xfe, 0xbf, 0x57, 0xdc, 0xc6, 0xf4, 0x8a, 0x8b, 0x5f, 0x78, 0x14,
+	0x83, 0xf1, 0xcd, 0xf7, 0xf0, 0xac, 0xcd, 0xd7, 0xba, 0x36, 0xe8, 0x2b, 0x6b, 0xe1, 0xad, 0x27,
+	0x32, 0xe0, 0xb4, 0xe8, 0xbc, 0x01, 0xb2, 0xa1, 0x14, 0x70, 0x65, 0x18, 0xa3, 0x6c, 0x18, 0x80,
+	0x6a, 0x94, 0x32, 0x4b, 0xa2, 0xc0, 0x2c, 0x89, 0x7a, 0x30, 0x43, 0xa2, 0x0a, 0x93, 0xb7, 0x9b,
+	0xcc, 0x80, 0x53, 0xfa, 0xf5, 0x70, 0x86, 0x7e, 0x15, 0x27, 0xcb, 0x4c, 0x66, 0xc0, 0x69, 0x71,
+	0xfb, 0x70, 0x96, 0xb8, 0x95, 0xce, 0x2f, 0x34, 0xad, 0x7c, 0x8d, 0x98, 0xf2, 0x05, 0x1b, 0x38,
+	0xd5, 0xba, 0x3c, 0xe8, 0x2b, 0xe5, 0xa8, 0x80, 0x88, 0xc0, 0x99, 0x72, 0x58, 0x7e, 0x8e, 0x1c,
+	0x2e, 0x5f, 0x58, 0x0e, 0x73, 0xd1, 0xb0, 0xc3, 0xaf, 0x17, 0x80, 0x34, 0x1a, 0xee, 0xe1, 0x17,
+	0xe7, 0xcb, 0x1f, 0xdc, 0x3a, 0xc8, 0xf1, 0xeb, 0x8e, 0x66, 0x36, 0xd6, 0x9b, 0x28, 0x22, 0xf4,
+	0x09, 0x07, 0x93, 0x1a, 0x13, 0xc0, 0xc5, 0x97, 0x22, 0x80, 0xe3, 0x1f, 0x31, 0x3f, 0x2f, 0x80,
+	0xeb, 0xd3, 0x7d, 0xf9, 0x77, 0xb5, 0xed, 0xbf, 0xd6, 0xa2, 0xf8, 0xf8, 0xa7, 0xcf, 0x1d, 0xff,
+	0x18, 0xc9, 0x3e, 0x03, 0xe5, 0x89, 0x73, 0xa4, 0x2a, 0x48, 0x1d, 0xa0, 0x68, 0x5b, 0x2e, 0x0d,
+	0xfa, 0x0a, 0x10, 0x65, 0x0e, 0x50, 0x0f, 0xaa, 0x41, 0x28, 0xe8, 0xef, 0x61, 0x90, 0x1a, 0x76,
+	0x2c, 0xd6, 0x5f, 0xee, 0x86, 0xaa, 0x08, 0xc3, 0x2f, 0x17, 0xc0, 0xe5, 0x1d, 0x66, 0x7d, 0x40,
+	0x0f, 0x55, 0x44, 0x1d, 0x44, 0xee, 0x77, 0x74, 0x42, 0xd0, 0x2b, 0xfb, 0x69, 0xba, 0x05, 0xb2,
+	0x0e, 0x75, 0xbd, 0x00, 0xb8, 0x38, 0xd9, 0xa3, 0x30, 0x00, 0xd5, 0x4c, 0xf0, 0xb4, 0x6d, 0x8e,
+	0x7f, 0x39, 0xa4, 0xe7, 0xfe, 0x72, 0x38, 0x73, 0x59, 0x5f, 0x07, 0xd7, 0x66, 0xb4, 0x62, 0xb8,
+	0xb2, 0xff, 0x4a, 0x02, 0x49, 0xc4, 0xef, 0xdb, 0x94, 0xa1, 0x8b, 0x76, 0x6a, 0x03, 0x00, 0x43,
+	0x94, 0x18, 0xb5, 0x29, 0xb6, 0x8b, 0x46, 0x31, 0xa8, 0xe6, 0x43, 0xe3, 0x55, 0x37, 0xe8, 0x35,
+	0xb0, 0x3e, 0xdd, 0x80, 0xa8, 0x3f, 0xad, 0xfd, 0x9f, 0x4e, 0x2a, 0xc9, 0x67, 0x27, 0x95, 0xe4,
+	0x6f, 0x27, 0x95, 0xe4, 0x57, 0xa7, 0x95, 0xc4, 0xb3, 0xd3, 0x4a, 0xe2, 0xd7, 0xd3, 0x4a, 0x62,
+	0xff, 0x9e, 0x85, 0xbd, 0x8e, 0xdf, 0xae, 0x1b, 0xb4, 0xdb, 0xc0, 0xc4, 0x42, 0xc4, 0xc7, 0x5e,
+	0xef, 0x76, 0xdb, 0xc7, 0xb6, 0xd9, 0x88, 0xff, 0xef, 0x1f, 0xcd, 0xf8, 0xe3, 0xf7, 0x7a, 0x0e,
+	0x62, 0xed, 0x0c, 0xff, 0xc7, 0x7f, 0xeb, 0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0xde, 0xd0, 0xb6,
+	0x59, 0xbd, 0x10, 0x00, 0x00,
 }
 
 func (m *RegisterZoneProposal) Marshal() (dAtA []byte, err error) {
@@ -513,6 +706,28 @@ func (m *RegisterZoneProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.SubzoneInfo != nil {
+		{
+			size, err := m.SubzoneInfo.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintProposals(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x7a
+	}
+	if m.Is_118 {
+		i--
+		if m.Is_118 {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x70
+	}
 	if m.Decimals != 0 {
 		i = encodeVarintProposals(dAtA, i, uint64(m.Decimals))
 		i--
@@ -618,6 +833,240 @@ func (m *RegisterZoneProposal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgRegisterZone) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRegisterZone) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRegisterZone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.SubzoneInfo != nil {
+		{
+			size, err := m.SubzoneInfo.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintProposals(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x6a
+	}
+	if m.Is_118 {
+		i--
+		if m.Is_118 {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x60
+	}
+	if m.Decimals != 0 {
+		i = encodeVarintProposals(dAtA, i, uint64(m.Decimals))
+		i--
+		dAtA[i] = 0x58
+	}
+	if m.UnbondingEnabled {
+		i--
+		if m.UnbondingEnabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x50
+	}
+	if m.DepositsEnabled {
+		i--
+		if m.DepositsEnabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x48
+	}
+	if m.ReturnToSender {
+		i--
+		if m.ReturnToSender {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x40
+	}
+	if m.MessagesPerTx != 0 {
+		i = encodeVarintProposals(dAtA, i, uint64(m.MessagesPerTx))
+		i--
+		dAtA[i] = 0x38
+	}
+	if m.LiquidityModule {
+		i--
+		if m.LiquidityModule {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x30
+	}
+	if len(m.AccountPrefix) > 0 {
+		i -= len(m.AccountPrefix)
+		copy(dAtA[i:], m.AccountPrefix)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.AccountPrefix)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.LocalDenom) > 0 {
+		i -= len(m.LocalDenom)
+		copy(dAtA[i:], m.LocalDenom)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.LocalDenom)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.BaseDenom) > 0 {
+		i -= len(m.BaseDenom)
+		copy(dAtA[i:], m.BaseDenom)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.BaseDenom)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.ConnectionID) > 0 {
+		i -= len(m.ConnectionID)
+		copy(dAtA[i:], m.ConnectionID)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.ConnectionID)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRegisterZoneResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRegisterZoneResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRegisterZoneResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ZoneID) > 0 {
+		i -= len(m.ZoneID)
+		copy(dAtA[i:], m.ZoneID)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.ZoneID)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateZone) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateZone) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateZone) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Changes) > 0 {
+		for iNdEx := len(m.Changes) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Changes[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintProposals(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.ZoneID) > 0 {
+		i -= len(m.ZoneID)
+		copy(dAtA[i:], m.ZoneID)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.ZoneID)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintProposals(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateZoneResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateZoneResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateZoneResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func (m *RegisterZoneProposalWithDeposit) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -638,6 +1087,30 @@ func (m *RegisterZoneProposalWithDeposit) MarshalToSizedBuffer(dAtA []byte) (int
 	_ = i
 	var l int
 	_ = l
+	if m.SubzoneInfo != nil {
+		{
+			size, err := m.SubzoneInfo.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintProposals(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x82
+	}
+	if m.Is_118 {
+		i--
+		if m.Is_118 {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x78
+	}
 	if m.Decimals != 0 {
 		i = encodeVarintProposals(dAtA, i, uint64(m.Decimals))
 		i--
@@ -1134,6 +1607,112 @@ func (m *RegisterZoneProposal) Size() (n int) {
 	if m.Decimals != 0 {
 		n += 1 + sovProposals(uint64(m.Decimals))
 	}
+	if m.Is_118 {
+		n += 2
+	}
+	if m.SubzoneInfo != nil {
+		l = m.SubzoneInfo.Size()
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgRegisterZone) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.ConnectionID)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.BaseDenom)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.LocalDenom)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.AccountPrefix)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	if m.LiquidityModule {
+		n += 2
+	}
+	if m.MessagesPerTx != 0 {
+		n += 1 + sovProposals(uint64(m.MessagesPerTx))
+	}
+	if m.ReturnToSender {
+		n += 2
+	}
+	if m.DepositsEnabled {
+		n += 2
+	}
+	if m.UnbondingEnabled {
+		n += 2
+	}
+	if m.Decimals != 0 {
+		n += 1 + sovProposals(uint64(m.Decimals))
+	}
+	if m.Is_118 {
+		n += 2
+	}
+	if m.SubzoneInfo != nil {
+		l = m.SubzoneInfo.Size()
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgRegisterZoneResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ZoneID)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateZone) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	l = len(m.ZoneID)
+	if l > 0 {
+		n += 1 + l + sovProposals(uint64(l))
+	}
+	if len(m.Changes) > 0 {
+		for _, e := range m.Changes {
+			l = e.Size()
+			n += 1 + l + sovProposals(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgUpdateZoneResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
 	return n
 }
 
@@ -1191,6 +1770,13 @@ func (m *RegisterZoneProposalWithDeposit) Size() (n int) {
 	}
 	if m.Decimals != 0 {
 		n += 1 + sovProposals(uint64(m.Decimals))
+	}
+	if m.Is_118 {
+		n += 2
+	}
+	if m.SubzoneInfo != nil {
+		l = m.SubzoneInfo.Size()
+		n += 2 + l + sovProposals(uint64(l))
 	}
 	return n
 }
@@ -1711,6 +2297,726 @@ func (m *RegisterZoneProposal) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Is_118", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Is_118 = bool(v != 0)
+		case 15:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubzoneInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.SubzoneInfo == nil {
+				m.SubzoneInfo = &SubzoneInfo{}
+			}
+			if err := m.SubzoneInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRegisterZone) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRegisterZone: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRegisterZone: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ConnectionID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ConnectionID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BaseDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LocalDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.LocalDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AccountPrefix", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AccountPrefix = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidityModule", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.LiquidityModule = bool(v != 0)
+		case 7:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MessagesPerTx", wireType)
+			}
+			m.MessagesPerTx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MessagesPerTx |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 8:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReturnToSender", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.ReturnToSender = bool(v != 0)
+		case 9:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DepositsEnabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.DepositsEnabled = bool(v != 0)
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UnbondingEnabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.UnbondingEnabled = bool(v != 0)
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Decimals", wireType)
+			}
+			m.Decimals = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Decimals |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Is_118", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Is_118 = bool(v != 0)
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubzoneInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.SubzoneInfo == nil {
+				m.SubzoneInfo = &SubzoneInfo{}
+			}
+			if err := m.SubzoneInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRegisterZoneResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRegisterZoneResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRegisterZoneResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ZoneID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ZoneID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateZone) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateZone: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateZone: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ZoneID", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ZoneID = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Changes", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Changes = append(m.Changes, &UpdateZoneValue{})
+			if err := m.Changes[len(m.Changes)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipProposals(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateZoneResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowProposals
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateZoneResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateZoneResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipProposals(dAtA[iNdEx:])
@@ -2123,6 +3429,62 @@ func (m *RegisterZoneProposalWithDeposit) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Is_118", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Is_118 = bool(v != 0)
+		case 16:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubzoneInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowProposals
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthProposals
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthProposals
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.SubzoneInfo == nil {
+				m.SubzoneInfo = &SubzoneInfo{}
+			}
+			if err := m.SubzoneInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipProposals(dAtA[iNdEx:])

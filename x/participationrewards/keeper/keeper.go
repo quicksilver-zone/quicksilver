@@ -9,15 +9,17 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
-	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
+	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
+	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
+	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types"
 	"github.com/ingenuity-build/quicksilver/utils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
-	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -29,18 +31,26 @@ type UserAllocation struct {
 	Amount  sdkmath.Int
 }
 
-var _ osmosistypes.ParticipationRewardsKeeper = &Keeper{}
+var (
+	_ osmosistypes.ParticipationRewardsKeeper  = &Keeper{}
+	_ umeetypes.ParticipationRewardsKeeper     = &Keeper{}
+	_ crescenttypes.ParticipationRewardsKeeper = &Keeper{}
+)
 
 type Keeper struct {
-	cdc                  codec.BinaryCodec
-	storeKey             storetypes.StoreKey
-	paramSpace           paramtypes.Subspace
-	accountKeeper        types.AccountKeeper
-	bankKeeper           types.BankKeeper
-	stakingKeeper        types.StakingKeeper
-	IcqKeeper            icqkeeper.Keeper
-	icsKeeper            icskeeper.Keeper
-	epochsKeeper         epochskeeper.Keeper
+	cdc           codec.BinaryCodec
+	storeKey      storetypes.StoreKey
+	paramSpace    paramtypes.Subspace
+	accountKeeper types.AccountKeeper
+	bankKeeper    types.BankKeeper
+	stakingKeeper types.StakingKeeper
+
+	IBCKeeper           *ibckeeper.Keeper
+	IcqKeeper           types.InterchainQueryKeeper
+	icsKeeper           types.InterchainStakingKeeper
+	epochsKeeper        epochskeeper.Keeper
+	ClaimsManagerKeeper types.ClaimsManagerKeeper
+
 	feeCollectorName     string
 	prSubmodules         map[cmtypes.ClaimType]Submodule
 	ValidateProofOps     utils.ProofOpsFn
@@ -56,8 +66,10 @@ func NewKeeper(
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 	sk types.StakingKeeper,
-	icqk icqkeeper.Keeper,
-	icsk icskeeper.Keeper,
+	ibcKeeper *ibckeeper.Keeper,
+	icqk types.InterchainQueryKeeper,
+	icsk types.InterchainStakingKeeper,
+	cmk types.ClaimsManagerKeeper,
 	feeCollectorName string,
 	proofValidationFn utils.ProofOpsFn,
 	selfProofValidationFn utils.SelfProofOpsFn,
@@ -78,13 +90,19 @@ func NewKeeper(
 		accountKeeper:        ak,
 		bankKeeper:           bk,
 		stakingKeeper:        sk,
+		IBCKeeper:            ibcKeeper,
 		IcqKeeper:            icqk,
 		icsKeeper:            icsk,
+		ClaimsManagerKeeper:  cmk,
 		feeCollectorName:     feeCollectorName,
 		prSubmodules:         LoadSubmodules(),
 		ValidateProofOps:     proofValidationFn,
 		ValidateSelfProofOps: selfProofValidationFn,
 	}
+}
+
+func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
+	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.accountKeeper.GetModuleAddress(govtypes.ModuleName))
 }
 
 func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
@@ -118,12 +136,13 @@ func (k *Keeper) GetCodec() codec.BinaryCodec {
 }
 
 func (k *Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
-	selfConnectionData, err := json.Marshal(types.ConnectionProtocolData{
+	selfConnectionData := types.ConnectionProtocolData{
 		ConnectionID: types.SelfConnection,
 		ChainID:      ctx.ChainID(),
 		LastEpoch:    ctx.BlockHeight() - 2, // reason why -2 works here.
 		Prefix:       config.Bech32Prefix,
-	})
+	}
+	selfConnectionDataBlob, err := json.Marshal(selfConnectionData)
 	if err != nil {
 		k.Logger(ctx).Info("Error Marshalling self connection Data")
 		return err
@@ -131,10 +150,10 @@ func (k *Keeper) UpdateSelfConnectionData(ctx sdk.Context) error {
 
 	data := types.ProtocolData{
 		Type: types.ProtocolDataType_name[int32(types.ProtocolDataTypeConnection)],
-		Data: selfConnectionData,
+		Data: selfConnectionDataBlob,
 	}
 	k.Logger(ctx).Info("Setting self protocol data", "data", data)
-	k.SetProtocolData(ctx, ctx.ChainID(), &data)
+	k.SetProtocolData(ctx, selfConnectionData.GenerateKey(), &data)
 
 	return nil
 }
@@ -153,5 +172,7 @@ func LoadSubmodules() map[cmtypes.ClaimType]Submodule {
 	out := make(map[cmtypes.ClaimType]Submodule, 0)
 	out[cmtypes.ClaimTypeLiquidToken] = &LiquidTokensModule{}
 	out[cmtypes.ClaimTypeOsmosisPool] = &OsmosisModule{}
+	out[cmtypes.ClaimTypeUmeeToken] = &UmeeModule{}
+	out[cmtypes.ClaimTypeCrescentPool] = &CrescentModule{}
 	return out
 }

@@ -2,27 +2,29 @@ package keeper_test
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"time"
 
 	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	abci "github.com/cometbft/cometbft/abci/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
-	"github.com/ingenuity-build/quicksilver/utils"
+	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
+	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
+func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 	// TODO: these tests ought to validate the error received.
-	appA := s.GetQuicksilverApp(s.chainA)
+	appA := suite.GetQuicksilverApp(suite.chainA)
 
 	msg := types.MsgSubmitClaim{}
 	tests := []struct {
@@ -41,9 +43,9 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"invalid_height",
 			func() {
 				msg = types.MsgSubmitClaim{
-					UserAddress: utils.GenerateAccAddressForTest().String(),
-					Zone:        s.chainB.ChainID,
-					SrcZone:     s.chainB.ChainID,
+					UserAddress: addressutils.GenerateAccAddressForTest().String(),
+					Zone:        suite.chainB.ChainID,
+					SrcZone:     suite.chainB.ChainID,
 					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -62,10 +64,10 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		{
 			"invalid_osmosis_user",
 			func() {
-				userAddress := utils.GenerateAccAddressForTest()
-				osmoAddress := utils.GenerateAccAddressForTestWithPrefix("osmo")
-				lockedResp := osmolockup.LockedResponse{
-					Lock: &osmolockup.PeriodLock{
+				userAddress := addressutils.GenerateAccAddressForTest()
+				osmoAddress := addressutils.GenerateAddressForTestWithPrefix("osmo")
+				lockedResp := lockup.LockedResponse{
+					Lock: &lockup.PeriodLock{
 						ID:       1,
 						Owner:    osmoAddress,
 						Duration: time.Hour * 72,
@@ -78,7 +80,7 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					},
 				}
 				bz, err := lockedResp.Marshal()
-				s.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
@@ -102,10 +104,10 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		{
 			"invalid_osmosis_pool",
 			func() {
-				userAddress := utils.GenerateAccAddressForTest()
-				osmoAddress := utils.ConvertAccAddressForTestUsingPrefix(userAddress, "osmo")
-				lockedResp := osmolockup.LockedResponse{
-					Lock: &osmolockup.PeriodLock{
+				userAddress := addressutils.GenerateAccAddressForTest()
+				osmoAddress := addressutils.MustEncodeAddressToBech32("osmo", userAddress)
+				lockedResp := lockup.LockedResponse{
+					Lock: &lockup.PeriodLock{
 						ID:       1,
 						Owner:    osmoAddress,
 						Duration: time.Hour * 72,
@@ -118,7 +120,7 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					},
 				}
 				bz, err := lockedResp.Marshal()
-				s.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
@@ -140,11 +142,146 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"a",
 		},
 		{
+			"invalid_umee_denom",
+			func() {
+				address := addressutils.GenerateAccAddressForTest()
+				prefix := banktypes.CreateAccountBalancesPrefix(authtypes.NewModuleAddress(umeetypes.LeverageModuleName))
+				key := banktypes.CreatePrefixedAccountStoreKey(prefix, []byte("u/ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
+
+				cd := sdk.Coin{
+					Denom:  "u/random",
+					Amount: math.NewInt(1000),
+				}
+				bz, err := cd.Marshal()
+				suite.NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: address.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeUmeeToken,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       key,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: "bank",
+						},
+					},
+				}
+			},
+			nil,
+			"a",
+		},
+		{
+			"invalid_crescent_pool",
+			func() {
+				prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+				userAddress := addressutils.GenerateAccAddressForTest()
+				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", userAddress)
+
+				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
+
+				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
+
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool7"}
+				bz, err := prk.GetCodec().Marshal(&cd)
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: userAddress.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeCrescentPool,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       key,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: types.ProofTypePosition,
+						},
+					},
+				}
+			},
+			nil,
+			"a",
+		},
+		{
+			"invalid_crescent_user",
+			func() {
+				prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+				userAddress := addressutils.GenerateAccAddressForTest()
+				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", addressutils.GenerateAccAddressForTest())
+
+				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
+
+				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
+
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
+				bz, err := prk.GetCodec().Marshal(&cd)
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: userAddress.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeCrescentPool,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       key,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: types.ProofTypePosition,
+						},
+					},
+				}
+			},
+			nil,
+			"a",
+		},
+		{
+			"negative_farming_amount",
+			func() {
+				prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+				userAddress := addressutils.GenerateAccAddressForTest()
+				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", userAddress)
+
+				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
+
+				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
+
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(-1), Denom: "pool1"}
+				bz, err := prk.GetCodec().Marshal(&cd)
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: userAddress.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeCrescentPool,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       key,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: types.ProofTypePosition,
+						},
+					},
+				}
+			},
+			nil,
+			"a",
+		},
+		{
 			"valid_osmosis",
 			func() {
-				userAddress := utils.GenerateAccAddressForTest()
-				osmoAddress := utils.ConvertAccAddressForTestUsingPrefix(userAddress, "osmo")
-				locked := &osmolockup.PeriodLock{
+				userAddress := addressutils.GenerateAccAddressForTest()
+				osmoAddress := addressutils.MustEncodeAddressToBech32("osmo", userAddress)
+				locked := &lockup.PeriodLock{
 					ID:       1,
 					Owner:    osmoAddress,
 					Duration: time.Hour * 72,
@@ -156,7 +293,7 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					),
 				}
 				bz, err := locked.Marshal()
-				s.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
@@ -180,7 +317,7 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		{
 			"valid_liquid",
 			func() {
-				address := utils.GenerateAccAddressForTest()
+				address := addressutils.GenerateAccAddressForTest()
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				cd := sdk.Coin{
@@ -188,7 +325,7 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					Amount: math.NewInt(0),
 				}
 				bz, err := cd.Marshal()
-				s.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
@@ -212,7 +349,7 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 		{
 			"valid_liquid",
 			func() {
-				address := utils.GenerateAccAddressForTest()
+				address := addressutils.GenerateAccAddressForTest()
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				cd := sdk.Coin{
@@ -220,12 +357,12 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 					Amount: math.NewInt(0),
 				}
 				bz, err := cd.Marshal()
-				s.Require().NoError(err)
+				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1-1", // wrong src_zone string maybe ?
+					SrcZone:     "testchain1-1",
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -241,13 +378,85 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			&types.MsgSubmitClaimResponse{},
 			"",
 		},
+		{
+			"valid_umee",
+			func() {
+				address := addressutils.GenerateAccAddressForTest()
+				bankkey := banktypes.CreateAccountBalancesPrefix(address)
+				bankkey = append(bankkey, []byte("u/uumee")...)
+
+				leveragekey := umeetypes.KeyCollateralAmount(address, "u/uumee")
+
+				cd := math.NewInt(1000)
+				bz, err := cd.Marshal()
+				suite.NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: address.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1-1",
+					ClaimType:   cmtypes.ClaimTypeUmeeToken,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       bankkey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: "bank",
+						},
+						{
+							Key:       leveragekey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: "leverage",
+						},
+					},
+				}
+			},
+			&types.MsgSubmitClaimResponse{},
+			"",
+		},
+		{
+			name: "valid_crescent",
+			malleate: func() {
+				prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
+				userAddress := addressutils.GenerateAccAddressForTest()
+				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", userAddress)
+
+				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
+
+				key := lpfarm.GetPositionKey(addr, cosmosIBCDenom)
+
+				cd := lpfarm.Position{Farmer: crescentAddress, FarmingAmount: math.NewInt(10000), Denom: "pool1"}
+				bz, err := prk.GetCodec().Marshal(&cd)
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: userAddress.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1-1",
+					ClaimType:   cmtypes.ClaimTypeCrescentPool,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       key,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: types.ProofTypePosition,
+						},
+					},
+				}
+			},
+			want: &types.MsgSubmitClaimResponse{},
+		},
 	}
 	for _, tt := range tests {
 		tt := tt
 
-		s.Run(tt.name, func() {
+		suite.Run(tt.name, func() {
 			tt.malleate()
-			ctx := s.chainA.GetContext()
+			ctx := suite.chainA.GetContext()
 			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
 			params.ClaimsEnabled = true
 			appA.ParticipationRewardsKeeper.SetParams(ctx, params)
@@ -255,21 +464,21 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			k := keeper.NewMsgServerImpl(appA.ParticipationRewardsKeeper)
 			resp, err := k.SubmitClaim(sdk.WrapSDKContext(ctx), &msg)
 			if tt.wantErr != "" {
-				s.Require().Errorf(err, tt.wantErr)
-				s.Require().Nil(resp)
-				s.T().Logf("Error: %v", err)
+				suite.Errorf(err, tt.wantErr)
+				suite.Nil(resp)
+				suite.T().Logf("Error: %v", err)
 				return
 			}
 
-			s.Require().NoError(err)
-			s.Require().NotNil(resp)
-			s.Require().Equal(tt.want, resp)
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.want, resp)
 		})
 	}
 }
 
-func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
-	address := utils.GenerateAccAddressForTest()
+func (suite *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
+	address := addressutils.GenerateAccAddressForTest()
 
 	var msg *types.MsgSubmitClaim
 	tests := []struct {
@@ -284,7 +493,7 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			"local_callback_nil",
 			func(ctx sdk.Context, appA *app.Quicksilver) {},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
-				address := utils.GenerateAccAddressForTest()
+				address := addressutils.GenerateAccAddressForTest()
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"))
 
 				query := abci.RequestQuery{
@@ -298,8 +507,8 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
-					Zone:        s.chainB.ChainID,
-					SrcZone:     s.chainA.ChainID,
+					Zone:        suite.chainB.ChainID,
+					SrcZone:     suite.chainA.ChainID,
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -319,8 +528,8 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 		{
 			"local_callback_value_invalid_denom",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				s.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
-				s.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
 			},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
@@ -336,8 +545,8 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
-					Zone:        s.chainB.ChainID,
-					SrcZone:     s.chainA.ChainID,
+					Zone:        suite.chainB.ChainID,
+					SrcZone:     suite.chainA.ChainID,
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -357,20 +566,22 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 		{
 			"local_callback_value_valid_denom",
 			func(ctx sdk.Context, appA *app.Quicksilver) {
-				s.Require().NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
-				s.Require().NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
+				suite.NoError(appA.BankKeeper.SendCoinsFromModuleToAccount(ctx, "mint", address, sdk.NewCoins(sdk.NewCoin("uqatom", sdk.NewInt(100)))))
 
 				// add uqatom to the list of allowed denoms for this zone
-				blob, err := json.Marshal(types.LiquidAllowedDenomProtocolData{
-					ChainID:               s.chainA.ChainID,
+				rawPd := types.LiquidAllowedDenomProtocolData{
+					ChainID:               suite.chainA.ChainID,
 					IbcDenom:              "uqatom",
 					QAssetDenom:           "uqatom",
-					RegisteredZoneChainID: s.chainB.ChainID,
-				})
-				s.Require().NoError(err)
+					RegisteredZoneChainID: suite.chainB.ChainID,
+				}
+
+				blob, err := json.Marshal(rawPd)
+				suite.NoError(err)
 				pd := types.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)], blob)
 
-				appA.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("%s/uqatom", s.chainA.ChainID), pd)
+				appA.ParticipationRewardsKeeper.SetProtocolData(ctx, rawPd.GenerateKey(), pd)
 			},
 			func(ctx sdk.Context, appA *app.Quicksilver) *types.MsgSubmitClaim {
 				key := banktypes.CreatePrefixedAccountStoreKey(address, []byte("uqatom"))
@@ -383,12 +594,11 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 				}
 
 				resp := appA.BaseApp.Query(query)
-				fmt.Println(resp)
 
 				return &types.MsgSubmitClaim{
 					UserAddress: address.String(),
-					Zone:        s.chainB.ChainID,
-					SrcZone:     s.chainA.ChainID,
+					Zone:        suite.chainB.ChainID,
+					SrcZone:     suite.chainA.ChainID,
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -405,9 +615,9 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			"",
 			[]cmtypes.Claim{{
 				UserAddress:   address.String(),
-				ChainId:       s.chainB.ChainID,
+				ChainId:       suite.chainB.ChainID,
 				Module:        cmtypes.ClaimTypeLiquidToken,
-				SourceChainId: s.chainA.ChainID,
+				SourceChainId: suite.chainA.ChainID,
 				Amount:        100,
 			}},
 		},
@@ -415,23 +625,23 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 	for _, tt := range tests {
 		tt := tt
 
-		s.Run(tt.name, func() {
-			s.SetupTest()
+		suite.Run(tt.name, func() {
+			suite.SetupTest()
 
-			appA := s.GetQuicksilverApp(s.chainA)
+			appA := suite.GetQuicksilverApp(suite.chainA)
 			// override disabled proof verification; lets test actual proofs :)
 			appA.ParticipationRewardsKeeper.ValidateProofOps = utils.ValidateProofOps
 			appA.ParticipationRewardsKeeper.ValidateSelfProofOps = utils.ValidateSelfProofOps
 
-			s.coordinator.CommitNBlocks(s.chainA, 3)
-			ctx := s.chainA.GetContext()
+			suite.coordinator.CommitNBlocks(suite.chainA, 3)
+			ctx := suite.chainA.GetContext()
 			tt.malleate(ctx, appA)
-			s.coordinator.CommitNBlocks(s.chainA, 3)
-			ctx = s.chainA.GetContext()
-			s.Require().NoError(appA.ClaimsManagerKeeper.StoreSelfConsensusState(ctx, "epoch"))
-			s.coordinator.CommitNBlocks(s.chainA, 1)
+			suite.coordinator.CommitNBlocks(suite.chainA, 3)
+			ctx = suite.chainA.GetContext()
+			suite.NoError(appA.ClaimsManagerKeeper.StoreSelfConsensusState(ctx, "epoch"))
+			suite.coordinator.CommitNBlocks(suite.chainA, 1)
 
-			ctx = s.chainA.GetContext()
+			ctx = suite.chainA.GetContext()
 			msg = tt.generate(ctx, appA)
 			params := appA.ParticipationRewardsKeeper.GetParams(ctx)
 			params.ClaimsEnabled = true
@@ -441,22 +651,22 @@ func (s *KeeperTestSuite) Test_msgServer_SubmitLocalClaim() {
 			k := keeper.NewMsgServerImpl(appA.ParticipationRewardsKeeper)
 			resp, err := k.SubmitClaim(sdk.WrapSDKContext(ctx), msg)
 			if tt.wantErr != "" {
-				s.Require().Errorf(err, tt.wantErr)
-				s.Require().Nil(resp)
-				s.T().Logf("Error: %v", err)
+				suite.Errorf(err, tt.wantErr)
+				suite.Nil(resp)
+				suite.T().Logf("Error: %v", err)
 				return
 			}
 
 			for _, expectedClaim := range tt.claims {
 				actualClaim, found := appA.ClaimsManagerKeeper.GetClaim(ctx, expectedClaim.ChainId, expectedClaim.UserAddress, expectedClaim.Module, expectedClaim.SourceChainId)
-				s.Require().True(found)
-				s.Require().Equal(expectedClaim.Amount, actualClaim.Amount)
+				suite.True(found)
+				suite.Equal(expectedClaim.Amount, actualClaim.Amount)
 
 			}
 
-			s.Require().NoError(err)
-			s.Require().NotNil(resp)
-			s.Require().Equal(tt.want, resp)
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.want, resp)
 		})
 	}
 }

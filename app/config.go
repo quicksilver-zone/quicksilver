@@ -7,21 +7,19 @@ import (
 	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	purningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	dbm "github.com/cometbft/cometbft-db"
 )
 
 func DefaultConfig() network.Config {
 	encCfg := MakeEncodingConfig()
-
 	return network.Config{
 		Codec:             encCfg.Marshaler,
 		TxConfig:          encCfg.TxConfig,
@@ -53,12 +51,11 @@ func NewAppConstructor(_ EncodingConfig, chainID string) network.AppConstructor 
 			true,
 			map[int64]bool{},
 			DefaultNodeHome,
-			0,
 			wasm.EnableAllProposals,
 			EmptyAppOptions{},
 			GetWasmOpts(EmptyAppOptions{}),
 			false,
-			baseapp.SetPruning(purningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.GetAppConfig().Pruning)),
 			baseapp.SetChainID(chainID),
 			// baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)

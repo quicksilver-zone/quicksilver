@@ -15,7 +15,7 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	sims "github.com/cosmos/cosmos-sdk/testutil/sims"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -152,11 +152,11 @@ func AppStateRandomizedFn(
 	// number of bonded accounts
 	var initialStake, numInitiallyBonded int64
 	appParams.GetOrGenerate(
-		cdc, sims.StakePerAccount, &initialStake, r,
+		cdc, simtestutil.StakePerAccount, &initialStake, r,
 		func(r *rand.Rand) { initialStake = r.Int63n(1e12) },
 	)
 	appParams.GetOrGenerate(
-		cdc, sims.InitiallyBondedValidators, &numInitiallyBonded, r,
+		cdc, simtestutil.InitiallyBondedValidators, &numInitiallyBonded, r,
 		func(r *rand.Rand) { numInitiallyBonded = int64(r.Intn(300)) },
 	)
 

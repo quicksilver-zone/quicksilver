@@ -10,12 +10,14 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-func NewProposalHandler(k keeper.Keeper) govv1beta1.Handler {
+func NewProposalHandler(k *keeper.Keeper) govv1beta1.Handler {
 	return func(ctx sdk.Context, content govv1beta1.Content) error {
 		switch c := content.(type) {
 		case *types.RegisterZoneProposal:
+			// nolint: staticcheck // remove in v1.6
 			return k.HandleRegisterZoneProposal(ctx, c)
 		case *types.UpdateZoneProposal:
+			// nolint: staticcheck // remove in v1.6
 			return k.HandleUpdateZoneProposal(ctx, c)
 
 		default:

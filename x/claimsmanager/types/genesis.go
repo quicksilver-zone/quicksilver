@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/multierror"
 )
 
 func NewGenesisState(params Params) *GenesisState {

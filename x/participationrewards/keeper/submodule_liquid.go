@@ -19,14 +19,6 @@ var _ Submodule = &LiquidTokensModule{}
 func (m *LiquidTokensModule) Hooks(_ sdk.Context, _ *Keeper) {
 }
 
-func (m *LiquidTokensModule) IsActive() bool {
-	return true
-}
-
-func (m *LiquidTokensModule) IsReady() bool {
-	return true
-}
-
 func (m *LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	// message
 	// check denom is valid vs allowed
@@ -55,7 +47,7 @@ func (m *LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *type
 			return 0, err
 		}
 
-		data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, fmt.Sprintf("%s/%s", msg.SrcZone, denom))
+		data, found := k.GetProtocolData(ctx, types.ProtocolDataTypeLiquidToken, fmt.Sprintf("%s_%s", msg.SrcZone, denom))
 		if !found {
 			// we don't have a record for this denom, but this is okay, we don't want to submit records for every ibc denom.
 			continue

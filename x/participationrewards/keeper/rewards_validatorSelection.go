@@ -18,23 +18,24 @@ import (
 // individually in a callback.
 func (k Keeper) AllocateValidatorSelectionRewards(ctx sdk.Context) {
 	k.icsKeeper.IterateZones(ctx, func(_ int64, zone *icstypes.Zone) (stop bool) {
-		k.Logger(ctx).Info("zones", "chain_id", zone.ChainId, "performance address", zone.PerformanceAddress.Address)
+		if zone.PerformanceAddress != nil {
+			k.Logger(ctx).Info("zones", "chain_id", zone.ZoneID(), "performance address", zone.PerformanceAddress.Address)
 
-		// obtain zone performance account rewards
-		rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.PerformanceAddress.Address}
-		bz := k.cdc.MustMarshal(&rewardsQuery)
-
-		k.IcqKeeper.MakeRequest(
-			ctx,
-			zone.ConnectionId,
-			zone.ChainId,
-			"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
-			bz,
-			sdk.NewInt(-1),
-			types.ModuleName,
-			"validatorselectionrewards",
-			0,
-		)
+			// obtain zone performance account rewards
+			rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: zone.PerformanceAddress.Address}
+			bz := k.cdc.MustMarshal(&rewardsQuery)
+			k.IcqKeeper.MakeRequest(
+				ctx,
+				zone.ConnectionId,
+				zone.BaseChainID(),
+				"cosmos.distribution.v1beta1.Query/DelegationTotalRewards",
+				bz,
+				sdk.NewInt(-1),
+				types.ModuleName,
+				ValidatorSelectionRewardsCallbackID,
+				0,
+			)
+		}
 		return false
 	})
 }
@@ -43,17 +44,17 @@ func (k Keeper) AllocateValidatorSelectionRewards(ctx sdk.Context) {
 // zone validator scores.
 func (k Keeper) getZoneScores(
 	ctx sdk.Context,
-	zone icstypes.Zone,
+	zone *icstypes.Zone,
 	delegatorRewards distrtypes.QueryDelegationTotalRewardsResponse,
 ) (*types.ZoneScore, error) {
 	k.Logger(ctx).Info(
 		"performance rewards zone callback response",
-		"zone", zone.ChainId,
+		"zone", zone.ZoneID(),
 		"rewards", delegatorRewards,
 	)
 
 	zs := types.ZoneScore{
-		ZoneID:           zone.ChainId,
+		ZoneID:           zone.ZoneID(),
 		TotalVotingPower: sdk.NewInt(0),
 		ValidatorScores:  make(map[string]*types.Validator),
 	}
@@ -71,13 +72,13 @@ func (k Keeper) getZoneScores(
 
 // CalcDistributionScores calculates the validator distribution scores for the
 // given zone based on the normalized voting power of the validators; scoring
-// favours smaller validators for decentraliztion purposes.
-func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *types.ZoneScore) error {
-	k.Logger(ctx).Info("calculate distribution scores", "zone", zone.ChainId)
+// favours smaller validators for decentralization purposes.
+func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone *icstypes.Zone, zs *types.ZoneScore) error {
+	k.Logger(ctx).Info("calculate distribution scores", "zone", zone.ZoneID())
 
-	zoneValidators := k.icsKeeper.GetValidators(ctx, zone.ChainId)
+	zoneValidators := k.icsKeeper.GetValidators(ctx, zone)
 	if len(zoneValidators) == 0 {
-		return fmt.Errorf("zone %v has no validators", zone.ChainId)
+		return fmt.Errorf("zone %v has no validators", zone.BaseChainID())
 	}
 
 	// calculate total voting power
@@ -106,7 +107,7 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 		}
 	}
 
-	k.Logger(ctx).Info("zone voting power", "zone", zone.ChainId, "total voting power", zs.TotalVotingPower)
+	k.Logger(ctx).Info("zone voting power", "zone", zone.ZoneID(), "total voting power", zs.TotalVotingPower)
 
 	if zs.TotalVotingPower.IsZero() {
 		err := errors.New("invalid zone, zero voting power")
@@ -153,7 +154,7 @@ func (k Keeper) CalcDistributionScores(ctx sdk.Context, zone icstypes.Zone, zs *
 // resetting zone performance scoring for the next epoch.
 func (k Keeper) CalcOverallScores(
 	ctx sdk.Context,
-	zone icstypes.Zone,
+	zone *icstypes.Zone,
 	delegatorRewards distrtypes.QueryDelegationTotalRewardsResponse,
 	zs *types.ZoneScore,
 ) error {
@@ -161,15 +162,17 @@ func (k Keeper) CalcOverallScores(
 
 	rewards := delegatorRewards.GetRewards()
 	if rewards == nil {
-		k.Logger(ctx).Error("No delegator rewards")
-		return nil
+		err := errors.New("no delegator rewards")
+		k.Logger(ctx).Error(err.Error())
+		return err
 	}
 
 	total := delegatorRewards.GetTotal().AmountOf(zone.BaseDenom)
 
 	if total.IsZero() {
-		k.Logger(ctx).Error("No delegator rewards (2)")
-		return nil
+		err := errors.New("no delegator rewards (2)")
+		k.Logger(ctx).Error(err.Error())
+		return err
 	}
 
 	expected := total.Quo(sdk.NewDec(int64(len(rewards))))
@@ -196,9 +199,12 @@ func (k Keeper) CalcOverallScores(
 		}
 		k.Logger(ctx).Info("performance score", "validator", vs.ValoperAddress, "performance", vs.PerformanceScore)
 
-		// calculate overall score
+		// calculate and set overall score
 		vs.Score = vs.DistributionScore.Mul(vs.PerformanceScore)
 		k.Logger(ctx).Info("overall score", "validator", vs.ValoperAddress, "overall", vs.Score)
+		if err := k.icsKeeper.SetValidator(ctx, zone, *(vs.Validator)); err != nil {
+			k.Logger(ctx).Error("unable to set score for validator", "validator", vs.ValoperAddress)
+		}
 
 		// prepare validator performance withdrawal msg
 		msg := &distrtypes.MsgWithdrawDelegatorReward{
@@ -218,7 +224,7 @@ func (k Keeper) CalcOverallScores(
 	}
 
 	// update zone with validator scores
-	k.icsKeeper.SetZone(ctx, &zone)
+	k.icsKeeper.SetZone(ctx, zone)
 
 	return nil
 }
@@ -231,7 +237,7 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 	zone *icstypes.Zone,
 	zs types.ZoneScore,
 ) []types.UserAllocation {
-	k.Logger(ctx).Info("calcUserValidatorSelectionAllocations", "zone", zone.ChainId, "scores", zs, "allocation", zone.ValidatorSelectionAllocation)
+	k.Logger(ctx).Info("calcUserValidatorSelectionAllocations", "zone", zone.ZoneID(), "scores", zs, "allocation", zone.ValidatorSelectionAllocation)
 
 	userAllocations := make([]types.UserAllocation, 0)
 	if zone.ValidatorSelectionAllocation == 0 {
@@ -267,17 +273,18 @@ func (k Keeper) CalcUserValidatorSelectionAllocations(
 	})
 
 	if sum.IsZero() {
-		k.Logger(ctx).Info("zero sum score for zone", "zone", zone.ChainId)
+		k.Logger(ctx).Info("zero sum score for zone", "zone", zone.ZoneID())
 		return userAllocations
 	}
 
 	allocation := sdk.NewDecFromInt(sdk.NewIntFromUint64(zone.ValidatorSelectionAllocation))
 	tokensPerPoint := allocation.Quo(sum)
+	bondDenom := k.stakingKeeper.BondDenom(ctx)
 	k.Logger(ctx).Info("tokens per point", "zone", zs.ZoneID, "zone score", sum, "tpp", tokensPerPoint)
 	for _, us := range userScores {
 		ua := types.UserAllocation{
 			Address: us.Address,
-			Amount:  us.Score.Mul(tokensPerPoint).TruncateInt(),
+			Amount:  sdk.NewCoin(bondDenom, us.Score.Mul(tokensPerPoint).TruncateInt()),
 		}
 		userAllocations = append(userAllocations, ua)
 	}

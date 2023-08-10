@@ -3,7 +3,7 @@ package types
 import (
 	"strings"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/multierror"
 )
 
 // LiquidAllowedDenomProtocolData defines protocol state to track off-chain
@@ -47,4 +47,8 @@ func (lpd *LiquidAllowedDenomProtocolData) ValidateBasic() error {
 	}
 
 	return nil
+}
+
+func (lpd *LiquidAllowedDenomProtocolData) GenerateKey() []byte {
+	return []byte(lpd.ChainID + "_" + lpd.IbcDenom)
 }

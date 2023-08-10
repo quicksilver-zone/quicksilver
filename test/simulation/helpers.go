@@ -70,7 +70,6 @@ func Operations(quicksilver *app.Quicksilver, cdc codec.JSONCodec, config simtyp
 		}
 	}
 
-	// simState.LegacyParamChange = quicksilver.SimulationManager().GenerateParamChanges(config.Seed)
 	simState.ProposalMsgs = quicksilver.SimulationManager().GetProposalMsgs(simState)
 	return quicksilver.SimulationManager().WeightedOperations(simState)
 }

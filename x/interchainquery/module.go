@@ -3,7 +3,6 @@ package interchainquery
 import (
 	"context"
 	"encoding/json"
-	"math/rand"
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -110,6 +109,9 @@ func (am AppModule) Name() string {
 	return am.AppModuleBasic.Name()
 }
 
+// QuerierRoute returns the capability module's query routing key.
+func (AppModule) QuerierRoute() string { return types.QuerierRoute }
+
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
 func (am AppModule) RegisterServices(cfg module.Configurator) {
@@ -156,16 +158,6 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // GenerateGenesisState creates a randomized GenState of the pool-incentives module.
 func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
-}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
-	return nil
-}
-
-// RandomizedParams creates randomized mint param changes for the simulator.
-func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.LegacyParamChange {
-	return []simtypes.LegacyParamChange{}
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types.

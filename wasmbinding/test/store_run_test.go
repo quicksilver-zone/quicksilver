@@ -43,7 +43,7 @@ func storeCodeViaProposal(t *testing.T, ctx sdk.Context, quicksilverApp *app.Qui
 	checksum, err := hex.DecodeString("5686AE32B4CC3811109CD4B37A80B8A99B9FF35323AA4FA0485174A8DF1E5A77")
 	require.NoError(t, err)
 
-	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) {
+	src := types.StoreCodeProposalFixture(func(p *types.StoreCodeProposal) { //nolint:staticcheck // suppress deprecated type lint
 		p.RunAs = addr.String()
 		p.WASMByteCode = wasmCode
 		p.CodeHash = checksum

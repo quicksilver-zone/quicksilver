@@ -55,7 +55,6 @@ func TestAddProtocolDataProposal_ValidateBasic(t *testing.T) {
 				Description: "A new protocol for testing protocols",
 				Protocol:    "TestProtocol",
 				Type:        "",
-				Key:         "",
 				Data:        nil,
 			},
 			true,
@@ -67,7 +66,6 @@ func TestAddProtocolDataProposal_ValidateBasic(t *testing.T) {
 				Description: "A new protocol for testing protocols",
 				Protocol:    "TestProtocol",
 				Type:        "TestType",
-				Key:         "",
 				Data:        nil,
 			},
 			true,
@@ -79,7 +77,6 @@ func TestAddProtocolDataProposal_ValidateBasic(t *testing.T) {
 				Description: "A new protocol for testing protocols",
 				Protocol:    "TestProtocol",
 				Type:        "TestType",
-				Key:         "TestKey",
 				Data:        nil,
 			},
 			true,
@@ -90,8 +87,7 @@ func TestAddProtocolDataProposal_ValidateBasic(t *testing.T) {
 				Title:       "Valid Protocol Data",
 				Description: "A valid protocol that is valid",
 				Protocol:    "ValidProtocol",
-				Type:        "liquidtoken",
-				Key:         "liquid",
+				Type:        types.ProtocolDataType_name[int32(types.ProtocolDataTypeLiquidToken)],
 				Data:        []byte(validLiquidData),
 			},
 			false,
@@ -146,7 +142,6 @@ Data:			{
 	"ibcdenom": "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 	"qassetdenom": "uqstake"
 }
-Key:			liquid
 `
 
 	t.Run("stringer", func(t *testing.T) {

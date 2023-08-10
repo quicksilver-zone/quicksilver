@@ -9,7 +9,7 @@ import (
 
 // InitGenesis initializes the interchainstaking module's state from a provided genesis
 // state.
-func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState) {
 	k.SetParams(ctx, genState.Params)
 
 	// set registered zones info from genesis
@@ -63,7 +63,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 }
 
 // ExportGenesis returns the capability module's exported genesis.
-func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 	return &types.GenesisState{
 		Params:                 k.GetParams(ctx),
 		Zones:                  k.AllZones(ctx),
@@ -76,32 +76,34 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 }
 
-func ExportDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegationsForZone {
+func ExportDelegationsPerZone(ctx sdk.Context, k *keeper.Keeper) []types.DelegationsForZone {
 	delegationsForZones := make([]types.DelegationsForZone, 0)
 	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
-		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainId, Delegations: k.GetAllDelegationsAsPointer(ctx, zone)})
+		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ZoneID(), Delegations: k.GetAllDelegationsAsPointer(ctx, zone)})
 		return false
 	})
 	return delegationsForZones
 }
 
-func ExportPerformanceDelegationsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegationsForZone {
+func ExportPerformanceDelegationsPerZone(ctx sdk.Context, k *keeper.Keeper) []types.DelegationsForZone {
 	delegationsForZones := make([]types.DelegationsForZone, 0)
 	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
-		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainId, Delegations: k.GetAllPerformanceDelegationsAsPointer(ctx, zone)})
+		if !zone.IsSubzone() {
+			delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.BaseChainID(), Delegations: k.GetAllPerformanceDelegationsAsPointer(ctx, zone)})
+		}
 		return false
 	})
 	return delegationsForZones
 }
 
-func ExportDelegatorIntentsPerZone(ctx sdk.Context, k keeper.Keeper) []types.DelegatorIntentsForZone {
+func ExportDelegatorIntentsPerZone(ctx sdk.Context, k *keeper.Keeper) []types.DelegatorIntentsForZone {
 	delegatorIntentsForZones := make([]types.DelegatorIntentsForZone, 0)
 	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
 		// export current epoch intents
 		delegatorIntentsForZones = append(delegatorIntentsForZones,
-			types.DelegatorIntentsForZone{ChainId: zone.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zone, false), Snapshot: false},
+			types.DelegatorIntentsForZone{ChainId: zone.ZoneID(), DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zone, false), Snapshot: false},
 			// export last epoch intents
-			types.DelegatorIntentsForZone{ChainId: zone.ChainId, DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zone, true), Snapshot: true},
+			types.DelegatorIntentsForZone{ChainId: zone.ZoneID(), DelegationIntent: k.AllDelegatorIntentsAsPointer(ctx, zone, true), Snapshot: true},
 		)
 		return false
 	})

@@ -25,7 +25,8 @@ import (
 
 func TestQuicksilverExport(t *testing.T) {
 	privVal := mock.NewPV()
-	pubKey, _ := privVal.GetPubKey()
+	pubKey, err := privVal.GetPubKey()
+	require.NoError(t, err)
 
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
@@ -50,7 +51,6 @@ func TestQuicksilverExport(t *testing.T) {
 		true,
 		map[int64]bool{},
 		DefaultNodeHome,
-		0,
 		wasm.EnableAllProposals,
 		EmptyAppOptions{},
 		GetWasmOpts(EmptyAppOptions{}),
@@ -81,7 +81,6 @@ func TestQuicksilverExport(t *testing.T) {
 		true,
 		map[int64]bool{},
 		DefaultNodeHome,
-		0,
 		wasm.EnableAllProposals,
 		EmptyAppOptions{},
 		GetWasmOpts(EmptyAppOptions{}),

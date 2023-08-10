@@ -2,14 +2,16 @@ package keeper
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 
 	sdkioerrors "cosmossdk.io/errors"
 	"github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
@@ -40,6 +42,8 @@ func (k msgServer) Claim(goCtx context.Context, msg *types.MsgClaim) (*types.Msg
 }
 
 func (k msgServer) IncentivePoolSpend(goCtx context.Context, msg *types.MsgIncentivePoolSpend) (*types.MsgIncentivePoolSpendResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	if k.GetAuthority() != msg.Authority {
 		return nil, sdkioerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
 	}
@@ -49,7 +53,6 @@ func (k msgServer) IncentivePoolSpend(goCtx context.Context, msg *types.MsgIncen
 		return nil, sdkerrors.ErrInvalidAddress.Wrapf("invalid to address: %s", err)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.bankKeeper.IsSendEnabledCoins(ctx, msg.Amount...); err != nil {
 		return nil, err
 	}
@@ -76,4 +79,53 @@ func (k msgServer) IncentivePoolSpend(goCtx context.Context, msg *types.MsgIncen
 	}()
 
 	return &types.MsgIncentivePoolSpendResponse{}, nil
+}
+
+func (k msgServer) RegisterZoneDrop(goCtx context.Context, msg *types.MsgRegisterZoneDrop) (*types.MsgRegisterZoneDropResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if k.GetAuthority() != msg.Authority {
+		return &types.MsgRegisterZoneDropResponse{}, sdkioerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), msg.Authority)
+	}
+
+	_, found := k.icsKeeper.GetZone(ctx, msg.ZoneDrop.ChainId)
+	if !found {
+		return &types.MsgRegisterZoneDropResponse{}, fmt.Errorf("zone not found, %q", msg.ZoneDrop.ChainId)
+	}
+
+	if msg.ZoneDrop.StartTime.Before(ctx.BlockTime()) {
+		return &types.MsgRegisterZoneDropResponse{}, errors.New("zone airdrop already started")
+	}
+
+	// decompress claim records
+	crsb, err := types.Decompress(msg.ClaimRecords)
+	if err != nil {
+		return &types.MsgRegisterZoneDropResponse{}, err
+	}
+
+	// unmarshal json
+	var crs types.ClaimRecords
+	if err := json.Unmarshal(crsb, &crs); err != nil {
+		return &types.MsgRegisterZoneDropResponse{}, err
+	}
+
+	// process ZoneDrop
+	k.SetZoneDrop(ctx, *msg.ZoneDrop)
+	for i, cr := range crs {
+		if err := k.SetClaimRecord(ctx, cr); err != nil {
+			return &types.MsgRegisterZoneDropResponse{}, fmt.Errorf("invalid zonedrop proposal claim record [%d]: %w", i, err)
+		}
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.ModuleName),
+		),
+		sdk.NewEvent(
+			types.EventTypeRegisterZoneDrop,
+			sdk.NewAttribute(types.AttributeKeyZoneID, msg.ZoneDrop.ChainId),
+		),
+	})
+
+	return &types.MsgRegisterZoneDropResponse{}, nil
 }

@@ -8,6 +8,7 @@ import (
 
 func (s *KeeperTestSuite) TestKeeper_Queries() {
 	k := s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper
+	icsKeeper := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper
 
 	// now that we have a kepper set the chainID of chainB
 	testClaims[0].ChainId = s.chainB.ChainID
@@ -52,7 +53,10 @@ func (s *KeeperTestSuite) TestKeeper_Queries() {
 		{
 			"LastEpochClaims_chainB",
 			func() {
-				k.ArchiveAndGarbageCollectClaims(s.chainA.GetContext(), s.chainB.ChainID)
+				zone, found := icsKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+				s.Require().True(found)
+
+				k.ArchiveAndGarbageCollectClaims(s.chainA.GetContext(), &zone)
 			},
 			&types.QueryClaimsRequest{
 				ChainId: s.chainB.ChainID,

@@ -25,6 +25,10 @@ type Keeper struct {
 
 // NewKeeper returns a new instance of zones Keeper.
 func NewKeeper(cdc codec.Codec, storeKey storetypes.StoreKey, ibcKeeper *ibckeeper.Keeper) Keeper {
+	if ibcKeeper == nil {
+		panic("ibcKeeper is nil")
+	}
+
 	return Keeper{
 		cdc:       cdc,
 		storeKey:  storeKey,
@@ -101,12 +105,32 @@ func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module, connectionID, ch
 	val, err := k.GetDatapoint(ctx, module, connectionID, chainID, queryType, request)
 	if err != nil {
 		// no datapoint
-		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdk.NewInt(-1), "", "", maxAge)
+		k.MakeRequest(
+			ctx,
+			connectionID,
+			chainID,
+			queryType,
+			request,
+			sdk.NewInt(-1),
+			"",
+			"",
+			maxAge,
+		)
 		return types.DataPoint{}, errors.New("no data; query submitted")
 	}
 
 	if val.LocalHeight.LT(sdk.NewInt(ctx.BlockHeight() - int64(maxAge))) { // this is somewhat arbitrary; TODO: make this better
-		k.MakeRequest(ctx, connectionID, chainID, queryType, request, sdk.NewInt(-1), "", "", maxAge)
+		k.MakeRequest(
+			ctx,
+			connectionID,
+			chainID,
+			queryType,
+			request,
+			sdk.NewInt(-1),
+			"",
+			"",
+			maxAge,
+		)
 		return types.DataPoint{}, errors.New("stale data; query submitted")
 	}
 	// check ttl

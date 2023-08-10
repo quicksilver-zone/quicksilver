@@ -12,8 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app/upgrades"
-	"github.com/ingenuity-build/quicksilver/utils"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
@@ -82,6 +81,7 @@ func (s *AppTestSuite) initTestZone() {
 		BaseDenom:       "uatom",
 		MultiSend:       false,
 		LiquidityModule: true,
+		Is_118:          true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
@@ -94,6 +94,7 @@ func (s *AppTestSuite) initTestZone() {
 		BaseDenom:       "uatom",
 		MultiSend:       false,
 		LiquidityModule: false,
+		Is_118:          true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
@@ -106,6 +107,7 @@ func (s *AppTestSuite) initTestZone() {
 		BaseDenom:       "uosmo",
 		MultiSend:       false,
 		LiquidityModule: true,
+		Is_118:          true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 	// uni-5 zone
@@ -117,12 +119,13 @@ func (s *AppTestSuite) initTestZone() {
 		BaseDenom:       "ujunox",
 		MultiSend:       false,
 		LiquidityModule: true,
+		Is_118:          true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
 	receipt := icstypes.Receipt{
 		ChainId: "uni-5",
-		Sender:  utils.GenerateAccAddressForTest().String(),
+		Sender:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
 		Txhash:  "TestDeposit01",
 		Amount: sdk.NewCoins(
 			sdk.NewCoin(
@@ -174,7 +177,7 @@ func (s *AppTestSuite) initTestZone() {
 
 	wRecord := icstypes.WithdrawalRecord{
 		ChainId:   "uni-5",
-		Delegator: utils.GenerateAccAddressForTest().String(),
+		Delegator: addressutils.GenerateAccAddressForTest().String(),
 		Distribution: []*icstypes.Distribution{
 			{Valoper: "junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn", Amount: 1000000},
 			{Valoper: "junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed", Amount: 1000000},
@@ -183,7 +186,7 @@ func (s *AppTestSuite) initTestZone() {
 		Amount:     sdk.NewCoins(sdk.NewCoin("ujunox", sdk.NewInt(4000000))),
 		BurnAmount: sdk.NewCoin("ujunox", sdk.NewInt(4000000)),
 		Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
-		Status:     icskeeper.WithdrawStatusQueued,
+		Status:     icstypes.WithdrawStatusQueued,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetWithdrawalRecord(s.chainA.GetContext(), wRecord)
 
@@ -191,14 +194,8 @@ func (s *AppTestSuite) initTestZone() {
 	if err != nil {
 		return
 	}
-	addr1, err := utils.AccAddressFromBech32("quick17v9kk34km3w6hdjs2sn5s5qjdu2zrm0m3rgtmq", "quick")
-	if err != nil {
-		return
-	}
-	addr2, err := utils.AccAddressFromBech32("quick16x03wcp37kx5e8ehckjxvwcgk9j0cqnhcccnty", "quick")
-	if err != nil {
-		return
-	}
+	addr1 := addressutils.GenerateAccAddressForTest()
+	addr2 := addressutils.GenerateAccAddressForTest()
 
 	err = s.GetQuicksilverApp(s.chainA).BankKeeper.SendCoinsFromModuleToAccount(s.chainA.GetContext(), tokenfactorytypes.ModuleName, addr1, sdk.NewCoins(sdk.NewCoin("uqjunox", sdkmath.NewInt(1600000))))
 	if err != nil {
@@ -220,7 +217,7 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 	handler := upgrades.V010402rc1UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
 	ctx := s.chainA.GetContext()
 	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		if zone.ChainId == "uni-5" {
+		if zone.ZoneID() == "uni-5" {
 
 			zone.Validators = []*icstypes.Validator{
 				{
@@ -243,7 +240,7 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 			}
 			app.InterchainstakingKeeper.SetZone(ctx, zone)
 		}
-		if zone.ChainId == "osmosis-1" {
+		if zone.ZoneID() == "osmosis-1" {
 			zone.Validators = []*icstypes.Validator{
 				{
 					ValoperAddress:  "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
@@ -272,26 +269,26 @@ func (s *AppTestSuite) TestV010402rc1UpgradeHandler() {
 	s.Require().NoError(err)
 
 	app.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		if zone.ChainId == "uni-5" {
+		if zone.ZoneID() == "uni-5" {
 			s.Require().Nil(zone.Validators)
-			valAddrBytes, err := utils.ValAddressFromBech32("junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn", "junovaloper")
+			valAddrBytes, err := addressutils.ValAddressFromBech32("junovaloper185hgkqs8q8ysnc8cvkgd8j2knnq2m0ah6ae73gntv9ampgwpmrxqlfzywn", "junovaloper")
 			s.Require().NoError(err)
-			_, found := app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+			_, found := app.InterchainstakingKeeper.GetValidator(ctx, zone, valAddrBytes)
 			s.Require().True(found)
-			valAddrBytes2, err := utils.ValAddressFromBech32("junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed", "junovaloper")
+			valAddrBytes2, err := addressutils.ValAddressFromBech32("junovaloper1z89utvygweg5l56fsk8ak7t6hh88fd0aa9ywed", "junovaloper")
 			s.Require().NoError(err)
-			_, found = app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes2)
+			_, found = app.InterchainstakingKeeper.GetValidator(ctx, zone, valAddrBytes2)
 			s.Require().True(found)
 		}
-		if zone.ChainId == "osmosis-1" {
+		if zone.ZoneID() == "osmosis-1" {
 			s.Require().Nil(zone.Validators)
-			valAddrBytes, err := utils.ValAddressFromBech32("osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", "osmovaloper")
+			valAddrBytes, err := addressutils.ValAddressFromBech32("osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", "osmovaloper")
 			s.Require().NoError(err)
-			_, found := app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+			_, found := app.InterchainstakingKeeper.GetValidator(ctx, zone, valAddrBytes)
 			s.Require().True(found)
-			valAddrBytes2, err := utils.ValAddressFromBech32("osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", "osmovaloper")
+			valAddrBytes2, err := addressutils.ValAddressFromBech32("osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", "osmovaloper")
 			s.Require().NoError(err)
-			_, found = app.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes2)
+			_, found = app.InterchainstakingKeeper.GetValidator(ctx, zone, valAddrBytes2)
 			s.Require().True(found)
 		}
 
@@ -312,12 +309,14 @@ func (s *AppTestSuite) TestV010402rc3UpgradeHandler() {
 		Data: []byte(`{"ConnectionID":"connection-2","ChainID":"regen-redwood-1","Prefix":"regen"}`),
 	}
 
-	app.ParticipationRewardsKeeper.SetProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rege-redwood-1")), &prData)
+	zone := &icstypes.Zone{ChainId: upgrades.OsmosisTestnetChainID}
+
+	app.ParticipationRewardsKeeper.SetProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("rege-redwood-1")), &prData)
 	val0 := icstypes.Validator{ValoperAddress: "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val0)
+	app.InterchainstakingKeeper.SetValidator(ctx, zone, val0)
 	val1 := icstypes.Validator{ValoperAddress: "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	app.InterchainstakingKeeper.SetValidator(ctx, upgrades.OsmosisTestnetChainID, val1)
-	vals := app.InterchainstakingKeeper.GetValidators(ctx, upgrades.OsmosisTestnetChainID)
+	app.InterchainstakingKeeper.SetValidator(ctx, zone, val1)
+	vals := app.InterchainstakingKeeper.GetValidators(ctx, zone)
 	s.Require().Equal(2, len(vals))
 
 	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
@@ -328,8 +327,93 @@ func (s *AppTestSuite) TestV010402rc3UpgradeHandler() {
 	_, found = app.ParticipationRewardsKeeper.GetProtocolData(ctx, prtypes.ProtocolDataType(pdType), "rege-redwood-1")
 	s.Require().False(found)
 
-	vals = app.InterchainstakingKeeper.GetValidators(ctx, upgrades.OsmosisTestnetChainID)
+	vals = app.InterchainstakingKeeper.GetValidators(ctx, zone)
 	s.Require().Equal(0, len(vals))
+}
+
+func (s *AppTestSuite) TestV010404beta0UpgradeHandler() {
+	app := s.GetQuicksilverApp(s.chainA)
+	// osmosis zone
+	zone := icstypes.Zone{
+		ConnectionId:    "connection-77002",
+		ChainId:         upgrades.OsmosisTestnetChainID,
+		AccountPrefix:   "osmo",
+		LocalDenom:      "uqosmo",
+		BaseDenom:       "uosmo",
+		MultiSend:       false,
+		LiquidityModule: true,
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+	handler := upgrades.V010404beta0UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	ctx := s.chainA.GetContext()
+
+	zone, _ = app.InterchainstakingKeeper.GetZone(ctx, upgrades.OsmosisTestnetChainID)
+	s.Require().False(zone.Is_118)
+
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.Require().NoError(err)
+	zone, _ = app.InterchainstakingKeeper.GetZone(ctx, upgrades.OsmosisTestnetChainID)
+	s.Require().True(zone.Is_118)
+}
+
+func (s *AppTestSuite) TestV010404beta7UpgradeHandler() {
+	app := s.GetQuicksilverApp(s.chainA)
+	// osmosis zone
+	zone := icstypes.Zone{
+		ConnectionId:    "connection-77002",
+		ChainId:         upgrades.OsmosisTestnetChainID,
+		AccountPrefix:   "osmo",
+		LocalDenom:      "uqosmo",
+		BaseDenom:       "uosmo",
+		MultiSend:       false,
+		LiquidityModule: true,
+	}
+
+	ctx := s.chainA.GetContext()
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+	rdRecord := icstypes.RedelegationRecord{
+		ChainId:        upgrades.OsmosisTestnetChainID,
+		EpochNumber:    4,
+		Source:         "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
+		Destination:    "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
+		Amount:         3000000,
+		CompletionTime: time.Time{},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), rdRecord)
+
+	rdRecord = icstypes.RedelegationRecord{
+		ChainId:        upgrades.OsmosisTestnetChainID,
+		EpochNumber:    6,
+		Source:         "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
+		Destination:    "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
+		Amount:         3000000,
+		CompletionTime: time.Time{},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), rdRecord)
+
+	rdRecord = icstypes.RedelegationRecord{
+		ChainId:        upgrades.OsmosisTestnetChainID,
+		EpochNumber:    34,
+		Source:         "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk",
+		Destination:    "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc",
+		Amount:         3000000,
+		CompletionTime: time.Time{},
+	}
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetRedelegationRecord(s.chainA.GetContext(), rdRecord)
+
+	handler := upgrades.V010404beta7UpgradeHandler(app.mm, app.configurator, &app.AppKeepers)
+	_, err := handler(ctx, types.Plan{}, app.mm.GetVersionMap())
+	s.Require().NoError(err)
+
+	_, found := app.InterchainstakingKeeper.GetRedelegationRecord(ctx, upgrades.OsmosisTestnetChainID, "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", 4)
+	s.Require().False(found)
+
+	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, upgrades.OsmosisTestnetChainID, "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", 6)
+	s.Require().False(found)
+
+	_, found = app.InterchainstakingKeeper.GetRedelegationRecord(ctx, upgrades.OsmosisTestnetChainID, "osmovaloper13eq5c99ym05jn02e78l8cac2fagzgdhh4294zk", "osmovaloper1zxavllftfx3a3y5ldfyze7jnu5uyuktsfx2jcc", 34)
+	s.Require().True(found)
 }
 
 // func (s *AppTestSuite) TestV010400rc6UpgradeHandler() {

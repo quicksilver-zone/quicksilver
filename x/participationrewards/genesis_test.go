@@ -33,7 +33,7 @@ func TestParticipationRewardsExportGenesis(t *testing.T) {
 	}
 	protocolData := types.NewProtocolData(types.ProtocolDataType_name[int32(types.ProtocolDataTypeOsmosisPool)], bz)
 
-	app.ParticipationRewardsKeeper.SetProtocolData(ctx, fmt.Sprintf("%d", pool.PoolID), protocolData)
+	app.ParticipationRewardsKeeper.SetProtocolData(ctx, []byte(fmt.Sprintf("%d", pool.PoolID)), protocolData)
 
 	genesis := participationrewards.ExportGenesis(ctx, app.ParticipationRewardsKeeper)
 
@@ -56,8 +56,8 @@ func TestParticipationRewardsInitGenesis(t *testing.T) {
 	"poolid": 1,
 	"poolname": "atom/osmo",
 	"pooltype": "balancer",
-	"zones": {
-		"zone_id": "IBC/zone_denom"
+	"denoms": {
+		"ibc/00000000000000000000000000000000": {"denom": "ustake", "chainid": "testzone-1"}
 	}
 }`
 

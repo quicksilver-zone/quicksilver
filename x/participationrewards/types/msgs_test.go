@@ -9,13 +9,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
-	userAddress := utils.GenerateAccAddressForTest().String()
+	userAddress := addressutils.GenerateAccAddressForTest().String()
 
 	type fields struct {
 		UserAddress string
@@ -106,7 +106,7 @@ func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgSubmitClaim_GetSigners(t *testing.T) {
-	validAddress := utils.GenerateAccAddressForTest().String()
+	validAddress := addressutils.GenerateAccAddressForTest().String()
 	validAcc, _ := sdk.AccAddressFromBech32(validAddress)
 
 	type fields struct {
@@ -150,7 +150,7 @@ func TestMsgSubmitClaim_GetSigners(t *testing.T) {
 }
 
 func TestNewMsgSubmitClaim(t *testing.T) {
-	userAddress := utils.GenerateAccAddressForTest()
+	userAddress := addressutils.GenerateAccAddressForTest()
 	type args struct {
 		userAddress sdk.Address
 		srcZone     string
@@ -201,6 +201,149 @@ func TestNewMsgSubmitClaim(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := types.NewMsgSubmitClaim(tt.args.userAddress, tt.args.srcZone, tt.args.zone, tt.args.claimType, tt.args.proofs); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewMsgSubmitClaim() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMsgGovRemoveProtocolData_ValidateBasic(t *testing.T) {
+	userAddress := addressutils.GenerateAccAddressForTest().String()
+
+	type fields struct {
+		Title       string
+		Description string
+		Key         string
+		Authority   string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{
+			"blank",
+			fields{},
+			true,
+		},
+		{
+			"invalid_empty_title",
+			fields{
+				Title:       "",
+				Description: "Non-nil description",
+				Key:         "123",
+				Authority:   "quick123",
+			},
+			true,
+		},
+		{
+			"invalid_empty_desc",
+			fields{
+				Title:       "Non-nil title",
+				Description: "",
+				Key:         "123",
+				Authority:   "quick123",
+			},
+			true,
+		},
+		{
+			"invalid_empty_key",
+			fields{
+				Title:       "Non-nil title",
+				Description: "Non-nil description",
+				Key:         "",
+				Authority:   "quick123",
+			},
+			true,
+		},
+		{
+			"invalid_empty_authority",
+			fields{
+				Title:       "Non-nil title",
+				Description: "Non-nil description",
+				Key:         "123",
+				Authority:   "",
+			},
+			true,
+		},
+		{
+			"invalid_invalid_authority",
+			fields{
+				Title:       "Non-nil title",
+				Description: "Non-nil description",
+				Key:         "123",
+				Authority:   "quick123",
+			},
+			true,
+		},
+		{
+			"valid",
+			fields{
+				Title:       "Non-nil title",
+				Description: "Non-nil description",
+				Key:         "123",
+				Authority:   userAddress,
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgGovRemoveProtocolData{
+				Title:       tt.fields.Title,
+				Description: tt.fields.Description,
+				Key:         tt.fields.Key,
+				Authority:   tt.fields.Authority,
+			}
+			err := msg.ValidateBasic()
+			if tt.wantErr {
+				t.Logf("Error:\n%v\n", err)
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestMsgGovRemoveProtocolData_GetSigners(t *testing.T) {
+	validAddress := addressutils.GenerateAccAddressForTest().String()
+	validAcc, _ := sdk.AccAddressFromBech32(validAddress)
+
+	type fields struct {
+		Title       string
+		Description string
+		Key         string
+		Authority   string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []sdk.AccAddress
+	}{
+		{
+			"blank",
+			fields{},
+			[]sdk.AccAddress{{}},
+		},
+		{
+			"valid",
+			fields{
+				Authority: validAddress,
+			},
+			[]sdk.AccAddress{validAcc},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			msg := types.MsgGovRemoveProtocolData{
+				Title:       tt.fields.Title,
+				Description: tt.fields.Description,
+				Key:         tt.fields.Key,
+				Authority:   tt.fields.Authority,
+			}
+			if got := msg.GetSigners(); !reflect.DeepEqual(got, tt.want) {
+				err := fmt.Errorf("MsgGovRemoveProtocolData.GetSigners() = %v, want %v", got, tt.want)
+				require.NoError(t, err)
 			}
 		})
 	}

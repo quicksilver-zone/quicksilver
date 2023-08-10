@@ -1,6 +1,7 @@
 package upgrades
 
 import (
+	"errors"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -9,10 +10,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
+	ibctmmigrations "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/migrations"
 
 	"github.com/ingenuity-build/quicksilver/app/keepers"
-	"github.com/ingenuity-build/quicksilver/utils"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -25,6 +29,17 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010402rc5UpgradeName, CreateUpgradeHandler: V010402rc5UpgradeHandler},
 		{UpgradeName: V010402rc6UpgradeName, CreateUpgradeHandler: V010402rc6UpgradeHandler},
 		{UpgradeName: V010402rc7UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010403rc0UpgradeName, CreateUpgradeHandler: V010403rc0UpgradeHandler},
+		{UpgradeName: V010404beta0UpgradeName, CreateUpgradeHandler: V010404beta0UpgradeHandler},
+		{UpgradeName: V010404beta1UpgradeName, CreateUpgradeHandler: NoOpHandler},
+		{UpgradeName: V010404beta5UpgradeName, CreateUpgradeHandler: V010404beta5UpgradeHandler},
+		{UpgradeName: V010404beta7UpgradeName, CreateUpgradeHandler: V010404beta7UpgradeHandler},
+		{UpgradeName: V010404rc0UpgradeName, CreateUpgradeHandler: V010404rc0UpgradeHandler},
+		{UpgradeName: V010404beta8UpgradeName, CreateUpgradeHandler: V010404beta8UpgradeHandler},
+		{UpgradeName: V010404rc1UpgradeName, CreateUpgradeHandler: V010404rc1UpgradeHandler},
+		{UpgradeName: IBCv6tov7UpgradeName, CreateUpgradeHandler: IBCv6tov7UpgradeHandler},
+		{UpgradeName: IBCv7tov71UpgradeName, CreateUpgradeHandler: IBCv7tov71UpgradeHandler},
+		{UpgradeName: V010404beta9UpgradeName, CreateUpgradeHandler: V010404beta9UpgradeHandler},
 	}
 }
 
@@ -45,9 +60,9 @@ func V010402rc1UpgradeHandler(
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) || isTest(ctx) {
-			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
 				for _, val := range zone.Validators {
-					newVal := types.Validator{
+					newVal := icstypes.Validator{
 						ValoperAddress:  val.ValoperAddress,
 						CommissionRate:  val.CommissionRate,
 						DelegatorShares: val.DelegatorShares,
@@ -58,7 +73,7 @@ func V010402rc1UpgradeHandler(
 						Tombstoned:      val.Tombstoned,
 						JailedSince:     val.JailedSince,
 					}
-					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newVal)
+					err := appKeepers.InterchainstakingKeeper.SetValidator(ctx, zone, newVal)
 					if err != nil {
 						panic(err)
 					}
@@ -86,11 +101,11 @@ func V010402rc3UpgradeHandler(
 				panic("connection protocol data type not found")
 			}
 
-			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rege-redwood-1")))
-			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, OsmosisTestnetChainID)
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("rege-redwood-1")))
+			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, &icstypes.Zone{ChainId: OsmosisTestnetChainID})
 			for _, val := range vals {
-				valoper, _ := utils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")
-				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, OsmosisTestnetChainID, valoper)
+				valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, &icstypes.Zone{ChainId: OsmosisTestnetChainID}, valoper)
 			}
 		}
 
@@ -109,10 +124,10 @@ func V010402rc4UpgradeHandler(
 			if !exists {
 				panic("liquid tokens protocol data type not found")
 			}
-			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "osmo-test-5/ibc/FBD3AC18A981B89F60F9FE5B21BD7F1DE87A53C3505D5A5E438E2399409CFB6F")))
-			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, string(prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), "rhye-1/uqosmo")))
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("osmo-test-5/ibc/FBD3AC18A981B89F60F9FE5B21BD7F1DE87A53C3505D5A5E438E2399409CFB6F")))
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte("rhye-1/uqosmo")))
 			rcptTime := time.Unix(1682932342, 0)
-			rcpt1 := types.Receipt{
+			rcpt1 := icstypes.Receipt{
 				ChainId:   "theta-testnet-001",
 				Sender:    "cosmos1e6p7tk969ftlzmz82drp84ruukwge6z6udand8",
 				Txhash:    "005AABC399866544CBEC4DC57887A7297289BF40C056A1544D3CE18946DB7DB9",
@@ -121,7 +136,7 @@ func V010402rc4UpgradeHandler(
 				Completed: nil,
 			}
 
-			rcpt2 := types.Receipt{
+			rcpt2 := icstypes.Receipt{
 				ChainId:   "elgafar-1",
 				Sender:    "stars1e6p7tk969ftlzmz82drp84ruukwge6z6g32wxk",
 				Txhash:    "01041964B4CDDD3ECA1C9F1EFC039B547C2D30D5B85C55089EB6F7DF311786B6",
@@ -149,7 +164,7 @@ func V010402rc5UpgradeHandler(
 
 			rcptTime := time.Unix(1682932342, 0)
 
-			rcpts := []types.Receipt{
+			rcpts := []icstypes.Receipt{
 				{
 					ChainId:   "theta-testnet-001",
 					Sender:    "cosmos1e6p7tk969ftlzmz82drp84ruukwge6z6udand8",
@@ -226,19 +241,19 @@ func V010402rc6UpgradeHandler(
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		if isTestnet(ctx) || isTest(ctx) {
 			// for each zone, trigger an icq request to update all delegations.
-			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
-				vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
+			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+				vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, zone)
 				delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{DelegatorAddr: zone.DelegationAddress.Address, Pagination: &query.PageRequest{Limit: uint64(len(vals))}}
 				bz := appKeepers.InterchainstakingKeeper.GetCodec().MustMarshal(&delegationQuery)
 
 				appKeepers.InterchainstakingKeeper.ICQKeeper.MakeRequest(
 					ctx,
 					zone.ConnectionId,
-					zone.ChainId,
+					zone.ZoneID(),
 					"cosmos.staking.v1beta1.Query/DelegatorDelegations",
 					bz,
 					sdk.NewInt(-1),
-					types.ModuleName,
+					icstypes.ModuleName,
 					"delegations",
 					0,
 				)
@@ -246,6 +261,315 @@ func V010402rc6UpgradeHandler(
 			})
 		}
 
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010403rc0UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) {
+			appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), func(index int64, key []byte, data prtypes.ProtocolData) (stop bool) {
+				prefixedKey := append(prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), key...)
+				appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prefixedKey)
+				pd, err := prtypes.UnmarshalProtocolData(prtypes.ProtocolDataTypeLiquidToken, data.Data)
+				if err != nil {
+					panic(err)
+				}
+				newKey := pd.GenerateKey()
+				appKeepers.ParticipationRewardsKeeper.SetProtocolData(ctx, newKey, &data)
+				return false
+			})
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta0UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) {
+			appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+				zone.Is_118 = true
+				appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
+				return false
+			})
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta5UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isDevnet(ctx) || isTest(ctx) {
+			// 6d3cc69d3276dd59a93a252e1ea15fc1e507c56512266c87c615fac4dcddb5cb
+			wr, found := appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "theta-testnet-001", "6d3cc69d3276dd59a93a252e1ea15fc1e507c56512266c87c615fac4dcddb5cb", 3)
+			if !found {
+				return nil, errors.New("unable to find withdrawal record 6d3cc69d3276dd59a93a252e1ea15fc1e507c56512266c87c615fac4dcddb5cb")
+			}
+			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &wr, icstypes.WithdrawStatusQueued)
+
+			// b9c6587af3317bfb4b21a29df3f7e1a00709c25b0590446cceb01b8c6996b656
+			wr, found = appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "theta-testnet-001", "b9c6587af3317bfb4b21a29df3f7e1a00709c25b0590446cceb01b8c6996b656", 3)
+			if !found {
+				return nil, errors.New("unable to find withdrawal record b9c6587af3317bfb4b21a29df3f7e1a00709c25b0590446cceb01b8c6996b656")
+			}
+			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &wr, icstypes.WithdrawStatusQueued)
+
+			// 995c6a77a568a7c03906ce6c7d470c11daa7e506f33264360cf1fec71fc774fe
+			wr, found = appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "regen-redwood-1", "995c6a77a568a7c03906ce6c7d470c11daa7e506f33264360cf1fec71fc774fe", 4)
+			if !found {
+				return nil, errors.New("unable to find withdrawal record 995c6a77a568a7c03906ce6c7d470c11daa7e506f33264360cf1fec71fc774fe")
+			}
+			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &wr, icstypes.WithdrawStatusUnbond)
+
+			// 95aec506a8281c90cb45395ecc7b562248135f8643e1017db469d847db125fbd
+			wr, found = appKeepers.InterchainstakingKeeper.GetWithdrawalRecord(ctx, "uni-6", "95aec506a8281c90cb45395ecc7b562248135f8643e1017db469d847db125fbd", 4)
+			if !found {
+				return nil, errors.New("unable to find withdrawal record 95aec506a8281c90cb45395ecc7b562248135f8643e1017db469d847db125fbd")
+			}
+			appKeepers.InterchainstakingKeeper.UpdateWithdrawalRecordStatus(ctx, &wr, icstypes.WithdrawStatusUnbond)
+		}
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta7UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		const (
+			thetaUnbondingPeriod = int64(172800)
+			uniUnbondingPeriod   = int64(2419200)
+			osmoUnbondingPeriod  = int64(86400)
+			regenUnbondingPeriod = int64(1814400)
+			epochDurations       = int64(10800)
+		)
+
+		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation icstypes.RedelegationRecord) (stop bool) {
+			var UnbondingPeriod int64
+			switch redelegation.ChainId {
+			case "theta-testnet-001":
+				UnbondingPeriod = thetaUnbondingPeriod
+			case "uni-6":
+				UnbondingPeriod = uniUnbondingPeriod
+			case "osmo-test-5":
+				UnbondingPeriod = osmoUnbondingPeriod
+			case "regen-redwood-1":
+				UnbondingPeriod = regenUnbondingPeriod
+			}
+
+			epochInfo := appKeepers.EpochsKeeper.GetEpochInfo(ctx, epochtypes.EpochIdentifierEpoch)
+
+			if UnbondingPeriod < (epochInfo.CurrentEpoch-redelegation.EpochNumber)*epochDurations {
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("garbage collecting completed redelegations", "key", key, "completion", redelegation.CompletionTime)
+				appKeepers.InterchainstakingKeeper.DeleteRedelegationRecordByKey(ctx, append(icstypes.KeyPrefixRedelegationRecord, key...))
+			}
+
+			return false
+		})
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404rc0UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		const (
+			thetaUnbondingPeriod = int64(172800)
+			uniUnbondingPeriod   = int64(2419200)
+			osmoUnbondingPeriod  = int64(86400)
+			regenUnbondingPeriod = int64(1814400)
+			epochDurations       = int64(43200)
+		)
+
+		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation icstypes.RedelegationRecord) (stop bool) {
+			var UnbondingPeriod int64
+			switch redelegation.ChainId {
+			case "theta-testnet-001":
+				UnbondingPeriod = thetaUnbondingPeriod
+			case "uni-6":
+				UnbondingPeriod = uniUnbondingPeriod
+			case "osmo-test-5":
+				UnbondingPeriod = osmoUnbondingPeriod
+			case "regen-redwood-1":
+				UnbondingPeriod = regenUnbondingPeriod
+			}
+
+			epochInfo := appKeepers.EpochsKeeper.GetEpochInfo(ctx, epochtypes.EpochIdentifierEpoch)
+
+			if UnbondingPeriod < (epochInfo.CurrentEpoch-redelegation.EpochNumber)*epochDurations {
+				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("garbage collecting completed redelegations", "key", key, "completion", redelegation.CompletionTime)
+				appKeepers.InterchainstakingKeeper.DeleteRedelegationRecordByKey(ctx, append(icstypes.KeyPrefixRedelegationRecord, key...))
+			}
+
+			return false
+		})
+
+		if isTestnet(ctx) || isTest(ctx) {
+			appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), func(index int64, key []byte, data prtypes.ProtocolData) (stop bool) {
+				prefixedKey := append(prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), key...)
+				appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prefixedKey)
+				pd, err := prtypes.UnmarshalProtocolData(prtypes.ProtocolDataTypeLiquidToken, data.Data)
+				if err != nil {
+					panic(err)
+				}
+				newKey := pd.GenerateKey()
+				appKeepers.ParticipationRewardsKeeper.SetProtocolData(ctx, newKey, &data)
+				return false
+			})
+		}
+
+		appKeepers.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
+			zone.Is_118 = true
+			appKeepers.InterchainstakingKeeper.SetZone(ctx, zone)
+			return false
+		})
+
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta8UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) || isDevnet(ctx) {
+			appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+				if (record.Status == icstypes.WithdrawStatusSend) || record.Requeued || ((record.CompletionTime != time.Time{}) && (record.CompletionTime.Before(ctx.BlockTime()))) {
+					record.Acknowledged = true
+				}
+
+				if (record.ChainId == "elgafar-1") && (record.CompletionTime == time.Time{}) {
+					record.Acknowledged = true
+				}
+
+				appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				return false
+			})
+		}
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404rc1UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) || isDevnet(ctx) {
+
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, JunoTestnetChainID)
+			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, &icstypes.Zone{ChainId: JunoTestnetChainID})
+			for _, val := range vals {
+				valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "junovaloper")
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, &icstypes.Zone{ChainId: JunoTestnetChainID}, valoper)
+			}
+
+			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
+			if !exists {
+				panic("connection protocol data type not found")
+			}
+
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte(JunoTestnetChainID)))
+
+			appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
+				if (record.Status == icstypes.WithdrawStatusSend) || record.Requeued || ((record.CompletionTime != time.Time{}) && (record.CompletionTime.Before(ctx.BlockTime()))) {
+					record.Acknowledged = true
+				}
+
+				if (record.ChainId == "elgafar-1") && (record.CompletionTime == time.Time{}) {
+					record.Acknowledged = true
+				}
+
+				appKeepers.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+				return false
+			})
+		}
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func V010404beta9UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTest(ctx) || isDevnet(ctx) {
+
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, JunoTestnetChainID)
+			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, &icstypes.Zone{ChainId: JunoTestnetChainID})
+			for _, val := range vals {
+				valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "junovaloper")
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, &icstypes.Zone{ChainId: JunoTestnetChainID}, valoper)
+			}
+
+			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
+			if !exists {
+				panic("connection protocol data type not found")
+			}
+
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte(JunoTestnetChainID)))
+
+		}
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func IBCv6tov7UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) || isDevnet(ctx) {
+			cdc := appKeepers.InterchainstakingKeeper.GetCodec()
+
+			// prune expired tendermint consensus states to save storage space
+			_, err := ibctmmigrations.PruneExpiredConsensusStates(ctx, cdc, appKeepers.IBCKeeper.ClientKeeper)
+			if err != nil {
+				return nil, err
+			}
+		}
+		return mm.RunMigrations(ctx, configurator, fromVM)
+	}
+}
+
+func IBCv7tov71UpgradeHandler(
+	mm *module.Manager,
+	configurator module.Configurator,
+	appKeepers *keepers.AppKeepers,
+) upgradetypes.UpgradeHandler {
+	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isTestnet(ctx) || isTest(ctx) || isDevnet(ctx) {
+			// explicitly update the IBC 02-client params, adding the localhost client type
+			params := appKeepers.IBCKeeper.ClientKeeper.GetParams(ctx)
+			params.AllowedClients = append(params.AllowedClients, ibcexported.Localhost)
+			appKeepers.IBCKeeper.ClientKeeper.SetParams(ctx, params)
+		}
 		return mm.RunMigrations(ctx, configurator, fromVM)
 	}
 }

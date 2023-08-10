@@ -2,21 +2,22 @@ package types
 
 import (
 	"errors"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 func NewICAAccount(addr, portID string) (*ICAAccount, error) {
-	if _, err := utils.AccAddressFromBech32(addr, ""); err != nil {
+	if _, err := addressutils.AccAddressFromBech32(addr, ""); err != nil {
 		return nil, err
 	}
 	return &ICAAccount{Address: addr, WithdrawalAddress: addr, Balance: sdk.Coins{}, PortName: portID}, nil
 }
 
 func (a *ICAAccount) SetWithdrawalAddress(addr string) error {
-	if _, err := utils.AccAddressFromBech32(addr, ""); err != nil {
+	if _, err := addressutils.AccAddressFromBech32(addr, ""); err != nil {
 		return err
 	}
 	a.WithdrawalAddress = addr
@@ -41,4 +42,20 @@ func (a *ICAAccount) DecrementBalanceWaitgroup() error {
 	}
 	a.BalanceWaitgroup--
 	return nil
+}
+
+func (z *Zone) DepositPortOwner() string {
+	return fmt.Sprintf("%s.%s", z.ZoneID(), ICASuffixDeposit)
+}
+
+func (z *Zone) WithdrawalPortOwner() string {
+	return fmt.Sprintf("%s.%s", z.ZoneID(), ICASuffixWithdrawal)
+}
+
+func (z *Zone) DelegatePortOwner() string {
+	return fmt.Sprintf("%s.%s", z.ZoneID(), ICASuffixDelegate)
+}
+
+func (z *Zone) PerformancePortOwner() string {
+	return fmt.Sprintf("%s.%s", z.ZoneID(), ICASuffixPerformance)
 }

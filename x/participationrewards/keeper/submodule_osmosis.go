@@ -5,11 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
+	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 
-	osmosistypes "github.com/ingenuity-build/quicksilver/osmosis-types"
-	osmolockup "github.com/ingenuity-build/quicksilver/osmosis-types/lockup"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -43,7 +44,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 		return
 	}
 
-	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, data types.ProtocolData) bool {
+	k.IteratePrefixedProtocolDatas(ctx, types.GetPrefixProtocolDataKey(types.ProtocolDataTypeOsmosisPool), func(idx int64, _ []byte, data types.ProtocolData) bool {
 		ipool, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, data.Data)
 		if err != nil {
 			return false
@@ -59,19 +60,11 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 			m.GetKeyPrefixPools(pool.PoolID),
 			sdk.NewInt(-1),
 			types.ModuleName,
-			"osmosispoolupdate",
+			OsmosisPoolUpdateCallbackID,
 			0,
 		) // query pool data
 		return false
 	})
-}
-
-func (m *OsmosisModule) IsActive() bool {
-	return true
-}
-
-func (m *OsmosisModule) IsReady() bool {
-	return true
 }
 
 func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {

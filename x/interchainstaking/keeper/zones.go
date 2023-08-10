@@ -11,8 +11,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
 	"github.com/cosmos/gogoproto/proto"
+
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -34,7 +34,7 @@ func (k *Keeper) GetZone(ctx sdk.Context, chainID string) (types.Zone, bool) {
 func (k *Keeper) SetZone(ctx sdk.Context, zone *types.Zone) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixZone)
 	bz := k.cdc.MustMarshal(zone)
-	store.Set([]byte(zone.ChainId), bz)
+	store.Set([]byte(zone.ZoneID()), bz)
 }
 
 // DeleteZone delete zone info.
@@ -98,7 +98,7 @@ func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 
 func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ZoneID(), types.WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
 		out = out.Add(wr.Amount[0])
 		return false
 	})
@@ -130,39 +130,59 @@ func (k *Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 	return &zone, nil
 }
 
-func (k *Keeper) GetZoneForAccount(ctx sdk.Context, address string) (zone *types.Zone) {
+func (k *Keeper) GetZoneForAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
 	chainID, found := k.GetAddressZoneMapping(ctx, address)
 	if !found {
-		return nil
+		return nil, false
 	}
-	// doesn't matter if this is _found_ because we are expecting to return nil if not anyway.
-	z, _ := k.GetZone(ctx, chainID)
-	return &z
+
+	zone, found := k.GetZone(ctx, chainID)
+	return &zone, found
 }
 
 // GetZoneForDelegateAccount determines the zone for a given address.
-func (k *Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.Zone {
-	z := k.GetZoneForAccount(ctx, address)
-	if z != nil && z.DelegationAddress != nil && address == z.DelegationAddress.Address {
-		return z
+func (k *Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
+	zone, found := k.GetZoneForAccount(ctx, address)
+	if !found {
+		return nil, false // address not found
 	}
-	return nil
+	if zone.DelegationAddress != nil && address == zone.DelegationAddress.Address {
+		return zone, true // address found and is delegate Account
+	}
+	return nil, false // address found, but not delegate account
 }
 
-func (k *Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *types.Zone {
-	z := k.GetZoneForAccount(ctx, address)
-	if z != nil && z.PerformanceAddress != nil && address == z.PerformanceAddress.Address {
-		return z
+func (k *Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
+	zone, found := k.GetZoneForAccount(ctx, address)
+	if !found {
+		return nil, false // address not found
 	}
-	return nil
+	if zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address {
+		return zone, true // address found and is performance Account
+	}
+	return nil, false // address found, but not performance account
 }
 
-func (k *Keeper) GetZoneForDepositAccount(ctx sdk.Context, address string) *types.Zone {
-	z := k.GetZoneForAccount(ctx, address)
-	if z != nil && z.DepositAddress != nil && address == z.DepositAddress.Address {
-		return z
+func (k *Keeper) GetZoneForDepositAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
+	zone, found := k.GetZoneForAccount(ctx, address)
+	if !found {
+		return nil, false // address not found
 	}
-	return nil
+	if zone.DepositAddress != nil && address == zone.DepositAddress.Address {
+		return zone, true // address found and is deposit Account
+	}
+	return nil, false // address found, but not deposit account
+}
+
+func (k *Keeper) GetZoneForWithdrawalAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
+	zone, found := k.GetZoneForAccount(ctx, address)
+	if !found {
+		return nil, false // address not found
+	}
+	if zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address {
+		return zone, true // address found and is withdrawal Account
+	}
+	return nil, false // address found, but not withdrawal account
 }
 
 func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {
@@ -185,8 +205,7 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DepositAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DepositAddress.Address, WithdrawAddress: withdrawalAddress}
-		owner := zone.ChainId + ".deposit"
-		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DepositAddress, "", zone.MessagesPerTx, owner)
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DepositAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -194,18 +213,16 @@ func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) er
 
 	if zone.DelegationAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.DelegationAddress.Address, WithdrawAddress: withdrawalAddress}
-		owner := zone.ChainId + ".delegate"
-		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx, owner)
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.DelegationAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
 	}
 
-	// set withdrawal address for performance address, if it exists
+	// set withdrawal address for performance address if it exists
 	if zone.PerformanceAddress != nil && zone.PerformanceAddress.WithdrawalAddress != withdrawalAddress {
 		msg := distrTypes.MsgSetWithdrawAddress{DelegatorAddress: zone.PerformanceAddress.Address, WithdrawAddress: withdrawalAddress}
-		owner := zone.ChainId + ".performance"
-		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "", zone.MessagesPerTx, owner)
+		err := k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "", zone.MessagesPerTx)
 		if err != nil {
 			return err
 		}
@@ -259,7 +276,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 	queryRes := banktypes.QueryAllBalancesResponse{}
 	err := k.cdc.Unmarshal(queryResult, &queryRes)
 	if err != nil {
-		k.Logger(ctx).Error("unable to unmarshal balance", "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("unable to unmarshal balance", "zone", zone.ZoneID(), "err", err)
 		return err
 	}
 	_, addr, err := bech32.DecodeAndConvert(address)
@@ -294,7 +311,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				zone.ConnectionId,
-				zone.ChainId,
+				zone.ZoneID(),
 				types.BankStoreKey,
 				append(data, []byte(coin.Denom)...),
 				sdk.NewInt(-1),
@@ -312,7 +329,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 		k.ICQKeeper.MakeRequest(
 			ctx,
 			zone.ConnectionId,
-			zone.ChainId,
+			zone.ZoneID(),
 			types.BankStoreKey,
 			append(data, []byte(coin.Denom)...),
 			sdk.NewInt(-1),
@@ -327,13 +344,13 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 	return nil
 }
 
-func (k *Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone) error {
+func (k *Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone *types.Zone) error {
 	k.Logger(ctx).Info("Initialize performance delegations")
 
-	delegations := k.GetAllPerformanceDelegations(ctx, &zone)
-	validatorsToDelegate := []string{}
+	delegations := k.GetAllPerformanceDelegations(ctx, zone)
+	var validatorsToDelegate []string
 OUTER:
-	for _, v := range k.GetActiveValidators(ctx, zone.ChainId) {
+	for _, v := range k.GetActiveValidators(ctx, zone) {
 		for _, d := range delegations {
 			if d.ValidatorAddress == v.ValoperAddress {
 				continue OUTER
@@ -357,13 +374,13 @@ OUTER:
 	}
 
 	// send delegations to validators
-	k.Logger(ctx).Info("send performance delegations", "zone", zone.ChainId)
+	k.Logger(ctx).Info("send performance delegations", "zone", zone.BaseChainID())
 
 	msgs := make([]proto.Message, len(validatorsToDelegate))
 	for i, val := range validatorsToDelegate {
 		k.Logger(ctx).Info(
 			"performance delegation",
-			"zone", zone.ChainId,
+			"zone", zone.BaseChainID(),
 			"validator", val,
 			"amount", amount,
 		)
@@ -375,15 +392,14 @@ OUTER:
 	}
 
 	if len(msgs) > 0 {
-		owner := zone.ChainId + ".performance"
-		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx, owner)
+		return k.SubmitTx(ctx, msgs, zone.PerformanceAddress, "", zone.MessagesPerTx)
 	}
 	return nil
 }
 
 func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.Statistics, error) {
 	out := &types.Statistics{}
-	out.ChainId = zone.ChainId
+	out.ChainId = zone.ZoneID()
 	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
 	userMap := map[string]bool{}
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) bool {
@@ -421,7 +437,7 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 
 	// remove zone and related records
 	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
-		if zone.ChainId == chainID {
+		if zone.ZoneID() == chainID {
 			// remove uni-5 delegation records
 			k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
 				err := k.RemoveDelegation(ctx, zone, delegation)
@@ -446,12 +462,12 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 			})
 
 			// remove withdrawal records
-			k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
-				k.DeleteWithdrawalRecord(ctx, zone.ChainId, record.Txhash, record.Status)
+			k.IterateZoneWithdrawalRecords(ctx, zone.ZoneID(), func(index int64, record types.WithdrawalRecord) (stop bool) {
+				k.DeleteWithdrawalRecord(ctx, zone.ZoneID(), record.Txhash, record.Status)
 				return false
 			})
 
-			k.DeleteZone(ctx, zone.ChainId)
+			k.DeleteZone(ctx, zone.ZoneID())
 
 		}
 		return false
@@ -499,9 +515,9 @@ func (k *Keeper) DistanceToTarget(ctx sdk.Context, zone *types.Zone) (float64, e
 }
 
 // DefaultAggregateIntents determines the default aggregate intent (for epoch 0).
-func (k *Keeper) DefaultAggregateIntents(ctx sdk.Context, chainID string) types.ValidatorIntents {
+func (k *Keeper) DefaultAggregateIntents(ctx sdk.Context, zone *types.Zone) types.ValidatorIntents {
 	out := make(types.ValidatorIntents, 0)
-	k.IterateValidators(ctx, chainID, func(index int64, validator types.Validator) (stop bool) {
+	k.IterateValidators(ctx, zone, func(index int64, validator types.Validator) (stop bool) {
 		if validator.CommissionRate.LTE(sdk.NewDecWithPrec(5, 1)) { // 50%; make this a param.
 			if !validator.Jailed && !validator.Tombstoned && validator.Status == stakingtypes.BondStatusBonded {
 				out = append(out, &types.ValidatorIntent{ValoperAddress: validator.GetValoperAddress(), Weight: sdk.OneDec()})

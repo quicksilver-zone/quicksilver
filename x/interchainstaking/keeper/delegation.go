@@ -10,9 +10,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/gogoproto/proto"
 	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -59,11 +59,11 @@ func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, val
 	return delegation, true
 }
 
-// IterateAllDelegations iterates through all of the delegations.
+// IterateAllDelegations iterates through all the delegations.
 func (k *Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(zone.ChainId)...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(zone.ZoneID())...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -84,11 +84,11 @@ func (k *Keeper) GetAllDelegations(ctx sdk.Context, zone *types.Zone) (delegatio
 	return delegations
 }
 
-// IterateAllPerformanceDelegations iterates through all of the delegations.
+// IterateAllPerformanceDelegations iterates through all the delegations.
 func (k *Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(zone.BaseChainID())...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -203,7 +203,7 @@ func (k *Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.
 }
 
 func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]sdkmath.Int, error) {
-	currentAllocations, currentSum, _ := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone)
 	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
 	if err != nil {
 		return nil, err
@@ -245,29 +245,27 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	zone.WithdrawalWaitgroup += uint32(len(msgs))
 	k.SetZone(ctx, zone)
 	k.Logger(ctx).Info("Received WithdrawDelegationRewardsForResponse acknowledgement", "wg", zone.WithdrawalWaitgroup, "address", delegator)
-	owner := zone.ChainId + ".delegate"
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "", zone.MessagesPerTx, owner)
+
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "", zone.MessagesPerTx)
 }
 
-func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool) {
+func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool, lockedSum sdkmath.Int) {
 	out = make(map[string]sdkmath.Int)
 	locked = make(map[string]bool)
 	sum = sdk.ZeroInt()
+	lockedSum = sdk.ZeroInt()
 
 	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
-		existing, found := out[delegation.ValidatorAddress]
-		if !found {
-			out[delegation.ValidatorAddress] = delegation.Amount.Amount
-			locked[delegation.ValidatorAddress] = delegation.RedelegationEnd != 0 && delegation.RedelegationEnd >= ctx.BlockTime().Unix()
-		} else {
-			out[delegation.ValidatorAddress] = existing.Add(delegation.Amount.Amount)
-			locked[delegation.ValidatorAddress] = locked[delegation.ValidatorAddress] || (delegation.RedelegationEnd != 0 && delegation.RedelegationEnd >= ctx.BlockTime().Unix())
+		out[delegation.ValidatorAddress] = delegation.Amount.Amount
+		if delegation.RedelegationEnd >= ctx.BlockTime().Unix() {
+			locked[delegation.ValidatorAddress] = true
+			lockedSum = lockedSum.Add(delegation.Amount.Amount)
 		}
 		sum = sum.Add(delegation.Amount.Amount)
 		return false
 	})
 
-	return out, sum, locked
+	return out, sum, locked, lockedSum
 }
 
 func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, validator string) error {
@@ -275,35 +273,37 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 	if zone.PerformanceAddress != nil {
 		k.SetPerformanceDelegation(ctx, zone, types.NewDelegation(zone.PerformanceAddress.Address, validator, sdk.NewInt64Coin(zone.BaseDenom, 0))) // intentionally zero; we add a record here to stop race conditions
 		msg := stakingTypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: validator, Amount: sdk.NewInt64Coin(zone.BaseDenom, 10000)}
-		owner := zone.ChainId + ".performance"
-		return k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, "perf/"+validator, zone.MessagesPerTx, owner)
+		return k.SubmitTx(ctx, []proto.Message{&msg}, zone.PerformanceAddress, fmt.Sprintf("%s/%s", types.MsgTypePerformance, validator), zone.MessagesPerTx)
 	}
 	return nil
 }
 
 func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, delAddrBalance sdk.Coin) error {
-	var amount sdk.Coins
+	var pendingAmount sdk.Coins
 	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
-
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
-		if receiptInfo.FirstSeen.After(exclusionTime) && receiptInfo.Completed == nil {
-			amount = amount.Add(receiptInfo.Amount...)
+		if (receiptInfo.FirstSeen.After(exclusionTime) || receiptInfo.FirstSeen.Equal(exclusionTime)) && receiptInfo.Completed == nil {
+			pendingAmount = pendingAmount.Add(receiptInfo.Amount...)
 		}
 		return false
 	})
 
-	coins := sdk.NewCoins(delAddrBalance).Sub(amount...)
-
-	if coins.IsAnyNegative() || coins.IsZero() {
-		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
+	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
+	if hasNeg || coinsToFlush.IsZero() {
+		k.Logger(ctx).Debug("delegate account balance negative, setting outdated receipts")
 		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
 		return nil
 	}
 
+	// set the zone amount to the coins to be flushed.
+	zone.DelegationAddress.Balance = coinsToFlush
+	k.Logger(ctx).Info("flush delegations ", "total", coinsToFlush)
+	k.SetZone(ctx, zone)
+
 	sendMsg := banktypes.MsgSend{
 		FromAddress: "",
 		ToAddress:   "",
-		Amount:      coins,
+		Amount:      coinsToFlush,
 	}
 	return k.handleSendToDelegate(ctx, zone, &sendMsg, fmt.Sprintf("batch/%d", exclusionTime.Unix()))
 }

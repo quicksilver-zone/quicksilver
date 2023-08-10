@@ -8,11 +8,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
-var testAddress = utils.GenerateAccAddressForTest().String()
+var testAddress = addressutils.GenerateAccAddressForTest().String()
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
@@ -79,6 +79,7 @@ func (s *KeeperTestSuite) initTestZone() {
 		UnbondingEnabled: false,
 		LiquidityModule:  true,
 		Decimals:         6,
+		Is_118:           true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
@@ -93,6 +94,7 @@ func (s *KeeperTestSuite) initTestZone() {
 		UnbondingEnabled: false,
 		LiquidityModule:  true,
 		Decimals:         6,
+		Is_118:           true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 
@@ -107,6 +109,7 @@ func (s *KeeperTestSuite) initTestZone() {
 		UnbondingEnabled: false,
 		LiquidityModule:  true,
 		Decimals:         6,
+		Is_118:           true,
 	}
 	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
 }

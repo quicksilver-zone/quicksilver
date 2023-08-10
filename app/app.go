@@ -13,8 +13,13 @@ import (
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -30,20 +35,13 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	dbm "github.com/cometbft/cometbft-db"
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
-	tmos "github.com/cometbft/cometbft/libs/os"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 
-	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/ingenuity-build/quicksilver/app/keepers"
 	"github.com/ingenuity-build/quicksilver/docs"
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
@@ -76,8 +74,8 @@ var (
 )
 
 var (
-	_ runtime.AppI            = (*Quicksilver)(nil)
 	_ servertypes.Application = (*Quicksilver)(nil)
+	_ runtime.AppI            = (*Quicksilver)(nil)
 )
 
 // Quicksilver implements an extended ABCI application.
@@ -89,8 +87,6 @@ type Quicksilver struct {
 	cdc               *codec.LegacyAmino
 	appCodec          codec.Codec
 	interfaceRegistry types.InterfaceRegistry
-
-	invCheckPeriod uint
 
 	// the module manager
 	mm *module.Manager
@@ -112,7 +108,6 @@ func NewQuicksilver(
 	loadLatest bool,
 	skipUpgradeHeights map[int64]bool,
 	homePath string,
-	invCheckPeriod uint,
 	enabledProposals []wasm.ProposalType,
 	appOpts servertypes.AppOptions,
 	wasmOpts []wasm.Option,
@@ -120,13 +115,18 @@ func NewQuicksilver(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *Quicksilver {
 	encodingConfig := MakeEncodingConfig()
-
 	appCodec, legacyAmino := encodingConfig.Marshaler, encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 
 	// NOTE we use custom transaction decoder that supports the sdk.Tx interface instead of sdk.StdTx
-	bApp := baseapp.NewBaseApp(Name, logger, db, txConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(
+		Name,
+		logger,
+		db,
+		encodingConfig.TxConfig.TxDecoder(),
+		baseAppOptions...,
+	)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
@@ -137,7 +137,6 @@ func NewQuicksilver(
 		cdc:               legacyAmino,
 		appCodec:          appCodec,
 		interfaceRegistry: interfaceRegistry,
-		invCheckPeriod:    invCheckPeriod,
 	}
 
 	wasmDir := filepath.Join(homePath, "data")
@@ -155,7 +154,6 @@ func NewQuicksilver(
 		skipUpgradeHeights,
 		mock,
 		homePath,
-		invCheckPeriod,
 		appOpts,
 		wasmDir,
 		wasmConfig,
@@ -166,17 +164,15 @@ func NewQuicksilver(
 
 	/****  Module Options ****/
 
-	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
+	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment,
 	// we prefer to be more strict in what arguments the modules expect.
-	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
-	app.mm = module.NewManager(appModules(app, encodingConfig, skipGenesisInvariants)...)
+	app.mm = module.NewManager(appModules(app, encodingConfig)...)
 
 	app.mm.SetOrderBeginBlockers(orderBeginBlockers()...)
 	app.mm.SetOrderEndBlockers(orderEndBlockers()...)
 	app.mm.SetOrderInitGenesis(orderInitBlockers()...)
+	app.mm.SetOrderExportGenesis(orderInitBlockers()...)
 
-	app.mm.RegisterInvariants(app.CrisisKeeper)
-	// app.mm.RegisterRoutes(app.Router(), app.QueryRouter(), encodingConfig.Amino)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	app.mm.RegisterServices(app.configurator)
 
@@ -192,7 +188,6 @@ func NewQuicksilver(
 	reflectionv1.RegisterReflectionServiceServer(app.GRPCQueryRouter(), reflectionSvc)
 
 	// // add test gRPC service for testing gRPC queries in isolation
-	// // testdata.RegisterTestServiceServer(app.GRPCQueryRouter(), testdata.TestServiceImpl{})
 
 	// create the simulation manager and define the order of the modules for deterministic simulations
 	//
@@ -235,10 +230,10 @@ func NewQuicksilver(
 		}
 	}
 
-	// Finally start the tpsCounter.
+	// Finally, start the tpsCounter.
 	app.tpsCounter = newTPSCounter(logger)
 	go func() {
-		// Unfortunately golangci-lint is so pedantic
+		// Unfortunately, golangci-lint is so pedantic
 		// so we have to ignore this error explicitly.
 		_ = app.tpsCounter.start(context.Background()) //nolint:errcheck
 	}()
@@ -361,6 +356,8 @@ func (app *Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.A
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+
+	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 

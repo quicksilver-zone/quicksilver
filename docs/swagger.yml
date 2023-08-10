@@ -764,6 +764,7 @@ paths:
                         - ClaimTypeOsmosisPool
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
+                        - ClaimTypeUmeeToken
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -923,6 +924,7 @@ paths:
                         - ClaimTypeOsmosisPool
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
+                        - ClaimTypeUmeeToken
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -1084,6 +1086,7 @@ paths:
                         - ClaimTypeOsmosisPool
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
+                        - ClaimTypeUmeeToken
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -1245,6 +1248,7 @@ paths:
                         - ClaimTypeOsmosisPool
                         - ClaimTypeCrescentPool
                         - ClaimTypeSifchainPool
+                        - ClaimTypeUmeeToken
                       default: ClaimTypeUndefined
                       title: >-
                         - ClaimTypeUndefined: Undefined action (per protobuf
@@ -2379,6 +2383,387 @@ paths:
                 type: string
       tags:
         - Msg
+  /quicksilver/interchainstaking/v1/delegator_intents/{delegator_address}:
+    get:
+      summary: >-
+        DelegatorIntents provides data on the intent of the delegator for all
+        zones
+      operationId: DelegatorIntents
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              intents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    chain_id:
+                      type: string
+                    intent:
+                      type: object
+                      properties:
+                        delegator:
+                          type: string
+                        intents:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              valoper_address:
+                                type: string
+                              weight:
+                                type: string
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: delegator_address
+          in: path
+          required: true
+          type: string
+      tags:
+        - QueryInterchainStaking
+  /quicksilver/interchainstaking/v1/mapped_addresses/{address}:
+    get:
+      summary: >-
+        MappedAccounts provides data on the mapped accounts for a given user
+        over different host chains.
+      operationId: MappedAccounts
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              RemoteAddressMap:
+                type: object
+                additionalProperties:
+                  type: string
+                  format: byte
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: address
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - QueryInterchainStaking
+  /quicksilver/interchainstaking/v1/users/{user_address}/withdrawal_records:
+    get:
+      summary: WithdrawalRecords provides data on the active withdrawals.
+      operationId: UserWithdrawalRecords
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              withdrawals:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    chain_id:
+                      type: string
+                    delegator:
+                      type: string
+                    distribution:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          valoper:
+                            type: string
+                          amount:
+                            type: string
+                            format: uint64
+                    recipient:
+                      type: string
+                    amount:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          denom:
+                            type: string
+                          amount:
+                            type: string
+                        description: >-
+                          Coin defines a token with a denomination and an
+                          amount.
+
+
+                          NOTE: The amount field is an Int which implements the
+                          custom method
+
+                          signatures required by gogoproto.
+                    burn_amount:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                    txhash:
+                      type: string
+                    status:
+                      type: integer
+                      format: int32
+                    completion_time:
+                      type: string
+                      format: date-time
+                    requeued:
+                      type: boolean
+                    acknowledged:
+                      type: boolean
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: user_address
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - QueryInterchainStaking
   /quicksilver/interchainstaking/v1/zone/{chain_id}:
     get:
       summary: Zone provides meta data on a specific zone.
@@ -2607,6 +2992,17 @@ paths:
                     type: boolean
                   return_to_sender:
                     type: boolean
+                  is_118:
+                    type: boolean
+                  subzoneInfo:
+                    type: object
+                    properties:
+                      authority:
+                        type: string
+                      base_chainID:
+                        type: string
+                      chainID:
+                        type: string
               stats:
                 type: object
                 properties:
@@ -2888,6 +3284,17 @@ paths:
                       type: boolean
                     return_to_sender:
                       type: boolean
+                    is_118:
+                      type: boolean
+                    subzoneInfo:
+                      type: object
+                      properties:
+                        authority:
+                          type: string
+                        base_chainID:
+                          type: string
+                        chainID:
+                          type: string
               stats:
                 type: array
                 items:
@@ -3279,6 +3686,80 @@ paths:
                       format: byte
       parameters:
         - name: chain_id
+          in: path
+          required: true
+          type: string
+      tags:
+        - QueryInterchainStaking
+  /quicksilver/interchainstaking/v1/zones/{chain_id}/deposits/{tx_hash}:
+    get:
+      operationId: TxStatus
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              receipt:
+                type: object
+                properties:
+                  chain_id:
+                    type: string
+                  sender:
+                    type: string
+                  txhash:
+                    type: string
+                  amount:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        denom:
+                          type: string
+                        amount:
+                          type: string
+                      description: >-
+                        Coin defines a token with a denomination and an amount.
+
+
+                        NOTE: The amount field is an Int which implements the
+                        custom method
+
+                        signatures required by gogoproto.
+                  first_seen:
+                    type: string
+                    format: date-time
+                  completed:
+                    type: string
+                    format: date-time
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: chain_id
+          in: path
+          required: true
+          type: string
+        - name: tx_hash
           in: path
           required: true
           type: string
@@ -3948,6 +4429,8 @@ paths:
                       format: date-time
                     requeued:
                       type: boolean
+                    acknowledged:
+                      type: boolean
               pagination:
                 type: object
                 properties:
@@ -4138,6 +4621,8 @@ paths:
                       type: string
                       format: date-time
                     requeued:
+                      type: boolean
+                    acknowledged:
                       type: boolean
               pagination:
                 type: object
@@ -4447,6 +4932,7 @@ paths:
                   - ClaimTypeOsmosisPool
                   - ClaimTypeCrescentPool
                   - ClaimTypeSifchainPool
+                  - ClaimTypeUmeeToken
                 default: ClaimTypeUndefined
                 title: '- ClaimTypeUndefined: Undefined action (per protobuf spec)'
               proofs:
@@ -4498,6 +4984,63 @@ paths:
               participation
 
               claim regarding the given zone (chain).
+      tags:
+        - Msg
+  /quicksilver/tx/v1/participationrewards/remove_protocoldata:
+    post:
+      summary: >-
+        SignalIntent defines a method for signalling voting intent for one or
+        more
+
+        validators.
+      operationId: GovRemoveProtocolData
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            description: >-
+              MsgGovRemoveProtocolDataResponse defines the
+              MsgGovRemoveProtocolData
+
+              response type.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              title:
+                type: string
+              description:
+                type: string
+              key:
+                type: string
+              authority:
+                type: string
       tags:
         - Msg
   /quicksilver/participationrewards/v1/params:

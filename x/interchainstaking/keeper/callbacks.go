@@ -2,14 +2,22 @@ package keeper
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/ingenuity-build/quicksilver/utils"
+	"strings"
 	"time"
 
 	sdkioerrors "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	"google.golang.org/protobuf/encoding/protowire"
+
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	tmtypes "github.com/cometbft/cometbft/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -17,8 +25,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
-	tmtypes "github.com/cometbft/cometbft/types"
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -130,7 +137,7 @@ func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return err
 	}
 
-	k.Logger(ctx).Debug("Delegations callback triggered", "chain", zone.ChainId)
+	k.Logger(ctx).Debug("Delegations callback triggered", "chain", query.ChainId)
 
 	return k.UpdateDelegationRecordsForAddress(ctx, zone, delegationQuery.DelegatorAddr, args)
 }
@@ -148,7 +155,7 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		return err
 	}
 
-	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", zone.ChainId)
+	k.Logger(ctx).Debug("Delegation callback", "delegation", delegation, "chain", query.ChainId)
 
 	if delegation.Shares.IsNil() || delegation.Shares.IsZero() {
 		// delegation never gets removed, even with zero shares.
@@ -156,11 +163,11 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		if err != nil {
 			return err
 		}
-		validatorAddress, err := bech32.ConvertAndEncode(zone.GetValoperPrefix(), validator)
+		validatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetValoperPrefix(), validator)
 		if err != nil {
 			return err
 		}
-		delegatorAddress, err := bech32.ConvertAndEncode(zone.GetAccountPrefix(), delegator)
+		delegatorAddress, err := addressutils.EncodeAddressToBech32(zone.GetAccountPrefix(), delegator)
 		if err != nil {
 			return err
 		}
@@ -173,11 +180,11 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 		}
 		return nil
 	}
-	valAddrBytes, err := utils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
+	valAddrBytes, err := addressutils.ValAddressFromBech32(delegation.ValidatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
 	}
-	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+	val, found := k.GetValidator(ctx, &zone, valAddrBytes)
 	if !found {
 		err := fmt.Errorf("unable to get validator: %s", delegation.ValidatorAddress)
 		k.Logger(ctx).Error(err.Error())
@@ -199,7 +206,7 @@ func PerfBalanceCallback(k *Keeper, ctx sdk.Context, response []byte, query icqt
 	}
 
 	// initialize performance delegations
-	if err := k.UpdatePerformanceDelegations(ctx, zone); err != nil {
+	if err := k.UpdatePerformanceDelegations(ctx, &zone); err != nil {
 		k.Logger(ctx).Info(err.Error())
 		return err
 	}
@@ -217,7 +224,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
 	}
 
-	k.Logger(ctx).Debug("Deposit interval callback", "zone", zone.ChainId)
+	k.Logger(ctx).Debug("Deposit interval callback", "zone", query.ChainId)
 
 	txs := tx.GetTxsEventResponse{}
 
@@ -233,13 +240,22 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 	for _, txn := range txs.TxResponses {
 		req := tx.GetTxRequest{Hash: txn.TxHash}
 		hashBytes := k.cdc.MustMarshal(&req)
-		_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, txn.TxHash))
+		_, found = k.GetReceipt(ctx, types.GetReceiptKey(query.ChainId, txn.TxHash))
 		if found {
 			k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
 			continue
 		}
 		k.Logger(ctx).Info("Found previously unhandled tx. Processing.", "txhash", txn.TxHash)
-		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
+		k.ICQKeeper.MakeRequest(
+			ctx,
+			query.ConnectionId,
+			query.ChainId,
+			"tendermint.Tx",
+			hashBytes, sdk.NewInt(-1),
+			types.ModuleName,
+			"deposittx",
+			0,
+		)
 	}
 	return nil
 }
@@ -411,7 +427,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return fmt.Errorf("chain id %s does not current allow deposits", query.GetChainId())
 	}
 
-	k.Logger(ctx).Debug("DepositTx callback", "zone", zone.ChainId)
+	k.Logger(ctx).Debug("DepositTx callback", "zone", query.ChainId)
 
 	res := icqtypes.GetTxWithProofResponse{}
 	err := k.cdc.Unmarshal(args, &res)
@@ -419,18 +435,37 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
-	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, res.GetTxResponse().TxHash))
+	// check tx is valid for hash.
+	hash := tmhash.Sum(res.Proof.Data)
+	hashStr := hex.EncodeToString(hash)
+
+	queryRequest := tx.GetTxRequest{}
+	err = k.cdc.Unmarshal(query.Request, &queryRequest)
+	if err != nil {
+		return err
+	}
+
+	// check hash matches query
+	if !strings.EqualFold(hashStr, queryRequest.Hash) {
+		return fmt.Errorf("invalid tx for query - expected %s, got %s", queryRequest.Hash, hashStr)
+	}
+
+	_, found = k.GetReceipt(ctx, types.GetReceiptKey(query.ChainId, hashStr))
 	if found {
-		k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", res.GetTxResponse().TxHash)
+		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", hashStr)
 		return nil
 	}
 
-	err = k.CheckTMHeaderForZone(ctx, &zone, res)
+	txn, err := txDecoder(k.cdc)(res.Proof.Data)
 	if err != nil {
-		return fmt.Errorf("unable  to verify proof: %w", err)
+		return err
 	}
 
-	return k.HandleReceiptForTransaction(ctx, res.GetTxResponse(), res.GetTx(), &zone)
+	txtx, ok := txn.(*tx.Tx)
+	if !ok {
+		return errors.New("cannot assert type of tx")
+	}
+	return k.HandleReceiptTransaction(ctx, txtx, hashStr, &zone)
 }
 
 // AccountBalanceCallback is a callback handler for Balance queries.
@@ -443,7 +478,7 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
 	// but lets us be safe here :)
 	if len(query.Request) < 2 {
-		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainId, "error", "request length is too short")
+		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", query.ChainId, "error", "request length is too short")
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
@@ -464,11 +499,11 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 	// Ensure that the coin is valid.
 	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/80
 	if err := coin.Validate(); err != nil {
-		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Error("invalid coin for zone", "zone", query.ChainId, "err", err)
 		return err
 	}
 
-	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
+	address, err := addressutils.EncodeAddressToBech32(zone.AccountPrefix, accAddr)
 	if err != nil {
 		return err
 	}
@@ -486,7 +521,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
 	// but lets us be safe here :)
 	if len(query.Request) < 2 {
-		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", zone.ChainId, "error", "request length is too short")
+		k.Logger(ctx).Error("unable to unmarshal balance request", "zone", query.ChainId, "error", "request length is too short")
 		return errors.New("account balance icq request must always have a length of at least 2 bytes")
 	}
 	balancesStore := query.Request[1:]
@@ -507,10 +542,10 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	// Ensure that the coin is valid.
 	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/80
 	if err := coin.Validate(); err != nil {
-		k.Logger(ctx).Debug("invalid coin for zone", "zone", zone.ChainId, "err", err)
+		k.Logger(ctx).Debug("invalid coin for zone", "zone", query.ChainId, "err", err)
 		return err
 	}
-	address, err := bech32.ConvertAndEncode(zone.AccountPrefix, accAddr)
+	address, err := addressutils.EncodeAddressToBech32(zone.AccountPrefix, accAddr)
 	if err != nil {
 		return err
 	}
@@ -519,6 +554,9 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 		k.Logger(ctx).Debug("delegation address does not match ")
 		return err
 	}
+
+	zone.WithdrawalWaitgroup--
+	k.SetZone(ctx, &zone)
 
 	return k.FlushOutstandingDelegations(ctx, &zone, coin)
 }
@@ -539,7 +577,7 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	k.Logger(ctx).Debug("AllBalances callback", "chain", zone.ChainId)
+	k.Logger(ctx).Debug("AllBalances callback", "chain", query.ChainId)
 
 	switch {
 	case zone.DepositAddress != nil && balanceQuery.Address == zone.DepositAddress.Address:
@@ -566,4 +604,114 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 	k.SetZone(ctx, &zone)
 
 	return k.SetAccountBalance(ctx, zone, balanceQuery.Address, args)
+}
+
+// txDecoder.
+func txDecoder(cdc codec.Codec) sdk.TxDecoder {
+	return func(txBytes []byte) (sdk.Tx, error) {
+		// Make sure txBytes follow ADR-027.
+		err := rejectNonADR027TxRaw(txBytes)
+		if err != nil {
+			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
+		var raw tx.TxRaw
+
+		err = cdc.Unmarshal(txBytes, &raw)
+		if err != nil {
+			return nil, err
+		}
+
+		var body tx.TxBody
+
+		err = cdc.Unmarshal(raw.BodyBytes, &body)
+		if err != nil {
+			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
+		var authInfo tx.AuthInfo
+
+		err = cdc.Unmarshal(raw.AuthInfoBytes, &authInfo)
+		if err != nil {
+			return nil, sdkioerrors.Wrap(sdkerrors.ErrTxDecode, err.Error())
+		}
+
+		return &tx.Tx{
+			Body:       &body,
+			AuthInfo:   &authInfo,
+			Signatures: raw.Signatures,
+		}, nil
+	}
+}
+
+func rejectNonADR027TxRaw(txBytes []byte) error {
+	// Make sure all fields are ordered in ascending order with this variable.
+	prevTagNum := protowire.Number(0)
+
+	for len(txBytes) > 0 {
+		tagNum, wireType, m := protowire.ConsumeTag(txBytes)
+		if m < 0 {
+			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
+		}
+		// TxRaw only has bytes fields.
+		if wireType != protowire.BytesType {
+			return fmt.Errorf("expected %d wire type, got %d", protowire.BytesType, wireType)
+		}
+		// Make sure fields are ordered in ascending order.
+		if tagNum < prevTagNum {
+			return fmt.Errorf("txRaw must follow ADR-027, got tagNum %d after tagNum %d", tagNum, prevTagNum)
+		}
+		prevTagNum = tagNum
+
+		// All 3 fields of TxRaw have wireType == 2, so their next component
+		// is a varint, so we can safely call ConsumeVarint here.
+		// Byte structure: <varint of bytes length><bytes sequence>
+		// Inner  fields are verified in `DefaultTxDecoder`
+		lengthPrefix, m := protowire.ConsumeVarint(txBytes[m:])
+		if m < 0 {
+			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
+		}
+		// We make sure that this varint is as short as possible.
+		n := varintMinLength(lengthPrefix)
+		if n != m {
+			return fmt.Errorf("length prefix varint for tagNum %d is not as short as possible, read %d, only need %d", tagNum, m, n)
+		}
+
+		// Skip over the bytes that store fieldNumber and wireType bytes.
+		_, _, m = protowire.ConsumeField(txBytes)
+		if m < 0 {
+			return fmt.Errorf("invalid length; %w", protowire.ParseError(m))
+		}
+		txBytes = txBytes[m:]
+	}
+
+	return nil
+}
+
+// varintMinLength returns the minimum number of bytes necessary to encode an
+// uint using varint encoding.
+func varintMinLength(n uint64) int {
+	switch {
+	// Note: 1<<N == 2**N.
+	case n < 1<<(7):
+		return 1
+	case n < 1<<(7*2):
+		return 2
+	case n < 1<<(7*3):
+		return 3
+	case n < 1<<(7*4):
+		return 4
+	case n < 1<<(7*5):
+		return 5
+	case n < 1<<(7*6):
+		return 6
+	case n < 1<<(7*7):
+		return 7
+	case n < 1<<(7*8):
+		return 8
+	case n < 1<<(7*9):
+		return 9
+	default:
+		return 10
+	}
 }

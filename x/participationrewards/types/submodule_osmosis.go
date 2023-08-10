@@ -3,12 +3,17 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm"
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/balancer"
-	"github.com/ingenuity-build/quicksilver/osmosis-types/gamm/pool-models/stableswap"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/multierror"
+
+	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 const (
@@ -19,12 +24,18 @@ const (
 // OsmosisPoolProtocolData defines protocol state to track qAssets locked in
 // Osmosis pools.
 type OsmosisPoolProtocolData struct {
-	PoolID      uint64
-	PoolName    string
-	LastUpdated time.Time
-	PoolData    json.RawMessage
-	PoolType    string
-	Zones       map[string]string // chainID: IBC/denom
+	PoolID         uint64
+	PoolName       string
+	LastUpdated    time.Time
+	PoolData       json.RawMessage
+	PoolType       string
+	Denoms         map[string]DenomWithZone
+	IsIncentivized bool
+}
+
+type DenomWithZone struct {
+	Denom   string
+	ChainID string
 }
 
 func (opd *OsmosisPoolProtocolData) GetPool() (gamm.PoolI, error) {
@@ -81,15 +92,15 @@ func (opd *OsmosisPoolProtocolData) ValidateBasic() error {
 	}
 
 	i := 0
-	for chainID, denom := range opd.Zones {
-		el := fmt.Sprintf("Zones[%d]", i)
+	for _, ibcdenom := range utils.Keys(opd.Denoms) {
+		el := fmt.Sprintf("Denoms[%s]", ibcdenom)
 
-		if chainID == "" {
-			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrUndefinedAttribute)
+		if opd.Denoms[ibcdenom].ChainID == "" || len(strings.Split(opd.Denoms[ibcdenom].ChainID, "-")) < 2 {
+			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrInvalidChainID)
 		}
 
-		if denom == "" {
-			errs[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrUndefinedAttribute)
+		if opd.Denoms[ibcdenom].Denom == "" || sdk.ValidateDenom(opd.Denoms[ibcdenom].Denom) != nil {
+			errs[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrInvalidDenom)
 		}
 
 		i++
@@ -106,10 +117,16 @@ func (opd *OsmosisPoolProtocolData) ValidateBasic() error {
 	return nil
 }
 
+func (opd *OsmosisPoolProtocolData) GenerateKey() []byte {
+	return []byte(fmt.Sprintf("%d", opd.PoolID))
+}
+
 // -----------------------------------------------------
 
 type OsmosisParamsProtocolData struct {
-	ChainID string
+	ChainID   string
+	BaseDenom string
+	BaseChain string
 }
 
 // ValidateBasic satisfies ProtocolDataI and validates basic stateless data.
@@ -121,9 +138,21 @@ func (oppd *OsmosisParamsProtocolData) ValidateBasic() error {
 		errs["ChainID"] = ErrUndefinedAttribute
 	}
 
+	if oppd.BaseChain == "" {
+		errs["BaseChain"] = ErrUndefinedAttribute
+	}
+
+	if oppd.BaseDenom == "" {
+		errs["BaseDenom"] = ErrUndefinedAttribute
+	}
+
 	if len(errs) > 0 {
 		return multierror.New(errs)
 	}
 
 	return nil
+}
+
+func (oppd *OsmosisParamsProtocolData) GenerateKey() []byte {
+	return []byte("osmosisparams")
 }
