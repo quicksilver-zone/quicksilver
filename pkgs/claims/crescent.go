@@ -122,190 +122,187 @@ func CrescentClaim(
 OUTER:
 	for _, position := range positionsQueryResponse.Positions {
 		for _, cpd := range poolsManager.Get(ctx) {
-			for chainID, denomAndZone := range cpd.Denoms {
-				if fmt.Sprintf("pool%d", cpd.PoolID) != position.Denom {
-					continue
-				}
-
-				tuple, ok := tokens[chainID]
-				if !ok {
-					fmt.Println("not dealing with token for chain", chainID, denomAndZone.Denom)
-					// token is not present in list of allowed tokens, ignore.
-					continue
-				}
-
-				if _, ok := msg[tuple.chain]; !ok {
-					msg[tuple.chain] = prewards.MsgSubmitClaim{
-						UserAddress: address,
-						Zone:        tuple.chain,
-						SrcZone:     chain,
-						ClaimType:   cmtypes.ClaimTypeCrescentPool,
-						Proofs:      make([]*cmtypes.Proof, 0),
-					}
-				}
-
-				if _, ok := assets[chain]; !ok {
-					assets[chain] = sdk.Coins{}
-				}
-
-				farmerAddr, err := addressutils.AddressFromBech32(position.Farmer, "")
-				if err != nil {
-					if errors == nil {
-						errors = make(map[string]error)
-					}
-					errors[chain] = fmt.Errorf("invalid farmer address %q: %w", chain, err)
-					continue
-				}
-
-				positionKey := lpfarmtypes.GetPositionKey(farmerAddr, position.Denom)
-
-				abciquery, err := client.ABCIQueryWithOptions(
-					ctx,
-					"/store/lpfarm/key",
-					positionKey,
-					rpcclient.ABCIQueryOptions{
-						Height: abciquery.Response.Height,
-						Prove:  true,
-					},
-				)
-				// 9:
-				err = failsim.FailureHook(failures, 9, err, "ABCIQuery: position")
-				if err != nil {
-					if errors == nil {
-						errors = make(map[string]error)
-					}
-					errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
-					continue
-				}
-				fmt.Println("prepared query for position...")
-				positionResponse := lpfarmtypes.Position{}
-				err = marshaler.Unmarshal(abciquery.Response.Value, &positionResponse)
-				// 10:
-				err = failsim.FailureHook(failures, 10, err, "ABCIQuery: position response")
-				if err != nil {
-					if errors == nil {
-						errors = make(map[string]error)
-					}
-					errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
-					continue
-				}
-
-				// query to get pool info
-				poolQuery, err := client.ABCIQueryWithOptions(
-					ctx,
-					"/store/liquidity/key",
-					liquiditytypes.GetPoolKey(cpd.PoolID),
-					rpcclient.ABCIQueryOptions{
-						Height: abciquery.Response.Height,
-						Prove:  true,
-					},
-				)
-				if err != nil {
-					return nil, nil, err
-				}
-
-				poolResponse := liquiditytypes.Pool{}
-				err = marshaler.Unmarshal(poolQuery.Response.Value, &poolResponse)
-				if err != nil {
-					return nil, nil, err
-				}
-				// 11:
-				err = failsim.FailureHook(failures, 10, err, "ABCIQuery: pool response")
-				if err != nil {
-					return nil, nil, err
-				}
-
-				// fetch reserveAddress balance
-				reserveAddrBytes, err := addressutils.AddressFromBech32(poolResponse.ReserveAddress, "")
-				if err != nil {
-					return nil, nil, err
-				}
-
-				accountPrefix := banktypes.CreateAccountBalancesPrefix(reserveAddrBytes)
-				lookupKey := append(accountPrefix, []byte(tuple.denom)...)
-
-				bankQuery, err := client.ABCIQueryWithOptions(
-					ctx,
-					"/store/bank/key",
-					lookupKey,
-					rpcclient.ABCIQueryOptions{
-						Height: abciquery.Response.Height,
-						Prove:  true,
-					},
-				)
-				if err != nil {
-					return nil, nil, err
-				}
-
-				fmt.Println("Querying for value", "prefix", accountPrefix, "denom", tuple.denom) // debug?
-				// 7:
-				err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", tuple.denom, chain))
-				if err != nil {
-					return nil, nil, err
-				}
-
-				amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, bankQuery.Response.Value, tuple.denom)
-				if err != nil {
-					return nil, nil, err
-				}
-				// 12:
-				err = failsim.FailureHook(failures, 8, err, fmt.Sprintf("ABCIQuery: value of denom %q on chain %q", tuple.denom, chain))
-				if err != nil {
-					return nil, nil, err
-				}
-
-				// fetch total poolcoin supply
-				supplyQuery, err := client.ABCIQueryWithOptions(
-					ctx,
-					"/store/bank/key",
-					append(banktypes.SupplyKey,
-						[]byte(positionResponse.Denom)...),
-					rpcclient.ABCIQueryOptions{
-						Height: abciquery.Response.Height,
-						Prove:  true,
-					},
-				)
-				if err != nil {
-					return nil, nil, err
-				}
-
-				fmt.Println("Querying for poolcoinsupply", "prefix", banktypes.SupplyKey, "denom", positionResponse.Denom) // debug?
-				// 7:
-				// 13:
-				err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", positionResponse.Denom, chain))
-				if err != nil {
-					return nil, nil, err
-				}
-
-				farmingAmount := positionResponse.FarmingAmount
-				poolSupply := sdk.ZeroInt()
-				err = poolSupply.Unmarshal(supplyQuery.Response.Value)
-				if err != nil {
-					return nil, nil, err
-				}
-
-				uratio := sdk.NewDecFromInt(farmingAmount).QuoInt(poolSupply)
-
-				uAmount := uratio.MulInt(amount.Amount).TruncateInt()
-
-				assets[chain] = assets[chain].Add(sdk.NewCoin(tuple.denom, uAmount))
-
-				chainMsg := msg[chainID]
-
-				proof := cmtypes.Proof{
-					Data:      abciquery.Response.Value,
-					Key:       abciquery.Response.Key,
-					ProofOps:  abciquery.Response.ProofOps,
-					Height:    abciquery.Response.Height,
-					ProofType: prewards.ProofTypePosition,
-				}
-
-				chainMsg.Proofs = append(chainMsg.Proofs, &proof)
-				fmt.Println("obtained relevant proofs...")
-				msg[chainID] = chainMsg
-				continue OUTER
-
+			if fmt.Sprintf("pool%d", cpd.PoolID) != position.Denom {
+				continue
 			}
+
+			tuple, ok := tokens[cpd.Denom]
+			if !ok {
+				fmt.Println("not dealing with token for chain", tuple.chain, cpd.Denom)
+				// token is not present in list of allowed tokens, ignore.
+				continue
+			}
+
+			if _, ok := msg[tuple.chain]; !ok {
+				msg[tuple.chain] = prewards.MsgSubmitClaim{
+					UserAddress: address,
+					Zone:        tuple.chain,
+					SrcZone:     chain,
+					ClaimType:   cmtypes.ClaimTypeCrescentPool,
+					Proofs:      make([]*cmtypes.Proof, 0),
+				}
+			}
+
+			if _, ok := assets[chain]; !ok {
+				assets[chain] = sdk.Coins{}
+			}
+
+			farmerAddr, err := addressutils.AddressFromBech32(position.Farmer, "")
+			if err != nil {
+				if errors == nil {
+					errors = make(map[string]error)
+				}
+				errors[chain] = fmt.Errorf("invalid farmer address %q: %w", chain, err)
+				continue
+			}
+
+			positionKey := lpfarmtypes.GetPositionKey(farmerAddr, position.Denom)
+
+			abciquery, err := client.ABCIQueryWithOptions(
+				ctx,
+				"/store/lpfarm/key",
+				positionKey,
+				rpcclient.ABCIQueryOptions{
+					Height: abciquery.Response.Height,
+					Prove:  true,
+				},
+			)
+			// 9:
+			err = failsim.FailureHook(failures, 9, err, "ABCIQuery: position")
+			if err != nil {
+				if errors == nil {
+					errors = make(map[string]error)
+				}
+				errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
+				continue
+			}
+			fmt.Println("prepared query for position...")
+			positionResponse := lpfarmtypes.Position{}
+			err = marshaler.Unmarshal(abciquery.Response.Value, &positionResponse)
+			// 10:
+			err = failsim.FailureHook(failures, 10, err, "ABCIQuery: position response")
+			if err != nil {
+				if errors == nil {
+					errors = make(map[string]error)
+				}
+				errors[chain] = fmt.Errorf("unable to account for assets on zone %q: %w", chain, err)
+				continue
+			}
+
+			// query to get pool info
+			poolQuery, err := client.ABCIQueryWithOptions(
+				ctx,
+				"/store/liquidity/key",
+				liquiditytypes.GetPoolKey(cpd.PoolID),
+				rpcclient.ABCIQueryOptions{
+					Height: abciquery.Response.Height,
+					Prove:  true,
+				},
+			)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			poolResponse := liquiditytypes.Pool{}
+			err = marshaler.Unmarshal(poolQuery.Response.Value, &poolResponse)
+			if err != nil {
+				return nil, nil, err
+			}
+			// 11:
+			err = failsim.FailureHook(failures, 10, err, "ABCIQuery: pool response")
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// fetch reserveAddress balance
+			reserveAddrBytes, err := addressutils.AddressFromBech32(poolResponse.ReserveAddress, "")
+			if err != nil {
+				return nil, nil, err
+			}
+
+			accountPrefix := banktypes.CreateAccountBalancesPrefix(reserveAddrBytes)
+			lookupKey := append(accountPrefix, []byte(cpd.Denom)...)
+
+			bankQuery, err := client.ABCIQueryWithOptions(
+				ctx,
+				"/store/bank/key",
+				lookupKey,
+				rpcclient.ABCIQueryOptions{
+					Height: abciquery.Response.Height,
+					Prove:  true,
+				},
+			)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			fmt.Println("Querying for value", "prefix", accountPrefix, "denom", cpd.Denom) // debug?
+			// 7:
+			err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", tuple.denom, chain))
+			if err != nil {
+				return nil, nil, err
+			}
+
+			amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, bankQuery.Response.Value, cpd.Denom)
+			if err != nil {
+				return nil, nil, err
+			}
+			// 12:
+			err = failsim.FailureHook(failures, 8, err, fmt.Sprintf("ABCIQuery: value of denom %q on chain %q", tuple.denom, chain))
+			if err != nil {
+				return nil, nil, err
+			}
+
+			// fetch total poolcoin supply
+			supplyQuery, err := client.ABCIQueryWithOptions(
+				ctx,
+				"/store/bank/key",
+				append(banktypes.SupplyKey,
+					[]byte(positionResponse.Denom)...),
+				rpcclient.ABCIQueryOptions{
+					Height: abciquery.Response.Height,
+					Prove:  true,
+				},
+			)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			fmt.Println("Querying for poolcoinsupply", "prefix", banktypes.SupplyKey, "denom", positionResponse.Denom) // debug?
+			// 7:
+			// 13:
+			err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", positionResponse.Denom, chain))
+			if err != nil {
+				return nil, nil, err
+			}
+
+			farmingAmount := positionResponse.FarmingAmount
+			poolSupply := sdk.ZeroInt()
+			err = poolSupply.Unmarshal(supplyQuery.Response.Value)
+			if err != nil {
+				return nil, nil, err
+			}
+
+			uratio := sdk.NewDecFromInt(farmingAmount).QuoInt(poolSupply)
+
+			uAmount := uratio.MulInt(amount.Amount).TruncateInt()
+
+			assets[chain] = assets[chain].Add(sdk.NewCoin(tuple.denom, uAmount))
+
+			chainMsg := msg[tuple.chain]
+
+			proof := cmtypes.Proof{
+				Data:      abciquery.Response.Value,
+				Key:       abciquery.Response.Key,
+				ProofOps:  abciquery.Response.ProofOps,
+				Height:    abciquery.Response.Height,
+				ProofType: prewards.ProofTypePosition,
+			}
+
+			chainMsg.Proofs = append(chainMsg.Proofs, &proof)
+			fmt.Println("obtained relevant proofs...")
+			msg[tuple.chain] = chainMsg
+			continue OUTER
 		}
 	}
 

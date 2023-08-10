@@ -71,7 +71,7 @@ func GetCurrentHandler(
 		}
 
 		for chainID, asset := range assets {
-			response.Assets[chainID] = []types.Asset{{Type: "liquid", Amount: asset}}
+			response.Assets[chainID] = append(response.Assets[chainID], types.Asset{Type: "liquid", Amount: asset})
 		}
 
 		// crescent claim
@@ -90,7 +90,7 @@ func GetCurrentHandler(
 		}
 
 		for chainID, asset := range assets {
-			response.Assets[chainID] = []types.Asset{{Type: "crescentpool", Amount: asset}}
+			response.Assets[chainID] = append(response.Assets[chainID], types.Asset{Type: "crescentpool", Amount: asset})
 		}
 
 		// liquid for all zones; config should hold osmosis chainid.
