@@ -19,7 +19,7 @@ import (
 
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/ingenuity-build/quicksilver/osmosis-types/osmoutils"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

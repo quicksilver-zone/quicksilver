@@ -11,7 +11,7 @@ import (
 
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
-	"github.com/ingenuity-build/quicksilver/osmosis-types/osmoutils"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
