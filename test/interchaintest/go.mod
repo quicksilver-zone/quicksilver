@@ -3,6 +3,7 @@ module github.com/ingenuity-build/quicksilver/test/interchaintest
 go 1.20
 
 require (
+	cosmossdk.io/math v1.0.1
 	github.com/cosmos/cosmos-sdk v0.47.4
 	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
@@ -24,7 +25,6 @@ require (
 	cosmossdk.io/depinject v1.0.0-alpha.3 // indirect
 	cosmossdk.io/errors v1.0.0 // indirect
 	cosmossdk.io/log v1.2.0 // indirect
-	cosmossdk.io/math v1.0.1 // indirect
 	cosmossdk.io/tools/rosetta v0.2.1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -245,7 +245,7 @@ replace (
 	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/ingenuity-build/quicksilver => ../../
-	github.com/iqlusioninc/liquidity-staking-module => github.com/notional-labs/liquidity-staking-module v0.0.3-0.20230629091513-34a6c6a866df
+	github.com/iqlusioninc/liquidity-staking-module => github.com/ingenuity-build/liquidity-staking-module-v47 v0.0.3-0.20230701011038-73a81cee4189
 	github.com/strangelove-ventures/interchaintest/v7 => github.com/notional-labs/interchaintest/v7 v7.0.0-20230808040749-159cc0cfefaa
 	// github.com/strangelove-ventures/interchaintest/v5 => github.com/aljo242/interchaintest/v5 v5.0.0-20230619200058-1d4823df8b75
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
