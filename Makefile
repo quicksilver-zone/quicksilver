@@ -170,6 +170,10 @@ test-docker-multi:
 	./scripts/multi-test.sh
 test-docker-multi-regen:
 	./scripts/multi-test.sh -r
+test-docker-simple-lsm:
+	./scripts/simple-test-lsm.sh
+test-docker-simple-lsm-regen:
+	./scripts/simple-test-lsm.sh -r
 build-docker-all:
 	$(DOCKERCOMPOSE) build
 
