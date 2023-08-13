@@ -384,6 +384,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"valid_umee",
 			func() {
 				address := addressutils.GenerateAccAddressForTest()
+
+				userAddress, _ := addressutils.EncodeAddressToBech32("umee", address)
 				bankkey := banktypes.CreateAccountBalancesPrefix(address)
 				bankkey = append(bankkey, []byte("u/uumee")...)
 
@@ -394,7 +396,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
-					UserAddress: address.String(),
+					UserAddress: userAddress,
 					Zone:        "cosmoshub-4",
 					SrcZone:     "testchain1",
 					ClaimType:   cmtypes.ClaimTypeUmeeToken,
@@ -423,8 +425,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			name: "valid_crescent",
 			malleate: func() {
 				prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
-				userAddress := addressutils.GenerateAccAddressForTest()
-				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", userAddress)
+				testAddr := addressutils.GenerateAccAddressForTest()
+				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", testAddr)
+				userAddress := addressutils.MustEncodeAddressToBech32("quick", testAddr)
 
 				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
 
@@ -435,7 +438,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				suite.Require().NoError(err)
 
 				msg = types.MsgSubmitClaim{
-					UserAddress: userAddress.String(),
+					UserAddress: userAddress,
 					Zone:        "cosmoshub-4",
 					SrcZone:     "testchain1",
 					ClaimType:   cmtypes.ClaimTypeCrescentPool,
