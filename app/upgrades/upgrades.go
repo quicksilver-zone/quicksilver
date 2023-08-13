@@ -37,6 +37,7 @@ func Upgrades() []Upgrade {
 		{UpgradeName: V010404rc1UpgradeName, CreateUpgradeHandler: V010404rc1UpgradeHandler},
 		{UpgradeName: V010404beta9UpgradeName, CreateUpgradeHandler: V010404beta9UpgradeHandler},
 		{UpgradeName: V010404beta10UpgradeName, CreateUpgradeHandler: V010404beta10UpgradeHandler},
+		{UpgradeName: V010404rc2UpgradeName, CreateUpgradeHandler: V010404beta10UpgradeHandler},
 	}
 }
 
@@ -542,6 +543,73 @@ func V010404beta10UpgradeHandler(
 	appKeepers *keepers.AppKeepers,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		if isDevnet(ctx) {
+			// stargaze
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, StargazeTestnetChainID)
+			vals := appKeepers.InterchainstakingKeeper.GetValidators(ctx, StargazeTestnetChainID)
+			for _, val := range vals {
+				valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "starsvaloper")
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, StargazeTestnetChainID, valoper)
+			}
+
+			// osmo
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, OsmosisTestnetChainID)
+			vals1 := appKeepers.InterchainstakingKeeper.GetValidators(ctx, OsmosisTestnetChainID)
+			for _, val := range vals1 {
+				valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "osmovaloper")
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, OsmosisTestnetChainID, valoper)
+			}
+
+			// somm
+			appKeepers.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, SommelierChainID)
+			vals2 := appKeepers.InterchainstakingKeeper.GetValidators(ctx, SommelierChainID)
+			for _, val := range vals2 {
+				valoper, _ := addressutils.ValAddressFromBech32(val.ValoperAddress, "sommvaloper")
+				appKeepers.InterchainstakingKeeper.DeleteValidator(ctx, SommelierChainID, valoper)
+			}
+
+			// remove protocol datas
+			appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), func(index int64, key []byte, data prtypes.ProtocolData) (stop bool) {
+				prefixedKey := append(prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeLiquidToken), key...)
+				pd, err := prtypes.UnmarshalProtocolData(prtypes.ProtocolDataTypeLiquidToken, data.Data)
+				if err != nil {
+					panic(err)
+				}
+				pdData, ok := pd.(*prtypes.LiquidAllowedDenomProtocolData)
+				if ok {
+					if pdData.ChainID == StargazeTestnetChainID || pdData.ChainID == SommelierChainID || pdData.ChainID == OsmosisTestnetChainID || pdData.RegisteredZoneChainID == StargazeTestnetChainID || pdData.RegisteredZoneChainID == SommelierChainID || pdData.RegisteredZoneChainID == OsmosisTestnetChainID {
+						appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prefixedKey)
+					}
+				}
+				return false
+			})
+
+			appKeepers.ParticipationRewardsKeeper.IteratePrefixedProtocolDatas(ctx, prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeOsmosisParams), func(index int64, key []byte, data prtypes.ProtocolData) (stop bool) {
+				prefixedKey := append(prtypes.GetPrefixProtocolDataKey(prtypes.ProtocolDataTypeOsmosisParams), key...)
+				pd, err := prtypes.UnmarshalProtocolData(prtypes.ProtocolDataTypeOsmosisParams, data.Data)
+				if err != nil {
+					panic(err)
+				}
+
+				pdData, ok := pd.(*prtypes.OsmosisParamsProtocolData)
+				if ok {
+					if pdData.ChainID == OsmosisTestnetChainID {
+						appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prefixedKey)
+					}
+				}
+				return false
+			})
+
+			pdType, exists := prtypes.ProtocolDataType_value["ProtocolDataTypeConnection"]
+			if !exists {
+				panic("connection protocol data type not found")
+			}
+
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte(StargazeTestnetChainID)))
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte(SommelierChainID)))
+			appKeepers.ParticipationRewardsKeeper.DeleteProtocolData(ctx, prtypes.GetProtocolDataKey(prtypes.ProtocolDataType(pdType), []byte(OsmosisTestnetChainID)))
+
+		}
 		if isTest(ctx) || isDevnet(ctx) || isTestnet(ctx) {
 			appKeepers.InterchainstakingKeeper.IterateWithdrawalRecords(ctx, func(index int64, record icstypes.WithdrawalRecord) (stop bool) {
 				if (record.Status == icstypes.WithdrawStatusUnbond) && !record.Acknowledged && record.EpochNumber < appKeepers.EpochsKeeper.GetEpochInfo(ctx, epochtypes.EpochIdentifierEpoch).CurrentEpoch {
