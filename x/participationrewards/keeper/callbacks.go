@@ -525,7 +525,7 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 		return errors.New("CrescentReserveAddress account balance cannot be negative")
 	}
 
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, address+"_"+denom)
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, fmt.Sprintf("%s_%s", address, denom))
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for crescent-types reserve address coins/%s, %s", address, denom)
 	}

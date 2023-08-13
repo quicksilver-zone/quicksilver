@@ -81,7 +81,7 @@ func (crd CrescentReserveAddressBalanceProtocolData) ValidateBasic() error {
 }
 
 func (crd CrescentReserveAddressBalanceProtocolData) GenerateKey() []byte {
-	return []byte(crd.ReserveAddress + "_" + crd.Denom)
+	return []byte(fmt.Sprintf("%s_%s", crd.ReserveAddress, crd.Denom))
 }
 
 func (crd CrescentReserveAddressBalanceProtocolData) GetBalance() (math.Int, error) {
