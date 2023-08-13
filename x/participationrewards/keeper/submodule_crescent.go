@@ -148,11 +148,14 @@ func (c CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 				return 0, err
 			}
 		}
-		_, farmer, err := bech32.DecodeAndConvert(position.Farmer)
+
+		farmer, err := addressutils.AccAddressFromBech32(position.Farmer, "")
 		if err != nil {
 			return 0, err
 		}
-		if sdk.AccAddress(farmer).String() != msg.UserAddress {
+
+		user, _ := addressutils.AccAddressFromBech32(msg.UserAddress, "")
+		if !farmer.Equals(user) {
 			return 0, errors.New("not a valid proof for submitting user")
 		}
 
