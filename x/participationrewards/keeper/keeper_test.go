@@ -481,14 +481,9 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	suite.addProtocolData(
 		types.ProtocolDataTypeCrescentPool,
 		[]byte(fmt.Sprintf(
-			"{\"poolid\":%d,\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
+			"{\"poolid\":%d, \"denom\":%q}",
 			1,
 			cosmosIBCDenom,
-			"cosmoshub-4",
-			"uatom",
-			osmosisIBCDenom,
-			"osmosis-1",
-			"uosmo",
 		)),
 	)
 	// crescent-types test supply
@@ -498,7 +493,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		cpd,
 	)
 	// crescent-types reserve address balance
-	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testAddress, Denom: cosmosIBCDenom})
+	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testCrescentAddress, Denom: cosmosIBCDenom})
 	suite.addProtocolData(
 		types.ProtocolDataTypeCrescentReserveAddressBalance,
 		cpd,

@@ -46,6 +46,7 @@ type Keeper struct {
 	IBCKeeper           *ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 	ClaimsManagerKeeper types.ClaimsManagerKeeper
+	EpochsKeeper        types.EpochsKeeper
 	Ir                  codectypes.InterfaceRegistry
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
@@ -118,6 +119,10 @@ func (k *Keeper) SetHooks(icsh types.IcsHooks) *Keeper {
 
 func (k *Keeper) GetGovAuthority() string {
 	return k.authority
+}
+
+func (k *Keeper) SetEpochsKeeper(epochsKeeper types.EpochsKeeper) {
+	k.EpochsKeeper = epochsKeeper
 }
 
 // Logger returns a module-specific logger.

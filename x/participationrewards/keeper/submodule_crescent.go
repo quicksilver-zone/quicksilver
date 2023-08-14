@@ -135,7 +135,7 @@ func (c CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 			return 0, errors.New("not a valid proof for submitting user")
 		}
 
-		sdkAmount, err := crescenttypes.DetermineApplicableTokensInPool(ctx, k, position, msg.Zone)
+		sdkAmount, err := crescenttypes.DetermineApplicableTokensInPool(ctx, k, position)
 		if err != nil {
 			return 0, err
 		}

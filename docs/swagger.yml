@@ -2651,6 +2651,9 @@ paths:
                       type: boolean
                     acknowledged:
                       type: boolean
+                    epoch_number:
+                      type: string
+                      format: int64
               pagination:
                 type: object
                 properties:
@@ -4431,6 +4434,9 @@ paths:
                       type: boolean
                     acknowledged:
                       type: boolean
+                    epoch_number:
+                      type: string
+                      format: int64
               pagination:
                 type: object
                 properties:
@@ -4624,6 +4630,9 @@ paths:
                       type: boolean
                     acknowledged:
                       type: boolean
+                    epoch_number:
+                      type: string
+                      format: int64
               pagination:
                 type: object
                 properties:
