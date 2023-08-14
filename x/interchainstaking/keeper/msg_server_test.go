@@ -58,17 +58,56 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			func() {
 				suite.SetupTest()
 				suite.setupTestZones()
-				suite.setupSubzoneForTest()
+
+				quicksilver := suite.GetQuicksilverApp(suite.chainA)
+				ctx := suite.chainA.GetContext()
+
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
+				suite.True(found)
+
+				// set up subzone
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				subzoneID = zone.ZoneID() + "#subzone-1"
+				msg := &icstypes.MsgRegisterZone{
+					Authority:        quicksilver.InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "usqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo: &icstypes.SubzoneInfo{
+						Authority:   subzoneAddress,
+						BaseChainID: zone.ZoneID(),
+						ChainID:     subzoneID,
+					},
+				}
+
+				msgSrv := icskeeper.NewMsgServerImpl(*quicksilver.InterchainstakingKeeper)
+				_, err := msgSrv.RegisterZone(sdk.WrapSDKContext(ctx), msg)
+				suite.NoError(err)
+
+				zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, subzoneID)
+				suite.True(found)
+
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
+
+				suite.coordinator.CommitNBlocks(suite.chainA, 2)
+				suite.coordinator.CommitNBlocks(suite.chainB, 2)
 
 				testAccount, err = addressutils.AccAddressFromBech32(subzoneAddress, "")
 				suite.NoError(err)
 				zoneID = subzoneID
 				denom = subzoneLocalDenom
 
-				quicksilver := suite.GetQuicksilverApp(suite.chainA)
-				ctx := suite.chainA.GetContext()
-
-				_, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zoneID)
+				_, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, zoneID)
 				suite.True(found)
 			},
 			func() {
@@ -89,6 +128,52 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			func() {
 				suite.SetupTest()
 				suite.setupTestZones()
+
+				quicksilver := suite.GetQuicksilverApp(suite.chainA)
+				ctx := suite.chainA.GetContext()
+
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
+				suite.True(found)
+
+				// set up subzone
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				subzoneID = zone.ZoneID() + "#subzone-1"
+				msg := &icstypes.MsgRegisterZone{
+					Authority:        suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "usqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo: &icstypes.SubzoneInfo{
+						Authority:   subzoneAddress,
+						BaseChainID: zone.ZoneID(),
+						ChainID:     subzoneID,
+					},
+				}
+
+				msgSrv := icskeeper.NewMsgServerImpl(*quicksilver.InterchainstakingKeeper)
+				_, err := msgSrv.RegisterZone(sdk.WrapSDKContext(ctx), msg)
+				suite.NoError(err)
+
+				zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, subzoneID)
+				suite.True(found)
+
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, subzoneID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
+
+				zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, subzoneID)
+				suite.True(found)
+
+				suite.coordinator.CommitNBlocks(suite.chainA, 2)
+				suite.coordinator.CommitNBlocks(suite.chainB, 2)
 
 				testAccount, err = addressutils.AccAddressFromBech32(testAddress, "")
 				suite.NoError(err)
@@ -508,21 +593,18 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 		// run tests with LSM enabled.
 		tt.name += "_LSM_enabled"
 		suite.Run(tt.name, func() {
-			suite.SetupTest()
-			suite.setupTestZones()
+			tt.init()
 
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
-
-			tt.init()
 
 			params := quicksilver.InterchainstakingKeeper.GetParams(ctx)
 			params.UnbondingEnabled = true
 			quicksilver.InterchainstakingKeeper.SetParams(ctx, params)
 
-			err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(10000000))))
 			suite.NoError(err)
-			err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
+			err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin(denom, math.NewInt(10000000))))
 			suite.NoError(err)
 
 			// enable LSM
@@ -562,11 +644,12 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 }
 
 func (suite *KeeperTestSuite) TestSignalIntent() {
+	var zoneID string
+
 	tests := []struct {
 		name             string
 		malleate         func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent
 		fromAddress      string
-		zoneID           string
 		expected         []sdk.Dec
 		failsValidations bool
 		expectErr        bool
@@ -577,14 +660,15 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
 				suite.NoError(err)
 
+				zoneID = testzoneID
+
 				return &icstypes.MsgSignalIntent{
-					ChainId:     testzoneID,
+					ChainId:     zoneID,
 					Intents:     fmt.Sprintf("0.3%s", val1.String()),
 					FromAddress: testAddress,
 				}
 			},
 			testAddress,
-			testzoneID,
 			[]sdk.Dec{},
 			true,
 			false,
@@ -595,14 +679,15 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
 				suite.NoError(err)
 
+				zoneID = testzoneID
+
 				return &icstypes.MsgSignalIntent{
-					ChainId:     testzoneID,
+					ChainId:     zoneID,
 					Intents:     fmt.Sprintf("3.0%s", val1.String()),
 					FromAddress: testAddress,
 				}
 			},
 			testAddress,
-			testzoneID,
 			[]sdk.Dec{},
 			true,
 			false,
@@ -613,14 +698,15 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
 				suite.NoError(err)
 
+				zoneID = testzoneID
+
 				return &icstypes.MsgSignalIntent{
-					ChainId:     subzoneID,
+					ChainId:     "invalid",
 					Intents:     fmt.Sprintf("1.0%s", val1.String()),
 					FromAddress: testAddress,
 				}
 			},
-			subzoneID,
-			testzoneID,
+			testAddress,
 			[]sdk.Dec{},
 			false,
 			true,
@@ -631,6 +717,8 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
 				suite.NoError(err)
 
+				zoneID = testzoneID
+
 				return &icstypes.MsgSignalIntent{
 					ChainId:     suite.chainA.ChainID,
 					Intents:     fmt.Sprintf("1.0%s", val1.String()),
@@ -638,7 +726,6 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				}
 			},
 			testAddress,
-			testzoneID,
 			[]sdk.Dec{},
 			false,
 			true,
@@ -649,14 +736,15 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
 				suite.NoError(err)
 
+				zoneID = testzoneID
+
 				return &icstypes.MsgSignalIntent{
-					ChainId:     testzoneID,
+					ChainId:     zoneID,
 					Intents:     fmt.Sprintf("1.0%s", val1.String()),
 					FromAddress: testAddress,
 				}
 			},
 			testAddress,
-			testzoneID,
 			[]sdk.Dec{sdk.NewDecWithPrec(1, 0)},
 			false,
 			false,
@@ -671,14 +759,15 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				val3, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[2].Address.String())
 				suite.NoError(err)
 
+				zoneID = testzoneID
+
 				return &icstypes.MsgSignalIntent{
-					ChainId:     testzoneID,
+					ChainId:     zoneID,
 					Intents:     fmt.Sprintf("0.5%s,0.2%s,0.3%s", val1.String(), val2.String(), val3.String()),
 					FromAddress: testAddress,
 				}
 			},
 			testAddress,
-			testzoneID,
 			[]sdk.Dec{
 				sdk.NewDecWithPrec(5, 1),
 				sdk.NewDecWithPrec(2, 1),
@@ -690,20 +779,59 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 		{
 			"valid - single weight  for subzone",
 			func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), subzoneID)
+				quicksilver := suite.GetQuicksilverApp(suite.chainA)
+				ctx := suite.chainA.GetContext()
+
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
+
+				// set up subzone
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				zoneID = zone.ZoneID() + "#subzone-1"
+				msg := &icstypes.MsgRegisterZone{
+					Authority:        quicksilver.InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "usqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo: &icstypes.SubzoneInfo{
+						Authority:   subzoneAddress,
+						BaseChainID: zone.ZoneID(),
+						ChainID:     zoneID,
+					},
+				}
+
+				msgSrv := icskeeper.NewMsgServerImpl(*quicksilver.InterchainstakingKeeper)
+				_, err := msgSrv.RegisterZone(sdk.WrapSDKContext(ctx), msg)
+				suite.NoError(err)
+
+				zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, zoneID)
+				suite.True(found)
+
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, zoneID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, zoneID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, zoneID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, zoneID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
+
+				suite.coordinator.CommitNBlocks(suite.chainA, 2)
+				suite.coordinator.CommitNBlocks(suite.chainB, 2)
 
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
 				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId:     zone.ZoneID(),
+					ChainId:     zoneID,
 					Intents:     fmt.Sprintf("1.0%s", val1.String()),
 					FromAddress: subzoneAddress,
 				}
 			},
 			subzoneAddress,
-			subzoneID,
 			[]sdk.Dec{sdk.NewDecWithPrec(1, 0)},
 			false,
 			false,
@@ -711,8 +839,48 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 		{
 			"valid - multi weight for subzone",
 			func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent {
-				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), subzoneID)
+				quicksilver := suite.GetQuicksilverApp(suite.chainA)
+				ctx := suite.chainA.GetContext()
+
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), testzoneID)
 				suite.True(found)
+
+				// set up subzone
+				////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+				zoneID = zone.ZoneID() + "#subzone-1"
+				msg := &icstypes.MsgRegisterZone{
+					Authority:        quicksilver.InterchainstakingKeeper.GetGovAuthority(),
+					ConnectionID:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "usqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+					SubzoneInfo: &icstypes.SubzoneInfo{
+						Authority:   subzoneAddress,
+						BaseChainID: zone.ZoneID(),
+						ChainID:     zoneID,
+					},
+				}
+
+				msgSrv := icskeeper.NewMsgServerImpl(*quicksilver.InterchainstakingKeeper)
+				_, err := msgSrv.RegisterZone(sdk.WrapSDKContext(ctx), msg)
+				suite.NoError(err)
+
+				zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, zoneID)
+				suite.True(found)
+
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, zoneID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, zoneID, suite.path.EndpointA.ConnectionID, "withdrawal", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, zoneID, suite.path.EndpointA.ConnectionID, "performance", zone.AccountPrefix))
+				suite.NoError(suite.setupSubzoneChannelForICA(ctx, zoneID, suite.path.EndpointA.ConnectionID, "delegate", zone.AccountPrefix))
+
+				suite.coordinator.CommitNBlocks(suite.chainA, 2)
+				suite.coordinator.CommitNBlocks(suite.chainB, 2)
 
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
 				suite.NoError(err)
@@ -722,13 +890,12 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
-					ChainId:     zone.ZoneID(),
+					ChainId:     zoneID,
 					Intents:     fmt.Sprintf("0.5%s,0.2%s,0.3%s", val1.String(), val2.String(), val3.String()),
 					FromAddress: subzoneAddress,
 				}
 			},
 			subzoneAddress,
-			subzoneID,
 			[]sdk.Dec{
 				sdk.NewDecWithPrec(5, 1),
 				sdk.NewDecWithPrec(2, 1),
@@ -747,6 +914,10 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			suite.setupTestZones()
 
 			msg := tt.malleate(suite)
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+
 			// validateBasic not explicitly tested here - but we don't call it inside msgSrv.SignalIntent
 			// so call here to make sure out tests are sane.
 			err := msg.ValidateBasic()
@@ -756,8 +927,8 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			}
 			suite.NoError(err)
 
-			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
-			res, err := msgSrv.SignalIntent(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
+			msgSrv := icskeeper.NewMsgServerImpl(*quicksilver.InterchainstakingKeeper)
+			res, err := msgSrv.SignalIntent(sdk.WrapSDKContext(ctx), msg)
 			if tt.expectErr {
 				suite.Error(err)
 				suite.Nil(res)
@@ -767,12 +938,10 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			suite.NoError(err)
 			suite.NotNil(res)
 
-			quicksilver := suite.GetQuicksilverApp(suite.chainA)
-			icsKeeper := quicksilver.InterchainstakingKeeper
-			zone, found := icsKeeper.GetZone(suite.chainA.GetContext(), tt.zoneID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zoneID)
 			suite.True(found)
 
-			intent, found := icsKeeper.GetDelegatorIntent(suite.chainA.GetContext(), &zone, tt.fromAddress, false)
+			intent, found := quicksilver.InterchainstakingKeeper.GetDelegatorIntent(ctx, &zone, tt.fromAddress, false)
 			suite.True(found)
 			intents := intent.GetIntents()
 
