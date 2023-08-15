@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -103,23 +104,26 @@ func GetEpochHandler(
 		if _, failHere := failAt[1]; failHere {
 			height = 0
 		}
+		var messages map[string]prewards.MsgSubmitClaim
+		var assets map[string]sdk.Coins
+		var err error
 		if height == 0 {
 			errors["height"] = fmt.Errorf("fetched height is 0")
 			return
-		}
+		} else {
+			fmt.Println("fetch osmosis claim...")
+			messages, assets, err = claims.OsmosisClaim(ctx, cfg, osmosisPoolsManager, tokensManager, vars["address"], chain, height)
+			if err != nil {
+				errors["OsmosisClaim"] = err
+			}
 
-		fmt.Println("fetch osmosis claim...")
-		messages, assets, err := claims.OsmosisClaim(ctx, cfg, osmosisPoolsManager, tokensManager, vars["address"], chain, height)
-		if err != nil {
-			errors["OsmosisClaim"] = err
-		}
+			for _, message := range messages {
+				response.Messages = append(response.Messages, message)
+			}
 
-		for _, message := range messages {
-			response.Messages = append(response.Messages, message)
-		}
-
-		for chainID, asset := range assets {
-			response.Assets[chainID] = []types.Asset{{Type: "osmosispool", Amount: asset}}
+			for chainID, asset := range assets {
+				response.Assets[chainID] = []types.Asset{{Type: "osmosispool", Amount: asset}}
+			}
 		}
 
 		// umee claim
@@ -148,20 +152,20 @@ func GetEpochHandler(
 		if height == 0 {
 			errors["height"] = fmt.Errorf("fetched height is 0")
 			return
-		}
+		} else {
+			fmt.Println("fetch umee claim...")
+			messages, assets, err = claims.UmeeClaim(ctx, cfg, tokensManager, vars["address"], chain, height)
+			if err != nil {
+				errors["UmeeClaim"] = err
+			}
 
-		fmt.Println("fetch umee claim...")
-		messages, assets, err = claims.UmeeClaim(ctx, cfg, tokensManager, vars["address"], chain, height)
-		if err != nil {
-			errors["UmeeClaim"] = err
-		}
+			for _, message := range messages {
+				response.Messages = append(response.Messages, message)
+			}
 
-		for _, message := range messages {
-			response.Messages = append(response.Messages, message)
-		}
-
-		for chainID, asset := range assets {
-			response.Assets[chainID] = append(response.Assets[chainID], types.Asset{Type: "liquid", Amount: asset})
+			for chainID, asset := range assets {
+				response.Assets[chainID] = append(response.Assets[chainID], types.Asset{Type: "liquid", Amount: asset})
+			}
 		}
 
 		// crescent claim
@@ -190,20 +194,21 @@ func GetEpochHandler(
 		if height == 0 {
 			errors["height"] = fmt.Errorf("fetched height is 0")
 			return
-		}
+		} else {
 
-		fmt.Println("fetch crescent claim...")
-		messages, assets, err = claims.CrescentClaim(ctx, cfg, crescentPoolsManager, tokensManager, vars["address"], chain, height)
-		if err != nil {
-			errors["CrescentClaim"] = err
-		}
+			fmt.Println("fetch crescent claim...")
+			messages, assets, err = claims.CrescentClaim(ctx, cfg, crescentPoolsManager, tokensManager, vars["address"], chain, height)
+			if err != nil {
+				errors["CrescentClaim"] = err
+			}
 
-		for _, message := range messages {
-			response.Messages = append(response.Messages, message)
-		}
+			for _, message := range messages {
+				response.Messages = append(response.Messages, message)
+			}
 
-		for chainID, asset := range assets {
-			response.Assets[chainID] = append(response.Assets[chainID], types.Asset{Type: "crescentpool", Amount: asset})
+			for chainID, asset := range assets {
+				response.Assets[chainID] = append(response.Assets[chainID], types.Asset{Type: "crescentpool", Amount: asset})
+			}
 		}
 
 		// liquid for all zones; config should hold osmosis chainid.
