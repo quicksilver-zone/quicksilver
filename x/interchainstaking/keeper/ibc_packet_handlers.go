@@ -23,11 +23,12 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 type TypedMsg struct {
