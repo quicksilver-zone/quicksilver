@@ -35,9 +35,9 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 		k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
 			k.IterateZoneRedelegationRecords(ctx, zone.ChainId, func(index int64, key []byte, record types.RedelegationRecord) (stop bool) {
 				unbondingPeriod := time.Duration(zone.UnbondingPeriod / 1_000_000_000)
-				RedelegationDuration := time.Duration(epochInfo.CurrentEpoch-record.EpochNumber) * epochInfo.Duration
+				redelegationDuration := time.Duration(epochInfo.CurrentEpoch-record.EpochNumber) * epochInfo.Duration
 
-				if RedelegationDuration >= unbondingPeriod {
+				if redelegationDuration >= unbondingPeriod {
 					k.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
 				}
 
