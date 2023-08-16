@@ -4,13 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"net/http"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/gorilla/mux"
+
 	"github.com/ingenuity-build/multierror"
 	prewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-
 	"github.com/ingenuity-build/xcclookup/pkgs/claims"
 	"github.com/ingenuity-build/xcclookup/pkgs/failsim"
 	"github.com/ingenuity-build/xcclookup/pkgs/types"
