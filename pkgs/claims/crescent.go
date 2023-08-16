@@ -34,9 +34,9 @@ func CrescentClaim(
 	// simFailure hooks: 0-8
 	simFailures := failsim.FailuresFromContext(ctx)
 	failures := make(map[uint8]struct{})
-	if UmeeClaimFailures, ok := simFailures[2]; ok {
+	if CrescentClaimFailures, ok := simFailures[2]; ok {
 		fmt.Println("liquid sim failures")
-		failures = UmeeClaimFailures
+		failures = CrescentClaimFailures
 	}
 	fmt.Println("simulate failures:", failures)
 
