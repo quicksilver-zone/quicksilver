@@ -582,11 +582,6 @@ func (appKeepers *AppKeepers) SetupHooks() {
 			appKeepers.ParticipationRewardsKeeper.Hooks(),
 		),
 	)
-	// appKeepers.GovKeeper.SetHooks(
-	// 	govtypes.NewMultiGovHooks(
-	// 	// insert governance hooks receivers here
-	// 	),
-	// )
 	appKeepers.InterchainstakingKeeper.SetHooks(
 		interchainstakingtypes.NewMultiIcsHooks(
 			appKeepers.ParticipationRewardsKeeper.Hooks(),

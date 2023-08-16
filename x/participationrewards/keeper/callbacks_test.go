@@ -82,10 +82,6 @@ func (suite *KeeperTestSuite) executeValidatorSelectionRewardsCallback(performan
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{DelegatorAddress: performanceAddress}
 	bz := prk.GetCodec().MustMarshal(&rewardsQuery)
 
-	// query, found := prk.IcqKeeper.GetQuery(ctx, qid)
-	// s.Require().True(found, "qid: %s", qid)
-
-	// Should we create a new query first since the query with the qid generate above i dont see where it was set in the store
 	query := prk.IcqKeeper.NewQuery(
 		types.ModuleName,
 		suite.path.EndpointA.ConnectionID,
