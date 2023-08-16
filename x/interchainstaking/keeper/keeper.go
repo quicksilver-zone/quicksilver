@@ -27,7 +27,6 @@ import (
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
 	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -41,9 +40,10 @@ type Keeper struct {
 	ICQKeeper           interchainquerykeeper.Keeper
 	AccountKeeper       types.AccountKeeper
 	BankKeeper          types.BankKeeper
-	IBCKeeper           ibckeeper.Keeper
+	IBCKeeper           *ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
-	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
+	ClaimsManagerKeeper types.ClaimsManagerKeeper
+	EpochsKeeper        types.EpochsKeeper
 	Ir                  codectypes.InterfaceRegistry
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
@@ -60,9 +60,9 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	icaControllerKeeper icacontrollerkeeper.Keeper,
 	icqKeeper interchainquerykeeper.Keeper,
-	ibcKeeper ibckeeper.Keeper,
+	ibcKeeper *ibckeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
-	claimsManagerKeeper claimsmanagerkeeper.Keeper,
+	claimsManagerKeeper types.ClaimsManagerKeeper,
 	ps paramtypes.Subspace,
 	msgRouter types.MessageRouter,
 	authority string,
@@ -72,11 +72,15 @@ func NewKeeper(
 	}
 
 	if addr := accountKeeper.GetModuleAddress(types.EscrowModuleAccount); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+		panic(fmt.Sprintf("%s escrow account has not been set", types.EscrowModuleAccount))
 	}
 
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
+	}
+
+	if ibcKeeper == nil {
+		panic("ibcKeeper is nil")
 	}
 
 	return &Keeper{
@@ -110,6 +114,10 @@ func (k *Keeper) SetHooks(icsh types.IcsHooks) *Keeper {
 
 func (k *Keeper) GetGovAuthority() string {
 	return k.authority
+}
+
+func (k *Keeper) SetEpochsKeeper(epochsKeeper types.EpochsKeeper) {
+	k.EpochsKeeper = epochsKeeper
 }
 
 // Logger returns a module-specific logger.

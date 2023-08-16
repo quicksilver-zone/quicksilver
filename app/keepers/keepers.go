@@ -57,7 +57,7 @@ import (
 	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v7/router/keeper"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
-	"github.com/ingenuity-build/quicksilver/proofs"
+	"github.com/ingenuity-build/quicksilver/utils"
 
 	appconfig "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/wasmbinding"
@@ -199,13 +199,13 @@ func (appKeepers *AppKeepers) InitKeepers(
 	wasmOpts []wasm.Option,
 ) {
 	// Add 'normal' keepers
-	proofOpsFn := proofs.ValidateProofOps
+	proofOpsFn := utils.ValidateProofOps
 	if mock {
-		proofOpsFn = proofs.MockProofOps
+		proofOpsFn = utils.MockProofOps
 	}
-	selfProofOpsFn := proofs.ValidateSelfProofOps
+	selfProofOpsFn := utils.ValidateSelfProofOps
 	if mock {
-		selfProofOpsFn = proofs.MockSelfProofOps
+		selfProofOpsFn = utils.MockSelfProofOps
 	}
 
 	appKeepers.ParamsKeeper = appKeepers.initParamsKeeper(appCodec, cdc, appKeepers.keys[paramstypes.StoreKey], appKeepers.tkeys[paramstypes.TStoreKey])
@@ -359,7 +359,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[claimsmanagertypes.StoreKey],
-		*appKeepers.IBCKeeper,
+		appKeepers.IBCKeeper,
 	)
 
 	// claimsmanagerModule := claimsmanager.NewAppModule(appCodec, appKeepers.ClaimsManagerKeeper)
@@ -373,7 +373,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.ICAControllerKeeper,
 		appKeepers.InterchainQueryKeeper,
-		*appKeepers.IBCKeeper,
+		appKeepers.IBCKeeper,
 		appKeepers.TransferKeeper,
 		appKeepers.ClaimsManagerKeeper,
 		appKeepers.GetSubspace(interchainstakingtypes.ModuleName),
@@ -389,8 +389,10 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
-		appKeepers.InterchainQueryKeeper,
+		appKeepers.IBCKeeper,
+		&appKeepers.InterchainQueryKeeper,
 		appKeepers.InterchainstakingKeeper,
+		appKeepers.ClaimsManagerKeeper,
 		authtypes.FeeCollectorName,
 		proofOpsFn,
 		selfProofOpsFn,
@@ -416,6 +418,8 @@ func (appKeepers *AppKeepers) InitKeepers(
 	// Quicksilver Keepers
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 	appKeepers.ParticipationRewardsKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
+	appKeepers.InterchainstakingKeeper.SetEpochsKeeper(&appKeepers.EpochsKeeper)
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
 	supportedFeatures := "iterator,staking,stargate,osmosis"
@@ -519,8 +523,8 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
 		appKeepers.GovKeeper,
+		appKeepers.IBCKeeper,
 		appKeepers.InterchainstakingKeeper,
-		appKeepers.InterchainQueryKeeper,
 		appKeepers.ParticipationRewardsKeeper,
 		proofOpsFn,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),

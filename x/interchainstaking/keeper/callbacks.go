@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/proofs"
+	"github.com/ingenuity-build/quicksilver/utils"
 
 	sdkioerrors "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -354,7 +354,7 @@ func checkTMStateValidity(
 	// - assert header timestamp is not past the trusting period
 	// - assert header timestamp is past latest stored consensus state timestamp
 	// - assert that a TrustLevel proportion of TrustedValidators signed new Commit
-	err = proofs.Verify(
+	err = utils.Verify(
 		&signedHeader,
 		tmTrustedValidators, tmSignedHeader, tmValidatorSet,
 		clientState.TrustingPeriod, currentTimestamp, clientState.MaxClockDrift, clientState.TrustLevel.ToTendermint(),

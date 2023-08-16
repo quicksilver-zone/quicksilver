@@ -33,13 +33,15 @@ func (k Keeper) AllocateHoldingsRewards(ctx sdk.Context) error {
 			}
 		}
 
-		if err := k.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address); err != nil {
-			k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
-			// we might want to do a soft fail here so that all zones are not affected...
-			return false
+		if zone.WithdrawalAddress != nil {
+			if err := k.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address); err != nil {
+				k.Logger(ctx).Error("failed to distribute to users", "ua", userAllocations, "err", err)
+				// we might want to do a soft fail here so that all zones are not affected...
+				return false
+			}
 		}
 
-		k.icsKeeper.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone)
+		k.ClaimsManagerKeeper.ArchiveAndGarbageCollectClaims(ctx, zone)
 		return false
 	})
 
@@ -66,7 +68,7 @@ func (k Keeper) CalcUserHoldingsAllocations(ctx sdk.Context, zone *icstypes.Zone
 	zoneAmount := math.ZeroInt()
 	userAmountsMap := make(map[string]math.Int)
 
-	k.icsKeeper.ClaimsManagerKeeper.IterateClaims(ctx, zone.ZoneID(), func(_ int64, claim cmtypes.Claim) (stop bool) {
+	k.ClaimsManagerKeeper.IterateClaims(ctx, zone.ChainId, func(_ int64, claim cmtypes.Claim) (stop bool) {
 		amount := math.NewIntFromUint64(claim.Amount)
 		k.Logger(ctx).Info(
 			"claim",
