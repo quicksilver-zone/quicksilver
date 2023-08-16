@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/ingenuity-build/quicksilver/utils"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
