@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	"github.com/strangelove-ventures/interchaintest/v7"
-	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v7/ibc"
-	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v7/testutil"
+	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
+	"github.com/strangelove-ventures/interchaintest/v5"
+	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v5/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
