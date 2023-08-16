@@ -96,7 +96,7 @@ func GetEpochHandler(
 				errors["OsmosisConfig"] = err
 			} else {
 				fmt.Println("check osmosis last epoch height...")
-				if err = ValidateHeight(connections, chain, failAt); err != nil {
+				if height, err = ValidateHeight(connections, chain, failAt); err != nil {
 					errors["OsmosisHeight"] = err
 				} else {
 					fmt.Println("fetch osmosis claim...")
@@ -119,7 +119,7 @@ func GetEpochHandler(
 				errors["UmeeConfig"] = err
 			} else {
 				fmt.Println("check umee last epoch height...")
-				if err = ValidateHeight(connections, chain, failAt); err != nil {
+				if height, err = ValidateHeight(connections, chain, failAt); err != nil {
 					errors["UmeeHeight"] = err
 				} else {
 					fmt.Println("fetch umee claim...")
@@ -143,7 +143,7 @@ func GetEpochHandler(
 				errors["CrescentConfig"] = err
 			} else {
 				fmt.Println("check crescent last epoch height...")
-				if err = ValidateHeight(connections, chain, failAt); err != nil {
+				if height, err = ValidateHeight(connections, chain, failAt); err != nil {
 					errors["UmeeHeight"] = err
 				} else {
 					fmt.Println("fetch crescent claim...")
@@ -185,7 +185,7 @@ func ValidateChainConfig(name, chain string, failAt map[uint8]struct{}) error {
 	return nil
 }
 
-func ValidateHeight(connections []prewards.ConnectionProtocolData, chain string, failAt map[uint8]struct{}) error {
+func ValidateHeight(connections []prewards.ConnectionProtocolData, chain string, failAt map[uint8]struct{}) (int64, error) {
 	var height int64
 	for _, con := range connections {
 		if con.ChainID == chain {
@@ -199,9 +199,9 @@ func ValidateHeight(connections []prewards.ConnectionProtocolData, chain string,
 	}
 
 	if height == 0 {
-		return fmt.Errorf("fetched height is 0")
+		return height, fmt.Errorf("fetched height is 0")
 	}
-	return nil
+	return height, nil
 }
 
 func UpdateResponse(response types.Response, messages map[string]prewards.MsgSubmitClaim, assets map[string]sdk.Coins, assetType string) types.Response {
