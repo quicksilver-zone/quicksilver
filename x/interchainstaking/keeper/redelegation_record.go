@@ -85,3 +85,8 @@ func (k *Keeper) ZoneRedelegationRecords(ctx sdk.Context, chainID string) []type
 	})
 	return records
 }
+
+// IterateZoneRedelegationRecords iterates through every record in the store for the specified zone.
+func (k *Keeper) IterateZoneRedelegationRecords(ctx sdk.Context, chainID string, fn func(index int64, key []byte, record types.RedelegationRecord) (stop bool)) {
+	k.IteratePrefixedRedelegationRecords(ctx, []byte(chainID), fn)
+}
