@@ -8,8 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/utils"
-
 	sdkioerrors "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	tmtypes "github.com/cometbft/cometbft/types"
