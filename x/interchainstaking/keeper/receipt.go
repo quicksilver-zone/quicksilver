@@ -123,6 +123,41 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 	return nil
 }
 
+// SendTokenIBC is a helper function that finds the zone channel and performs an ibc transfer from senderAccAddress
+// to receiver.
+func (k *Keeper) SendTokenIBC(ctx sdk.Context, senderAccAddress sdk.AccAddress, receiver string, zone *types.Zone, coin sdk.Coin) error {
+	var srcPort string
+	var srcChannel string
+
+	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
+		if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
+			srcChannel = channel.Counterparty.ChannelId
+			srcPort = channel.Counterparty.PortId
+			return true
+		}
+		return false
+	})
+	if srcPort == "" {
+		return errors.New("unable to find remote transfer connection")
+	}
+
+	transferMsg := &ibctransfertypes.MsgTransfer{
+		SourcePort:    srcPort,
+		SourceChannel: srcChannel,
+		Token:         coin,
+		Sender:        senderAccAddress.String(),
+		Receiver:      receiver,
+		TimeoutHeight: clienttypes.Height{
+			RevisionNumber: 0,
+			RevisionHeight: 0,
+		},
+		TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
+	}
+
+	_, err := k.TransferKeeper.Transfer(ctx, transferMsg)
+	return err
+}
+
 // MintAndSendQAsset mints qAssets based on the native asset redemption rate.  Tokens are then transferred to the given user.
 // The function handles the following cases:
 //  1. If the zone is labeled "return to sender" or the Tx memo contains "return to sender" flag:
@@ -168,35 +203,7 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 
 	switch {
 	case zone.ReturnToSender || memoRTS:
-		var srcPort string
-		var srcChannel string
-
-		k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
-			if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
-				srcChannel = channel.Counterparty.ChannelId
-				srcPort = channel.Counterparty.PortId
-				return true
-			}
-			return false
-		})
-		if srcPort == "" {
-			return errors.New("unable to find remote transfer connection")
-		}
-
-		transferMsg := ibctransfertypes.MsgTransfer{
-			SourcePort:    srcPort,
-			SourceChannel: srcChannel,
-			Token:         qAssets[0],
-			Sender:        k.AccountKeeper.GetModuleAddress(types.ModuleName).String(),
-			Receiver:      senderAddress,
-			TimeoutHeight: clienttypes.Height{
-				RevisionNumber: 0,
-				RevisionHeight: 0,
-			},
-			TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 5*time.Minute.Nanoseconds()),
-		}
-
-		_, err = k.TransferKeeper.Transfer(ctx, &transferMsg)
+		err = k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, qAssets[0])
 
 	case mappedAddress != nil && !zone.Is_118:
 		// set mapped account
