@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
@@ -130,23 +131,31 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 
 	k.SetZone(ctx, zone)
 
+	appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
+		Version:                icatypes.Version,
+		ControllerConnectionId: zone.ConnectionId,
+		HostConnectionId:       connection.Counterparty.ConnectionId,
+		Encoding:               icatypes.EncodingProtobuf,
+		TxType:                 icatypes.TxTypeSDKMultiMsg,
+	}))
+
 	// generate deposit account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), appVersion); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
-	// generate the withdrawal account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
-		return nil, err
+	// generate withdrawal account
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner(), appVersion); err != nil {
+		return &types.MsgRegisterZoneResponse{}, err
 	}
 
-	// generate the perf account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
+	// generate perf account
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner(), appVersion); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
 	// generate delegate accounts
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner(), appVersion); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
@@ -300,23 +309,31 @@ func (k msgServer) UpdateZone(goCtx context.Context, msg *types.MsgUpdateZone) (
 
 			k.SetZone(ctx, &zone)
 
+			appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
+				Version:                icatypes.Version,
+				ControllerConnectionId: zone.ConnectionId,
+				HostConnectionId:       connection.Counterparty.ConnectionId,
+				Encoding:               icatypes.EncodingProtobuf,
+				TxType:                 icatypes.TxTypeSDKMultiMsg,
+			}))
+
 			// generate deposit account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), appVersion); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate withdrawal account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner(), appVersion); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate perf account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner(), appVersion); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate delegate accounts
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner(), appVersion); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
@@ -392,7 +409,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	if zone.LiquidityModule {
-		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil { //nolint:contextcheck // incorrect lint firing
 			return nil, fmt.Errorf("unable to process redemption for LSM: %w", err)
 		}
 	} else {
@@ -467,10 +484,10 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 	// TODO handle for subzone?
 
 	// remove leading prefix icacontroller- if passed in msg
-	portID := strings.ReplaceAll(msg.PortId, "icacontroller-", "")
+	portOwner := strings.ReplaceAll(msg.PortId, "icacontroller-", "")
 
 	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
-	parts := strings.Split(portID, ".")
+	parts := strings.Split(portOwner, ".")
 
 	// portId and connectionId format validated in validateBasic, so not duplicated here.
 
@@ -484,11 +501,23 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		return nil, fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", chainID, parts[0])
 	}
 
-	if _, found := k.GetZone(ctx, chainID); !found {
+	connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, msg.ConnectionId)
+	if !found {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("unable to fetch connection")
+	}
+	zone, found := k.GetZone(ctx, chainID)
+	if !found {
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
 	}
 
-	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
+	appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
+		Version:                icatypes.Version,
+		ControllerConnectionId: zone.ConnectionId,
+		HostConnectionId:       connection.Counterparty.ConnectionId,
+		Encoding:               icatypes.EncodingProtobuf,
+		TxType:                 icatypes.TxTypeSDKMultiMsg,
+	}))
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, portOwner, appVersion); err != nil { //nolint:contextcheck // suppress incorrect lint error
 		return &types.MsgGovReopenChannelResponse{}, err
 	}
 
@@ -499,7 +528,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		),
 		sdk.NewEvent(
 			types.EventTypeReopenICA,
-			sdk.NewAttribute(types.AttributeKeyPortID, portID),
+			sdk.NewAttribute(types.AttributeKeyPortID, portOwner),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
 		),
 	})

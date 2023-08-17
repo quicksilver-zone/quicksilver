@@ -37,7 +37,6 @@ func ValidateProofOps(
 	if !found {
 		return errors.New("unable to fetch consensus state")
 	}
-
 	expConsensusState, ok := consensusState.(*tmclienttypes.ConsensusState)
 	if !ok {
 		return errors.New("unable to convert consensus state")

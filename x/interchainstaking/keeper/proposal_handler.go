@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -102,27 +100,35 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 
 	k.SetZone(ctx, zone)
 
+	appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
+		Version:                icatypes.Version,
+		ControllerConnectionId: zone.ConnectionId,
+		HostConnectionId:       connection.Counterparty.ConnectionId,
+		Encoding:               icatypes.EncodingProtobuf,
+		TxType:                 icatypes.TxTypeSDKMultiMsg,
+	}))
+
 	// generate deposit account
 	portOwner := chainID + ".deposit"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner, appVersion); err != nil {
 		return err
 	}
 
 	// generate withdrawal account
 	portOwner = chainID + ".withdrawal"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner, appVersion); err != nil {
 		return err
 	}
 
 	// generate perf account
 	portOwner = chainID + ".performance"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner, appVersion); err != nil {
 		return err
 	}
 
 	// generate delegate accounts
 	portOwner = chainID + ".delegate"
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, portOwner); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner, appVersion); err != nil {
 		return err
 	}
 
@@ -152,29 +158,6 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 			sdk.NewAttribute(types.AttributeKeyChainID, chainID),
 		),
 	})
-
-	return nil
-}
-
-func (k *Keeper) registerInterchainAccount(ctx sdk.Context, connectionID, portOwner string) error {
-	msg := &icacontrollertypes.MsgRegisterInterchainAccount{
-		Owner:        portOwner,
-		ConnectionId: connectionID,
-		Version:      "",
-	}
-
-	handler := k.msgRouter.Handler(msg)
-	_, err := handler(ctx, msg)
-	if err != nil {
-		return err
-	}
-
-	portID, err := icatypes.NewControllerPortID(portOwner)
-	if err != nil {
-		return err
-	}
-
-	k.SetConnectionForPort(ctx, connectionID, portID)
 
 	return nil
 }
@@ -291,23 +274,31 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 
 			k.SetZone(ctx, &zone)
 
+			appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
+				Version:                icatypes.Version,
+				ControllerConnectionId: zone.ConnectionId,
+				HostConnectionId:       connection.Counterparty.ConnectionId,
+				Encoding:               icatypes.EncodingProtobuf,
+				TxType:                 icatypes.TxTypeSDKMultiMsg,
+			}))
+
 			// generate deposit account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner()); err != nil {
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), appVersion); err != nil {
 				return err
 			}
 
 			// generate withdrawal account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner(), appVersion); err != nil {
 				return err
 			}
 
 			// generate perf account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner()); err != nil {
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner(), appVersion); err != nil {
 				return err
 			}
 
 			// generate delegate accounts
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner()); err != nil {
+			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner(), appVersion); err != nil {
 				return err
 			}
 

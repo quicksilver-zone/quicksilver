@@ -413,7 +413,6 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 	}
 
 	k.Logger(ctx).Info("messages to send", "messages", msgs)
-
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo, zone.MessagesPerTx)
 }
 
