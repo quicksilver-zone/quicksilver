@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -697,4 +699,26 @@ func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error)
 	}
 
 	return validator, nil
+}
+
+func (k *Keeper) registerInterchainAccount(ctx sdk.Context, zoneConnectionID, counterpartyConnectionID, portOwner string) error {
+	appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
+		Version:                icatypes.Version,
+		ControllerConnectionId: zoneConnectionID,
+		HostConnectionId:       counterpartyConnectionID,
+		Encoding:               icatypes.EncodingProtobuf,
+		TxType:                 icatypes.TxTypeSDKMultiMsg,
+	}))
+
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zoneConnectionID, portOwner, appVersion); err != nil {
+		return err
+	}
+	portID, err := icatypes.NewControllerPortID(portOwner)
+	if err != nil {
+		return err
+	}
+
+	k.SetConnectionForPort(ctx, zoneConnectionID, portID)
+
+	return nil
 }

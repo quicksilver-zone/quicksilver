@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
 
@@ -100,35 +99,23 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 
 	k.SetZone(ctx, zone)
 
-	appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
-		Version:                icatypes.Version,
-		ControllerConnectionId: zone.ConnectionId,
-		HostConnectionId:       connection.Counterparty.ConnectionId,
-		Encoding:               icatypes.EncodingProtobuf,
-		TxType:                 icatypes.TxTypeSDKMultiMsg,
-	}))
-
 	// generate deposit account
-	portOwner := chainID + ".deposit"
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner, appVersion); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.DepositPortOwner()); err != nil {
 		return err
 	}
 
 	// generate withdrawal account
-	portOwner = chainID + ".withdrawal"
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner, appVersion); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
 		return err
 	}
 
 	// generate perf account
-	portOwner = chainID + ".performance"
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner, appVersion); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.PerformancePortOwner()); err != nil {
 		return err
 	}
 
 	// generate delegate accounts
-	portOwner = chainID + ".delegate"
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner, appVersion); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.DelegatePortOwner()); err != nil {
 		return err
 	}
 
@@ -274,31 +261,23 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 
 			k.SetZone(ctx, &zone)
 
-			appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
-				Version:                icatypes.Version,
-				ControllerConnectionId: zone.ConnectionId,
-				HostConnectionId:       connection.Counterparty.ConnectionId,
-				Encoding:               icatypes.EncodingProtobuf,
-				TxType:                 icatypes.TxTypeSDKMultiMsg,
-			}))
-
 			// generate deposit account
-			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), appVersion); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.DepositPortOwner()); err != nil {
 				return err
 			}
 
 			// generate withdrawal account
-			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner(), appVersion); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
 				return err
 			}
 
 			// generate perf account
-			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner(), appVersion); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.PerformancePortOwner()); err != nil {
 				return err
 			}
 
 			// generate delegate accounts
-			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner(), appVersion); err != nil {
+			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.DelegatePortOwner()); err != nil {
 				return err
 			}
 
