@@ -83,11 +83,11 @@ import (
 
 type AppKeepers struct {
 	// make scoped keepers public for test purposes
-	ScopedIBCKeeper                      capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper                 capabilitykeeper.ScopedKeeper
-	ScopedICAControllerKeeper            capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper                  capabilitykeeper.ScopedKeeper
-	scopedWasmKeeper                     capabilitykeeper.ScopedKeeper // TODO: we can use this for testing
+	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
+	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
+	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
+	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
+	scopedWasmKeeper          capabilitykeeper.ScopedKeeper // TODO: we can use this for testing
 
 	// "Normal" keepers
 	// 		SDK

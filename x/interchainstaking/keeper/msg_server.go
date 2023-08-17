@@ -14,9 +14,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -316,7 +316,7 @@ func (k msgServer) UpdateZone(goCtx context.Context, msg *types.MsgUpdateZone) (
 				Encoding:               icatypes.EncodingProtobuf,
 				TxType:                 icatypes.TxTypeSDKMultiMsg,
 			}))
-		
+
 			// generate deposit account
 			if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), appVersion); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
@@ -517,8 +517,6 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		Encoding:               icatypes.EncodingProtobuf,
 		TxType:                 icatypes.TxTypeSDKMultiMsg,
 	}))
-
-
 	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, msg.ConnectionId, portOwner, appVersion); err != nil { //nolint:contextcheck // suppress incorrect lint error
 		return &types.MsgGovReopenChannelResponse{}, err
 	}
