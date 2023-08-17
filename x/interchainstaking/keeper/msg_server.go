@@ -125,22 +125,22 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 	k.SetZone(ctx, zone)
 
 	// generate deposit account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), zone.ZoneID()); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone, connection.Counterparty.ConnectionId, zone.DepositPortOwner()); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
-	// generate the withdrawal account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner(), zone.ZoneID()); err != nil {
-		return nil, err
+	// generate withdrawal account
+	if err := k.registerInterchainAccount(ctx, zone, connection.Counterparty.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
+		return &types.MsgRegisterZoneResponse{}, err
 	}
 
-	// generate the perf account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner(), zone.ZoneID()); err != nil {
+	// generate perf account
+	if err := k.registerInterchainAccount(ctx, zone, connection.Counterparty.ConnectionId, zone.PerformancePortOwner()); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
 	// generate delegate accounts
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner(), zone.ZoneID()); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone, connection.Counterparty.ConnectionId, zone.DelegatePortOwner()); err != nil {
 		return &types.MsgRegisterZoneResponse{}, err
 	}
 
@@ -297,22 +297,22 @@ func (k msgServer) UpdateZone(goCtx context.Context, msg *types.MsgUpdateZone) (
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DepositPortOwner(), zone.ZoneID()); err != nil {
+			if err := k.registerInterchainAccount(ctx, &zone, connection.Counterparty.ConnectionId, zone.DepositPortOwner()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate withdrawal account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.WithdrawalPortOwner(), zone.ZoneID()); err != nil {
+			if err := k.registerInterchainAccount(ctx, &zone, connection.Counterparty.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate perf account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.PerformancePortOwner(), zone.ZoneID()); err != nil {
+			if err := k.registerInterchainAccount(ctx, &zone, connection.Counterparty.ConnectionId, zone.PerformancePortOwner()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
 			// generate delegate accounts
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, zone.DelegatePortOwner(), zone.ZoneID()); err != nil {
+			if err := k.registerInterchainAccount(ctx, &zone, connection.Counterparty.ConnectionId, zone.DelegatePortOwner()); err != nil {
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
@@ -393,7 +393,7 @@ func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgReques
 	}
 
 	if zone.LiquidityModule {
-		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil {
+		if err := k.processRedemptionForLsm(ctx, zone, sender, msg.DestinationAddress, nativeTokens, msg.Value, hashString); err != nil { //nolint:contextcheck // incorrect lint firing
 			return nil, fmt.Errorf("unable to process redemption for LSM: %w", err)
 		}
 	} else {
@@ -470,24 +470,27 @@ func (k msgServer) SignalIntent(goCtx context.Context, msg *types.MsgSignalInten
 func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO handle for subzone?
-
 	// remove leading prefix icacontroller- if passed in msg
-	portID := strings.ReplaceAll(msg.PortId, "icacontroller-", "")
+	portOwner := strings.ReplaceAll(msg.PortId, "icacontroller-", "")
 
 	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
-	parts := strings.Split(portID, ".")
+	parts := strings.Split(portOwner, ".")
 
 	// portId and connectionId format validated in validateBasic, so not duplicated here.
+
+	connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, msg.ConnectionId)
+	if !found {
+		return &types.MsgGovReopenChannelResponse{}, errors.New("unable to fetch connection")
+	}
 
 	// assert chainId matches connectionId
 	chainID, err := k.GetChainIDFromConnection(ctx, msg.ConnectionId)
 	if err != nil {
-		return nil, fmt.Errorf("unable to obtain chain id: %w", err)
+		return &types.MsgGovReopenChannelResponse{}, fmt.Errorf("unable to obtain chain id: %w", err)
 	}
 
 	if chainID != parts[0] {
-		return nil, fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", chainID, parts[0])
+		return &types.MsgGovReopenChannelResponse{}, fmt.Errorf("chainID / connectionID mismatch. Connection: %s, Port: %s", chainID, parts[0])
 	}
 
 	zone, found := k.GetZone(ctx, chainID)
@@ -495,7 +498,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
 	}
 
-	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID, zone.ZoneID()); err != nil {
+	if err := k.registerInterchainAccount(ctx, &zone, connection.Counterparty.ConnectionId, portOwner); err != nil {
 		return &types.MsgGovReopenChannelResponse{}, err
 	}
 
@@ -506,7 +509,7 @@ func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReop
 		),
 		sdk.NewEvent(
 			types.EventTypeReopenICA,
-			sdk.NewAttribute(types.AttributeKeyPortID, portID),
+			sdk.NewAttribute(types.AttributeKeyPortID, portOwner),
 			sdk.NewAttribute(types.AttributeKeyConnectionID, msg.ConnectionId),
 		),
 	})

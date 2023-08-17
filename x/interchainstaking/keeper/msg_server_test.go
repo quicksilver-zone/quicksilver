@@ -1610,7 +1610,7 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 					Authority:    "",
 				}
 			},
-			"unable to obtain chain id",
+			"unable to fetch connection",
 		},
 		{
 			"invalid: invalid connection ID",

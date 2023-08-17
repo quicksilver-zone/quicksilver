@@ -185,13 +185,17 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 			var zoneDrop *types.ZoneDrop
 			// assert zonedrop exists
 			for _, zd := range airdropGenState.ZoneDrops {
-				if zd.ChainId == claimRecords[0].ChainId {
+				if len(claimRecords) > 0 && zd.ChainId == claimRecords[0].ChainId { //nolint:gosec // added bounds check
 					zoneDrop = zd
 				}
 			}
 
 			if zoneDrop == nil {
-				return fmt.Errorf("zoneDrop doesn't exist for chain ID: %s", claimRecords[0].ChainId)
+				if len(claimRecords) > 0 {
+					return fmt.Errorf("zoneDrop doesn't exist for chain ID: %s", claimRecords[0].ChainId) //nolint:gosec // added bounds check
+				}
+				return fmt.Errorf("no claim records found")
+
 			}
 
 			authGenState := authtypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
@@ -202,12 +206,12 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 			}
 			bankGenState := banktypes.GetGenesisStateFromAppState(clientCtx.Codec, appState)
 
-			zoneclaims := map[string]bool{}
+			zoneClaims := map[string]bool{}
 			existing := airdropGenState.ClaimRecords
 
 			for _, i := range existing {
-				if i.ChainId == claimRecords[0].ChainId {
-					zoneclaims[i.Address] = true
+				if len(claimRecords) > 0 && i.ChainId == claimRecords[0].ChainId { //nolint:gosec // added bounds check
+					zoneClaims[i.Address] = true
 				}
 			}
 
@@ -216,7 +220,7 @@ func BulkGenesisAirdropCmd(defaultNodeHome string) *cobra.Command {
 					fmt.Printf("(%d/%d)...\n", idx, len(claimRecords))
 				}
 
-				if _, exists := zoneclaims[claimRecord.Address]; exists {
+				if _, exists := zoneClaims[claimRecord.Address]; exists {
 					return fmt.Errorf("airdrop claimRecord already exists for user %s on chain ID: %s", claimRecord.Address, claimRecord.ChainId)
 				}
 

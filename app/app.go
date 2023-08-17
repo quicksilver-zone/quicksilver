@@ -74,8 +74,8 @@ var (
 )
 
 var (
-	_ servertypes.Application = (*Quicksilver)(nil)
 	_ runtime.AppI            = (*Quicksilver)(nil)
+	_ servertypes.Application = (*Quicksilver)(nil)
 )
 
 // Quicksilver implements an extended ABCI application.
@@ -124,7 +124,7 @@ func NewQuicksilver(
 		Name,
 		logger,
 		db,
-		encodingConfig.TxConfig.TxDecoder(),
+		txConfig.TxDecoder(),
 		baseAppOptions...,
 	)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -357,6 +357,7 @@ func (app *Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.A
 	// Register new tendermint queries routes from grpc-gateway.
 	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
+	// Register node gRPC service for grpc-gateway.
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
