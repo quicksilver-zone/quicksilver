@@ -448,7 +448,11 @@ func (appKeepers *AppKeepers) InitKeepers(
 
 	var icaControllerStack porttypes.IBCModule
 	icaControllerStack = interchainstaking.NewIBCModule(appKeepers.InterchainstakingKeeper)
-	appKeepers.ICSModule = icaControllerStack.(interchainstaking.IBCModule)
+	interchainstakingIBCModule, ok := icaControllerStack.(interchainstaking.IBCModule)
+	if !ok {
+		panic("unable to create interchainstaking module from ICA controller stack")
+	}
+	appKeepers.ICSModule = interchainstakingIBCModule
 	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, appKeepers.ICAControllerKeeper)
 
 	icaHostIBCModule := icahost.NewIBCModule(appKeepers.ICAHostKeeper)
