@@ -78,8 +78,8 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, _ int64)
 		}
 
 		if err := k.AllocateZoneRewards(ctx, tvs, *allocation); err != nil {
-			k.Logger(ctx).Error(err.Error())
-			return err
+			k.Logger(ctx).Error("unable to allocate: tvl is zero", "error", err.Error())
+			return nil
 		}
 
 		if !allocation.Lockup.IsZero() {
