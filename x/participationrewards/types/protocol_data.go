@@ -2,64 +2,59 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/multierror"
 )
 
 func NewProtocolData(datatype string, data json.RawMessage) *ProtocolData {
 	return &ProtocolData{Type: datatype, Data: data}
 }
 
+func unmarshalProtocolData[V ProtocolDataI](data json.RawMessage) (ProtocolDataI, error) {
+	var cpd, blank V
+	_ = json.Unmarshal([]byte(`{}`), &blank)
+	err := json.Unmarshal(data, &cpd)
+	if err != nil {
+		return nil, fmt.Errorf("unable to unmarshal intermediary %s: %w", reflect.TypeOf(cpd).Name(), err)
+	}
+	if reflect.DeepEqual(cpd, blank) {
+		return nil, fmt.Errorf("unable to unmarshal %s from empty JSON object", reflect.TypeOf(cpd).Name())
+	}
+	return cpd, nil
+}
+
 func UnmarshalProtocolData(datatype ProtocolDataType, data json.RawMessage) (ProtocolDataI, error) {
 	switch datatype {
 	case ProtocolDataTypeConnection:
-		cpd := ConnectionProtocolData{}
-		err := json.Unmarshal(data, &cpd)
-		if err != nil {
-			return nil, err
-		}
-		var blank ConnectionProtocolData
-		if reflect.DeepEqual(cpd, blank) {
-			return nil, errors.New("unable to unmarshal connection protocol data from empty JSON object")
-		}
-		return &cpd, nil
+		return unmarshalProtocolData[*ConnectionProtocolData](data)
 	case ProtocolDataTypeOsmosisParams:
-		oppd := OsmosisParamsProtocolData{}
-		err := json.Unmarshal(data, &oppd)
-		if err != nil {
-			return nil, err
-		}
-		var blank OsmosisParamsProtocolData
-		if reflect.DeepEqual(oppd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal osmosisparams protocol data from empty JSON object")
-		}
-		return &oppd, nil
+		return unmarshalProtocolData[*OsmosisParamsProtocolData](data)
 	case ProtocolDataTypeLiquidToken:
-		ladpd := LiquidAllowedDenomProtocolData{}
-		err := json.Unmarshal(data, &ladpd)
-		if err != nil {
-			return nil, err
-		}
-		var blank LiquidAllowedDenomProtocolData
-		if reflect.DeepEqual(ladpd, blank) {
-			return nil, errors.New("unable to unmarshal liquid protocol data from empty JSON object")
-		}
-		return &ladpd, nil
+		return unmarshalProtocolData[*LiquidAllowedDenomProtocolData](data)
 	case ProtocolDataTypeOsmosisPool:
-		oppd := OsmosisPoolProtocolData{}
-		err := json.Unmarshal(data, &oppd)
-		if err != nil {
-			return nil, fmt.Errorf("unable to unmarshal intermediary osmosisPoolProtocolData: %w", err)
-		}
-		var blank OsmosisPoolProtocolData
-		if reflect.DeepEqual(oppd, blank) {
-			return nil, fmt.Errorf("unable to unmarshal osmosispool protocol data from empty JSON object")
-		}
-
-		return &oppd, nil
+		return unmarshalProtocolData[*OsmosisPoolProtocolData](data)
+	case ProtocolDataTypeUmeeParams:
+		return unmarshalProtocolData[*UmeeParamsProtocolData](data)
+	case ProtocolDataTypeUmeeReserves:
+		return unmarshalProtocolData[*UmeeReservesProtocolData](data)
+	case ProtocolDataTypeUmeeUTokenSupply:
+		return unmarshalProtocolData[*UmeeUTokenSupplyProtocolData](data)
+	case ProtocolDataTypeUmeeTotalBorrows:
+		return unmarshalProtocolData[*UmeeTotalBorrowsProtocolData](data)
+	case ProtocolDataTypeUmeeInterestScalar:
+		return unmarshalProtocolData[*UmeeInterestScalarProtocolData](data)
+	case ProtocolDataTypeUmeeLeverageModuleBalance:
+		return unmarshalProtocolData[*UmeeLeverageModuleBalanceProtocolData](data)
+	case ProtocolDataTypeCrescentParams:
+		return unmarshalProtocolData[*CrescentParamsProtocolData](data)
+	case ProtocolDataTypeCrescentPool:
+		return unmarshalProtocolData[*CrescentPoolProtocolData](data)
+	case ProtocolDataTypeCrescentPoolCoinSupply:
+		return unmarshalProtocolData[*CrescentPoolCoinSupplyProtocolData](data)
+	case ProtocolDataTypeCrescentReserveAddressBalance:
+		return unmarshalProtocolData[*CrescentReserveAddressBalanceProtocolData](data)
 	default:
 		return nil, ErrUnknownProtocolDataType
 	}
@@ -110,4 +105,10 @@ var (
 	_ ProtocolDataI = &OsmosisPoolProtocolData{}
 	_ ProtocolDataI = &OsmosisParamsProtocolData{}
 	_ ProtocolDataI = &LiquidAllowedDenomProtocolData{}
+	_ ProtocolDataI = &UmeeProtocolData{}
+	_ ProtocolDataI = &UmeeParamsProtocolData{}
+	_ ProtocolDataI = &CrescentParamsProtocolData{}
+	_ ProtocolDataI = &CrescentPoolProtocolData{}
+	_ ProtocolDataI = &CrescentReserveAddressBalanceProtocolData{}
+	_ ProtocolDataI = &CrescentPoolCoinSupplyProtocolData{}
 )

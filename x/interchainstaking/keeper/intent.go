@@ -7,8 +7,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/ingenuity-build/multierror"
 
-	"github.com/ingenuity-build/quicksilver/internal/multierror"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	prtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
@@ -94,23 +94,15 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 	snapshot := false
 	aggregate := make(types.ValidatorIntents, 0)
 	ordinalizedIntentSum := sdk.ZeroDec()
-	// reduce intents
 
 	k.IterateDelegatorIntents(ctx, zone, snapshot, func(_ int64, delIntent types.DelegatorIntent) (stop bool) {
-		// addr, localErr := sdk.AccAddressFromBech32(intent.Delegator)
-		// if localErr != nil {
-		// 	err = localErr
-		// 	return true
-		// }
-		// balance := k.BankKeeper.GetBalance(ctx, addr, zone.LocalDenom)
 		balance := sdk.NewCoin(zone.LocalDenom, sdkmath.ZeroInt())
-
 		// grab offchain asset value, and raise the users' base value by this amount.
 		// currently ignoring base value (locally held assets)
 		k.ClaimsManagerKeeper.IterateLastEpochUserClaims(ctx, zone.ChainId, delIntent.Delegator, func(index int64, data prtypes.Claim) (stop bool) {
 			balance.Amount = balance.Amount.Add(sdkmath.NewIntFromUint64(data.Amount))
 			// claim amounts are in zone.baseDenom - but given weights are all relative to one another this okay.
-			k.Logger(ctx).Error(
+			k.Logger(ctx).Debug(
 				"intents - found claim for user",
 				"user", delIntent.Delegator,
 				"claim amount", data.Amount,
@@ -120,7 +112,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 		})
 
 		valIntents := delIntent.Ordinalize(sdk.NewDecFromInt(balance.Amount)).Intents
-		k.Logger(ctx).Error(
+		k.Logger(ctx).Debug(
 			"intents - ordinalized",
 			"user", delIntent.Delegator,
 			"new balance", balance.Amount,
@@ -142,6 +134,27 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 		return false
 	})
 
+	// weight supply for which we do not have claim equally across active validators.
+	// this stops a small number of claimants exercising a disproportionate amount of
+	// power, in the event claims cannot be made properly.
+	supply := k.BankKeeper.GetSupply(ctx, zone.LocalDenom)
+	defaults := k.DefaultAggregateIntents(ctx, zone.ChainId)
+	nonVotingSupply := sdk.NewDecFromInt(supply.Amount).Sub(ordinalizedIntentSum)
+	di := types.DelegatorIntent{Delegator: "", Intents: defaults}
+	di = di.Ordinalize(nonVotingSupply)
+	defaults = di.Intents
+
+	for idx := range defaults.Sort() {
+		valIntent, found := aggregate.GetForValoper(defaults[idx].ValoperAddress)
+		ordinalizedIntentSum = ordinalizedIntentSum.Add(defaults[idx].Weight)
+		if !found {
+			aggregate = append(aggregate, defaults[idx])
+		} else {
+			valIntent.Weight = valIntent.Weight.Add(defaults[idx].Weight)
+			aggregate = aggregate.SetForValoper(defaults[idx].ValoperAddress, valIntent)
+		}
+	}
+
 	if len(aggregate) > 0 && ordinalizedIntentSum.IsZero() {
 		return errors.New("ordinalized intent sum is zero, this may happen if no claims are recorded")
 	}
@@ -149,7 +162,7 @@ func (k *Keeper) AggregateDelegatorIntents(ctx sdk.Context, zone *types.Zone) er
 	// normalise aggregated intents again.
 	newAggregate := make(types.ValidatorIntents, 0)
 	for _, valIntent := range aggregate.Sort() {
-		if !valIntent.Weight.IsZero() && valIntent.Weight.IsPositive() {
+		if valIntent.Weight.IsPositive() {
 			valIntent.Weight = valIntent.Weight.Quo(ordinalizedIntentSum)
 			newAggregate = append(newAggregate, valIntent)
 		}

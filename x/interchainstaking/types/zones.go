@@ -1,13 +1,13 @@
 package types
 
 import (
-	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
@@ -24,6 +24,10 @@ func (z *Zone) GetValoperPrefix() string {
 
 func (z Zone) IsDelegateAddress(addr string) bool {
 	return z.DelegationAddress != nil && z.DelegationAddress.Address == addr
+}
+
+func (z Zone) IsWithdrawalAddress(addr string) bool {
+	return z.WithdrawalAddress != nil && z.WithdrawalAddress.Address == addr
 }
 
 func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
@@ -87,35 +91,10 @@ COINS:
 	return out
 }
 
-func (z *Zone) ConvertMemoToOrdinalIntents(coins sdk.Coins, memo string) (ValidatorIntents, error) {
-	// should we be return DelegatorIntent here?
-
-	validatorIntents, _, err := z.DecodeMemo(coins, memo)
-	if err != nil {
-		return ValidatorIntents{}, fmt.Errorf("error decoding memo: %w", err)
-	}
-
-	return validatorIntents, nil
-}
-
-// decode memo
-// if zone.Is_118:
-//		decode as we have ( up to 8 validators)
-// 		return
-//
-// decode as we have (up to 6 validators)
-// look for separator 0xFF
-// field_id = [
-//  0x00 = map
-//  0x01 = rts
-// ] // will scale to future fields
-
-var separator = []byte{byte(255)}
-
 const (
-	FieldTypeAccountMap int = iota
-	FieldTypeReturnToSender
-	// add more here.
+	FieldTypeAccountMap     int = 0x00
+	FieldTypeReturnToSender int = 0x01
+	FieldTypeIntent         int = 0x02
 )
 
 type MemoField struct {
@@ -135,6 +114,19 @@ func (m MemoFields) AccountMap() ([]byte, bool) {
 	return field.Data, found
 }
 
+func (m MemoFields) Intent(coins sdk.Coins, zone *Zone) (ValidatorIntents, bool) {
+	field, found := m[FieldTypeIntent]
+	if !found {
+		return nil, false
+	}
+
+	validatorIntents, err := zone.validatorIntentsFromBytes(coins, field.Data)
+	if err != nil {
+		return validatorIntents, false
+	}
+	return validatorIntents, true
+}
+
 func (m *MemoField) Validate() error {
 	switch m.ID {
 	case FieldTypeAccountMap:
@@ -148,6 +140,10 @@ func (m *MemoField) Validate() error {
 		}
 	case FieldTypeReturnToSender:
 		// do nothing - we ignore data if RTS
+	case FieldTypeIntent:
+		if len(m.Data)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
+			return fmt.Errorf("invalid length for validator intent memo field %d", len(m.Data))
+		}
 	default:
 		return fmt.Errorf("invalid field type %d", m.ID)
 	}
@@ -155,47 +151,25 @@ func (m *MemoField) Validate() error {
 	return nil
 }
 
-func (z *Zone) DecodeMemo(coins sdk.Coins, memo string) (validatorIntents ValidatorIntents, memoFields MemoFields, err error) {
+func (z *Zone) DecodeMemo(memo string) (memoFields MemoFields, err error) {
 	if memo == "" {
-		return validatorIntents, memoFields, errors.New("memo length unexpectedly zero")
+		return memoFields, nil
 	}
 
 	memoBytes, err := base64.StdEncoding.DecodeString(memo)
 	if err != nil {
-		return validatorIntents, memoFields, fmt.Errorf("failed to decode base64 message: %w", err)
+		return memoFields, fmt.Errorf("failed to decode base64 message: %w", err)
 	}
 
-	parts := bytes.Split(memoBytes, separator)
-	valWeightsBytes := parts[0]
-	if len(valWeightsBytes)%21 != 0 { // memo must be one byte (1-200) weight then 20 byte valoperAddress
-		return validatorIntents, memoFields, fmt.Errorf("unable to determine intent from memo: Message was incorrect length: %d", len(memoBytes))
+	memoFields, err = ParseMemoFields(memoBytes)
+	if err != nil {
+		return memoFields, fmt.Errorf("unable to decode memo field: %w", err)
 	}
 
-	switch {
-	case len(parts) == 0:
-		return validatorIntents, memoFields, errors.New("invalid memo format")
-
-	case len(parts) == 1:
-		if len(valWeightsBytes)/21 > 8 {
-			return validatorIntents, memoFields, errors.New("memo format not currently supported")
-		}
-
-	default:
-		// iterate through all non-validator weights parts of the memo
-		memoFields, err = ParseMemoFields(parts[1])
-		if err != nil {
-			return validatorIntents, memoFields, fmt.Errorf("unable to decode memo field: %w", err)
-		}
-	}
-
-	validatorIntents, err = z.validatorIntentsFromBytes(coins, valWeightsBytes)
-
-	return validatorIntents, memoFields, err
+	return memoFields, err
 }
 
-func (z *Zone) validatorIntentsFromBytes(coins sdk.Coins, weightBytes []byte) (ValidatorIntents, error) {
-	validatorIntents := make(ValidatorIntents, 0)
-
+func (z *Zone) validatorIntentsFromBytes(coins sdk.Coins, weightBytes []byte) (validatorIntents ValidatorIntents, err error) {
 	for index := 0; index < len(weightBytes); {
 		// truncate weight to 200
 		rawWeight := int64(weightBytes[index])

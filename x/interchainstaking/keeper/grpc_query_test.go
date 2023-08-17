@@ -6,12 +6,13 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/utils/randomutils"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
+
+var delegatorAddress = "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure"
 
 func (suite *KeeperTestSuite) TestKeeper_Zones() {
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
@@ -60,15 +61,15 @@ func (suite *KeeperTestSuite) TestKeeper_Zones() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Zones))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Zones))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -122,15 +123,15 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneValidators() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Validators))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Validators))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -190,14 +191,14 @@ func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
+			suite.NoError(err)
+			suite.NotNil(resp)
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -259,7 +260,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 			"DelegatorIntent_Valid_Intents",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				// give funds
 				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
 				// set intents
@@ -298,15 +299,145 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Intent.Intents))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Intent.Intents))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
+
+			suite.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	tests := []struct {
+		name     string
+		malleate func()
+		req      *types.QueryDelegatorIntentsRequest
+		wantErr  bool
+		verify   func(delegation []*types.DelegatorIntentsResponse)
+	}{
+		{
+			name:     "DelegatorIntent_Nil_Request",
+			malleate: func() {},
+			req:      nil,
+			wantErr:  true,
+			verify: func([]*types.DelegatorIntentsResponse) {
+			},
+		},
+		{
+			"DelegatorIntent_No_Delegator_Intents",
+			func() {
+			},
+			&types.QueryDelegatorIntentsRequest{
+				DelegatorAddress: testAddress,
+			},
+			false,
+			func(intents []*types.DelegatorIntentsResponse) {
+				for _, intent := range intents {
+					suite.Equal(intent.ChainId, suite.chainB.ChainID)
+					suite.Equal(len(intent.Intent.Intents), 0)
+				}
+			},
+		},
+		{
+			"DelegatorIntent_Valid_Intents across multiple zones",
+			func() {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				// give funds
+				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
+				// set intents
+				intents := []types.DelegatorIntent{
+					{
+						Delegator: testAddress,
+						Intents: types.ValidatorIntents{
+							&types.ValidatorIntent{
+								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+								Weight:         sdk.OneDec(),
+							},
+						},
+					},
+				}
+				for _, intent := range intents {
+					icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
+				}
+
+				// cosmos zone
+				zone = types.Zone{
+					ConnectionId:    "connection-77001",
+					ChainId:         "cosmoshub-4",
+					AccountPrefix:   "cosmos",
+					LocalDenom:      "uqatom",
+					BaseDenom:       "uatom",
+					MultiSend:       false,
+					LiquidityModule: false,
+					Is_118:          true,
+				}
+				icsKeeper.SetZone(ctx, &zone)
+				// give funds
+				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
+				// set intents
+				intents = []types.DelegatorIntent{
+					{
+						Delegator: testAddress,
+						Intents: types.ValidatorIntents{
+							&types.ValidatorIntent{
+								ValoperAddress: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+								Weight:         sdk.OneDec(),
+							},
+						},
+					},
+				}
+				for _, intent := range intents {
+					icsKeeper.SetDelegatorIntent(ctx, &zone, intent, false)
+				}
+			},
+			&types.QueryDelegatorIntentsRequest{
+				DelegatorAddress: testAddress,
+			},
+			false,
+			func(intents []*types.DelegatorIntentsResponse) {
+				suite.Equal(len(intents), 2)
+				suite.Equal(intents[0].ChainId, "cosmoshub-4")
+				suite.Equal(intents[1].ChainId, suite.chainB.ChainID)
+				for _, intent := range intents {
+					suite.Equal(intent.Intent.Delegator, testAddress)
+					suite.Equal(len(intent.Intent.Intents), 1)
+				}
+			},
+		},
+	}
+
+	// run tests:
+	suite.setupTestZones()
+
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.DelegatorIntents(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Error(err)
+				return
+			}
+			suite.NoError(err)
+			suite.NotNil(resp)
+			tt.verify(resp.Intents)
+
+			vstr, err := json.MarshalIndent(resp, "", "\t")
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -356,7 +487,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 			"Delegations_Valid_Delegations",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				// set delegation
 				// TODO: set standardized delegations for keeper_test package
@@ -385,15 +516,15 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Delegations))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Delegations))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -443,7 +574,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 			"Receipts_Valid_Receipts",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				// set receipts
 				receipt := icsKeeper.NewReceipt(
@@ -475,15 +606,118 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Receipts))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Receipts))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
+
+			suite.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+	suite.setupTestZones()
+
+	testReceiptHash := "testReceiptHash#01"
+
+	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	testReceipt := icsKeeper.NewReceipt(
+		ctx,
+		&zone,
+		testAddress,
+		testReceiptHash,
+		sdk.NewCoins(
+			sdk.NewCoin(zone.BaseDenom, math.NewInt(50000000)),
+		),
+	)
+
+	tests := []struct {
+		name     string
+		malleate func()
+		req      *types.QueryTxStatusRequest
+		want     *types.QueryTxStatusResponse
+		wantErr  bool
+	}{
+		{
+			"Nil_Request",
+			func() {},
+			nil,
+			nil,
+			true,
+		},
+		{
+			"empty_TxHash",
+			func() {},
+			&types.QueryTxStatusRequest{
+				ChainId: suite.chainB.ChainID,
+				TxHash:  "",
+			},
+			nil,
+			true,
+		},
+		{
+			"Invalid_Zone",
+			func() {},
+			&types.QueryTxStatusRequest{
+				ChainId: "boguschain",
+				TxHash:  "unimportant",
+			},
+			nil,
+			true,
+		},
+		{
+			name:     "Receipts_No_Zone_Receipts",
+			malleate: func() {},
+			req: &types.QueryTxStatusRequest{
+				ChainId: suite.chainB.ChainID,
+				TxHash:  "randomhash",
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			"Receipts_Valid_Receipts",
+			func() {
+				icsKeeper.SetReceipt(ctx, *testReceipt)
+			},
+			&types.QueryTxStatusRequest{
+				ChainId: suite.chainB.ChainID,
+				TxHash:  testReceiptHash,
+			},
+			&types.QueryTxStatusResponse{Receipt: testReceipt},
+			false,
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.TxStatus(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Error(err)
+				return
+			}
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.EqualValues(tt.want, resp)
+
+			vstr, err := json.MarshalIndent(resp, "", "\t")
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -525,7 +759,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 			func() {},
 			&types.QueryWithdrawalRecordsRequest{
 				ChainId:          suite.chainB.ChainID,
-				DelegatorAddress: "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+				DelegatorAddress: delegatorAddress,
 			},
 			false,
 			0,
@@ -534,7 +768,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 			"ZoneWithdrawalRecords_Valid_Records",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				distribution := []*types.Distribution{
 					{
@@ -551,19 +785,20 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
 					zone.ChainId,
-					"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+					delegatorAddress,
 					distribution,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
 					"ABC012",
-					icskeeper.WithdrawStatusQueued,
+					types.WithdrawStatusQueued,
 					time.Time{},
+					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
 			},
 			&types.QueryWithdrawalRecordsRequest{
 				ChainId:          suite.chainB.ChainID,
-				DelegatorAddress: "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+				DelegatorAddress: delegatorAddress,
 			},
 			false,
 			1,
@@ -580,15 +815,119 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Withdrawals))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Withdrawals))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
+
+			suite.T().Logf("Response:\n%s\n", vstr)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
+	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+	ctx := suite.chainA.GetContext()
+
+	tests := []struct {
+		name         string
+		malleate     func()
+		req          *types.QueryUserWithdrawalRecordsRequest
+		wantErr      bool
+		expectLength int
+	}{
+		{
+			"UserWithdrawalRecords_Nil_Request",
+			func() {},
+			nil,
+			true,
+			0,
+		},
+		{
+			"UserWithdrawalRecords_Invalid_Address",
+			func() {
+				// setup zones
+				suite.setupTestZones()
+			},
+			&types.QueryUserWithdrawalRecordsRequest{
+				UserAddress: "incorrect address",
+			},
+			true,
+			0,
+		},
+		{
+			"UserWithdrawalRecords_No_Withdrawal_Records",
+			func() {},
+			&types.QueryUserWithdrawalRecordsRequest{
+				UserAddress: testAddress,
+			},
+			false,
+			0,
+		},
+		{
+			"UserWithdrawalRecords_Valid_Records",
+			func() {
+				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				distribution := []*types.Distribution{
+					{
+						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
+						Amount:  10000000,
+					},
+					{
+						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[1].ValoperAddress,
+						Amount:  20000000,
+					},
+				}
+
+				// set records
+				icsKeeper.AddWithdrawalRecord(
+					ctx,
+					zone.ChainId,
+					delegatorAddress,
+					distribution,
+					testAddress,
+					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
+					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
+					"ABC012",
+					types.WithdrawStatusQueued,
+					time.Time{},
+					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
+				)
+			},
+			&types.QueryUserWithdrawalRecordsRequest{
+				UserAddress: delegatorAddress,
+			},
+			false,
+			1,
+		},
+	}
+
+	// run tests:
+	for _, tt := range tests {
+		suite.Run(tt.name, func() {
+			tt.malleate()
+			resp, err := icsKeeper.UserWithdrawalRecords(
+				ctx,
+				tt.req,
+			)
+			if tt.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Error(err)
+				return
+			}
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Withdrawals))
+
+			vstr, err := json.MarshalIndent(resp, "", "\t")
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -627,7 +966,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 			"WithdrawalRecords_Valid_Records",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				distribution := []*types.Distribution{
 					{
@@ -644,14 +983,15 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				icsKeeper.AddWithdrawalRecord(
 					ctx,
 					zone.ChainId,
-					"quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure",
+					delegatorAddress,
 					distribution,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
 					"ABC012",
-					icskeeper.WithdrawStatusQueued,
+					types.WithdrawStatusQueued,
 					time.Time{},
+					icsKeeper.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 				)
 			},
 			&types.QueryWithdrawalRecordsRequest{},
@@ -670,15 +1010,15 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Withdrawals))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Withdrawals))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -717,7 +1057,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 			"UnbondingRecords_Valid_Records",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				icsKeeper.SetUnbondingRecord(
 					ctx,
@@ -745,15 +1085,15 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Unbondings))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Unbondings))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -792,7 +1132,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 			"RedelegationRecords_Valid_Records",
 			func() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 
 				icsKeeper.SetRedelegationRecord(
 					ctx,
@@ -820,15 +1160,15 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.Redelegations))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.Redelegations))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})
@@ -946,15 +1286,15 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 			)
 			if tt.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
-			suite.Require().NotNil(resp)
-			suite.Require().Equal(tt.expectLength, len(resp.RemoteAddressMap))
+			suite.NoError(err)
+			suite.NotNil(resp)
+			suite.Equal(tt.expectLength, len(resp.RemoteAddressMap))
 
 			vstr, err := json.MarshalIndent(resp, "", "\t")
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			suite.T().Logf("Response:\n%s\n", vstr)
 		})

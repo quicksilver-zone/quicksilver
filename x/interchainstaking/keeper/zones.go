@@ -97,7 +97,7 @@ func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin 
 
 func (k *Keeper) GetUnbondingAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(index int64, wr types.WithdrawalRecord) (stop bool) {
 		out = out.Add(wr.Amount[0])
 		return false
 	})
@@ -129,39 +129,59 @@ func (k *Keeper) GetZoneFromContext(ctx sdk.Context) (*types.Zone, error) {
 	return &zone, nil
 }
 
-func (k *Keeper) GetZoneForAccount(ctx sdk.Context, address string) (zone *types.Zone) {
+func (k *Keeper) GetZoneForAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
 	chainID, found := k.GetAddressZoneMapping(ctx, address)
 	if !found {
-		return nil
+		return nil, false
 	}
-	// doesn't matter if this is _found_ because we are expecting to return nil if not anyway.
-	z, _ := k.GetZone(ctx, chainID)
-	return &z
+
+	zone, found := k.GetZone(ctx, chainID)
+	return &zone, found
 }
 
 // GetZoneForDelegateAccount determines the zone for a given address.
-func (k *Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) *types.Zone {
-	z := k.GetZoneForAccount(ctx, address)
-	if z != nil && z.DelegationAddress != nil && address == z.DelegationAddress.Address {
-		return z
+func (k *Keeper) GetZoneForDelegateAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
+	zone, found := k.GetZoneForAccount(ctx, address)
+	if !found {
+		return nil, false // address not found
 	}
-	return nil
+	if zone.DelegationAddress != nil && address == zone.DelegationAddress.Address {
+		return zone, true // address found and is delegate Account
+	}
+	return nil, false // address found, but not delegate account
 }
 
-func (k *Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) *types.Zone {
-	z := k.GetZoneForAccount(ctx, address)
-	if z != nil && z.PerformanceAddress != nil && address == z.PerformanceAddress.Address {
-		return z
+func (k *Keeper) GetZoneForPerformanceAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
+	zone, found := k.GetZoneForAccount(ctx, address)
+	if !found {
+		return nil, false // address not found
 	}
-	return nil
+	if zone.PerformanceAddress != nil && address == zone.PerformanceAddress.Address {
+		return zone, true // address found and is performance Account
+	}
+	return nil, false // address found, but not performance account
 }
 
-func (k *Keeper) GetZoneForDepositAccount(ctx sdk.Context, address string) *types.Zone {
-	z := k.GetZoneForAccount(ctx, address)
-	if z != nil && z.DepositAddress != nil && address == z.DepositAddress.Address {
-		return z
+func (k *Keeper) GetZoneForDepositAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
+	zone, found := k.GetZoneForAccount(ctx, address)
+	if !found {
+		return nil, false // address not found
 	}
-	return nil
+	if zone.DepositAddress != nil && address == zone.DepositAddress.Address {
+		return zone, true // address found and is deposit Account
+	}
+	return nil, false // address found, but not deposit account
+}
+
+func (k *Keeper) GetZoneForWithdrawalAccount(ctx sdk.Context, address string) (*types.Zone, bool) {
+	zone, found := k.GetZoneForAccount(ctx, address)
+	if !found {
+		return nil, false // address not found
+	}
+	if zone.WithdrawalAddress != nil && address == zone.WithdrawalAddress.Address {
+		return zone, true // address found and is withdrawal Account
+	}
+	return nil, false // address found, but not withdrawal account
 }
 
 func (k *Keeper) EnsureWithdrawalAddresses(ctx sdk.Context, zone *types.Zone) error {

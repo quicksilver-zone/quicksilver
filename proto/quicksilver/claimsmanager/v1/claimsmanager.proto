@@ -16,6 +16,7 @@ enum ClaimType {
   ClaimTypeOsmosisPool = 2;
   ClaimTypeCrescentPool = 3;
   ClaimTypeSifchainPool = 4;
+  ClaimTypeUmeeToken = 5;
 }
 
 // Params holds parameters for the claimsmanager module.

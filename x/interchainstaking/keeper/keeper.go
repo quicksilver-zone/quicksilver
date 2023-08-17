@@ -27,13 +27,12 @@ import (
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-
-	config "github.com/ingenuity-build/quicksilver/cmd/config"
 	"github.com/ingenuity-build/quicksilver/utils"
-	claimsmanagerkeeper "github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+
+	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
 	interchainquerykeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -46,10 +45,12 @@ type Keeper struct {
 	ICQKeeper           interchainquerykeeper.Keeper
 	AccountKeeper       types.AccountKeeper
 	BankKeeper          types.BankKeeper
-	IBCKeeper           ibckeeper.Keeper
+	IBCKeeper           *ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
-	ClaimsManagerKeeper claimsmanagerkeeper.Keeper
+	ClaimsManagerKeeper types.ClaimsManagerKeeper
+	EpochsKeeper        types.EpochsKeeper
 	Ir                  codectypes.InterfaceRegistry
+	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
 }
 
@@ -63,24 +64,28 @@ func NewKeeper(
 	icaControllerKeeper icacontrollerkeeper.Keeper,
 	scopedKeeper *capabilitykeeper.ScopedKeeper,
 	icqKeeper interchainquerykeeper.Keeper,
-	ibcKeeper ibckeeper.Keeper,
+	ibcKeeper *ibckeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
-	claimsManagerKeeper claimsmanagerkeeper.Keeper,
+	claimsManagerKeeper types.ClaimsManagerKeeper,
 	ps paramtypes.Subspace,
-) Keeper {
+) *Keeper {
 	if addr := accountKeeper.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
 	}
 
 	if addr := accountKeeper.GetModuleAddress(types.EscrowModuleAccount); addr == nil {
-		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))
+		panic(fmt.Sprintf("%s escrow account has not been set", types.EscrowModuleAccount))
 	}
 
 	if !ps.HasKeyTable() {
 		ps = ps.WithKeyTable(types.ParamKeyTable())
 	}
 
-	return Keeper{
+	if ibcKeeper == nil {
+		panic("ibcKeeper is nil")
+	}
+
+	return &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		scopedKeeper:        scopedKeeper,
@@ -91,13 +96,29 @@ func NewKeeper(
 		IBCKeeper:           ibcKeeper,
 		TransferKeeper:      transferKeeper,
 		ClaimsManagerKeeper: claimsManagerKeeper,
+		hooks:               nil,
 
 		paramStore: ps,
 	}
 }
 
+// SetHooks set the ics hooks.
+func (k *Keeper) SetHooks(icsh types.IcsHooks) *Keeper {
+	if k.hooks != nil {
+		panic("cannot set epochs hooks twice")
+	}
+
+	k.hooks = icsh
+
+	return k
+}
+
 func (k *Keeper) GetGovAuthority(_ sdk.Context) string {
-	return sdk.MustBech32ifyAddressBytes(config.Bech32Prefix, k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
+	return sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName))
+}
+
+func (k *Keeper) SetEpochsKeeper(epochsKeeper epochskeeper.Keeper) {
+	k.EpochsKeeper = &epochsKeeper
 }
 
 // Logger returns a module-specific logger.
@@ -223,6 +244,13 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 }
 
 func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []byte) error {
+	if data == nil {
+		k.Logger(ctx).Error("expected validator state, got nil")
+		// return nil here, as if we receive nil we fail to unmarshal (as nil validators are invalid),
+		// so we can never hope to resolve this query. Possibly received a valset update from a
+		// different chain.
+		return nil
+	}
 	validator, err := k.UnmarshalValidator(data)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zone.ChainId, "err", err)
@@ -322,7 +350,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 
 func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
 	var err error
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
 		recordSubAmount := sdkmath.ZeroInt()
 		distr := record.Distribution
 		for _, d := range distr {
@@ -611,12 +639,12 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64) error {
-	currentAllocations, currentSum, currentLocked := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, currentLocked, lockedSum := k.GetDelegationMap(ctx, zone)
 	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
 	if err != nil {
 		return err
 	}
-	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId), k.Logger(ctx))
+	rebalances := types.DetermineAllocationsForRebalancing(currentAllocations, currentLocked, currentSum, lockedSum, targetAllocations, k.Logger(ctx))
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
@@ -633,7 +661,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 		return nil
 	}
 	k.Logger(ctx).Info("Send rebalancing messages", "msgs", msgs)
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("rebalance/%d", epochNumber), zone.MessagesPerTx)
+	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, types.EpochRebalanceMemo(epochNumber), zone.MessagesPerTx)
 }
 
 // UnmarshalValidatorsResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.

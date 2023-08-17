@@ -18,14 +18,14 @@ func TestParseMsgMemo(t *testing.T) {
 	}{
 		{
 			name:                "valid rebalance",
-			memo:                types.MsgTypeRebalance + "/" + "10",
+			memo:                types.EpochRebalanceMemo(10),
 			msgType:             types.MsgTypeRebalance,
 			wantErr:             false,
 			expectedEpochNumber: 10,
 		},
 		{
 			name:                "valid withdrawal",
-			memo:                types.MsgTypeWithdrawal + "/" + "10",
+			memo:                types.EpochWithdrawalMemo(10),
 			msgType:             types.MsgTypeWithdrawal,
 			wantErr:             false,
 			expectedEpochNumber: 10,
@@ -45,7 +45,7 @@ func TestParseMsgMemo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			epochNumber, err := types.ParseMsgMemo(tt.memo, tt.msgType)
+			epochNumber, err := types.ParseEpochMsgMemo(tt.memo, tt.msgType)
 			if tt.wantErr {
 				t.Logf("Error:\n%v\n", err)
 				require.Error(t, err)

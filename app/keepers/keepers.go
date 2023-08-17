@@ -111,7 +111,7 @@ type AppKeepers struct {
 	EpochsKeeper               epochskeeper.Keeper
 	MintKeeper                 mintkeeper.Keeper
 	ClaimsManagerKeeper        claimsmanagerkeeper.Keeper
-	InterchainstakingKeeper    interchainstakingkeeper.Keeper
+	InterchainstakingKeeper    *interchainstakingkeeper.Keeper
 	InterchainQueryKeeper      interchainquerykeeper.Keeper
 	ParticipationRewardsKeeper *participationrewardskeeper.Keeper
 	AirdropKeeper              *airdropkeeper.Keeper
@@ -374,7 +374,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	appKeepers.ClaimsManagerKeeper = claimsmanagerkeeper.NewKeeper(
 		appCodec,
 		appKeepers.keys[claimsmanagertypes.StoreKey],
-		*appKeepers.IBCKeeper,
+		appKeepers.IBCKeeper,
 	)
 
 	// claimsmanagerModule := claimsmanager.NewAppModule(appCodec, appKeepers.ClaimsManagerKeeper)
@@ -391,7 +391,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.ICAControllerKeeper,
 		&scopedInterchainStakingKeeper,
 		appKeepers.InterchainQueryKeeper,
-		*appKeepers.IBCKeeper,
+		appKeepers.IBCKeeper,
 		appKeepers.TransferKeeper,
 		appKeepers.ClaimsManagerKeeper,
 		appKeepers.GetSubspace(interchainstakingtypes.ModuleName),
@@ -408,8 +408,10 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.AccountKeeper,
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
-		appKeepers.InterchainQueryKeeper,
+		appKeepers.IBCKeeper,
+		&appKeepers.InterchainQueryKeeper,
 		appKeepers.InterchainstakingKeeper,
+		appKeepers.ClaimsManagerKeeper,
 		authtypes.FeeCollectorName,
 		proofOpsFn,
 		selfProofOpsFn,
@@ -436,6 +438,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 	// Quicksilver Keepers
 	appKeepers.EpochsKeeper = epochskeeper.NewKeeper(appCodec, appKeepers.keys[epochstypes.StoreKey])
 	appKeepers.ParticipationRewardsKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
+	appKeepers.InterchainstakingKeeper.SetEpochsKeeper(appKeepers.EpochsKeeper)
 
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
@@ -533,8 +536,8 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appKeepers.BankKeeper,
 		appKeepers.StakingKeeper,
 		appKeepers.GovKeeper,
+		appKeepers.IBCKeeper,
 		appKeepers.InterchainstakingKeeper,
-		appKeepers.InterchainQueryKeeper,
 		appKeepers.ParticipationRewardsKeeper,
 		proofOpsFn,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -607,6 +610,12 @@ func (appKeepers *AppKeepers) SetupHooks() {
 	appKeepers.GovKeeper.SetHooks(
 		govtypes.NewMultiGovHooks(
 		// insert governance hooks receivers here
+		),
+	)
+
+	appKeepers.InterchainstakingKeeper.SetHooks(
+		interchainstakingtypes.NewMultiIcsHooks(
+			appKeepers.ParticipationRewardsKeeper.Hooks(),
 		),
 	)
 }

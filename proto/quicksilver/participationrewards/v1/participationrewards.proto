@@ -35,8 +35,7 @@ message Params {
 
   // distribution_proportions defines the proportions of the minted
   // participation rewards;
-  DistributionProportions distribution_proportions = 1
-      [ (gogoproto.nullable) = false ];
+  DistributionProportions distribution_proportions = 1 [(gogoproto.nullable) = false];
   bool claims_enabled = 2;
 }
 
@@ -49,7 +48,7 @@ message KeyedProtocolData {
 // determination of rewards.
 message ProtocolData {
   string type = 1;
-  bytes data = 2 [ (gogoproto.casttype) = "encoding/json.RawMessage" ];
+  bytes data = 2 [(gogoproto.casttype) = "encoding/json.RawMessage"];
 }
 
 enum ProtocolDataType {
@@ -63,4 +62,13 @@ enum ProtocolDataType {
   ProtocolDataTypeOsmosisPool = 4;
   ProtocolDataTypeCrescentPool = 5;
   ProtocolDataTypeSifchainPool = 6;
+  ProtocolDataTypeUmeeParams = 7;
+  ProtocolDataTypeUmeeReserves = 8;
+  ProtocolDataTypeUmeeInterestScalar = 9;
+  ProtocolDataTypeUmeeTotalBorrows = 10;
+  ProtocolDataTypeUmeeUTokenSupply = 11;
+  ProtocolDataTypeUmeeLeverageModuleBalance = 12;
+  ProtocolDataTypeCrescentParams = 13;
+  ProtocolDataTypeCrescentReserveAddressBalance = 14;
+  ProtocolDataTypeCrescentPoolCoinSupply = 15;
 }

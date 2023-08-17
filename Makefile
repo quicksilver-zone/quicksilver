@@ -352,18 +352,18 @@ vet:
 ###############################################################################
 
 # Executes basic chain tests via interchaintest
-ictest-basic: 
+ictest-basic: ictest-deps
 	@cd test/interchaintest && go test -v -run TestBasicQuicksilverStart .
 
 # Executes a basic chain upgrade test via interchaintest
-ictest-upgrade: 
+ictest-upgrade: ictest-deps
 	@cd test/interchaintest && go test -v -run TestBasicQuicksilverUpgrade .
 
 # Executes a basic chain upgrade locally via interchaintest after compiling a local image as quicksilver:local
-ictest-upgrade-local: local-image ictest-upgrade
+ictest-upgrade-local: local-image ictest-deps ictest-upgrade
 
 # Executes IBC Transfer tests via interchaintest
-ictest-ibc: 
+ictest-ibc: ictest-deps
 	@cd test/interchaintest && go test -v -run TestQuicksilverJunoIBCTransfer .
 
 # Executes TestInterchainStaking tests via interchaintest
@@ -371,7 +371,9 @@ ictest-interchainstaking: ictest-deps
 	@cd test/interchaintest && go test -v -run TestInterchainStaking .
 
 # Executes all tests via interchaintest after compiling a local image as quicksilver:local
-ictest-all: ictest-build ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
+ictest-all: ictest-setup ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
+
+ictest-setup: ictest-build ictest-deps
 
 ictest-build: get-heighliner local-image
 
@@ -383,7 +385,6 @@ ictest-deps:
 ictest-build-push: ictest-setup
 	@$(DOCKER) tag quicksilver:local  quicksilverzone/quicksilver-e2e:latest
 	@$(DOCKER) push quicksilverzone/quicksilver-e2e:latest
-
 .PHONY: ictest-basic ictest-upgrade ictest-ibc ictest-all ictest-deps ictest-build ictest-build-push
 
 ###############################################################################
@@ -503,11 +504,11 @@ mdlint-fix:
 ###                                Protobuf                                 ###
 ###############################################################################
 
-BUF_VERSION=1.15.1
+BUF_VERSION=1.21.0
 
 proto-all: proto-gen
 
-proto-gen:
+proto-gen: proto-format
 	@echo "🤖 Generating code from protobuf..."
 	@$(DOCKER) run --rm --volume "$(PWD)":/workspace --workdir /workspace \
 		quicksilver-proto sh ./proto/generate.sh

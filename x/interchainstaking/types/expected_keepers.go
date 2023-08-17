@@ -3,9 +3,11 @@ package types
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
+
+	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
 // ChannelKeeper defines the expected IBC channel keeper.
@@ -36,4 +38,17 @@ type BankKeeper interface {
 	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule, recipientModule string, amt sdk.Coins) error
+}
+
+type IcsHooks interface {
+	AfterZoneCreated(ctx sdk.Context, connectionID, chainID, accountPrefix string) error
+}
+
+type ClaimsManagerKeeper interface {
+	IterateLastEpochUserClaims(ctx sdk.Context, chainID, address string, fn func(index int64, data claimsmanagertypes.Claim) (stop bool))
+	SetClaim(ctx sdk.Context, claim *claimsmanagertypes.Claim)
+}
+
+type EpochsKeeper interface {
+	GetEpochInfo(ctx sdk.Context, identifier string) epochstypes.EpochInfo
 }

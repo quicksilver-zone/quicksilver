@@ -52,7 +52,7 @@ func FuzzZones(f *testing.F) {
 
 	for _, seed := range seeds {
 		bz, err := app.AppCodec().Marshal(seed)
-		suite.Require().NoError(err)
+		suite.NoError(err)
 		f.Add(bz)
 	}
 
@@ -145,7 +145,7 @@ func FuzzValsetCallback(f *testing.F) {
 		queryRes := valFunc(chainBVals)
 		app := suite.GetQuicksilverApp(suite.chainA)
 		bz, err := app.AppCodec().Marshal(&queryRes)
-		suite.Require().NoError(err)
+		suite.NoError(err)
 		f.Add(bz)
 	}
 
@@ -161,6 +161,6 @@ func (suite *FuzzingTestSuite) FuzzValsetCallback(args []byte) {
 	app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
 	ctx := suite.chainA.GetContext()
 
-	err := keeper.ValsetCallback(&app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: suite.chainB.ChainID})
-	suite.Require().NoError(err)
+	err := keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, args, icqtypes.Query{ChainId: suite.chainB.ChainID})
+	suite.NoError(err)
 }

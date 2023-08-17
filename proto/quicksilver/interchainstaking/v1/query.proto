@@ -29,11 +29,19 @@ service Query {
   rpc DepositAccount(QueryDepositAccountForChainRequest) returns (QueryDepositAccountForChainResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/deposit_address";
   }
+
   // DelegatorIntent provides data on the intent of the delegator for the given
   // zone.
   rpc DelegatorIntent(QueryDelegatorIntentRequest) returns (QueryDelegatorIntentResponse) {
     option (google.api.http).get =
       "/quicksilver/interchainstaking/v1/zones/{chain_id}/delegator_intent/"
+      "{delegator_address}";
+  }
+
+  // DelegatorIntents provides data on the intent of the delegator for all zones
+  rpc DelegatorIntents(QueryDelegatorIntentsRequest) returns (QueryDelegatorIntentsResponse) {
+    option (google.api.http).get =
+      "/quicksilver/interchainstaking/v1/delegator_intents/"
       "{delegator_address}";
   }
 
@@ -47,6 +55,10 @@ service Query {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/receipts";
   }
 
+  rpc TxStatus(QueryTxStatusRequest) returns (QueryTxStatusResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/deposits/{tx_hash}";
+  }
+
   // WithdrawalRecords provides data on the active withdrawals.
   rpc ZoneWithdrawalRecords(QueryWithdrawalRecordsRequest) returns (QueryWithdrawalRecordsResponse) {
     option (google.api.http).get =
@@ -57,6 +69,11 @@ service Query {
   // WithdrawalRecords provides data on the active withdrawals.
   rpc WithdrawalRecords(QueryWithdrawalRecordsRequest) returns (QueryWithdrawalRecordsResponse) {
     option (google.api.http).get = "/quicksilver/interchainstaking/v1/zones/{chain_id}/withdrawal_records";
+  }
+
+  // WithdrawalRecords provides data on the active withdrawals.
+  rpc UserWithdrawalRecords(QueryUserWithdrawalRecordsRequest) returns (QueryWithdrawalRecordsResponse) {
+    option (google.api.http).get = "/quicksilver/interchainstaking/v1/users/{user_address}/withdrawal_records";
   }
 
   // UnbondingRecords provides data on the active unbondings.
@@ -138,6 +155,19 @@ message QueryDelegatorIntentResponse {
   DelegatorIntent intent = 1;
 }
 
+message QueryDelegatorIntentsRequest {
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message DelegatorIntentsResponse {
+  string chain_id = 1;
+  DelegatorIntent intent = 2;
+}
+
+message QueryDelegatorIntentsResponse {
+  repeated DelegatorIntentsResponse intents = 1;
+}
+
 message QueryDelegationsRequest {
   string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
@@ -159,6 +189,15 @@ message QueryReceiptsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+message QueryTxStatusRequest {
+  string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
+  string tx_hash = 2;
+}
+
+message QueryTxStatusResponse {
+  Receipt receipt = 1;
+}
+
 message QueryWithdrawalRecordsRequest {
   string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
   string delegator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -170,9 +209,14 @@ message QueryWithdrawalRecordsResponse {
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
+message QueryUserWithdrawalRecordsRequest {
+  string user_address = 1 [(gogoproto.moretags) = "cosmos.AddressString"];
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
 message QueryUnbondingRecordsRequest {
   string chain_id = 1 [(gogoproto.moretags) = "yaml:\"chain_id\""];
-  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
 message QueryUnbondingRecordsResponse {
@@ -196,6 +240,6 @@ message QueryMappedAccountsRequest {
 }
 
 message QueryMappedAccountsResponse {
-   map<string, bytes> RemoteAddressMap= 1 [(gogoproto.nullable) = false];
+  map<string, bytes> RemoteAddressMap = 1 [(gogoproto.nullable) = false];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

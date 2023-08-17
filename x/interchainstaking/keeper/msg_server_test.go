@@ -16,7 +16,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 	var msg icstypes.MsgRequestRedemption
 
 	testAccount, err := addressutils.AccAddressFromBech32(testAddress, "")
-	suite.Require().NoError(err)
+	suite.NoError(err)
 
 	tests := []struct {
 		name         string
@@ -28,7 +28,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"valid - full claim",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
 					DestinationAddress: addr,
@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"valid - full claim (discounted)",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
 					DestinationAddress: addr,
@@ -50,7 +50,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				zone.RedemptionRate = sdk.MustNewDecFromStr("0.95")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"valid - full claim (interest)",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
 					DestinationAddress: addr,
@@ -69,7 +69,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.05")
 				zone.RedemptionRate = sdk.MustNewDecFromStr("1.1")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
@@ -81,7 +81,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"valid - full claim (interest)",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
 					DestinationAddress: addr,
@@ -89,7 +89,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.1")
 				zone.RedemptionRate = sdk.MustNewDecFromStr("1.05")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
@@ -101,7 +101,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"valid - partial claim",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
 					DestinationAddress: addr,
@@ -115,7 +115,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"valid - partial claim (discounted)",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
 					DestinationAddress: addr,
@@ -123,7 +123,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				zone.RedemptionRate = sdk.MustNewDecFromStr("0.99999")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
@@ -134,7 +134,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"valid - partial claim (interest)",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
 					DestinationAddress: addr,
@@ -142,7 +142,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				zone.LastRedemptionRate = sdk.MustNewDecFromStr("1.049999")
 				zone.RedemptionRate = sdk.MustNewDecFromStr("1.099999")
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
@@ -154,7 +154,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"invalid - unbonding not enabled for zone",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(5000000)),
 					DestinationAddress: addr,
@@ -162,7 +162,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				}
 
 				zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-				suite.Require().True(found)
+				suite.True(found)
 				zone.UnbondingEnabled = false
 				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 			},
@@ -173,7 +173,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"invalid - wrong denom",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uatom", sdk.NewInt(10000000)),
 					DestinationAddress: addr,
@@ -187,7 +187,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"invalid - insufficient funds",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(1000000000)),
 					DestinationAddress: addr,
@@ -201,7 +201,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"invalid - bad prefix",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("bob", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
 					DestinationAddress: addr,
@@ -215,7 +215,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"invalid - bad from address",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.OneInt()),
 					DestinationAddress: addr,
@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			"invalid - too many locked tokens",
 			func() {
 				addr, err := addressutils.EncodeAddressToBech32("cosmos", addressutils.GenerateAccAddressForTest())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				msg = icstypes.MsgRequestRedemption{
 					Value:              sdk.NewCoin("uqatom", sdk.NewInt(10000000)),
 					DestinationAddress: addr,
@@ -267,29 +267,29 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetParams(ctx, params)
 
 			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			// disable LSM
 			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			suite.True(found)
 			zone.LiquidityModule = false
 			zone.UnbondingEnabled = true
 			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
 
 			tt.malleate()
 
-			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 
 			if tt.expectErr != "" {
-				suite.Require().ErrorContains(err, tt.expectErr)
-				suite.Require().Nil(res)
+				suite.ErrorContains(err, tt.expectErr)
+				suite.Nil(res)
 				suite.T().Logf("Error: %v", err)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(res)
+				suite.NoError(err)
+				suite.NotNil(res)
 			}
 		})
 
@@ -306,13 +306,13 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetParams(ctx, params)
 
 			err := suite.GetQuicksilverApp(suite.chainA).BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-			suite.Require().NoError(err)
+			suite.NoError(err)
 			err = suite.GetQuicksilverApp(suite.chainA).BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, testAccount, sdk.NewCoins(sdk.NewCoin("uqatom", math.NewInt(10000000))))
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
 			// enable LSM
 			zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-			suite.Require().True(found)
+			suite.True(found)
 			zone.LiquidityModule = true
 			zone.UnbondingEnabled = true
 			suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(ctx, &zone)
@@ -330,16 +330,16 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 
 			tt.malleate()
 
-			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.RequestRedemption(sdk.WrapSDKContext(suite.chainA.GetContext()), &msg)
 
 			if tt.expectErrLsm != "" {
-				suite.Require().Errorf(err, tt.expectErrLsm)
-				suite.Require().Nil(res)
+				suite.Errorf(err, tt.expectErrLsm)
+				suite.Nil(res)
 				suite.T().Logf("Error: %v", err)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(res)
+				suite.NoError(err)
+				suite.NotNil(res)
 			}
 		})
 
@@ -358,7 +358,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			"invalid - weight sum < 1",
 			func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent {
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
 					ChainId:     suite.chainB.ChainID,
@@ -374,7 +374,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			"invalid - weight sum > 1",
 			func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent {
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
 					ChainId:     suite.chainB.ChainID,
@@ -390,7 +390,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			"invalid - chain id",
 			func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent {
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
 					ChainId:     suite.chainA.ChainID,
@@ -406,7 +406,7 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			"valid - single weight",
 			func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent {
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
 					ChainId:     suite.chainB.ChainID,
@@ -422,11 +422,11 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			"valid - multi weight",
 			func(suite *KeeperTestSuite) *icstypes.MsgSignalIntent {
 				val1, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[0].Address.String())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				val2, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[1].Address.String())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 				val3, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[2].Address.String())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				return &icstypes.MsgSignalIntent{
 					ChainId:     suite.chainB.ChainID,
@@ -456,38 +456,38 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 			// so call here to make sure out tests are sane.
 			err := msg.ValidateBasic()
 			if tt.failsValidations {
-				suite.Require().Error(err)
+				suite.Error(err)
 				return
 			}
-			suite.Require().NoError(err)
+			suite.NoError(err)
 
-			msgSrv := icskeeper.NewMsgServerImpl(suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
 			res, err := msgSrv.SignalIntent(sdk.WrapSDKContext(suite.chainA.GetContext()), msg)
 			if tt.expectErr {
-				suite.Require().Error(err)
-				suite.Require().Nil(res)
+				suite.Error(err)
+				suite.Nil(res)
 			} else {
-				suite.Require().NoError(err)
-				suite.Require().NotNil(res)
+				suite.NoError(err)
+				suite.NotNil(res)
 			}
 
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			icsKeeper := quicksilver.InterchainstakingKeeper
 			zone, found := icsKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-			suite.Require().True(found)
+			suite.True(found)
 
 			intent, found := icsKeeper.GetDelegatorIntent(suite.chainA.GetContext(), &zone, testAddress, false)
-			suite.Require().True(found)
+			suite.True(found)
 			intents := intent.GetIntents()
 
 			for idx, weight := range tt.expected {
 				val, err := sdk.ValAddressFromHex(suite.chainB.Vals.Validators[idx].Address.String())
-				suite.Require().NoError(err)
+				suite.NoError(err)
 
 				valIntent, found := intents.GetForValoper(val.String())
-				suite.Require().True(found)
+				suite.True(found)
 
-				suite.Require().Equal(weight, valIntent.Weight)
+				suite.Equal(weight, valIntent.Weight)
 			}
 		})
 	}

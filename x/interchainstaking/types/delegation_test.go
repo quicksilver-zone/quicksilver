@@ -109,10 +109,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 	// we auto generate the validator addresses in these tests. any dust gets allocated to the first validator in the list
 	// once sorted alphabetically on valoper.
 
-	val1 := addressutils.GenerateValAddressForTest()
-	val2 := addressutils.GenerateValAddressForTest()
-	val3 := addressutils.GenerateValAddressForTest()
-	val4 := addressutils.GenerateValAddressForTest()
+	vals := addressutils.GenerateValidatorsDeterministic(4)
 
 	tc := []struct {
 		current  map[string]sdkmath.Int
@@ -123,79 +120,81 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 	}{
 		{
 			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(350000),
-				val2.String(): sdk.NewInt(650000),
-				val3.String(): sdk.NewInt(75000),
+				vals[0]: sdk.NewInt(350000),
+				vals[1]: sdk.NewInt(650000),
+				vals[2]: sdk.NewInt(75000),
 			},
 			target: types.ValidatorIntents{
-				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(30, 2)},
-				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(63, 2)},
-				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(7, 2)},
+				{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(30, 2)},
+				{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(63, 2)},
+				{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(7, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50000))),
 			expected: map[string]sdkmath.Int{
-				val1.String(): sdk.ZeroInt(),
-				val2.String(): sdk.NewInt(33182),
-				val3.String(): sdk.NewInt(16818),
+				vals[0]: sdk.ZeroInt(),
+				vals[1]: sdk.NewInt(33182),
+				vals[2]: sdk.NewInt(16818),
 			},
 		},
 		{
 			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(52),
-				val2.String(): sdk.NewInt(24),
-				val3.String(): sdk.NewInt(20),
-				val4.String(): sdk.NewInt(4),
+				vals[0]: sdk.NewInt(52),
+				vals[1]: sdk.NewInt(24),
+				vals[2]: sdk.NewInt(20),
+				vals[3]: sdk.NewInt(4),
 			},
 			target: types.ValidatorIntents{
-				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
-				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
-				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
-				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
+				{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(50, 2)},
+				{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(25, 2)},
+				{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(15, 2)},
+				{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(20))),
 			expected: map[string]sdkmath.Int{
-				val4.String(): sdk.NewInt(11),
-				val3.String(): sdk.ZeroInt(),
-				val2.String(): sdk.NewInt(6),
-				val1.String(): sdk.NewInt(3),
+				vals[3]: sdk.NewInt(11),
+				vals[2]: sdk.ZeroInt(),
+				vals[1]: sdk.NewInt(6),
+				vals[0]: sdk.NewInt(3),
 			},
 		},
 		{
 			current: map[string]sdkmath.Int{
-				val1.String(): sdk.NewInt(52),
-				val2.String(): sdk.NewInt(24),
-				val3.String(): sdk.NewInt(20),
-				val4.String(): sdk.NewInt(4),
+				vals[0]: sdk.NewInt(52),
+				vals[1]: sdk.NewInt(24),
+				vals[2]: sdk.NewInt(20),
+				vals[3]: sdk.NewInt(4),
 			},
 			target: types.ValidatorIntents{
-				{ValoperAddress: val1.String(), Weight: sdk.NewDecWithPrec(50, 2)},
-				{ValoperAddress: val2.String(), Weight: sdk.NewDecWithPrec(25, 2)},
-				{ValoperAddress: val3.String(), Weight: sdk.NewDecWithPrec(15, 2)},
-				{ValoperAddress: val4.String(), Weight: sdk.NewDecWithPrec(10, 2)},
+				{ValoperAddress: vals[0], Weight: sdk.NewDecWithPrec(50, 2)},
+				{ValoperAddress: vals[1], Weight: sdk.NewDecWithPrec(25, 2)},
+				{ValoperAddress: vals[2], Weight: sdk.NewDecWithPrec(15, 2)},
+				{ValoperAddress: vals[3], Weight: sdk.NewDecWithPrec(10, 2)},
 			},
 			inAmount: sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(50))),
 			expected: map[string]sdkmath.Int{
-				val4.String(): sdk.NewInt(20),
-				val2.String(): sdk.NewInt(13),
-				val1.String(): sdk.NewInt(10),
-				val3.String(): sdk.NewInt(7),
+				vals[0]: sdk.NewInt(18),
+				vals[1]: sdk.NewInt(14),
+				vals[2]: sdk.NewInt(4),
+				vals[3]: sdk.NewInt(14),
 			},
 		},
 	}
 
 	for caseNumber, val := range tc {
-		sum := sdkmath.ZeroInt()
-		for _, amount := range val.current {
-			sum = sum.Add(amount)
-		}
-		allocations := types.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount)
-		require.Equal(t, len(val.expected), len(allocations))
-		for valoper := range val.expected {
-			ex, ok := val.expected[valoper]
-			require.True(t, ok)
-			ac, ok := allocations[valoper]
-			require.True(t, ok)
-			require.True(t, ex.Equal(ac), fmt.Sprintf("Test Case #%d failed; allocations did not equal expected output - expected %s, got %s.", caseNumber, val.expected[valoper], allocations[valoper]))
-		}
+		t.Run(fmt.Sprint(caseNumber), func(t *testing.T) {
+			sum := sdkmath.ZeroInt()
+			for _, amount := range val.current {
+				sum = sum.Add(amount)
+			}
+			allocations := types.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount)
+			require.Equal(t, len(val.expected), len(allocations))
+			for valoper := range val.expected {
+				ex, ok := val.expected[valoper]
+				require.True(t, ok)
+				ac, ok := allocations[valoper]
+				require.True(t, ok)
+				require.True(t, ex.Equal(ac), fmt.Sprintf("Test Case #%d failed; allocations did not equal expected output - expected %s, got %s.", caseNumber, val.expected[valoper], allocations[valoper]))
+			}
+		})
 	}
 }

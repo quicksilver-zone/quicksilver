@@ -3,10 +3,12 @@ package addressutils
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+
 	"github.com/ingenuity-build/quicksilver/utils/randomutils"
 )
 
@@ -107,4 +109,14 @@ func MustEncodeAddressToBech32(prefix string, address sdk.Address) string {
 		panic(err)
 	}
 	return addr
+}
+
+// Generate a slice of validator bech32 addresses, sorted alphabetically (deterministic).
+func GenerateValidatorsDeterministic(n int) (out []string) {
+	out = make([]string, 0, n)
+	for i := 0; i < n; i++ {
+		out = append(out, GenerateAddressForTestWithPrefix("cosmosvaloper"))
+	}
+	sort.Strings(out)
+	return out
 }

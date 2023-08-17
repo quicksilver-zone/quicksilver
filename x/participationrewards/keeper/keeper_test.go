@@ -1,13 +1,16 @@
 package keeper_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
 
-	testsuite "github.com/stretchr/testify/suite"
+	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
 
 	"cosmossdk.io/math"
+
+	testsuite "github.com/stretchr/testify/suite"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
@@ -26,7 +29,18 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-var testAddress = addressutils.GenerateAddressForTestWithPrefix("cosmos")
+var (
+	testAddress         = addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	testCrescentAddress = addressutils.GenerateAddressForTestWithPrefix("cre")
+	umeeTestConnection  = "connection-77003"
+	umeeTestChain       = "umee-types-1"
+	umeeBaseDenom       = "uumee"
+
+	crescentTestConnection = "connection-7704"
+	crescentTestChain      = "crescent-types-1"
+	cosmosIBCDenom         = "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3"
+	osmosisIBCDenom        = "ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159"
+)
 
 func init() {
 	ibctesting.DefaultTestingAppInit = app.SetupTestingApp
@@ -89,13 +103,13 @@ func (suite *KeeperTestSuite) coreTest() {
 	// test ProtocolData
 	akpd := quicksilver.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
 	// initially we expect one - the 'local' chain
-	suite.Require().Equal(1, len(akpd))
+	suite.Equal(1, len(akpd))
 
 	suite.setupTestProtocolData()
 
 	akpd = quicksilver.ParticipationRewardsKeeper.AllKeyedProtocolDatas(suite.chainA.GetContext())
-	// added 6 in setupTestProtocolData
-	suite.Require().Equal(7, len(akpd))
+	// added 19 in setupTestProtocolData
+	suite.Equal(19, len(akpd))
 
 	// advance the chains
 	suite.coordinator.CommitNBlocks(suite.chainA, 1)
@@ -104,6 +118,14 @@ func (suite *KeeperTestSuite) coreTest() {
 	// callback test
 	suite.executeSetEpochBlockCallback()
 	suite.executeOsmosisPoolUpdateCallback()
+	suite.executeUmeeReservesUpdateCallback()
+	suite.executeUmeeTotalBorrowsUpdateCallback()
+	suite.executeUmeeInterestScalarUpdateCallback()
+	suite.executeUmeeLeverageModuleBalanceUpdateCallback()
+	suite.executeUmeeUTokenSupplyUpdateCallback()
+	suite.executeCrescentPoolUpdateCallback()
+	suite.executeCrescentPoolCoinSupplyUpdateCallback()
+	suite.executeCrescentReserveBalanceUpdateCallback()
 
 	suite.setupTestDeposits()
 	suite.setupTestIntents()
@@ -117,19 +139,19 @@ func (suite *KeeperTestSuite) coreTest() {
 	ctx := suite.chainA.GetContext()
 
 	quicksilver.InterchainstakingKeeper.IterateZones(ctx, func(index int64, zone *icstypes.Zone) (stop bool) {
-		suite.Require().NoError(quicksilver.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
-		suite.Require().NoError(quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+		suite.NoError(quicksilver.BankKeeper.MintCoins(ctx, "mint", sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
+		suite.NoError(quicksilver.BankKeeper.SendCoinsFromModuleToModule(ctx, "mint", types.ModuleName, sdk.NewCoins(sdk.NewCoin(quicksilver.StakingKeeper.BondDenom(ctx), sdk.NewIntFromUint64(zone.HoldingsAllocation)))))
 		return false
 	})
 
 	_, found := quicksilver.ClaimsManagerKeeper.GetLastEpochClaim(ctx, "cosmoshub-4", "quick16pxh2v4hr28h2gkntgfk8qgh47pfmjfhzgeure", cmtypes.ClaimTypeLiquidToken, "osmosis-1")
-	suite.Require().True(found)
+	suite.True(found)
 
 	quicksilver.EpochsKeeper.AfterEpochEnd(suite.chainA.GetContext(), epochtypes.EpochIdentifierEpoch, 3)
 
 	// zone for remote chain
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	valRewards := make(map[string]sdk.Dec)
 	for _, val := range quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID) {
@@ -141,6 +163,9 @@ func (suite *KeeperTestSuite) coreTest() {
 
 func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+
+	withdrawalAddress1 := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	withdrawalAddress2 := addressutils.GenerateAddressForTestWithPrefix("osmo")
 
 	// test zone
 	testzone := icstypes.Zone{
@@ -154,6 +179,11 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		DepositsEnabled:  true,
 		UnbondingEnabled: false,
 		Is_118:           true,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           withdrawalAddress1,
+			PortName:          suite.chainB.ChainID + ".withrawal",
+			WithdrawalAddress: withdrawalAddress1,
+		},
 	}
 	selftestzone := icstypes.Zone{
 		ConnectionId:     suite.path.EndpointB.ConnectionID,
@@ -166,6 +196,11 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		DepositsEnabled:  true,
 		UnbondingEnabled: false,
 		Is_118:           true,
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           withdrawalAddress2,
+			PortName:          suite.chainA.ChainID + ".withrawal",
+			WithdrawalAddress: withdrawalAddress2,
+		},
 	}
 
 	quicksilver.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &selftestzone)
@@ -174,21 +209,24 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), "07-tendermint-0", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
 
 	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: suite.chainA.GetContext().BlockTime()})
-	suite.Require().NoError(suite.setupChannelForICA(suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
 
 	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	for i := range vals {
-		suite.Require().NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
+		suite.NoError(quicksilver.InterchainstakingKeeper.SetValidatorForZone(suite.chainA.GetContext(), &zone, app.DefaultConfig().Codec.MustMarshal(&vals[i])))
 	}
 
 	// self zone
 	performanceAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
-	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "self")
-	suite.Require().NoError(err)
-	performanceAccountOsmo.WithdrawalAddress = addressutils.GenerateAddressForTestWithPrefix("osmo")
+	performanceAccountOsmo, err := icstypes.NewICAAccount(performanceAddressOsmo, "testchain1.performance")
+	suite.NoError(err)
+	withdrawalAddressOsmo := addressutils.GenerateAddressForTestWithPrefix("osmo")
+	withdrawalAccountOsmo, err := icstypes.NewICAAccount(withdrawalAddressOsmo, "testchain1.withdrawal")
+	suite.NoError(err)
+	performanceAccountOsmo.WithdrawalAddress = withdrawalAddressOsmo
 
 	zoneSelf := icstypes.Zone{
 		ConnectionId:       "connection-77004",
@@ -203,6 +241,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		Is_118:             true,
 		Decimals:           6,
 		PerformanceAddress: performanceAccountOsmo,
+		WithdrawalAddress:  withdrawalAccountOsmo,
 		Validators: []*icstypes.Validator{
 			{
 				ValoperAddress:  "osmovaloper1clpqr4nrk4khgkxj78fcwwh6dl3uw4ep88n0y4",
@@ -232,8 +271,13 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	// cosmos zone
 	performanceAddressCosmos := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 	performanceAccountCosmos, err := icstypes.NewICAAccount(performanceAddressCosmos, "cosmoshub-4.performance")
-	suite.Require().NoError(err)
+	suite.NoError(err)
 	performanceAccountCosmos.WithdrawalAddress = addressutils.GenerateAddressForTestWithPrefix("cosmos")
+
+	withdrawalAddressCosmos := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+	withdrawalAccountCosmos, err := icstypes.NewICAAccount(withdrawalAddressCosmos, "cosmoshub-4.withdrawal")
+	suite.NoError(err)
+	performanceAccountOsmo.WithdrawalAddress = withdrawalAddressCosmos
 
 	zoneCosmos := icstypes.Zone{
 		ConnectionId:       "connection-77001",
@@ -245,6 +289,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		LiquidityModule:    true,
 		PerformanceAddress: performanceAccountCosmos,
 		Is_118:             true,
+		WithdrawalAddress:  withdrawalAccountCosmos,
 	}
 	quicksilver.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneCosmos)
 	cosmosVals := []icstypes.Validator{
@@ -274,6 +319,8 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		quicksilver.InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zoneCosmos.ChainId, cosmosVal)
 	}
 
+	withdrawalAddress := addressutils.GenerateAddressForTestWithPrefix("osmo")
+
 	// osmosis zone
 	zoneOsmosis := icstypes.Zone{
 		ConnectionId:    "connection-77002",
@@ -285,8 +332,13 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		LiquidityModule: true,
 		PerformanceAddress: &icstypes.ICAAccount{
 			Address:           addressutils.GenerateAddressForTestWithPrefix("osmo"),
-			PortName:          "cosmoshub-4.performance",
-			WithdrawalAddress: addressutils.GenerateAddressForTestWithPrefix("osmo"),
+			PortName:          "osmosis-1.performance",
+			WithdrawalAddress: withdrawalAddress,
+		},
+		WithdrawalAddress: &icstypes.ICAAccount{
+			Address:           withdrawalAddress,
+			PortName:          "osmosis-1.withrawal",
+			WithdrawalAddress: withdrawalAddress,
 		},
 		Is_118: true,
 	}
@@ -353,6 +405,46 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		types.ProtocolDataTypeConnection,
 		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", suite.path.EndpointB.ConnectionID, suite.chainB.ChainID, 0)),
 	)
+	// umee-types params
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeParams,
+		[]byte(fmt.Sprintf("{\"ChainID\": %q}", umeeTestChain)),
+	)
+	// umee-types test chain
+	suite.addProtocolData(
+		types.ProtocolDataTypeConnection,
+		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", umeeTestConnection, umeeTestChain, 0)),
+	)
+	// umee-types test reserves
+	upd, _ := json.Marshal(types.UmeeReservesProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeReserves,
+		upd,
+	)
+	// umee-types test leverage module balance
+	upd, _ = json.Marshal(types.UmeeLeverageModuleBalanceProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeLeverageModuleBalance,
+		upd,
+	)
+	// umee-types test borrows
+	upd, _ = json.Marshal(types.UmeeTotalBorrowsProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeTotalBorrows,
+		upd,
+	)
+	// umee-types test interest scalar
+	upd, _ = json.Marshal(types.UmeeInterestScalarProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeInterestScalar,
+		upd,
+	)
+	// umee-types test utoken supply
+	upd, _ = json.Marshal(types.UmeeUTokenSupplyProtocolData{UmeeProtocolData: types.UmeeProtocolData{Denom: umeetypes.UTokenPrefix + umeeBaseDenom}})
+	suite.addProtocolData(
+		types.ProtocolDataTypeUmeeUTokenSupply,
+		upd,
+	)
 	// osmosis params
 	suite.addProtocolData(
 		types.ProtocolDataTypeOsmosisParams,
@@ -370,15 +462,45 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"{\"poolid\":%d,\"poolname\":%q,\"pooltype\":\"balancer\",\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
 			1,
 			"atom/osmo",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			cosmosIBCDenom,
 			"cosmoshub-4",
 			"uatom",
-			"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159",
+			osmosisIBCDenom,
 			"osmosis-1",
 			"uosmo",
 		)),
 	)
-
+	// crescent params
+	suite.addProtocolData(
+		types.ProtocolDataTypeCrescentParams,
+		[]byte(fmt.Sprintf("{\"ChainID\": %q}", crescentTestChain)),
+	)
+	// crescent test chain
+	suite.addProtocolData(
+		types.ProtocolDataTypeConnection,
+		[]byte(fmt.Sprintf("{\"connectionid\": %q,\"chainid\": %q,\"lastepoch\": %d}", crescentTestConnection, crescentTestChain, 0)),
+	)
+	// crescent test pool
+	suite.addProtocolData(
+		types.ProtocolDataTypeCrescentPool,
+		[]byte(fmt.Sprintf(
+			"{\"poolid\":%d, \"denom\":%q}",
+			1,
+			cosmosIBCDenom,
+		)),
+	)
+	// crescent-types test supply
+	cpd, _ := json.Marshal(types.CrescentPoolCoinSupplyProtocolData{PoolCoinDenom: PoolCoinDenom})
+	suite.addProtocolData(
+		types.ProtocolDataTypeCrescentPoolCoinSupply,
+		cpd,
+	)
+	// crescent-types reserve address balance
+	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testCrescentAddress, Denom: cosmosIBCDenom})
+	suite.addProtocolData(
+		types.ProtocolDataTypeCrescentReserveAddressBalance,
+		cpd,
+	)
 	// atom (cosmoshub) on osmosis
 	suite.addProtocolData(
 		types.ProtocolDataTypeLiquidToken,
@@ -386,7 +508,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
 			"osmosis-1",
 			"cosmoshub-4",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			cosmosIBCDenom,
 			"uqatom",
 		)),
 	)
@@ -396,7 +518,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 			"{\"chainid\":%q,\"registeredzonechainid\":%q,\"ibcdenom\":%q,\"qassetdenom\":%q}",
 			"testchain1",
 			"cosmoshub-4",
-			"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
+			cosmosIBCDenom,
 			"uqatom",
 		)),
 	)
@@ -423,7 +545,7 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 
 	// add deposit to chainB zone
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 
 	suite.addReceipt(
 		&zone,
@@ -434,7 +556,7 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 
 	// add deposit to cosmos zone
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), "cosmoshub-4")
-	suite.Require().True(found)
+	suite.True(found)
 
 	suite.addReceipt(
 		&zone,
@@ -445,7 +567,7 @@ func (suite *KeeperTestSuite) setupTestDeposits() {
 
 	// add deposit to osmosis zone
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), "osmosis-1")
-	suite.Require().True(found)
+	suite.True(found)
 
 	suite.addReceipt(
 		&zone,
@@ -486,7 +608,7 @@ func (suite *KeeperTestSuite) setupTestIntents() {
 
 	// chainB
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
-	suite.Require().True(found)
+	suite.True(found)
 	vals := quicksilver.InterchainstakingKeeper.GetValidators(suite.chainA.GetContext(), suite.chainB.ChainID)
 
 	suite.addIntent(

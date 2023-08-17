@@ -31,9 +31,9 @@ func (s *KeeperTestSuite) TestAdminMsgs() {
 
 	// // Test force transferring
 	// _, err = suite.msgServer.ForceTransfer(sdk.WrapSDKContext(suite.Ctx), types.NewMsgForceTransfer(suite.TestAccs[0].String(), sdk.NewInt64Coin(denom, 5), suite.TestAccs[1].String(), suite.TestAccs[0].String()))
-	// suite.Require().NoError(err)
-	// suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], denom).IsEqual(sdk.NewInt64Coin(denom, 15)))
-	// suite.Require().True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[1], denom).IsEqual(sdk.NewInt64Coin(denom, 5)))
+	// suite.NoError(err)
+	// suite.True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[0], denom).IsEqual(sdk.NewInt64Coin(denom, 15)))
+	// suite.True(bankKeeper.GetBalance(suite.Ctx, suite.TestAccs[1], denom).IsEqual(sdk.NewInt64Coin(denom, 5)))
 
 	// Test burning from own account
 	_, err = s.msgServer.Burn(sdk.WrapSDKContext(s.Ctx), types.NewMsgBurn(s.TestAccs[0].String(), sdk.NewInt64Coin(s.defaultDenom, 5)))

@@ -12,6 +12,7 @@ import (
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
+	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -63,7 +64,8 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	for _, msg := range msgs {
 		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))
 	}
-	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, WithdrawStatusTokenize, time.Unix(0, 0))
+
+	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0), k.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch)
 
 	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx)
 }
@@ -90,8 +92,9 @@ func (k *Keeper) queueRedemption(
 		amount,
 		burnAmount,
 		hash,
-		WithdrawStatusQueued,
+		types.WithdrawStatusQueued,
 		time.Time{},
+		k.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch,
 	)
 
 	return nil
@@ -140,7 +143,7 @@ func (k *Keeper) HandleQueuedUnbondings(ctx sdk.Context, zone *types.Zone, epoch
 		return err
 	}
 
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusQueued, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		k.Logger(ctx).Info("handling queued withdrawal request", "from", withdrawal.Delegator, "to", withdrawal.Recipient, "amount", withdrawal.Amount)
 		if len(withdrawal.Amount) == 0 {
 			k.Logger(ctx).Error("withdrawal %s has no amount set; cannot process...", withdrawal.Txhash)
@@ -220,12 +223,12 @@ WITHDRAWAL:
 	}
 
 	for _, hash := range utils.Keys(txDistrsMap) {
-		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, WithdrawStatusQueued)
+		record, found := k.GetWithdrawalRecord(ctx, zone.ChainId, hash, types.WithdrawStatusQueued)
 		if !found {
 			return errors.New("unable to find withdrawal record")
 		}
 		record.Distribution = txDistrsMap[hash]
-		k.UpdateWithdrawalRecordStatus(ctx, &record, WithdrawStatusUnbond)
+		k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusUnbond)
 	}
 
 	if len(txHashes) == 0 {
@@ -242,7 +245,7 @@ WITHDRAWAL:
 
 	k.Logger(ctx).Info("unbonding messages to send", "msg", msgs)
 
-	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, fmt.Sprintf("withdrawal/%d", epoch), zone.MessagesPerTx)
+	err = k.SubmitTx(ctx, msgs, zone.DelegationAddress, types.EpochWithdrawalMemo(epoch), zone.MessagesPerTx)
 	if err != nil {
 		return err
 	}
@@ -260,10 +263,10 @@ WITHDRAWAL:
 func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error {
 	var err error
 
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
+	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusCompleted, func(idx int64, withdrawal types.WithdrawalRecord) bool {
 		if ctx.BlockTime().After(withdrawal.CompletionTime.Add(24 * time.Hour)) {
 			k.Logger(ctx).Info("garbage collecting completed unbondings")
-			k.DeleteWithdrawalRecord(ctx, zone.ChainId, withdrawal.Txhash, WithdrawStatusCompleted)
+			k.DeleteWithdrawalRecord(ctx, zone.ChainId, withdrawal.Txhash, types.WithdrawStatusCompleted)
 		}
 		return false
 	})
@@ -272,7 +275,7 @@ func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error 
 }
 
 func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]math.Int, error) {
-	currentAllocations, currentSum, _ := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone)
 	availablePerValidator, _, err := k.GetUnlockedTokensForZone(ctx, zone)
 	if err != nil {
 		return nil, err
@@ -281,6 +284,6 @@ func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone,
 	if err != nil {
 		return nil, err
 	}
-	allocations := types.DetermineAllocationsForUndelegation(currentAllocations, currentSum, targetAllocations, availablePerValidator, amount)
+	allocations := types.DetermineAllocationsForUndelegation(currentAllocations, map[string]bool{}, currentSum, targetAllocations, availablePerValidator, amount)
 	return allocations, nil
 }
