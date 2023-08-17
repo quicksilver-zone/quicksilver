@@ -172,6 +172,8 @@ test-docker-multi-regen:
 	./scripts/multi-test.sh -r
 test-docker-simple-lsm:
 	./scripts/simple-test-lsm.sh
+test-docker-simple-v2:
+	./scripts/simple-test-v2.sh -r
 test-docker-simple-lsm-regen:
 	./scripts/simple-test-lsm.sh -r
 build-docker-all:

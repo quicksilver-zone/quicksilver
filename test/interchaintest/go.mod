@@ -6,6 +6,7 @@ require (
 	cosmossdk.io/math v1.0.1
 	github.com/cosmos/cosmos-sdk v0.47.4
 	github.com/cosmos/ibc-go/v7 v7.2.0
+	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
 	github.com/ingenuity-build/quicksilver v1.3.2
 	github.com/strangelove-ventures/interchaintest/v7 v7.0.0-20230802153316-8e02aef8573a
 	github.com/stretchr/testify v1.8.4
@@ -15,7 +16,6 @@ require (
 require (
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/go-playground/locales v0.14.0 // indirect
-	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845 // indirect
 	golang.org/x/time v0.3.0 // indirect
 )
 
@@ -57,7 +57,7 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
-	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
+	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
 	github.com/cometbft/cometbft v0.37.2 // indirect
 	github.com/cometbft/cometbft-db v0.8.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect

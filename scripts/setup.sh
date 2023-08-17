@@ -204,6 +204,7 @@ fi
 
 VAL_ADDRESS_1=$($QS1_RUN keys show val1 --keyring-backend test -a)
 DEMO_ADDRESS_1=$($QS1_RUN keys show demowallet1 --keyring-backend test -a)
+DEMO_ADDRESS_22=$($QS1_RUN keys show demowallet2 --keyring-backend test -a)
 RLY_ADDRESS_1=$($QS1_RUN keys show rly1 --keyring-backend test -a)
 
 VAL_ADDRESS_2=$($TZ1_1_RUN keys show val2 --keyring-backend test -a)
@@ -256,6 +257,7 @@ fi
 
 $QS1_RUN add-genesis-account ${VAL_ADDRESS_1} 100000000000uqck
 $QS1_RUN add-genesis-account ${DEMO_ADDRESS_1} 100000000000uqck
+$QS1_RUN add-genesis-account ${DEMO_ADDRESS_22} 100000000000uqck
 $QS1_RUN add-genesis-account ${RLY_ADDRESS_1} 100000000000uqck
 
 $QS1_RUN add-genesis-account ${VAL_ADDRESS_6} 100000000000uqck
@@ -508,6 +510,7 @@ if [ "$IS_MULTI_ZONE_TEST" = true ]; then
 cat << EOF > ${SCRIPT_DIR}/wallets.sh
 VAL_ADDRESS_1=$VAL_ADDRESS_1
 DEMO_ADDRESS_1=$DEMO_ADDRESS_1
+DEMO_ADDRESS_22=$DEMO_ADDRESS_22
 RLY_ADDRESS_1=$RLY_ADDRESS_1
 VAL_ADDRESS_6=$VAL_ADDRESS_6
 DEMO_ADDRESS_6=$DEMO_ADDRESS_6
@@ -551,6 +554,7 @@ else
 cat << EOF > ${SCRIPT_DIR}/wallets.sh
 VAL_ADDRESS_1=$VAL_ADDRESS_1
 DEMO_ADDRESS_1=$DEMO_ADDRESS_1
+DEMO_ADDRESS_22=$DEMO_ADDRESS_22
 RLY_ADDRESS_1=$RLY_ADDRESS_1
 VAL_ADDRESS_6=$VAL_ADDRESS_6
 DEMO_ADDRESS_6=$DEMO_ADDRESS_6

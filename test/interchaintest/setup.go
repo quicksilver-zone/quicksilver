@@ -40,7 +40,7 @@ func createConfig() (ibc.ChainConfig, error) {
 	return ibc.ChainConfig{
 			Type:                "cosmos",
 			Name:                "quicksilver",
-			ChainID:             "quicksilver-1",
+			ChainID:             "quicksilverd",
 			Images:              []ibc.DockerImage{QuicksilverImage},
 			Bin:                 "quicksilverd",
 			Bech32Prefix:        "quick",
