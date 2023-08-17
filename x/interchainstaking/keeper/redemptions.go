@@ -60,10 +60,12 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 		})
 	}
 	// add unallocated dust.
-	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding)
 	sdkMsgs := make([]proto.Message, 0)
-	for _, msg := range msgs {
-		sdkMsgs = append(sdkMsgs, proto.Message(msg))
+	if len(msgs) > 0 {
+		msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding) //nolint:gosec // added bounds check
+		for _, msg := range msgs {
+			sdkMsgs = append(sdkMsgs, proto.Message(msg))
+		}
 	}
 
 	k.AddWithdrawalRecord(ctx, zone, sender.String(), []*types.Distribution{}, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0), k.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch)
