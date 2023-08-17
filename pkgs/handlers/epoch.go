@@ -134,7 +134,6 @@ func GetEpochHandler(
 		}
 
 		// crescent claim
-		chain = crescentParamsManager.Get(ctx)[0].ChainID
 		fmt.Println("check config for crescent chain id...")
 		if len(crescentParamsManager.Get(ctx)) == 0 {
 			errors["CrescentConfig"] = fmt.Errorf("crescent params not set")
