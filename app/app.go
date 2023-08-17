@@ -35,9 +35,8 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v7/testing/types"
 	"github.com/prometheus/client_golang/prometheus"
