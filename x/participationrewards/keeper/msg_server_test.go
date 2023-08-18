@@ -22,6 +22,10 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
+const (
+	testchainID = "testchain1-1"
+)
+
 func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 	// TODO: these tests ought to validate the error received.
 	appA := suite.GetQuicksilverApp(suite.chainA)
@@ -392,7 +396,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1-1",
+					SrcZone:     testchainID,
 					ClaimType:   cmtypes.ClaimTypeLiquidToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -426,7 +430,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress,
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1-1",
+					SrcZone:     testchainID,
 					ClaimType:   cmtypes.ClaimTypeUmeeToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -468,7 +472,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress,
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1-1",
+					SrcZone:     testchainID,
 					ClaimType:   cmtypes.ClaimTypeCrescentPool,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -497,7 +501,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     testchainID,
 					ClaimType:   cmtypes.ClaimTypeCrescentPool,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -527,7 +531,6 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			resp, err := k.SubmitClaim(sdk.WrapSDKContext(ctx), &msg)
 			if tt.wantErr != "" {
 				suite.Errorf(err, tt.wantErr)
-				suite.Nil(resp)
 				suite.T().Logf("Error: %v", err)
 				return
 			}

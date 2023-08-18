@@ -3,6 +3,7 @@ package quicksilver.claimsmanager.v1;
 
 import "gogoproto/gogo.proto";
 import "quicksilver/claimsmanager/v1/claimsmanager.proto";
+import "quicksilver/claimsmanager/v1/params.proto";
 
 option go_package = "github.com/ingenuity-build/quicksilver/x/claimsmanager/types";
 

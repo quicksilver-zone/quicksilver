@@ -359,6 +359,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 		appCodec,
 		appKeepers.keys[claimsmanagertypes.StoreKey],
 		appKeepers.IBCKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	// claimsmanagerModule := claimsmanager.NewAppModule(appCodec, appKeepers.ClaimsManagerKeeper)

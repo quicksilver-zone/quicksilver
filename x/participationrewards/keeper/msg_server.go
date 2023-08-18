@@ -30,17 +30,17 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if !k.GetClaimsEnabled(ctx) {
-		return nil, errors.New("claims currently disabled")
+		return &types.MsgSubmitClaimResponse{}, errors.New("claims currently disabled")
 	}
 	// fetch zone
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
-		return nil, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
+		return &types.MsgSubmitClaimResponse{}, fmt.Errorf("invalid zone, chain id \"%s\" not found", msg.Zone)
 	}
 	var pd types.ProtocolData
 	pd, ok = k.GetProtocolData(ctx, types.ProtocolDataTypeConnection, msg.SrcZone)
 	if !ok {
-		return nil, fmt.Errorf("unable to obtain connection protocol data for %q", msg.SrcZone)
+		return &types.MsgSubmitClaimResponse{}, fmt.Errorf("unable to obtain connection protocol data for %q", msg.SrcZone)
 	}
 
 	// protocol data
@@ -54,7 +54,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 		pl := fmt.Sprintf("Proof [%d]", i)
 
 		if proof.Height != connectionData.LastEpoch {
-			return nil, fmt.Errorf(
+			return &types.MsgSubmitClaimResponse{}, fmt.Errorf(
 				"invalid claim for last epoch, %s expected height %d, got %d",
 				pl,
 				connectionData.LastEpoch,
@@ -73,7 +73,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 				proof.Data,
 				proof.ProofOps,
 			); err != nil {
-				return nil, fmt.Errorf("%s: %w", pl, err)
+				return &types.MsgSubmitClaimResponse{}, fmt.Errorf("%s: %w", pl, err)
 			}
 		} else {
 			if err := k.ValidateProofOps(
@@ -87,7 +87,7 @@ func (k msgServer) SubmitClaim(goCtx context.Context, msg *types.MsgSubmitClaim)
 				proof.Data,
 				proof.ProofOps,
 			); err != nil {
-				return nil, fmt.Errorf("%s: %w", pl, err)
+				return &types.MsgSubmitClaimResponse{}, fmt.Errorf("%s: %w", pl, err)
 			}
 		}
 	}

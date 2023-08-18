@@ -20,6 +20,10 @@ type Keeper struct {
 	cdc       codec.BinaryCodec
 	storeKey  storetypes.StoreKey
 	IBCKeeper *ibckeeper.Keeper
+
+	// the address capable of executing authority-scoped messages (ex. params, props). Typically, this
+	// should be the x/gov module account.
+	authority string
 }
 
 // NewKeeper returns a new instance of participationrewards Keeper.
@@ -28,6 +32,7 @@ func NewKeeper(
 	cdc codec.Codec,
 	key storetypes.StoreKey,
 	ibcKeeper *ibckeeper.Keeper,
+	authority string,
 ) Keeper {
 	if ibcKeeper == nil {
 		panic("ibcKeeper is nil")
@@ -37,6 +42,7 @@ func NewKeeper(
 		cdc:       cdc,
 		storeKey:  key,
 		IBCKeeper: ibcKeeper,
+		authority: authority,
 	}
 }
 

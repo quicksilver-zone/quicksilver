@@ -1,0 +1,13 @@
+syntax = "proto3";
+package quicksilver.claimsmanager.v1;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/claimsmanager/types";
+
+// Params holds parameters for the claimsmanager module.
+message Params {
+  option (gogoproto.goproto_getters) = false;
+  option (gogoproto.goproto_stringer) = false;
+}

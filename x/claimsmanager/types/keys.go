@@ -17,6 +17,7 @@ var (
 	KeyPrefixClaim          = []byte{0x00}
 	KeyPrefixLastEpochClaim = []byte{0x01}
 	KeySelfConsensusState   = []byte{0x02}
+	KeyPrefixParams         = []byte{0x03}
 )
 
 // GetGenericKeyClaim returns the key for storing a given claim.
