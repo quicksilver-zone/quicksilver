@@ -1,4 +1,4 @@
-package osmoutils
+package ibc_hooks
 
 import (
 	"encoding/json"
