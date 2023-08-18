@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -29,7 +31,23 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 	if epochIdentifier == epochstypes.EpochIdentifierEpoch {
 		k.Logger(ctx).Info("handling epoch end", "epoch_identifier", epochIdentifier, "epoch_number", epochNumber)
 
+		epochInfo := k.EpochsKeeper.GetEpochInfo(ctx, epochIdentifier)
 		k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
+			k.IterateZoneRedelegationRecords(ctx, zone.ChainId, func(index int64, key []byte, record types.RedelegationRecord) (stop bool) {
+				unbondingPeriod := time.Duration(zone.UnbondingPeriod / 1_000_000_000)
+				redelegationDuration := time.Duration(epochInfo.CurrentEpoch-record.EpochNumber) * epochInfo.Duration
+
+				if redelegationDuration >= unbondingPeriod {
+					k.DeleteRedelegationRecord(ctx, record.ChainId, record.Source, record.Destination, record.EpochNumber)
+				}
+
+				return false
+			})
+
+			if err := k.HandleMaturedUnbondings(ctx, zone); err != nil {
+				k.Logger(ctx).Error("error in HandleMaturedUnbondings", "error", err.Error())
+			}
+
 			k.Logger(ctx).Info(
 				"taking a snapshot of delegator intents",
 				"epoch_identifier", epochIdentifier,
@@ -55,6 +73,14 @@ func (k *Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNum
 				// This shouldn't happen in normal operation, but can if the zone was registered right on the epoch boundary.
 				return false
 			}
+
+			k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(idx int64, record types.WithdrawalRecord) bool {
+				if (record.Status == types.WithdrawStatusUnbond) && !record.Acknowledged && record.EpochNumber < epochNumber {
+					record.Requeued = true
+					k.UpdateWithdrawalRecordStatus(ctx, &record, types.WithdrawStatusQueued)
+				}
+				return false
+			})
 
 			if err := k.HandleQueuedUnbondings(ctx, zone, epochNumber); err != nil {
 				// we can and need not panic here; logging the error is sufficient.

@@ -362,7 +362,7 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	quicksilver.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
 
 	chanCapName := host.ChannelCapabilityPath(portID, channelID)
-	capability, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+	capability, err := quicksilver.ScopedIBCKeeper.NewCapability(
 		suite.chainA.GetContext(),
 		chanCapName,
 	)
@@ -373,13 +373,9 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	if err != nil {
 		return err
 	}
-	err = quicksilver.ScopedIBCKeeper.ClaimCapability(suite.chainA.GetContext(), capability, chanCapName)
-	if err != nil {
-		return err
-	}
 
 	portPathName := host.PortPath(portID)
-	capability, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+	capability, err = quicksilver.ScopedIBCKeeper.NewCapability(
 		suite.chainA.GetContext(),
 		portPathName,
 	)
@@ -481,14 +477,9 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	suite.addProtocolData(
 		types.ProtocolDataTypeCrescentPool,
 		[]byte(fmt.Sprintf(
-			"{\"poolid\":%d,\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
+			"{\"poolid\":%d, \"denom\":%q}",
 			1,
 			cosmosIBCDenom,
-			"cosmoshub-4",
-			"uatom",
-			osmosisIBCDenom,
-			"osmosis-1",
-			"uosmo",
 		)),
 	)
 	// crescent-types test supply
@@ -498,7 +489,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		cpd,
 	)
 	// crescent-types reserve address balance
-	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testAddress, Denom: cosmosIBCDenom})
+	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testCrescentAddress, Denom: cosmosIBCDenom})
 	suite.addProtocolData(
 		types.ProtocolDataTypeCrescentReserveAddressBalance,
 		cpd,

@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"encoding/json"
-	"github.com/ingenuity-build/quicksilver/utils"
 	"time"
 
 	"cosmossdk.io/math"
@@ -16,6 +15,7 @@ import (
 	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"

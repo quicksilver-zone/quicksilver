@@ -370,11 +370,8 @@ func TestUnmarshalProtocolData(t *testing.T) {
 					}
 					pooldata, _ := json.Marshal(pool)
 					pd := types.CrescentPoolProtocolData{
-						PoolID: 1,
-						Denoms: map[string]types.DenomWithZone{
-							"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3": {ChainID: "cosmoshub-4", Denom: "uatom"},
-							"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159": {ChainID: "osmosis-1", Denom: "uosmo"},
-						},
+						PoolID:   1,
+						Denom:    "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 						PoolData: pooldata,
 					}
 					data, _ := json.Marshal(&pd)
@@ -383,10 +380,7 @@ func TestUnmarshalProtocolData(t *testing.T) {
 			},
 			&types.CrescentPoolProtocolData{
 				PoolID: 1,
-				Denoms: map[string]types.DenomWithZone{
-					"ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3": {ChainID: "cosmoshub-4", Denom: "uatom"},
-					"ibc/15E9C5CF5969080539DB395FA7D9C0868265217EFC528433671AAF9B1912D159": {ChainID: "osmosis-1", Denom: "uosmo"},
-				},
+				Denom:  "ibc/3020922B7576FC75BBE057A0290A9AEEFF489BB1113E6E365CE472D4BFB7FFA3",
 				PoolData: func() []byte {
 					pool := &liquiditytypes.Pool{
 						PoolCoinDenom: "pool1",
