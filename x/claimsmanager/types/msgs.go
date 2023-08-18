@@ -7,9 +7,7 @@ import (
 	"github.com/ingenuity-build/multierror"
 )
 
-var (
-	_ sdk.Msg = &MsgUpdateParams{}
-)
+var _ sdk.Msg = &MsgUpdateParams{}
 
 // ValidateBasic performs stateless validation for Proof.
 func (p *Proof) ValidateBasic() error {
