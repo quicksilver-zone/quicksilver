@@ -108,7 +108,9 @@ paths:
             type: object
             description: >-
               MsgIncentivePoolSpendResponse defines the MsgIncentivePoolSpend
-              response type.
+              response
+
+              type.
         default:
           description: An unexpected error response.
           schema:
@@ -161,7 +163,9 @@ paths:
                     signatures required by gogoproto.
             description: >-
               MsgIncentivePoolSpend represents a message to send coins from one
-              account to another.
+              account to
+
+              another.
       tags:
         - Msg
   /quicksilver/airdrop/v1/accountbalance/{chain_id}:
@@ -1059,7 +1063,7 @@ paths:
         - QueryClaimsManager
   /quicksilver/claimsmanager/v1/user/{address}/claims:
     get:
-      summary: >-
+      summary: |-
         UserClaims returns all zone claims for a given address from the current
         epoch.
       operationId: UserClaims
@@ -1221,7 +1225,7 @@ paths:
         - QueryClaimsManager
   /quicksilver/claimsmanager/v1/user/{address}/previous_epoch_claims:
     get:
-      summary: >-
+      summary: |-
         UserLastEpochClaims returns all zone claims for a given address from the
         last epoch.
       operationId: UserLastEpochClaims
@@ -2449,7 +2453,9 @@ paths:
     get:
       summary: >-
         MappedAccounts provides data on the mapped accounts for a given user
-        over different host chains.
+        over
+
+        different host chains.
       operationId: MappedAccounts
       responses:
         '200':
@@ -5338,3 +5344,3134 @@ paths:
                       format: byte
       tags:
         - QueryTokenFactory
+definitions:
+  cosmos.base.v1beta1.Coin:
+    type: object
+    properties:
+      denom:
+        type: string
+      amount:
+        type: string
+    description: |-
+      Coin defines a token with a denomination and an amount.
+
+      NOTE: The amount field is an Int which implements the custom method
+      signatures required by gogoproto.
+  google.protobuf.Any:
+    type: object
+    properties:
+      type_url:
+        type: string
+        description: >-
+          A URL/resource name that uniquely identifies the type of the
+          serialized
+
+          protocol buffer message. This string must contain at least
+
+          one "/" character. The last segment of the URL's path must represent
+
+          the fully qualified name of the type (as in
+
+          `path/google.protobuf.Duration`). The name should be in a canonical
+          form
+
+          (e.g., leading "." is not accepted).
+
+
+          In practice, teams usually precompile into the binary all types that
+          they
+
+          expect it to use in the context of Any. However, for URLs which use
+          the
+
+          scheme `http`, `https`, or no scheme, one can optionally set up a type
+
+          server that maps type URLs to message definitions as follows:
+
+
+          * If no scheme is provided, `https` is assumed.
+
+          * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+            value in binary format, or produce an error.
+          * Applications are allowed to cache lookup results based on the
+            URL, or have them precompiled into a binary to avoid any
+            lookup. Therefore, binary compatibility needs to be preserved
+            on changes to types. (Use versioned type names to manage
+            breaking changes.)
+
+          Note: this functionality is not currently available in the official
+
+          protobuf release, and it is not used for type URLs beginning with
+
+          type.googleapis.com.
+
+
+          Schemes other than `http`, `https` (or the empty scheme) might be
+
+          used with implementation specific semantics.
+      value:
+        type: string
+        format: byte
+        description: >-
+          Must be a valid serialized protocol buffer of the above specified
+          type.
+    description: >-
+      `Any` contains an arbitrary serialized protocol buffer message along with
+      a
+
+      URL that describes the type of the serialized message.
+
+
+      Protobuf library provides support to pack/unpack Any values in the form
+
+      of utility functions or additional generated methods of the Any type.
+
+
+      Example 1: Pack and unpack a message in C++.
+
+          Foo foo = ...;
+          Any any;
+          any.PackFrom(foo);
+          ...
+          if (any.UnpackTo(&foo)) {
+            ...
+          }
+
+      Example 2: Pack and unpack a message in Java.
+
+          Foo foo = ...;
+          Any any = Any.pack(foo);
+          ...
+          if (any.is(Foo.class)) {
+            foo = any.unpack(Foo.class);
+          }
+          // or ...
+          if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+            foo = any.unpack(Foo.getDefaultInstance());
+          }
+
+      Example 3: Pack and unpack a message in Python.
+
+          foo = Foo(...)
+          any = Any()
+          any.Pack(foo)
+          ...
+          if any.Is(Foo.DESCRIPTOR):
+            any.Unpack(foo)
+            ...
+
+      Example 4: Pack and unpack a message in Go
+
+           foo := &pb.Foo{...}
+           any, err := anypb.New(foo)
+           if err != nil {
+             ...
+           }
+           ...
+           foo := &pb.Foo{}
+           if err := any.UnmarshalTo(foo); err != nil {
+             ...
+           }
+
+      The pack methods provided by protobuf library will by default use
+
+      'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+      methods only use the fully qualified type name after the last '/'
+
+      in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+      name "y.z".
+
+
+      JSON
+
+
+      The JSON representation of an `Any` value uses the regular
+
+      representation of the deserialized, embedded message, with an
+
+      additional field `@type` which contains the type URL. Example:
+
+          package google.profile;
+          message Person {
+            string first_name = 1;
+            string last_name = 2;
+          }
+
+          {
+            "@type": "type.googleapis.com/google.profile.Person",
+            "firstName": <string>,
+            "lastName": <string>
+          }
+
+      If the embedded message type is well-known and has a custom JSON
+
+      representation, that representation will be embedded adding a field
+
+      `value` which holds the custom JSON in addition to the `@type`
+
+      field. Example (for message [google.protobuf.Duration][]):
+
+          {
+            "@type": "type.googleapis.com/google.protobuf.Duration",
+            "value": "1.212s"
+          }
+  grpc.gateway.runtime.Error:
+    type: object
+    properties:
+      error:
+        type: string
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+      details:
+        type: array
+        items:
+          type: object
+          properties:
+            type_url:
+              type: string
+              description: >-
+                A URL/resource name that uniquely identifies the type of the
+                serialized
+
+                protocol buffer message. This string must contain at least
+
+                one "/" character. The last segment of the URL's path must
+                represent
+
+                the fully qualified name of the type (as in
+
+                `path/google.protobuf.Duration`). The name should be in a
+                canonical form
+
+                (e.g., leading "." is not accepted).
+
+
+                In practice, teams usually precompile into the binary all types
+                that they
+
+                expect it to use in the context of Any. However, for URLs which
+                use the
+
+                scheme `http`, `https`, or no scheme, one can optionally set up
+                a type
+
+                server that maps type URLs to message definitions as follows:
+
+
+                * If no scheme is provided, `https` is assumed.
+
+                * An HTTP GET on the URL must yield a [google.protobuf.Type][]
+                  value in binary format, or produce an error.
+                * Applications are allowed to cache lookup results based on the
+                  URL, or have them precompiled into a binary to avoid any
+                  lookup. Therefore, binary compatibility needs to be preserved
+                  on changes to types. (Use versioned type names to manage
+                  breaking changes.)
+
+                Note: this functionality is not currently available in the
+                official
+
+                protobuf release, and it is not used for type URLs beginning
+                with
+
+                type.googleapis.com.
+
+
+                Schemes other than `http`, `https` (or the empty scheme) might
+                be
+
+                used with implementation specific semantics.
+            value:
+              type: string
+              format: byte
+              description: >-
+                Must be a valid serialized protocol buffer of the above
+                specified type.
+          description: >-
+            `Any` contains an arbitrary serialized protocol buffer message along
+            with a
+
+            URL that describes the type of the serialized message.
+
+
+            Protobuf library provides support to pack/unpack Any values in the
+            form
+
+            of utility functions or additional generated methods of the Any
+            type.
+
+
+            Example 1: Pack and unpack a message in C++.
+
+                Foo foo = ...;
+                Any any;
+                any.PackFrom(foo);
+                ...
+                if (any.UnpackTo(&foo)) {
+                  ...
+                }
+
+            Example 2: Pack and unpack a message in Java.
+
+                Foo foo = ...;
+                Any any = Any.pack(foo);
+                ...
+                if (any.is(Foo.class)) {
+                  foo = any.unpack(Foo.class);
+                }
+                // or ...
+                if (any.isSameTypeAs(Foo.getDefaultInstance())) {
+                  foo = any.unpack(Foo.getDefaultInstance());
+                }
+
+            Example 3: Pack and unpack a message in Python.
+
+                foo = Foo(...)
+                any = Any()
+                any.Pack(foo)
+                ...
+                if any.Is(Foo.DESCRIPTOR):
+                  any.Unpack(foo)
+                  ...
+
+            Example 4: Pack and unpack a message in Go
+
+                 foo := &pb.Foo{...}
+                 any, err := anypb.New(foo)
+                 if err != nil {
+                   ...
+                 }
+                 ...
+                 foo := &pb.Foo{}
+                 if err := any.UnmarshalTo(foo); err != nil {
+                   ...
+                 }
+
+            The pack methods provided by protobuf library will by default use
+
+            'type.googleapis.com/full.type.name' as the type URL and the unpack
+
+            methods only use the fully qualified type name after the last '/'
+
+            in the type URL, for example "foo.bar.com/x/y.z" will yield type
+
+            name "y.z".
+
+
+            JSON
+
+
+            The JSON representation of an `Any` value uses the regular
+
+            representation of the deserialized, embedded message, with an
+
+            additional field `@type` which contains the type URL. Example:
+
+                package google.profile;
+                message Person {
+                  string first_name = 1;
+                  string last_name = 2;
+                }
+
+                {
+                  "@type": "type.googleapis.com/google.profile.Person",
+                  "firstName": <string>,
+                  "lastName": <string>
+                }
+
+            If the embedded message type is well-known and has a custom JSON
+
+            representation, that representation will be embedded adding a field
+
+            `value` which holds the custom JSON in addition to the `@type`
+
+            field. Example (for message [google.protobuf.Duration][]):
+
+                {
+                  "@type": "type.googleapis.com/google.protobuf.Duration",
+                  "value": "1.212s"
+                }
+  quicksilver.airdrop.v1.MsgClaim:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      action:
+        type: string
+        format: int64
+      address:
+        type: string
+      proofs:
+        type: array
+        items:
+          type: object
+          properties:
+            key:
+              type: string
+              format: byte
+            data:
+              type: string
+              format: byte
+            proof_ops:
+              type: object
+              properties:
+                ops:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      key:
+                        type: string
+                        format: byte
+                      data:
+                        type: string
+                        format: byte
+                    title: >-
+                      ProofOp defines an operation used for calculating Merkle
+                      root
+
+                      The data could be arbitrary format, providing nessecary
+                      data
+
+                      for example neighbouring node hash
+              title: ProofOps is Merkle proof defined by the list of ProofOps
+            height:
+              type: string
+              format: int64
+            proof_type:
+              type: string
+          description: Proof defines a type used to cryptographically prove a claim.
+  quicksilver.airdrop.v1.MsgClaimResponse:
+    type: object
+    properties:
+      amount:
+        type: string
+        format: uint64
+  quicksilver.airdrop.v1.MsgIncentivePoolSpend:
+    type: object
+    properties:
+      authority:
+        type: string
+      to_address:
+        type: string
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    description: >-
+      MsgIncentivePoolSpend represents a message to send coins from one account
+      to
+
+      another.
+  quicksilver.airdrop.v1.MsgIncentivePoolSpendResponse:
+    type: object
+    description: |-
+      MsgIncentivePoolSpendResponse defines the MsgIncentivePoolSpend response
+      type.
+  quicksilver.claimsmanager.v1.Proof:
+    type: object
+    properties:
+      key:
+        type: string
+        format: byte
+      data:
+        type: string
+        format: byte
+      proof_ops:
+        type: object
+        properties:
+          ops:
+            type: array
+            items:
+              type: object
+              properties:
+                type:
+                  type: string
+                key:
+                  type: string
+                  format: byte
+                data:
+                  type: string
+                  format: byte
+              title: |-
+                ProofOp defines an operation used for calculating Merkle root
+                The data could be arbitrary format, providing nessecary data
+                for example neighbouring node hash
+        title: ProofOps is Merkle proof defined by the list of ProofOps
+      height:
+        type: string
+        format: int64
+      proof_type:
+        type: string
+    description: Proof defines a type used to cryptographically prove a claim.
+  tendermint.crypto.ProofOp:
+    type: object
+    properties:
+      type:
+        type: string
+      key:
+        type: string
+        format: byte
+      data:
+        type: string
+        format: byte
+    title: |-
+      ProofOp defines an operation used for calculating Merkle root
+      The data could be arbitrary format, providing nessecary data
+      for example neighbouring node hash
+  tendermint.crypto.ProofOps:
+    type: object
+    properties:
+      ops:
+        type: array
+        items:
+          type: object
+          properties:
+            type:
+              type: string
+            key:
+              type: string
+              format: byte
+            data:
+              type: string
+              format: byte
+          title: |-
+            ProofOp defines an operation used for calculating Merkle root
+            The data could be arbitrary format, providing nessecary data
+            for example neighbouring node hash
+    title: ProofOps is Merkle proof defined by the list of ProofOps
+  cosmos.base.query.v1beta1.PageRequest:
+    type: object
+    properties:
+      key:
+        type: string
+        format: byte
+        description: |-
+          key is a value returned in PageResponse.next_key to begin
+          querying the next page most efficiently. Only one of offset or key
+          should be set.
+      offset:
+        type: string
+        format: uint64
+        description: |-
+          offset is a numeric offset that can be used when key is unavailable.
+          It is less efficient than using key. Only one of offset or key should
+          be set.
+      limit:
+        type: string
+        format: uint64
+        description: >-
+          limit is the total number of results to be returned in the result
+          page.
+
+          If left empty it will default to a value to be set by each app.
+      count_total:
+        type: boolean
+        description: >-
+          count_total is set to true  to indicate that the result set should
+          include
+
+          a count of the total number of items available for pagination in UIs.
+
+          count_total is only respected when offset is used. It is ignored when
+          key
+
+          is set.
+      reverse:
+        type: boolean
+        description: >-
+          reverse is set to true if results are to be returned in the descending
+          order.
+
+
+          Since: cosmos-sdk 0.43
+    description: |-
+      message SomeRequest {
+               Foo some_parameter = 1;
+               PageRequest pagination = 2;
+       }
+    title: |-
+      PageRequest is to be embedded in gRPC request messages for efficient
+      pagination. Ex:
+  cosmos.base.query.v1beta1.PageResponse:
+    type: object
+    properties:
+      next_key:
+        type: string
+        format: byte
+        description: |-
+          next_key is the key to be passed to PageRequest.key to
+          query the next page most efficiently. It will be empty if
+          there are no more results.
+      total:
+        type: string
+        format: uint64
+        title: |-
+          total is total number of results available if PageRequest.count_total
+          was set, its value is undefined otherwise
+    description: |-
+      PageResponse is to be embedded in gRPC response messages where the
+      corresponding request message has used PageRequest.
+
+       message SomeResponse {
+               repeated Bar results = 1;
+               PageResponse page = 2;
+       }
+  quicksilver.airdrop.v1.ClaimRecord:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      address:
+        type: string
+      actions_completed:
+        type: object
+        additionalProperties:
+          type: object
+          properties:
+            complete_time:
+              type: string
+              format: date-time
+            claim_amount:
+              type: string
+              format: uint64
+          description: CompletedAction represents a claim action completed by the user.
+        title: Protobuf3 does not allow enum as map key
+      max_allocation:
+        type: string
+        format: uint64
+      base_value:
+        type: string
+        format: uint64
+    description: |-
+      ClaimRecord represents a users' claim (including completed claims) for a
+      given zone.
+  quicksilver.airdrop.v1.CompletedAction:
+    type: object
+    properties:
+      complete_time:
+        type: string
+        format: date-time
+      claim_amount:
+        type: string
+        format: uint64
+    description: CompletedAction represents a claim action completed by the user.
+  quicksilver.airdrop.v1.Params:
+    type: object
+    description: Params holds parameters for the airdrop module.
+  quicksilver.airdrop.v1.QueryAccountBalanceResponse:
+    type: object
+    properties:
+      account_balance:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+    description: >-
+      QueryAccountBalanceResponse is the response type for Query/AccountBalance
+      RPC
+
+      method.
+  quicksilver.airdrop.v1.QueryClaimRecordResponse:
+    type: object
+    properties:
+      claim_record:
+        type: object
+        properties:
+          chain_id:
+            type: string
+          address:
+            type: string
+          actions_completed:
+            type: object
+            additionalProperties:
+              type: object
+              properties:
+                complete_time:
+                  type: string
+                  format: date-time
+                claim_amount:
+                  type: string
+                  format: uint64
+              description: CompletedAction represents a claim action completed by the user.
+            title: Protobuf3 does not allow enum as map key
+          max_allocation:
+            type: string
+            format: uint64
+          base_value:
+            type: string
+            format: uint64
+        description: >-
+          ClaimRecord represents a users' claim (including completed claims) for
+          a
+
+          given zone.
+    description: |-
+      QueryClaimRecordResponse is the response type for Query/ClaimRecord RPC
+      method.
+  quicksilver.airdrop.v1.QueryClaimRecordsResponse:
+    type: object
+    properties:
+      claim_records:
+        type: array
+        items:
+          type: object
+          properties:
+            chain_id:
+              type: string
+            address:
+              type: string
+            actions_completed:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  complete_time:
+                    type: string
+                    format: date-time
+                  claim_amount:
+                    type: string
+                    format: uint64
+                description: >-
+                  CompletedAction represents a claim action completed by the
+                  user.
+              title: Protobuf3 does not allow enum as map key
+            max_allocation:
+              type: string
+              format: uint64
+            base_value:
+              type: string
+              format: uint64
+          description: >-
+            ClaimRecord represents a users' claim (including completed claims)
+            for a
+
+            given zone.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: |-
+      QueryClaimRecordsResponse is the response type for Query/ClaimRecords RPC
+      method.
+  quicksilver.airdrop.v1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params defines the parameters of the module.
+        type: object
+    description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  quicksilver.airdrop.v1.QueryZoneDropResponse:
+    type: object
+    properties:
+      zone_drop:
+        type: object
+        properties:
+          chain_id:
+            type: string
+          start_time:
+            type: string
+            format: date-time
+          duration:
+            type: string
+          decay:
+            type: string
+          allocation:
+            type: string
+            format: uint64
+          actions:
+            type: array
+            items:
+              type: string
+          is_concluded:
+            type: boolean
+        description: ZoneDrop represents an airdrop for a specific zone.
+    description: QueryZoneDropResponse is the response type for Query/ZoneDrop RPC method.
+  quicksilver.airdrop.v1.QueryZoneDropsResponse:
+    type: object
+    properties:
+      zone_drops:
+        type: array
+        items:
+          type: object
+          properties:
+            chain_id:
+              type: string
+            start_time:
+              type: string
+              format: date-time
+            duration:
+              type: string
+            decay:
+              type: string
+            allocation:
+              type: string
+              format: uint64
+            actions:
+              type: array
+              items:
+                type: string
+            is_concluded:
+              type: boolean
+          description: ZoneDrop represents an airdrop for a specific zone.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: QueryZoneDropResponse is the response type for Query/ZoneDrops RPC method.
+  quicksilver.airdrop.v1.Status:
+    type: string
+    enum:
+      - StatusUndefined
+      - StatusActive
+      - StatusFuture
+      - StatusExpired
+    default: StatusUndefined
+    description: Status is used as an enum to denote zone status.
+  quicksilver.airdrop.v1.ZoneDrop:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      start_time:
+        type: string
+        format: date-time
+      duration:
+        type: string
+      decay:
+        type: string
+      allocation:
+        type: string
+        format: uint64
+      actions:
+        type: array
+        items:
+          type: string
+      is_concluded:
+        type: boolean
+    description: ZoneDrop represents an airdrop for a specific zone.
+  quicksilver.claimsmanager.v1.Claim:
+    type: object
+    properties:
+      user_address:
+        type: string
+      chain_id:
+        type: string
+      module:
+        type: string
+        enum:
+          - ClaimTypeUndefined
+          - ClaimTypeLiquidToken
+          - ClaimTypeOsmosisPool
+          - ClaimTypeCrescentPool
+          - ClaimTypeSifchainPool
+        default: ClaimTypeUndefined
+        title: '- ClaimTypeUndefined: Undefined action (per protobuf spec)'
+      source_chain_id:
+        type: string
+      amount:
+        type: string
+        format: uint64
+    description: Claim define the users claim for holding assets within a given zone.
+  quicksilver.claimsmanager.v1.ClaimType:
+    type: string
+    enum:
+      - ClaimTypeUndefined
+      - ClaimTypeLiquidToken
+      - ClaimTypeOsmosisPool
+      - ClaimTypeCrescentPool
+      - ClaimTypeSifchainPool
+    default: ClaimTypeUndefined
+    title: '- ClaimTypeUndefined: Undefined action (per protobuf spec)'
+  quicksilver.claimsmanager.v1.QueryClaimsResponse:
+    type: object
+    properties:
+      claims:
+        type: array
+        items:
+          type: object
+          properties:
+            user_address:
+              type: string
+            chain_id:
+              type: string
+            module:
+              type: string
+              enum:
+                - ClaimTypeUndefined
+                - ClaimTypeLiquidToken
+                - ClaimTypeOsmosisPool
+                - ClaimTypeCrescentPool
+                - ClaimTypeSifchainPool
+              default: ClaimTypeUndefined
+              title: '- ClaimTypeUndefined: Undefined action (per protobuf spec)'
+            source_chain_id:
+              type: string
+            amount:
+              type: string
+              format: uint64
+          description: Claim define the users claim for holding assets within a given zone.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: QueryClaimsResponse is the response type for the Query/Claims RPC method.
+  quicksilver.epochs.v1.EpochInfo:
+    type: object
+    properties:
+      identifier:
+        type: string
+      start_time:
+        type: string
+        format: date-time
+      duration:
+        type: string
+      current_epoch:
+        type: string
+        format: int64
+      current_epoch_start_time:
+        type: string
+        format: date-time
+      epoch_counting_started:
+        type: boolean
+      current_epoch_start_height:
+        type: string
+        format: int64
+  quicksilver.epochs.v1.QueryCurrentEpochResponse:
+    type: object
+    properties:
+      current_epoch:
+        type: string
+        format: int64
+  quicksilver.epochs.v1.QueryEpochsInfoResponse:
+    type: object
+    properties:
+      epochs:
+        type: array
+        items:
+          type: object
+          properties:
+            identifier:
+              type: string
+            start_time:
+              type: string
+              format: date-time
+            duration:
+              type: string
+            current_epoch:
+              type: string
+              format: int64
+            current_epoch_start_time:
+              type: string
+              format: date-time
+            epoch_counting_started:
+              type: boolean
+            current_epoch_start_height:
+              type: string
+              format: int64
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  quicksilver.interchainquery.v1.MsgSubmitQueryResponse:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      query_id:
+        type: string
+      result:
+        type: string
+        format: byte
+      proof_ops:
+        type: object
+        properties:
+          ops:
+            type: array
+            items:
+              type: object
+              properties:
+                type:
+                  type: string
+                key:
+                  type: string
+                  format: byte
+                data:
+                  type: string
+                  format: byte
+              title: |-
+                ProofOp defines an operation used for calculating Merkle root
+                The data could be arbitrary format, providing nessecary data
+                for example neighbouring node hash
+        title: ProofOps is Merkle proof defined by the list of ProofOps
+      height:
+        type: string
+        format: int64
+      from_address:
+        type: string
+    description: >-
+      MsgSubmitQueryResponse represents a message type to fulfil a query
+      request.
+  quicksilver.interchainquery.v1.MsgSubmitQueryResponseResponse:
+    type: object
+    description: |-
+      MsgSubmitQueryResponseResponse defines the MsgSubmitQueryResponse response
+      type.
+  quicksilver.interchainquery.v1.Query:
+    type: object
+    properties:
+      id:
+        type: string
+      connection_id:
+        type: string
+      chain_id:
+        type: string
+      query_type:
+        type: string
+      request:
+        type: string
+        format: byte
+      period:
+        type: string
+        title: change these to uint64 in v0.5.0
+      last_height:
+        type: string
+      callback_id:
+        type: string
+      ttl:
+        type: string
+        format: uint64
+      last_emission:
+        type: string
+  quicksilver.interchainquery.v1.QueryRequestsResponse:
+    type: object
+    properties:
+      queries:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: string
+            connection_id:
+              type: string
+            chain_id:
+              type: string
+            query_type:
+              type: string
+            request:
+              type: string
+              format: byte
+            period:
+              type: string
+              title: change these to uint64 in v0.5.0
+            last_height:
+              type: string
+            callback_id:
+              type: string
+            ttl:
+              type: string
+              format: uint64
+            last_emission:
+              type: string
+        description: params defines the parameters of the module.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  quicksilver.interchainstaking.v1.MsgGovCloseChannel:
+    type: object
+    properties:
+      title:
+        type: string
+      description:
+        type: string
+      channel_id:
+        type: string
+      port_id:
+        type: string
+      authority:
+        type: string
+  quicksilver.interchainstaking.v1.MsgGovCloseChannelResponse:
+    type: object
+    description: MsgGovCloseChannelResponse defines the MsgGovCloseChannel response type.
+  quicksilver.interchainstaking.v1.MsgGovReopenChannel:
+    type: object
+    properties:
+      title:
+        type: string
+      description:
+        type: string
+      connection_id:
+        type: string
+      port_id:
+        type: string
+      authority:
+        type: string
+  quicksilver.interchainstaking.v1.MsgGovReopenChannelResponse:
+    type: object
+    description: MsgGovReopenChannelResponse defines the MsgGovReopenChannel response type.
+  quicksilver.interchainstaking.v1.MsgRequestRedemption:
+    type: object
+    properties:
+      value:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      destination_address:
+        type: string
+      from_address:
+        type: string
+    description: >-
+      MsgRequestRedemption represents a message type to request a burn of
+      qAssets
+
+      for native assets.
+  quicksilver.interchainstaking.v1.MsgRequestRedemptionResponse:
+    type: object
+    description: >-
+      MsgRequestRedemptionResponse defines the MsgRequestRedemption response
+      type.
+  quicksilver.interchainstaking.v1.MsgSignalIntent:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      intents:
+        type: string
+      from_address:
+        type: string
+    description: |-
+      MsgSignalIntent represents a message type for signalling voting intent for
+      one or more validators.
+  quicksilver.interchainstaking.v1.MsgSignalIntentResponse:
+    type: object
+    description: MsgSignalIntentResponse defines the MsgSignalIntent response type.
+  quicksilver.interchainstaking.v1.Delegation:
+    type: object
+    properties:
+      delegation_address:
+        type: string
+      validator_address:
+        type: string
+      amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      height:
+        type: string
+        format: int64
+      redelegation_end:
+        type: string
+        format: int64
+  quicksilver.interchainstaking.v1.DelegatorIntent:
+    type: object
+    properties:
+      delegator:
+        type: string
+      intents:
+        type: array
+        items:
+          type: object
+          properties:
+            valoper_address:
+              type: string
+            weight:
+              type: string
+  quicksilver.interchainstaking.v1.Distribution:
+    type: object
+    properties:
+      valoper:
+        type: string
+      amount:
+        type: string
+        format: uint64
+  quicksilver.interchainstaking.v1.ICAAccount:
+    type: object
+    properties:
+      address:
+        type: string
+      balance:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+        description: balance defines the different coins this balance holds.
+      port_name:
+        type: string
+      withdrawal_address:
+        type: string
+      balance_waitgroup:
+        type: integer
+        format: int64
+  quicksilver.interchainstaking.v1.QueryDelegationsResponse:
+    type: object
+    properties:
+      delegations:
+        type: array
+        items:
+          type: object
+          properties:
+            delegation_address:
+              type: string
+            validator_address:
+              type: string
+            amount:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            height:
+              type: string
+              format: int64
+            redelegation_end:
+              type: string
+              format: int64
+      tvl:
+        type: string
+        format: int64
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  quicksilver.interchainstaking.v1.QueryDelegatorIntentResponse:
+    type: object
+    properties:
+      intent:
+        type: object
+        properties:
+          delegator:
+            type: string
+          intents:
+            type: array
+            items:
+              type: object
+              properties:
+                valoper_address:
+                  type: string
+                weight:
+                  type: string
+  quicksilver.interchainstaking.v1.QueryDepositAccountForChainResponse:
+    type: object
+    properties:
+      deposit_account_address:
+        type: string
+    title: |-
+      QueryDepositAccountForChainResponse the response type for the
+      Query/InterchainAccountAddress RPC
+  quicksilver.interchainstaking.v1.QueryMappedAccountsResponse:
+    type: object
+    properties:
+      RemoteAddressMap:
+        type: object
+        additionalProperties:
+          type: string
+          format: byte
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  quicksilver.interchainstaking.v1.QueryReceiptsResponse:
+    type: object
+    properties:
+      receipts:
+        type: array
+        items:
+          type: object
+          properties:
+            chain_id:
+              type: string
+            sender:
+              type: string
+            txhash:
+              type: string
+            amount:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            first_seen:
+              type: string
+              format: date-time
+            completed:
+              type: string
+              format: date-time
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  quicksilver.interchainstaking.v1.QueryRedelegationRecordsResponse:
+    type: object
+    properties:
+      redelegations:
+        type: array
+        items:
+          type: object
+          properties:
+            chain_id:
+              type: string
+            epoch_number:
+              type: string
+              format: int64
+            source:
+              type: string
+            destination:
+              type: string
+            amount:
+              type: string
+              format: int64
+            completion_time:
+              type: string
+              format: date-time
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  quicksilver.interchainstaking.v1.QueryUnbondingRecordsResponse:
+    type: object
+    properties:
+      unbondings:
+        type: array
+        items:
+          type: object
+          properties:
+            chain_id:
+              type: string
+            epoch_number:
+              type: string
+              format: int64
+            validator:
+              type: string
+            related_txhash:
+              type: array
+              items:
+                type: string
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  quicksilver.interchainstaking.v1.QueryWithdrawalRecordsResponse:
+    type: object
+    properties:
+      withdrawals:
+        type: array
+        items:
+          type: object
+          properties:
+            chain_id:
+              type: string
+            delegator:
+              type: string
+            distribution:
+              type: array
+              items:
+                type: object
+                properties:
+                  valoper:
+                    type: string
+                  amount:
+                    type: string
+                    format: uint64
+            recipient:
+              type: string
+            amount:
+              type: array
+              items:
+                type: object
+                properties:
+                  denom:
+                    type: string
+                  amount:
+                    type: string
+                description: >-
+                  Coin defines a token with a denomination and an amount.
+
+
+                  NOTE: The amount field is an Int which implements the custom
+                  method
+
+                  signatures required by gogoproto.
+            burn_amount:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            txhash:
+              type: string
+            status:
+              type: integer
+              format: int32
+            completion_time:
+              type: string
+              format: date-time
+            requeued:
+              type: boolean
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  quicksilver.interchainstaking.v1.QueryZoneResponse:
+    type: object
+    properties:
+      zone:
+        type: object
+        properties:
+          connection_id:
+            type: string
+          chain_id:
+            type: string
+          deposit_address:
+            type: object
+            properties:
+              address:
+                type: string
+              balance:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+                description: balance defines the different coins this balance holds.
+              port_name:
+                type: string
+              withdrawal_address:
+                type: string
+              balance_waitgroup:
+                type: integer
+                format: int64
+          withdrawal_address:
+            type: object
+            properties:
+              address:
+                type: string
+              balance:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+                description: balance defines the different coins this balance holds.
+              port_name:
+                type: string
+              withdrawal_address:
+                type: string
+              balance_waitgroup:
+                type: integer
+                format: int64
+          performance_address:
+            type: object
+            properties:
+              address:
+                type: string
+              balance:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+                description: balance defines the different coins this balance holds.
+              port_name:
+                type: string
+              withdrawal_address:
+                type: string
+              balance_waitgroup:
+                type: integer
+                format: int64
+          delegation_address:
+            type: object
+            properties:
+              address:
+                type: string
+              balance:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    denom:
+                      type: string
+                    amount:
+                      type: string
+                  description: >-
+                    Coin defines a token with a denomination and an amount.
+
+
+                    NOTE: The amount field is an Int which implements the custom
+                    method
+
+                    signatures required by gogoproto.
+                description: balance defines the different coins this balance holds.
+              port_name:
+                type: string
+              withdrawal_address:
+                type: string
+              balance_waitgroup:
+                type: integer
+                format: int64
+          account_prefix:
+            type: string
+          local_denom:
+            type: string
+          base_denom:
+            type: string
+          redemption_rate:
+            type: string
+          last_redemption_rate:
+            type: string
+          validators:
+            type: array
+            items:
+              type: object
+              properties:
+                valoper_address:
+                  type: string
+                commission_rate:
+                  type: string
+                delegator_shares:
+                  type: string
+                voting_power:
+                  type: string
+                score:
+                  type: string
+                status:
+                  type: string
+                jailed:
+                  type: boolean
+                tombstoned:
+                  type: boolean
+                jailed_since:
+                  type: string
+                  format: date-time
+          aggregate_intent:
+            type: array
+            items:
+              type: object
+              properties:
+                valoper_address:
+                  type: string
+                weight:
+                  type: string
+          multi_send:
+            type: boolean
+          liquidity_module:
+            type: boolean
+          withdrawal_waitgroup:
+            type: integer
+            format: int64
+          ibc_next_validators_hash:
+            type: string
+            format: byte
+          validator_selection_allocation:
+            type: string
+            format: uint64
+          holdings_allocation:
+            type: string
+            format: uint64
+          last_epoch_height:
+            type: string
+            format: int64
+          tvl:
+            type: string
+          unbonding_period:
+            type: string
+            format: int64
+          messages_per_tx:
+            type: string
+            format: int64
+          decimals:
+            type: string
+            format: int64
+          unbonding_enabled:
+            type: boolean
+          deposits_enabled:
+            type: boolean
+          return_to_sender:
+            type: boolean
+          is_118:
+            type: boolean
+      stats:
+        type: object
+        properties:
+          chain_id:
+            type: string
+          deposited:
+            type: string
+            format: int64
+          deposits:
+            type: string
+            format: int64
+          depositors:
+            type: string
+            format: int64
+          delegated:
+            type: string
+            format: int64
+          supply:
+            type: string
+            format: int64
+          distance_to_target:
+            type: string
+  quicksilver.interchainstaking.v1.QueryZoneValidatorsResponse:
+    type: object
+    properties:
+      validators:
+        type: array
+        items:
+          type: object
+          properties:
+            valoper_address:
+              type: string
+            commission_rate:
+              type: string
+            delegator_shares:
+              type: string
+            voting_power:
+              type: string
+            score:
+              type: string
+            status:
+              type: string
+            jailed:
+              type: boolean
+            tombstoned:
+              type: boolean
+            jailed_since:
+              type: string
+              format: date-time
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  quicksilver.interchainstaking.v1.QueryZonesResponse:
+    type: object
+    properties:
+      zones:
+        type: array
+        items:
+          type: object
+          properties:
+            connection_id:
+              type: string
+            chain_id:
+              type: string
+            deposit_address:
+              type: object
+              properties:
+                address:
+                  type: string
+                balance:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  description: balance defines the different coins this balance holds.
+                port_name:
+                  type: string
+                withdrawal_address:
+                  type: string
+                balance_waitgroup:
+                  type: integer
+                  format: int64
+            withdrawal_address:
+              type: object
+              properties:
+                address:
+                  type: string
+                balance:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  description: balance defines the different coins this balance holds.
+                port_name:
+                  type: string
+                withdrawal_address:
+                  type: string
+                balance_waitgroup:
+                  type: integer
+                  format: int64
+            performance_address:
+              type: object
+              properties:
+                address:
+                  type: string
+                balance:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  description: balance defines the different coins this balance holds.
+                port_name:
+                  type: string
+                withdrawal_address:
+                  type: string
+                balance_waitgroup:
+                  type: integer
+                  format: int64
+            delegation_address:
+              type: object
+              properties:
+                address:
+                  type: string
+                balance:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                  description: balance defines the different coins this balance holds.
+                port_name:
+                  type: string
+                withdrawal_address:
+                  type: string
+                balance_waitgroup:
+                  type: integer
+                  format: int64
+            account_prefix:
+              type: string
+            local_denom:
+              type: string
+            base_denom:
+              type: string
+            redemption_rate:
+              type: string
+            last_redemption_rate:
+              type: string
+            validators:
+              type: array
+              items:
+                type: object
+                properties:
+                  valoper_address:
+                    type: string
+                  commission_rate:
+                    type: string
+                  delegator_shares:
+                    type: string
+                  voting_power:
+                    type: string
+                  score:
+                    type: string
+                  status:
+                    type: string
+                  jailed:
+                    type: boolean
+                  tombstoned:
+                    type: boolean
+                  jailed_since:
+                    type: string
+                    format: date-time
+            aggregate_intent:
+              type: array
+              items:
+                type: object
+                properties:
+                  valoper_address:
+                    type: string
+                  weight:
+                    type: string
+            multi_send:
+              type: boolean
+            liquidity_module:
+              type: boolean
+            withdrawal_waitgroup:
+              type: integer
+              format: int64
+            ibc_next_validators_hash:
+              type: string
+              format: byte
+            validator_selection_allocation:
+              type: string
+              format: uint64
+            holdings_allocation:
+              type: string
+              format: uint64
+            last_epoch_height:
+              type: string
+              format: int64
+            tvl:
+              type: string
+            unbonding_period:
+              type: string
+              format: int64
+            messages_per_tx:
+              type: string
+              format: int64
+            decimals:
+              type: string
+              format: int64
+            unbonding_enabled:
+              type: boolean
+            deposits_enabled:
+              type: boolean
+            return_to_sender:
+              type: boolean
+            is_118:
+              type: boolean
+      stats:
+        type: array
+        items:
+          type: object
+          properties:
+            chain_id:
+              type: string
+            deposited:
+              type: string
+              format: int64
+            deposits:
+              type: string
+              format: int64
+            depositors:
+              type: string
+              format: int64
+            delegated:
+              type: string
+              format: int64
+            supply:
+              type: string
+              format: int64
+            distance_to_target:
+              type: string
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+  quicksilver.interchainstaking.v1.Receipt:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      sender:
+        type: string
+      txhash:
+        type: string
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+      first_seen:
+        type: string
+        format: date-time
+      completed:
+        type: string
+        format: date-time
+  quicksilver.interchainstaking.v1.RedelegationRecord:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      epoch_number:
+        type: string
+        format: int64
+      source:
+        type: string
+      destination:
+        type: string
+      amount:
+        type: string
+        format: int64
+      completion_time:
+        type: string
+        format: date-time
+  quicksilver.interchainstaking.v1.Statistics:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      deposited:
+        type: string
+        format: int64
+      deposits:
+        type: string
+        format: int64
+      depositors:
+        type: string
+        format: int64
+      delegated:
+        type: string
+        format: int64
+      supply:
+        type: string
+        format: int64
+      distance_to_target:
+        type: string
+  quicksilver.interchainstaking.v1.UnbondingRecord:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      epoch_number:
+        type: string
+        format: int64
+      validator:
+        type: string
+      related_txhash:
+        type: array
+        items:
+          type: string
+  quicksilver.interchainstaking.v1.Validator:
+    type: object
+    properties:
+      valoper_address:
+        type: string
+      commission_rate:
+        type: string
+      delegator_shares:
+        type: string
+      voting_power:
+        type: string
+      score:
+        type: string
+      status:
+        type: string
+      jailed:
+        type: boolean
+      tombstoned:
+        type: boolean
+      jailed_since:
+        type: string
+        format: date-time
+  quicksilver.interchainstaking.v1.ValidatorIntent:
+    type: object
+    properties:
+      valoper_address:
+        type: string
+      weight:
+        type: string
+  quicksilver.interchainstaking.v1.WithdrawalRecord:
+    type: object
+    properties:
+      chain_id:
+        type: string
+      delegator:
+        type: string
+      distribution:
+        type: array
+        items:
+          type: object
+          properties:
+            valoper:
+              type: string
+            amount:
+              type: string
+              format: uint64
+      recipient:
+        type: string
+      amount:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+      burn_amount:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+      txhash:
+        type: string
+      status:
+        type: integer
+        format: int32
+      completion_time:
+        type: string
+        format: date-time
+      requeued:
+        type: boolean
+  quicksilver.interchainstaking.v1.Zone:
+    type: object
+    properties:
+      connection_id:
+        type: string
+      chain_id:
+        type: string
+      deposit_address:
+        type: object
+        properties:
+          address:
+            type: string
+          balance:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            description: balance defines the different coins this balance holds.
+          port_name:
+            type: string
+          withdrawal_address:
+            type: string
+          balance_waitgroup:
+            type: integer
+            format: int64
+      withdrawal_address:
+        type: object
+        properties:
+          address:
+            type: string
+          balance:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            description: balance defines the different coins this balance holds.
+          port_name:
+            type: string
+          withdrawal_address:
+            type: string
+          balance_waitgroup:
+            type: integer
+            format: int64
+      performance_address:
+        type: object
+        properties:
+          address:
+            type: string
+          balance:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            description: balance defines the different coins this balance holds.
+          port_name:
+            type: string
+          withdrawal_address:
+            type: string
+          balance_waitgroup:
+            type: integer
+            format: int64
+      delegation_address:
+        type: object
+        properties:
+          address:
+            type: string
+          balance:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+            description: balance defines the different coins this balance holds.
+          port_name:
+            type: string
+          withdrawal_address:
+            type: string
+          balance_waitgroup:
+            type: integer
+            format: int64
+      account_prefix:
+        type: string
+      local_denom:
+        type: string
+      base_denom:
+        type: string
+      redemption_rate:
+        type: string
+      last_redemption_rate:
+        type: string
+      validators:
+        type: array
+        items:
+          type: object
+          properties:
+            valoper_address:
+              type: string
+            commission_rate:
+              type: string
+            delegator_shares:
+              type: string
+            voting_power:
+              type: string
+            score:
+              type: string
+            status:
+              type: string
+            jailed:
+              type: boolean
+            tombstoned:
+              type: boolean
+            jailed_since:
+              type: string
+              format: date-time
+      aggregate_intent:
+        type: array
+        items:
+          type: object
+          properties:
+            valoper_address:
+              type: string
+            weight:
+              type: string
+      multi_send:
+        type: boolean
+      liquidity_module:
+        type: boolean
+      withdrawal_waitgroup:
+        type: integer
+        format: int64
+      ibc_next_validators_hash:
+        type: string
+        format: byte
+      validator_selection_allocation:
+        type: string
+        format: uint64
+      holdings_allocation:
+        type: string
+        format: uint64
+      last_epoch_height:
+        type: string
+        format: int64
+      tvl:
+        type: string
+      unbonding_period:
+        type: string
+        format: int64
+      messages_per_tx:
+        type: string
+        format: int64
+      decimals:
+        type: string
+        format: int64
+      unbonding_enabled:
+        type: boolean
+      deposits_enabled:
+        type: boolean
+      return_to_sender:
+        type: boolean
+      is_118:
+        type: boolean
+  quicksilver.mint.v1beta1.DistributionProportions:
+    type: object
+    properties:
+      staking:
+        type: string
+        description: >-
+          staking defines the proportion of the minted minted_denom that is to
+          be
+
+          allocated as staking rewards.
+      pool_incentives:
+        type: string
+        description: >-
+          pool_incentives defines the proportion of the minted minted_denom that
+          is
+
+          to be allocated as pool incentives.
+      participation_rewards:
+        type: string
+        description: >-
+          participation_rewards defines the proportion of the minted
+          minted_denom
+
+          that is to be allocated to participation rewards address.
+      community_pool:
+        type: string
+        description: >-
+          community_pool defines the proportion of the minted minted_denom that
+          is
+
+          to be allocated to the community pool.
+  quicksilver.mint.v1beta1.Params:
+    type: object
+    properties:
+      mint_denom:
+        type: string
+        title: type of coin to mint
+      genesis_epoch_provisions:
+        type: string
+        title: epoch provisions from the first epoch
+      epoch_identifier:
+        type: string
+        title: mint epoch identifier
+      reduction_period_in_epochs:
+        type: string
+        format: int64
+        title: number of epochs take to reduce rewards
+      reduction_factor:
+        type: string
+        title: reduction multiplier to execute on each period
+      distribution_proportions:
+        title: distribution_proportions defines the proportion of the minted denom
+        type: object
+        properties:
+          staking:
+            type: string
+            description: >-
+              staking defines the proportion of the minted minted_denom that is
+              to be
+
+              allocated as staking rewards.
+          pool_incentives:
+            type: string
+            description: >-
+              pool_incentives defines the proportion of the minted minted_denom
+              that is
+
+              to be allocated as pool incentives.
+          participation_rewards:
+            type: string
+            description: >-
+              participation_rewards defines the proportion of the minted
+              minted_denom
+
+              that is to be allocated to participation rewards address.
+          community_pool:
+            type: string
+            description: >-
+              community_pool defines the proportion of the minted minted_denom
+              that is
+
+              to be allocated to the community pool.
+      minting_rewards_distribution_start_epoch:
+        type: string
+        format: int64
+        title: start epoch to distribute minting rewards
+    description: Params holds parameters for the mint module.
+  quicksilver.mint.v1beta1.QueryEpochProvisionsResponse:
+    type: object
+    properties:
+      epoch_provisions:
+        type: string
+        format: byte
+        description: epoch_provisions is the current minting per epoch provisions value.
+    description: |-
+      QueryEpochProvisionsResponse is the response type for the
+      Query/EpochProvisions RPC method.
+  quicksilver.mint.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params defines the parameters of the module.
+        type: object
+        properties:
+          mint_denom:
+            type: string
+            title: type of coin to mint
+          genesis_epoch_provisions:
+            type: string
+            title: epoch provisions from the first epoch
+          epoch_identifier:
+            type: string
+            title: mint epoch identifier
+          reduction_period_in_epochs:
+            type: string
+            format: int64
+            title: number of epochs take to reduce rewards
+          reduction_factor:
+            type: string
+            title: reduction multiplier to execute on each period
+          distribution_proportions:
+            title: >-
+              distribution_proportions defines the proportion of the minted
+              denom
+            type: object
+            properties:
+              staking:
+                type: string
+                description: >-
+                  staking defines the proportion of the minted minted_denom that
+                  is to be
+
+                  allocated as staking rewards.
+              pool_incentives:
+                type: string
+                description: >-
+                  pool_incentives defines the proportion of the minted
+                  minted_denom that is
+
+                  to be allocated as pool incentives.
+              participation_rewards:
+                type: string
+                description: >-
+                  participation_rewards defines the proportion of the minted
+                  minted_denom
+
+                  that is to be allocated to participation rewards address.
+              community_pool:
+                type: string
+                description: >-
+                  community_pool defines the proportion of the minted
+                  minted_denom that is
+
+                  to be allocated to the community pool.
+          minting_rewards_distribution_start_epoch:
+            type: string
+            format: int64
+            title: start epoch to distribute minting rewards
+    description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  quicksilver.participationrewards.v1.MsgSubmitClaim:
+    type: object
+    properties:
+      user_address:
+        type: string
+      zone:
+        type: string
+      src_zone:
+        type: string
+      claim_type:
+        type: string
+        enum:
+          - ClaimTypeUndefined
+          - ClaimTypeLiquidToken
+          - ClaimTypeOsmosisPool
+          - ClaimTypeCrescentPool
+          - ClaimTypeSifchainPool
+        default: ClaimTypeUndefined
+        title: '- ClaimTypeUndefined: Undefined action (per protobuf spec)'
+      proofs:
+        type: array
+        items:
+          type: object
+          properties:
+            key:
+              type: string
+              format: byte
+            data:
+              type: string
+              format: byte
+            proof_ops:
+              type: object
+              properties:
+                ops:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      key:
+                        type: string
+                        format: byte
+                      data:
+                        type: string
+                        format: byte
+                    title: >-
+                      ProofOp defines an operation used for calculating Merkle
+                      root
+
+                      The data could be arbitrary format, providing nessecary
+                      data
+
+                      for example neighbouring node hash
+              title: ProofOps is Merkle proof defined by the list of ProofOps
+            height:
+              type: string
+              format: int64
+            proof_type:
+              type: string
+          description: Proof defines a type used to cryptographically prove a claim.
+    description: |-
+      MsgSubmitClaim represents a message type for submitting a participation
+      claim regarding the given zone (chain).
+  quicksilver.participationrewards.v1.MsgSubmitClaimResponse:
+    type: object
+    description: MsgSubmitClaimResponse defines the MsgSubmitClaim response type.
+  quicksilver.participationrewards.v1.DistributionProportions:
+    type: object
+    properties:
+      validator_selection_allocation:
+        type: string
+      holdings_allocation:
+        type: string
+      lockup_allocation:
+        type: string
+    description: >-
+      DistributionProportions defines the proportions of minted QCK that is to
+      be
+
+      allocated as participation rewards.
+  quicksilver.participationrewards.v1.Params:
+    type: object
+    properties:
+      distribution_proportions:
+        title: |-
+          distribution_proportions defines the proportions of the minted
+          participation rewards;
+        type: object
+        properties:
+          validator_selection_allocation:
+            type: string
+          holdings_allocation:
+            type: string
+          lockup_allocation:
+            type: string
+        description: >-
+          DistributionProportions defines the proportions of minted QCK that is
+          to be
+
+          allocated as participation rewards.
+      claims_enabled:
+        type: boolean
+    description: Params holds parameters for the participationrewards module.
+  quicksilver.participationrewards.v1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params defines the parameters of the module.
+        type: object
+        properties:
+          distribution_proportions:
+            title: |-
+              distribution_proportions defines the proportions of the minted
+              participation rewards;
+            type: object
+            properties:
+              validator_selection_allocation:
+                type: string
+              holdings_allocation:
+                type: string
+              lockup_allocation:
+                type: string
+            description: >-
+              DistributionProportions defines the proportions of minted QCK that
+              is to be
+
+              allocated as participation rewards.
+          claims_enabled:
+            type: boolean
+    description: QueryParamsResponse is the response type for the Query/Params RPC method.
+  quicksilver.participationrewards.v1.QueryProtocolDataResponse:
+    type: object
+    properties:
+      data:
+        type: array
+        items:
+          type: string
+          format: byte
+        description: data defines the underlying protocol data.
+    description: QueryProtocolDataResponse is the response type for querying Protocol Data.
+  cosmos.bank.v1beta1.DenomUnit:
+    type: object
+    properties:
+      denom:
+        type: string
+        description: denom represents the string name of the given denom unit (e.g uatom).
+      exponent:
+        type: integer
+        format: int64
+        description: >-
+          exponent represents power of 10 exponent that one must
+
+          raise the base_denom to in order to equal the given DenomUnit's denom
+
+          1 denom = 10^exponent base_denom
+
+          (e.g. with a base_denom of uatom, one can create a DenomUnit of 'atom'
+          with
+
+          exponent = 6, thus: 1 atom = 10^6 uatom).
+      aliases:
+        type: array
+        items:
+          type: string
+        title: aliases is a list of string aliases for the given denom
+    description: |-
+      DenomUnit represents a struct that describes a given
+      denomination unit of the basic token.
+  cosmos.bank.v1beta1.Metadata:
+    type: object
+    properties:
+      description:
+        type: string
+      denom_units:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+              description: >-
+                denom represents the string name of the given denom unit (e.g
+                uatom).
+            exponent:
+              type: integer
+              format: int64
+              description: >-
+                exponent represents power of 10 exponent that one must
+
+                raise the base_denom to in order to equal the given DenomUnit's
+                denom
+
+                1 denom = 10^exponent base_denom
+
+                (e.g. with a base_denom of uatom, one can create a DenomUnit of
+                'atom' with
+
+                exponent = 6, thus: 1 atom = 10^6 uatom).
+            aliases:
+              type: array
+              items:
+                type: string
+              title: aliases is a list of string aliases for the given denom
+          description: |-
+            DenomUnit represents a struct that describes a given
+            denomination unit of the basic token.
+        title: denom_units represents the list of DenomUnit's for a given coin
+      base:
+        type: string
+        description: >-
+          base represents the base denom (should be the DenomUnit with exponent
+          = 0).
+      display:
+        type: string
+        description: |-
+          display indicates the suggested denom that should be
+          displayed in clients.
+      name:
+        type: string
+        description: 'Since: cosmos-sdk 0.43'
+        title: 'name defines the name of the token (eg: Cosmos Atom)'
+      symbol:
+        type: string
+        description: >-
+          symbol is the token symbol usually shown on exchanges (eg: ATOM). This
+          can
+
+          be the same as the display.
+
+
+          Since: cosmos-sdk 0.43
+      uri:
+        type: string
+        description: >-
+          URI to a document (on or off-chain) that contains additional
+          information. Optional.
+
+
+          Since: cosmos-sdk 0.46
+      uri_hash:
+        type: string
+        description: >-
+          URIHash is a sha256 hash of a document pointed by URI. It's used to
+          verify that
+
+          the document didn't change. Optional.
+
+
+          Since: cosmos-sdk 0.46
+    description: |-
+      Metadata represents a struct that describes
+      a basic token.
+  quicksilver.tokenfactory.v1beta1.MsgBurnResponse:
+    type: object
+  quicksilver.tokenfactory.v1beta1.MsgChangeAdminResponse:
+    type: object
+    description: |-
+      MsgChangeAdminResponse defines the response structure for an executed
+      MsgChangeAdmin message.
+  quicksilver.tokenfactory.v1beta1.MsgCreateDenomResponse:
+    type: object
+    properties:
+      new_token_denom:
+        type: string
+    title: |-
+      MsgCreateDenomResponse is the return value of MsgCreateDenom
+      It returns the full string of the newly created denom
+  quicksilver.tokenfactory.v1beta1.MsgMintResponse:
+    type: object
+  quicksilver.tokenfactory.v1beta1.MsgSetDenomMetadataResponse:
+    type: object
+    description: |-
+      MsgSetDenomMetadataResponse defines the response structure for an executed
+      MsgSetDenomMetadata message.
+  quicksilver.tokenfactory.v1beta1.DenomAuthorityMetadata:
+    type: object
+    properties:
+      admin:
+        type: string
+        title: Can be empty for no admin, or a valid quicksilver address
+    description: |-
+      DenomAuthorityMetadata specifies metadata for addresses that have specific
+      capabilities over a token factory denom. Right now there is only one Admin
+      permission, but is planned to be extended to the future.
+  quicksilver.tokenfactory.v1beta1.Params:
+    type: object
+    properties:
+      denom_creation_fee:
+        type: array
+        items:
+          type: object
+          properties:
+            denom:
+              type: string
+            amount:
+              type: string
+          description: |-
+            Coin defines a token with a denomination and an amount.
+
+            NOTE: The amount field is an Int which implements the custom method
+            signatures required by gogoproto.
+    description: Params defines the parameters for the tokenfactory module.
+  quicksilver.tokenfactory.v1beta1.QueryDenomAuthorityMetadataResponse:
+    type: object
+    properties:
+      authority_metadata:
+        type: object
+        properties:
+          admin:
+            type: string
+            title: Can be empty for no admin, or a valid quicksilver address
+        description: >-
+          DenomAuthorityMetadata specifies metadata for addresses that have
+          specific
+
+          capabilities over a token factory denom. Right now there is only one
+          Admin
+
+          permission, but is planned to be extended to the future.
+    description: |-
+      QueryDenomAuthorityMetadataResponse defines the response structure for the
+      DenomAuthorityMetadata gRPC query.
+  quicksilver.tokenfactory.v1beta1.QueryDenomsFromCreatorResponse:
+    type: object
+    properties:
+      denoms:
+        type: array
+        items:
+          type: string
+    description: |-
+      QueryDenomsFromCreatorRequest defines the response structure for the
+      DenomsFromCreator gRPC query.
+  quicksilver.tokenfactory.v1beta1.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params defines the parameters of the module.
+        type: object
+        properties:
+          denom_creation_fee:
+            type: array
+            items:
+              type: object
+              properties:
+                denom:
+                  type: string
+                amount:
+                  type: string
+              description: >-
+                Coin defines a token with a denomination and an amount.
+
+
+                NOTE: The amount field is an Int which implements the custom
+                method
+
+                signatures required by gogoproto.
+    description: QueryParamsResponse is the response type for the Query/Params RPC method.

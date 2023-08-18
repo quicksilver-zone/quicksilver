@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,8 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -38,7 +38,6 @@ import (
 type Keeper struct {
 	cdc                 codec.Codec
 	storeKey            storetypes.StoreKey
-	scopedKeeper        *capabilitykeeper.ScopedKeeper
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICQKeeper           interchainquerykeeper.Keeper
 	AccountKeeper       types.AccountKeeper
@@ -62,7 +61,6 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	icaControllerKeeper icacontrollerkeeper.Keeper,
-	scopedKeeper *capabilitykeeper.ScopedKeeper,
 	icqKeeper interchainquerykeeper.Keeper,
 	ibcKeeper *ibckeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
@@ -90,7 +88,6 @@ func NewKeeper(
 	return &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
-		scopedKeeper:        scopedKeeper,
 		ICAControllerKeeper: icaControllerKeeper,
 		ICQKeeper:           icqKeeper,
 		BankKeeper:          bankKeeper,
@@ -132,15 +129,6 @@ func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k *Keeper) GetCodec() codec.Codec {
 	return k.cdc
-}
-
-func (k *Keeper) ScopedKeeper() *capabilitykeeper.ScopedKeeper {
-	return k.scopedKeeper
-}
-
-// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback.
-func (k *Keeper) ClaimCapability(ctx sdk.Context, capability *capabilitytypes.Capability, name string) error {
-	return k.scopedKeeper.ClaimCapability(ctx, capability, name)
 }
 
 func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID, port string) {
@@ -711,4 +699,26 @@ func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error)
 	}
 
 	return validator, nil
+}
+
+func (k *Keeper) registerInterchainAccount(ctx sdk.Context, zoneConnectionID, counterpartyConnectionID, portOwner string) error {
+	appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
+		Version:                icatypes.Version,
+		ControllerConnectionId: zoneConnectionID,
+		HostConnectionId:       counterpartyConnectionID,
+		Encoding:               icatypes.EncodingProtobuf,
+		TxType:                 icatypes.TxTypeSDKMultiMsg,
+	}))
+
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zoneConnectionID, portOwner, appVersion); err != nil {
+		return err
+	}
+	portID, err := icatypes.NewControllerPortID(portOwner)
+	if err != nil {
+		return err
+	}
+
+	k.SetConnectionForPort(ctx, zoneConnectionID, portID)
+
+	return nil
 }
