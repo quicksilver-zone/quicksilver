@@ -25,7 +25,7 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	)
 
 	// get chain id from connection
-	chainID, err := k.GetChainID(ctx, p.ConnectionId)
+	chainID, err := k.GetChainIDFromConnection(ctx, p.ConnectionId)
 	if err != nil {
 		return fmt.Errorf("unable to obtain chain id: %w", err)
 	}
@@ -100,22 +100,22 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 	k.SetZone(ctx, zone)
 
 	// generate deposit account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.DepositPortOwner()); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone, connection.Counterparty.ConnectionId, zone.DepositPortOwner()); err != nil {
 		return err
 	}
 
 	// generate withdrawal account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone, connection.Counterparty.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
 		return err
 	}
 
 	// generate perf account
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.PerformancePortOwner()); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone, connection.Counterparty.ConnectionId, zone.PerformancePortOwner()); err != nil {
 		return err
 	}
 
 	// generate delegate accounts
-	if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.DelegatePortOwner()); err != nil {
+	if err := k.registerInterchainAccount(ctx, zone, connection.Counterparty.ConnectionId, zone.DelegatePortOwner()); err != nil {
 		return err
 	}
 
@@ -262,22 +262,22 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 			k.SetZone(ctx, &zone)
 
 			// generate deposit account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.DepositPortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, &zone, connection.Counterparty.ConnectionId, zone.DepositPortOwner()); err != nil {
 				return err
 			}
 
 			// generate withdrawal account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, &zone, connection.Counterparty.ConnectionId, zone.WithdrawalPortOwner()); err != nil {
 				return err
 			}
 
 			// generate perf account
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.PerformancePortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, &zone, connection.Counterparty.ConnectionId, zone.PerformancePortOwner()); err != nil {
 				return err
 			}
 
 			// generate delegate accounts
-			if err := k.registerInterchainAccount(ctx, zone.ConnectionId, connection.Counterparty.ConnectionId, zone.DelegatePortOwner()); err != nil {
+			if err := k.registerInterchainAccount(ctx, &zone, connection.Counterparty.ConnectionId, zone.DelegatePortOwner()); err != nil {
 				return err
 			}
 

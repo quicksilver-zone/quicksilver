@@ -22,7 +22,7 @@ func (suite *KeeperTestSuite) TestKeeper_IntentStore() {
 	ctx := suite.chainA.GetContext()
 
 	// get test zone
-	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 	zoneValidatorAddresses := icsKeeper.GetValidators(ctx, &zone)
 
@@ -320,7 +320,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 			icsKeeper := quicksilver.InterchainstakingKeeper
-			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := icsKeeper.GetZone(ctx, testzoneID)
 			suite.True(found)
 
 			// give each user some funds
@@ -335,7 +335,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 			_ = icsKeeper.AggregateDelegatorIntents(ctx, &zone)
 
 			// refresh zone to pull new aggregate
-			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found = icsKeeper.GetZone(ctx, testzoneID)
 			suite.True(found)
 
 			actual, err := icsKeeper.GetAggregateIntentOrDefault(ctx, &zone)
@@ -429,7 +429,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 // 			ctx := suite.chainA.GetContext()
 // 			icsKeeper := quicksilver.InterchainstakingKeeper
-// 			zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+// 			zone, found := icsKeeper.GetZone(ctx, testzoneID)
 // 			suite.True(found)
 
 // 			// give each user some funds
@@ -451,7 +451,7 @@ func (suite *KeeperTestSuite) TestAggregateIntent() {
 // 			icsKeeper.AggregateDelegatorIntents(ctx, zone)
 
 // 			// refresh zone to pull new aggregate
-// 			zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+// 			zone, found = icsKeeper.GetZone(ctx, testzoneID)
 // 			suite.True(found)
 
 // 			actual := zone.GetAggregateIntentOrDefault()
