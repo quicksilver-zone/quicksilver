@@ -58,13 +58,16 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 				return err
 			}
 
+			params := k.GetParams(ctx)
+			period := int64(params.ValidatorsetInterval)
+
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				connectionID,
 				zone.ZoneID(),
 				"cosmos.bank.v1beta1.Query/AllBalances",
 				bz,
-				sdk.NewInt(int64(k.GetParam(ctx, types.KeyDepositInterval))),
+				sdk.NewInt(period),
 				types.ModuleName,
 				"allbalances",
 				0,

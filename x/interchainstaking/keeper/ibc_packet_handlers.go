@@ -338,7 +338,8 @@ func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 
 	if found && denomTrace.BaseDenom != zone.BaseDenom {
 		// k.Logger(ctx).Error("got withdrawal account and NOT staking denom", "rx", receivedCoin.Denom, "trace_base_denom", denomTrace.BaseDenom, "zone_base_denom", zone.BaseDenom)
-		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(k.GetCommissionRate(ctx)).TruncateInt()
+		params := k.GetParams(ctx)
+		feeAmount := sdk.NewDecFromInt(receivedCoin.Amount).Mul(params.CommissionRate).TruncateInt()
 		rewardCoin := receivedCoin.SubAmount(feeAmount)
 		zoneAddress, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
 		if err != nil {
@@ -479,7 +480,8 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 		}
 	}
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	params := k.GetParams(ctx)
+	period := int64(params.ValidatorsetInterval)
 	query := stakingtypes.QueryValidatorsRequest{}
 
 	return k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
@@ -1099,7 +1101,8 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 	}
 	k.SetDelegation(ctx, zone, delegation)
 
-	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+	params := k.GetParams(ctx)
+	period := int64(params.ValidatorsetInterval)
 	query := stakingtypes.QueryValidatorsRequest{}
 	err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
 	if err != nil {
@@ -1181,8 +1184,9 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 	baseDenomAmount := withdrawBalance.Balances.AmountOf(zone.BaseDenom)
 	// calculate fee (fee = amount * rate)
 
+	params := k.GetParams(ctx)
 	baseDenomFee := sdk.NewDecFromInt(baseDenomAmount).
-		Mul(k.GetCommissionRate(ctx)).
+		Mul(params.CommissionRate).
 		TruncateInt()
 
 	// prepare rewards distribution

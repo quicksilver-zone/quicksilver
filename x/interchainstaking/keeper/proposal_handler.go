@@ -121,7 +121,8 @@ func (k *Keeper) HandleRegisterZoneProposal(ctx sdk.Context, p *types.RegisterZo
 
 	// query val set for base zone
 	if !zone.IsSubzone() {
-		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+		params := k.GetParams(ctx)
+		period := int64(params.ValidatorsetInterval)
 		query := stakingTypes.QueryValidatorsRequest{}
 		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
 		if err != nil {
@@ -281,7 +282,8 @@ func (k *Keeper) HandleUpdateZoneProposal(ctx sdk.Context, p *types.UpdateZonePr
 				return err
 			}
 
-			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+			params := k.GetParams(ctx)
+			period := int64(params.ValidatorsetInterval)
 			query := stakingTypes.QueryValidatorsRequest{}
 			err := k.EmitValSetQuery(ctx, zone.ConnectionId, &zone, query, sdkmath.NewInt(period))
 			if err != nil {

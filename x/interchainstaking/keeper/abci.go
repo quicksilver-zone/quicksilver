@@ -54,7 +54,8 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 					if len(zone.IbcNextValidatorsHash) == 0 || !bytes.Equal(zone.IbcNextValidatorsHash, tmConsState.NextValidatorsHash.Bytes()) {
 						k.Logger(ctx).Info("IBC ValSet has changed; requerying valset")
 						// trigger valset update.
-						period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+						params := k.GetParams(ctx)
+						period := int64(params.ValidatorsetInterval)
 						query := stakingTypes.QueryValidatorsRequest{}
 						err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
 						if err != nil {

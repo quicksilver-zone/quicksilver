@@ -60,9 +60,8 @@ var (
 	KeyPrefixRemoteAddress               = []byte{0x0d}
 	KeyPrefixLocalAddress                = []byte{0x0e}
 	KeyPrefixPortConnectionZone          = []byte{0x0f}
-
-	// fill in missing 0d - 0f before adding 0x11!
-	KeyPrefixRedelegationRecord = []byte{0x10}
+	KeyPrefixRedelegationRecord          = []byte{0x10}
+	KeyPrefixParams                      = []byte{0x11}
 )
 
 // ParseStakingDelegationKey parses the KV store key for a delegation from Cosmos x/staking module,

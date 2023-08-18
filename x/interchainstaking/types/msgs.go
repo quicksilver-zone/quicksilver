@@ -6,6 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	sdkioerrors "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/ingenuity-build/multierror"
@@ -18,6 +20,7 @@ var (
 	_ sdk.Msg = &MsgSignalIntent{}
 	_ sdk.Msg = &MsgGovCloseChannel{}
 	_ sdk.Msg = &MsgGovReopenChannel{}
+	_ sdk.Msg = &MsgUpdateParams{}
 )
 
 const (
@@ -354,4 +357,26 @@ func (msg MsgGovReopenChannel) GetSignBytes() []byte {
 // GetSignBytes Implements Msg.
 func (msg MsgGovCloseChannel) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// GetSignBytes implements the LegacyMsg interface.
+func (m *MsgUpdateParams) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(m))
+}
+
+// GetSigners returns the expected signers for a MsgUpdateParams message.
+func (m *MsgUpdateParams) GetSigners() []sdk.AccAddress {
+	addr, _ := sdk.AccAddressFromBech32(m.Authority)
+	return []sdk.AccAddress{addr}
+}
+
+// ValidateBasic does a sanity check on the provided data.
+func (m *MsgUpdateParams) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return sdkioerrors.Wrap(err, "invalid authority address")
+	}
+
+	return m.Params.Validate()
 }

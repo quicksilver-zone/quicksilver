@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 
+	sdkioerrors "cosmossdk.io/errors"
+
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -146,7 +148,8 @@ func (k msgServer) RegisterZone(goCtx context.Context, msg *types.MsgRegisterZon
 
 	// query val set for base zone
 	if !zone.IsSubzone() {
-		period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+		params := k.GetParams(ctx)
+		period := int64(params.ValidatorsetInterval)
 		query := stakingTypes.QueryValidatorsRequest{}
 		err = k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
 		if err != nil {
@@ -316,7 +319,8 @@ func (k msgServer) UpdateZone(goCtx context.Context, msg *types.MsgUpdateZone) (
 				return &types.MsgUpdateZoneResponse{}, err
 			}
 
-			period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+			params := k.GetParams(ctx)
+			period := int64(params.ValidatorsetInterval)
 			query := stakingTypes.QueryValidatorsRequest{}
 			err := k.EmitValSetQuery(ctx, zone.ConnectionId, &zone, query, sdkmath.NewInt(period))
 			if err != nil {
@@ -338,7 +342,7 @@ func (k msgServer) UpdateZone(goCtx context.Context, msg *types.MsgUpdateZone) (
 func (k msgServer) RequestRedemption(goCtx context.Context, msg *types.MsgRequestRedemption) (*types.MsgRequestRedemptionResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if !k.Keeper.GetUnbondingEnabled(ctx) {
+	if !k.GetParams(ctx).UnbondingEnabled {
 		return nil, fmt.Errorf("unbonding is currently disabled")
 	}
 
@@ -552,4 +556,17 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 	})
 
 	return &types.MsgGovCloseChannelResponse{}, nil
+}
+
+func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	if k.authority != req.Authority {
+		return nil, sdkioerrors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, req.Authority)
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := k.SetParams(ctx, req.Params); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgUpdateParamsResponse{}, nil
 }

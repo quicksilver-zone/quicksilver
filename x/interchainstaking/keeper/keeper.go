@@ -384,45 +384,6 @@ func (k *Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 	}
 }
 
-func (k *Keeper) GetParam(ctx sdk.Context, key []byte) uint64 {
-	var out uint64
-	k.paramStore.Get(ctx, key, &out)
-	return out
-}
-
-func (k *Keeper) GetUnbondingEnabled(ctx sdk.Context) bool {
-	var out bool
-	k.paramStore.Get(ctx, types.KeyUnbondingEnabled, &out)
-	return out
-}
-
-func (k *Keeper) GetCommissionRate(ctx sdk.Context) sdk.Dec {
-	var out sdk.Dec
-	k.paramStore.Get(ctx, types.KeyCommissionRate, &out)
-	return out
-}
-
-// MigrateParams fetches params, adds ClaimsEnabled field and re-sets params.
-func (k *Keeper) MigrateParams(ctx sdk.Context) {
-	params := types.Params{}
-	params.DepositInterval = k.GetParam(ctx, types.KeyDepositInterval)
-	params.CommissionRate = k.GetCommissionRate(ctx)
-	params.ValidatorsetInterval = k.GetParam(ctx, types.KeyValidatorSetInterval)
-	params.UnbondingEnabled = false
-
-	k.paramStore.SetParamSet(ctx, &params)
-}
-
-func (k *Keeper) GetParams(clientCtx sdk.Context) (params types.Params) {
-	k.paramStore.GetParamSet(clientCtx, &params)
-	return params
-}
-
-// SetParams sets the distribution parameters to the param space.
-func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
-	k.paramStore.SetParamSet(ctx, &params)
-}
-
 func (k *Keeper) SetZoneIDForPortConnection(ctx sdk.Context, portID, connectionID, zoneID string) {
 	key := fmt.Sprintf("%s-%s", portID, connectionID)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortConnectionZone)
