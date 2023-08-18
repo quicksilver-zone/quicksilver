@@ -176,7 +176,7 @@ func (suite *KeeperTestSuite) TestKeeper_DepositAccount() {
 				// use state set from previous tests
 			},
 			&types.QueryDepositAccountForChainRequest{
-				ChainId: suite.chainB.ChainID,
+				ChainId: testzoneID,
 			},
 			false,
 		},
@@ -241,7 +241,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 			"DelegatorIntent_No_Zone_Intents",
 			func() {},
 			&types.QueryDelegatorIntentRequest{
-				ChainId:          suite.chainB.ChainID,
+				ChainId:          testzoneID,
 				DelegatorAddress: testAddress,
 			},
 			false,
@@ -251,7 +251,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 			"DelegatorIntent_No_Delegator_Intents",
 			func() {},
 			&types.QueryDelegatorIntentRequest{
-				ChainId:          suite.chainB.ChainID,
+				ChainId:          testzoneID,
 				DelegatorAddress: testAddress,
 			},
 			false,
@@ -260,7 +260,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 		{
 			"DelegatorIntent_Valid_Intents",
 			func() {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := icsKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 				// give funds
 				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
@@ -282,7 +282,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntent() {
 				}
 			},
 			&types.QueryDelegatorIntentRequest{
-				ChainId:          suite.chainB.ChainID,
+				ChainId:          testzoneID,
 				DelegatorAddress: testAddress,
 			},
 			false,
@@ -344,7 +344,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 			false,
 			func(intents []*types.DelegatorIntentsResponse) {
 				for _, intent := range intents {
-					suite.Equal(intent.ChainId, suite.chainB.ChainID)
+					suite.Equal(intent.ChainId, testzoneID)
 					suite.Equal(len(intent.Intent.Intents), 0)
 				}
 			},
@@ -352,7 +352,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 		{
 			"DelegatorIntent_Valid_Intents across multiple zones",
 			func() {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := icsKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 				// give funds
 				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
@@ -387,7 +387,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 				// give funds
 				suite.giveFunds(ctx, zone.LocalDenom, 5000000, testAddress)
 
-				chainBZone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				chainBZone, found := icsKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 				// set intents
 				intents = []types.DelegatorIntent{
@@ -412,7 +412,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegatorIntents() {
 			func(intents []*types.DelegatorIntentsResponse) {
 				suite.Equal(len(intents), 2)
 				suite.Equal(intents[0].ChainId, "cosmoshub-4")
-				suite.Equal(intents[1].ChainId, suite.chainB.ChainID)
+				suite.Equal(intents[1].ChainId, testzoneID)
 				for _, intent := range intents {
 					suite.Equal(intent.Intent.Delegator, testAddress)
 					suite.Equal(len(intent.Intent.Intents), 1)
@@ -482,7 +482,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 			"Delegations_No_Zone_Delegations",
 			func() {},
 			&types.QueryDelegationsRequest{
-				ChainId: suite.chainB.ChainID,
+				ChainId: testzoneID,
 			},
 			false,
 			0,
@@ -490,7 +490,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 		{
 			"Delegations_Valid_Delegations",
 			func() {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := icsKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 
 				// set delegation
@@ -503,7 +503,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 				icsKeeper.SetDelegation(ctx, &zone, delegation)
 			},
 			&types.QueryDelegationsRequest{
-				ChainId: suite.chainB.ChainID,
+				ChainId: testzoneID,
 			},
 			false,
 			1,
@@ -569,7 +569,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 			"Receipts_No_Zone_Receipts",
 			func() {},
 			&types.QueryReceiptsRequest{
-				ChainId: suite.chainB.ChainID,
+				ChainId: testzoneID,
 			},
 			false,
 			0,
@@ -577,7 +577,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 		{
 			"Receipts_Valid_Receipts",
 			func() {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := icsKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 
 				// set receipts
@@ -593,7 +593,7 @@ func (suite *KeeperTestSuite) TestKeeper_Receipts() {
 				icsKeeper.SetReceipt(ctx, *receipt)
 			},
 			&types.QueryReceiptsRequest{
-				ChainId: suite.chainB.ChainID,
+				ChainId: testzoneID,
 			},
 			false,
 			1,
@@ -632,7 +632,7 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 
 	testReceiptHash := "testReceiptHash#01"
 
-	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := icsKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	testReceipt := icsKeeper.NewReceipt(
@@ -663,7 +663,7 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 			"empty_TxHash",
 			func() {},
 			&types.QueryTxStatusRequest{
-				ChainId: suite.chainB.ChainID,
+				ChainId: testzoneID,
 				TxHash:  "",
 			},
 			nil,
@@ -683,7 +683,7 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 			name:     "Receipts_No_Zone_Receipts",
 			malleate: func() {},
 			req: &types.QueryTxStatusRequest{
-				ChainId: suite.chainB.ChainID,
+				ChainId: testzoneID,
 				TxHash:  "randomhash",
 			},
 			want:    nil,
@@ -695,7 +695,7 @@ func (suite *KeeperTestSuite) TestKeeper_TxStatus() {
 				icsKeeper.SetReceipt(ctx, *testReceipt)
 			},
 			&types.QueryTxStatusRequest{
-				ChainId: suite.chainB.ChainID,
+				ChainId: testzoneID,
 				TxHash:  testReceiptHash,
 			},
 			&types.QueryTxStatusResponse{Receipt: testReceipt},
@@ -762,7 +762,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 			"ZoneWithdrawalRecords_No_Zone_Records",
 			func() {},
 			&types.QueryWithdrawalRecordsRequest{
-				ChainId:          suite.chainB.ChainID,
+				ChainId:          testzoneID,
 				DelegatorAddress: delegatorAddress,
 			},
 			false,
@@ -771,7 +771,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 		{
 			"ZoneWithdrawalRecords_Valid_Records",
 			func() {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := icsKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 
 				distribution := []*types.Distribution{
@@ -801,7 +801,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				)
 			},
 			&types.QueryWithdrawalRecordsRequest{
-				ChainId:          suite.chainB.ChainID,
+				ChainId:          testzoneID,
 				DelegatorAddress: delegatorAddress,
 			},
 			false,
@@ -876,7 +876,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 		{
 			"UserWithdrawalRecords_Valid_Records",
 			func() {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := icsKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 
 				distribution := []*types.Distribution{
@@ -969,7 +969,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 		{
 			"WithdrawalRecords_Valid_Records",
 			func() {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := icsKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 
 				distribution := []*types.Distribution{
@@ -1060,7 +1060,7 @@ func (suite *KeeperTestSuite) TestKeeper_UnbondingRecords() {
 		{
 			"UnbondingRecords_Valid_Records",
 			func() {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := icsKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 
 				icsKeeper.SetUnbondingRecord(
@@ -1135,7 +1135,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 		{
 			"RedelegationRecords_Valid_Records",
 			func() {
-				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := icsKeeper.GetZone(ctx, testzoneID)
 				suite.True(found)
 
 				icsKeeper.SetRedelegationRecord(
@@ -1180,6 +1180,8 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 }
 
 func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
+	suite.setupTestZones()
+
 	icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
 	usrAddress1, _ := addressutils.AccAddressFromBech32("cosmos1vwh8mkgefn73vpsv7td68l3tynayck07engahn", "cosmos")
 	ctx := suite.chainA.GetContext()
@@ -1222,7 +1224,6 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 			"MappedAccounts_ValidRecord_Request",
 			func() {
 				// setup zones
-				suite.setupTestZones()
 				zone := types.Zone{
 					ConnectionId:    "connection-77881",
 					ChainId:         "evmos_9001-1",
