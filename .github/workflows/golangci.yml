@@ -6,6 +6,8 @@ on:
     branches:
       - main
       - develop
+      - unstable
+      - unstable-v1.5
   pull_request:
 permissions:
   contents: read
