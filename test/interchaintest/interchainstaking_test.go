@@ -195,8 +195,6 @@ chains:
 	err = icq.StartContainer(ctx)
 	require.NoError(t, err)
 
-	//err = icq.Running(ctx)
-	//require.NoError(t, err)
 }
 
 func runXCC(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
