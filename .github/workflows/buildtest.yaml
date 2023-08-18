@@ -9,8 +9,10 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - "develop"
-      - "main"
+      - main
+      - develop
+      - unstable
+      - unstable-v1.5
 
 # This workflow makes x86_64 for windows, and linux.
 

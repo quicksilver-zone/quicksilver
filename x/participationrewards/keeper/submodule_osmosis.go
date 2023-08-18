@@ -4,13 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
-	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
-	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
+	"strconv"
+	"strings"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
+	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
@@ -69,22 +73,38 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 
 func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	var amount uint64
+	var lock osmolockup.PeriodLock
 	for _, proof := range msg.Proofs {
-		lock := osmolockup.PeriodLock{}
-		err := k.cdc.Unmarshal(proof.Data, &lock)
-		if err != nil {
-			return 0, err
-		}
+		if proof.ProofType == types.ProofTypeBank {
+			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
+			if err != nil {
+				return 0, err
+			}
+			coin, err := keeper.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
+			if err != nil {
+				return 0, err
+			}
+			poolID, err := strconv.Atoi(poolDenom[strings.LastIndex(poolDenom, "/")+1:])
+			if err != nil {
+				return 0, err
+			}
+			lock = osmolockup.NewPeriodLock(uint64(poolID), addr, time.Hour, time.Time{}, sdk.NewCoins(coin))
+		} else {
+			lock = osmolockup.PeriodLock{}
+			err := k.cdc.Unmarshal(proof.Data, &lock)
+			if err != nil {
+				return 0, err
+			}
 
-		_, lockupOwner, err := bech32.DecodeAndConvert(lock.Owner)
-		if err != nil {
-			return 0, err
-		}
+			_, lockupOwner, err := bech32.DecodeAndConvert(lock.Owner)
+			if err != nil {
+				return 0, err
+			}
 
-		if sdk.AccAddress(lockupOwner).String() != msg.UserAddress {
-			return 0, errors.New("not a valid proof for submitting user")
+			if sdk.AccAddress(lockupOwner).String() != msg.UserAddress {
+				return 0, errors.New("not a valid proof for submitting user")
+			}
 		}
-
 		sdkAmount, err := osmosistypes.DetermineApplicableTokensInPool(ctx, k, lock, msg.Zone)
 		if err != nil {
 			return 0, err

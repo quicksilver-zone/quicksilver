@@ -484,7 +484,7 @@ func (suite *KeeperTestSuite) executeCrescentReserveBalanceUpdateCallback() {
 		Balance:        expectedData,
 	}
 
-	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, testCrescentAddress+cosmosIBCDenom)
+	pd, found := prk.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, testCrescentAddress+"_"+cosmosIBCDenom)
 	suite.Require().True(found)
 
 	value, err := types.UnmarshalProtocolData(types.ProtocolDataTypeCrescentReserveAddressBalance, pd.Data)
