@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {
 	ctx := suite.chainA.GetContext()
 
 	// get test zone
-	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
@@ -61,7 +61,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 	ctx := suite.chainA.GetContext()
 
 	// get test zone
-	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
@@ -93,7 +93,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
 	ctx := suite.chainA.GetContext()
 
 	// get test zone
-	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
@@ -125,7 +125,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptMixedMessageTypeGood() {
 	ctx := suite.chainA.GetContext()
 
 	// get test zone
-	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
@@ -159,7 +159,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMixedSender() { // 
 	ctx := suite.chainA.GetContext()
 
 	// get test zone
-	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
@@ -195,7 +195,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadDenom() {
 	ctx := suite.chainA.GetContext()
 
 	// get test zone
-	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	fromAddress := addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix)
@@ -229,7 +229,7 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 	ctx := suite.chainA.GetContext()
 
 	// get test zone
-	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	suite.True(found)
 
 	account1 := addressutils.GenerateAccAddressForTest()
