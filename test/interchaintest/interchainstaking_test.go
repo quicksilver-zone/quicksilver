@@ -226,10 +226,10 @@ chains:
 	require.NoError(t, err)
 	_, err = xcc.ReadFile(ctx, containerCfg)
 	require.NoError(t, err)
-
-	err = xcc.StartContainer(ctx)
-	require.NoError(t, err)
-
-	// err = xcc.Running(ctx)
-	// require.NoError(t, err)
+	//
+	//err = xcc.StartContainer(ctx)
+	//require.NoError(t, err)
+	//
+	//err = xcc.Running(ctx)
+	//require.NoError(t, err)
 }

@@ -6,7 +6,6 @@ require (
 	cosmossdk.io/math v1.0.1
 	github.com/cosmos/cosmos-sdk v0.47.4
 	github.com/cosmos/ibc-go/v7 v7.2.0
-	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
 	github.com/ingenuity-build/quicksilver v1.3.2
 	github.com/strangelove-ventures/interchaintest/v7 v7.0.0-20230802153316-8e02aef8573a
 	github.com/stretchr/testify v1.8.4
@@ -19,6 +18,7 @@ require (
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/getsentry/sentry-go v0.23.0 // indirect
+	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845 // indirect
 	github.com/ingenuity-build/multierror v0.1.0 // indirect
 	github.com/iqlusioninc/liquidity-staking-module v1.0.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect

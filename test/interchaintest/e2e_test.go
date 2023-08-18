@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/icza/dyno"
 	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
 	"strings"
 	"time"
@@ -24,23 +23,17 @@ import (
 	"go.uber.org/zap/zaptest"
 )
 
-const (
-	heightDelta      = 20
-	votingPeriod     = "30s"
-	maxDepositPeriod = "10s"
-)
-
 func TestQuicksilverE2E(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
 	t.Parallel()
 	// Create chain factory with Quicksilver
-	//numVals := 3
-	//numFullNodes := 3
-	//
-	//config, err := createConfig()
-	//require.NoError(t, err)
+	numVals := 3
+	numFullNodes := 3
+
+	config, err := createConfig()
+	require.NoError(t, err)
 
 	// Create relayer factory to utilize the go-relayer
 	client, network := interchaintest.DockerSetup(t)
@@ -49,25 +42,19 @@ func TestQuicksilverE2E(t *testing.T) {
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
 		{
-			ChainConfig: ibc.ChainConfig{
-				Type:           "cosmos",
-				Name:           "quicksilver",
-				ChainID:        "quicksilverd",
-				Images:         []ibc.DockerImage{QuicksilverImage},
-				Bin:            "quicksilverd",
-				Bech32Prefix:   "quick",
-				Denom:          "stake",
-				GasPrices:      "0.00stake",
-				GasAdjustment:  1.3,
-				TrustingPeriod: "504h",
-				EncodingConfig: quicksilverEncoding(),
-				NoHostMount:    true,
-				ModifyGenesis:  modifyGenesisShortProposals(votingPeriod, maxDepositPeriod),
-			},
+			Name:          "quicksilver",
+			ChainConfig:   config,
+			NumValidators: &numVals,
+			NumFullNodes:  &numFullNodes,
 		},
 		{
-			Name:    "juno",
-			Version: "v14.1.0",
+			Name:          "juno",
+			Version:       "v14.1.0",
+			NumValidators: &numVals,
+			NumFullNodes:  &numFullNodes,
+			//ChainConfig: ibc.ChainConfig{
+			//	GasPrices: "0.0uatom",
+			//},
 		},
 	})
 	// Get chains from the chain factory
@@ -351,27 +338,4 @@ func TestQuicksilverE2E(t *testing.T) {
 	parts = strings.SplitN(string(stdout), ":", 2)
 	icaAddr = strings.TrimSpace(parts[1])
 	require.NotEmpty(t, icaAddr)
-}
-
-func modifyGenesisShortProposals(votingPeriod, maxDepositPeriod string) func(ibc.ChainConfig, []byte) ([]byte, error) {
-	return func(chainConfig ibc.ChainConfig, genbz []byte) ([]byte, error) {
-		g := make(map[string]interface{})
-		if err := json.Unmarshal(genbz, &g); err != nil {
-			return nil, fmt.Errorf("failed to unmarshal genesis file: %w", err)
-		}
-		if err := dyno.Set(g, votingPeriod, "app_state", "gov", "params", "voting_period"); err != nil {
-			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
-		}
-		if err := dyno.Set(g, maxDepositPeriod, "app_state", "gov", "params", "max_deposit_period"); err != nil {
-			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
-		}
-		if err := dyno.Set(g, chainConfig.Denom, "app_state", "gov", "params", "min_deposit", 0, "denom"); err != nil {
-			return nil, fmt.Errorf("failed to set voting period in genesis json: %w", err)
-		}
-		out, err := json.Marshal(g)
-		if err != nil {
-			return nil, fmt.Errorf("failed to marshal genesis bytes to json: %w", err)
-		}
-		return out, nil
-	}
 }
