@@ -10,9 +10,9 @@ import (
 
 const (
 	testZoneID        = "test-zone-1"
-	testSubzoneID     = "test-zone-1|1"
+	testSubzoneID     = "test-zone-1#1"
 	invalidSubZoneID1 = "test-subzone-1"
-	invalidSubZoneID2 = "test-subzone-1|1"
+	invalidSubZoneID2 = "test-subzone-1#1"
 )
 
 var (
@@ -95,7 +95,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-chain|1234",
+					ChainID:     "test-chain#1234",
 				},
 			},
 			baseZone: baseZone,
@@ -135,7 +135,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-chain|1234",
+					ChainID:     "test-chain#1234",
 				},
 			},
 			baseZone: baseZone,
@@ -155,7 +155,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-chain|1234",
+					ChainID:     "test-chain#1234",
 				},
 			},
 			baseZone: baseZone,
@@ -175,7 +175,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-chain|1234",
+					ChainID:     "test-chain#1234",
 				},
 			},
 			baseZone: baseZone,
@@ -195,7 +195,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-chain|1234",
+					ChainID:     "test-chain#1234",
 				},
 			},
 			baseZone: baseZone,
@@ -216,7 +216,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-chain|1234",
+					ChainID:     "test-chain#1234",
 				},
 			},
 			baseZone: baseZone,
@@ -252,7 +252,7 @@ func TestValidateSubzoneForBasezone(t *testing.T) {
 				SubzoneInfo: &types.SubzoneInfo{
 					Authority:   "testauth",
 					BaseChainID: "test-chain",
-					ChainID:     "test-chain|1234",
+					ChainID:     "test-chain#1234",
 				},
 			},
 			baseZone: invalidBaseZone,

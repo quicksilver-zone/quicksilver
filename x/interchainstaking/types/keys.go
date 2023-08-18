@@ -59,6 +59,7 @@ var (
 	KeyPrefixValidatorsInfo              = []byte{0x0c}
 	KeyPrefixRemoteAddress               = []byte{0x0d}
 	KeyPrefixLocalAddress                = []byte{0x0e}
+	KeyPrefixPortConnectionZone          = []byte{0x0f}
 
 	// fill in missing 0d - 0f before adding 0x11!
 	KeyPrefixRedelegationRecord = []byte{0x10}

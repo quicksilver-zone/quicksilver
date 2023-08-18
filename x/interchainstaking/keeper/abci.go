@@ -45,31 +45,30 @@ func (k *Keeper) BeginBlocker(ctx sdk.Context) {
 			}
 		}
 
-		if !zone.IsSubzone() {
-			connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
+		connection, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, zone.ConnectionId)
+		if found {
+			consState, found := k.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(ctx, connection.GetClientID())
 			if found {
-				consState, found := k.IBCKeeper.ClientKeeper.GetLatestClientConsensusState(ctx, connection.GetClientID())
-				if found {
-					tmConsState, ok := consState.(*tmtypes.ConsensusState)
-					if ok {
-						if len(zone.IbcNextValidatorsHash) == 0 || !bytes.Equal(zone.IbcNextValidatorsHash, tmConsState.NextValidatorsHash.Bytes()) {
-							k.Logger(ctx).Info("IBC ValSet has changed; requerying valset")
-							// trigger valset update.
-							period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
-							query := stakingTypes.QueryValidatorsRequest{}
-							err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
-							if err != nil {
-								k.Logger(ctx).Error("unable to trigger valset update query", "error", err.Error())
-								// failing to emit the valset update is not terminal but constitutes
-								// an error, as if this starts happening frequent it is something
-								// we should investigate.
-							}
-							zone.IbcNextValidatorsHash = tmConsState.NextValidatorsHash.Bytes()
-							k.SetZone(ctx, zone)
+				tmConsState, ok := consState.(*tmtypes.ConsensusState)
+				if ok {
+					if len(zone.IbcNextValidatorsHash) == 0 || !bytes.Equal(zone.IbcNextValidatorsHash, tmConsState.NextValidatorsHash.Bytes()) {
+						k.Logger(ctx).Info("IBC ValSet has changed; requerying valset")
+						// trigger valset update.
+						period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
+						query := stakingTypes.QueryValidatorsRequest{}
+						err := k.EmitValSetQuery(ctx, zone.ConnectionId, zone, query, sdkmath.NewInt(period))
+						if err != nil {
+							k.Logger(ctx).Error("unable to trigger valset update query", "error", err.Error())
+							// failing to emit the valset update is not terminal but constitutes
+							// an error, as if this starts happening frequent it is something
+							// we should investigate.
 						}
+						zone.IbcNextValidatorsHash = tmConsState.NextValidatorsHash.Bytes()
+						k.SetZone(ctx, zone)
 					}
 				}
 			}
+
 		}
 
 		return false

@@ -423,7 +423,25 @@ func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramStore.SetParamSet(ctx, &params)
 }
 
-func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
+func (k *Keeper) SetZoneIDForPortConnection(ctx sdk.Context, portID, connectionID, zoneID string) {
+	key := fmt.Sprintf("%s-%s", portID, connectionID)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortConnectionZone)
+	bz := []byte(zoneID)
+	store.Set([]byte(key), bz)
+}
+
+func (k *Keeper) GetZoneIDFromPortConnection(ctx sdk.Context, portID, connectionID string) (string, error) {
+	key := fmt.Sprintf("%s-%s", portID, connectionID)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortConnectionZone)
+	bz := store.Get([]byte(key))
+	if len(bz) == 0 {
+		return "", fmt.Errorf("unable to find zone for port connection %s-%s", portID, connectionID)
+	}
+
+	return string(bz), nil
+}
+
+func (k *Keeper) GetChainIDFromConnection(ctx sdk.Context, connectionID string) (string, error) {
 	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 	if !found {
 		return "", fmt.Errorf("invalid connection id, \"%s\" not found", connectionID)
@@ -446,7 +464,7 @@ func (k *Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
 		return "", errors.New("connectionID not in context")
 	}
 
-	return k.GetChainID(ctx, connectionID.(string))
+	return k.GetChainIDFromConnection(ctx, connectionID.(string))
 }
 
 func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
@@ -662,7 +680,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, types.EpochRebalanceMemo(epochNumber), zone.MessagesPerTx)
 }
 
-// UnmarshalValidatorsResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.
+// UnmarshalValidatorsResponse attempts to unmarshal  a byte slice into a QueryValidatorsResponse.
 func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryValidatorsResponse, error) {
 	validatorsRes := stakingtypes.QueryValidatorsResponse{}
 	if len(data) == 0 {
@@ -676,7 +694,7 @@ func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryVal
 	return validatorsRes, nil
 }
 
-// UnmarshalValidatorsRequest attempts to umarshal a byte slice into a QueryValidatorsRequest.
+// UnmarshalValidatorsRequest attempts to unmarshal a byte slice into a QueryValidatorsRequest.
 func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
 	validatorsReq := stakingtypes.QueryValidatorsRequest{}
 	err := k.cdc.Unmarshal(data, &validatorsReq)
@@ -687,7 +705,7 @@ func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryVali
 	return validatorsReq, nil
 }
 
-// UnmarshalValidator attempts to umarshal  a byte slice into a Validator.
+// UnmarshalValidator attempts to unmarshal  a byte slice into a Validator.
 func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error) {
 	validator := stakingtypes.Validator{}
 	if len(data) == 0 {
@@ -701,16 +719,16 @@ func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error)
 	return validator, nil
 }
 
-func (k *Keeper) registerInterchainAccount(ctx sdk.Context, zoneConnectionID, counterpartyConnectionID, portOwner string) error {
+func (k *Keeper) registerInterchainAccount(ctx sdk.Context, zone *types.Zone, counterpartyConnectionID, portOwner string) error {
 	appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
 		Version:                icatypes.Version,
-		ControllerConnectionId: zoneConnectionID,
+		ControllerConnectionId: zone.ConnectionId,
 		HostConnectionId:       counterpartyConnectionID,
 		Encoding:               icatypes.EncodingProtobuf,
 		TxType:                 icatypes.TxTypeSDKMultiMsg,
 	}))
 
-	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zoneConnectionID, portOwner, appVersion); err != nil {
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner, appVersion); err != nil {
 		return err
 	}
 	portID, err := icatypes.NewControllerPortID(portOwner)
@@ -718,7 +736,8 @@ func (k *Keeper) registerInterchainAccount(ctx sdk.Context, zoneConnectionID, co
 		return err
 	}
 
-	k.SetConnectionForPort(ctx, zoneConnectionID, portID)
+	k.SetConnectionForPort(ctx, zone.ConnectionId, portID)
+	k.SetZoneIDForPortConnection(ctx, portID, zone.ConnectionId, zone.ZoneID())
 
 	return nil
 }

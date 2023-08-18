@@ -76,7 +76,7 @@ func (k *Keeper) Zone(c context.Context, req *types.QueryZoneRequest) (*types.Qu
 	}, nil
 }
 
-func (k Keeper) ZoneValidators(c context.Context, req *types.QueryZoneValidatorsRequest) (*types.QueryZoneValidatorsResponse, error) {
+func (k *Keeper) ZoneValidators(c context.Context, req *types.QueryZoneValidatorsRequest) (*types.QueryZoneValidatorsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

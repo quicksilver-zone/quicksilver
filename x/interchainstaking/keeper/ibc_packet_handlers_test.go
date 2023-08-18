@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 				quicksilver.InterchainstakingKeeper.SetParams(ctx, params)
 			}
 
-			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 			suite.True(found)
 
 			sender := zone.WithdrawalAddress.Address
@@ -431,7 +431,7 @@ func (suite *KeeperTestSuite) TestHandleQueuedUnbondings() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 			if !found {
 				suite.Fail("unable to retrieve zone for test")
 			}
@@ -602,7 +602,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 			if !found {
 				suite.Fail("unable to retrieve zone for test")
 			}
@@ -718,7 +718,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 			if !found {
 				suite.Fail("unable to retrieve zone for test")
 			}
@@ -775,14 +775,14 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 
-	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	if !found {
 		suite.Fail("unable to retrieve zone for test")
 	}
 	validators := quicksilver.InterchainstakingKeeper.GetValidators(ctx, &zone)
 	// create redelegation record
 	record := icstypes.RedelegationRecord{
-		ChainId:     suite.chainB.ChainID,
+		ChainId:     testzoneID,
 		EpochNumber: 1,
 		Source:      validators[0].ValoperAddress,
 		Destination: validators[1].ValoperAddress,
@@ -839,7 +839,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -863,7 +863,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.UnbondingRecord{
 					{
-						ChainId:       suite.chainB.ChainID,
+						ChainId:       testzoneID,
 						EpochNumber:   1,
 						Validator:     vals[0],
 						RelatedTxhash: []string{hash1},
@@ -884,7 +884,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -899,7 +899,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:      suite.chainB.ChainID,
+						ChainId:      testzoneID,
 						Delegator:    delegator1,
 						Distribution: nil,
 						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -918,7 +918,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -938,7 +938,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.UnbondingRecord{
 					{
-						ChainId:       suite.chainB.ChainID,
+						ChainId:       testzoneID,
 						EpochNumber:   1,
 						Validator:     vals[0],
 						RelatedTxhash: []string{hash1},
@@ -958,7 +958,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 			expectedWithdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone *icstypes.Zone) []icstypes.WithdrawalRecord {
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:      suite.chainB.ChainID,
+						ChainId:      testzoneID,
 						Delegator:    delegator1,
 						Distribution: nil,
 						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -977,7 +977,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -996,7 +996,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator2,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1015,7 +1015,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1039,7 +1039,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.UnbondingRecord{
 					{
-						ChainId:       suite.chainB.ChainID,
+						ChainId:       testzoneID,
 						EpochNumber:   2,
 						Validator:     vals[1],
 						RelatedTxhash: []string{hash1, hash2, hash3},
@@ -1060,7 +1060,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1075,7 +1075,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator2,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1090,7 +1090,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1105,7 +1105,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:      suite.chainB.ChainID,
+						ChainId:      testzoneID,
 						Delegator:    delegator1,
 						Distribution: nil,
 						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -1115,7 +1115,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:       icstypes.WithdrawStatusQueued,
 					},
 					{
-						ChainId:      suite.chainB.ChainID,
+						ChainId:      testzoneID,
 						Delegator:    delegator2,
 						Distribution: nil,
 						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -1125,7 +1125,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 						Status:       icstypes.WithdrawStatusQueued,
 					},
 					{
-						ChainId:      suite.chainB.ChainID,
+						ChainId:      testzoneID,
 						Delegator:    delegator1,
 						Distribution: nil,
 						Recipient:    addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
@@ -1147,7 +1147,7 @@ func (suite *KeeperTestSuite) TestReceiveAckErrForBeginUndelegate() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 			if !found {
 				suite.Fail("unable to retrieve zone for test")
 			}
@@ -1209,7 +1209,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 
-	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	if !found {
 		suite.Fail("unable to retrieve zone for test")
 	}
@@ -1311,7 +1311,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	suite.True(present)
 
 	// change intents to trigger transitive redelegations which should fail rebalance
-	zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	intents = icstypes.ValidatorIntents{
 		{ValoperAddress: vals[0].ValoperAddress, Weight: sdk.NewDecWithPrec(1, 1)},
 		{ValoperAddress: vals[1].ValoperAddress, Weight: sdk.NewDecWithPrec(3, 1)},
@@ -1340,7 +1340,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 
-	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	if !found {
 		suite.Fail("unable to retrieve zone for test")
 	}
@@ -1472,7 +1472,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 		{
 			name: "msg response with some data",
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, []byte) {
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
 				}
@@ -1499,7 +1499,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 				return []proto.Message{&transferMsg}, respBytes
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
 				}
@@ -1519,7 +1519,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 		{
 			name: "msg response with nil data",
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, []byte) {
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
 				}
@@ -1535,7 +1535,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 				return []proto.Message{&msgSetWithdrawAddress}, respBytes
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
 				}
@@ -1602,7 +1602,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 		{
 			name: "msg response with some data",
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, *codectypes.Any) {
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
 				}
@@ -1630,7 +1630,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 				return []proto.Message{&transferMsg}, anyResponse
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
 				}
@@ -1650,7 +1650,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 		{
 			name: "msg response with nil data",
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) ([]proto.Message, *codectypes.Any) {
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
 				}
@@ -1667,7 +1667,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 				return []proto.Message{&msgSetWithdrawAddress}, anyResponse
 			},
 			assertStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) bool {
-				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 				if !found {
 					suite.Fail("unable to retrieve zone for test")
 				}
@@ -1749,7 +1749,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1773,7 +1773,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.UnbondingRecord{
 					{
-						ChainId:       suite.chainB.ChainID,
+						ChainId:       testzoneID,
 						EpochNumber:   1,
 						Validator:     vals[0],
 						RelatedTxhash: []string{hash1},
@@ -1795,7 +1795,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1824,7 +1824,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1844,7 +1844,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.UnbondingRecord{
 					{
-						ChainId:       suite.chainB.ChainID,
+						ChainId:       testzoneID,
 						EpochNumber:   1,
 						Validator:     vals[0],
 						RelatedTxhash: []string{hash1},
@@ -1866,7 +1866,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1891,7 +1891,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1910,7 +1910,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator2,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1929,7 +1929,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1953,7 +1953,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.UnbondingRecord{
 					{
-						ChainId:       suite.chainB.ChainID,
+						ChainId:       testzoneID,
 						EpochNumber:   2,
 						Validator:     vals[1],
 						RelatedTxhash: []string{hash1, hash2, hash3},
@@ -1975,7 +1975,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -1994,7 +1994,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator2,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2013,7 +2013,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2041,7 +2041,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2056,7 +2056,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 						Status:     icstypes.WithdrawStatusUnbond,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator2,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2080,13 +2080,13 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.UnbondingRecord{
 					{
-						ChainId:       suite.chainB.ChainID,
+						ChainId:       testzoneID,
 						EpochNumber:   1,
 						Validator:     vals[0],
 						RelatedTxhash: []string{hash1},
 					},
 					{
-						ChainId:       suite.chainB.ChainID,
+						ChainId:       testzoneID,
 						EpochNumber:   1,
 						Validator:     vals[1],
 						RelatedTxhash: []string{hash2},
@@ -2123,7 +2123,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginUndelegate() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 			if !found {
 				suite.Fail("unable to retrieve zone for test")
 			}
@@ -2204,14 +2204,14 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNonNilCompletion()
 	ctx := suite.chainA.GetContext()
 	complete := time.Now().UTC().AddDate(0, 0, 21)
 
-	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	if !found {
 		suite.Fail("unable to retrieve zone for test")
 	}
 	validators := quicksilver.InterchainstakingKeeper.GetValidators(ctx, &zone)
 	// create redelegation record
 	record := icstypes.RedelegationRecord{
-		ChainId:     suite.chainB.ChainID,
+		ChainId:     testzoneID,
 		EpochNumber: 1,
 		Source:      validators[0].ValoperAddress,
 		Destination: validators[1].ValoperAddress,
@@ -2291,14 +2291,14 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNilCompletion() {
 	ctx := suite.chainA.GetContext()
 	complete := time.Time{}
 
-	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 	if !found {
 		suite.Fail("unable to retrieve zone for test")
 	}
 	validators := quicksilver.InterchainstakingKeeper.GetValidators(ctx, &zone)
 	// create redelegation record
 	record := icstypes.RedelegationRecord{
-		ChainId:     suite.chainB.ChainID,
+		ChainId:     testzoneID,
 		EpochNumber: epoch,
 		Source:      validators[0].ValoperAddress,
 		Destination: validators[1].ValoperAddress,
@@ -2393,7 +2393,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2419,7 +2419,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2449,7 +2449,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2475,7 +2475,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2505,7 +2505,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2531,7 +2531,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2562,7 +2562,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2584,7 +2584,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2610,7 +2610,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2631,7 +2631,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 						Acknowledged:   false,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator2,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2657,7 +2657,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone)
 				return []icstypes.WithdrawalRecord{
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator1,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2678,7 +2678,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 						Acknowledged:   false,
 					},
 					{
-						ChainId:   suite.chainB.ChainID,
+						ChainId:   testzoneID,
 						Delegator: delegator2,
 						Distribution: []*icstypes.Distribution{
 							{
@@ -2711,7 +2711,7 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 			quicksilver := suite.GetQuicksilverApp(suite.chainA)
 			ctx := suite.chainA.GetContext()
 
-			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 			if !found {
 				suite.Fail("unable to retrieve zone for test")
 			}
