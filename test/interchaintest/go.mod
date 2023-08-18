@@ -6,30 +6,12 @@ require (
 	cosmossdk.io/math v1.0.1
 	github.com/cosmos/cosmos-sdk v0.47.4
 	github.com/cosmos/ibc-go/v7 v7.2.0
-	github.com/ingenuity-build/quicksilver v1.3.2
+	github.com/ingenuity-build/quicksilver v0.0.0-00010101000000-000000000000
 	github.com/strangelove-ventures/interchaintest/v7 v7.0.0-20230802153316-8e02aef8573a
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.25.0
-)
 
-require (
-	github.com/cockroachdb/errors v1.10.0 // indirect
-	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
-	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/getsentry/sentry-go v0.23.0 // indirect
-	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845 // indirect
-	github.com/ingenuity-build/multierror v0.1.0 // indirect
-	github.com/iqlusioninc/liquidity-staking-module v1.0.0 // indirect
-	github.com/kr/pretty v0.3.1 // indirect
-	github.com/kr/text v0.2.0 // indirect
-	github.com/lib/pq v1.10.9 // indirect
-	github.com/linxGnu/grocksdb v1.8.0 // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
-	github.com/rogpeppe/go-internal v1.11.0 // indirect
 )
-
-//require github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
 
 require (
 	cloud.google.com/go v0.110.7 // indirect
@@ -62,17 +44,18 @@ require (
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
-	github.com/btcsuite/btcd/chaincfg/chainhash v1.0.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
+	github.com/cockroachdb/errors v1.10.0 // indirect
+	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
+	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/coinbase/rosetta-sdk-go v0.7.9 // indirect
 	github.com/cometbft/cometbft v0.37.2 // indirect
 	github.com/cometbft/cometbft-db v0.8.0 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
-	//github.com/cosmos/btcutil v1.0.5 // indirect
-	////github.com/cosmos/cosmos-db v1.0.0-rc.1 // indirect
+	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
@@ -102,6 +85,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.22 // indirect
 	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
+	github.com/getsentry/sentry-go v0.23.0 // indirect
 	github.com/go-kit/kit v0.12.0 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
@@ -138,19 +122,29 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/huandu/skiplist v1.2.0 // indirect
+	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/ipfs/go-cid v0.4.1 // indirect
+	github.com/ingenuity-build/multierror v0.1.0 // indirect
+	github.com/ipfs/go-cid v0.2.0 // indirect
+	github.com/iqlusioninc/liquidity-staking-module v1.0.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/klauspost/compress v1.16.7 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.3 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
-	github.com/libp2p/go-libp2p v0.27.8 // indirect
+	github.com/libp2p/go-libp2p v0.22.0 // indirect
+	github.com/libp2p/go-openssl v0.1.0 // indirect
+	github.com/linxGnu/grocksdb v1.8.0 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
+	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/mattn/go-pointer v0.0.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20220103164710-9a04d6ca976b // indirect
 	github.com/minio/highwayhash v1.0.2 // indirect
@@ -161,14 +155,13 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
-	github.com/multiformats/go-base32 v0.1.0 // indirect
-	github.com/multiformats/go-base36 v0.2.0 // indirect
-	github.com/multiformats/go-multiaddr v0.9.0 // indirect
-	github.com/multiformats/go-multibase v0.2.0 // indirect
-	github.com/multiformats/go-multicodec v0.8.1 // indirect
+	github.com/multiformats/go-base32 v0.0.4 // indirect
+	github.com/multiformats/go-base36 v0.1.0 // indirect
+	github.com/multiformats/go-multiaddr v0.6.0 // indirect
+	github.com/multiformats/go-multibase v0.1.1 // indirect
+	github.com/multiformats/go-multicodec v0.5.0 // indirect
 	github.com/multiformats/go-multihash v0.2.1 // indirect
-	github.com/multiformats/go-varint v0.0.7 // indirect
-	github.com/onsi/gomega v1.27.4 // indirect
+	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc2 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -184,9 +177,11 @@ require (
 	github.com/rakyll/statik v0.1.7 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	github.com/rs/cors v1.9.0 // indirect
 	github.com/rs/zerolog v1.30.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
+	github.com/spacemonkeygo/spacelog v0.0.0-20180420211403-2296661a0572 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.5.1 // indirect
@@ -248,13 +243,13 @@ require (
 replace (
 	github.com/ChainSafe/go-schnorrkel => github.com/ChainSafe/go-schnorrkel v0.0.0-20200405005733-88cbf1b4c40d
 	github.com/ChainSafe/go-schnorrkel/1 => github.com/ChainSafe/go-schnorrkel v1.0.0
-	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.29.0-sdk46.0.20221114145317-d6e67fd50956
+	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.40.0
 	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/ingenuity-build => ../../
-	github.com/ingenuity-build/quicksilver => /Users/rohitprasad/go/src/github.com/quicksilver
-	github.com/iqlusioninc/liquidity-staking-module => github.com/notional-labs/liquidity-staking-module v0.0.3-0.20230629091513-34a6c6a866df
-	//github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.37.2
-
+	github.com/ingenuity-build/quicksilver => ../../
+	github.com/iqlusioninc/liquidity-staking-module => github.com/ingenuity-build/liquidity-staking-module-v47 v0.0.3-0.20230701011038-73a81cee4189
+	//github.com/strangelove-ventures/interchaintest/v7 => github.com/notional-labs/interchaintest/v7 v7.0.0-20230808040749-159cc0cfefaa
+	// github.com/strangelove-ventures/interchaintest/v5 => github.com/aljo242/interchaintest/v5 v5.0.0-20230619200058-1d4823df8b75
+	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27
 	github.com/vedhavyas/go-subkey => github.com/strangelove-ventures/go-subkey v1.0.7
 )
