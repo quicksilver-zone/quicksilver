@@ -158,6 +158,13 @@ if [ "$qTokensInt" -eq "$qatomBal" ]; then
 else
     echo "Balance differs : uatom"
 fi
+sleep 100
+redemptionRateNew=$($QS1_EXEC q interchainstaking zones --output=json | jq .zones[0].redemption_rate -r)
+if [ "$redemptionRate" -eq "$redemptionRateNew" ]; then
+    echo "The redemption_rate are same. Some thing is wrong."
+else
+    echo "Difference in redemption_rate : All good $redemptionRate -old , $redemptionRateNew -new"
+fi
 
 #$TZ1_1_EXEC tx staking tokenize-share $VAL_VALOPER_2 36000000uatom $VAL_ADDRESS_2 --from demowallet2 --gas 400000 --chain-id $CHAINID_1 -y --keyring-backend=test   #4
 #$TZ1_2_EXEC tx bank send val3 $DEPOSIT_ACCOUNT 10000000${VAL_VALOPER_3}2 --chain-id $CHAINID_1 -y --keyring-backend=test
