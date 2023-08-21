@@ -1,12 +1,10 @@
 package ibchooks
 
 import (
-	// external libraries
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 
-	// ibc-go
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 )
@@ -23,7 +21,7 @@ type OnChanOpenInitAfterHooks interface {
 	OnChanOpenInitAfterHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID string, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, version string, finalVersion string, err error)
 }
 
-// OnChanOpenTry Hooks
+// OnChanOpenTry Hooks.
 type OnChanOpenTryOverrideHooks interface {
 	OnChanOpenTryOverride(im IBCMiddleware, ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string) (string, error)
 }
@@ -34,7 +32,7 @@ type OnChanOpenTryAfterHooks interface {
 	OnChanOpenTryAfterHook(ctx sdk.Context, order channeltypes.Order, connectionHops []string, portID, channelID string, channelCap *capabilitytypes.Capability, counterparty channeltypes.Counterparty, counterpartyVersion string, version string, err error)
 }
 
-// OnChanOpenAck Hooks
+// OnChanOpenAck Hooks.
 type OnChanOpenAckOverrideHooks interface {
 	OnChanOpenAckOverride(im IBCMiddleware, ctx sdk.Context, portID, channelID string, counterpartyChannelID string, counterpartyVersion string) error
 }
@@ -45,7 +43,7 @@ type OnChanOpenAckAfterHooks interface {
 	OnChanOpenAckAfterHook(ctx sdk.Context, portID, channelID string, counterpartyChannelID string, counterpartyVersion string, err error)
 }
 
-// OnChanOpenConfirm Hooks
+// OnChanOpenConfirm Hooks.
 type OnChanOpenConfirmOverrideHooks interface {
 	OnChanOpenConfirmOverride(im IBCMiddleware, ctx sdk.Context, portID, channelID string) error
 }
@@ -56,7 +54,7 @@ type OnChanOpenConfirmAfterHooks interface {
 	OnChanOpenConfirmAfterHook(ctx sdk.Context, portID, channelID string, err error)
 }
 
-// OnChanCloseInit Hooks
+// OnChanCloseInit Hooks.
 type OnChanCloseInitOverrideHooks interface {
 	OnChanCloseInitOverride(im IBCMiddleware, ctx sdk.Context, portID, channelID string) error
 }
@@ -67,7 +65,7 @@ type OnChanCloseInitAfterHooks interface {
 	OnChanCloseInitAfterHook(ctx sdk.Context, portID, channelID string, err error)
 }
 
-// OnChanCloseConfirm Hooks
+// OnChanCloseConfirm Hooks.
 type OnChanCloseConfirmOverrideHooks interface {
 	OnChanCloseConfirmOverride(im IBCMiddleware, ctx sdk.Context, portID, channelID string) error
 }
@@ -78,7 +76,7 @@ type OnChanCloseConfirmAfterHooks interface {
 	OnChanCloseConfirmAfterHook(ctx sdk.Context, portID, channelID string, err error)
 }
 
-// OnRecvPacket Hooks
+// OnRecvPacket Hooks.
 type OnRecvPacketOverrideHooks interface {
 	OnRecvPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress) ibcexported.Acknowledgement
 }
@@ -89,7 +87,7 @@ type OnRecvPacketAfterHooks interface {
 	OnRecvPacketAfterHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress, ack ibcexported.Acknowledgement)
 }
 
-// OnAcknowledgementPacket Hooks
+// OnAcknowledgementPacket Hooks.
 type OnAcknowledgementPacketOverrideHooks interface {
 	OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Context, packet channeltypes.Packet, acknowledgement []byte, relayer sdk.AccAddress) error
 }
@@ -111,7 +109,7 @@ type OnTimeoutPacketAfterHooks interface {
 	OnTimeoutPacketAfterHook(ctx sdk.Context, packet channeltypes.Packet, relayer sdk.AccAddress, err error)
 }
 
-// SendPacket Hooks
+// SendPacket Hooks.
 type SendPacketOverrideHooks interface {
 	SendPacketOverride(i ICS4Middleware,
 		ctx sdk.Context,
@@ -144,7 +142,7 @@ type SendPacketAfterHooks interface {
 	)
 }
 
-// WriteAcknowledgement Hooks
+// WriteAcknowledgement Hooks.
 type WriteAcknowledgementOverrideHooks interface {
 	WriteAcknowledgementOverride(i ICS4Middleware, ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, ack ibcexported.Acknowledgement) error
 }
@@ -155,7 +153,7 @@ type WriteAcknowledgementAfterHooks interface {
 	WriteAcknowledgementAfterHook(ctx sdk.Context, chanCap *capabilitytypes.Capability, packet ibcexported.PacketI, ack ibcexported.Acknowledgement, err error)
 }
 
-// GetAppVersion Hooks
+// GetAppVersion Hooks.
 type GetAppVersionOverrideHooks interface {
 	GetAppVersionOverride(i ICS4Middleware, ctx sdk.Context, portID, channelID string) (string, bool)
 }
