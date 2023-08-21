@@ -30,7 +30,7 @@ func NewEmitErrorAcknowledgement(ctx sdk.Context, err error, errorContexts ...st
 
 // MustExtractDenomFromPacketOnRecv takes a packet with a valid ICS20 token data in the Data field and returns the
 // denom as represented in the local chain.
-// If the data cannot be unmarshalled this function will panic
+// If the data cannot be unmarshalled this function will panic.
 func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
 	var data transfertypes.FungibleTokenPacketData
 	if err := json.Unmarshal(packet.GetData(), &data); err != nil {
@@ -61,7 +61,7 @@ func MustExtractDenomFromPacketOnRecv(packet ibcexported.PacketI) string {
 }
 
 // IsAckError checks an IBC acknowledgement to see if it's an error.
-// This is a replacement for ack.Success() which is currently not working on some circumstances
+// This is a replacement for ack.Success() which is currently not working on some circumstances.
 func IsAckError(acknowledgement []byte) bool {
 	var ackErr channeltypes.Acknowledgement_Error
 	if err := json.Unmarshal(acknowledgement, &ackErr); err == nil && len(ackErr.Error) > 0 {
