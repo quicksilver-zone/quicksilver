@@ -8,5 +8,5 @@ import (
 
 // RandomizedGenState generates a random GenesisState for mint.
 func RandomizedGenState(simState *module.SimulationState) {
-	//TODO: Add a randomized genesis state
+	// TODO: Add a randomized genesis state
 }

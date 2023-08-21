@@ -3,19 +3,20 @@ package ibchooks
 import (
 	"encoding/json"
 	"fmt"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/keeper"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+
 	transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 
+	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/keeper"
 	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/types"
 )
 
@@ -233,7 +234,6 @@ func (h WasmHooks) SendPacketOverride(i ICS4Middleware,
 	timeoutTimestamp uint64,
 	packetData []byte,
 ) (sequence uint64, err error) {
-
 	isIcs20, data := isIcs20Packet(packetData)
 	if !isIcs20 {
 		return i.channel.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, packetData) // continue

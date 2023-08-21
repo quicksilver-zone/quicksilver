@@ -2,14 +2,15 @@ package cli
 
 import (
 	"fmt"
-	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/keeper"
 	"strings"
+
+	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/spf13/cobra"
 
+	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/keeper"
 	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/types"
 )
 

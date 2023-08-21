@@ -33,7 +33,8 @@ func (i ICS4Middleware) SendPacket(ctx sdk.Context,
 	sourceChannel string,
 	timeoutHeight clienttypes.Height,
 	timeoutTimestamp uint64,
-	data []byte) (sequence uint64, err error) {
+	data []byte,
+) (sequence uint64, err error) {
 	if hook, ok := i.Hooks.(SendPacketOverrideHooks); ok {
 		return hook.SendPacketOverride(i, ctx, channelCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 	}
