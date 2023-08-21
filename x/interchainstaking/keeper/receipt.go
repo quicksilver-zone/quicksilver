@@ -202,6 +202,10 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 	}
 
 	switch {
+	case zone.IsSubzone(): // always send coins to the authority if a subzone
+		subzoneAuth, _ := sdk.AccAddressFromBech32(zone.SubzoneInfo.Authority)
+		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, subzoneAuth, qAssets)
+
 	case zone.ReturnToSender || memoRTS:
 		err = k.SendTokenIBC(ctx, k.AccountKeeper.GetModuleAddress(types.ModuleName), senderAddress, zone, qAssets[0])
 
@@ -215,7 +219,6 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, mappedAddress, qAssets)
 	default:
 		err = k.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, qAssets)
-
 	}
 
 	if err != nil {
@@ -311,13 +314,13 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []proto.Message, account *types.
 
 // ---------------------------------------------------------------
 
-func (k Keeper) NilReceipt(ctx sdk.Context, zone *types.Zone, txhash string) {
+func (k *Keeper) NilReceipt(ctx sdk.Context, zone *types.Zone, txhash string) {
 	t := ctx.BlockTime()
 	r := types.Receipt{ChainId: zone.ZoneID(), Sender: "", Txhash: txhash, Amount: sdk.Coins{}, FirstSeen: &t, Completed: &t}
 	k.SetReceipt(ctx, r)
 }
 
-func (k Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
+func (k *Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
 	t := ctx.BlockTime()
 	return &types.Receipt{ChainId: zone.ZoneID(), Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t}
 }

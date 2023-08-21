@@ -16,7 +16,7 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
 		app := suite.GetQuicksilverApp(suite.chainA)
 		ctx := suite.chainA.GetContext()
 
-		zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		zone, found := app.InterchainstakingKeeper.GetZone(ctx, testzoneID)
 		suite.True(found)
 
 		validator := addressutils.GenerateValAddressForTest()

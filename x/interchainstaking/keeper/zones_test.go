@@ -65,7 +65,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 	require.Equal(t, zone, gotZone, "Expecting the stored zone")
 
 	// 3. Delete the zone then try to retrieve it.
-	kpr.DeleteZone(ctx, chainID)
+	kpr.DeleteZone(ctx, &zone)
 	zone, ok = kpr.GetZone(ctx, chainID)
 	require.False(t, ok, "No zone stored anymore in the keeper")
 	require.Equal(t, types.Zone{}, zone, "Expecting the blank zone")

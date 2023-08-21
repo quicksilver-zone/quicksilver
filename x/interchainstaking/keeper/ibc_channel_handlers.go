@@ -11,9 +11,7 @@ import (
 )
 
 func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID string) error {
-	// TODO: how to handle for subzone
-
-	chainID, err := k.GetChainID(ctx, connectionID)
+	zoneID, err := k.GetZoneIDFromPortConnection(ctx, portID, connectionID)
 	if err != nil {
 		ctx.Logger().Error(
 			"unable to obtain chain for given connection and port",
@@ -25,9 +23,9 @@ func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID stri
 	}
 
 	// get zone
-	zone, found := k.GetZone(ctx, chainID)
+	zone, found := k.GetZone(ctx, zoneID)
 	if !found {
-		err := fmt.Errorf("unable to obtain zone for chainID %s", chainID)
+		err := fmt.Errorf("unable to obtain zone for zoneID %s", zoneID)
 		ctx.Logger().Error(err.Error())
 		return err
 	}
