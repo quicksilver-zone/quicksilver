@@ -321,7 +321,7 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		"{\"ibc_lifecycle_complete\": {\"ibc_ack\": {\"channel\": %q, \"sequence\": %d, \"ack\": %s, \"success\": %s}}}",
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": %q, "sequence": %d, "ack": %s, "success": %s}}}`,
 		packet.SourceChannel, packet.Sequence, ackAsJSON, success))
 	_, err = h.keeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
