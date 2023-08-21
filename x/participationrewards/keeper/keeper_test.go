@@ -207,7 +207,7 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver.IBCKeeper.ClientKeeper.SetClientState(suite.chainA.GetContext(), "07-tendermint-0", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
 
 	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(suite.chainA.GetContext(), "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: suite.chainA.GetContext().BlockTime()})
-	suite.NoError(suite.setupChannelForICA(suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
+	suite.NoError(suite.setupChannelForICA(suite.chainA.GetContext(), suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "performance", testzone.AccountPrefix))
 
 	vals := suite.GetQuicksilverApp(suite.chainB).StakingKeeper.GetBondedValidatorsByPower(suite.chainB.GetContext())
 	zone, found := quicksilver.InterchainstakingKeeper.GetZone(suite.chainA.GetContext(), suite.chainB.ChainID)
@@ -343,26 +343,27 @@ func (suite *KeeperTestSuite) setupTestZones() {
 	quicksilver.InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zoneOsmosis)
 }
 
-func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountSuffix, remotePrefix string) error {
+func (suite *KeeperTestSuite) setupChannelForICA(ctx sdk.Context, zoneID, connectionID, accountSuffix, remotePrefix string) error {
 	suite.T().Helper()
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 
 	ibcModule := ics.NewIBCModule(quicksilver.InterchainstakingKeeper)
-	portID, err := icatypes.NewControllerPortID(chainID + "." + accountSuffix)
+	portID, err := icatypes.NewControllerPortID(zoneID + "." + accountSuffix)
 	if err != nil {
 		return err
 	}
 
-	quicksilver.InterchainstakingKeeper.SetConnectionForPort(suite.chainA.GetContext(), connectionID, portID)
+	quicksilver.InterchainstakingKeeper.SetConnectionForPort(ctx, connectionID, portID)
+	quicksilver.InterchainstakingKeeper.SetZoneIDForPortConnection(ctx, portID, connectionID, zoneID)
 
 	channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(suite.chainA.GetContext())
-	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(suite.chainA.GetContext(), portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: portID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
+	quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctx, portID, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: portID, ChannelId: channelID}, ConnectionHops: []string{connectionID}})
 
-	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(suite.chainA.GetContext(), portID, channelID, 1)
-	quicksilver.ICAControllerKeeper.SetActiveChannelID(suite.chainA.GetContext(), connectionID, portID, channelID)
+	quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctx, portID, channelID, 1)
+	quicksilver.ICAControllerKeeper.SetActiveChannelID(ctx, connectionID, portID, channelID)
 
 	chanCapName := host.ChannelCapabilityPath(portID, channelID)
-	capability, err := quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+	capability, err := quicksilver.ScopedIBCKeeper.NewCapability(
 		suite.chainA.GetContext(),
 		chanCapName,
 	)
@@ -373,13 +374,9 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	if err != nil {
 		return err
 	}
-	err = quicksilver.ScopedIBCKeeper.ClaimCapability(suite.chainA.GetContext(), capability, chanCapName)
-	if err != nil {
-		return err
-	}
 
 	portPathName := host.PortPath(portID)
-	capability, err = quicksilver.InterchainstakingKeeper.ScopedKeeper().NewCapability(
+	capability, err = quicksilver.ScopedIBCKeeper.NewCapability(
 		suite.chainA.GetContext(),
 		portPathName,
 	)
@@ -392,8 +389,8 @@ func (suite *KeeperTestSuite) setupChannelForICA(chainID, connectionID, accountS
 	}
 
 	addr := addressutils.GenerateAddressForTestWithPrefix(remotePrefix)
-	quicksilver.ICAControllerKeeper.SetInterchainAccountAddress(suite.chainA.GetContext(), connectionID, portID, addr)
-	return ibcModule.OnChanOpenAck(suite.chainA.GetContext(), portID, channelID, "", "")
+	quicksilver.ICAControllerKeeper.SetInterchainAccountAddress(ctx, connectionID, portID, addr)
+	return ibcModule.OnChanOpenAck(ctx, portID, channelID, "", "")
 }
 
 func (suite *KeeperTestSuite) setupTestProtocolData() {
@@ -481,14 +478,9 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 	suite.addProtocolData(
 		types.ProtocolDataTypeCrescentPool,
 		[]byte(fmt.Sprintf(
-			"{\"poolid\":%d,\"denoms\":{%q:{\"chainid\": %q, \"denom\":%q}, %q:{\"chainid\": %q, \"denom\":%q}}}",
+			"{\"poolid\":%d, \"denom\":%q}",
 			1,
 			cosmosIBCDenom,
-			"cosmoshub-4",
-			"uatom",
-			osmosisIBCDenom,
-			"osmosis-1",
-			"uosmo",
 		)),
 	)
 	// crescent-types test supply
@@ -498,7 +490,7 @@ func (suite *KeeperTestSuite) setupTestProtocolData() {
 		cpd,
 	)
 	// crescent-types reserve address balance
-	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testAddress, Denom: cosmosIBCDenom})
+	cpd, _ = json.Marshal(types.CrescentReserveAddressBalanceProtocolData{ReserveAddress: testCrescentAddress, Denom: cosmosIBCDenom})
 	suite.addProtocolData(
 		types.ProtocolDataTypeCrescentReserveAddressBalance,
 		cpd,

@@ -17,6 +17,7 @@ import (
 	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
 	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+	"github.com/ingenuity-build/quicksilver/utils"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
@@ -316,6 +317,36 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"",
 		},
 		{
+			"valid_osmosis_unbonded_gamm",
+			func() {
+				userAddress := addressutils.GenerateAccAddressForTest()
+				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
+				bankkey = append(bankkey, []byte("gamm/1")...)
+
+				cd := math.NewInt(10000000)
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: userAddress.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "osmosis-1",
+					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       bankkey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    0,
+							ProofType: types.ProofTypeBank,
+						},
+					},
+				}
+			},
+			&types.MsgSubmitClaimResponse{},
+			"",
+		},
+		{
 			"valid_liquid",
 			func() {
 				address := addressutils.GenerateAccAddressForTest()
@@ -383,6 +414,8 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			"valid_umee",
 			func() {
 				address := addressutils.GenerateAccAddressForTest()
+
+				userAddress, _ := addressutils.EncodeAddressToBech32("umee", address)
 				bankkey := banktypes.CreateAccountBalancesPrefix(address)
 				bankkey = append(bankkey, []byte("u/uumee")...)
 
@@ -393,7 +426,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				suite.NoError(err)
 
 				msg = types.MsgSubmitClaim{
-					UserAddress: address.String(),
+					UserAddress: userAddress,
 					Zone:        "cosmoshub-4",
 					SrcZone:     "testchain1-1",
 					ClaimType:   cmtypes.ClaimTypeUmeeToken,
@@ -422,8 +455,9 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 			name: "valid_crescent",
 			malleate: func() {
 				prk := suite.GetQuicksilverApp(suite.chainA).ParticipationRewardsKeeper
-				userAddress := addressutils.GenerateAccAddressForTest()
-				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", userAddress)
+				testAddr := addressutils.GenerateAccAddressForTest()
+				crescentAddress := addressutils.MustEncodeAddressToBech32("cre", testAddr)
+				userAddress := addressutils.MustEncodeAddressToBech32("quick", testAddr)
 
 				addr, _ := sdk.GetFromBech32(crescentAddress, "cre")
 
@@ -434,7 +468,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				suite.Require().NoError(err)
 
 				msg = types.MsgSubmitClaim{
-					UserAddress: userAddress.String(),
+					UserAddress: userAddress,
 					Zone:        "cosmoshub-4",
 					SrcZone:     "testchain1-1",
 					ClaimType:   cmtypes.ClaimTypeCrescentPool,
@@ -445,6 +479,35 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
 							ProofType: types.ProofTypePosition,
+						},
+					},
+				}
+			},
+			want: &types.MsgSubmitClaimResponse{},
+		},
+		{
+			name: "valid_crescent_unbonded_pool_coin",
+			malleate: func() {
+				userAddress := addressutils.GenerateAccAddressForTest()
+				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
+				bankkey = append(bankkey, []byte("pool1")...)
+
+				cd := math.NewInt(1000)
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: userAddress.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeCrescentPool,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       bankkey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: types.ProofTypeBank,
 						},
 					},
 				}

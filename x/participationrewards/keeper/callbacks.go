@@ -8,15 +8,15 @@ import (
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 const (
@@ -509,7 +509,11 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 		return err
 	}
 
-	address := addr.String()
+	address, err := addressutils.EncodeAddressToBech32("cre", addr)
+	if err != nil {
+		return err
+	}
+
 	balanceCoin, err := bankkeeper.UnmarshalBalanceCompat(k.cdc, response, denom)
 	if err != nil {
 		return err
@@ -521,7 +525,7 @@ func CrescentReserveBalanceUpdateCallback(ctx sdk.Context, k *Keeper, response [
 		return errors.New("CrescentReserveAddress account balance cannot be negative")
 	}
 
-	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, address+denom)
+	data, ok := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentReserveAddressBalance, fmt.Sprintf("%s_%s", address, denom))
 	if !ok {
 		return fmt.Errorf("unable to find protocol data for crescent-types reserve address coins/%s, %s", address, denom)
 	}

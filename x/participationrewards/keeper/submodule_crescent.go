@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 
@@ -121,21 +124,42 @@ func (c CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 	var amount uint64
 	for _, proof := range msg.Proofs {
 		position := lpfarm.Position{}
-		err := k.cdc.Unmarshal(proof.Data, &position)
+		if proof.ProofType == types.ProofTypeBank {
+			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
+			if err != nil {
+				return 0, err
+			}
+			coin, err := keeper.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
+			if err != nil {
+				return 0, err
+			}
+			address, err := addressutils.EncodeAddressToBech32("cre", addr)
+			if err != nil {
+				return 0, err
+			}
+			position = lpfarm.Position{
+				Farmer:        address,
+				Denom:         coin.GetDenom(),
+				FarmingAmount: coin.Amount,
+			}
+		} else {
+			err := k.cdc.Unmarshal(proof.Data, &position)
+			if err != nil {
+				return 0, err
+			}
+		}
+
+		farmer, err := addressutils.AccAddressFromBech32(position.Farmer, "")
 		if err != nil {
 			return 0, err
 		}
 
-		_, farmer, err := bech32.DecodeAndConvert(position.Farmer)
-		if err != nil {
-			return 0, err
-		}
-
-		if sdk.AccAddress(farmer).String() != msg.UserAddress {
+		user, _ := addressutils.AccAddressFromBech32(msg.UserAddress, "")
+		if !farmer.Equals(user) {
 			return 0, errors.New("not a valid proof for submitting user")
 		}
 
-		sdkAmount, err := crescenttypes.DetermineApplicableTokensInPool(ctx, k, position, msg.Zone)
+		sdkAmount, err := crescenttypes.DetermineApplicableTokensInPool(ctx, k, position)
 		if err != nil {
 			return 0, err
 		}

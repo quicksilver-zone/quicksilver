@@ -3,10 +3,7 @@ package types
 import (
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
-
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 
 	"cosmossdk.io/math"
 
@@ -14,12 +11,13 @@ import (
 
 	"github.com/ingenuity-build/multierror"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 type CrescentPoolProtocolData struct {
 	PoolID      uint64
-	Denoms      map[string]DenomWithZone
+	Denom       string
 	PoolData    json.RawMessage
 	LastUpdated time.Time
 }
@@ -31,23 +29,8 @@ func (cpd *CrescentPoolProtocolData) ValidateBasic() error {
 		errs["PoolId"] = ErrUndefinedAttribute
 	}
 
-	i := 0
-	for _, ibcdenom := range utils.Keys(cpd.Denoms) {
-		el := fmt.Sprintf("Denoms[%s]", ibcdenom)
-
-		if cpd.Denoms[ibcdenom].ChainID == "" || len(strings.Split(cpd.Denoms[ibcdenom].ChainID, "-")) < 2 {
-			errs[el+" key"] = fmt.Errorf("%w, chainID", ErrInvalidChainID)
-		}
-
-		if cpd.Denoms[ibcdenom].Denom == "" || sdk.ValidateDenom(cpd.Denoms[ibcdenom].Denom) != nil {
-			errs[el+" value"] = fmt.Errorf("%w, IBC/denom", ErrInvalidDenom)
-		}
-
-		i++
-	}
-
-	if i == 0 {
-		errs["Denoms"] = ErrUndefinedAttribute
+	if err := sdk.ValidateDenom(cpd.Denom); err != nil {
+		errs["Denom"] = ErrInvalidDenom
 	}
 
 	if len(errs) > 0 {
@@ -85,7 +68,7 @@ func (crd CrescentReserveAddressBalanceProtocolData) ValidateBasic() error {
 	if crd.ReserveAddress == "" {
 		errs["ReserveAddress"] = ErrUndefinedAttribute
 	}
-	if _, err := sdk.AccAddressFromBech32(crd.ReserveAddress); err != nil {
+	if _, err := addressutils.AccAddressFromBech32(crd.ReserveAddress, ""); err != nil {
 		errs["ReserveAddress"] = ErrInvalidBech32
 	}
 	if err := sdk.ValidateDenom(crd.Denom); err != nil {
@@ -99,7 +82,7 @@ func (crd CrescentReserveAddressBalanceProtocolData) ValidateBasic() error {
 }
 
 func (crd CrescentReserveAddressBalanceProtocolData) GenerateKey() []byte {
-	return []byte(crd.ReserveAddress + crd.Denom)
+	return []byte(fmt.Sprintf("%s_%s", crd.ReserveAddress, crd.Denom))
 }
 
 func (crd CrescentReserveAddressBalanceProtocolData) GetBalance() (math.Int, error) {

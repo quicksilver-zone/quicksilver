@@ -18,7 +18,6 @@ HTTPS_GIT := https://github.com/ingenuity-build/quicksilver.git
 
 DOCKER := $(shell which docker)
 DOCKERCOMPOSE := $(shell which docker-compose)
-DOCKER_BUF := $(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace bufbuild/buf
 COMMIT_HASH := $(shell git rev-parse --short=7 HEAD)
 DOCKER_TAG := $(COMMIT_HASH)
 
@@ -354,6 +353,10 @@ vet:
 # Executes basic chain tests via interchaintest
 ictest-basic: ictest-deps
 	@cd test/interchaintest && go test -v -run TestBasicQuicksilverStart .
+
+# Executes register-zone tests via interchaintest
+ictest-rz: 
+	@cd test/interchaintest && go test -v -run TestRegisterZone .
 
 # Executes a basic chain upgrade test via interchaintest
 ictest-upgrade: ictest-deps

@@ -159,6 +159,11 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (AppModule) GenerateGenesisState(_ *module.SimulationState) {
 }
 
+// ProposalContents doesn't return any content functions for governance proposals.
+func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return nil
+}
+
 // RegisterStoreDecoder registers a decoder for mint module's types.
 func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 }

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -17,8 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -38,7 +38,6 @@ import (
 type Keeper struct {
 	cdc                 codec.Codec
 	storeKey            storetypes.StoreKey
-	scopedKeeper        *capabilitykeeper.ScopedKeeper
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICQKeeper           interchainquerykeeper.Keeper
 	AccountKeeper       types.AccountKeeper
@@ -46,6 +45,7 @@ type Keeper struct {
 	IBCKeeper           *ibckeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 	ClaimsManagerKeeper types.ClaimsManagerKeeper
+	EpochsKeeper        types.EpochsKeeper
 	Ir                  codectypes.InterfaceRegistry
 	hooks               types.IcsHooks
 	paramStore          paramtypes.Subspace
@@ -61,7 +61,6 @@ func NewKeeper(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	icaControllerKeeper icacontrollerkeeper.Keeper,
-	scopedKeeper *capabilitykeeper.ScopedKeeper,
 	icqKeeper interchainquerykeeper.Keeper,
 	ibcKeeper *ibckeeper.Keeper,
 	transferKeeper ibctransferkeeper.Keeper,
@@ -89,7 +88,6 @@ func NewKeeper(
 	return &Keeper{
 		cdc:                 cdc,
 		storeKey:            storeKey,
-		scopedKeeper:        scopedKeeper,
 		ICAControllerKeeper: icaControllerKeeper,
 		ICQKeeper:           icqKeeper,
 		BankKeeper:          bankKeeper,
@@ -120,6 +118,10 @@ func (k *Keeper) GetGovAuthority() string {
 	return k.authority
 }
 
+func (k *Keeper) SetEpochsKeeper(epochsKeeper types.EpochsKeeper) {
+	k.EpochsKeeper = epochsKeeper
+}
+
 // Logger returns a module-specific logger.
 func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
@@ -127,15 +129,6 @@ func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
 
 func (k *Keeper) GetCodec() codec.Codec {
 	return k.cdc
-}
-
-func (k *Keeper) ScopedKeeper() *capabilitykeeper.ScopedKeeper {
-	return k.scopedKeeper
-}
-
-// ClaimCapability claims the channel capability passed via the OnOpenChanInit callback.
-func (k *Keeper) ClaimCapability(ctx sdk.Context, capability *capabilitytypes.Capability, name string) error {
-	return k.scopedKeeper.ClaimCapability(ctx, capability, name)
 }
 
 func (k *Keeper) SetConnectionForPort(ctx sdk.Context, connectionID, port string) {
@@ -430,7 +423,25 @@ func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramStore.SetParamSet(ctx, &params)
 }
 
-func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
+func (k *Keeper) SetZoneIDForPortConnection(ctx sdk.Context, portID, connectionID, zoneID string) {
+	key := fmt.Sprintf("%s-%s", portID, connectionID)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortConnectionZone)
+	bz := []byte(zoneID)
+	store.Set([]byte(key), bz)
+}
+
+func (k *Keeper) GetZoneIDFromPortConnection(ctx sdk.Context, portID, connectionID string) (string, error) {
+	key := fmt.Sprintf("%s-%s", portID, connectionID)
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixPortConnectionZone)
+	bz := store.Get([]byte(key))
+	if len(bz) == 0 {
+		return "", fmt.Errorf("unable to find zone for port connection %s-%s", portID, connectionID)
+	}
+
+	return string(bz), nil
+}
+
+func (k *Keeper) GetChainIDFromConnection(ctx sdk.Context, connectionID string) (string, error) {
 	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 	if !found {
 		return "", fmt.Errorf("invalid connection id, \"%s\" not found", connectionID)
@@ -453,7 +464,7 @@ func (k *Keeper) GetChainIDFromContext(ctx sdk.Context) (string, error) {
 		return "", errors.New("connectionID not in context")
 	}
 
-	return k.GetChainID(ctx, connectionID.(string))
+	return k.GetChainIDFromConnection(ctx, connectionID.(string))
 }
 
 func (k *Keeper) EmitPerformanceBalanceQuery(ctx sdk.Context, zone *types.Zone) error {
@@ -669,7 +680,7 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, types.EpochRebalanceMemo(epochNumber), zone.MessagesPerTx)
 }
 
-// UnmarshalValidatorsResponse attempts to umarshal  a byte slice into a QueryValidatorsResponse.
+// UnmarshalValidatorsResponse attempts to unmarshal  a byte slice into a QueryValidatorsResponse.
 func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryValidatorsResponse, error) {
 	validatorsRes := stakingtypes.QueryValidatorsResponse{}
 	if len(data) == 0 {
@@ -683,7 +694,7 @@ func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryVal
 	return validatorsRes, nil
 }
 
-// UnmarshalValidatorsRequest attempts to umarshal a byte slice into a QueryValidatorsRequest.
+// UnmarshalValidatorsRequest attempts to unmarshal a byte slice into a QueryValidatorsRequest.
 func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
 	validatorsReq := stakingtypes.QueryValidatorsRequest{}
 	err := k.cdc.Unmarshal(data, &validatorsReq)
@@ -694,7 +705,7 @@ func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryVali
 	return validatorsReq, nil
 }
 
-// UnmarshalValidator attempts to umarshal  a byte slice into a Validator.
+// UnmarshalValidator attempts to unmarshal  a byte slice into a Validator.
 func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error) {
 	validator := stakingtypes.Validator{}
 	if len(data) == 0 {
@@ -706,4 +717,27 @@ func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error)
 	}
 
 	return validator, nil
+}
+
+func (k *Keeper) registerInterchainAccount(ctx sdk.Context, zone *types.Zone, counterpartyConnectionID, portOwner string) error {
+	appVersion := string(icatypes.ModuleCdc.MustMarshalJSON(&icatypes.Metadata{
+		Version:                icatypes.Version,
+		ControllerConnectionId: zone.ConnectionId,
+		HostConnectionId:       counterpartyConnectionID,
+		Encoding:               icatypes.EncodingProtobuf,
+		TxType:                 icatypes.TxTypeSDKMultiMsg,
+	}))
+
+	if err := k.ICAControllerKeeper.RegisterInterchainAccount(ctx, zone.ConnectionId, portOwner, appVersion); err != nil {
+		return err
+	}
+	portID, err := icatypes.NewControllerPortID(portOwner)
+	if err != nil {
+		return err
+	}
+
+	k.SetConnectionForPort(ctx, zone.ConnectionId, portID)
+	k.SetZoneIDForPortConnection(ctx, portID, zone.ConnectionId, zone.ZoneID())
+
+	return nil
 }
