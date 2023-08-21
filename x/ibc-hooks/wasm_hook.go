@@ -134,7 +134,7 @@ func (h WasmHooks) execWasmMsg(ctx sdk.Context, execMsg *wasmtypes.MsgExecuteCon
 
 func isIcs20Packet(data []byte) (isIcs20 bool, ics20data transfertypes.FungibleTokenPacketData) {
 	var packetData transfertypes.FungibleTokenPacketData
-	if err := json.Unmarshal(data, &data); err != nil {
+	if err := json.Unmarshal(data, &packetData); err != nil {
 		return false, packetData
 	}
 	return true, packetData
@@ -146,7 +146,7 @@ func jsonStringHasKey(memo, key string) (found bool, jsonObject map[string]inter
 
 	// If there is no memo, the packet was either sent with an earlier version of IBC, or the memo was
 	// intentionally left blank. Nothing to do here. Ignore the packet and pass it down the stack.
-	if len(memo) == 0 {
+	if memo == "" {
 		return false, jsonObject
 	}
 
@@ -314,15 +314,15 @@ func (h WasmHooks) OnAcknowledgementPacketOverride(im IBCMiddleware, ctx sdk.Con
 	}
 
 	// Notify the sender that the ack has been received
-	ackAsJson, err := json.Marshal(acknowledgement)
+	ackAsJSON, err := json.Marshal(acknowledgement)
 	if err != nil {
 		// If the ack is not a json object, error
 		return err
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": "%s", "sequence": %d, "ack": %s, "success": %s}}}`,
-		packet.SourceChannel, packet.Sequence, ackAsJson, success))
+		`{"ibc_lifecycle_complete": {"ibc_ack": {"channel": %q, "sequence": %d, "ack": %s, "success": %s}}}`,
+		packet.SourceChannel, packet.Sequence, ackAsJSON, success))
 	_, err = h.keeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
 		// error processing the callback
@@ -356,7 +356,7 @@ func (h WasmHooks) OnTimeoutPacketOverride(im IBCMiddleware, ctx sdk.Context, pa
 	}
 
 	sudoMsg := []byte(fmt.Sprintf(
-		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": "%s", "sequence": %d}}}`,
+		`{"ibc_lifecycle_complete": {"ibc_timeout": {"channel": %q, "sequence": %d}}}`,
 		packet.SourceChannel, packet.Sequence))
 	_, err = h.keeper.Sudo(ctx, contractAddr, sudoMsg)
 	if err != nil {
