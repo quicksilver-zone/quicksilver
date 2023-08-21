@@ -1,12 +1,10 @@
 package ibchooks
 
 import (
-	// external libraries
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 
-	// ibc-go
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
@@ -26,7 +24,7 @@ func NewIBCMiddleware(app porttypes.IBCModule, ics4 *ICS4Middleware) IBCMiddlewa
 	}
 }
 
-// OnChanOpenInit implements the IBCMiddleware interface
+// OnChanOpenInit implements the IBCMiddleware interface.
 func (im IBCMiddleware) OnChanOpenInit(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -53,7 +51,7 @@ func (im IBCMiddleware) OnChanOpenInit(
 	return version, err
 }
 
-// OnChanOpenTry implements the IBCMiddleware interface
+// OnChanOpenTry implements the IBCMiddleware interface.
 func (im IBCMiddleware) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -80,7 +78,7 @@ func (im IBCMiddleware) OnChanOpenTry(
 	return version, err
 }
 
-// OnChanOpenAck implements the IBCMiddleware interface
+// OnChanOpenAck implements the IBCMiddleware interface.
 func (im IBCMiddleware) OnChanOpenAck(
 	ctx sdk.Context,
 	portID,
@@ -103,7 +101,7 @@ func (im IBCMiddleware) OnChanOpenAck(
 	return err
 }
 
-// OnChanOpenConfirm implements the IBCMiddleware interface
+// OnChanOpenConfirm implements the IBCMiddleware interface.
 func (im IBCMiddleware) OnChanOpenConfirm(
 	ctx sdk.Context,
 	portID,
@@ -123,7 +121,7 @@ func (im IBCMiddleware) OnChanOpenConfirm(
 	return err
 }
 
-// OnChanCloseInit implements the IBCMiddleware interface
+// OnChanCloseInit implements the IBCMiddleware interface.
 func (im IBCMiddleware) OnChanCloseInit(
 	ctx sdk.Context,
 	portID,
@@ -145,7 +143,7 @@ func (im IBCMiddleware) OnChanCloseInit(
 	return err
 }
 
-// OnChanCloseConfirm implements the IBCMiddleware interface
+// OnChanCloseConfirm implements the IBCMiddleware interface.
 func (im IBCMiddleware) OnChanCloseConfirm(
 	ctx sdk.Context,
 	portID,
@@ -167,7 +165,7 @@ func (im IBCMiddleware) OnChanCloseConfirm(
 	return err
 }
 
-// OnRecvPacket implements the IBCMiddleware interface
+// OnRecvPacket implements the IBCMiddleware interface.
 func (im IBCMiddleware) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -190,7 +188,7 @@ func (im IBCMiddleware) OnRecvPacket(
 	return ack
 }
 
-// OnAcknowledgementPacket implements the IBCMiddleware interface
+// OnAcknowledgementPacket implements the IBCMiddleware interface.
 func (im IBCMiddleware) OnAcknowledgementPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -213,7 +211,7 @@ func (im IBCMiddleware) OnAcknowledgementPacket(
 	return err
 }
 
-// OnTimeoutPacket implements the IBCMiddleware interface
+// OnTimeoutPacket implements the IBCMiddleware interface.
 func (im IBCMiddleware) OnTimeoutPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,
@@ -234,7 +232,7 @@ func (im IBCMiddleware) OnTimeoutPacket(
 	return err
 }
 
-// SendPacket implements the ICS4 Wrapper interface
+// SendPacket implements the ICS4 Wrapper interface.
 func (im IBCMiddleware) SendPacket(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
@@ -247,7 +245,7 @@ func (im IBCMiddleware) SendPacket(
 	return im.ICS4Middleware.SendPacket(ctx, chanCap, sourcePort, sourceChannel, timeoutHeight, timeoutTimestamp, data)
 }
 
-// WriteAcknowledgement implements the ICS4 Wrapper interface
+// WriteAcknowledgement implements the ICS4 Wrapper interface.
 func (im IBCMiddleware) WriteAcknowledgement(
 	ctx sdk.Context,
 	chanCap *capabilitytypes.Capability,
