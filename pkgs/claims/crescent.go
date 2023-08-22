@@ -118,21 +118,80 @@ func CrescentClaim(
 	fmt.Println("got relevant pools...")
 
 	var errors map[string]error
+	var poolCoinDenom string
 
-OUTER:
-	for _, position := range positionsQueryResponse.Positions {
-		for _, cpd := range poolsManager.Get(ctx) {
-			if fmt.Sprintf("pool%d", cpd.PoolID) != position.Denom {
-				continue
+	for _, cpd := range poolsManager.Get(ctx) {
+		fmt.Printf("checking account for pool%d...\n", cpd.PoolID)
+		poolCoinDenom = fmt.Sprintf("pool%d", cpd.PoolID)
+		tuple, ok := tokens[cpd.Denom]
+		if !ok {
+			fmt.Println("not dealing with token for chain", tuple.chain, cpd.Denom)
+			// token is not present in list of allowed tokens, ignore.
+			continue
+		}
+		// fetching unbonded gamm tokens from account
+		accountPrefix := banktypes.CreateAccountBalancesPrefix(addrBytes)
+		lookupKey := append(accountPrefix, []byte(poolCoinDenom)...)
+
+		bankQuery, err := client.ABCIQueryWithOptions(
+			ctx, "/store/bank/key",
+			lookupKey,
+			rpcclient.ABCIQueryOptions{Height: abciquery.Response.Height, Prove: true},
+		)
+		fmt.Println("Querying for value", "prefix", accountPrefix, "denom", poolCoinDenom) // debug?
+		// 9:
+		err = failsim.FailureHook(failures, 7, err, fmt.Sprintf("unable to query for value of denom %q on %q", poolCoinDenom, chain))
+		if err != nil {
+			return nil, nil, err
+		}
+
+		amount, err := bankkeeper.UnmarshalBalanceCompat(marshaler, bankQuery.Response.Value, poolCoinDenom)
+		if err != nil {
+			return nil, nil, err
+		}
+		// 10:
+		err = failsim.FailureHook(failures, 8, err, fmt.Sprintf("ABCIQuery: value of denom %q on chain %q", poolCoinDenom, chain))
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if amount.IsZero() {
+			fmt.Println("no unbonded tokens found for denom: " + poolCoinDenom)
+		} else {
+			fmt.Printf("found assets in bank account for zone %q...\n", tuple.chain)
+			if _, ok := msg[tuple.chain]; !ok {
+				msg[tuple.chain] = prewards.MsgSubmitClaim{
+					UserAddress: address,
+					Zone:        tuple.chain,
+					SrcZone:     chain,
+					ClaimType:   cmtypes.ClaimTypeCrescentPool,
+					Proofs:      make([]*cmtypes.Proof, 0),
+				}
 			}
 
-			tuple, ok := tokens[cpd.Denom]
-			if !ok {
-				fmt.Println("not dealing with token for chain", tuple.chain, cpd.Denom)
-				// token is not present in list of allowed tokens, ignore.
-				continue
+			if _, ok := assets[chain]; !ok {
+				assets[chain] = sdk.Coins{}
 			}
 
+			assets[chain] = assets[chain].Add(amount)
+
+			chainMsg := msg[tuple.chain]
+
+			proof := cmtypes.Proof{
+				Data:      bankQuery.Response.Value,
+				Key:       bankQuery.Response.Key,
+				ProofOps:  bankQuery.Response.ProofOps,
+				Height:    bankQuery.Response.Height,
+				ProofType: prewards.ProofTypeBank,
+			}
+
+			chainMsg.Proofs = append(chainMsg.Proofs, &proof)
+			msg[tuple.chain] = chainMsg
+		}
+		for _, position := range positionsQueryResponse.Positions {
+			if poolCoinDenom != position.Denom {
+				continue
+			}
 			if _, ok := msg[tuple.chain]; !ok {
 				msg[tuple.chain] = prewards.MsgSubmitClaim{
 					UserAddress: address,
@@ -302,7 +361,7 @@ OUTER:
 			chainMsg.Proofs = append(chainMsg.Proofs, &proof)
 			fmt.Println("obtained relevant proofs...")
 			msg[tuple.chain] = chainMsg
-			continue OUTER
+			break
 		}
 	}
 
