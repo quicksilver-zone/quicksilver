@@ -162,7 +162,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: address.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     "testchain1-1",
 					ClaimType:   cmtypes.ClaimTypeUmeeToken,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -196,7 +196,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     "testchain1-1",
 					ClaimType:   cmtypes.ClaimTypeCrescentPool,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -230,7 +230,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     "testchain1-1",
 					ClaimType:   cmtypes.ClaimTypeCrescentPool,
 					Proofs: []*cmtypes.Proof{
 						{
@@ -264,7 +264,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 				msg = types.MsgSubmitClaim{
 					UserAddress: userAddress.String(),
 					Zone:        "cosmoshub-4",
-					SrcZone:     "testchain1",
+					SrcZone:     "testchain1-1",
 					ClaimType:   cmtypes.ClaimTypeCrescentPool,
 					Proofs: []*cmtypes.Proof{
 						{
