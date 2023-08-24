@@ -49,13 +49,13 @@ message Zone {
     (gogoproto.nullable) = false
   ];
   int64 unbonding_period = 22 [
-    (gogoproto.jsontag) = "validator_selection_allocation,string,omitempty"
+    (gogoproto.jsontag) = "unbonding_period,string,omitempty"
   ];
   int64 messages_per_tx = 23 [
-    (gogoproto.jsontag) = "validator_selection_allocation,string,omitempty"
+    (gogoproto.jsontag) = "messages_per_tx,string,omitempty"
   ];
   int64 decimals = 24 [
-    (gogoproto.jsontag) = "validator_selection_allocation,string,omitempty"
+    (gogoproto.jsontag) = "decimals,string,omitempty"
   ];
   bool unbonding_enabled = 25;
   bool deposits_enabled = 26;
