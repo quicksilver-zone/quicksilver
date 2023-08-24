@@ -34,17 +34,29 @@ message Zone {
   bool liquidity_module = 15;
   uint32 withdrawal_waitgroup = 16;
   bytes ibc_next_validators_hash = 17;
-  uint64 validator_selection_allocation = 18;
-  uint64 holdings_allocation = 19;
-  int64 last_epoch_height = 20; // deprecated
+  uint64 validator_selection_allocation = 18 [
+    (gogoproto.jsontag) = "validator_selection_allocation,string,omitempty"
+  ];
+  uint64 holdings_allocation = 19[
+    (gogoproto.jsontag) = "holdings_allocation,string,omitempty"
+  ];
+  int64 last_epoch_height = 20 [
+    (gogoproto.jsontag) = "last_epoch_height,string,omitempty"
+  ]; // deprecated
   string tvl = 21 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
-  int64 unbonding_period = 22;
-  int64 messages_per_tx = 23;
-  int64 decimals = 24;
+  int64 unbonding_period = 22 [
+    (gogoproto.jsontag) = "validator_selection_allocation,string,omitempty"
+  ];
+  int64 messages_per_tx = 23 [
+    (gogoproto.jsontag) = "validator_selection_allocation,string,omitempty"
+  ];
+  int64 decimals = 24 [
+    (gogoproto.jsontag) = "validator_selection_allocation,string,omitempty"
+  ];
   bool unbonding_enabled = 25;
   bool deposits_enabled = 26;
   bool return_to_sender = 27;
