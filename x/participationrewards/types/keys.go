@@ -19,7 +19,7 @@ const (
 	CrescentParamsKey = "crescentparams"
 	ProofTypeBank     = "bank"
 	ProofTypeLeverage = "leverage"
-	ProofTypePosition = "position"
+	ProofTypeLPFarm   = "lpfarm"
 )
 
 var KeyPrefixProtocolData = []byte{0x00}
