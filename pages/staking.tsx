@@ -202,7 +202,7 @@ placeholder="amount"
 w="100%"
 flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
     <Text color="white" fontWeight="light">
-      Available to stake in wallet: 0 ATOM
+      Tokens available: 0 ATOM
     </Text>
     <HStack spacing={2}>
       <Button 

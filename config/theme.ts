@@ -109,8 +109,8 @@ import { mode } from "@chakra-ui/theme-tools";
         bgColor: "primary.700",
         color: "primary.50",
         borderRadius: "8px", 
-        px: "0.5em", 
-        py: "0.25em", 
+        px: "0.75em", 
+        py: "0.5em", 
       },
     },
     Button: {

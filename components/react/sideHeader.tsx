@@ -3,11 +3,28 @@ import { BsFillMoonStarsFill, BsFillSunFill } from "react-icons/bs";
 import { HamburgerIcon } from '@chakra-ui/icons'
 import { WalletButton } from "../wallet-button";
 import { useRouter } from 'next/router';
-import Link from 'next/link'; // Import the Link component from next/link
+import Link from 'next/link'; 
+import { useState, useEffect } from 'react';
 
 export function SideHeader() {
-    const router = useRouter(); // Initialize the useRouter hook
-    
+    const router = useRouter(); 
+    const [selectedPage, setSelectedPage] = useState("");
+    useEffect(() => {
+        // Function to handle route changes
+        const handleRouteChange = (url: string) => {
+            const path = url.split("/")[1]; // Get the path after the first '/'
+            setSelectedPage(path);
+        };
+
+        // Add the route change listener
+        router.events.on('routeChangeComplete', handleRouteChange);
+
+        // Cleanup the listener when the component is unmounted
+        return () => {
+            router.events.off('routeChangeComplete', handleRouteChange);
+        };
+    }, [router]);
+
     return (
         <Box
             w="fit-content"
@@ -18,7 +35,7 @@ export function SideHeader() {
             top={6}
             left="6"
             position="fixed"
-            px={2}
+
             bgColor="rgba(214, 219, 220, 0.1)"
         >
             <Flex
@@ -30,6 +47,7 @@ export function SideHeader() {
                 height="100%"
             >
                 <Image
+                    mt="-10px"
                     h="75px"
                     src="/img/networks/quicksilver.svg"
                     onClick={() => router.push('/')}
@@ -39,73 +57,79 @@ export function SideHeader() {
                 <VStack
                     justifyContent="center"
                     alignItems="center"
-                    spacing={8}
+                    spacing={16}
                 >
-                    <Tooltip label="Staking" placement="right">
+                    <Tooltip 
+                    borderLeft= "4px solid rgba(255, 0, 0, 0.5)"
+                    label="Staking" placement="right">
                     <Box
-                            w="55px"
-                            h="55px"
-                            onClick={() => router.push('/staking')}
-                            cursor="pointer"
-                            borderRadius="100px"
-                            _hover={{ 
-                                boxShadow: "0 0 15px 5px rgba(255, 0, 0, 1)",
-                                backdropFilter: "blur(70px)",
-                                bgColor: "rgba(255, 0, 0, 0.5)",
-                            }}
-                        >
-                            <Image alt="Staking" h="55px" src="/img/networks/quicksilver.svg" />
+    w="55px"
+    h="55px"
+    onClick={() => router.push('/staking')}
+    cursor="pointer"
+    borderRadius="100px"
+    boxShadow={selectedPage === 'staking' ? "0 0 15px 5px rgba(255, 0, 0, 0.25), inset 0 0 50px 5px rgba(255, 0, 0, 0.25)" : ""}
+    _hover={{ 
+        boxShadow:"0 0 15px 5px rgba(255, 0, 0, 0.25), inset 0 0 50px 5px rgba(255, 0, 0, 0.25)",
+
+    }}
+>
+                            <Image alt="Staking" h="55px" src="/img/test.png" />
                         </Box>
                     </Tooltip>
 
-                    <Tooltip label="Governance" placement="right">
+                    <Tooltip 
+                    borderLeft= "4px solid rgba(128, 0, 128, 0.5)"
+                    label="Governance" placement="right">
                     <Box
-                            w="55px"
-                            h="55px"
-                            onClick={() => router.push('/governance')}
-                            cursor="pointer"
-                            borderRadius="100px"
-                            _hover={{ 
-                                boxShadow: "0 0 15px 5px rgba(128, 0, 128, 1)",
-                                backdropFilter: "blur(70px)",
-                                bgColor: "rgba(128, 0, 128, 0.5)",
-                            }}
-                        >
-                            <Image alt="Governance" h="55px" src="/img/networks/quicksilver.svg" />
+        w="55px"
+        h="55px"
+        onClick={() => router.push('/governance')}
+        cursor="pointer"
+        borderRadius="100px"
+        boxShadow={selectedPage === 'governance' ? "0 0 15px 5px rgba(128, 0, 128, 0.25), inset 0 0 50px 5px rgba(128, 0, 128, 0.25)" : ""}
+        _hover={{ 
+            boxShadow:"0 0 15px 5px rgba(128, 0, 128, 0.25), inset 0 0 50px 5px rgba(128, 0, 128, 0.25)",
+        }}
+    >
+                            <Image alt="Governance" h="55px" src="/img/test2.png" />
                         </Box>
                     </Tooltip>
 
-                    <Tooltip label="Assets" placement="right">
-                        <Box
-                            w="55px"
-                            h="55px"
-                            onClick={() => router.push('/assets')}
-                            cursor="pointer"
-                            borderRadius="100px"
-                            _hover={{ 
-                                boxShadow: "0 0 15px 5px rgba(0, 0, 255, 1)",
-                                backdropFilter: "blur(70px)",
-                                bgColor: "rgba(0, 0, 255, 0.5)",
-                            }}
-                        >
-                            <Image alt="Assets" h="55px" src="/img/networks/quicksilver.svg" />
+                    <Tooltip 
+                    borderLeft= "4px solid rgba(0, 0, 255, 0.5)"
+                    label="Assets" placement="right">
+                    <Box
+        w="55px"
+        h="55px"
+        onClick={() => router.push('/assets')}
+        cursor="pointer"
+        borderRadius="100px"
+        boxShadow={selectedPage === 'assets' ? "0 0 15px 5px rgba(0, 0, 255, 0.25), inset 0 0 50px 5px rgba(0, 0, 255, 0.25)" : ""}
+        _hover={{ 
+            boxShadow:"0 0 15px 5px rgba(0, 0, 255, 0.25), inset 0 0 50px 5px rgba(0, 0, 255, 0.25)",
+        }}
+    >
+                            <Image alt="Assets" h="55px" src="/img/test3.png" />
                         </Box>
                     </Tooltip>
 
-                    <Tooltip label="DeFi" placement="right">
-                        <Box
-                            w="55px"
-                            h="55px"
-                            onClick={() => router.push('/defi')}
-                            cursor="pointer"
-                            borderRadius="100px"
-                            _hover={{ 
-                                boxShadow: "0 0 15px 5px rgba(255, 128, 0, 1)",
-                                backdropFilter: "blur(70px)",
-                                bgColor: "rgba(255, 128, 0, 0.5)",
-                            }}
-                        >
-                            <Image alt="DeFi" h="55px" src="/img/networks/quicksilver.svg" />
+                    <Tooltip 
+                    borderLeft= "4px solid rgba(255, 128, 0, 0.5)"
+                    label="DeFi" placement="right">
+                    <Box
+        w="55px"
+        h="55px"
+        onClick={() => router.push('/defi')}
+        cursor="pointer"
+        borderRadius="100px"
+        boxShadow={selectedPage === 'defi' ? "0 0 15px 5px rgba(255, 128, 0, 0.25), inset 0 0 50px 5px rgba(255, 128, 0, 0.25)" : ""}
+        _hover={{ 
+            boxShadow:"0 0 15px 5px rgba(255, 128, 0, 0.25), inset 0 0 50px 5px rgba(255, 128, 0, 0.25)",
+        }}
+    >
+                            <Image 
+                            alt="DeFi" h="55px" src="/img/test4.png" />
                         </Box>
                     </Tooltip>
                 </VStack>

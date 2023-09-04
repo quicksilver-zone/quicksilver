@@ -29,7 +29,7 @@ const bg = useColorModeValue("primary.light", "primary.dark")
     <Box
     w="100vw"
     h="100vh"
-    bgImage="url('/img/backgroundTest.png')" // Add this line
+    bgImage="url('/img/background.png')" // Add this line
     bgSize="cover" // Add this line
     bgPosition="center center" // Add this line
     bgAttachment="fixed" // Add this line
