@@ -5,11 +5,21 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
-
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { SignerOptions } from '@cosmos-kit/core';
 import { chains, assets } from 'chain-registry';
 import { defaultTheme } from '../config';
 import '@interchain-ui/react/styles';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
@@ -38,7 +48,9 @@ function CreateCosmosApp({ Component, pageProps }: AppProps) {
         }}
         signerOptions={signerOptions}
       >
+         <QueryClientProvider client={queryClient}>
         <Component {...pageProps} />
+        </QueryClientProvider>
       </ChainProvider>
     </ChakraProvider>
   );

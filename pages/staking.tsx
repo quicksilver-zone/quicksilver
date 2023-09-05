@@ -442,6 +442,7 @@ _hover={{
               <Flex flex="1" direction="column">
                 {/* Top Half (2/3) */}
                 <Box 
+                zIndex={2}
                 position="relative"
                 backdropFilter="blur(30px)"
                 borderRadius="10px" bgColor="rgba(255,255,255,0.1)" flex="2" p={5}>
@@ -457,7 +458,7 @@ _hover={{
                    <Text
                  fontSize="20px"
                  color="white"
-                 >About {selectedOption.toUpperCase()} on Quicksilver</Text>
+                 >{selectedOption.toUpperCase()} on Quicksilver</Text>
                  <Accordion
         mt={6}
         index={activeAccordion === 1 ? openItem : null}
@@ -642,7 +643,19 @@ _hover={{
     borderTop={"none"}
     >
       <h2>
-        <AccordionButton borderTopColor={"transparent"}>
+        <AccordionButton 
+        borderRadius={"10px"}
+        _hover={{
+          bgColor: "rgba(0,0,0,0.05)", 
+          backdropFilter: "blur(10px)",
+          
+        }}
+        _active={{
+          bgColor: "rgba(0,0,0,0.05)",
+          backdropFilter: "blur(10px)",
+          
+        }}
+        borderTopColor={"transparent"}>
           <Flex p={1} flexDirection="row" flex='1' alignItems="center">
             <Image src="/img/networks/atom.svg" boxSize="35px" mr={2} />
             <Text 
@@ -691,7 +704,18 @@ _hover={{
     >
       <h2>
       <AccordionButton 
-      >
+        borderRadius={"10px"}
+        _hover={{
+          bgColor: "rgba(0,0,0,0.05)", 
+          backdropFilter: "blur(10px)",
+          
+        }}
+        _active={{
+          bgColor: "rgba(0,0,0,0.05)",
+          backdropFilter: "blur(10px)",
+          
+        }}
+        borderTopColor={"transparent"}>
           <Flex 
           p={1}
           flexDirection="row" flex='1' alignItems="center">
