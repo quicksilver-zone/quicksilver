@@ -20,7 +20,7 @@ import { Product, Dependency, WalletSection } from '../components';
 import { dependencies, products } from '../config';
 import { Header } from '../components/react/header';
 import { SideHeader } from '../components/react/sideHeader';
-import { MultiStakeModal } from '../components/Staking/multiStakeModal';
+import { MultiStakeModal } from '../components/Staking/modals/multiStakeModal';
 
 export default function Home() {
 const bg = useColorModeValue("primary.light", "primary.dark")

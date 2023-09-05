@@ -1,6 +1,4 @@
-// SimpleModal.tsx
-
-import React from 'react';
+import React from "react";
 import {
   Modal,
   ModalOverlay,
@@ -9,7 +7,6 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalFooter,
-  Button
 } from "@chakra-ui/react";
 
 interface MultiModalProps {
@@ -23,15 +20,11 @@ export const MultiModal: React.FC<MultiModalProps> = ({ isOpen, onClose }) => {
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>
-            Validator Selection
-        </ModalHeader>
+        <ModalHeader>Validator Selection</ModalHeader>
         <ModalCloseButton />
         <ModalBody></ModalBody>
-        <ModalFooter>
-        </ModalFooter>
+        <ModalFooter></ModalFooter>
       </ModalContent>
     </Modal>
   );
-}
-
+};
