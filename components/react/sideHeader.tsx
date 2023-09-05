@@ -74,7 +74,10 @@ export function SideHeader() {
 
     }}
 >
-                            <Image alt="Staking" h="55px" src="/img/test.png" />
+                            <Image 
+                             filter={selectedPage === 'staking' ? "contrast(100%)" : "contrast(50%)"} 
+                             _hover={{ filter: "contrast(100%)" }}
+                            alt="Staking" h="55px" src="/img/test.png" />
                         </Box>
                     </Tooltip>
 
@@ -92,7 +95,10 @@ export function SideHeader() {
             boxShadow:"0 0 15px 5px rgba(128, 0, 128, 0.25), inset 0 0 50px 5px rgba(128, 0, 128, 0.25)",
         }}
     >
-                            <Image alt="Governance" h="55px" src="/img/test2.png" />
+                            <Image 
+                            filter={selectedPage === 'governance' ? "contrast(100%)" : "contrast(50%)"} 
+                            _hover={{ filter: "contrast(100%)" }}
+                            alt="Governance" h="55px" src="/img/test2.png" />
                         </Box>
                     </Tooltip>
 
@@ -110,7 +116,10 @@ export function SideHeader() {
             boxShadow:"0 0 15px 5px rgba(0, 0, 255, 0.25), inset 0 0 50px 5px rgba(0, 0, 255, 0.25)",
         }}
     >
-                            <Image alt="Assets" h="55px" src="/img/test3.png" />
+                            <Image 
+                            filter={selectedPage === 'assets' ? "contrast(100%)" : "contrast(50%)"} 
+                            _hover={{ filter: "contrast(100%)" }}
+                            alt="Assets" h="55px" src="/img/test3.png" />
                         </Box>
                     </Tooltip>
 
@@ -129,6 +138,8 @@ export function SideHeader() {
         }}
     >
                             <Image 
+                            filter={selectedPage === 'defi' ? "contrast(100%)" : "contrast(50%)"} 
+                            _hover={{ filter: "contrast(100%)" }}
                             alt="DeFi" h="55px" src="/img/test4.png" />
                         </Box>
                     </Tooltip>

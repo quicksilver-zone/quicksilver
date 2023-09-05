@@ -3,6 +3,7 @@ import { useState } from "react"
 import {
   Box,
   Divider,
+  Image,
   Grid,
   Heading,
   Text,
@@ -30,30 +31,55 @@ import {
   Input
 } from "@chakra-ui/react";
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
-import { BsFillMoonStarsFill, BsFillSunFill, BsArrowDown } from "react-icons/bs";
+import { BsFillMoonStarsFill, BsFillSunFill, BsArrowDown, BsTrophy, BsCoin, BsClock } from "react-icons/bs";
+import { RiStockLine } from "react-icons/ri";
 import { Product, Dependency, WalletSection } from "../components";
 import { dependencies, products } from "../config";
 import { Header } from "../components/react/header";
 import { SideHeader } from "../components/react/sideHeader";
+import {
+  Accordion,
+  AccordionItem,
+  AccordionButton,
+  AccordionPanel,
+  AccordionIcon,
+} from '@chakra-ui/react'
 
 export default function Staking() {
   const bg = useColorModeValue("primary.light", "primary.dark");
   const buttonTextColor = useColorModeValue("primary.700", "primary.50");
   const invertButtonTextColor = useColorModeValue("primary.50", "primary.700");
-  const [selectedOption, setSelectedOption] = useState("Select Token");
+  const [selectedOption, setSelectedOption] = useState("Atom");
+  const [openItem, setOpenItem] = useState(null);
+  const [activeAccordion, setActiveAccordion] = useState(null);
+  const handleAccordionChange = (accordionNumber, index) => {
+    if (activeAccordion === accordionNumber && openItem === index) {
+      setOpenItem(null);
+      setActiveAccordion(null);
+    } else {
+      setOpenItem(index);
+      setActiveAccordion(accordionNumber);
+    }
+  };
   return (
     <>
       <Box
         w="100vw"
         h="100vh"
-        bgImage="url('/img/background.png')"
+        bgImage="url('/img/backgroundTest.png')"
         bgSize="cover"
         bgPosition="center center"
         bgAttachment="fixed"
       >
+        <Head>
+        <title>Staking</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="icon" href="/img/favicon.png" />
+      </Head>
         <Header />
         <SideHeader />
-        <Container 
+        <Container
+        mt={-7}
         maxW="container.lg" maxH="80vh" h="80vh">
           <Flex direction="column" h="100%">
             {/* Dropdown and Statistic */}
@@ -65,13 +91,14 @@ export default function Staking() {
             minW="150px"
             variant="ghost"
             color="complimentary.900"
+            backgroundColor="rgba(255,255,255,0.1)"
             _hover={{
-              bgColor: "rgba(0,0,0,0.5)", 
+              bgColor: "rgba(255,255,255,0.05)", 
               backdropFilter: "blur(10px)",
               
             }}
             _active={{
-              bgColor: "rgba(0,0,0,0.5)", 
+              bgColor: "rgba(255,255,255,0.05)",
               backdropFilter: "blur(10px)",
               
             }}
@@ -79,13 +106,38 @@ export default function Staking() {
             opacity={1}
             as={Button} rightIcon={<BsArrowDown />}
           >
-            {selectedOption} {/* Display the selected option */}
+            {selectedOption} 
           </MenuButton>
-          <MenuList>
+          <MenuList
+          mt={1}
+          bgColor="black"
+          borderColor="black"
+          >
             {/* Update state when an option is selected */}
-            <MenuItem onClick={() => setSelectedOption("Atom")}>Cosmos Hub</MenuItem>
-            <MenuItem onClick={() => setSelectedOption("Osmo")}>Osmosis</MenuItem>
-            <MenuItem onClick={() => setSelectedOption("Inj")}>Injective</MenuItem>
+            <MenuItem 
+            bgColor="black"
+            borderRadius="4px"
+            color="complimentary.900"
+            _hover={{
+              bgColor: "rgba(255,255,255,0.25)",
+            }}
+            onClick={() => setSelectedOption("Atom")}>Cosmos Hub</MenuItem>
+            <MenuItem 
+            bgColor="black"
+            borderRadius="4px"
+            color="complimentary.900"
+            _hover={{
+              bgColor: "rgba(255,255,255,0.25)",
+            }}
+            onClick={() => setSelectedOption("Osmo")}>Osmosis</MenuItem>
+            <MenuItem 
+            bgColor="black"
+            borderRadius="4px"
+            color="complimentary.900"
+            _hover={{
+              bgColor: "rgba(255,255,255,0.25)",
+            }}
+            onClick={() => setSelectedOption("Inj")}>Injective</MenuItem>
           </MenuList>
         </Menu>
         <VStack 
@@ -108,12 +160,11 @@ export default function Staking() {
               {/* Left Box */}
               <Box 
                backdropFilter="blur(50px)"
-              bgColor="rgba(0,0,0,0.5)" flex="1" borderRadius="10px" p={5}>
+              bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
               <Tabs isFitted variant='enclosed'>
   <TabList
     mt={"4"}
     mb='1em'
-    borderRadius="md"
     overflow="hidden"
     borderBottomColor="transparent"
     bg="rgba(255,255,255,0.1)"
@@ -166,7 +217,7 @@ export default function Staking() {
       textAlign="center"
       color="white"
       >
-      Stake your ATOM tokens in exchange for qATOM which you can deploy around the ecosystem. You can liquid stake half of your balance, if you're going to LP.
+      Stake your {selectedOption}  tokens in exchange for q{selectedOption} which you can deploy around the ecosystem. You can liquid stake half of your balance, if you're going to LP.
       </Text>
 <Flex
 flexDirection="column"
@@ -178,7 +229,7 @@ py={4}
                 color="white"
                 >
   <StatLabel>Amount to stake:</StatLabel>
-  <StatNumber>Atom</StatNumber>
+  <StatNumber>{selectedOption} </StatNumber>
 </Stat>
 <Input
 _active={{
@@ -202,17 +253,17 @@ placeholder="amount"
 w="100%"
 flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
     <Text color="white" fontWeight="light">
-      Tokens available: 0 ATOM
+      Tokens available: 0 {selectedOption} 
     </Text>
     <HStack spacing={2}>
       <Button 
        _hover={{
-        bgColor: "rgba(255,255,255,0.5)", 
+        bgColor: "rgba(255,255,255,0.05)", 
         backdropFilter: "blur(10px)",
         
       }}
       _active={{
-        bgColor: "rgba(255,255,255,0.5)", 
+        bgColor: "rgba(255,255,255,0.05)",
         backdropFilter: "blur(10px)",
         
       }}
@@ -221,12 +272,12 @@ flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="ce
       </Button>
       <Button 
        _hover={{
-        bgColor: "rgba(255,255,255,0.5)", 
+        bgColor: "rgba(255,255,255,0.05)", 
         backdropFilter: "blur(10px)",
         
       }}
       _active={{
-        bgColor: "rgba(255,255,255,0.5)", 
+        bgColor: "rgba(255,255,255,0.05)",
         backdropFilter: "blur(10px)",
         
       }}
@@ -248,7 +299,7 @@ flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="ce
     color="white"
   >
     <StatLabel>What you'll get</StatLabel>
-    <StatNumber>qAtom:</StatNumber>
+    <StatNumber>q{selectedOption}:</StatNumber>
   </Stat>
   <Spacer /> {/* This will push the next Stat component to the right */}
   <Stat
@@ -263,12 +314,111 @@ flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="ce
 </HStack>
 <Button
 width="100%"
+_hover={{
+  bgColor: "complimentary.1000"
+}}
 >Liquid Stake</Button>
 </VStack>
 
     </TabPanel>
     <TabPanel>
-      <p>two!</p>
+    <VStack
+      spacing={8}
+      align="center"
+      >
+      <Text
+      textAlign="center"
+      color="white"
+      >
+      Unstake your q{selectedOption} tokens in exchange for {selectedOption}.
+      </Text>
+<Flex
+flexDirection="column"
+w="100%"
+>
+<Stat
+py={4}
+                textAlign="left"
+                color="white"
+                >
+  <StatLabel>Amount tounstake:</StatLabel>
+  <StatNumber>q{selectedOption} </StatNumber>
+</Stat>
+<Input
+_active={{
+  borderColor: "complimentary.900",
+}}
+_selected={{
+  borderColor: "complimentary.900",
+}}
+_hover={{
+  borderColor: "complimentary.900",
+}}
+_focus={{
+  borderColor: "complimentary.900",
+  boxShadow: "0 0 0 3px #FF8000",
+}}
+color="complimentary.900"
+textAlign={"right"}
+placeholder="amount"
+/>
+<Flex 
+w="100%"
+flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
+    <Text color="white" fontWeight="light">
+      Tokens available: 0 q{selectedOption} 
+    </Text>
+   
+      <Button 
+       _hover={{
+        bgColor: "rgba(255,255,255,0.05)", 
+        backdropFilter: "blur(10px)",
+        
+      }}
+      _active={{
+        bgColor: "rgba(255,255,255,0.05)",
+        backdropFilter: "blur(10px)",
+        
+      }}
+      color="complimentary.900" variant="ghost" w="60px" h="30px">
+        max
+      </Button>
+
+  </Flex>
+</Flex>
+<Divider/>
+<HStack
+  justifyContent="space-between"
+  alignItems="left"
+  w="100%"
+  mt={-8}
+>
+  <Stat
+    textAlign="left"
+    color="white"
+  >
+    <StatLabel>What you'll get</StatLabel>
+    <StatNumber>{selectedOption}:</StatNumber>
+  </Stat>
+  <Spacer /> {/* This will push the next Stat component to the right */}
+  <Stat
+    py={4}
+    textAlign="right"
+    color="white"
+  >
+    <StatNumber
+    textColor="complimentary.900"
+    >0</StatNumber>
+  </Stat>
+</HStack>
+<Button
+width="100%"
+_hover={{
+  bgColor: "complimentary.1000"
+}}
+>Liquid Stake</Button>
+</VStack>
+
     </TabPanel>
   </TabPanels>
 </Tabs>
@@ -280,17 +430,289 @@ width="100%"
               <Flex flex="1" direction="column">
                 {/* Top Half (2/3) */}
                 <Box 
-                backdropFilter="blur(50px)"
-                borderRadius="10px" bgColor="rgba(0,0,0,0.5)" flex="2" p={5}>
-                  {/* Content for Top Right Box */}
+                backdropFilter="blur(30px)"
+                borderRadius="10px" bgColor="rgba(255,255,255,0.1)" flex="2" p={5}>
+                   <Text
+                 fontSize="20px"
+                 color="white"
+                 >About {selectedOption} on Quicksilver</Text>
+                 <Accordion
+        mt={6}
+        index={activeAccordion === 1 ? openItem : null}
+        onChange={(index) => handleAccordionChange(1, index)}
+        allowToggle
+      >
+    <AccordionItem
+    pt={2}
+    mb={2}
+    borderTop={"none"}
+    >
+      <h2>
+      <Flex 
+    borderTopColor={"transparent"} 
+    alignItems="center" 
+    justifyContent="space-between" 
+    width="100%"
+    py={2} // padding for top and bottom to mimic button's vertical padding
+>
+    <Flex flexDirection="row" alignItems="center">
+        <Box mr="16px">
+            <BsTrophy
+                color="#FF8000"
+                size="24px"
+            />
+        </Box>
+        <Text fontSize="16px" color={"white"}>Rewards</Text>
+    </Flex>
+    <Text pr={2} color="complimentary.900">35%</Text>
+</Flex>
+      </h2>
+     
+    </AccordionItem>
+
+    <AccordionItem
+    pt={2}
+    mb={2}
+    >
+      <h2>
+      <Flex 
+    borderTopColor={"transparent"} 
+    alignItems="center" 
+    justifyContent="space-between" 
+    width="100%"
+    py={2} // padding for top and bottom to mimic button's vertical padding
+>
+          <Flex  flexDirection="row" flex='1' alignItems="center">
+          <Box mr="16px"> {/* Adjusts right margin */}
+  <BsCoin
+      color="#FF8000"
+      size="24px"
+  />
+</Box>
+            <Text 
+            fontSize="16px"
+            color={"white"}>Fees</Text>
+          </Flex>
+          <Text
+           pr={2}
+          color="complimentary.900"
+          >Low</Text>
+          
+        </Flex>
+      </h2>
+     
+    </AccordionItem>
+    <AccordionItem
+    pt={2}
+    mb={2}
+    >
+      <h2>
+      <Flex 
+    borderTopColor={"transparent"} 
+    alignItems="center" 
+    justifyContent="space-between" 
+    width="100%"
+    py={2} // padding for top and bottom to mimic button's vertical padding
+>
+          <Flex  flexDirection="row" flex='1' alignItems="center">
+          <Box mr="16px"> {/* Adjusts right margin */}
+  <BsClock
+      color="#FF8000"
+      size="24px"
+  />
+</Box>
+            <Text 
+            fontSize="16px"
+            color={"white"}>Unbonding</Text>
+          </Flex>
+          <Text
+           pr={2}
+          color="complimentary.900"
+          >21-24 Days*</Text>
+
+        </Flex>
+      </h2>
+      <AccordionPanel 
+  alignItems="center"
+  justifyItems="center"
+  color="white"
+  pb={4}
+>
+  <VStack spacing={2} width="100%">
+    <HStack justifyContent="space-between" width="100%">
+      <Text
+      color="white"
+      >on {selectedOption}</Text>
+      <Text
+      color="complimentary.900"
+      >0 {selectedOption}</Text>
+    </HStack>
+    <HStack justifyContent="space-between" width="100%">
+      <Text
+      color="white"
+      >on Quicksilver</Text>
+      <Text
+      color="complimentary.900"
+      >0 {selectedOption}</Text>
+    </HStack>
+  </VStack>
+</AccordionPanel>
+    </AccordionItem>
+    <AccordionItem
+    pt={2}
+    mb={2}
+    borderBottom={"none"}
+    >
+      <h2>
+      <Flex 
+    borderTopColor={"transparent"} 
+    alignItems="center" 
+    justifyContent="space-between" 
+    width="100%"
+    py={2} // padding for top and bottom to mimic button's vertical padding
+>
+          <Flex flexDirection="row" flex='1' alignItems="center">
+          <Box mr="16px"> {/* Adjusts right margin */}
+  <RiStockLine
+      color="#FF8000"
+      size="24px"
+  />
+</Box>
+            <Text 
+            fontSize="16px"
+            color={"white"}>Value of 1 q{selectedOption}</Text>
+          </Flex>
+          <Text
+           pr={2}
+          color="complimentary.900"
+          >1 q{selectedOption} = 1 {selectedOption}</Text>
+        </Flex>
+      </h2>
+     
+    </AccordionItem>
+  </Accordion>
+
+  <Text mt={3}  color="white" textAlign="center" bgColor="rgba(0,0,0,0.4)" p={5} width="100%" borderRadius={6}>
+  Want to learn more about rewards, fees, and unbonding on Quicksilver? Check out the <Link href="https://your-docs-url.com" color="complimentary.900" isExternal>docs</Link>.
+</Text>
+
                 </Box>
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
                 <Box 
-                backdropFilter="blur(50px)"
-                borderRadius="10px" flex="1" bgColor="rgba(0,0,0,0.5)" p={5}>
-                  {/* Content for Bottom Right Box */}
+                backdropFilter="blur(10px)"
+                borderRadius="10px" bgColor="rgba(255,255,255,0.1)" flex="1" p={5}>
+                 <Text
+                 fontSize="20px"
+                 color="white"
+                 >Assets</Text>
+                <Accordion
+        mt={6}
+        index={activeAccordion === 2 ? openItem : null}
+        onChange={(index) => handleAccordionChange(2, index)}
+        allowToggle
+      >
+    <AccordionItem
+    mb={4}
+    borderTop={"none"}
+    >
+      <h2>
+        <AccordionButton borderTopColor={"transparent"}>
+          <Flex p={1} flexDirection="row" flex='1' alignItems="center">
+            <Image src="/img/networks/atom.svg" boxSize="35px" mr={2} />
+            <Text 
+            fontSize="16px"
+            color={"white"}>Available to stake</Text>
+          </Flex>
+          <Text
+           pr={2}
+          color="complimentary.900"
+          >0 {selectedOption}</Text>
+          <AccordionIcon
+          color="complimentary.900"
+          />
+        </AccordionButton>
+      </h2>
+      <AccordionPanel 
+  alignItems="center"
+  justifyItems="center"
+  color="white"
+  pb={4}
+>
+  <VStack spacing={2} width="100%">
+    <HStack justifyContent="space-between" width="100%">
+      <Text
+      color="white"
+      >on {selectedOption}</Text>
+      <Text
+      color="complimentary.900"
+      >0 {selectedOption}</Text>
+    </HStack>
+    <HStack justifyContent="space-between" width="100%">
+      <Text
+      color="white"
+      >on Quicksilver</Text>
+      <Text
+      color="complimentary.900"
+      >0 {selectedOption}</Text>
+    </HStack>
+  </VStack>
+</AccordionPanel>
+    </AccordionItem>
+
+    <AccordionItem
+    pt={4}
+      borderBottom={"none"}
+    >
+      <h2>
+      <AccordionButton 
+      >
+          <Flex 
+          p={1}
+          flexDirection="row" flex='1' alignItems="center">
+            <Image src="/img/networks/q-atom.svg" boxSize="35px" mr={2} />
+            <Text 
+            fontSize="16px"
+            color={"white"}>Liquid Staked</Text>
+          </Flex>
+          <Text
+          pr={2}
+          color="complimentary.900"
+          >0 q{selectedOption}</Text>
+          <AccordionIcon
+          color="complimentary.900"
+          />
+        </AccordionButton>
+      </h2>
+      <AccordionPanel 
+  alignItems="center"
+  justifyItems="center"
+  color="white"
+  pb={4}
+>
+  <VStack spacing={2} width="100%">
+    <HStack justifyContent="space-between" width="100%">
+      <Text
+      color="white"
+      >on {selectedOption}</Text>
+      <Text
+      color="complimentary.900"
+      >0 q{selectedOption}</Text>
+    </HStack>
+    <HStack justifyContent="space-between" width="100%">
+      <Text
+      color="white"
+      >on Quicksilver</Text>
+      <Text
+      color="complimentary.900"
+      >0 q{selectedOption}</Text>
+    </HStack>
+  </VStack>
+</AccordionPanel>
+    </AccordionItem>
+  </Accordion>
+  
                 </Box>
               </Flex>
             </Flex>
