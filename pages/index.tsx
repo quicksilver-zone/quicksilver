@@ -48,13 +48,6 @@ const bg = useColorModeValue("primary.light", "primary.dark")
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="/img/favicon.png" />
       </Head>
-     <Image
-     mt={"200px"}
-     mr={"200px"}
-     w="800px"
-     src="/img/logowords.png"
-     >
-     </Image>
     </Container>
     </Box>
     </>

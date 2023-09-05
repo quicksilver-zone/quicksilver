@@ -79,14 +79,26 @@ export default function Staking() {
         <Header />
         <SideHeader />
         <Container
+  zIndex={2}
+        position="relative"
         mt={-7}
         maxW="container.lg" maxH="80vh" h="80vh">
-          <Flex direction="column" h="100%">
+            <Image 
+        src="/img/metalmisc2.png" 
+        zIndex={-10}
+        position="absolute" 
+        bottom="-10" 
+        left="-10" 
+        boxSize="120px" // Set the desired size of the image
+    />
+          <Flex zIndex={3} direction="column" h="100%">
             {/* Dropdown and Statistic */}
             <Box w="50%" >
             <HStack justifyContent="space-between" w="100%">
-        <Menu>
+        <Menu zIndex={4}>
           <MenuButton
+          position="relative"
+          zIndex={5}
             maxW="150px"
             minW="150px"
             variant="ghost"
@@ -103,10 +115,9 @@ export default function Staking() {
               
             }}
             borderColor={buttonTextColor}
-            opacity={1}
             as={Button} rightIcon={<BsArrowDown />}
           >
-            {selectedOption} 
+            {selectedOption.toUpperCase()} 
           </MenuButton>
           <MenuList
           mt={1}
@@ -121,7 +132,7 @@ export default function Staking() {
             _hover={{
               bgColor: "rgba(255,255,255,0.25)",
             }}
-            onClick={() => setSelectedOption("Atom")}>Cosmos Hub</MenuItem>
+            onClick={() => setSelectedOption("ATOM")}>Cosmos Hub</MenuItem>
             <MenuItem 
             bgColor="black"
             borderRadius="4px"
@@ -129,7 +140,7 @@ export default function Staking() {
             _hover={{
               bgColor: "rgba(255,255,255,0.25)",
             }}
-            onClick={() => setSelectedOption("Osmo")}>Osmosis</MenuItem>
+            onClick={() => setSelectedOption("OSMO")}>Osmosis</MenuItem>
             <MenuItem 
             bgColor="black"
             borderRadius="4px"
@@ -137,7 +148,7 @@ export default function Staking() {
             _hover={{
               bgColor: "rgba(255,255,255,0.25)",
             }}
-            onClick={() => setSelectedOption("Inj")}>Injective</MenuItem>
+            onClick={() => setSelectedOption("INJ")}>Injective</MenuItem>
           </MenuList>
         </Menu>
         <VStack 
@@ -159,6 +170,7 @@ export default function Staking() {
             <Flex h="100%">
               {/* Left Box */}
               <Box 
+              position="relative"
                backdropFilter="blur(50px)"
               bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
               <Tabs isFitted variant='enclosed'>
@@ -217,7 +229,7 @@ export default function Staking() {
       textAlign="center"
       color="white"
       >
-      Stake your {selectedOption}  tokens in exchange for q{selectedOption} which you can deploy around the ecosystem. You can liquid stake half of your balance, if you're going to LP.
+      Stake your {selectedOption.toUpperCase()}  tokens in exchange for q{selectedOption.toUpperCase()} which you can deploy around the ecosystem. You can liquid stake half of your balance, if you're going to LP.
       </Text>
 <Flex
 flexDirection="column"
@@ -229,7 +241,7 @@ py={4}
                 color="white"
                 >
   <StatLabel>Amount to stake:</StatLabel>
-  <StatNumber>{selectedOption} </StatNumber>
+  <StatNumber>{selectedOption.toUpperCase()} </StatNumber>
 </Stat>
 <Input
 _active={{
@@ -253,7 +265,7 @@ placeholder="amount"
 w="100%"
 flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
     <Text color="white" fontWeight="light">
-      Tokens available: 0 {selectedOption} 
+      Tokens available: 0 {selectedOption.toUpperCase()} 
     </Text>
     <HStack spacing={2}>
       <Button 
@@ -299,7 +311,7 @@ flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="ce
     color="white"
   >
     <StatLabel>What you'll get</StatLabel>
-    <StatNumber>q{selectedOption}:</StatNumber>
+    <StatNumber>q{selectedOption.toUpperCase()}:</StatNumber>
   </Stat>
   <Spacer /> {/* This will push the next Stat component to the right */}
   <Stat
@@ -315,7 +327,7 @@ flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="ce
 <Button
 width="100%"
 _hover={{
-  bgColor: "complimentary.1000"
+  bgColor: "#181818"
 }}
 >Liquid Stake</Button>
 </VStack>
@@ -330,7 +342,7 @@ _hover={{
       textAlign="center"
       color="white"
       >
-      Unstake your q{selectedOption} tokens in exchange for {selectedOption}.
+      Unstake your q{selectedOption.toUpperCase()} tokens in exchange for {selectedOption.toUpperCase()}.
       </Text>
 <Flex
 flexDirection="column"
@@ -342,7 +354,7 @@ py={4}
                 color="white"
                 >
   <StatLabel>Amount tounstake:</StatLabel>
-  <StatNumber>q{selectedOption} </StatNumber>
+  <StatNumber>q{selectedOption.toUpperCase()} </StatNumber>
 </Stat>
 <Input
 _active={{
@@ -366,7 +378,7 @@ placeholder="amount"
 w="100%"
 flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
     <Text color="white" fontWeight="light">
-      Tokens available: 0 q{selectedOption} 
+      Tokens available: 0 q{selectedOption.toUpperCase()} 
     </Text>
    
       <Button 
@@ -398,7 +410,7 @@ flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="ce
     color="white"
   >
     <StatLabel>What you'll get</StatLabel>
-    <StatNumber>{selectedOption}:</StatNumber>
+    <StatNumber>{selectedOption.toUpperCase()}:</StatNumber>
   </Stat>
   <Spacer /> {/* This will push the next Stat component to the right */}
   <Stat
@@ -430,12 +442,22 @@ _hover={{
               <Flex flex="1" direction="column">
                 {/* Top Half (2/3) */}
                 <Box 
+                position="relative"
                 backdropFilter="blur(30px)"
                 borderRadius="10px" bgColor="rgba(255,255,255,0.1)" flex="2" p={5}>
+                   <Image 
+        src="/img/metalmisc3.png" 
+        zindex={1}
+        position="absolute" 
+        top="-40px" 
+        right="-65px" 
+        boxSize="135px" 
+        transform="rotate(25deg)"
+    />
                    <Text
                  fontSize="20px"
                  color="white"
-                 >About {selectedOption} on Quicksilver</Text>
+                 >About {selectedOption.toUpperCase()} on Quicksilver</Text>
                  <Accordion
         mt={6}
         index={activeAccordion === 1 ? openItem : null}
@@ -542,10 +564,10 @@ _hover={{
     <HStack justifyContent="space-between" width="100%">
       <Text
       color="white"
-      >on {selectedOption}</Text>
+      >on {selectedOption.toUpperCase()}</Text>
       <Text
       color="complimentary.900"
-      >0 {selectedOption}</Text>
+      >0 {selectedOption.toUpperCase()}</Text>
     </HStack>
     <HStack justifyContent="space-between" width="100%">
       <Text
@@ -553,7 +575,7 @@ _hover={{
       >on Quicksilver</Text>
       <Text
       color="complimentary.900"
-      >0 {selectedOption}</Text>
+      >0 {selectedOption.toUpperCase()}</Text>
     </HStack>
   </VStack>
 </AccordionPanel>
@@ -580,12 +602,12 @@ _hover={{
 </Box>
             <Text 
             fontSize="16px"
-            color={"white"}>Value of 1 q{selectedOption}</Text>
+            color={"white"}>Value of 1 q{selectedOption.toUpperCase()}</Text>
           </Flex>
           <Text
            pr={2}
           color="complimentary.900"
-          >1 q{selectedOption} = 1 {selectedOption}</Text>
+          >1 q{selectedOption.toUpperCase()} = 1 {selectedOption.toUpperCase()}</Text>
         </Flex>
       </h2>
      
@@ -601,7 +623,9 @@ _hover={{
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
                 <Box 
+                 position="relative"
                 backdropFilter="blur(10px)"
+                zindex={10}
                 borderRadius="10px" bgColor="rgba(255,255,255,0.1)" flex="1" p={5}>
                  <Text
                  fontSize="20px"
@@ -628,7 +652,7 @@ _hover={{
           <Text
            pr={2}
           color="complimentary.900"
-          >0 {selectedOption}</Text>
+          >0 {selectedOption.toUpperCase()}</Text>
           <AccordionIcon
           color="complimentary.900"
           />
@@ -644,10 +668,10 @@ _hover={{
     <HStack justifyContent="space-between" width="100%">
       <Text
       color="white"
-      >on {selectedOption}</Text>
+      >on {selectedOption.toUpperCase()}</Text>
       <Text
       color="complimentary.900"
-      >0 {selectedOption}</Text>
+      >0 {selectedOption.toUpperCase()}</Text>
     </HStack>
     <HStack justifyContent="space-between" width="100%">
       <Text
@@ -655,7 +679,7 @@ _hover={{
       >on Quicksilver</Text>
       <Text
       color="complimentary.900"
-      >0 {selectedOption}</Text>
+      >0 {selectedOption.toUpperCase()}</Text>
     </HStack>
   </VStack>
 </AccordionPanel>
@@ -679,7 +703,7 @@ _hover={{
           <Text
           pr={2}
           color="complimentary.900"
-          >0 q{selectedOption}</Text>
+          >0 q{selectedOption.toUpperCase()}</Text>
           <AccordionIcon
           color="complimentary.900"
           />
@@ -695,10 +719,10 @@ _hover={{
     <HStack justifyContent="space-between" width="100%">
       <Text
       color="white"
-      >on {selectedOption}</Text>
+      >on {selectedOption.toUpperCase()}</Text>
       <Text
       color="complimentary.900"
-      >0 q{selectedOption}</Text>
+      >0 q{selectedOption.toUpperCase()}</Text>
     </HStack>
     <HStack justifyContent="space-between" width="100%">
       <Text
@@ -706,7 +730,7 @@ _hover={{
       >on Quicksilver</Text>
       <Text
       color="complimentary.900"
-      >0 q{selectedOption}</Text>
+      >0 q{selectedOption.toUpperCase()}</Text>
     </HStack>
   </VStack>
 </AccordionPanel>
