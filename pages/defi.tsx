@@ -20,6 +20,7 @@ import { Product, Dependency, WalletSection } from '../components';
 import { dependencies, products } from '../config';
 import { Header } from '../components/react/header';
 import { SideHeader } from '../components/react/sideHeader';
+import { MultiStakeModal } from '../components/Staking/multiStakeModal';
 
 export default function Home() {
 const bg = useColorModeValue("primary.light", "primary.dark")
@@ -47,7 +48,7 @@ const bg = useColorModeValue("primary.light", "primary.dark")
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="icon" href="/img/favicon.png" />
       </Head>
-     
+
     </Container>
     </Box>
     </>

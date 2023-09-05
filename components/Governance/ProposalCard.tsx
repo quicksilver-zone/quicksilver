@@ -49,6 +49,15 @@ export const ProposalCard = ({
 
   const isVoted = votes && votes[proposal.proposalId.toString()];
 
+  const getTitleFromProposal = (proposal: Proposal): string | undefined => {
+    if (proposal.content && 'title' in proposal.content) {
+      return proposal.content.title;
+    }
+    return undefined;
+  };
+
+const title = getTitleFromProposal(proposal);
+
   return (
     <Grid
       h="120px"
@@ -60,7 +69,7 @@ export const ProposalCard = ({
       borderRadius={10}
       transition="all 0.2s linear"
       _hover={{
-        backgroundColor: useColorModeValue('gray.100', 'gray.700'),
+        backgroundColor: "rgba(255,255,255,0.25)",
         cursor: 'pointer',
       }}
       onClick={handleClick}
@@ -78,7 +87,7 @@ export const ProposalCard = ({
             <Text 
             color="white"
             fontSize="lg">
-              {getTitleFromDecoded(decodeUint8Arr(proposal.content?.value))}
+              {title || ""}
             </Text>
             {isVoted && <VotedBadge />}
           </Flex>

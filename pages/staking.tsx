@@ -43,7 +43,8 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
-} from '@chakra-ui/react'
+} from '@chakra-ui/react';
+import { MultiModal } from "../components/Staking/multiStakeModal";
 
 export default function Staking() {
   const bg = useColorModeValue("primary.light", "primary.dark");
@@ -61,6 +62,7 @@ export default function Staking() {
       setActiveAccordion(accordionNumber);
     }
   };
+  const [isModalOpen, setModalOpen] = useState(false);
   return (
     <>
       <Box
@@ -329,7 +331,14 @@ width="100%"
 _hover={{
   bgColor: "#181818"
 }}
+onClick={() => setModalOpen(true)}
 >Liquid Stake</Button>
+<MultiModal
+        isOpen={isModalOpen}
+        onClose={() => setModalOpen(false)}
+      >
+        This is a simple modal content.
+      </MultiModal>
 </VStack>
 
     </TabPanel>

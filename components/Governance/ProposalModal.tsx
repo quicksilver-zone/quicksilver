@@ -124,19 +124,37 @@ export const ProposalModal = ({
   const minStakedTokens =
     quorum && exponentiate(quorum * Number(bondedTokens), -exponent).toFixed(6);
 
-  const title = getTitleFromDecoded(decodeUint8Arr(proposal.content?.value));
+    const getTitleFromProposal = (proposal: Proposal): string | undefined => {
+      if (proposal.content && 'title' in proposal.content) {
+        return proposal.content.title;
+      }
+      return undefined;
+    };
 
-  const description =
-    decodeUint8Arr(proposal.content?.value)
-      .match(/(?<=\u0012).*/s)?.[0]
-      .slice(2) || '';
+    
+    const getDescritpionFromProposal = (proposal: Proposal): string | undefined => {
+      if (proposal.content && 'description' in proposal.content) {
+        return proposal.content.description;
+      }
+      return undefined;
+    };
 
-  const renderedDescription =
-    description.length > 200
-      ? showMore
-        ? description
-        : `${description.slice(0, 200)}...`
-      : description || '';
+  const title = getTitleFromProposal(proposal);
+
+  const description = getDescritpionFromProposal(proposal);
+
+
+  const descriptionRenderer = () => {
+    if (!description) return ''; // If description is undefined or empty, return an empty string
+  
+    if (description.length > 200) {
+      return showMore ? description : `${description.slice(0, 200)}...`;
+    }
+  
+    return description;
+  };
+  
+  const renderedDescription = descriptionRenderer();
 
   return (
     <>

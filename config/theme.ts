@@ -3,6 +3,10 @@ import { mode } from "@chakra-ui/theme-tools";
 
 
  const defaultThemeObject = {
+  config: {
+    initialColorMode: "light",
+    useSystemColorMode: false,
+  },
   styles: {
     global: (props: { colorMode: string; }) => ({
       body: {

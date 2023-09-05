@@ -12,9 +12,9 @@ import { useVotingData } from '../../hooks';
 export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
   const [selectedProposal, setSelectedProposal] = useState<Proposal>();
 
-  const { address } = useChain('cosmoshub');
+  const { address } = useChain(chainName);
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { data, isLoading, refetch } = useVotingData('cosmoshub');
+  const { data, isLoading, refetch } = useVotingData(chainName);
 
   const content = address ? (
     <Stack spacing={4}>

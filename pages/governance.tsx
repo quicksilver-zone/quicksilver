@@ -54,7 +54,7 @@ const bg = useColorModeValue("primary.light", "primary.dark")
   width="100%"
   padding={2} // Optional: for some spacing inside the box
 >
-  <VotingSection chainName="cosmoshub" />
+  <VotingSection chainName="akash" />
 </Box>
 
     </Container>
