@@ -1,18 +1,28 @@
-import { cosmos } from 'interchain-query';
 import { useQuery } from '@tanstack/react-query';
+import { cosmos } from 'interchain-query';
+
 import { useQueryHooks } from './useQueryHooks';
 
-const createRPCQueryClient = cosmos.ClientFactory.createRPCQueryClient;
+const createRPCQueryClient =
+  cosmos.ClientFactory.createRPCQueryClient;
 
-export const useRpcQueryClient = (chainName: string) => {
-  const { rpcEndpoint } = useQueryHooks(chainName);
+export const useRpcQueryClient = (
+  chainName: string,
+) => {
+  const { rpcEndpoint } =
+    useQueryHooks(chainName);
 
   const rpcQueryClientQuery = useQuery({
     queryKey: ['rpcQueryClient', rpcEndpoint],
-    queryFn: () => createRPCQueryClient({ rpcEndpoint: rpcEndpoint || '' }),
+    queryFn: () =>
+      createRPCQueryClient({
+        rpcEndpoint: rpcEndpoint || '',
+      }),
     enabled: !!rpcEndpoint,
     staleTime: Infinity,
   });
 
-  return { rpcQueryClient: rpcQueryClientQuery.data };
+  return {
+    rpcQueryClient: rpcQueryClientQuery.data,
+  };
 };

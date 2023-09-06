@@ -1,10 +1,15 @@
-import React, { ReactNode } from 'react';
-import { Box, Stack, Text, useColorModeValue } from '@chakra-ui/react';
+import {
+  Box,
+  Stack,
+  Text,
+  useColorModeValue,
+} from '@chakra-ui/react';
 import { WalletStatus } from '@cosmos-kit/core';
+import React, { ReactNode } from 'react';
 
 export const WarnBlock = ({
   wordOfWarning,
-  icon
+  icon,
 }: {
   wordOfWarning?: string;
   icon?: ReactNode;
@@ -14,7 +19,10 @@ export const WarnBlock = ({
       borderRadius="md"
       p={4}
       pr={2}
-      bg={useColorModeValue('orange.200', 'orange.300')}
+      bg={useColorModeValue(
+        'orange.200',
+        'orange.300',
+      )}
       color="blackAlpha.900"
     >
       <Stack
@@ -29,26 +37,26 @@ export const WarnBlock = ({
           scrollbarWidth: 'auto',
           scrollbarColor: useColorModeValue(
             'rgba(0,0,0,0.3) rgba(0,0,0,0.2)',
-            'rgba(255,255,255,0.2) rgba(255,255,255,0.1)'
+            'rgba(255,255,255,0.2) rgba(255,255,255,0.1)',
           ),
           // For Chrome and other browsers except Firefox
           '&::-webkit-scrollbar': {
             width: '14px',
             background: useColorModeValue(
               'rgba(220,220,220,0.1)',
-              'rgba(60,60,60,0.1)'
+              'rgba(60,60,60,0.1)',
             ),
-            borderRadius: '3px'
+            borderRadius: '3px',
           },
           '&::-webkit-scrollbar-thumb': {
             background: useColorModeValue(
               'rgba(0,0,0,0.1)',
-              'rgba(255,255,255,0.1)'
+              'rgba(255,255,255,0.1)',
             ),
             borderRadius: '10px',
             border: '3px solid transparent',
-            backgroundClip: 'content-box'
-          }
+            backgroundClip: 'content-box',
+          },
         }}
       >
         <Box position="sticky" top={0}>
@@ -62,18 +70,23 @@ export const WarnBlock = ({
 
 export const RejectedWarn = ({
   wordOfWarning,
-  icon
+  icon,
 }: {
   wordOfWarning?: string;
   icon?: ReactNode;
 }) => {
-  return <WarnBlock wordOfWarning={wordOfWarning} icon={icon} />;
+  return (
+    <WarnBlock
+      wordOfWarning={wordOfWarning}
+      icon={icon}
+    />
+  );
 };
 
 export const ConnectStatusWarn = ({
   walletStatus,
   rejected,
-  error
+  error,
 }: {
   walletStatus: WalletStatus;
   rejected: ReactNode;

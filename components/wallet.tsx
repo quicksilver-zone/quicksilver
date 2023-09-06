@@ -1,4 +1,3 @@
-import { useChain, useManager } from '@cosmos-kit/react';
 import {
   Box,
   Center,
@@ -7,10 +6,14 @@ import {
   Icon,
   Stack,
   useColorModeValue,
-  Text,
 } from '@chakra-ui/react';
+import {
+  useChain,
+  useManager,
+} from '@cosmos-kit/react';
 import { MouseEventHandler } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
+
 import {
   Astronaut,
   Error,
@@ -50,12 +53,15 @@ export const WalletSection = () => {
   };
 
   // Events
-  const onClickConnect: MouseEventHandler = async (e) => {
-    e.preventDefault();
-    await connect();
-  };
+  const onClickConnect: MouseEventHandler =
+    async (e) => {
+      e.preventDefault();
+      await connect();
+    };
 
-  const onClickOpenView: MouseEventHandler = (e) => {
+  const onClickOpenView: MouseEventHandler = (
+    e,
+  ) => {
     e.preventDefault();
     openView();
   };
@@ -65,16 +71,35 @@ export const WalletSection = () => {
     <WalletConnectComponent
       walletStatus={status}
       disconnect={
-        <Disconnected buttonText="Connect Wallet" onClick={onClickConnect} />
+        <Disconnected
+          buttonText="Connect Wallet"
+          onClick={onClickConnect}
+        />
       }
       connecting={<Connecting />}
       connected={
-        <Connected buttonText={'My Wallet'} onClick={onClickOpenView} />
+        <Connected
+          buttonText={'My Wallet'}
+          onClick={onClickOpenView}
+        />
       }
-      rejected={<Rejected buttonText="Reconnect" onClick={onClickConnect} />}
-      error={<Error buttonText="Change Wallet" onClick={onClickOpenView} />}
+      rejected={
+        <Rejected
+          buttonText="Reconnect"
+          onClick={onClickConnect}
+        />
+      }
+      error={
+        <Error
+          buttonText="Change Wallet"
+          onClick={onClickOpenView}
+        />
+      }
       notExist={
-        <NotExist buttonText="Install Wallet" onClick={onClickOpenView} />
+        <NotExist
+          buttonText="Install Wallet"
+          onClick={onClickOpenView}
+        />
       }
     />
   );
@@ -84,13 +109,17 @@ export const WalletSection = () => {
       walletStatus={status}
       rejected={
         <RejectedWarn
-          icon={<Icon as={FiAlertTriangle} mt={1} />}
+          icon={
+            <Icon as={FiAlertTriangle} mt={1} />
+          }
           wordOfWarning={`${wallet?.prettyName}: ${message}`}
         />
       }
       error={
         <RejectedWarn
-          icon={<Icon as={FiAlertTriangle} mt={1} />}
+          icon={
+            <Icon as={FiAlertTriangle} mt={1} />
+          }
           wordOfWarning={`${wallet?.prettyName}: ${message}`}
         />
       }
@@ -98,12 +127,20 @@ export const WalletSection = () => {
   );
 
   const userInfo = username && (
-    <ConnectedUserInfo username={username} icon={<Astronaut />} />
+    <ConnectedUserInfo
+      username={username}
+      icon={<Astronaut />}
+    />
   );
   const addressBtn = (
     <CopyAddressBtn
       walletStatus={status}
-      connected={<ConnectedShowAddress address={address} isLoading={false} />}
+      connected={
+        <ConnectedShowAddress
+          address={address}
+          isLoading={false}
+        />
+      }
     />
   );
 
@@ -128,10 +165,13 @@ export const WalletSection = () => {
             justifyContent="center"
             alignItems="center"
             borderRadius="lg"
-            bg={useColorModeValue('white', 'blackAlpha.400')}
+            bg={useColorModeValue(
+              'white',
+              'blackAlpha.400',
+            )}
             boxShadow={useColorModeValue(
               '0 0 2px #dfdfdf, 0 0 6px -2px #d3d3d3',
-              '0 0 2px #363636, 0 0 8px -2px #4f4f4f'
+              '0 0 2px #363636, 0 0 8px -2px #4f4f4f',
             )}
             spacing={4}
             px={4}
@@ -139,10 +179,17 @@ export const WalletSection = () => {
           >
             {userInfo}
             {addressBtn}
-            <Box w="full" maxW={{ base: 52, md: 64 }}>
+            <Box
+              w="full"
+              maxW={{ base: 52, md: 64 }}
+            >
               {connectWalletButton}
             </Box>
-            {connectWalletWarn && <GridItem>{connectWalletWarn}</GridItem>}
+            {connectWalletWarn && (
+              <GridItem>
+                {connectWalletWarn}
+              </GridItem>
+            )}
           </Stack>
         </GridItem>
       </Grid>

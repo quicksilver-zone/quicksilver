@@ -1,67 +1,88 @@
-import React, { MouseEventHandler, ReactNode } from 'react';
-import { Button, Icon, Stack, Text, useColorModeValue } from '@chakra-ui/react';
-import { IoWallet } from 'react-icons/io5';
-import { ConnectWalletType } from '../types';
-import { FiAlertTriangle } from 'react-icons/fi';
+import {
+  Button,
+  Icon,
+  Stack,
+  Text,
+  useColorModeValue,
+} from '@chakra-ui/react';
 import { WalletStatus } from '@cosmos-kit/core';
+import React, {
+  MouseEventHandler,
+  ReactNode,
+} from 'react';
+import { FiAlertTriangle } from 'react-icons/fi';
+import { IoWallet } from 'react-icons/io5';
+
+import { ConnectWalletType } from '../types';
 
 export const ConnectWalletButton = ({
   buttonText,
   isLoading,
   isDisabled,
   icon,
-  onClickConnectBtn
+  onClickConnectBtn,
 }: ConnectWalletType) => {
-  const buttonTextColor = useColorModeValue("primary.700", "primary.50")
-  const invertButtonTextColor = useColorModeValue("primary.50", "primary.700")
+  const buttonTextColor = useColorModeValue(
+    'primary.700',
+    'primary.50',
+  );
+  const invertButtonTextColor = useColorModeValue(
+    'primary.50',
+    'primary.700',
+  );
   return (
-<Button
-    variant="solid"
-    minW="fit-content"
-    isLoading={isLoading}
-    isDisabled={isDisabled}
-    bgColor={buttonTextColor}
-    color={invertButtonTextColor}
-    _hover={{
-        bgColor: "rgba(0,0,0,0.5)", 
-        backdropFilter: "blur(5px)",
-        color: "white",
-    }}
-    _active={{
-      bgColor: "rgba(0,0,0,0.5)", 
-      backdropFilter: "blur(10px)",
-      
-    }}
-    opacity={1}
-    onClick={onClickConnectBtn}
->
-    <Icon as={icon ? icon : IoWallet} mr={2} />
-    {buttonText ? buttonText : 'Connect'}
-</Button>
+    <Button
+      variant="solid"
+      minW="fit-content"
+      isLoading={isLoading}
+      isDisabled={isDisabled}
+      bgColor={buttonTextColor}
+      color={invertButtonTextColor}
+      _hover={{
+        bgColor: 'rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(5px)',
+        color: 'white',
+      }}
+      _active={{
+        bgColor: 'rgba(0,0,0,0.5)',
+        backdropFilter: 'blur(10px)',
+      }}
+      opacity={1}
+      onClick={onClickConnectBtn}
+    >
+      <Icon as={icon ? icon : IoWallet} mr={2} />
+      {buttonText ? buttonText : 'Connect'}
+    </Button>
   );
 };
 
 export const Disconnected = ({
   buttonText,
-  onClick
+  onClick,
 }: {
   buttonText: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
 }) => {
   return (
-    <ConnectWalletButton buttonText={buttonText} onClickConnectBtn={onClick} />
+    <ConnectWalletButton
+      buttonText={buttonText}
+      onClickConnectBtn={onClick}
+    />
   );
 };
 
 export const Connected = ({
   buttonText,
-  onClick
+  onClick,
 }: {
   buttonText: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
 }) => {
   return (
-    <ConnectWalletButton buttonText={buttonText} onClickConnectBtn={onClick} />
+    <ConnectWalletButton
+      buttonText={buttonText}
+      onClickConnectBtn={onClick}
+    />
   );
 };
 
@@ -72,13 +93,16 @@ export const Connecting = () => {
 export const Rejected = ({
   buttonText,
   wordOfWarning,
-  onClick
+  onClick,
 }: {
   buttonText: string;
   wordOfWarning?: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
 }) => {
-  const bg = useColorModeValue('orange.200', 'orange.300');
+  const bg = useColorModeValue(
+    'orange.200',
+    'orange.300',
+  );
 
   return (
     <Stack>
@@ -112,13 +136,16 @@ export const Rejected = ({
 export const Error = ({
   buttonText,
   wordOfWarning,
-  onClick
+  onClick,
 }: {
   buttonText: string;
   wordOfWarning?: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
 }) => {
-  const bg = useColorModeValue('orange.200', 'orange.300');
+  const bg = useColorModeValue(
+    'orange.200',
+    'orange.300',
+  );
 
   return (
     <Stack>
@@ -151,7 +178,7 @@ export const Error = ({
 
 export const NotExist = ({
   buttonText,
-  onClick
+  onClick,
 }: {
   buttonText: string;
   onClick: MouseEventHandler<HTMLButtonElement>;
@@ -172,7 +199,7 @@ export const WalletConnectComponent = ({
   connected,
   rejected,
   error,
-  notExist
+  notExist,
 }: {
   walletStatus: WalletStatus;
   disconnect: ReactNode;

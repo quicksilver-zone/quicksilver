@@ -1,16 +1,16 @@
-import { useChain, useManager } from '@cosmos-kit/react';
 import {
-  Box,
   Center,
   Grid,
   GridItem,
   Icon,
-  Stack,
-  useColorModeValue,
-  Text,
 } from '@chakra-ui/react';
+import {
+  useChain,
+  useManager,
+} from '@cosmos-kit/react';
 import { MouseEventHandler } from 'react';
 import { FiAlertTriangle } from 'react-icons/fi';
+
 import {
   Astronaut,
   Error,
@@ -25,9 +25,8 @@ import {
   Rejected,
   RejectedWarn,
   WalletConnectComponent,
-  ChainCard,
-} from '../components';
-import { chainName } from '../config';
+} from '@/components';
+import { chainName } from '@/config';
 
 export const WalletButton = () => {
   const {
@@ -50,12 +49,15 @@ export const WalletButton = () => {
   };
 
   // Events
-  const onClickConnect: MouseEventHandler = async (e) => {
-    e.preventDefault();
-    await connect();
-  };
+  const onClickConnect: MouseEventHandler =
+    async (e) => {
+      e.preventDefault();
+      await connect();
+    };
 
-  const onClickOpenView: MouseEventHandler = (e) => {
+  const onClickOpenView: MouseEventHandler = (
+    e,
+  ) => {
     e.preventDefault();
     openView();
   };
@@ -65,16 +67,35 @@ export const WalletButton = () => {
     <WalletConnectComponent
       walletStatus={status}
       disconnect={
-        <Disconnected buttonText="Connect Wallet" onClick={onClickConnect} />
+        <Disconnected
+          buttonText="Connect Wallet"
+          onClick={onClickConnect}
+        />
       }
       connecting={<Connecting />}
       connected={
-        <Connected buttonText={'My Wallet'} onClick={onClickOpenView} />
+        <Connected
+          buttonText={'My Wallet'}
+          onClick={onClickOpenView}
+        />
       }
-      rejected={<Rejected buttonText="Reconnect" onClick={onClickConnect} />}
-      error={<Error buttonText="Change Wallet" onClick={onClickOpenView} />}
+      rejected={
+        <Rejected
+          buttonText="Reconnect"
+          onClick={onClickConnect}
+        />
+      }
+      error={
+        <Error
+          buttonText="Change Wallet"
+          onClick={onClickOpenView}
+        />
+      }
       notExist={
-        <NotExist buttonText="Install Wallet" onClick={onClickOpenView} />
+        <NotExist
+          buttonText="Install Wallet"
+          onClick={onClickOpenView}
+        />
       }
     />
   );
@@ -84,13 +105,17 @@ export const WalletButton = () => {
       walletStatus={status}
       rejected={
         <RejectedWarn
-          icon={<Icon as={FiAlertTriangle} mt={1} />}
+          icon={
+            <Icon as={FiAlertTriangle} mt={1} />
+          }
           wordOfWarning={`${wallet?.prettyName}: ${message}`}
         />
       }
       error={
         <RejectedWarn
-          icon={<Icon as={FiAlertTriangle} mt={1} />}
+          icon={
+            <Icon as={FiAlertTriangle} mt={1} />
+          }
           wordOfWarning={`${wallet?.prettyName}: ${message}`}
         />
       }
@@ -98,17 +123,25 @@ export const WalletButton = () => {
   );
 
   const userInfo = username && (
-    <ConnectedUserInfo username={username} icon={<Astronaut />} />
+    <ConnectedUserInfo
+      username={username}
+      icon={<Astronaut />}
+    />
   );
   const addressBtn = (
     <CopyAddressBtn
       walletStatus={status}
-      connected={<ConnectedShowAddress address={address} isLoading={false} />}
+      connected={
+        <ConnectedShowAddress
+          address={address}
+          isLoading={false}
+        />
+      }
     />
   );
 
   return (
-    <Center >
+    <Center>
       <Grid
         w="full"
         maxW="sm"
@@ -116,12 +149,10 @@ export const WalletButton = () => {
         alignItems="center"
         justifyContent="center"
       >
-      
-           
-              {connectWalletButton}
-            {connectWalletWarn && <GridItem>{connectWalletWarn}</GridItem>}
-
-
+        {connectWalletButton}
+        {connectWalletWarn && (
+          <GridItem>{connectWalletWarn}</GridItem>
+        )}
       </Grid>
     </Center>
   );

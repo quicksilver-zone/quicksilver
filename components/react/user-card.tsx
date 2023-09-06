@@ -1,10 +1,15 @@
+import {
+  Text,
+  Stack,
+  Box,
+} from '@chakra-ui/react';
 import React from 'react';
-import { Text, Stack, Box } from '@chakra-ui/react';
+
 import { ConnectedUserCardType } from '../types';
 
 export const ConnectedUserInfo = ({
   username,
-  icon
+  icon,
 }: ConnectedUserCardType) => {
   return (
     <Stack spacing={1} alignItems="center">
@@ -23,7 +28,10 @@ export const ConnectedUserInfo = ({
           >
             {icon}
           </Box>
-          <Text fontSize={{ md: 'xl' }} fontWeight="semibold">
+          <Text
+            fontSize={{ md: 'xl' }}
+            fontWeight="semibold"
+          >
             {username}
           </Text>
         </>

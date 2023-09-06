@@ -1,10 +1,14 @@
-import { useToast, Text, Box } from '@chakra-ui/react';
+import {
+  useToast,
+  Text,
+  Box,
+} from '@chakra-ui/react';
 
 export enum ToastType {
   Info = 'info',
   Error = 'error',
   Success = 'success',
-  Loading = 'loading'
+  Loading = 'loading',
 }
 
 export type CustomToast = {
@@ -19,8 +23,8 @@ export const useToaster = () => {
   const toast = useToast({
     position: 'top-right',
     containerStyle: {
-      maxWidth: '150px'
-    }
+      maxWidth: '150px',
+    },
   });
 
   const customToast = ({
@@ -28,7 +32,7 @@ export const useToaster = () => {
     title,
     message,
     closable = true,
-    duration = 5000
+    duration = 5000,
   }: CustomToast) => {
     return toast({
       title,
@@ -41,7 +45,7 @@ export const useToaster = () => {
             {message}
           </Text>
         </Box>
-      )
+      ),
     });
   };
 

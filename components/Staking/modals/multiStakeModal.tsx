@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Modal,
   ModalOverlay,
@@ -7,20 +6,25 @@ import {
   ModalCloseButton,
   ModalBody,
   ModalFooter,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react';
+import React from 'react';
 
 interface MultiModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  children?: React.ReactNode;
 }
 
-export const MultiModal: React.FC<MultiModalProps> = ({ isOpen, onClose }) => {
+export const MultiModal: React.FC<
+  MultiModalProps
+> = ({ isOpen, onClose }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Validator Selection</ModalHeader>
+        <ModalHeader>
+          Validator Selection
+        </ModalHeader>
         <ModalCloseButton />
         <ModalBody></ModalBody>
         <ModalFooter></ModalFooter>

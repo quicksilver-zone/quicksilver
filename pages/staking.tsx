@@ -1,5 +1,3 @@
-import Head from "next/head";
-import { useState } from "react";
 import {
   Box,
   Image,
@@ -10,24 +8,34 @@ import {
   Stat,
   StatLabel,
   StatNumber,
-} from "@chakra-ui/react";
+} from '@chakra-ui/react';
+import Head from 'next/head';
+import { useState } from 'react';
 
-import { Header } from "../components/react/header";
-import { SideHeader } from "../components/react/sideHeader";
-
-import NetworkSelect from "../components/Staking/networkSelectButton";
-import StakingBox from "../components/Staking/stakingBox";
-import InfoBox from "../components/Staking/infoBox";
-import AssetsAccordian from "../components/Staking/assetsAccordion";
+import { Header } from '@/components';
+import { SideHeader } from '@/components';
+import { NetworkSelect } from '@/components';
+import { StakingBox } from '@/components';
+import { InfoBox } from '@/components';
+import { AssetsAccordian } from '@/components';
 
 export default function Staking() {
-  const [selectedOption, setSelectedOption] = useState("Atom"); // or a default value
-  const [isModalOpen, setModalOpen] = useState(false);
+  const [selectedOption, setSelectedOption] =
+    useState('Atom'); // or a default value
+  const [isModalOpen, setModalOpen] =
+    useState(false);
   const [openItem, setOpenItem] = useState(null);
-  const [activeAccordion, setActiveAccordion] = useState(null);
+  const [activeAccordion, setActiveAccordion] =
+    useState(null);
 
-  const handleAccordionChange = (accordionNumber: any, index: any) => {
-    if (activeAccordion === accordionNumber && openItem === index) {
+  const handleAccordionChange = (
+    accordionNumber: any,
+    index: any,
+  ) => {
+    if (
+      activeAccordion === accordionNumber &&
+      openItem === index
+    ) {
       setOpenItem(null);
       setActiveAccordion(null);
     } else {
@@ -52,7 +60,10 @@ export default function Staking() {
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           />
-          <link rel="icon" href="/img/favicon.png" />
+          <link
+            rel="icon"
+            href="/img/favicon.png"
+          />
         </Head>
         <Header />
         <SideHeader />
@@ -65,22 +76,36 @@ export default function Staking() {
           h="80vh"
         >
           <Image
+            alt={''}
             src="/img/metalmisc2.png"
             zIndex={-10}
             position="absolute"
             bottom="-10"
             left="-10"
-            boxSize="120px" // Set the desired size of the image
+            boxSize="120px"
           />
-          <Flex zIndex={3} direction="column" h="100%">
+          <Flex
+            zIndex={3}
+            direction="column"
+            h="100%"
+          >
             {/* Dropdown and Statistic */}
             <Box w="50%">
-              <HStack justifyContent="space-between" w="100%">
+              <HStack
+                justifyContent="space-between"
+                w="100%"
+              >
                 <NetworkSelect
                   selectedOption={selectedOption}
-                  setSelectedOption={setSelectedOption}
+                  setSelectedOption={
+                    setSelectedOption
+                  }
                 />
-                <VStack p={1} borderRadius="10px" alignItems="flex-end">
+                <VStack
+                  p={1}
+                  borderRadius="10px"
+                  alignItems="flex-end"
+                >
                   <Stat color="complimentary.900">
                     <StatLabel>APY</StatLabel>
                     <StatNumber>35%</StatNumber>
@@ -105,18 +130,12 @@ export default function Staking() {
                 {/* Top Half (2/3) */}
                 <InfoBox
                   selectedOption={selectedOption}
-                  activeAccordion={activeAccordion}
-                  handleAccordionChange={handleAccordionChange}
-                  openItem={openItem}
                 />
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
                 <AssetsAccordian
                   selectedOption={selectedOption}
-                  activeAccordion={activeAccordion}
-                  handleAccordionChange={handleAccordionChange}
-                  openItem={openItem}
                 />
               </Flex>
             </Flex>
