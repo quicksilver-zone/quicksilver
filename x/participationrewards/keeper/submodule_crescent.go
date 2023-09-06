@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
 	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
