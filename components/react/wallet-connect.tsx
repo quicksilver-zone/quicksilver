@@ -36,7 +36,7 @@ export const ConnectWalletButton = ({
       minW="fit-content"
       isLoading={isLoading}
       isDisabled={isDisabled}
-      bgColor={buttonTextColor}
+      bgColor="complimentary.900"
       color={invertButtonTextColor}
       _hover={{
         bgColor: 'rgba(0,0,0,0.5)',

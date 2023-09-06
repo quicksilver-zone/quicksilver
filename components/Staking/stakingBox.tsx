@@ -202,7 +202,7 @@ export const StakingBox = ({
                   </HStack>
                 </Flex>
               </Flex>
-              <Divider />
+              <Divider bgColor="complimentary.900" />
               <HStack
                 justifyContent="space-between"
                 alignItems="left"
@@ -340,7 +340,7 @@ export const StakingBox = ({
                   </Button>
                 </Flex>
               </Flex>
-              <Divider />
+              <Divider bgColor="complimentary.900" />
               <HStack
                 justifyContent="space-between"
                 alignItems="left"

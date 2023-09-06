@@ -1,8 +1,4 @@
-import {
-  Box,
-  Container,
-  useColorModeValue,
-} from '@chakra-ui/react';
+import { Box, Container } from '@chakra-ui/react';
 import Head from 'next/head';
 
 import { Header } from '../components/react/header';
@@ -14,10 +10,10 @@ export default function Home() {
       <Box
         w="100vw"
         h="100vh"
-        bgImage="url('/img/background.png')" // Add this line
-        bgSize="cover" // Add this line
-        bgPosition="center center" // Add this line
-        bgAttachment="fixed" // Add this line
+        bgImage="url('/img/background.png')"
+        bgSize="cover"
+        bgPosition="center center"
+        bgAttachment="fixed"
       >
         <Header />
         <SideHeader />

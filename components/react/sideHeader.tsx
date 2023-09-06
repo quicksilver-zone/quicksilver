@@ -37,6 +37,9 @@ export const SideHeader = () => {
     };
   }, [router]);
 
+  const commonBoxShadowColor =
+    'rgba(255, 128, 0, 0.25)';
+
   return (
     <Box
       w="fit-content"
@@ -72,7 +75,7 @@ export const SideHeader = () => {
           spacing={16}
         >
           <Tooltip
-            borderLeft="4px solid rgba(255, 0, 0, 0.5)"
+            borderLeft="4px solid rgba(255, 128, 0, 0.9)"
             label="Staking"
             placement="right"
           >
@@ -86,12 +89,11 @@ export const SideHeader = () => {
               borderRadius="100px"
               boxShadow={
                 selectedPage === 'staking'
-                  ? '0 0 15px 5px rgba(255, 0, 0, 0.25), inset 0 0 50px 5px rgba(255, 0, 0, 0.25)'
+                  ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`
                   : ''
               }
               _hover={{
-                boxShadow:
-                  '0 0 15px 5px rgba(255, 0, 0, 0.25), inset 0 0 50px 5px rgba(255, 0, 0, 0.25)',
+                boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
               }}
             >
               <Image
@@ -111,7 +113,7 @@ export const SideHeader = () => {
           </Tooltip>
 
           <Tooltip
-            borderLeft="4px solid rgba(128, 0, 128, 0.5)"
+            borderLeft="4px solid rgba(255, 128, 0, 0.9)"
             label="Governance"
             placement="right"
           >
@@ -125,12 +127,11 @@ export const SideHeader = () => {
               borderRadius="100px"
               boxShadow={
                 selectedPage === 'governance'
-                  ? '0 0 15px 5px rgba(128, 0, 128, 0.25), inset 0 0 50px 5px rgba(128, 0, 128, 0.25)'
+                  ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`
                   : ''
               }
               _hover={{
-                boxShadow:
-                  '0 0 15px 5px rgba(128, 0, 128, 0.25), inset 0 0 50px 5px rgba(128, 0, 128, 0.25)',
+                boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
               }}
             >
               <Image
@@ -150,7 +151,7 @@ export const SideHeader = () => {
           </Tooltip>
 
           <Tooltip
-            borderLeft="4px solid rgba(0, 0, 255, 0.5)"
+            borderLeft="4px solid rgba(255, 128, 0, 0.9)"
             label="Assets"
             placement="right"
           >
@@ -164,12 +165,11 @@ export const SideHeader = () => {
               borderRadius="100px"
               boxShadow={
                 selectedPage === 'assets'
-                  ? '0 0 15px 5px rgba(0, 0, 255, 0.25), inset 0 0 50px 5px rgba(0, 0, 255, 0.25)'
+                  ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`
                   : ''
               }
               _hover={{
-                boxShadow:
-                  '0 0 15px 5px rgba(0, 0, 255, 0.25), inset 0 0 50px 5px rgba(0, 0, 255, 0.25)',
+                boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
               }}
             >
               <Image
@@ -189,7 +189,7 @@ export const SideHeader = () => {
           </Tooltip>
 
           <Tooltip
-            borderLeft="4px solid rgba(255, 128, 0, 0.5)"
+            borderLeft="4px solid rgba(255, 128, 0, 0.9)"
             label="DeFi"
             placement="right"
           >
@@ -201,12 +201,11 @@ export const SideHeader = () => {
               borderRadius="100px"
               boxShadow={
                 selectedPage === 'defi'
-                  ? '0 0 15px 5px rgba(255, 128, 0, 0.25), inset 0 0 50px 5px rgba(255, 128, 0, 0.25)'
+                  ? `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`
                   : ''
               }
               _hover={{
-                boxShadow:
-                  '0 0 15px 5px rgba(255, 128, 0, 0.25), inset 0 0 50px 5px rgba(255, 128, 0, 0.25)',
+                boxShadow: `0 0 15px 5px ${commonBoxShadowColor}, inset 0 0 50px 5px ${commonBoxShadowColor}`,
               }}
             >
               <Image

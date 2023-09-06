@@ -18,10 +18,10 @@ export default function Home() {
       <Box
         w="100vw"
         h="100vh"
-        bgImage="url('/img/backgroundTest.png')" // Add this line
-        bgSize="cover" // Add this line
-        bgPosition="center center" // Add this line
-        bgAttachment="fixed" // Add this line
+        bgImage="url('/img/backgroundTest.png')"
+        bgSize="cover"
+        bgPosition="center center"
+        bgAttachment="fixed"
       >
         <Header />
         <SideHeader />
