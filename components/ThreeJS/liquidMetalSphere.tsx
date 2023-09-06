@@ -28,7 +28,7 @@ const LiquidMetalSphere = () => {
       renderer.domElement,
     );
 
-    // Create the sphere
+
     const geometry = new THREE.SphereGeometry(
       1,
       32,
@@ -37,7 +37,7 @@ const LiquidMetalSphere = () => {
     const material = new THREE.MeshBasicMaterial({
       color: 'orange',
       wireframe: true,
-    }); // Placeholder material, replace this for "liquid metal" look
+    }); 
     const sphere = new THREE.Mesh(
       geometry,
       material,

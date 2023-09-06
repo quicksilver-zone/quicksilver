@@ -21,7 +21,7 @@ import { AssetsAccordian } from '@/components';
 
 export default function Staking() {
   const [selectedOption, setSelectedOption] =
-    useState('Atom'); // or a default value
+    useState('Atom');
   const [isModalOpen, setModalOpen] =
     useState(false);
   const [openItem, setOpenItem] = useState(null);

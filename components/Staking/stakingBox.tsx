@@ -56,7 +56,7 @@ export const StakingBox = ({
             flex="1"
             color="white"
             fontWeight="bold"
-            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out" // Added transition property
+            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out" 
             _hover={{
               borderBottomColor:
                 'complimentary.900',
@@ -74,7 +74,7 @@ export const StakingBox = ({
             flex="1"
             color="white"
             fontWeight="bold"
-            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out" // Added transition property
+            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out" 
             _hover={{
               borderBottomColor:
                 'complimentary.900',
@@ -223,7 +223,7 @@ export const StakingBox = ({
                   </StatNumber>
                 </Stat>
                 <Spacer />{' '}
-                {/* This will push the next Stat component to the right */}
+                {/* This pushes the next Stat component to the right */}
                 <Stat
                   py={4}
                   textAlign="right"
@@ -360,7 +360,7 @@ export const StakingBox = ({
                   </StatNumber>
                 </Stat>
                 <Spacer />{' '}
-                {/* This will push the next Stat component to the right */}
+                {/* This pushes the next Stat component to the right */}
                 <Stat
                   py={4}
                   textAlign="right"

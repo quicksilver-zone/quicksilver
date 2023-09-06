@@ -18,7 +18,7 @@ export const SideHeader = () => {
   useEffect(() => {
     // Function to handle route changes
     const handleRouteChange = (url: string) => {
-      const path = url.split('/')[1]; // Get the path after the first '/'
+      const path = url.split('/')[1]; 
       setSelectedPage(path);
     };
 
