@@ -11,7 +11,7 @@ export const useRpcQueryClient = (
 ) => {
   const { rpcEndpoint } =
     useQueryHooks(chainName);
-
+  console.log(rpcEndpoint);
   const rpcQueryClientQuery = useQuery({
     queryKey: ['rpcQueryClient', rpcEndpoint],
     queryFn: () =>

@@ -18,7 +18,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import { cosmos } from 'interchain-query';
-import { Proposal } from 'interchain-query/cosmos/gov/v1beta1/gov';
+import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
 import React, { useMemo, useState } from 'react';
 import { PieChart } from 'react-minimal-pie-chart';
 
@@ -75,28 +75,29 @@ export const ProposalModal = ({
     {
       title: 'YES',
       value: Number(
-        proposal.finalTallyResult?.yes,
+        proposal.finalTallyResult?.yesCount,
       ),
       color: VoteColor.YES,
     },
     {
       title: 'NO',
       value: Number(
-        proposal.finalTallyResult?.no,
+        proposal.finalTallyResult?.noCount,
       ),
       color: VoteColor.NO,
     },
     {
       title: 'NWV',
       value: Number(
-        proposal.finalTallyResult?.noWithVeto,
+        proposal.finalTallyResult
+          ?.noWithVetoCount,
       ),
       color: VoteColor.NWV,
     },
     {
       title: 'ABSTAIN',
       value: Number(
-        proposal.finalTallyResult?.abstain,
+        proposal.finalTallyResult?.abstainCount,
       ),
       color: VoteColor.ABSTAIN,
     },
@@ -121,8 +122,7 @@ export const ProposalModal = ({
     return total ? total : 0;
   }, [proposal]);
 
-  const vote =
-    votes?.[proposal.proposalId.toString()];
+  const vote = votes?.[proposal.id.toString()];
 
   const isDepositPeriod =
     proposal.status ===
@@ -145,11 +145,8 @@ export const ProposalModal = ({
   const getTitleFromProposal = (
     proposal: Proposal,
   ): string | undefined => {
-    if (
-      proposal.content &&
-      'title' in proposal.content
-    ) {
-      return proposal.content.title;
+    if (proposal.title) {
+      return proposal.title;
     }
     return undefined;
   };
@@ -157,11 +154,8 @@ export const ProposalModal = ({
   const getDescritpionFromProposal = (
     proposal: Proposal,
   ): string | undefined => {
-    if (
-      proposal.content &&
-      'description' in proposal.content
-    ) {
-      return proposal.content.description;
+    if (proposal.summary) {
+      return proposal.summary;
     }
     return undefined;
   };
@@ -194,7 +188,7 @@ export const ProposalModal = ({
         updateVotes={updateVotes}
         title={title || ''}
         vote={vote}
-        proposalId={proposal.proposalId}
+        proposalId={proposal.id}
       />
 
       <Modal
@@ -232,7 +226,7 @@ export const ProposalModal = ({
                   <VoteResult voteOption={vote} />
                 )}
               </Flex>
-              <Text>{`#${proposal.proposalId} ${title}`}</Text>
+              <Text>{`#${proposal.id} ${title}`}</Text>
             </ModalHeader>
             <ModalCloseButton />
             <ModalBody>
@@ -396,13 +390,13 @@ export const ProposalModal = ({
                         ratio={getPercentage(
                           proposal
                             .finalTallyResult
-                            ?.yes,
+                            ?.yesCount,
                           totalVotes,
                         )}
                         amount={exponentiate(
                           proposal
                             .finalTallyResult
-                            ?.yes,
+                            ?.yesCount,
                           -exponent,
                         ).toFixed(2)}
                         token={coin.symbol}
@@ -411,12 +405,14 @@ export const ProposalModal = ({
                         type={VoteOption.NO}
                         ratio={getPercentage(
                           proposal
-                            .finalTallyResult?.no,
+                            .finalTallyResult
+                            ?.noCount,
                           totalVotes,
                         )}
                         amount={exponentiate(
                           proposal
-                            .finalTallyResult?.no,
+                            .finalTallyResult
+                            ?.noCount,
                           -exponent,
                         ).toFixed(2)}
                         token={coin.symbol}
@@ -426,13 +422,13 @@ export const ProposalModal = ({
                         ratio={getPercentage(
                           proposal
                             .finalTallyResult
-                            ?.noWithVeto,
+                            ?.noWithVetoCount,
                           totalVotes,
                         )}
                         amount={exponentiate(
                           proposal
                             .finalTallyResult
-                            ?.noWithVeto,
+                            ?.noWithVetoCount,
                           -exponent,
                         ).toFixed(2)}
                         token={coin.symbol}
@@ -442,13 +438,13 @@ export const ProposalModal = ({
                         ratio={getPercentage(
                           proposal
                             .finalTallyResult
-                            ?.abstain,
+                            ?.abstainCount,
                           totalVotes,
                         )}
                         amount={exponentiate(
                           proposal
                             .finalTallyResult
-                            ?.abstain,
+                            ?.abstainCount,
                           -exponent,
                         ).toFixed(2)}
                         token={coin.symbol}

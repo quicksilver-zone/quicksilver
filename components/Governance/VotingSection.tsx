@@ -6,7 +6,7 @@ import {
 } from '@chakra-ui/react';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain } from '@cosmos-kit/react';
-import { Proposal } from 'interchain-query/cosmos/gov/v1beta1/gov';
+import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
 import React, { useState } from 'react';
 
 import { useVotingData } from '@/hooks';
