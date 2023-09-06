@@ -76,7 +76,7 @@ export const TimeDisplay = ({
   </Stack>
 );
 
-const VoteType = cosmos.gov.v1beta1.VoteOption;
+const VoteType = cosmos.gov.v1.VoteOption;
 
 export enum VoteOption {
   YES = 'YES',

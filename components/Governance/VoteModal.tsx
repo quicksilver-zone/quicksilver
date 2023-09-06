@@ -20,9 +20,9 @@ import { useState } from 'react';
 import { useTx } from '@/hooks';
 import { getCoin } from '@/utils';
 
-const VoteType = cosmos.gov.v1beta1.VoteOption;
+const VoteType = cosmos.gov.v1.VoteOption;
 const { vote: composeVoteMessage } =
-  cosmos.gov.v1beta1.MessageComposer.fromPartial;
+  cosmos.gov.v1.MessageComposer.fromPartial;
 
 interface VoteModalProps {
   modalControl: UseDisclosureReturn;
@@ -69,6 +69,7 @@ export const VoteModal: React.FC<
       option,
       proposalId,
       voter: address,
+      metadata: ''
     });
 
     const fee: StdFee = {

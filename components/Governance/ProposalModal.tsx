@@ -43,7 +43,7 @@ import { VoteColor } from './ProposalCard';
 import { VoteModal } from './VoteModal';
 
 const ProposalStatus =
-  cosmos.gov.v1beta1.ProposalStatus;
+  cosmos.gov.v1.ProposalStatus;
 
 export const ProposalModal = ({
   isOpen,

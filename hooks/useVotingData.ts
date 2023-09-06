@@ -46,7 +46,7 @@ export const useVotingData = (
     useQueryHooks(chainName);
 
   const proposalsQuery =
-    cosmosQuery.gov.v1beta1.useProposals({
+    cosmosQuery.gov.v1.useProposals({
       request: {
         voter: '',
         depositor: '',
@@ -107,7 +107,7 @@ export const useVotingData = (
           address,
         ],
         queryFn: () =>
-          rpcQueryClient?.cosmos.gov.v1beta1.vote(
+          rpcQueryClient?.cosmos.gov.v1.vote(
             {
               proposalId,
               voter: address || '',

@@ -29,7 +29,7 @@ enum VoteOption {
 }
 
 const ProposalStatus =
-  cosmos.gov.v1beta1.ProposalStatus;
+  cosmos.gov.v1.ProposalStatus;
 
 export const VoteColor: {
   [key in VoteOption]: string;
