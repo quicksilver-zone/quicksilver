@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
-							ProofType: types.ProofTypePosition,
+							ProofType: types.ProofTypeLPFarm,
 						},
 					},
 				}
@@ -236,7 +236,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
-							ProofType: types.ProofTypePosition,
+							ProofType: types.ProofTypeLPFarm,
 						},
 					},
 				}
@@ -270,7 +270,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
-							ProofType: types.ProofTypePosition,
+							ProofType: types.ProofTypeLPFarm,
 						},
 					},
 				}
@@ -478,7 +478,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
-							ProofType: types.ProofTypePosition,
+							ProofType: types.ProofTypeLPFarm,
 						},
 					},
 				}
