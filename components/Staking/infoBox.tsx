@@ -46,8 +46,7 @@ export const InfoBox: React.FC<
         transform="rotate(25deg)"
       />
       <Text fontSize="20px" color="white">
-        {selectedOption.toUpperCase()}
-        on Quicksilver
+        {selectedOption.toUpperCase()}&nbsp;on Quicksilver
       </Text>
       <Accordion mt={6} allowToggle>
         <AccordionItem
@@ -61,7 +60,7 @@ export const InfoBox: React.FC<
               alignItems="center"
               justifyContent="space-between"
               width="100%"
-              py={2} // padding for top and bottom to mimic button's vertical padding
+              py={2} 
             >
               <Flex
                 flexDirection="row"
@@ -97,7 +96,7 @@ export const InfoBox: React.FC<
               alignItems="center"
               justifyContent="space-between"
               width="100%"
-              py={2} // padding for top and bottom to mimic button's vertical padding
+              py={2}
             >
               <Flex
                 flexDirection="row"
@@ -209,7 +208,7 @@ export const InfoBox: React.FC<
               alignItems="center"
               justifyContent="space-between"
               width="100%"
-              py={2} // padding for top and bottom to mimic button's vertical padding
+              py={2} 
             >
               <Flex
                 flexDirection="row"
@@ -254,7 +253,7 @@ export const InfoBox: React.FC<
         borderRadius={6}
       >
         Want to learn more about rewards, fees,
-        and unbonding on Quicksilver? Check out
+        and unbonding on Quicksilver?&nbsp;Check out
         the{' '}
         <Link
           href="https://your-docs-url.com"
