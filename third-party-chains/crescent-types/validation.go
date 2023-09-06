@@ -45,7 +45,7 @@ func DetermineApplicableTokensInPool(ctx sdk.Context, prKeeper ParticipationRewa
 
 	reserveAddress := poolData.GetReserveAddress()
 
-	pd, ok = prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeCrescentReserveAddressBalance, reserveAddress+pool.Denom)
+	pd, ok = prKeeper.GetProtocolData(ctx, participationrewardstypes.ProtocolDataTypeCrescentReserveAddressBalance, fmt.Sprintf("%s_%s", reserveAddress, pool.Denom))
 	if !ok {
 		return sdk.ZeroInt(), fmt.Errorf("unable to obtain reserveaddressbalance protocoldata for address=%s, denom=%s", reserveAddress, pool.Denom)
 	}

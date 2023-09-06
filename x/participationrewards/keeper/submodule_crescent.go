@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
@@ -121,9 +122,29 @@ func (c CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 	var amount uint64
 	for _, proof := range msg.Proofs {
 		position := lpfarm.Position{}
-		err := k.cdc.Unmarshal(proof.Data, &position)
-		if err != nil {
-			return 0, err
+		if proof.ProofType == types.ProofTypeBank {
+			addr, poolDenom, err := banktypes.AddressAndDenomFromBalancesStore(proof.Key[1:])
+			if err != nil {
+				return 0, err
+			}
+			coin, err := keeper.UnmarshalBalanceCompat(k.cdc, proof.Data, poolDenom)
+			if err != nil {
+				return 0, err
+			}
+			address, err := addressutils.EncodeAddressToBech32("cre", addr)
+			if err != nil {
+				return 0, err
+			}
+			position = lpfarm.Position{
+				Farmer:        address,
+				Denom:         coin.GetDenom(),
+				FarmingAmount: coin.Amount,
+			}
+		} else {
+			err := k.cdc.Unmarshal(proof.Data, &position)
+			if err != nil {
+				return 0, err
+			}
 		}
 
 		farmer, err := addressutils.AccAddressFromBech32(position.Farmer, "")

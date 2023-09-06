@@ -202,7 +202,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
-							ProofType: types.ProofTypePosition,
+							ProofType: types.ProofTypeLPFarm,
 						},
 					},
 				}
@@ -236,7 +236,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
-							ProofType: types.ProofTypePosition,
+							ProofType: types.ProofTypeLPFarm,
 						},
 					},
 				}
@@ -270,7 +270,7 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
-							ProofType: types.ProofTypePosition,
+							ProofType: types.ProofTypeLPFarm,
 						},
 					},
 				}
@@ -309,6 +309,36 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							ProofOps:  &crypto.ProofOps{},
 							Height:    0,
 							ProofType: "lockup",
+						},
+					},
+				}
+			},
+			&types.MsgSubmitClaimResponse{},
+			"",
+		},
+		{
+			"valid_osmosis_unbonded_gamm",
+			func() {
+				userAddress := addressutils.GenerateAccAddressForTest()
+				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
+				bankkey = append(bankkey, []byte("gamm/1")...)
+
+				cd := math.NewInt(10000000)
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: userAddress.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "osmosis-1",
+					ClaimType:   cmtypes.ClaimTypeOsmosisPool,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       bankkey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    0,
+							ProofType: types.ProofTypeBank,
 						},
 					},
 				}
@@ -448,7 +478,36 @@ func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {
 							Data:      bz,
 							ProofOps:  &crypto.ProofOps{},
 							Height:    10,
-							ProofType: types.ProofTypePosition,
+							ProofType: types.ProofTypeLPFarm,
+						},
+					},
+				}
+			},
+			want: &types.MsgSubmitClaimResponse{},
+		},
+		{
+			name: "valid_crescent_unbonded_pool_coin",
+			malleate: func() {
+				userAddress := addressutils.GenerateAccAddressForTest()
+				bankkey := banktypes.CreateAccountBalancesPrefix(userAddress)
+				bankkey = append(bankkey, []byte("pool1")...)
+
+				cd := math.NewInt(1000)
+				bz, err := cd.Marshal()
+				suite.Require().NoError(err)
+
+				msg = types.MsgSubmitClaim{
+					UserAddress: userAddress.String(),
+					Zone:        "cosmoshub-4",
+					SrcZone:     "testchain1",
+					ClaimType:   cmtypes.ClaimTypeCrescentPool,
+					Proofs: []*cmtypes.Proof{
+						{
+							Key:       bankkey,
+							Data:      bz,
+							ProofOps:  &crypto.ProofOps{},
+							Height:    10,
+							ProofType: types.ProofTypeBank,
 						},
 					},
 				}
