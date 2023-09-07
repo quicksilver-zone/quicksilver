@@ -11,7 +11,6 @@ import (
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgWithdrawTokenizeShareRecordReward{}, "cosmos-sdk/MsgWithdrawTokenizeShareRecordReward", nil)
 	cdc.RegisterConcrete(&MsgWithdrawAllTokenizeShareRecordReward{}, "cosmos-sdk/MsgWithdrawAllTokenizeShareRecordReward", nil)
-	cdc.RegisterConcrete(&MsgCancelUnbondingDelegation{}, "cosmos-sdk/MsgCancelUnbondingDelegation", nil)
 	cdc.RegisterConcrete(&MsgValidatorBond{}, "cosmos-sdk/MsgValidatorBond", nil)
 	cdc.RegisterConcrete(&MsgUnbondValidator{}, "cosmos-sdk/MsgUnbondValidator", nil)
 	cdc.RegisterConcrete(&MsgTokenizeShares{}, "cosmos-sdk/MsgTokenizeShares", nil)
@@ -26,7 +25,6 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		(*sdk.Msg)(nil),
 		&MsgWithdrawTokenizeShareRecordReward{},
 		&MsgWithdrawAllTokenizeShareRecordReward{},
-		&MsgCancelUnbondingDelegation{},
 		&MsgValidatorBond{},
 		&MsgUnbondValidator{},
 		&MsgTokenizeShares{},
