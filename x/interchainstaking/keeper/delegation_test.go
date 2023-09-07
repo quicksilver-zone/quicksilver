@@ -182,7 +182,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 		for _, amount := range val.current {
 			sum = sum.Add(amount)
 		}
-		allocations := icskeeper.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount)
+		allocations := icskeeper.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount, make(map[string]sdkmath.Int))
 		require.Equal(t, len(val.expected), len(allocations))
 		for valoper := range val.expected {
 			ex, ok := val.expected[valoper]
@@ -442,7 +442,7 @@ func TestCalculateDeltas(t *testing.T) {
 		for _, amount := range val.current {
 			sum = sum.Add(amount)
 		}
-		deltas := icskeeper.CalculateDeltas(val.current, sum, val.target)
+		deltas := icskeeper.CalculateDeltas(val.current, sum, val.target, make(map[string]sdkmath.Int))
 		// fmt.Println("Deltas", deltas)
 		require.Equal(t, len(val.expected), len(deltas), fmt.Sprintf("expected %d RebalanceTargets in case %d, got %d", len(val.expected), caseNumber, len(deltas)))
 		for idx, expected := range val.expected {
@@ -679,7 +679,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 		for _, amount := range val.current {
 			sum = sum.Add(amount)
 		}
-		allocations := icskeeper.DetermineAllocationsForRebalancing(val.current, sum, val.target, val.redelegations)
+		allocations := icskeeper.DetermineAllocationsForRebalancing(val.current, sum, val.target, val.redelegations, make(map[string]sdkmath.Int))
 		require.Equal(t, len(val.expected), len(allocations), fmt.Sprintf("expected %d RebalanceTargets in '%s', got %d", len(val.expected), val.name, len(allocations)))
 		for idx, rebalance := range val.expected {
 			require.Equal(t, rebalance, allocations[idx], fmt.Sprintf("%s, idx %d: Expected %v, got %v", val.name, idx, rebalance, allocations[idx]))
@@ -1073,10 +1073,9 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 
 			test.setStatements(ctx, quicksilver)
 			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			zone.DelegationAddress.Balance = sdk.NewCoins(test.delAddrBalance)
 			s.Require().True(found)
-			// before := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
 			err := quicksilver.InterchainstakingKeeper.FlushOutstandingDelegations(ctx, &zone, test.delAddrBalance)
-			// refetch zone after FlushOutstandingDelegations setZone().
 			ctx = s.chainA.GetContext()
 			if test.mockAck {
 				var msgs []sdk.Msg
@@ -1087,8 +1086,6 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					s.Require().NoError(err)
 				}
 			}
-			// after := quicksilver.InterchainstakingKeeper.AllReceipts(ctx)
-			// fmt.Println(before, after)
 			s.Require().NoError(err)
 			isCorrect := test.assertStatements(ctx, quicksilver)
 			s.Require().True(isCorrect)

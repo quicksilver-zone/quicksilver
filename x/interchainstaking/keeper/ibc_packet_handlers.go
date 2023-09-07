@@ -26,7 +26,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	lsmstakingtypes "github.com/ingenuity-build/quicksilver/x/lsmtypes"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -136,35 +136,37 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
-			// TODO: handle this before LSM
+		case "/cosmos.staking.v1beta1.MsgRedeemTokensForShares":
 			if !success {
-				return nil
+				if err := k.HandleFailedRedeemTokens(ctx, src, packetData.Memo); err != nil {
+					return err
+				}
+				continue
 			}
-			response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{}
+			response := lsmstakingtypes.MsgRedeemTokensForSharesResponse{}
 
 			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
-					k.Logger(ctx).Error("unable to unpack MsgRedeemTokensforShares response", "error", err)
+					k.Logger(ctx).Error("unable to unpack MsgRedeemTokensForShares response", "error", err)
 					return err
 				}
 			} else {
 				err := proto.Unmarshal(msgData.Data, &response)
 				if err != nil {
-					k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
+					k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensForShares response", "error", err)
 					return err
 				}
 			}
 			k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
 			// we should update delegation records here.
-			if err := k.HandleRedeemTokens(ctx, src, response.Amount); err != nil {
+			if err := k.HandleRedeemTokens(ctx, src, response.Amount, packetData.Memo); err != nil {
 				return err
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
-			// TODO: handle this before LSM
 			if !success {
+				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
 				return nil
 			}
 			response := lsmstakingtypes.MsgTokenizeSharesResponse{}
@@ -187,8 +189,8 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			continue
 		case "/cosmos.staking.v1beta1.MsgDelegate":
-			// TODO: can we safely ignore this?
 			if !success {
+				// We can safely ignore this, as this can reasonably fail, and we cater for this in the flush logic.
 				if err := k.HandleFailedDelegate(ctx, src, packetData.Memo); err != nil {
 					return err
 				}
@@ -209,7 +211,6 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				}
 			}
 			k.Logger(ctx).Info("Delegated", "response", response)
-			// we should update delegation records here.
 			if err := k.HandleDelegate(ctx, src, packetData.Memo); err != nil {
 				return err
 			}
@@ -852,10 +853,10 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	return nil
 }
 
-func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin) error {
+func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin, memo string) error {
 	k.Logger(ctx).Info("Received MsgRedeemTokensforShares acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgRedeemTokensforShares
-	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensforShares)
+	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensForShares)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensforShares")
 		return errors.New("unable to cast source message to MsgRedeemTokensforShares")
@@ -866,6 +867,34 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, redeemMsg.DelegatorAddress)
 
+	switch {
+	//case memo == "rewards":
+	case strings.HasPrefix(memo, "batch"):
+		k.Logger(ctx).Debug("batch delegation", "memo", memo, "tx", redeemMsg)
+		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
+		if err != nil {
+			return err
+		}
+		k.Logger(ctx).Debug("outstanding delegations ack-received")
+		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), redeemMsg.Amount.Denom)
+		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(redeemMsg.Amount)
+		k.SetZone(ctx, zone)
+		if zone.WithdrawalWaitgroup == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
+			if err = k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
+
+	default:
+		receipt, found := k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, memo))
+		if !found {
+			return fmt.Errorf("unable to find receipt for hash %s", memo)
+		}
+		t := ctx.BlockTime()
+		receipt.Completed = &t
+		k.SetReceipt(ctx, receipt)
+	}
 	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
 }
 
@@ -895,9 +924,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 			return err
 		}
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
-		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime())
-		// fmt.Println(zone.DelegationAddress.Balance)
-		// fmt.Println(delegateMsg.Amount)
+		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), delegateMsg.Amount.Denom)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
 		zone.WithdrawalWaitgroup--
 		k.SetZone(ctx, zone)
@@ -918,6 +945,41 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		k.SetReceipt(ctx, receipt)
 	}
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
+}
+
+func (k *Keeper) HandleFailedRedeemTokens(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	k.Logger(ctx).Info("Received MsgRedeemTokensForShares failure acknowledgement")
+	// first, type assertion. we should have lsmstakingtypes.MsgRedeemTokensForShares
+	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensForShares)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensForShares")
+		return errors.New("unable to cast source message to MsgRedeemTokensForShares")
+	}
+	zone := k.GetZoneForDelegateAccount(ctx, redeemMsg.DelegatorAddress)
+	if zone == nil {
+		// most likely a performance account...
+		if zone := k.GetZoneForPerformanceAccount(ctx, redeemMsg.DelegatorAddress); zone != nil {
+			return nil
+		}
+		return fmt.Errorf("unable to find zone for address %s", redeemMsg.DelegatorAddress)
+	}
+
+	switch {
+	case strings.HasPrefix(memo, "batch"):
+		k.Logger(ctx).Error("batch token redemption failed", "memo", memo, "tx", redeemMsg)
+		zone.WithdrawalWaitgroup--
+		k.SetZone(ctx, zone)
+		if zone.WithdrawalWaitgroup == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
+			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
+
+	default:
+		// no-op
+	}
+	return nil
 }
 
 func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
