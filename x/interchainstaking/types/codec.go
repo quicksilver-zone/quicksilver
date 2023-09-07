@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	lsmstakingtypes "github.com/ingenuity-build/quicksilver/x/lsm-types"
 )
 
 var (
