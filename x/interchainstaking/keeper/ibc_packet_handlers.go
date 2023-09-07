@@ -26,7 +26,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	lsmstakingtypes "github.com/ingenuity-build/quicksilver/x/lsm-types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	queryTypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
@@ -141,7 +141,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			if !success {
 				return nil
 			}
-			response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{}
+			response := lsmstakingtypes.MsgRedeemTokensForSharesResponse{}
 
 			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
@@ -850,7 +850,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin) error {
 	k.Logger(ctx).Info("Received MsgRedeemTokensforShares acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgRedeemTokensforShares
-	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensforShares)
+	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensForShares)
 	if !ok {
 		k.Logger(ctx).Error("unable to cast source message to MsgRedeemTokensforShares")
 		return errors.New("unable to cast source message to MsgRedeemTokensforShares")
