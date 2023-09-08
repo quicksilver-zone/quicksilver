@@ -1,4 +1,4 @@
-package lsm_types
+package lsmtypes
 
 import (
 	"github.com/cosmos/cosmos-sdk/codec"

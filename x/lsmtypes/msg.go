@@ -1,6 +1,8 @@
-package lsm_types
+package lsmtypes
 
 import (
+	"cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -12,26 +14,28 @@ var (
 	_ sdk.Msg = &MsgTransferTokenizeShareRecord{}
 	_ sdk.Msg = &MsgDisableTokenizeShares{}
 	_ sdk.Msg = &MsgEnableTokenizeShares{}
-	_ sdk.Msg = &MsgCancelUnbondingDelegation{}
 	_ sdk.Msg = &MsgValidatorBond{}
 )
 
 const (
-	TypeMsgUndelegate                  = "begin_unbonding"
-	TypeMsgUnbondValidator             = "unbond_validator"
-	TypeMsgEditValidator               = "edit_validator"
-	TypeMsgCreateValidator             = "create_validator"
-	TypeMsgDelegate                    = "delegate"
-	TypeMsgBeginRedelegate             = "begin_redelegate"
-	TypeMsgCancelUnbondingDelegation   = "cancel_unbond"
-	TypeMsgTokenizeShares              = "tokenize_shares"
-	TypeMsgRedeemTokensForShares       = "redeem_tokens_for_shares"
-	TypeMsgTransferTokenizeShareRecord = "transfer_tokenize_share_record"
-	TypeMsgDisableTokenizeShares       = "disable_tokenize_shares"
-	TypeMsgEnableTokenizeShares        = "enable_tokenize_shares"
-	TypeMsgValidatorBond               = "validator_bond"
+	TypeMsgUndelegate                           = "begin_unbonding"
+	TypeMsgUnbondValidator                      = "unbond_validator"
+	TypeMsgEditValidator                        = "edit_validator"
+	TypeMsgCreateValidator                      = "create_validator"
+	TypeMsgDelegate                             = "delegate"
+	TypeMsgBeginRedelegate                      = "begin_redelegate"
+	TypeMsgCancelUnbondingDelegation            = "cancel_unbond"
+	TypeMsgTokenizeShares                       = "tokenize_shares"
+	TypeMsgRedeemTokensForShares                = "redeem_tokens_for_shares" //nolint:gosec
+	TypeMsgTransferTokenizeShareRecord          = "transfer_tokenize_share_record"
+	TypeMsgDisableTokenizeShares                = "disable_tokenize_shares"
+	TypeMsgEnableTokenizeShares                 = "enable_tokenize_shares" //nolint:gosec
+	TypeMsgValidatorBond                        = "validator_bond"
+	TypeMsgWithdrawTokenizeShareRecordReward    = "withdraw_tokenize_share_record_reward"
+	TypeMsgWithdrawAllTokenizeShareRecordReward = "withdraw_all_tokenize_share_record_reward"
 
-	RouterKey = ""
+	RouterKey  = "lsm"
+	ModuleName = "lsm"
 )
 
 // NewMsgUnbondValidator creates a new MsgUnbondValidator instance.
@@ -119,7 +123,7 @@ func (msg MsgTokenizeShares) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errors.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
@@ -166,7 +170,7 @@ func (msg MsgRedeemTokensForShares) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errors.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
@@ -178,9 +182,9 @@ func (msg MsgRedeemTokensForShares) ValidateBasic() error {
 // NewMsgTransferTokenizeShareRecord creates a new MsgTransferTokenizeShareRecord instance.
 //
 //nolint:interfacer
-func NewMsgTransferTokenizeShareRecord(recordId uint64, sender, newOwner sdk.AccAddress) *MsgTransferTokenizeShareRecord {
+func NewMsgTransferTokenizeShareRecord(recordID uint64, sender, newOwner sdk.AccAddress) *MsgTransferTokenizeShareRecord {
 	return &MsgTransferTokenizeShareRecord{
-		TokenizeShareRecordId: recordId,
+		TokenizeShareRecordId: recordID,
 		Sender:                sender.String(),
 		NewOwner:              newOwner.String(),
 	}
@@ -297,61 +301,6 @@ func (msg MsgEnableTokenizeShares) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgCancelUnbondingDelegation creates a new MsgCancelUnbondingDelegation instance.
-//
-//nolint:interfacer
-func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, creationHeight int64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
-	return &MsgCancelUnbondingDelegation{
-		DelegatorAddress: delAddr.String(),
-		ValidatorAddress: valAddr.String(),
-		Amount:           amount,
-		CreationHeight:   creationHeight,
-	}
-}
-
-// Route implements the sdk.Msg interface.
-func (msg MsgCancelUnbondingDelegation) Route() string { return RouterKey }
-
-// Type implements the sdk.Msg interface.
-func (msg MsgCancelUnbondingDelegation) Type() string { return TypeMsgCancelUnbondingDelegation }
-
-// GetSigners implements the sdk.Msg interface.
-func (msg MsgCancelUnbondingDelegation) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
-	return []sdk.AccAddress{delegator}
-}
-
-// GetSignBytes implements the sdk.Msg interface.
-func (msg MsgCancelUnbondingDelegation) GetSignBytes() []byte {
-	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
-}
-
-// ValidateBasic implements the sdk.Msg interface.
-func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
-	}
-	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
-		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
-	}
-
-	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"invalid amount",
-		)
-	}
-
-	if msg.CreationHeight <= 0 {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"invalid height",
-		)
-	}
-
-	return nil
-}
-
 // NewMsgValidatorBond creates a new MsgValidatorBond instance.
 //
 //nolint:interfacer
@@ -392,5 +341,75 @@ func (msg MsgValidatorBond) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
+	return nil
+}
+
+func NewMsgWithdrawTokenizeShareRecordReward(ownerAddr sdk.AccAddress, recordID uint64) *MsgWithdrawTokenizeShareRecordReward {
+	return &MsgWithdrawTokenizeShareRecordReward{
+		OwnerAddress: ownerAddr.String(),
+		RecordId:     recordID,
+	}
+}
+
+func (msg MsgWithdrawTokenizeShareRecordReward) Route() string { return ModuleName }
+func (msg MsgWithdrawTokenizeShareRecordReward) Type() string {
+	return TypeMsgWithdrawTokenizeShareRecordReward
+}
+
+// Return address that must sign over msg.GetSignBytes()
+func (msg MsgWithdrawTokenizeShareRecordReward) GetSigners() []sdk.AccAddress {
+	owner, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{owner}
+}
+
+// get the bytes for the message signer to sign on
+func (msg MsgWithdrawTokenizeShareRecordReward) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// quick validity check
+func (msg MsgWithdrawTokenizeShareRecordReward) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.OwnerAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err)
+	}
+	return nil
+}
+
+func NewMsgWithdrawAllTokenizeShareRecordReward(ownerAddr sdk.AccAddress) *MsgWithdrawAllTokenizeShareRecordReward {
+	return &MsgWithdrawAllTokenizeShareRecordReward{
+		OwnerAddress: ownerAddr.String(),
+	}
+}
+
+func (msg MsgWithdrawAllTokenizeShareRecordReward) Route() string { return ModuleName }
+
+func (msg MsgWithdrawAllTokenizeShareRecordReward) Type() string {
+	return TypeMsgWithdrawAllTokenizeShareRecordReward
+}
+
+// Return address that must sign over msg.GetSignBytes()
+func (msg MsgWithdrawAllTokenizeShareRecordReward) GetSigners() []sdk.AccAddress {
+	owner, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{owner}
+}
+
+// get the bytes for the message signer to sign on
+func (msg MsgWithdrawAllTokenizeShareRecordReward) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// quick validity check
+func (msg MsgWithdrawAllTokenizeShareRecordReward) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.OwnerAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid owner address: %s", err)
+	}
 	return nil
 }
