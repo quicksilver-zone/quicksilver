@@ -95,7 +95,6 @@ function CreateCosmosApp({
           },
         }}
         signerOptions={signerOptions}
-        walletModal={undefined} // `modalViews` only counts when `walletModal` is `undefined`
       >
         <QueryClientProvider client={queryClient}>
           <ReactQueryDevtools

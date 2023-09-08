@@ -27,7 +27,7 @@ import {
   Spacer,
 } from '@chakra-ui/react';
 import { Spinner } from '@interchain-ui/react';
-import { Validator } from 'interchain-query/cosmos/staking/v1beta1/staking';
+import { ExtendedValidator as Validator } from '@/utils';
 import React, { useEffect } from 'react';
 
 import { useStakingData } from '@/hooks/useStakingData';
@@ -155,6 +155,8 @@ export const MultiModal: React.FC<MultiModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedChainName]);
 
+  let validators = data?.allValidators
+
   const handleValidatorClick = (validatorName: string) => {
     // If the validator is already selected, remove it, else add to the selected list
     setSelectedValidators((prevState) =>
@@ -163,11 +165,11 @@ export const MultiModal: React.FC<MultiModalProps> = ({
         : [...prevState, validatorName],
     );
   };
-  console.log(data?.allValidators);
-  console.log(selectedChainName);
+  console.log("Multi stake Modal", validators);
+  console.log("Multi stake Modal", selectedChainName);
 
   const handleQuickSelect = (count: number) => {
-    if (!data || !data.allValidators) return;
+    if (!data || !validators) return;
 
     // Get the top N validators
     const topValidators = data.allValidators
@@ -205,7 +207,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
               </h2>
               <AccordionPanel
               justifyContent="center"
-              textAlign="lef"
+              textAlign="left"
               mt={-2}>
                 <Box
                 >
@@ -245,7 +247,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
           ) : (
             <Box mt={4}>
               <ValidatorsTable
-                validators={data?.allValidators || []}
+                validators={validators || []}
                 onValidatorClick={handleValidatorClick}
                 selectedValidators={selectedValidators}
               />

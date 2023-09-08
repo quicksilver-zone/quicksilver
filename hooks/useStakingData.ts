@@ -1,22 +1,23 @@
+import { useEffect, useMemo } from 'react';
 import { useChain } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
+import { shiftDigits } from '../utils';
 import {
   cosmos,
   useRpcClient,
   useRpcEndpoint,
   createRpcQueryHooks,
 } from 'interchain-query';
-import { useEffect, useMemo } from 'react';
-
+import { getCoin, getExponent } from '../config';
 import {
+  calcTotalDelegation,
   extendValidators,
   parseAnnualProvisions,
+  parseDelegations,
+  parseRewards,
   parseUnbondingDays,
   parseValidators,
 } from '@/utils/staking';
-
-import { getCoin, getExponent } from '../config';
-import { shiftDigits } from '../utils';
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
@@ -24,12 +25,14 @@ import { shiftDigits } from '../utils';
 
 export const useStakingData = (chainName: string) => {
   const { address, getRpcEndpoint } = useChain(chainName);
-  console.log('useStakingData', chainName);
+
+  const coin = getCoin(chainName);
+  const exp = getExponent(chainName);
+
   const rpcEndpointQuery = useRpcEndpoint({
     getter: getRpcEndpoint,
-    extraKey: chainName,
     options: {
-      enabled: !!chainName,
+      enabled: !!address,
       staleTime: Infinity,
     },
   });
@@ -37,7 +40,7 @@ export const useStakingData = (chainName: string) => {
   const rpcClientQuery = useRpcClient({
     rpcEndpoint: rpcEndpointQuery.data || '',
     options: {
-      enabled: !!rpcEndpointQuery.data,
+      enabled: !!address && !!rpcEndpointQuery.data,
       staleTime: Infinity,
     },
   });
@@ -46,12 +49,14 @@ export const useStakingData = (chainName: string) => {
     rpc: rpcClientQuery.data,
   });
 
-  const isDataQueryEnabled = !!rpcClientQuery.data;
+  const isDataQueryEnabled = !!address && !!rpcClientQuery.data;
+
+
 
   const validatorsQuery = cosmosQuery.staking.v1beta1.useValidators({
     request: {
       status: cosmos.staking.v1beta1.bondStatusToJSON(
-        cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED,
+        cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED
       ),
       pagination: {
         key: new Uint8Array(),
@@ -65,10 +70,28 @@ export const useStakingData = (chainName: string) => {
       enabled: isDataQueryEnabled,
       select: ({ validators }) => {
         const sorted = validators.sort((a, b) =>
-          new BigNumber(b.tokens).minus(a.tokens).toNumber(),
+          new BigNumber(b.tokens).minus(a.tokens).toNumber()
         );
         return parseValidators(sorted);
       },
+    },
+  });
+
+  const delegationsQuery = cosmosQuery.staking.v1beta1.useDelegatorDelegations({
+    request: {
+      delegatorAddr: address || '',
+      pagination: {
+        key: new Uint8Array(),
+        offset: 0n,
+        limit: 100n,
+        countTotal: true,
+        reverse: false,
+      },
+    },
+    options: {
+      enabled: isDataQueryEnabled,
+      select: ({ delegationResponses }) =>
+        parseDelegations(delegationResponses, -exp),
     },
   });
 
@@ -103,7 +126,6 @@ export const useStakingData = (chainName: string) => {
 
   const allQueries = {
     allValidators: validatorsQuery,
-
     unbondingDays: unbondingDaysQuery,
     annualProvisions: annualProvisionsQuery,
     pool: poolQuery,
@@ -118,19 +140,24 @@ export const useStakingData = (chainName: string) => {
     allQueries.allValidators,
   ];
 
-  const updatableQueriesAfterMutation = [allQueries.allValidators];
+  const updatableQueriesAfterMutation = [
+
+    allQueries.allValidators,
+
+  ];
 
   useEffect(() => {
     queriesWithUnchangingKeys.forEach((query) => query.remove());
+    updatableQueriesAfterMutation.forEach((query) => query.remove());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chainName]);
 
   const isInitialFetching = Object.values(allQueries).some(
-    ({ isLoading }) => isLoading,
+    ({ isLoading }) => isLoading
   );
 
   const isRefetching = Object.values(allQueries).some(
-    ({ isRefetching }) => isRefetching,
+    ({ isRefetching }) => isRefetching
   );
 
   const isLoading = isInitialFetching || isRefetching;
@@ -145,32 +172,33 @@ export const useStakingData = (chainName: string) => {
     if (isLoading) return;
 
     const queriesData = Object.fromEntries(
-      Object.entries(allQueries).map(([key, query]) => [key, query.data]),
+      Object.entries(allQueries).map(([key, query]) => [key, query.data])
     ) as QueriesData;
 
-    const { allValidators, annualProvisions, communityTax, pool } = queriesData;
-
-    const chainMetadata = {
+    const {
+      allValidators,
       annualProvisions,
       communityTax,
       pool,
-    };
+    } = queriesData;
+
+    const chainMetadata = { annualProvisions, communityTax, pool };
 
     const extendedAllValidators = extendValidators(
       allValidators,
-
-      chainMetadata,
+      chainMetadata
     );
+
+
 
     return {
       ...queriesData,
       allValidators: extendedAllValidators,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading]);
+  }, [isLoading, chainName]);
 
   const refetch = () => {
-    updatableQueriesAfterMutation.forEach((query) => query.remove());
     updatableQueriesAfterMutation.forEach((query) => query.refetch());
   };
 
