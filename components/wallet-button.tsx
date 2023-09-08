@@ -26,7 +26,7 @@ import {
   RejectedWarn,
   WalletConnectComponent,
 } from '@/components';
-import { chainName } from '@/config';
+import { defaultChainName as chainName } from '@/config';
 
 export const WalletButton = () => {
   const {

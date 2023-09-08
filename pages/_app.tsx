@@ -9,6 +9,7 @@ import {
   QueryClientProvider,
   QueryClient,
 } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';
 import type { AppProps } from 'next/app';
 
@@ -62,6 +63,9 @@ function CreateCosmosApp({
         signerOptions={signerOptions}
       >
         <QueryClientProvider client={queryClient}>
+          <ReactQueryDevtools
+            initialIsOpen={true}
+          />
           <Component {...pageProps} />
         </QueryClientProvider>
       </ChainProvider>

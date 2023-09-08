@@ -1,6 +1,6 @@
 import { useChain } from '@cosmos-kit/react';
 import { useQueries } from '@tanstack/react-query';
-import { ProposalStatus } from 'interchain-query/cosmos/gov/v1/gov';
+import { ProposalStatus } from 'interchain-query/cosmos/gov/v1beta1/gov';
 import {
   useEffect,
   useMemo,
@@ -107,12 +107,10 @@ export const useVotingData = (
           address,
         ],
         queryFn: () =>
-          rpcQueryClient?.cosmos.gov.v1.vote(
-            {
-              proposalId,
-              voter: address || '',
-            },
-          ),
+          rpcQueryClient?.cosmos.gov.v1.vote({
+            proposalId,
+            voter: address || '',
+          }),
         enabled:
           !!rpcQueryClient &&
           !!address &&

@@ -14,20 +14,83 @@ import {
   Box,
   Divider,
   Text,
+  Table,
+  TableCaption,
+  Tbody,
+  Td,
+  Tfoot,
+  Th,
+  Thead,
+  Tr,
 } from '@chakra-ui/react';
 import React from 'react';
+
+import { type ExtendedValidator as Validator } from '@/utils';
+
+export const ValidatorsTable: React.FC<{
+  validators: Validator[];
+}> = ({ validators }) => {
+  return (
+    <Box px={4} overflowX="auto">
+      <Table variant="simple" size="md">
+        <Thead>
+          <Tr>
+            <Th color="white" fontSize={'16px'}>
+              Moniker
+            </Th>
+            <Th color="white" fontSize={'16px'}>
+              Commission
+            </Th>
+            <Th color="white" fontSize={'16px'}>
+              Missed Blocks
+            </Th>
+            <Th color="white" fontSize={'16px'}>
+              Rank
+            </Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {validators.map((validator, index) => (
+            <Tr key={index}>
+              <Td>{validator.name}</Td>
+              <Td>
+                {validator.commission
+                  ? (
+                      (parseFloat(
+                        validator.commission,
+                      ) /
+                        1e18) *
+                      100
+                    ).toFixed(2) + '%'
+                  : 'N/A'}
+              </Td>
+              <Td></Td>
+              <Td></Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
+    </Box>
+  );
+};
 
 interface MultiModalProps {
   isOpen: boolean;
   onClose: () => void;
   children?: React.ReactNode;
+  validators: Validator[];
 }
 
 export const MultiModal: React.FC<
   MultiModalProps
-> = ({ isOpen, onClose }) => {
+> = ({ isOpen, onClose, validators }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+    >
+      {/* Set the size here */}
       <ModalOverlay />
       <ModalContent bgColor="#1A1A1A">
         <ModalHeader bgColor="#1A1A1A" p={0}>
@@ -55,25 +118,31 @@ export const MultiModal: React.FC<
                   color="white"
                   fontSize="18px"
                 >
-                  Ligma figma sigma digma Ligma
-                  figma sigma digma Ligma figma
-                  sigma digma Ligma figma sigma
-                  digma
+                  Choose which validator(s) you
+                  would like to liquid stake to.
                 </Text>
               </AccordionPanel>
             </AccordionItem>
           </Accordion>
         </ModalHeader>
-        <ModalCloseButton />
+        <ModalCloseButton />{' '}
+        {/* Positioning by default should be top right */}
         <Divider
           bgColor="complimentary.900"
           alignSelf="center"
           w="95%"
+          m="auto"
         />
         <ModalBody
           bgColor="#1A1A1A"
           borderRadius={'6px'}
-        ></ModalBody>
+        >
+          <Box mt={4}>
+            <ValidatorsTable
+              validators={validators}
+            />
+          </Box>
+        </ModalBody>
         <ModalFooter></ModalFooter>
       </ModalContent>
     </Modal>

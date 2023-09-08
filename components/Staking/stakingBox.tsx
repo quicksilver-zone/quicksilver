@@ -19,18 +19,24 @@ import {
 } from '@chakra-ui/react';
 import React from 'react';
 
+import { useValidatorData } from '@/hooks';
+import { type ExtendedValidator as Validator } from '@/utils';
+
 import { MultiModal } from './modals/multiStakeModal';
 
 type StakingBoxProps = {
   selectedOption: string;
   isModalOpen: boolean;
   setModalOpen: (isOpen: boolean) => void;
+  selectedChainName: string;
+  validators: Validator[];
 };
 
 export const StakingBox = ({
   selectedOption,
   isModalOpen,
   setModalOpen,
+  validators,
 }: StakingBoxProps): JSX.Element => {
   return (
     <Box
@@ -56,7 +62,7 @@ export const StakingBox = ({
             flex="1"
             color="white"
             fontWeight="bold"
-            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out" 
+            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out"
             _hover={{
               borderBottomColor:
                 'complimentary.900',
@@ -74,7 +80,7 @@ export const StakingBox = ({
             flex="1"
             color="white"
             fontWeight="bold"
-            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out" 
+            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out"
             _hover={{
               borderBottomColor:
                 'complimentary.900',
@@ -248,6 +254,7 @@ export const StakingBox = ({
                 onClose={() =>
                   setModalOpen(false)
                 }
+                validators={validators}
               />
             </VStack>
           </TabPanel>

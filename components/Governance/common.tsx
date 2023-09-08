@@ -10,7 +10,7 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import { cosmos } from 'interchain-query';
-import { ProposalStatus } from 'interchain-query/cosmos/gov/v1/gov';
+import { ProposalStatus } from 'interchain-query/cosmos/gov/v1beta1/gov';
 import { IconType } from 'react-icons';
 import {
   AiFillCheckCircle,
@@ -76,7 +76,7 @@ export const TimeDisplay = ({
   </Stack>
 );
 
-const VoteType = cosmos.gov.v1.VoteOption;
+const VoteType = cosmos.gov.v1beta1.VoteOption;
 
 export enum VoteOption {
   YES = 'YES',

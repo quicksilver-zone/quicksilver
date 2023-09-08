@@ -10,7 +10,7 @@ import {
 } from '@chakra-ui/react';
 import dayjs from 'dayjs';
 import { cosmos } from 'interchain-query';
-import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
+import { Proposal } from 'interchain-query/cosmos/gov/v1beta1/gov';
 import React, { useMemo } from 'react';
 
 import { Votes } from '@/hooks';
@@ -29,7 +29,7 @@ enum VoteOption {
 }
 
 const ProposalStatus =
-  cosmos.gov.v1.ProposalStatus;
+  cosmos.gov.v1beta1.ProposalStatus;
 
 export const VoteColor: {
   [key in VoteOption]: string;
@@ -63,13 +63,17 @@ export const ProposalCard = ({
   }, [proposal]);
 
   const isVoted =
-    votes && votes[proposal.id.toString()];
+    votes &&
+    votes[proposal.proposalId.toString()];
 
   const getTitleFromProposal = (
     proposal: Proposal,
   ): string | undefined => {
-    if (proposal.title) {
-      return proposal.title;
+    if (
+      proposal.content &&
+      'title' in proposal.content
+    ) {
+      return proposal.content.title;
     }
     return undefined;
   };
@@ -95,7 +99,7 @@ export const ProposalCard = ({
       <GridItem colSpan={2}>
         <Center color="white" w="100%" h="100%">
           #{' '}
-          {proposal.id
+          {proposal.proposalId
             .toString()
             .padStart(6, '0')}
         </Center>
@@ -139,7 +143,7 @@ export const ProposalCard = ({
                 <Box
                   w={getPercentage(
                     proposal.finalTallyResult
-                      ?.yesCount,
+                      ?.yes,
                     totalVotes,
                   )}
                   h="3px"
@@ -147,8 +151,7 @@ export const ProposalCard = ({
                 />
                 <Box
                   w={getPercentage(
-                    proposal.finalTallyResult
-                      ?.noCount,
+                    proposal.finalTallyResult?.no,
                     totalVotes,
                   )}
                   h="3px"
@@ -157,7 +160,7 @@ export const ProposalCard = ({
                 <Box
                   w={getPercentage(
                     proposal.finalTallyResult
-                      ?.noWithVetoCount,
+                      ?.noWithVeto,
                     totalVotes,
                   )}
                   h="3px"
@@ -166,7 +169,7 @@ export const ProposalCard = ({
                 <Box
                   w={getPercentage(
                     proposal.finalTallyResult
-                      ?.abstainCount,
+                      ?.abstain,
                     totalVotes,
                   )}
                   h="3px"

@@ -13,10 +13,45 @@ import {
 import React from 'react';
 import { BsArrowDown } from 'react-icons/bs';
 
+const networks = [
+  {
+    value: 'ATOM',
+    logo: '/img/networks/atom.svg',
+    name: 'Cosmos Hub',
+    chainName: 'cosmoshub',
+  },
+  {
+    value: 'OSMO',
+    logo: '/img/networks/osmosis.svg',
+    name: 'Osmosis',
+    chainName: 'osmosis',
+  },
+  {
+    value: 'STARS',
+    logo: '/img/networks/stargaze.svg',
+    name: 'Stargaze',
+    chainName: 'stargaze',
+  },
+  {
+    value: 'REGEN',
+    logo: '/img/networks/regen.svg',
+    name: 'Regen',
+    chainName: 'regen',
+  },
+  {
+    value: 'SOMM',
+    logo: '/img/networks/sommelier.png',
+    name: 'Sommelier',
+    chainName: 'sommelier',
+  },
+];
+
 interface CustomMenuProps {
   buttonTextColor?: string;
   selectedOption: string;
   setSelectedOption: (value: string) => void;
+  setSelectedChainName: (value: string) => void;
+  updateNetworks: () => void;
 }
 
 export const NetworkSelect: React.FC<
@@ -25,9 +60,20 @@ export const NetworkSelect: React.FC<
   buttonTextColor = 'white',
   selectedOption,
   setSelectedOption,
+  setSelectedChainName,
+  updateNetworks,
 }) => {
   const handleOptionClick = (option: string) => {
+    updateNetworks();
     setSelectedOption(option);
+    const selectedNetwork = networks.find(
+      (net) => net.value === option,
+    );
+    if (selectedNetwork) {
+      setSelectedChainName(
+        selectedNetwork.chainName,
+      );
+    }
   };
 
   return (
@@ -55,167 +101,41 @@ export const NetworkSelect: React.FC<
         {selectedOption.toUpperCase()}
       </MenuButton>
       <MenuList mt={1} bgColor="rgba(35,35,35,1)">
-        <MenuItem
-          py={4}
-          bgColor="rgba(35,35,35,1)"
-          borderRadius="4px"
-          color="complimentary.900"
-          _hover={{
-            bgColor: 'rgba(255,255,255,0.25)',
-          }}
-          onClick={() =>
-            handleOptionClick('ATOM')
-          }
-        >
-          <Flex
-            justifyContent="center"
-            alignItems="center"
-            flexDirection="row"
+        {networks.map((network) => (
+          <MenuItem
+            key={network.value}
+            py={4}
+            bgColor="rgba(35,35,35,1)"
+            borderRadius="4px"
+            color="complimentary.900"
+            _hover={{
+              bgColor: 'rgba(255,255,255,0.25)',
+            }}
+            onClick={() =>
+              handleOptionClick(network.value)
+            }
           >
-            <Image
-              alt="atom"
-              px={4}
-              h="40px"
-              src="/img/networks/atom.svg"
-            />
-            <Text
-              color="complimentary.900"
-              fontSize="20px"
-              textAlign="center"
+            <Flex
+              justifyContent="center"
+              alignItems="center"
+              flexDirection="row"
             >
-              Cosmos Hub
-            </Text>
-          </Flex>
-        </MenuItem>
-        <MenuItem
-          py={4}
-          bgColor="rgba(35,35,35,1)"
-          borderRadius="4px"
-          color="complimentary.900"
-          _hover={{
-            bgColor: 'rgba(255,255,255,0.25)',
-          }}
-          onClick={() =>
-            handleOptionClick('OSMO')
-          }
-        >
-          <Flex
-            justifyContent="center"
-            alignItems="center"
-            flexDirection="row"
-          >
-            <Image
-              alt="osmosis"
-              px={4}
-              h="40px"
-              src="/img/networks/osmosis.svg"
-            />
-            <Text
-              color="complimentary.900"
-              fontSize="20px"
-              textAlign="center"
-            >
-              Osmosis
-            </Text>
-          </Flex>
-        </MenuItem>
-        <MenuItem
-          py={4}
-          bgColor="rgba(35,35,35,1)"
-          borderRadius="4px"
-          color="complimentary.900"
-          _hover={{
-            bgColor: 'rgba(255,255,255,0.25)',
-          }}
-          onClick={() =>
-            handleOptionClick('REGEN')
-          }
-        >
-          <Flex
-            justifyContent="center"
-            alignItems="center"
-            flexDirection="row"
-          >
-            <Image
-              alt="regen"
-              px={4}
-              h="40px"
-              src="/img/networks/regen.svg"
-            />
-            <Text
-              color="complimentary.900"
-              fontSize="20px"
-              textAlign="center"
-            >
-              Regen
-            </Text>
-          </Flex>
-        </MenuItem>
-        <MenuItem
-          py={4}
-          bgColor="rgba(35,35,35,1)"
-          borderRadius="4px"
-          color="complimentary.900"
-          _hover={{
-            bgColor: 'rgba(255,255,255,0.25)',
-          }}
-          onClick={() =>
-            handleOptionClick('STARS')
-          }
-        >
-          <Flex
-            justifyContent="center"
-            alignItems="center"
-            flexDirection="row"
-          >
-            <Image
-              alt="stargaze"
-              px={4}
-              h="40px"
-              src="/img/networks/stargaze.svg"
-            />
-            <Text
-              color="complimentary.900"
-              fontSize="20px"
-              textAlign="center"
-            >
-              Stargaze
-            </Text>
-          </Flex>
-        </MenuItem>
-        <MenuItem
-          py={4}
-          bgColor="rgba(35,35,35,1)"
-          borderRadius="4px"
-          color="complimentary.900"
-          _hover={{
-            bgColor: 'rgba(255,255,255,0.25)',
-          }}
-          onClick={() =>
-            handleOptionClick('SOMM')
-          }
-        >
-          <Flex
-            justifyContent="center"
-            alignItems="center"
-            flexDirection="row"
-          >
-            <Image
-              alt="somm"
-              px={4}
-              h="40px"
-              src="/img/networks/sommelier.png"
-              borderRadius="50%"
-            />
-            <Text
-              color="complimentary.900"
-              fontSize="20px"
-              textAlign="center"
-            >
-              Sommelier
-            </Text>
-          </Flex>
-        </MenuItem>
+              <Image
+                alt={network.name.toLowerCase()}
+                px={4}
+                h="40px"
+                src={network.logo}
+              />
+              <Text
+                color="complimentary.900"
+                fontSize="20px"
+                textAlign="center"
+              >
+                {network.name}
+              </Text>
+            </Flex>
+          </MenuItem>
+        ))}
       </MenuList>
     </Menu>
   );

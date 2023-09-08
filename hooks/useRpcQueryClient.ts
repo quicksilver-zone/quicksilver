@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { cosmos } from 'interchain-query';
-import { RPC } from '@/config'
 
 import { useQueryHooks } from './useQueryHooks';
 
@@ -14,10 +13,10 @@ export const useRpcQueryClient = (
     useQueryHooks(chainName);
 
   const rpcQueryClientQuery = useQuery({
-    queryKey: ['rpcQueryClient', RPC],
+    queryKey: ['rpcQueryClient', rpcEndpoint],
     queryFn: () =>
       createRPCQueryClient({
-        rpcEndpoint: RPC || RPC,
+        rpcEndpoint: rpcEndpoint || '',
       }),
     enabled: !!rpcEndpoint,
     staleTime: Infinity,

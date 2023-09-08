@@ -9,6 +9,7 @@ import {
   StatLabel,
   StatNumber,
 } from '@chakra-ui/react';
+import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useState } from 'react';
 
@@ -18,32 +19,33 @@ import { NetworkSelect } from '@/components';
 import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
+import { useValidatorData } from '@/hooks';
+import { useStakingData } from '@/hooks/useStakingData';
+
+const DynamicStakingBox = dynamic(
+  () => Promise.resolve(StakingBox),
+  { ssr: false },
+);
+
+const DynamicNetworkSelect = dynamic(
+  () => Promise.resolve(NetworkSelect),
+  { ssr: false },
+);
 
 export default function Staking() {
   const [selectedOption, setSelectedOption] =
     useState('Atom');
+  const [
+    selectedChainName,
+    setSelectedChainName,
+  ] = useState('cosmoshub');
   const [isModalOpen, setModalOpen] =
     useState(false);
-  const [openItem, setOpenItem] = useState(null);
-  const [activeAccordion, setActiveAccordion] =
-    useState(null);
+  useState(null);
 
-  const handleAccordionChange = (
-    accordionNumber: any,
-    index: any,
-  ) => {
-    if (
-      activeAccordion === accordionNumber &&
-      openItem === index
-    ) {
-      setOpenItem(null);
-      setActiveAccordion(null);
-    } else {
-      setOpenItem(index);
-      setActiveAccordion(accordionNumber);
-    }
-  };
-
+  const { data, isLoading, refetch } =
+    useStakingData(selectedChainName);
+  console.log(data);
   return (
     <>
       <Box
@@ -95,11 +97,15 @@ export default function Staking() {
                 justifyContent="space-between"
                 w="100%"
               >
-                <NetworkSelect
+                <DynamicNetworkSelect
                   selectedOption={selectedOption}
                   setSelectedOption={
                     setSelectedOption
                   }
+                  setSelectedChainName={
+                    setSelectedChainName
+                  }
+                  updateNetworks={refetch}
                 />
                 <VStack
                   p={1}
@@ -117,10 +123,14 @@ export default function Staking() {
             {/* Content Boxes */}
             <Flex h="100%">
               {/* Staking Box*/}
-              <StakingBox
+              <DynamicStakingBox
                 selectedOption={selectedOption}
                 isModalOpen={isModalOpen}
                 setModalOpen={setModalOpen}
+                selectedChainName={
+                  selectedChainName
+                }
+                validators={data?.allValidators}
               />
 
               <Box w="10px" />
