@@ -178,10 +178,13 @@ export const MultiModal: React.FC<MultiModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal 
+    isOpen={isOpen} onClose={onClose} size="2xl">
       {/* Set the size here */}
       <ModalOverlay />
-      <ModalContent bgColor="#1A1A1A">
+      <ModalContent 
+      borderRadius={"10px"}
+      maxHeight="70vh" bgColor="#1A1A1A">
         <ModalHeader bgColor="#1A1A1A" p={0}>
           <Accordion allowToggle>
             <AccordionItem border="none">
@@ -200,13 +203,19 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                   <AccordionIcon color="complimentary.900" />
                 </AccordionButton>
               </h2>
-              <AccordionPanel mt={-2}>
-                <Text color="white" fontSize="18px" letterSpacing={'wider'}>
+              <AccordionPanel
+              justifyContent="center"
+              textAlign="lef"
+              mt={-2}>
+                <Box
+                >
+                <Text color="white" fontSize="16px" letterSpacing={'wider'}>
                   Choose which validator(s) you would like to liquid stake to.
                   You can select from the list below or utilize the quick select
                   to pick the highest ranked validators. To learn more about
                   raninkings click here.
                 </Text>
+                </Box>
               </AccordionPanel>
             </AccordionItem>
           </Accordion>
@@ -243,8 +252,8 @@ export const MultiModal: React.FC<MultiModalProps> = ({
             </Box>
           )}
           <Box
-            mt={8}
-            bg="rgba(255,255,255,0.1)"
+            mt={4}
+
             borderRadius="10px"
             w="100%"
             h="100px"

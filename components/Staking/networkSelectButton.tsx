@@ -97,7 +97,9 @@ export const NetworkSelect: React.FC<
       >
         {selectedOption.toUpperCase()}
       </MenuButton>
-      <MenuList mt={1} bgColor="rgba(35,35,35,1)">
+      <MenuList 
+      borderColor="rgba(35,35,35,1)"
+      mt={1} bgColor="rgba(35,35,35,1)">
         {networks.map((network) => (
           <MenuItem
             key={network.value}

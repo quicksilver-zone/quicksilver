@@ -1,6 +1,6 @@
 import '../styles/globals.css';
-import { ChakraProvider } from '@chakra-ui/react';
-import { SignerOptions } from '@cosmos-kit/core';
+import { Box, ChakraProvider } from '@chakra-ui/react';
+import { SignerOptions, WalletViewProps } from '@cosmos-kit/core';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
@@ -15,6 +15,40 @@ import type { AppProps } from 'next/app';
 
 import { defaultTheme } from '@/config';
 import '@interchain-ui/react/styles';
+
+const ConnectedView = ({
+  onClose,
+  onReturn,
+  wallet,
+}: WalletViewProps) => {
+  const {
+    walletInfo: { prettyName },
+    username,
+    address,
+  } = wallet;
+ 
+  return (
+  <Box
+  bgColor="complimentary.900"
+  >
+
+  </Box>
+  );
+};
+
+const ConnectingView = ({
+  onClose,
+  onReturn,
+  wallet,
+}: WalletViewProps) => {
+  const {
+    walletInfo: { prettyName },
+    username,
+    address,
+  } = wallet;
+ 
+  return <div>{`${prettyName}/${username}/${address}`}</div>;
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,6 +95,7 @@ function CreateCosmosApp({
           },
         }}
         signerOptions={signerOptions}
+        walletModal={undefined} // `modalViews` only counts when `walletModal` is `undefined`
       >
         <QueryClientProvider client={queryClient}>
           <ReactQueryDevtools
