@@ -51,7 +51,6 @@ interface CustomMenuProps {
   selectedOption: string;
   setSelectedOption: (value: string) => void;
   setSelectedChainName: (value: string) => void;
-  updateNetworks: () => void;
 }
 
 export const NetworkSelect: React.FC<
@@ -61,10 +60,8 @@ export const NetworkSelect: React.FC<
   selectedOption,
   setSelectedOption,
   setSelectedChainName,
-  updateNetworks,
 }) => {
   const handleOptionClick = (option: string) => {
-    updateNetworks();
     setSelectedOption(option);
     const selectedNetwork = networks.find(
       (net) => net.value === option,

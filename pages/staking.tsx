@@ -42,10 +42,6 @@ export default function Staking() {
   const [isModalOpen, setModalOpen] =
     useState(false);
   useState(null);
-
-  const { data, isLoading, refetch } =
-    useStakingData(selectedChainName);
-  console.log(data);
   return (
     <>
       <Box
@@ -105,7 +101,6 @@ export default function Staking() {
                   setSelectedChainName={
                     setSelectedChainName
                   }
-                  updateNetworks={refetch}
                 />
                 <VStack
                   p={1}
@@ -130,7 +125,6 @@ export default function Staking() {
                 selectedChainName={
                   selectedChainName
                 }
-                validators={data?.allValidators}
               />
 
               <Box w="10px" />

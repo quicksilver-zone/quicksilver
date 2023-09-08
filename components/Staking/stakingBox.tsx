@@ -16,10 +16,12 @@ import {
   HStack,
   Button,
   Spacer,
+  Spinner,
 } from '@chakra-ui/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { useValidatorData } from '@/hooks';
+import { useStakingData } from '@/hooks/useStakingData';
 import { type ExtendedValidator as Validator } from '@/utils';
 
 import { MultiModal } from './modals/multiStakeModal';
@@ -29,14 +31,13 @@ type StakingBoxProps = {
   isModalOpen: boolean;
   setModalOpen: (isOpen: boolean) => void;
   selectedChainName: string;
-  validators: Validator[];
 };
 
 export const StakingBox = ({
   selectedOption,
   isModalOpen,
   setModalOpen,
-  validators,
+  selectedChainName,
 }: StakingBoxProps): JSX.Element => {
   return (
     <Box
@@ -254,7 +255,9 @@ export const StakingBox = ({
                 onClose={() =>
                   setModalOpen(false)
                 }
-                validators={validators}
+                selectedChainName={
+                  selectedChainName
+                }
               />
             </VStack>
           </TabPanel>

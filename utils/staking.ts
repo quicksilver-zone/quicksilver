@@ -89,25 +89,12 @@ export type ChainMetaData = {
 
 export const extendValidators = (
   validators: ParsedValidator[] = [],
-  delegations: ParsedDelegations = [],
-  rewards: ParsedRewards['byValidators'] = [],
   chainMetadata: ChainMetaData,
 ) => {
   const { annualProvisions, communityTax, pool } =
     chainMetadata;
 
   return validators.map((validator) => {
-    const delegation =
-      delegations.find(
-        ({ validatorAddress }) =>
-          validatorAddress === validator.address,
-      )?.amount || ZERO;
-    const reward =
-      rewards.find(
-        ({ validatorAddress }) =>
-          validatorAddress === validator.address,
-      )?.amount || ZERO;
-
     const apr = annualProvisions
       ? calcStakingApr({
           annualProvisions,
@@ -119,8 +106,6 @@ export const extendValidators = (
 
     return {
       ...validator,
-      delegation,
-      reward,
       apr,
     };
   });
