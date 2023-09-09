@@ -8,18 +8,13 @@ const defaultThemeObject = {
   styles: {
     global: (props: { colorMode: string }) => ({
       body: {
-        background:
-          props.colorMode === 'dark'
-            ? '#333333'
-            : '#CCCCCC',
+        background: props.colorMode === 'dark' ? '#000000' : '#000000',
         bgGradient:
           props.colorMode === 'dark'
             ? 'linear(to-r, #333333, #808080)'
             : 'linear(to-l, #CCCCCC, #808080)',
         color:
-          props.colorMode === 'dark'
-            ? 'rgb(255, 255, 255)'
-            : 'rgb(0, 0, 0)',
+          props.colorMode === 'dark' ? 'rgb(255, 255, 255)' : 'rgb(0, 0, 0)',
       },
     }),
   },
@@ -88,8 +83,7 @@ const defaultThemeObject = {
       dark: 'radial-gradient(rgba(1, 65, 255, 0.4), rgba(1, 65, 255, 0))',
     },
     secondaryGlow: {
-      light:
-        'radial-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0))',
+      light: 'radial-gradient(rgba(255, 255, 255, 1), rgba(255, 255, 255, 0))',
       dark: 'linear-gradient(to bottom right, rgba(1, 65, 255, 0), rgba(1, 65, 255, 0), rgba(1, 65, 255, 0.3))',
     },
   },
@@ -165,6 +159,4 @@ const defaultThemeObject = {
   },
 };
 
-export const defaultTheme = extendTheme(
-  defaultThemeObject,
-);
+export const defaultTheme = extendTheme(defaultThemeObject);

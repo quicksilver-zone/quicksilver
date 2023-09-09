@@ -1,62 +1,34 @@
-import { useEffect, useMemo } from 'react';
 import { useChain } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
-import { shiftDigits } from '../utils';
+import exp from 'constants';
 import {
   cosmos,
   useRpcClient,
   useRpcEndpoint,
   createRpcQueryHooks,
 } from 'interchain-query';
-import { getCoin, getExponent } from '../config';
-import {
-  calcTotalDelegation,
-  extendValidators,
-  parseAnnualProvisions,
-  parseDelegations,
-  parseRewards,
-  parseUnbondingDays,
-  parseValidators,
-} from '@/utils/staking';
+import { useEffect, useMemo, useState } from 'react';
+
+import { parseValidators } from '@/utils/staking';
+
+import { useQueryHooks } from './useQueryHooks';
+import { useRpcQueryClient } from './useRpcQueryClient';
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
 };
 
 export const useStakingData = (chainName: string) => {
-  const { address, getRpcEndpoint } = useChain(chainName);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const coin = getCoin(chainName);
-  const exp = getExponent(chainName);
+  const { rpcQueryClient } = useRpcQueryClient(chainName);
 
-  const rpcEndpointQuery = useRpcEndpoint({
-    getter: getRpcEndpoint,
-    options: {
-      enabled: !!address,
-      staleTime: Infinity,
-    },
-  });
-
-  const rpcClientQuery = useRpcClient({
-    rpcEndpoint: rpcEndpointQuery.data || '',
-    options: {
-      enabled: !!address && !!rpcEndpointQuery.data,
-      staleTime: Infinity,
-    },
-  });
-
-  const { cosmos: cosmosQuery } = createRpcQueryHooks({
-    rpc: rpcClientQuery.data,
-  });
-
-  const isDataQueryEnabled = !!address && !!rpcClientQuery.data;
-
-
+  const { cosmosQuery, isReady } = useQueryHooks(chainName);
 
   const validatorsQuery = cosmosQuery.staking.v1beta1.useValidators({
     request: {
       status: cosmos.staking.v1beta1.bondStatusToJSON(
-        cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED
+        cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED,
       ),
       pagination: {
         key: new Uint8Array(),
@@ -67,140 +39,48 @@ export const useStakingData = (chainName: string) => {
       },
     },
     options: {
-      enabled: isDataQueryEnabled,
+      queryKey: ['validators', chainName],
+      enabled: !!rpcQueryClient?.cosmos?.staking?.v1beta1.validator,
       select: ({ validators }) => {
         const sorted = validators.sort((a, b) =>
-          new BigNumber(b.tokens).minus(a.tokens).toNumber()
+          new BigNumber(b.tokens).minus(a.tokens).toNumber(),
         );
         return parseValidators(sorted);
       },
-    },
-  });
-
-  const delegationsQuery = cosmosQuery.staking.v1beta1.useDelegatorDelegations({
-    request: {
-      delegatorAddr: address || '',
-      pagination: {
-        key: new Uint8Array(),
-        offset: 0n,
-        limit: 100n,
-        countTotal: true,
-        reverse: false,
+      onError: (error) => {
+        console.error('Error fetching validators:', error);
+        validatorsQuery.remove();
+        validatorsQuery.refetch();
       },
     },
-    options: {
-      enabled: isDataQueryEnabled,
-      select: ({ delegationResponses }) =>
-        parseDelegations(delegationResponses, -exp),
-    },
   });
 
-  const unbondingDaysQuery = cosmosQuery.staking.v1beta1.useParams({
-    options: {
-      enabled: isDataQueryEnabled,
-      select: ({ params }) => parseUnbondingDays(params),
-    },
-  });
-
-  const annualProvisionsQuery = cosmosQuery.mint.v1beta1.useAnnualProvisions({
-    options: {
-      enabled: isDataQueryEnabled,
-      select: parseAnnualProvisions,
-      retry: false,
-    },
-  });
-
-  const poolQuery = cosmosQuery.staking.v1beta1.usePool({
-    options: {
-      enabled: isDataQueryEnabled,
-      select: ({ pool }) => pool,
-    },
-  });
-
-  const communityTaxQuery = cosmosQuery.distribution.v1beta1.useParams({
-    options: {
-      enabled: isDataQueryEnabled,
-      select: ({ params }) => shiftDigits(params?.communityTax || '0', -18),
-    },
-  });
-
-  const allQueries = {
-    allValidators: validatorsQuery,
-    unbondingDays: unbondingDaysQuery,
-    annualProvisions: annualProvisionsQuery,
-    pool: poolQuery,
-    communityTax: communityTaxQuery,
-  };
-
-  const queriesWithUnchangingKeys = [
-    allQueries.unbondingDays,
-    allQueries.annualProvisions,
-    allQueries.pool,
-    allQueries.communityTax,
-    allQueries.allValidators,
-  ];
-
-  const updatableQueriesAfterMutation = [
-
-    allQueries.allValidators,
-
-  ];
+  const loading = validatorsQuery.isFetching || !isReady;
 
   useEffect(() => {
-    queriesWithUnchangingKeys.forEach((query) => query.remove());
-    updatableQueriesAfterMutation.forEach((query) => query.remove());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chainName]);
+    setIsLoading(loading);
+  }, [loading]);
 
-  const isInitialFetching = Object.values(allQueries).some(
-    ({ isLoading }) => isLoading
-  );
-
-  const isRefetching = Object.values(allQueries).some(
-    ({ isRefetching }) => isRefetching
-  );
-
-  const isLoading = isInitialFetching || isRefetching;
-
-  type AllQueries = typeof allQueries;
-
-  type QueriesData = {
-    [Key in keyof AllQueries]: NonNullable<AllQueries[Key]['data']>;
+  type SingleQueriesData = {
+    validators: NonNullable<(typeof validatorsQuery)['data']>;
   };
 
-  const data = useMemo(() => {
-    if (isLoading) return;
-
-    const queriesData = Object.fromEntries(
-      Object.entries(allQueries).map(([key, query]) => [key, query.data])
-    ) as QueriesData;
-
-    const {
-      allValidators,
-      annualProvisions,
-      communityTax,
-      pool,
-    } = queriesData;
-
-    const chainMetadata = { annualProvisions, communityTax, pool };
-
-    const extendedAllValidators = extendValidators(
-      allValidators,
-      chainMetadata
-    );
-
-
-
+  const singleQueriesData = useMemo(() => {
+    if (validatorsQuery.isFetching || !isReady) return;
     return {
-      ...queriesData,
-      allValidators: extendedAllValidators,
-    };
+      validators: validatorsQuery.data,
+    } as SingleQueriesData;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, chainName]);
+  }, [validatorsQuery.isFetching, isReady]);
 
   const refetch = () => {
-    updatableQueriesAfterMutation.forEach((query) => query.refetch());
+    validatorsQuery.remove();
+    validatorsQuery.refetch();
   };
 
-  return { data, isLoading, refetch };
+  return {
+    data: singleQueriesData,
+    isLoading,
+    refetch,
+  };
 };

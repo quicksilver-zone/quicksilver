@@ -10,7 +10,7 @@ import {
   Image,
   Text,
 } from '@chakra-ui/react';
-import React from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
 import { BsArrowDown } from 'react-icons/bs';
 
 const networks = [
@@ -49,30 +49,27 @@ const networks = [
 interface CustomMenuProps {
   buttonTextColor?: string;
   selectedOption: string;
+  selectedChainName: string;
   setSelectedOption: (value: string) => void;
   setSelectedChainName: (value: string) => void;
 }
 
-export const NetworkSelect: React.FC<
-  CustomMenuProps
-> = ({
+export const NetworkSelect: React.FC<CustomMenuProps> = ({
   buttonTextColor = 'white',
   selectedOption,
   setSelectedOption,
   setSelectedChainName,
+  selectedChainName,
 }) => {
   const handleOptionClick = (option: string) => {
     setSelectedOption(option);
-    const selectedNetwork = networks.find(
-      (net) => net.value === option,
-    );
+    const selectedNetwork = networks.find((net) => net.value === option);
     if (selectedNetwork) {
-      setSelectedChainName(
-        selectedNetwork.chainName,
-      );
+      setSelectedChainName(selectedNetwork.chainName);
     }
   };
-
+  console.log('Selected Option:', selectedOption);
+  console.log('Selected Chain Name:', selectedChainName);
   return (
     <Menu>
       <MenuButton
@@ -97,9 +94,11 @@ export const NetworkSelect: React.FC<
       >
         {selectedOption.toUpperCase()}
       </MenuButton>
-      <MenuList 
-      borderColor="rgba(35,35,35,1)"
-      mt={1} bgColor="rgba(35,35,35,1)">
+      <MenuList
+        borderColor="rgba(35,35,35,1)"
+        mt={1}
+        bgColor="rgba(35,35,35,1)"
+      >
         {networks.map((network) => (
           <MenuItem
             key={network.value}
@@ -110,9 +109,7 @@ export const NetworkSelect: React.FC<
             _hover={{
               bgColor: 'rgba(255,255,255,0.25)',
             }}
-            onClick={() =>
-              handleOptionClick(network.value)
-            }
+            onClick={() => handleOptionClick(network.value)}
           >
             <Flex
               justifyContent="center"

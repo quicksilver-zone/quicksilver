@@ -22,35 +22,26 @@ import { AssetsAccordian } from '@/components';
 import { useValidatorData } from '@/hooks';
 import { useStakingData } from '@/hooks/useStakingData';
 
-const DynamicStakingBox = dynamic(
-  () => Promise.resolve(StakingBox),
-  { ssr: false },
-);
-
-const DynamicNetworkSelect = dynamic(
-  () => Promise.resolve(NetworkSelect),
-  { ssr: false },
-);
+const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
+  ssr: false,
+});
 
 export default function Staking() {
-  const [selectedOption, setSelectedOption] =
-    useState('Atom');
-  const [
-    selectedChainName,
-    setSelectedChainName,
-  ] = useState('cosmoshub');
-  const [isModalOpen, setModalOpen] =
-    useState(false);
+  const [selectedOption, setSelectedOption] = useState('Atom');
+  const [selectedChainName, setSelectedChainName] = useState('cosmoshub');
+  const [isModalOpen, setModalOpen] = useState(false);
   useState(null);
   return (
     <>
       <Box
         w="100vw"
         h="100vh"
-        bgImage="url('/img/backgroundTest.png')"
-        bgSize="cover"
-        bgPosition="center center"
+        bgImage="url('https://s3-alpha-sig.figma.com/img/555d/db64/f5bf65e93a15603069e8e865d5f6d60d?Expires=1694995200&Signature=fYfmbqDdOGRYtSeEsOkavPhhkaNQK1UFFfICaUaM1k9OVEpACsoWOcK2upjRW7Tfs-pPTJBuQuvcmF9gBjosh5-Al2xTWHYzDlR~CYJNzsXcseIEnVf7H8lCdJqhZY-T0r~lmbJK5-CmbulWfOaubc-wyY3C-oM3b1RanGV1TqmPZto5bbHwf56jDYqK86HedVMXbUCOlzkeBw2R93AkmNDMOdDbKa9rIKqxil64DuQQAfIFxWm1Rc69Jc1-4K-bunsS~kfz8bSET6TIGmR15nCo~ibfISG72YYKAa7zz6XqUY6GKmmG-Yhj9XyyYb7Jy02r5axNei3DRD78SBe~6w__&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4')"
+        bgSize="fit"
+        bgPosition="right center"
         bgAttachment="fixed"
+        bgRepeat="no-repeat"
+        bgColor="#000000"
       >
         <Head>
           <title>Staking</title>
@@ -58,10 +49,7 @@ export default function Staking() {
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           />
-          <link
-            rel="icon"
-            href="/img/favicon.png"
-          />
+          <link rel="icon" href="/img/favicon.png" />
         </Head>
         <Header />
         <SideHeader />
@@ -82,31 +70,17 @@ export default function Staking() {
             left="-10"
             boxSize="120px"
           />
-          <Flex
-            zIndex={3}
-            direction="column"
-            h="100%"
-          >
+          <Flex zIndex={3} direction="column" h="100%">
             {/* Dropdown and Statistic */}
             <Box w="50%">
-              <HStack
-                justifyContent="space-between"
-                w="100%"
-              >
-                <DynamicNetworkSelect
+              <HStack justifyContent="space-between" w="100%">
+                <NetworkSelect
                   selectedOption={selectedOption}
-                  setSelectedOption={
-                    setSelectedOption
-                  }
-                  setSelectedChainName={
-                    setSelectedChainName
-                  }
+                  setSelectedOption={setSelectedOption}
+                  selectedChainName={selectedChainName}
+                  setSelectedChainName={setSelectedChainName}
                 />
-                <VStack
-                  p={1}
-                  borderRadius="10px"
-                  alignItems="flex-end"
-                >
+                <VStack p={1} borderRadius="10px" alignItems="flex-end">
                   <Stat color="complimentary.900">
                     <StatLabel>APY</StatLabel>
                     <StatNumber>35%</StatNumber>
@@ -122,9 +96,7 @@ export default function Staking() {
                 selectedOption={selectedOption}
                 isModalOpen={isModalOpen}
                 setModalOpen={setModalOpen}
-                selectedChainName={
-                  selectedChainName
-                }
+                selectedChainName={selectedChainName}
               />
 
               <Box w="10px" />
@@ -132,15 +104,11 @@ export default function Staking() {
               {/* Right Box */}
               <Flex flex="1" direction="column">
                 {/* Top Half (2/3) */}
-                <InfoBox
-                  selectedOption={selectedOption}
-                />
+                <InfoBox selectedOption={selectedOption} />
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
-                <AssetsAccordian
-                  selectedOption={selectedOption}
-                />
+                <AssetsAccordian selectedOption={selectedOption} />
               </Flex>
             </Flex>
           </Flex>

@@ -7,10 +7,9 @@ import { SideHeader } from '@/components';
 import { VotingSection } from '@/components';
 import { chainName } from '@/config';
 
-const DynamicVotingSection = dynamic(
-  () => Promise.resolve(VotingSection),
-  { ssr: false },
-);
+const DynamicVotingSection = dynamic(() => Promise.resolve(VotingSection), {
+  ssr: false,
+});
 
 export default function Home() {
   return (
@@ -25,21 +24,14 @@ export default function Home() {
       >
         <Header />
         <SideHeader />
-        <Container
-          justifyContent="center"
-          alignItems="center"
-          maxW="5xl"
-        >
+        <Container justifyContent="center" alignItems="center" maxW="5xl">
           <Head>
             <title>Governance</title>
             <meta
               name="viewport"
               content="width=device-width, initial-scale=1.0"
             />
-            <link
-              rel="icon"
-              href="/img/favicon.png"
-            />
+            <link rel="icon" href="/img/favicon.png" />
           </Head>
           <Box
             maxHeight="3xl" // Adjust this value based on your preference
@@ -47,11 +39,7 @@ export default function Home() {
             width="100%"
             padding={2} // Optional: for some spacing inside the box
           >
-            {chainName && (
-              <DynamicVotingSection
-                chainName={chainName}
-              />
-            )}
+            {chainName && <DynamicVotingSection chainName={chainName} />}
           </Box>
         </Container>
       </Box>
