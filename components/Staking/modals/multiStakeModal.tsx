@@ -30,7 +30,7 @@ import {
 import { Spinner } from '@interchain-ui/react';
 import React, { useEffect } from 'react';
 
-import { useStakingData } from '@/hooks/useStakingData';
+import { useValidatorData } from '@/hooks/useValidatorData';
 import { ExtendedValidator as Validator } from '@/utils';
 
 export const ValidatorsTable: React.FC<{
@@ -216,12 +216,11 @@ export const ValidatorsTable: React.FC<{
         <Input
           type="text"
           mr="16px"
-          mt={4}
+          mt={6}
           borderColor="complimentary.1000"
           placeholder="Validator Moniker"
           onChange={handleSearchChange}
           w="28%"
-          mb={4}
           borderRadius={'4px'}
           _hover={{
             borderColor: 'complimentary.900',
@@ -254,7 +253,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
     [],
   );
 
-  const { data, isLoading, refetch } = useStakingData(selectedChainName);
+  const { data, isLoading, refetch } = useValidatorData(selectedChainName);
 
   useEffect(() => {
     if (isLoading) return;
@@ -350,7 +349,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
               <Spinner size="large" color="complimentary.900" />
             </Box>
           ) : (
-            <Box mt={4}>
+            <Box mt={2}>
               <ValidatorsTable
                 validators={validators || []}
                 onValidatorClick={handleValidatorClick}

@@ -20,7 +20,7 @@ import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
 import { useValidatorData } from '@/hooks';
-import { useStakingData } from '@/hooks/useStakingData';
+import { useStakingData } from '@/hooks/useValidatorData';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,

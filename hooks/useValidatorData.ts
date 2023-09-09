@@ -1,56 +1,70 @@
-import { useChain } from '@cosmos-kit/react';
-import { QueryValidatorsResponse } from 'interchain-query/cosmos/staking/v1beta1/query';
-import { useEffect, useState } from 'react';
+import BigNumber from 'bignumber.js';
+import { cosmos } from 'interchain-query';
+import { useEffect, useMemo, useState } from 'react';
+
+import { parseValidators } from '@/utils/staking';
 
 import { useQueryHooks } from './useQueryHooks';
+import { useRpcQueryClient } from './useRpcQueryClient';
 
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
 };
 
-const getPagination = (
-  limit: bigint,
-  reverse: boolean = false,
-) => ({
-  limit,
-  reverse,
-  key: new Uint8Array(),
-  offset: 0n,
-  countTotal: true,
-});
+export const useValidatorData = (chainName: string) => {
+  const [isLoading, setIsLoading] = useState(false);
 
-export const useValidatorData = (
-  chainName: string,
-) => {
-  const [isLoading, setIsLoading] =
-    useState(false);
+  const { rpcQueryClient } = useRpcQueryClient(chainName);
 
-  const { cosmosQuery, isReady } =
-    useQueryHooks(chainName);
+  const { cosmosQuery, isReady } = useQueryHooks(chainName);
 
-  const validatorsQuery =
-    cosmosQuery.staking.v1beta1.useValidators({
-      request: {
-        status: 'BOND_STATUS_BONDED',
-        pagination: getPagination(50n, true),
+  const validatorsQuery = cosmosQuery.staking.v1beta1.useValidators({
+    request: {
+      status: cosmos.staking.v1beta1.bondStatusToJSON(
+        cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED,
+      ),
+      pagination: {
+        key: new Uint8Array(),
+        offset: 0n,
+        limit: 200n,
+        countTotal: true,
+        reverse: false,
       },
-      options: {
-        enabled: isReady,
-        staleTime: Infinity,
-        select: (
-          response: QueryValidatorsResponse,
-        ) => response.validators,
+    },
+    options: {
+      queryKey: ['validators', chainName],
+      enabled: !!rpcQueryClient?.cosmos?.staking?.v1beta1.validator,
+      select: ({ validators }) => {
+        const sorted = validators.sort((a, b) =>
+          new BigNumber(b.tokens).minus(a.tokens).toNumber(),
+        );
+        return parseValidators(sorted);
       },
-    });
+      onError: (error) => {
+        console.error('Error fetching validators:', error);
+        validatorsQuery.remove();
+        validatorsQuery.refetch();
+      },
+    },
+  });
+
+  const loading = validatorsQuery.isFetching || !isReady;
 
   useEffect(() => {
-    if (validatorsQuery.isFetching) {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
-    }
+    setIsLoading(loading);
+  }, [loading]);
+
+  type SingleQueriesData = {
+    validators: NonNullable<(typeof validatorsQuery)['data']>;
+  };
+
+  const singleQueriesData = useMemo(() => {
+    if (validatorsQuery.isFetching || !isReady) return;
+    return {
+      validators: validatorsQuery.data,
+    } as SingleQueriesData;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validatorsQuery.isFetching]);
+  }, [validatorsQuery.isFetching, isReady]);
 
   const refetch = () => {
     validatorsQuery.remove();
@@ -58,7 +72,7 @@ export const useValidatorData = (
   };
 
   return {
-    data: { ...validatorsQuery },
+    data: singleQueriesData,
     isLoading,
     refetch,
   };
