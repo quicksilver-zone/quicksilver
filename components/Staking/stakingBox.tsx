@@ -20,10 +20,6 @@ import {
 } from '@chakra-ui/react';
 import React, { useEffect } from 'react';
 
-import { useValidatorData } from '@/hooks';
-import { useStakingData } from '@/hooks/useValidatorData';
-import { type ExtendedValidator as Validator } from '@/utils';
-
 import { MultiModal } from './modals/multiStakeModal';
 
 type StakingBoxProps = {

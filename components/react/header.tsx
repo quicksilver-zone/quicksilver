@@ -6,7 +6,7 @@ import {
 
 import { WalletButton } from '../wallet-button';
 
-export const Header = () => {
+export const Header: React.FC<{ chainName: string }> = ({ chainName }) => {
   return (
     <Box
       w="100%"
@@ -33,7 +33,9 @@ export const Header = () => {
           alignItems="center"
           justifyContent="center"
         >
-          <WalletButton />
+          <WalletButton
+          chainName={chainName}
+          />
         </Flex>
       </Flex>
     </Box>

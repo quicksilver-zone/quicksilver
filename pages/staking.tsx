@@ -19,8 +19,6 @@ import { NetworkSelect } from '@/components';
 import { StakingBox } from '@/components';
 import { InfoBox } from '@/components';
 import { AssetsAccordian } from '@/components';
-import { useValidatorData } from '@/hooks';
-import { useStakingData } from '@/hooks/useValidatorData';
 
 const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
   ssr: false,
@@ -51,7 +49,9 @@ export default function Staking() {
           />
           <link rel="icon" href="/img/favicon.png" />
         </Head>
-        <Header />
+        <Header
+        chainName={selectedChainName}
+        />
         <SideHeader />
         <Container
           zIndex={2}

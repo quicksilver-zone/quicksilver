@@ -26,9 +26,11 @@ import {
   Button,
   Spacer,
   Input,
+  Spinner
 } from '@chakra-ui/react';
-import { Spinner } from '@interchain-ui/react';
+import { Icon } from '@interchain-ui/react';
 import React, { useEffect } from 'react';
+import { FaSearch } from 'react-icons/fa';
 
 import { useValidatorData } from '@/hooks/useValidatorData';
 import { ExtendedValidator as Validator } from '@/utils';
@@ -108,13 +110,13 @@ export const ValidatorsTable: React.FC<{
   }, [validators, searchTerm, sortBy, sortOrder]);
 
   return (
-    <Box borderRadius={'6px'} maxH="xl" minH="xl">
+    <Box borderRadius={'6px'} maxH="lg" minH="lg">
       <Box
         borderRadius={'6px'}
-        maxH="lg"
-        minH="lg"
+        maxH="md"
+        minH="md"
         px={4}
-        overflowX="scroll"
+        overflowY="scroll"
         sx={{
           '&::-webkit-scrollbar': {
             width: '8px',
@@ -124,10 +126,10 @@ export const ValidatorsTable: React.FC<{
             borderRadius: '4px',
           },
           '&::-webkit-scrollbar-track': {
-            backgroundColor: 'primary.900',
+            backgroundColor: 'rgba(255,128,0, 0.25)',
+            borderRadius: "10px"
+            ,
           },
-          scrollbarWidth: 'thin',
-          scrollbarColor: 'complimentary.900 primary.900',
         }}
       >
         <Table
@@ -212,24 +214,38 @@ export const ValidatorsTable: React.FC<{
           </Tbody>
         </Table>
       </Box>
-      <Flex justifyContent={'flex-end'} w="100%" flexDirection={'row'}>
+      <Flex alignContent="center" alignItems="center" justifyContent={'flex-end'} w="100%" flexDirection={'row'}>
+                      <Box
+                      mr={4}
+                      mt={6}
+                      >
+          <FaSearch
+          color="rgba(255,128,0,0.5)"
+          size="20px"
+          />
+          </Box>
         <Input
           type="text"
-          mr="16px"
+          mr="10px"
           mt={6}
+          color="white"
           borderColor="complimentary.1000"
           placeholder="Validator Moniker"
           onChange={handleSearchChange}
-          w="28%"
+          w="165px"
           borderRadius={'4px'}
-          _hover={{
+          _active={{
             borderColor: 'complimentary.900',
           }}
           _selected={{
             borderColor: 'complimentary.900',
           }}
+          _hover={{
+            borderColor: 'complimentary.900',
+          }}
           _focus={{
             borderColor: 'complimentary.900',
+            boxShadow: '0 0 0 3px #FF8000',
           }}
         />
       </Flex>
@@ -309,19 +325,16 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                 </AccordionButton>
               </h2>
               <AccordionPanel justifyContent="center" mt={-2}>
-                <Box>
-                  <Text
-                    maxW="85%"
+                <Text
+                  maxW="95%"
                     color="white"
                     fontSize="16px"
                     letterSpacing={'wider'}
                   >
-                    Choose which validator(s) you would like to liquid stake to.
-                    You can select from the list below or utilize the quick
+                    Choose which validator(s) you would like to liquid stake to. You can select from the list below or utilize the quick
                     select to pick the highest ranked validators. To learn more
                     about raninkings click here.
                   </Text>
-                </Box>
               </AccordionPanel>
             </AccordionItem>
           </Accordion>
@@ -346,7 +359,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
               alignItems="center"
               height="200px"
             >
-              <Spinner size="large" color="complimentary.900" />
+              <Spinner h="50px" w="50px" color="complimentary.900" />
             </Box>
           ) : (
             <Box mt={2}>
@@ -382,7 +395,6 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                 Liquid Stake
               </Button>
             </Flex>
-
             <Box
               bg="rgba(255,255,255,0.1)"
               borderRadius="10px"
@@ -443,6 +455,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                 </Button>
               </Flex>
             </Box>
+            
           </Box>
         </ModalBody>
         <ModalFooter></ModalFooter>
