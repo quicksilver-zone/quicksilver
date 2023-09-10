@@ -68,8 +68,6 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({
       setSelectedChainName(selectedNetwork.chainName);
     }
   };
-  console.log('Selected Option:', selectedOption);
-  console.log('Selected Chain Name:', selectedChainName);
   return (
     <Menu>
       <MenuButton

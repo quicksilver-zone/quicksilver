@@ -53,7 +53,7 @@ const defaultThemeObject = {
       darkEnd: 'rgb(0, 0, 0)',
     },
     text: {
-      light: 'rgb(0, 0, 0)',
+      light: 'white',
       dark: 'rgb(255, 255, 255)',
     },
     swiper: '#007aff',

@@ -9,6 +9,7 @@ import {
   Text,
   useColorModeValue,
 } from '@chakra-ui/react';
+import styled from '@emotion/styled';
 import { cosmos } from 'interchain-query';
 import { ProposalStatus } from 'interchain-query/cosmos/gov/v1beta1/gov';
 import { IconType } from 'react-icons';
@@ -21,6 +22,15 @@ import ReactMarkdown from 'react-markdown';
 
 import { VoteColor } from './ProposalCard';
 
+/* eslint-disable */ // @ts-ignore
+const MarkdownStyled = styled(ReactMarkdown)`
+  color: white;
+
+  a {
+    color: white;
+  }
+`;
+
 export const Loader = () => (
   <Center
     w="100%"
@@ -28,12 +38,7 @@ export const Loader = () => (
     bgColor="rgba(214, 219, 220, 0.1)"
     borderRadius="xl"
   >
-    <Spinner
-      thickness="3px"
-      color="complimentary.900"
-      size="lg"
-      speed="0.4s"
-    />
+    <Spinner thickness="3px" color="complimentary.900" size="lg" speed="0.4s" />
   </Center>
 );
 
@@ -45,8 +50,7 @@ export const DisconnectedContent = () => (
     borderRadius="xl"
   >
     <Text fontSize="lg" color="white">
-      Please connect the wallet to see the
-      proposals
+      Please connect the wallet to see the proposals
     </Text>
   </Center>
 );
@@ -59,18 +63,10 @@ export const TimeDisplay = ({
   time: string;
 }) => (
   <Stack spacing="0.5">
-    <Text
-      fontSize="sm"
-      fontWeight="semibold"
-      color="white"
-    >
+    <Text fontSize="sm" fontWeight="semibold" color="white">
       {title}
     </Text>
-    <Text
-      fontWeight="semibold"
-      color="white"
-      letterSpacing="tight"
-    >
+    <Text fontWeight="semibold" color="white" letterSpacing="tight">
       {time}
     </Text>
   </Stack>
@@ -101,37 +97,20 @@ export const VoteRatio = ({
     px={4}
     border="1px solid"
     borderRadius="md"
-    borderColor={useColorModeValue(
-      'gray.200',
-      'gray.900',
-    )}
-    bgColor={useColorModeValue(
-      'whiteAlpha.800',
-      'gray.800',
-    )}
+    borderColor="complimentary.900"
+    bgColor="primary.900"
     w="200px"
   >
-    <Text
-      color={VoteColor[type]}
-      fontWeight="bold"
-    >
+    <Text color={VoteColor[type]} fontWeight="bold">
       {type} {ratio}
     </Text>
-    <Text
-      fontSize="sm"
-      fontWeight="semibold"
-      color="white"
-    >
+    <Text fontSize="sm" fontWeight="semibold" color="white">
       {amount} {token}
     </Text>
   </Box>
 );
 
-export const VoteResult = ({
-  voteOption,
-}: {
-  voteOption: number;
-}) => {
+export const VoteResult = ({ voteOption }: { voteOption: number }) => {
   let optionConfig: {
     color: string;
     icon: IconType;
@@ -175,18 +154,11 @@ export const VoteResult = ({
       <Text
         fontSize="sm"
         fontWeight="semibold"
-        color={useColorModeValue(
-          'gray.600',
-          'gray.400',
-        )}
+        color={useColorModeValue('gray.600', 'gray.400')}
       >
         You Voted
       </Text>
-      <Flex
-        color={optionConfig.color}
-        alignItems="center"
-        gap="2px"
-      >
+      <Flex color={optionConfig.color} alignItems="center" gap="2px">
         <Icon
           as={optionConfig.icon}
           fontSize="lg"
@@ -200,37 +172,22 @@ export const VoteResult = ({
   );
 };
 
-export const NewLineText = ({
-  text,
-}: {
-  text: string;
-}) => {
+export const NewLineText = ({ text }: { text: string }) => {
   let count = 0;
   return (
     <>
       {text.split('\\n').map((str) => (
-        <Box
-          lineHeight="taller"
-          fontSize="sm"
-          key={count++}
-        >
-          <ReactMarkdown
-            linkTarget="_blank"
-            className="markdown-text"
-          >
+        <Box lineHeight="taller" fontSize="sm" key={count++}>
+          <MarkdownStyled linkTarget="_blank" className="markdown-text">
             {str}
-          </ReactMarkdown>
+          </MarkdownStyled>
         </Box>
       ))}
     </>
   );
 };
 
-export const StatusBadge = ({
-  status,
-}: {
-  status: number;
-}) => {
+export const StatusBadge = ({ status }: { status: number }) => {
   let statusConfig: {
     color: string;
     name: string;
@@ -265,25 +222,14 @@ export const StatusBadge = ({
   }
 
   return (
-    <Badge
-      colorScheme={statusConfig.color}
-      variant="subtle"
-      borderRadius={4}
-    >
-      <Flex alignItems="center">
-        {statusConfig.name}
-      </Flex>
+    <Badge colorScheme={statusConfig.color} variant="subtle" borderRadius={4}>
+      <Flex alignItems="center">{statusConfig.name}</Flex>
     </Badge>
   );
 };
 
 export const VotedBadge = () => (
-  <Badge
-    colorScheme="purple"
-    variant="solid"
-    borderRadius={4}
-    h="min-content"
-  >
+  <Badge colorScheme="purple" variant="solid" borderRadius={4} h="min-content">
     Voted
   </Badge>
 );

@@ -1,5 +1,6 @@
 import {
   Modal,
+  Text,
   ModalOverlay,
   ModalContent,
   ModalHeader,
@@ -94,13 +95,18 @@ export const VoteModal: React.FC<
       onClose={closeModal}
       isCentered
     >
-      <ModalOverlay />
+      <ModalOverlay
+       />
       <>
-        <ModalContent>
-          <ModalHeader mr={4}>
+        <ModalContent
+         bgColor="#1A1A1A"
+        >
+          <ModalHeader
+          color="white"
+           mr={4}>
             {title}
           </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton color="white" />
           <ModalBody>
             <RadioGroup
               onChange={(e) =>
@@ -109,14 +115,16 @@ export const VoteModal: React.FC<
             >
               <Stack>
                 <Radio
-                  colorScheme="blue"
+                  colorScheme="green"
                   size="lg"
                   value={VoteType.VOTE_OPTION_YES.toString()}
                   isDisabled={checkIfDisable(
                     VoteType.VOTE_OPTION_YES,
                   )}
                 >
-                  Yes
+                  <Text>
+                    Yes
+                    </Text>
                 </Radio>
                 <Radio
                   colorScheme="red"
@@ -126,7 +134,9 @@ export const VoteModal: React.FC<
                     VoteType.VOTE_OPTION_NO,
                   )}
                 >
-                  No
+                <Text>
+                    No
+                    </Text>
                 </Radio>
                 <Radio
                   colorScheme="red"
@@ -136,7 +146,9 @@ export const VoteModal: React.FC<
                     VoteType.VOTE_OPTION_NO_WITH_VETO,
                   )}
                 >
-                  No with Veto
+                  <Text>
+                    No With Veto
+                    </Text>
                 </Radio>
                 <Radio
                   colorScheme="gray"
@@ -146,7 +158,9 @@ export const VoteModal: React.FC<
                     VoteType.VOTE_OPTION_ABSTAIN,
                   )}
                 >
-                  Abstain
+                 <Text>
+                    Abstain
+                    </Text>
                 </Radio>
               </Stack>
             </RadioGroup>
@@ -154,7 +168,9 @@ export const VoteModal: React.FC<
 
           <ModalFooter>
             <Button
-              colorScheme="blue"
+             _hover={{
+              bgColor: '#181818',
+            }}
               onClick={handleConfirmClick}
               isDisabled={!option || isLoading}
               isLoading={isLoading}

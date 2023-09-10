@@ -39,7 +39,6 @@ export default function Staking() {
         bgPosition="right center"
         bgAttachment="fixed"
         bgRepeat="no-repeat"
-        bgColor="#000000"
       >
         <Head>
           <title>Staking</title>
@@ -49,9 +48,7 @@ export default function Staking() {
           />
           <link rel="icon" href="/img/favicon.png" />
         </Head>
-        <Header
-        chainName={selectedChainName}
-        />
+        <Header chainName={selectedChainName} />
         <SideHeader />
         <Container
           zIndex={2}
