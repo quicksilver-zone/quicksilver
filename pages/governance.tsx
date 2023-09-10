@@ -23,6 +23,7 @@ export default function Home() {
         bgPosition="right center"
         bgAttachment="fixed"
         bgRepeat="no-repeat"
+        bgColor="#000000"
       >
         <Header chainName="quicksilver" />
         <SideHeader />

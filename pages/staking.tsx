@@ -39,6 +39,7 @@ export default function Staking() {
         bgPosition="right center"
         bgAttachment="fixed"
         bgRepeat="no-repeat"
+        bgColor="#000000"
       >
         <Head>
           <title>Staking</title>
