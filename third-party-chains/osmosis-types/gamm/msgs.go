@@ -66,8 +66,8 @@ func ValidateFutureGovernor(governor string) error {
 
 var _ sdk.Msg = &MsgSwapExactAmountIn{}
 
-func (msg MsgSwapExactAmountIn) Route() string { return RouterKey }
-func (msg MsgSwapExactAmountIn) Type() string  { return TypeMsgSwapExactAmountIn }
+func (MsgSwapExactAmountIn) Route() string { return RouterKey }
+func (MsgSwapExactAmountIn) Type() string  { return TypeMsgSwapExactAmountIn }
 func (msg MsgSwapExactAmountIn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
