@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -45,7 +46,7 @@ func (p PeriodLock) SingleCoin() (sdk.Coin, error) {
 	return p.Coins[0], nil
 }
 
-func SumLocksByDenom(locks []PeriodLock, denom string) sdk.Int {
+func SumLocksByDenom(locks []PeriodLock, denom string) sdkmath.Int {
 	sum := sdk.NewInt(0)
 	// validate the denom once, so we can avoid the expensive validate check in the hot loop.
 	err := sdk.ValidateDenom(denom)

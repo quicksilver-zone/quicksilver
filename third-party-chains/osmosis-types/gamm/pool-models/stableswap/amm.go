@@ -3,6 +3,7 @@ package stableswap
 import (
 	"errors"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
@@ -362,8 +363,8 @@ func (p *Pool) calcInAmtGivenOut(tokenOut sdk.Coin, tokenInDenom string, swapFee
 	return inAmt, nil
 }
 
-func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk.Int, error) {
-	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares sdk.Int) gamm.PoolI {
+func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdkmath.Int, error) {
+	poolWithAddedLiquidityAndShares := func(newLiquidity sdk.Coin, newShares sdkmath.Int) gamm.PoolI {
 		paCopy := p.Copy()
 		paCopy.updatePoolForJoin(sdk.NewCoins(tokenIn), newShares)
 		return &paCopy
@@ -374,7 +375,7 @@ func (p *Pool) calcSingleAssetJoinShares(tokenIn sdk.Coin, swapFee sdk.Dec) (sdk
 
 // We can mutate pa here
 // TODO: some day switch this to a COW wrapped pa, for better perf
-func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+func (p *Pool) joinPoolSharesInternal(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
 	if len(tokensIn) == 1 {
 		numShares, err = p.calcSingleAssetJoinShares(tokensIn[0], swapFee)
 		newLiquidity = tokensIn

@@ -9,6 +9,7 @@ import (
 
 	sdkioerrors "cosmossdk.io/errors"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
@@ -103,19 +104,19 @@ func (p Pool) GetPoolParams() PoolParams {
 	return p.PoolParams
 }
 
-func (p Pool) GetTotalWeight() sdk.Int {
+func (p Pool) GetTotalWeight() sdkmath.Int {
 	return p.TotalWeight
 }
 
-func (p Pool) GetTotalShares() sdk.Int {
+func (p Pool) GetTotalShares() sdkmath.Int {
 	return p.TotalShares.Amount
 }
 
-func (p *Pool) AddTotalShares(amt sdk.Int) {
+func (p *Pool) AddTotalShares(amt sdkmath.Int) {
 	p.TotalShares.Amount = p.TotalShares.Amount.Add(amt)
 }
 
-func (p *Pool) SubTotalShares(amt sdk.Int) {
+func (p *Pool) SubTotalShares(amt sdkmath.Int) {
 	p.TotalShares.Amount = p.TotalShares.Amount.Sub(amt)
 }
 
@@ -276,7 +277,7 @@ func (p Pool) parsePoolAssetsCoins(tokensA sdk.Coins, tokensB sdk.Coins) (
 	return Aasset, Basset, err
 }
 
-func (p *Pool) IncreaseLiquidity(sharesOut sdk.Int, coinsIn sdk.Coins) {
+func (p *Pool) IncreaseLiquidity(sharesOut sdkmath.Int, coinsIn sdk.Coins) {
 	err := p.addToPoolAssetBalances(coinsIn)
 	if err != nil {
 		panic(err)
@@ -448,19 +449,19 @@ func (p *Pool) PokePool(blockTime time.Time) {
 	}
 }
 
-func (p Pool) GetTokenWeight(denom string) (sdk.Int, error) {
+func (p Pool) GetTokenWeight(denom string) (sdkmath.Int, error) {
 	PoolAsset, err := p.GetPoolAsset(denom)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdkmath.Int{}, err
 	}
 
 	return PoolAsset.Weight, nil
 }
 
-func (p Pool) GetTokenBalance(denom string) (sdk.Int, error) {
+func (p Pool) GetTokenBalance(denom string) (sdkmath.Int, error) {
 	PoolAsset, err := p.GetPoolAsset(denom)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdkmath.Int{}, err
 	}
 
 	return PoolAsset.Token.Amount, nil
@@ -627,7 +628,7 @@ func (p Pool) SpotPrice(ctx sdk.Context, baseAsset, quoteAsset string) (spotPric
 }
 
 // calcPoolOutGivenSingleIn - balance pAo.
-func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoolAsset PoolAsset, totalShares sdk.Int) (numShares sdk.Int, err error) {
+func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoolAsset PoolAsset, totalShares sdkmath.Int) (numShares sdkmath.Int, err error) {
 	_, err = p.GetPoolAsset(tokenIn.Denom)
 	if err != nil {
 		return sdk.ZeroInt(), err
@@ -650,10 +651,10 @@ func (p *Pool) calcSingleAssetJoin(tokenIn sdk.Coin, swapFee sdk.Dec, tokenInPoo
 // JoinPool calculates the number of shares needed given tokensIn with swapFee applied.
 // It updates the liquidity if the pool is joined successfully. If not, returns error.
 // and updates pool accordingly.
-func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
+func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, err error) {
 	numShares, newLiquidity, err := p.CalcJoinPoolShares(ctx, tokensIn, swapFee)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdkmath.Int{}, err
 	}
 
 	// update pool with the calculated share and liquidity needed to join pool
@@ -663,10 +664,10 @@ func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (n
 
 // JoinPoolNoSwap calculates the number of shares needed for an all-asset join given tokensIn with swapFee applied.
 // It updates the liquidity if the pool is joined successfully. If not, returns error.
-func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
+func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, err error) {
 	numShares, tokensJoined, err := p.CalcJoinPoolNoSwapShares(ctx, tokensIn, swapFee)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdkmath.Int{}, err
 	}
 
 	// update pool with the calculated share and liquidity needed to join pool
@@ -681,7 +682,7 @@ func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.D
 //
 // It returns the number of shares created, the amount of coins actually joined into the pool
 // (in case of not being able to fully join), or an error.
-func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, tokensJoined sdk.Coins, err error) {
 	// 1) Get pool current liquidity + and token weights
 	// 2) If single token provided, do single asset join and exit.
 	// 3) If multi-asset join, first do as much of a join as we can with no swaps.
@@ -772,7 +773,7 @@ func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee s
 // Since CalcJoinPoolNoSwapShares is non-mutative, the steps for updating pool shares / liquidity are
 // more complex / don't just alter the state.
 // We should simplify this logic further in the future using multi-join equations.
-func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, tokensJoined sdk.Coins, err error) {
+func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, tokensJoined sdk.Coins, err error) {
 	// get all 'pool assets' (aka current pool liquidity + balancer weight)
 	poolAssetsByDenom, err := getPoolAssetsByDenom(p.GetAllPoolAssets())
 	if err != nil {
@@ -814,7 +815,7 @@ func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swa
 // Returns totalNewShares and totalNewLiquidity from joining all tokensIn
 // by mimicking individually single asset joining each.
 // or error if fails to calculate join for any of the tokensIn.
-func (p *Pool) calcJoinSingleAssetTokensIn(tokensIn sdk.Coins, totalShares sdk.Int, poolAssetsByDenom map[string]PoolAsset, swapFee sdk.Dec) (sdk.Int, sdk.Coins, error) {
+func (p *Pool) calcJoinSingleAssetTokensIn(tokensIn sdk.Coins, totalShares sdkmath.Int, poolAssetsByDenom map[string]PoolAsset, swapFee sdk.Dec) (sdkmath.Int, sdk.Coins, error) {
 	totalNewShares := sdk.ZeroInt()
 	totalNewLiquidity := sdk.NewCoins()
 	for _, coin := range tokensIn {
@@ -829,7 +830,7 @@ func (p *Pool) calcJoinSingleAssetTokensIn(tokensIn sdk.Coins, totalShares sdk.I
 	return totalNewShares, totalNewLiquidity, nil
 }
 
-func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdkmath.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
 	exitingCoins, err = p.CalcExitPoolCoinsFromShares(ctx, exitingShares, exitFee)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -844,7 +845,7 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 
 // exitPool exits the pool given exitingCoins and exitingShares.
 // updates the pool's liquidity and totalShares.
-func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares sdk.Int) error {
+func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares sdkmath.Int) error {
 	balances := p.GetTotalPoolLiquidity(ctx).Sub(exitingCoins...)
 	if err := p.UpdatePoolAssetBalances(balances); err != nil {
 		return err
@@ -856,19 +857,19 @@ func (p *Pool) exitPool(ctx sdk.Context, exitingCoins sdk.Coins, exitingShares s
 	return nil
 }
 
-func (p *Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
+func (p *Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdkmath.Int, exitFee sdk.Dec) (exitedCoins sdk.Coins, err error) {
 	return cfmm_common.CalcExitPool(ctx, p, exitingShares, exitFee)
 }
 
 func (p *Pool) CalcTokenInShareAmountOut(
 	ctx sdk.Context,
 	tokenInDenom string,
-	shareOutAmount sdk.Int,
+	shareOutAmount sdkmath.Int,
 	swapFee sdk.Dec,
-) (tokenInAmount sdk.Int, err error) {
+) (tokenInAmount sdkmath.Int, err error) {
 	_, poolAssetIn, err := p.getPoolAssetAndIndex(tokenInDenom)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdkmath.Int{}, err
 	}
 
 	normalizedWeight := sdk.NewDecFromInt(poolAssetIn.Weight).Quo(sdk.NewDecFromInt(p.GetTotalWeight()))
@@ -884,7 +885,7 @@ func (p *Pool) CalcTokenInShareAmountOut(
 	).Ceil().TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdkmath.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
 	}
 
 	return tokenInAmount, nil
@@ -893,11 +894,11 @@ func (p *Pool) CalcTokenInShareAmountOut(
 func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 	ctx sdk.Context,
 	tokenInDenom string,
-	shareOutAmount sdk.Int,
-) (tokenInAmount sdk.Int, err error) {
+	shareOutAmount sdkmath.Int,
+) (tokenInAmount sdkmath.Int, err error) {
 	_, poolAssetIn, err := p.getPoolAssetAndIndex(tokenInDenom)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdkmath.Int{}, err
 	}
 
 	normalizedWeight := sdk.NewDecFromInt(poolAssetIn.Weight).Quo(sdk.NewDecFromInt(p.GetTotalWeight()))
@@ -911,13 +912,13 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 	).TruncateInt()
 
 	if !tokenInAmount.IsPositive() {
-		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
+		return sdkmath.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveTokenAmountErrFormat, tokenInAmount.Int64())
 	}
 
 	poolAssetIn.Token.Amount = poolAssetIn.Token.Amount.Add(tokenInAmount)
 	err = p.UpdatePoolAssetBalance(poolAssetIn.Token)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdkmath.Int{}, err
 	}
 
 	return tokenInAmount, nil
@@ -926,11 +927,11 @@ func (p *Pool) JoinPoolTokenInMaxShareAmountOut(
 func (p *Pool) ExitSwapExactAmountOut(
 	ctx sdk.Context,
 	tokenOut sdk.Coin,
-	shareInMaxAmount sdk.Int,
-) (shareInAmount sdk.Int, err error) {
+	shareInMaxAmount sdkmath.Int,
+) (shareInAmount sdkmath.Int, err error) {
 	_, poolAssetOut, err := p.getPoolAssetAndIndex(tokenOut.Denom)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdkmath.Int{}, err
 	}
 
 	sharesIn := calcPoolSharesInGivenSingleAssetOut(
@@ -943,15 +944,15 @@ func (p *Pool) ExitSwapExactAmountOut(
 	).TruncateInt()
 
 	if !sharesIn.IsPositive() {
-		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
+		return sdkmath.Int{}, sdkioerrors.Wrapf(gamm.ErrNotPositiveRequireAmount, nonPostiveSharesAmountErrFormat, sharesIn.Int64())
 	}
 
 	if sharesIn.GT(shareInMaxAmount) {
-		return sdk.Int{}, sdkioerrors.Wrapf(gamm.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
+		return sdkmath.Int{}, sdkioerrors.Wrapf(gamm.ErrLimitMaxAmount, sharesLargerThanMaxErrFormat, sharesIn.Int64(), shareInMaxAmount.Uint64())
 	}
 
 	if err := p.exitPool(ctx, sdk.NewCoins(tokenOut), sharesIn); err != nil {
-		return sdk.Int{}, err
+		return sdkmath.Int{}, err
 	}
 
 	return sharesIn, nil

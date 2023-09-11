@@ -12,7 +12,7 @@ import (
 )
 
 // Benchmarking :)
-// previously using sdk.Int operations:
+// previously using sdkmath.Int operations:
 // BenchmarkEpochProvision-4 5000000 220 ns/op
 //
 // using sdk.Dec operations: (current implementation)

@@ -71,7 +71,7 @@ func poolAssetsMulDec(base []PoolAsset, d sdk.Dec) []PoolAsset {
 // ValidateUserSpecifiedWeight ensures that a weight that is provided from user-input anywhere
 // for creating a pool obeys the expected guarantees.
 // Namely, that the weight is in the range [1, MaxUserSpecifiedWeight)
-func ValidateUserSpecifiedWeight(weight sdk.Int) error {
+func ValidateUserSpecifiedWeight(weight sdkmath.Int) error {
 	if !weight.IsPositive() {
 		return sdkioerrors.Wrap(gamm.ErrNotPositiveWeight, weight.String())
 	}
