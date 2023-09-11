@@ -308,16 +308,23 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                   }}
                   p={6}
                 >
-                  <Box pr={4}>
+                  <Box h="100%" mb={-4} pr={4}>
                     <Text ml={4} color="white" fontSize="24px" textAlign="left">
                       Validator Selection
                     </Text>
                   </Box>
-                  <AccordionIcon color="complimentary.900" />
+                  <AccordionIcon mb={-4} color="complimentary.900" />
                 </AccordionButton>
               </h2>
-              <AccordionPanel justifyContent="center" mt={-2}>
+              <AccordionPanel
+                textAlign="left"
+                alignContent="center"
+                justifyContent="center"
+                mt={-2}
+              >
                 <Text
+                  fontWeight="light"
+                  pl={6}
                   maxW="95%"
                   color="white"
                   fontSize="16px"
@@ -375,7 +382,8 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                     type="text"
                     color="white"
                     borderColor="complimentary.1000"
-                    placeholder="Validator Moniker"
+                    placeholder="validator moniker..."
+                    fontWeight="light"
                     onChange={handleSearchChange}
                     width="55%"
                     borderRadius={'4px'}

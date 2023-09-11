@@ -11,20 +11,14 @@ import {
   Link,
 } from '@chakra-ui/react';
 import React from 'react';
-import {
-  BsTrophy,
-  BsCoin,
-  BsClock,
-} from 'react-icons/bs';
+import { BsTrophy, BsCoin, BsClock } from 'react-icons/bs';
 import { RiStockLine } from 'react-icons/ri';
 
 type AssetsAccordianProps = {
   selectedOption: string;
 };
 
-export const InfoBox: React.FC<
-  AssetsAccordianProps
-> = ({ selectedOption }) => {
+export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
   return (
     <Box
       zIndex={2}
@@ -49,40 +43,24 @@ export const InfoBox: React.FC<
         {selectedOption.toUpperCase()}&nbsp;on Quicksilver
       </Text>
       <Accordion mt={6} allowToggle>
-        <AccordionItem
-          pt={2}
-          mb={2}
-          borderTop={'none'}
-        >
+        <AccordionItem pt={2} mb={2} borderTop={'none'}>
           <h2>
             <Flex
               borderTopColor={'transparent'}
               alignItems="center"
               justifyContent="space-between"
               width="100%"
-              py={2} 
+              py={2}
             >
-              <Flex
-                flexDirection="row"
-                alignItems="center"
-              >
+              <Flex flexDirection="row" alignItems="center">
                 <Box mr="16px">
-                  <BsTrophy
-                    color="#FF8000"
-                    size="24px"
-                  />
+                  <BsTrophy color="#FF8000" size="24px" />
                 </Box>
-                <Text
-                  fontSize="16px"
-                  color={'white'}
-                >
+                <Text fontSize="16px" color={'white'}>
                   Rewards
                 </Text>
               </Flex>
-              <Text
-                pr={2}
-                color="complimentary.900"
-              >
+              <Text pr={2} color="complimentary.900">
                 35%
               </Text>
             </Flex>
@@ -98,30 +76,17 @@ export const InfoBox: React.FC<
               width="100%"
               py={2}
             >
-              <Flex
-                flexDirection="row"
-                flex="1"
-                alignItems="center"
-              >
+              <Flex flexDirection="row" flex="1" alignItems="center">
                 <Box mr="16px">
                   {' '}
                   {/* Adjusts right margin */}
-                  <BsCoin
-                    color="#FF8000"
-                    size="24px"
-                  />
+                  <BsCoin color="#FF8000" size="24px" />
                 </Box>
-                <Text
-                  fontSize="16px"
-                  color={'white'}
-                >
+                <Text fontSize="16px" color={'white'}>
                   Fees
                 </Text>
               </Flex>
-              <Text
-                pr={2}
-                color="complimentary.900"
-              >
+              <Text pr={2} color="complimentary.900">
                 Low
               </Text>
             </Flex>
@@ -136,30 +101,17 @@ export const InfoBox: React.FC<
               width="100%"
               py={2}
             >
-              <Flex
-                flexDirection="row"
-                flex="1"
-                alignItems="center"
-              >
+              <Flex flexDirection="row" flex="1" alignItems="center">
                 <Box mr="16px">
                   {' '}
                   {/* Adjusts right margin */}
-                  <BsClock
-                    color="#FF8000"
-                    size="24px"
-                  />
+                  <BsClock color="#FF8000" size="24px" />
                 </Box>
-                <Text
-                  fontSize="16px"
-                  color={'white'}
-                >
+                <Text fontSize="16px" color={'white'}>
                   Unbonding
                 </Text>
               </Flex>
-              <Text
-                pr={2}
-                color="complimentary.900"
-              >
+              <Text pr={2} color="complimentary.900">
                 21-24 Days*
               </Text>
             </Flex>
@@ -171,25 +123,14 @@ export const InfoBox: React.FC<
             pb={4}
           >
             <VStack spacing={2} width="100%">
-              <HStack
-                justifyContent="space-between"
-                width="100%"
-              >
-                <Text color="white">
-                  on{' '}
-                  {selectedOption.toUpperCase()}
-                </Text>
+              <HStack justifyContent="space-between" width="100%">
+                <Text color="white">on {selectedOption.toUpperCase()}</Text>
                 <Text color="complimentary.900">
                   0 {selectedOption.toUpperCase()}
                 </Text>
               </HStack>
-              <HStack
-                justifyContent="space-between"
-                width="100%"
-              >
-                <Text color="white">
-                  on Quicksilver
-                </Text>
+              <HStack justifyContent="space-between" width="100%">
+                <Text color="white">on Quicksilver</Text>
                 <Text color="complimentary.900">
                   0 {selectedOption.toUpperCase()}
                 </Text>
@@ -197,46 +138,28 @@ export const InfoBox: React.FC<
             </VStack>
           </AccordionPanel>
         </AccordionItem>
-        <AccordionItem
-          pt={2}
-          mb={2}
-          borderBottom={'none'}
-        >
+        <AccordionItem pt={2} mb={2} borderBottom={'none'}>
           <h2>
             <Flex
               borderTopColor={'transparent'}
               alignItems="center"
               justifyContent="space-between"
               width="100%"
-              py={2} 
+              py={2}
             >
-              <Flex
-                flexDirection="row"
-                flex="1"
-                alignItems="center"
-              >
+              <Flex flexDirection="row" flex="1" alignItems="center">
                 <Box mr="16px">
                   {' '}
                   {/* Adjusts right margin */}
-                  <RiStockLine
-                    color="#FF8000"
-                    size="24px"
-                  />
+                  <RiStockLine color="#FF8000" size="24px" />
                 </Box>
-                <Text
-                  fontSize="16px"
-                  color={'white'}
-                >
-                  Value of 1 q
-                  {selectedOption.toUpperCase()}
+                <Text fontSize="16px" color={'white'}>
+                  Value of 1 q{selectedOption.toUpperCase()}
                 </Text>
               </Flex>
-              <Text
-                pr={2}
-                color="complimentary.900"
-              >
-                1 q{selectedOption.toUpperCase()}{' '}
-                = 1 {selectedOption.toUpperCase()}
+              <Text pr={2} color="complimentary.900">
+                1 q{selectedOption.toUpperCase()} = 1{' '}
+                {selectedOption.toUpperCase()}
               </Text>
             </Flex>
           </h2>
@@ -251,10 +174,10 @@ export const InfoBox: React.FC<
         p={5}
         width="100%"
         borderRadius={6}
+        fontWeight="light"
       >
-        Want to learn more about rewards, fees,
-        and unbonding on Quicksilver?&nbsp;Check out
-        the{' '}
+        Want to learn more about rewards, fees, and unbonding on
+        Quicksilver?&nbsp;Check out the{' '}
         <Link
           href="https://your-docs-url.com"
           color="complimentary.900"

@@ -92,7 +92,7 @@ export const StakingBox = ({
         <TabPanels>
           <TabPanel>
             <VStack spacing={8} align="center">
-              <Text textAlign="center" color="white">
+              <Text fontWeight="light" textAlign="center" color="white">
                 Stake your {selectedOption.toUpperCase()} tokens in exchange for
                 q{selectedOption.toUpperCase()} which you can deploy around the
                 ecosystem. You can liquid stake half of your balance, if
@@ -203,7 +203,7 @@ export const StakingBox = ({
           </TabPanel>
           <TabPanel>
             <VStack spacing={8} align="center">
-              <Text textAlign="center" color="white">
+              <Text fontWeight="light" textAlign="center" color="white">
                 Unstake your q{selectedOption.toUpperCase()} tokens in exchange
                 for {selectedOption.toUpperCase()}.
               </Text>

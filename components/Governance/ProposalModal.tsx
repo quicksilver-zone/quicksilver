@@ -176,7 +176,26 @@ export const ProposalModal = ({
       >
         <ModalOverlay />
         <>
-          <ModalContent bgColor="#1A1A1A" maxH="80vh" overflowY="scroll" px={2}>
+          <ModalContent
+            pr={2}
+            sx={{
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'complimentary.900',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-track': {
+                backgroundColor: 'rgba(255,128,0, 0.25)',
+                borderRadius: '10px',
+              },
+            }}
+            bgColor="#1A1A1A"
+            maxH="80vh"
+            overflowY="scroll"
+            px={2}
+          >
             <ModalHeader>
               <Flex gap={2} mt={1} mb={2} alignItems="center">
                 <Center h="min-content" transform="translateY(1px)">

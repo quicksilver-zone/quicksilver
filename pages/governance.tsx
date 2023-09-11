@@ -36,26 +36,8 @@ export default function Home() {
             />
             <link rel="icon" href="/img/favicon.png" />
           </Head>
-          <Box
-            maxHeight="3xl"
-            overflowY="auto"
-            width="100%"
-            padding={2}
-            sx={{
-              '&::-webkit-scrollbar': {
-                width: '8px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                backgroundColor: 'complimentary.900',
-                borderRadius: '4px',
-              },
-              '&::-webkit-scrollbar-track': {
-                backgroundColor: 'rgba(255,128,0, 0.25)',
-                borderRadius: '10px',
-              },
-            }}
-          >
-            <Text color="white" fontSize="24px">
+          <Box maxHeight="3xl" width="100%" padding={2}>
+            <Text pb={2} color="white" fontSize="24px">
               Proposals
             </Text>
             {chainName && <DynamicVotingSection chainName={chainName} />}
