@@ -362,9 +362,6 @@ ictest-rz:
 ictest-upgrade: ictest-deps
 	@cd test/interchaintest && go test -v -run TestBasicQuicksilverUpgrade .
 
-ictest-rz: 
-	@cd test/interchaintest && go test -v -run TestRegisterZone .
-
 # Executes a basic chain upgrade locally via interchaintest after compiling a local image as quicksilver:local
 ictest-upgrade-local: local-image ictest-deps ictest-upgrade
 

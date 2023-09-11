@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/utils"
-
 	"cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/proto/tendermint/crypto"
