@@ -1,0 +1,7 @@
+FROM ubuntu:jammy
+
+COPY ./interchain-queries /bin/interchain-queries
+
+RUN adduser --system --home /icq --disabled-password --disabled-login icq -U 1000
+USER icq
+
