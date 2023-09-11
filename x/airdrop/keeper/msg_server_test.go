@@ -1,18 +1,18 @@
 package keeper_test
 
 import (
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-
-	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
 	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
 func (s *KeeperTestSuite) Test_msgServer_Claim() {

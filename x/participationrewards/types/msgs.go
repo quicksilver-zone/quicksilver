@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ingenuity-build/multierror"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	"github.com/ingenuity-build/multierror"
 
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"

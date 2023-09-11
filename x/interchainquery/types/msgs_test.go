@@ -3,11 +3,11 @@ package types_test
 import (
 	"testing"
 
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	"github.com/stretchr/testify/require"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-
-	"github.com/stretchr/testify/require"
 
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"

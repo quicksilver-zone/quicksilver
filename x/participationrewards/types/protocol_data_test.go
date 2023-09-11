@@ -4,12 +4,11 @@ import (
 	"encoding/json"
 	"testing"
 
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	"github.com/stretchr/testify/require"
 
+	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-
-	"github.com/stretchr/testify/require"
 )
 
 // tests that {} is an invalid string, and that an error is thrown when unmarshalled.

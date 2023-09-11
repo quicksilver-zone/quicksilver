@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ingenuity-build/multierror"
+
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/multierror"
 	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )

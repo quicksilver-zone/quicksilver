@@ -6,10 +6,11 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/ingenuity-build/multierror"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
-	"github.com/ingenuity-build/multierror"
 )
 
 // interchainstaking message types.

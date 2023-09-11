@@ -4,10 +4,12 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/ingenuity-build/multierror"
+
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ingenuity-build/multierror"
 
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	prtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"

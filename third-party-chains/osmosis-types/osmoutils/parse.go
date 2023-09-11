@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 	"github.com/spf13/pflag"
+
+	"github.com/cosmos/cosmos-sdk/x/gov/client/cli"
 )
 
 type Proposal struct {

@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

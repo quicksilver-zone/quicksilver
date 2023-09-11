@@ -3,11 +3,12 @@ package balancer
 import (
 	"fmt"
 
+	sdkioerrors "cosmossdk.io/errors"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmomath"
-
-	sdkioerrors "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // subPoolAssetWeights subtracts the weights of two different pool asset slices.

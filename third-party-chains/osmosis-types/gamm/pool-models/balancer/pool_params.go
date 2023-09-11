@@ -3,9 +3,9 @@ package balancer
 import (
 	"errors"
 
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 )
 
 func NewPoolParams(swapFee, exitFee sdk.Dec, params *SmoothWeightChangeParams) PoolParams {

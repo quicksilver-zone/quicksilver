@@ -4,12 +4,14 @@ import (
 	"testing"
 	"time"
 
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	"github.com/stretchr/testify/suite"
+
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/ingenuity-build/quicksilver/app/upgrades"
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"

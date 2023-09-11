@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-
 	sdkioerrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
+	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 )
 
 var _ gamm.PoolI = &Pool{}

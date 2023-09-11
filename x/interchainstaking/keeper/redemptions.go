@@ -6,10 +6,12 @@ import (
 	"sort"
 	"time"
 
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	"github.com/ingenuity-build/quicksilver/utils"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"

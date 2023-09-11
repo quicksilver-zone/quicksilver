@@ -3,10 +3,12 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/tendermint/tendermint/crypto"
+
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tendermint/tendermint/crypto"
 
 	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )

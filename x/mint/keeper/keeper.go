@@ -3,14 +3,13 @@ package keeper
 import (
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/ingenuity-build/quicksilver/x/mint/types"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	"github.com/ingenuity-build/quicksilver/x/mint/types"
 	participationrewards "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 

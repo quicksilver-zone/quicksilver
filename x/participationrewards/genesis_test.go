@@ -6,9 +6,10 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	simapp "github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/x/participationrewards"

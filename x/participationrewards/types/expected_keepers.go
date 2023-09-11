@@ -1,10 +1,12 @@
 package types
 
 import (
+	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
 	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"

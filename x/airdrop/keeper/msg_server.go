@@ -3,8 +3,10 @@ package keeper
 import (
 	"context"
 
-	sdkioerrors "cosmossdk.io/errors"
 	"github.com/armon/go-metrics"
+
+	sdkioerrors "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"

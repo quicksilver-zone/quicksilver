@@ -8,9 +8,9 @@ import (
 	"time"
 	"unsafe"
 
-	sdkmath "cosmossdk.io/math"
-
 	"golang.org/x/exp/constraints"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -2,6 +2,7 @@ package types
 
 import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

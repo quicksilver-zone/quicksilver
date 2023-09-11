@@ -3,8 +3,6 @@ package simulation
 import (
 	"math/rand"
 
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
@@ -14,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	"github.com/ingenuity-build/quicksilver/test/simulation/simtypes"
+	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
 	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )

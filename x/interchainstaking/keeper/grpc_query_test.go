@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ingenuity-build/quicksilver/utils/addressutils"
 	"github.com/ingenuity-build/quicksilver/utils/randomutils"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"

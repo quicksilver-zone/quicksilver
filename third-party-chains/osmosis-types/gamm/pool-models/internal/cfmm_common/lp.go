@@ -3,11 +3,12 @@ package cfmm_common
 import (
 	"errors"
 
+	sdkioerrors "cosmossdk.io/errors"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
-
-	sdkioerrors "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
