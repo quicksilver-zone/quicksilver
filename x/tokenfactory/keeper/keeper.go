@@ -49,7 +49,7 @@ func NewKeeper(
 }
 
 // Logger returns a logger for the x/tokenfactory module.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 

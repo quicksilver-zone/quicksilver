@@ -30,8 +30,8 @@ func NewMsgLockTokens(owner sdk.AccAddress, duration time.Duration, coins sdk.Co
 	}
 }
 
-func (m MsgLockTokens) Route() string { return RouterKey }
-func (m MsgLockTokens) Type() string  { return TypeMsgLockTokens }
+func (MsgLockTokens) Route() string { return RouterKey }
+func (MsgLockTokens) Type() string  { return TypeMsgLockTokens }
 func (m MsgLockTokens) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {
@@ -72,8 +72,8 @@ func NewMsgBeginUnlockingAll(owner sdk.AccAddress) *MsgBeginUnlockingAll {
 	}
 }
 
-func (m MsgBeginUnlockingAll) Route() string { return RouterKey }
-func (m MsgBeginUnlockingAll) Type() string  { return TypeMsgBeginUnlockingAll }
+func (MsgBeginUnlockingAll) Route() string { return RouterKey }
+func (MsgBeginUnlockingAll) Type() string  { return TypeMsgBeginUnlockingAll }
 func (m MsgBeginUnlockingAll) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {
@@ -102,8 +102,8 @@ func NewMsgBeginUnlocking(owner sdk.AccAddress, id uint64, coins sdk.Coins) *Msg
 	}
 }
 
-func (m MsgBeginUnlocking) Route() string { return RouterKey }
-func (m MsgBeginUnlocking) Type() string  { return TypeMsgBeginUnlocking }
+func (MsgBeginUnlocking) Route() string { return RouterKey }
+func (MsgBeginUnlocking) Type() string  { return TypeMsgBeginUnlocking }
 func (m MsgBeginUnlocking) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {
@@ -144,8 +144,8 @@ func NewMsgExtendLockup(owner sdk.AccAddress, id uint64, duration time.Duration)
 	}
 }
 
-func (m MsgExtendLockup) Route() string { return RouterKey }
-func (m MsgExtendLockup) Type() string  { return TypeMsgExtendLockup }
+func (MsgExtendLockup) Route() string { return RouterKey }
+func (MsgExtendLockup) Type() string  { return TypeMsgExtendLockup }
 func (m MsgExtendLockup) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {

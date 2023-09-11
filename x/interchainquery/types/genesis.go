@@ -12,7 +12,7 @@ func DefaultGenesisState() *GenesisState {
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
-func (gs GenesisState) Validate() error {
+func (GenesisState) Validate() error {
 	// TODO: validate genesis state.
 	return nil
 }

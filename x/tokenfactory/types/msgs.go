@@ -28,8 +28,8 @@ func NewMsgCreateDenom(sender, subdenom string) *MsgCreateDenom {
 	}
 }
 
-func (m MsgCreateDenom) Route() string { return RouterKey }
-func (m MsgCreateDenom) Type() string  { return TypeMsgCreateDenom }
+func (MsgCreateDenom) Route() string { return RouterKey }
+func (MsgCreateDenom) Type() string  { return TypeMsgCreateDenom }
 func (m MsgCreateDenom) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
@@ -63,8 +63,8 @@ func NewMsgMint(sender string, amount sdk.Coin) *MsgMint {
 	}
 }
 
-func (m MsgMint) Route() string { return RouterKey }
-func (m MsgMint) Type() string  { return TypeMsgMint }
+func (MsgMint) Route() string { return RouterKey }
+func (MsgMint) Type() string  { return TypeMsgMint }
 func (m MsgMint) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
@@ -97,8 +97,8 @@ func NewMsgBurn(sender string, amount sdk.Coin) *MsgBurn {
 	}
 }
 
-func (m MsgBurn) Route() string { return RouterKey }
-func (m MsgBurn) Type() string  { return TypeMsgBurn }
+func (MsgBurn) Route() string { return RouterKey }
+func (MsgBurn) Type() string  { return TypeMsgBurn }
 func (m MsgBurn) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
@@ -177,8 +177,8 @@ func NewMsgChangeAdmin(sender, denom, newAdmin string) *MsgChangeAdmin {
 	}
 }
 
-func (m MsgChangeAdmin) Route() string { return RouterKey }
-func (m MsgChangeAdmin) Type() string  { return TypeMsgChangeAdmin }
+func (MsgChangeAdmin) Route() string { return RouterKey }
+func (MsgChangeAdmin) Type() string  { return TypeMsgChangeAdmin }
 func (m MsgChangeAdmin) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
@@ -217,8 +217,8 @@ func NewMsgSetDenomMetadata(sender string, metadata banktypes.Metadata) *MsgSetD
 	}
 }
 
-func (m MsgSetDenomMetadata) Route() string { return RouterKey }
-func (m MsgSetDenomMetadata) Type() string  { return TypeMsgSetDenomMetadata }
+func (MsgSetDenomMetadata) Route() string { return RouterKey }
+func (MsgSetDenomMetadata) Type() string  { return TypeMsgSetDenomMetadata }
 func (m MsgSetDenomMetadata) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Sender)
 	if err != nil {
