@@ -311,7 +311,7 @@ func (k Keeper) NilReceipt(ctx sdk.Context, zone *types.Zone, txhash string) {
 	k.SetReceipt(ctx, r)
 }
 
-func (k Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
+func (Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash string, amount sdk.Coins) *types.Receipt {
 	t := ctx.BlockTime()
 	return &types.Receipt{ChainId: zone.ChainId, Sender: sender, Txhash: txhash, Amount: amount, FirstSeen: &t}
 }

@@ -49,7 +49,7 @@ type AppTestSuite struct {
 	path *ibctesting.Path
 }
 
-func (s *AppTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *Quicksilver {
+func (*AppTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *Quicksilver {
 	app, ok := chain.App.(*Quicksilver)
 	if !ok {
 		panic("not quicksilver app")

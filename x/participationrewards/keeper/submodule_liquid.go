@@ -16,10 +16,10 @@ type LiquidTokensModule struct{}
 
 var _ Submodule = &LiquidTokensModule{}
 
-func (m *LiquidTokensModule) Hooks(_ sdk.Context, _ *Keeper) {
+func (*LiquidTokensModule) Hooks(_ sdk.Context, _ *Keeper) {
 }
 
-func (m *LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	// message
 	// check denom is valid vs allowed
 

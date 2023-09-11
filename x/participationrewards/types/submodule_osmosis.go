@@ -153,6 +153,6 @@ func (oppd *OsmosisParamsProtocolData) ValidateBasic() error {
 	return nil
 }
 
-func (oppd *OsmosisParamsProtocolData) GenerateKey() []byte {
+func (*OsmosisParamsProtocolData) GenerateKey() []byte {
 	return []byte("osmosisparams")
 }

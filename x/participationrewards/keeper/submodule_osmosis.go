@@ -71,7 +71,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
-func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	var amount uint64
 	var lock osmolockup.PeriodLock
 	for _, proof := range msg.Proofs {
@@ -118,6 +118,6 @@ func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 	return amount, nil
 }
 
-func (m *OsmosisModule) GetKeyPrefixPools(poolID uint64) []byte {
+func (*OsmosisModule) GetKeyPrefixPools(poolID uint64) []byte {
 	return append([]byte{0x02}, sdk.Uint64ToBigEndian(poolID)...)
 }

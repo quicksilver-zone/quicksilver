@@ -22,7 +22,7 @@ type UmeeModule struct{}
 
 var _ Submodule = &UmeeModule{}
 
-func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
+func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 	// umee-types params
 	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeParams, types.UmeeParamsKey)
 	if !found {
@@ -177,7 +177,7 @@ func getDenomFromProof(proof *cmtypes.Proof, addr []byte) (string, error) {
 	return denom, err
 }
 
-func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
 		return 0, fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)

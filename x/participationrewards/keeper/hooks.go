@@ -11,7 +11,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
-func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
+func (*Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 	return nil
 }
 

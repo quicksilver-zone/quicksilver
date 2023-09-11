@@ -142,8 +142,8 @@ func NewUpdateZoneProposal(
 
 func (m UpdateZoneProposal) GetDescription() string { return m.Description }
 func (m UpdateZoneProposal) GetTitle() string       { return m.Title }
-func (m UpdateZoneProposal) ProposalRoute() string  { return RouterKey }
-func (m UpdateZoneProposal) ProposalType() string   { return ProposalTypeUpdateZone }
+func (UpdateZoneProposal) ProposalRoute() string    { return RouterKey }
+func (UpdateZoneProposal) ProposalType() string     { return ProposalTypeUpdateZone }
 
 // ValidateBasic runs basic stateless validity checks.
 func (m UpdateZoneProposal) ValidateBasic() error {
@@ -168,6 +168,6 @@ func (m UpdateZoneProposal) String() string {
 	return b.String()
 }
 
-func (v UpdateZoneValue) Validate() error {
+func (UpdateZoneValue) Validate() error {
 	return nil
 }

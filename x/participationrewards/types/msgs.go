@@ -49,10 +49,10 @@ func (msg MsgSubmitClaim) GetSignBytes() []byte {
 }
 
 // Route implements LegacyMsg.
-func (msg MsgSubmitClaim) Route() string { return RouterKey }
+func (MsgSubmitClaim) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (msg MsgSubmitClaim) Type() string { return TypeMsgSubmitClaim }
+func (MsgSubmitClaim) Type() string { return TypeMsgSubmitClaim }
 
 // GetSigners implements Msg.
 func (msg MsgSubmitClaim) GetSigners() []sdk.AccAddress {

@@ -102,7 +102,7 @@ const (
 	statusFailure = "failure"
 )
 
-func (tpc *tpsCounter) recordValue(ctx context.Context, latest, previous uint64, status status) (int64, error) {
+func (*tpsCounter) recordValue(ctx context.Context, latest, previous uint64, status status) (int64, error) {
 	if latest < previous {
 		return 0, nil
 	}

@@ -10,7 +10,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
-func (k Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
+func (Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 	return nil
 }
 

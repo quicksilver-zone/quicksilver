@@ -64,11 +64,11 @@ func (z *Zone) UpdateIntentWithCoins(intent DelegatorIntent, multiplier sdk.Dec,
 	return intent.AddOrdinal(multiplier, z.ConvertCoinsToOrdinalIntents(inAmount, vals))
 }
 
-func (z *Zone) UpdateZoneIntentWithMemo(memoIntent ValidatorIntents, intent DelegatorIntent, multiplier sdk.Dec) DelegatorIntent {
+func (*Zone) UpdateZoneIntentWithMemo(memoIntent ValidatorIntents, intent DelegatorIntent, multiplier sdk.Dec) DelegatorIntent {
 	return intent.AddOrdinal(multiplier, memoIntent)
 }
 
-func (z *Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins, zoneVals []string) ValidatorIntents {
+func (*Zone) ConvertCoinsToOrdinalIntents(coins sdk.Coins, zoneVals []string) ValidatorIntents {
 	// should we be return DelegatorIntent here?
 	out := make(ValidatorIntents, 0)
 COINS:
@@ -151,7 +151,7 @@ func (m *MemoField) Validate() error {
 	return nil
 }
 
-func (z *Zone) DecodeMemo(memo string) (memoFields MemoFields, err error) {
+func (*Zone) DecodeMemo(memo string) (memoFields MemoFields, err error) {
 	if memo == "" {
 		return memoFields, nil
 	}

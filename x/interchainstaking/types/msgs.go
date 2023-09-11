@@ -32,10 +32,10 @@ func NewMsgRequestRedemption(value sdk.Coin, destinationAddress string, fromAddr
 }
 
 // Route Implements Msg.
-func (msg MsgRequestRedemption) Route() string { return RouterKey }
+func (MsgRequestRedemption) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (msg MsgRequestRedemption) Type() string { return TypeMsgRequestRedemption }
+func (MsgRequestRedemption) Type() string { return TypeMsgRequestRedemption }
 
 // ValidateBasic Implements Msg.
 func (msg MsgRequestRedemption) ValidateBasic() error {
@@ -137,10 +137,10 @@ func NewMsgSignalIntent(chainID, intents string, fromAddress sdk.Address) *MsgSi
 }
 
 // Route Implements Msg.
-func (msg MsgSignalIntent) Route() string { return RouterKey }
+func (MsgSignalIntent) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (msg MsgSignalIntent) Type() string { return TypeMsgSignalIntent }
+func (MsgSignalIntent) Type() string { return TypeMsgSignalIntent }
 
 // ValidateBasic Implements Msg.
 func (msg MsgSignalIntent) ValidateBasic() error {
@@ -211,7 +211,7 @@ func (msg MsgGovCloseChannel) GetSigners() []sdk.AccAddress {
 }
 
 // check channel id is correct format. validate port name?
-func (msg MsgGovCloseChannel) ValidateBasic() error { return nil }
+func (MsgGovCloseChannel) ValidateBasic() error { return nil }
 
 // NewMsgGovReopenChannel - construct a msg to update signalled intent.
 func NewMsgGovReopenChannel(connectionID, portName string, fromAddress sdk.Address) *MsgGovReopenChannel {

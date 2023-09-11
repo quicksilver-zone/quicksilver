@@ -22,7 +22,7 @@ type CrescentModule struct{}
 
 var _ Submodule = &CrescentModule{}
 
-func (c CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
+func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 	// crescent-types params
 	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentParams, types.CrescentParamsKey)
 	if !found {
@@ -119,7 +119,7 @@ func (c CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
-func (c CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	var amount uint64
 	for _, proof := range msg.Proofs {
 		position := lpfarm.Position{}

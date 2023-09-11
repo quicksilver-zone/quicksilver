@@ -134,6 +134,6 @@ func (uppd CrescentParamsProtocolData) ValidateBasic() error {
 	return nil
 }
 
-func (uppd CrescentParamsProtocolData) GenerateKey() []byte {
+func (CrescentParamsProtocolData) GenerateKey() []byte {
 	return []byte(CrescentParamsKey)
 }

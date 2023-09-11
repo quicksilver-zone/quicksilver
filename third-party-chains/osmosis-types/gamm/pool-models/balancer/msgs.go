@@ -32,8 +32,8 @@ func NewMsgCreateBalancerPool(
 	}
 }
 
-func (msg MsgCreateBalancerPool) Route() string { return gamm.RouterKey }
-func (msg MsgCreateBalancerPool) Type() string  { return TypeMsgCreateBalancerPool }
+func (MsgCreateBalancerPool) Route() string { return gamm.RouterKey }
+func (MsgCreateBalancerPool) Type() string  { return TypeMsgCreateBalancerPool }
 func (msg MsgCreateBalancerPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
