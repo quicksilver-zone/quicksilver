@@ -16,8 +16,9 @@ import {
   HStack,
   Button,
   Spacer,
+  Spinner,
 } from '@chakra-ui/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 import { MultiModal } from './modals/multiStakeModal';
 
@@ -25,12 +26,14 @@ type StakingBoxProps = {
   selectedOption: string;
   isModalOpen: boolean;
   setModalOpen: (isOpen: boolean) => void;
+  selectedChainName: string;
 };
 
 export const StakingBox = ({
   selectedOption,
   isModalOpen,
   setModalOpen,
+  selectedChainName,
 }: StakingBoxProps): JSX.Element => {
   return (
     <Box
@@ -56,10 +59,9 @@ export const StakingBox = ({
             flex="1"
             color="white"
             fontWeight="bold"
-            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out" 
+            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out"
             _hover={{
-              borderBottomColor:
-                'complimentary.900',
+              borderBottomColor: 'complimentary.900',
             }}
             _selected={{
               bgColor: 'rgba(0,0,0,0.5)',
@@ -74,10 +76,9 @@ export const StakingBox = ({
             flex="1"
             color="white"
             fontWeight="bold"
-            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out" 
+            transition="background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out"
             _hover={{
-              borderBottomColor:
-                'complimentary.900',
+              borderBottomColor: 'complimentary.900',
             }}
             _selected={{
               bgColor: 'rgba(0,0,0,0.5)',
@@ -91,53 +92,30 @@ export const StakingBox = ({
         <TabPanels>
           <TabPanel>
             <VStack spacing={8} align="center">
-              <Text
-                textAlign="center"
-                color="white"
-              >
-                Stake your{' '}
-                {selectedOption.toUpperCase()}{' '}
-                tokens in exchange for q
-                {selectedOption.toUpperCase()}{' '}
-                which you can deploy around the
-                ecosystem. You can liquid stake
-                half of your balance, if
+              <Text fontWeight="light" textAlign="center" color="white">
+                Stake your {selectedOption.toUpperCase()} tokens in exchange for
+                q{selectedOption.toUpperCase()} which you can deploy around the
+                ecosystem. You can liquid stake half of your balance, if
                 you&apos;re going to LP.
               </Text>
-              <Flex
-                flexDirection="column"
-                w="100%"
-              >
-                <Stat
-                  py={4}
-                  textAlign="left"
-                  color="white"
-                >
-                  <StatLabel>
-                    Amount to stake:
-                  </StatLabel>
-                  <StatNumber>
-                    {selectedOption.toUpperCase()}{' '}
-                  </StatNumber>
+              <Flex flexDirection="column" w="100%">
+                <Stat py={4} textAlign="left" color="white">
+                  <StatLabel>Amount to stake:</StatLabel>
+                  <StatNumber>{selectedOption.toUpperCase()} </StatNumber>
                 </Stat>
                 <Input
                   _active={{
-                    borderColor:
-                      'complimentary.900',
+                    borderColor: 'complimentary.900',
                   }}
                   _selected={{
-                    borderColor:
-                      'complimentary.900',
+                    borderColor: 'complimentary.900',
                   }}
                   _hover={{
-                    borderColor:
-                      'complimentary.900',
+                    borderColor: 'complimentary.900',
                   }}
                   _focus={{
-                    borderColor:
-                      'complimentary.900',
-                    boxShadow:
-                      '0 0 0 3px #FF8000',
+                    borderColor: 'complimentary.900',
+                    boxShadow: '0 0 0 3px #FF8000',
                   }}
                   color="complimentary.900"
                   textAlign={'right'}
@@ -151,26 +129,18 @@ export const StakingBox = ({
                   justifyContent="space-between"
                   alignItems="center"
                 >
-                  <Text
-                    color="white"
-                    fontWeight="light"
-                  >
-                    Tokens available: 0{' '}
-                    {selectedOption.toUpperCase()}
+                  <Text color="white" fontWeight="light">
+                    Tokens available: 0 {selectedOption.toUpperCase()}
                   </Text>
                   <HStack spacing={2}>
                     <Button
                       _hover={{
-                        bgColor:
-                          'rgba(255,255,255,0.05)',
-                        backdropFilter:
-                          'blur(10px)',
+                        bgColor: 'rgba(255,255,255,0.05)',
+                        backdropFilter: 'blur(10px)',
                       }}
                       _active={{
-                        bgColor:
-                          'rgba(255,255,255,0.05)',
-                        backdropFilter:
-                          'blur(10px)',
+                        bgColor: 'rgba(255,255,255,0.05)',
+                        backdropFilter: 'blur(10px)',
                       }}
                       color="complimentary.900"
                       variant="ghost"
@@ -181,16 +151,12 @@ export const StakingBox = ({
                     </Button>
                     <Button
                       _hover={{
-                        bgColor:
-                          'rgba(255,255,255,0.05)',
-                        backdropFilter:
-                          'blur(10px)',
+                        bgColor: 'rgba(255,255,255,0.05)',
+                        backdropFilter: 'blur(10px)',
                       }}
                       _active={{
-                        bgColor:
-                          'rgba(255,255,255,0.05)',
-                        backdropFilter:
-                          'blur(10px)',
+                        bgColor: 'rgba(255,255,255,0.05)',
+                        backdropFilter: 'blur(10px)',
                       }}
                       color="complimentary.900"
                       variant="ghost"
@@ -209,29 +175,14 @@ export const StakingBox = ({
                 w="100%"
                 mt={-8}
               >
-                <Stat
-                  textAlign="left"
-                  color="white"
-                >
-                  <StatLabel>
-                    What you&apos;ll get
-                  </StatLabel>
-                  <StatNumber>
-                    q
-                    {selectedOption.toUpperCase()}
-                    :
-                  </StatNumber>
+                <Stat textAlign="left" color="white">
+                  <StatLabel>What you&apos;ll get</StatLabel>
+                  <StatNumber>q{selectedOption.toUpperCase()}:</StatNumber>
                 </Stat>
                 <Spacer />{' '}
                 {/* This pushes the next Stat component to the right */}
-                <Stat
-                  py={4}
-                  textAlign="right"
-                  color="white"
-                >
-                  <StatNumber textColor="complimentary.900">
-                    0
-                  </StatNumber>
+                <Stat py={4} textAlign="right" color="white">
+                  <StatNumber textColor="complimentary.900">0</StatNumber>
                 </Stat>
               </HStack>
               <Button
@@ -245,58 +196,35 @@ export const StakingBox = ({
               </Button>
               <MultiModal
                 isOpen={isModalOpen}
-                onClose={() =>
-                  setModalOpen(false)
-                }
+                onClose={() => setModalOpen(false)}
+                selectedChainName={selectedChainName}
               />
             </VStack>
           </TabPanel>
           <TabPanel>
             <VStack spacing={8} align="center">
-              <Text
-                textAlign="center"
-                color="white"
-              >
-                Unstake your q
-                {selectedOption.toUpperCase()}{' '}
-                tokens in exchange for{' '}
-                {selectedOption.toUpperCase()}.
+              <Text fontWeight="light" textAlign="center" color="white">
+                Unstake your q{selectedOption.toUpperCase()} tokens in exchange
+                for {selectedOption.toUpperCase()}.
               </Text>
-              <Flex
-                flexDirection="column"
-                w="100%"
-              >
-                <Stat
-                  py={4}
-                  textAlign="left"
-                  color="white"
-                >
-                  <StatLabel>
-                    Amount tounstake:
-                  </StatLabel>
-                  <StatNumber>
-                    q
-                    {selectedOption.toUpperCase()}{' '}
-                  </StatNumber>
+              <Flex flexDirection="column" w="100%">
+                <Stat py={4} textAlign="left" color="white">
+                  <StatLabel>Amount tounstake:</StatLabel>
+                  <StatNumber>q{selectedOption.toUpperCase()} </StatNumber>
                 </Stat>
                 <Input
                   _active={{
-                    borderColor:
-                      'complimentary.900',
+                    borderColor: 'complimentary.900',
                   }}
                   _selected={{
-                    borderColor:
-                      'complimentary.900',
+                    borderColor: 'complimentary.900',
                   }}
                   _hover={{
-                    borderColor:
-                      'complimentary.900',
+                    borderColor: 'complimentary.900',
                   }}
                   _focus={{
-                    borderColor:
-                      'complimentary.900',
-                    boxShadow:
-                      '0 0 0 3px #FF8000',
+                    borderColor: 'complimentary.900',
+                    boxShadow: '0 0 0 3px #FF8000',
                   }}
                   color="complimentary.900"
                   textAlign={'right'}
@@ -310,26 +238,18 @@ export const StakingBox = ({
                   justifyContent="space-between"
                   alignItems="center"
                 >
-                  <Text
-                    color="white"
-                    fontWeight="light"
-                  >
-                    Tokens available: 0 q
-                    {selectedOption.toUpperCase()}
+                  <Text color="white" fontWeight="light">
+                    Tokens available: 0 q{selectedOption.toUpperCase()}
                   </Text>
 
                   <Button
                     _hover={{
-                      bgColor:
-                        'rgba(255,255,255,0.05)',
-                      backdropFilter:
-                        'blur(10px)',
+                      bgColor: 'rgba(255,255,255,0.05)',
+                      backdropFilter: 'blur(10px)',
                     }}
                     _active={{
-                      bgColor:
-                        'rgba(255,255,255,0.05)',
-                      backdropFilter:
-                        'blur(10px)',
+                      bgColor: 'rgba(255,255,255,0.05)',
+                      backdropFilter: 'blur(10px)',
                     }}
                     color="complimentary.900"
                     variant="ghost"
@@ -347,28 +267,14 @@ export const StakingBox = ({
                 w="100%"
                 mt={-8}
               >
-                <Stat
-                  textAlign="left"
-                  color="white"
-                >
-                  <StatLabel>
-                    What you&apos;ll get
-                  </StatLabel>
-                  <StatNumber>
-                    {selectedOption.toUpperCase()}
-                    :
-                  </StatNumber>
+                <Stat textAlign="left" color="white">
+                  <StatLabel>What you&apos;ll get</StatLabel>
+                  <StatNumber>{selectedOption.toUpperCase()}:</StatNumber>
                 </Stat>
                 <Spacer />{' '}
                 {/* This pushes the next Stat component to the right */}
-                <Stat
-                  py={4}
-                  textAlign="right"
-                  color="white"
-                >
-                  <StatNumber textColor="complimentary.900">
-                    0
-                  </StatNumber>
+                <Stat py={4} textAlign="right" color="white">
+                  <StatNumber textColor="complimentary.900">0</StatNumber>
                 </Stat>
               </HStack>
               <Button

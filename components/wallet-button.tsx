@@ -26,9 +26,8 @@ import {
   RejectedWarn,
   WalletConnectComponent,
 } from '@/components';
-import { chainName } from '@/config';
 
-export const WalletButton = () => {
+export const WalletButton: React.FC<{ chainName: string }> = ({ chainName }) => {
   const {
     connect,
     openView,
@@ -38,14 +37,14 @@ export const WalletButton = () => {
     message,
     wallet,
     chain: chainInfo,
-  } = useChain(chainName);
+  } = useChain(chainName || "cosmoshub");
   const { getChainLogo } = useManager();
 
   const chain = {
     chainName,
     label: chainInfo.pretty_name,
     value: chainName,
-    icon: getChainLogo(chainName),
+    icon: getChainLogo(chainName || "cosmoshub"),
   };
 
   // Events

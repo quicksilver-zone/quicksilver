@@ -10,16 +10,13 @@ import {
 } from '@chakra-ui/react';
 import dayjs from 'dayjs';
 import { cosmos } from 'interchain-query';
-import { Proposal } from 'interchain-query/cosmos/gov/v1beta1/gov';
+import { Proposal } from 'interchain-query/cosmos/gov/v1/gov';
 import React, { useMemo } from 'react';
 
 import { Votes } from '@/hooks';
-import { getPercentage } from '@/utils';
+import { decodeUint8Arr, getPercentage } from '@/utils';
 
-import {
-  StatusBadge,
-  VotedBadge,
-} from './common';
+import { StatusBadge, VotedBadge } from './common';
 
 enum VoteOption {
   YES = 'YES',
@@ -28,8 +25,7 @@ enum VoteOption {
   ABSTAIN = 'ABSTAIN',
 }
 
-const ProposalStatus =
-  cosmos.gov.v1beta1.ProposalStatus;
+const ProposalStatus = cosmos.gov.v1beta1.ProposalStatus;
 
 export const VoteColor: {
   [key in VoteOption]: string;
@@ -53,9 +49,7 @@ export const ProposalCard = ({
 
   const totalVotes = useMemo(() => {
     if (!proposal.finalTallyResult) return 0;
-    const total = Object.values(
-      proposal.finalTallyResult,
-    ).reduce(
+    const total = Object.values(proposal.finalTallyResult).reduce(
       (prev, cur) => prev + Number(cur),
       0,
     );
@@ -63,22 +57,16 @@ export const ProposalCard = ({
   }, [proposal]);
 
   const isVoted =
-    votes &&
-    votes[proposal.proposalId.toString()];
+    votes && proposal.finalTallyResult && votes[proposal.id.toString()];
 
-  const getTitleFromProposal = (
-    proposal: Proposal,
-  ): string | undefined => {
-    if (
-      proposal.content &&
-      'title' in proposal.content
-    ) {
-      return proposal.content.title;
-    }
-    return undefined;
+  const uint8ArrayValue = proposal.messages[0].value;
+  const propinfo = decodeUint8Arr(uint8ArrayValue);
+
+  const getTitleFromDecoded = (decodedStr: string) => {
+    return decodedStr.slice(0, 250).match(/[A-Z][A-Za-z].*(?=\u0012)/)?.[0];
   };
 
-  const title = getTitleFromProposal(proposal);
+  const title = getTitleFromDecoded(propinfo);
 
   return (
     <Grid
@@ -98,14 +86,12 @@ export const ProposalCard = ({
     >
       <GridItem colSpan={2}>
         <Center color="white" w="100%" h="100%">
-          #{' '}
-          {proposal.proposalId
-            .toString()
-            .padStart(6, '0')}
+          # {proposal.id ? proposal.id.toString().padStart(6, '0') : ''}
         </Center>
       </GridItem>
       <GridItem colSpan={9} py={2}>
         <Flex flexDirection="column" h="100%">
+          {/* Ts-ignore */}
           <Flex gap={2} alignItems="center">
             <Text color="white" fontSize="lg">
               {title || ''}
@@ -114,10 +100,7 @@ export const ProposalCard = ({
           </Flex>
           <Spacer />
           <Flex flexDirection="column" h="44%">
-            <Flex
-              alignItems="center"
-              fontSize="sm"
-            >
+            <Flex alignItems="center" fontSize="sm">
               <Text color="white">
                 {proposal.status ===
                 ProposalStatus.PROPOSAL_STATUS_DEPOSIT_PERIOD
@@ -125,10 +108,7 @@ export const ProposalCard = ({
                   : 'Voting'}
                 &nbsp;end time: &nbsp;
               </Text>
-              <Text
-                color="white"
-                fontWeight="semibold"
-              >
+              <Text color="white" fontWeight="semibold">
                 {dayjs(
                   proposal.status ===
                     ProposalStatus.PROPOSAL_STATUS_DEPOSIT_PERIOD
@@ -142,8 +122,7 @@ export const ProposalCard = ({
               <Flex gap="1px">
                 <Box
                   w={getPercentage(
-                    proposal.finalTallyResult
-                      ?.yes,
+                    proposal.finalTallyResult?.yesCount,
                     totalVotes,
                   )}
                   h="3px"
@@ -151,7 +130,7 @@ export const ProposalCard = ({
                 />
                 <Box
                   w={getPercentage(
-                    proposal.finalTallyResult?.no,
+                    proposal.finalTallyResult?.noCount,
                     totalVotes,
                   )}
                   h="3px"
@@ -159,8 +138,7 @@ export const ProposalCard = ({
                 />
                 <Box
                   w={getPercentage(
-                    proposal.finalTallyResult
-                      ?.noWithVeto,
+                    proposal.finalTallyResult?.noWithVetoCount,
                     totalVotes,
                   )}
                   h="3px"
@@ -168,8 +146,7 @@ export const ProposalCard = ({
                 />
                 <Box
                   w={getPercentage(
-                    proposal.finalTallyResult
-                      ?.abstain,
+                    proposal.finalTallyResult?.abstainCount,
                     totalVotes,
                   )}
                   h="3px"
@@ -180,11 +157,7 @@ export const ProposalCard = ({
               <Box
                 w="100%"
                 h="3px"
-                bgColor={
-                  colorMode === 'light'
-                    ? 'gray.200'
-                    : 'gray.600'
-                }
+                bgColor={colorMode === 'light' ? 'gray.200' : 'gray.600'}
               />
             )}
           </Flex>
