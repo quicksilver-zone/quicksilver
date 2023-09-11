@@ -45,7 +45,7 @@ function RotateIcon({ isOpen }: { isOpen: boolean }) {
 export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
   const [selectedProposal, setSelectedProposal] = useState<Proposal>();
   const [selectedPeriodOption, setSelectedPeriodOption] =
-    useState('All Period');
+    useState('All Periods');
   const [selectedProposalOption, setSelectedProposalOption] =
     useState('All Proposals');
 
@@ -118,9 +118,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
                 boxShadow: '0 0 0 3px #FF8000',
               }}
             />
-            <InputLeftElement
-              pointerEvents="none" // Makes the icon non-clickable and allows the input to be focused when clicking on the icon
-            >
+            <InputLeftElement pointerEvents="none">
               <FaSearch color="orange" />
             </InputLeftElement>
           </InputGroup>
@@ -193,7 +191,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
                     w="150px"
                     as={Button}
                     variant="outline"
-                    rightIcon={<RotateIcon isOpen={isOpen} />} // Use rightIcon prop for alignment
+                    rightIcon={<RotateIcon isOpen={isOpen} />}
                   >
                     {selectedProposalOption}
                   </MenuButton>
@@ -217,7 +215,7 @@ export const VotingSection = ({ chainName }: { chainName: ChainName }) => {
         </Flex>
         <Box
           pr={2}
-          maxHeight="2xl" // Adjust this value as needed
+          maxHeight="2xl"
           overflowY="scroll"
           sx={{
             '&::-webkit-scrollbar': {
