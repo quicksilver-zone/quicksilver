@@ -18,6 +18,7 @@ const (
 var (
 	KeyPrefixZoneDrop    = []byte{0x01}
 	KeyPrefixClaimRecord = []byte{0x02}
+	KeyPrefixParams      = []byte{0x03}
 )
 
 func GetKeyZoneDrop(chainID string) []byte {
