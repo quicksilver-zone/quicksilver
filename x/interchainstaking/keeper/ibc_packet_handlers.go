@@ -136,7 +136,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
+		case "/cosmos.staking.v1beta1.MsgRedeemTokensForShares":
 			// TODO: handle this before LSM
 			if !success {
 				return nil
@@ -146,13 +146,13 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			if msgResponseType != "" {
 				err = proto.Unmarshal(msgResponse, &response)
 				if err != nil {
-					k.Logger(ctx).Error("unable to unpack MsgRedeemTokensforShares response", "error", err)
+					k.Logger(ctx).Error("unable to unpack MsgRedeemTokensForShares response", "error", err)
 					return err
 				}
 			} else {
 				err := proto.Unmarshal(msgData.Data, &response)
 				if err != nil {
-					k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensforShares response", "error", err)
+					k.Logger(ctx).Error("unable to unmarshal MsgRedeemTokensForShares response", "error", err)
 					return err
 				}
 			}
