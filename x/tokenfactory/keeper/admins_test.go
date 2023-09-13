@@ -196,6 +196,7 @@ func (s *KeeperTestSuite) TestChangeAdminDenom() {
 		msgMint                 func(denom string) *types.MsgMint
 		expectedMintPass        bool
 	}{
+
 		{
 			desc: "creator admin can't mint after setting to '' ",
 			msgChangeAdmin: func(denom string) *types.MsgChangeAdmin {

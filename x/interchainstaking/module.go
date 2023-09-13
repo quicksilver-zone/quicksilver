@@ -120,7 +120,7 @@ func (am AppModule) Name() string {
 }
 
 // Route returns the capability module's message routing key.
-func (am AppModule) Route() sdk.Route {
+func (AppModule) Route() sdk.Route {
 	return sdk.Route{}
 }
 
@@ -128,7 +128,7 @@ func (am AppModule) Route() sdk.Route {
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
 // LegacyQuerierHandler returns the capability module's Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+func (AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
@@ -169,7 +169,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 

@@ -46,7 +46,7 @@ func (im IBCModule) OnChanOpenInit(
 }
 
 // OnChanOpenTry implements the IBCModule interface.
-func (im IBCModule) OnChanOpenTry(
+func (IBCModule) OnChanOpenTry(
 	_ sdk.Context,
 	_ channeltypes.Order,
 	_ []string,
@@ -94,7 +94,7 @@ func (im IBCModule) OnChanCloseInit(
 }
 
 // OnChanCloseConfirm implements the IBCModule interface.
-func (im IBCModule) OnChanCloseConfirm(
+func (IBCModule) OnChanCloseConfirm(
 	_ sdk.Context,
 	_,
 	_ string,
@@ -145,7 +145,7 @@ func (im IBCModule) OnTimeoutPacket(
 }
 
 // NegotiateAppVersion implements the IBCModule interface.
-func (im IBCModule) NegotiateAppVersion(
+func (IBCModule) NegotiateAppVersion(
 	_ sdk.Context,
 	_ channeltypes.Order,
 	_ string,

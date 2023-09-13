@@ -51,8 +51,8 @@ func NewRegisterZoneProposal(
 
 func (m RegisterZoneProposal) GetDescription() string { return m.Description }
 func (m RegisterZoneProposal) GetTitle() string       { return m.Title }
-func (m RegisterZoneProposal) ProposalRoute() string  { return RouterKey }
-func (m RegisterZoneProposal) ProposalType() string   { return ProposalTypeRegisterZone }
+func (RegisterZoneProposal) ProposalRoute() string    { return RouterKey }
+func (RegisterZoneProposal) ProposalType() string     { return ProposalTypeRegisterZone }
 
 // ValidateBasic runs basic stateless validity checks.
 func (m RegisterZoneProposal) ValidateBasic() error {

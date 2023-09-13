@@ -158,7 +158,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 // EndBlock executes all ABCI EndBlock logic respective to the claimsmanager module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
@@ -184,7 +184,7 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+func (AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations doesn't return any mint module operation.

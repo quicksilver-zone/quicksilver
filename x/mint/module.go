@@ -114,7 +114,7 @@ func (AppModule) QuerierRoute() string {
 }
 
 // LegacyQuerierHandler returns the x/mint module's sdk.Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+func (AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return func(sdk.Context, []string, abci.RequestQuery) ([]byte, error) {
 		return nil, fmt.Errorf("legacy querier not supported for the x/%s module", types.ModuleName)
 	}

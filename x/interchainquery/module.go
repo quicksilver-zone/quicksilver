@@ -51,7 +51,7 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 }
 
 // RegisterInterfaces registers the module's interface types.
-func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
+func (AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	// RegisterInterfaces registers interfaces and implementations of the bank module.
 	types.RegisterInterfaces(reg)
 }
@@ -75,7 +75,7 @@ func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *r
 }
 
 // GetTxCmd returns the capability module's root tx command.
-func (a AppModuleBasic) GetTxCmd() *cobra.Command {
+func (AppModuleBasic) GetTxCmd() *cobra.Command {
 	return nil
 }
 
@@ -108,7 +108,7 @@ func (am AppModule) Name() string {
 }
 
 // Route returns the capability module's message routing key.
-func (am AppModule) Route() sdk.Route {
+func (AppModule) Route() sdk.Route {
 	return sdk.Route{}
 }
 
@@ -116,7 +116,7 @@ func (am AppModule) Route() sdk.Route {
 func (AppModule) QuerierRoute() string { return types.QuerierRoute }
 
 // LegacyQuerierHandler returns the capability module's Querier.
-func (am AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
+func (AppModule) LegacyQuerierHandler(_ *codec.LegacyAmino) sdk.Querier {
 	return nil
 }
 
@@ -128,7 +128,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 }
 
 // RegisterInvariants registers the capability module's invariants.
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
+func (AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs the capability module's genesis initialization It returns
 // no validator updates.
@@ -147,7 +147,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the capability module.
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {
+func (AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the capability module. It
@@ -179,10 +179,10 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types.
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+func (AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
+func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {
 	return nil // TODO add operations
 }
