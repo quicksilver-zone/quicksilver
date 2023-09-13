@@ -1,4 +1,4 @@
-module github.com/ingenuity-build/quicksilver
+module github.com/quicksilver-zone/quicksilver
 
 go 1.21
 

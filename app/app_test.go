@@ -18,7 +18,7 @@ import (
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/ingenuity-build/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/app"
 )
 
 func TestQuicksilverExport(t *testing.T) {

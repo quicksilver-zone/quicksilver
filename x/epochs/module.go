@@ -16,10 +16,10 @@ import (
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
-	"github.com/ingenuity-build/quicksilver/x/epochs/client/cli"
-	"github.com/ingenuity-build/quicksilver/x/epochs/keeper"
-	"github.com/ingenuity-build/quicksilver/x/epochs/simulation"
-	"github.com/ingenuity-build/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/x/epochs/client/cli"
+	"github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/epochs/simulation"
+	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
 )
 
 var (

@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/ingenuity-build/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 // CalculateAllocationDeltas determines, for the current delegations, in delta between actual allocations and the target intent.

@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
-	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
 type ClaimsManagerKeeper interface {

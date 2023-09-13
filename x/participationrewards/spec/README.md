@@ -341,7 +341,7 @@ type QueryProtocolDataResponse struct {
 
 ## Keepers
 
-<https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/participationrewards/keeper>
+<https://pkg.go.dev/github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper>
 
 ## Parameters
 
