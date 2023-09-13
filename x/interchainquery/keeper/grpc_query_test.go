@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 )
 
 func (s *KeeperTestSuite) TestQueries() {

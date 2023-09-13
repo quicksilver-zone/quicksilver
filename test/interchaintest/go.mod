@@ -1,4 +1,4 @@
-module github.com/ingenuity-build/quicksilver/test/interchaintest
+module github.com/quicksilver-zone/quicksilver/test/interchaintest
 
 go 1.20
 

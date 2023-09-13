@@ -197,7 +197,7 @@ type QueryClaimsResponse struct {
 
 ## Keepers
 
-<https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper>
+<https://pkg.go.dev/github.com/quicksilver-zone/quicksilver/x/claimsmanager/keeper>
 
 ## Parameters
 

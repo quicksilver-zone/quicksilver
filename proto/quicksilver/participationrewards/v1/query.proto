@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "quicksilver/participationrewards/v1/participationrewards.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/participationrewards/types";
 
 // Query provides defines the gRPC querier service.
 service Query {
