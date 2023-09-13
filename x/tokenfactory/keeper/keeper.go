@@ -10,7 +10,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 type (

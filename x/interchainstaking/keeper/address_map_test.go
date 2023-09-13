@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/ingenuity-build/quicksilver/utils/randomutils"
+	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 )
 
 const (

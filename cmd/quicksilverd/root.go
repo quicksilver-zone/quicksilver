@@ -36,9 +36,9 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/ingenuity-build/quicksilver/app"
-	quicksilverconfig "github.com/ingenuity-build/quicksilver/cmd/config"
-	servercfg "github.com/ingenuity-build/quicksilver/server/config"
+	"github.com/quicksilver-zone/quicksilver/app"
+	quicksilverconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
+	servercfg "github.com/quicksilver-zone/quicksilver/server/config"
 )
 
 const (

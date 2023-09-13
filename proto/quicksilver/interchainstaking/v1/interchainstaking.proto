@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types";
 
 message Zone {
   string connection_id = 1;

@@ -7,7 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

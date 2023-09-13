@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
-	"github.com/ingenuity-build/quicksilver/x/mint/types"
+	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"

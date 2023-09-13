@@ -11,10 +11,10 @@ import (
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"github.com/ingenuity-build/quicksilver/app"
-	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/app"
+	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/config"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 var (
