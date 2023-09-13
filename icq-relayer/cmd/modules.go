@@ -20,7 +20,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/cosmos/ibc-go/v5/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v5/modules/core"
-	interchainquery "github.com/ingenuity-build/quicksilver/x/interchainquery"
+	interchainquery "github.com/quicksilver-zone/quicksilver/x/interchainquery"
 )
 
 // TODO: Import a bunch of custom modules like cosmwasm and osmosis
