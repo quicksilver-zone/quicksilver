@@ -9,7 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // RandomizedGenState generates a random GenesisState for tokenfactory.

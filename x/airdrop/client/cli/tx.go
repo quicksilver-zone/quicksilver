@@ -12,7 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 )
 
 // GetTxCmd returns the cli transaction commands for the airdrop module.

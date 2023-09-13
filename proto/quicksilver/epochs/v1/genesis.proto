@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/epochs/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/epochs/types";
 
 message EpochInfo {
   string identifier = 1;

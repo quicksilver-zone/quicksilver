@@ -7,7 +7,7 @@ import "google/api/annotations.proto";
 import "quicksilver/claimsmanager/v1/claimsmanager.proto";
 import "quicksilver/participationrewards/v1/proposals.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/participationrewards/types";
 
 // Msg defines the participationrewards Msg service.
 service Msg {

@@ -3,8 +3,8 @@ package cfmm_common
 import (
 	"errors"
 
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
 
 	sdkioerrors "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"

@@ -10,9 +10,9 @@ import (
 
 	"github.com/stretchr/testify/suite"
 
-	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
+	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 )
 
 const TestOwnerAddress = "cosmos17dtl0mjt3t77kpuhg2edqzjpszulwhgzuj9ljs"

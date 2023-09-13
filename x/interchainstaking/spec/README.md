@@ -685,7 +685,7 @@ Query deposit account address for a given chain.
 
 ## Keepers
 
-<https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper>
+<https://pkg.go.dev/github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper>
 
 ## Parameters
 

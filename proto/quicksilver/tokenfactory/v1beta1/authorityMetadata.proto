@@ -3,7 +3,7 @@ package quicksilver.tokenfactory.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/tokenfactory/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types";
 
 // DenomAuthorityMetadata specifies metadata for addresses that have specific
 // capabilities over a token factory denom. Right now there is only one Admin
