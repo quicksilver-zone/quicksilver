@@ -92,6 +92,6 @@ func (uppd UmeeParamsProtocolData) ValidateBasic() error {
 	return nil
 }
 
-func (uppd UmeeParamsProtocolData) GenerateKey() []byte {
+func (UmeeParamsProtocolData) GenerateKey() []byte {
 	return []byte(UmeeParamsKey)
 }

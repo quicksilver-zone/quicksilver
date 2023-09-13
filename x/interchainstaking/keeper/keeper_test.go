@@ -4,25 +4,24 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-
-	testsuite "github.com/stretchr/testify/suite"
-
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	testsuite "github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 )
 
 var testAddress = addressutils.GenerateAccAddressForTest().String()
@@ -54,7 +53,7 @@ type KeeperTestSuite struct {
 	path   *ibctesting.Path
 }
 
-func (suite *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
+func (*KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
 	quicksilver, ok := chain.App.(*app.Quicksilver)
 	if !ok {
 		panic("not quicksilver app")

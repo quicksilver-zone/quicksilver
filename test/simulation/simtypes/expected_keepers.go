@@ -24,7 +24,7 @@ type BankKeeper interface {
 	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
 	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	// AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdk.Int)
+	// AddSupplyOffset(ctx sdk.Context, denom string, offsetAmount sdkmath.Int)
 }
 
 // DistrKeeper defines the contract needed to be fulfilled for distribution keeper.

@@ -6,14 +6,15 @@ import (
 	"strconv"
 	"strings"
 
-	sdkmath "cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
+	sdkmath "cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // HandleRegisterZoneProposal is a handler for executing a passed community spend proposal.

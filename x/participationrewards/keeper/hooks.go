@@ -3,15 +3,15 @@ package keeper
 import (
 	"encoding/json"
 
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
+	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
+func (*Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 	return nil
 }
 

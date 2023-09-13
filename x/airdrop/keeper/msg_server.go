@@ -3,14 +3,15 @@ package keeper
 import (
 	"context"
 
-	sdkioerrors "cosmossdk.io/errors"
 	"github.com/armon/go-metrics"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+
+	sdkioerrors "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 )
 
 type msgServer struct {

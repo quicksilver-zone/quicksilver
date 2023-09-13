@@ -5,11 +5,10 @@ import (
 	"time"
 
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/stretchr/testify/suite"
 )
 
 var testAddress = addressutils.GenerateAccAddressForTest().String()

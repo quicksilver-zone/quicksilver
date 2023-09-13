@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/stretchr/testify/require"
 )
 
 var validLiquidData = `{

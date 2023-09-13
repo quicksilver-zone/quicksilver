@@ -8,8 +8,9 @@ import (
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
-
 	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -80,7 +81,7 @@ func TestCalcExitPool(t *testing.T) {
 	tests := []struct {
 		name          string
 		pool          gamm.PoolI
-		exitingShares sdk.Int
+		exitingShares sdkmath.Int
 		expError      bool
 	}{
 		{
@@ -149,7 +150,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 		name        string
 		pool        func() gamm.PoolI
 		tokensIn    sdk.Coins
-		expNumShare sdk.Int
+		expNumShare sdkmath.Int
 		expRemCoin  sdk.Coins
 	}{
 		{

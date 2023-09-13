@@ -1,11 +1,11 @@
 package types
 
-func (q Query) ValidateBasic() error {
+func (Query) ValidateBasic() error {
 	// TODO: implement
 	return nil
 }
 
-func (dp DataPoint) ValidateBasic() error {
+func (DataPoint) ValidateBasic() error {
 	// TODO: implement
 	return nil
 }

@@ -1,18 +1,17 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
-
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/tendermint/tendermint/proto/tendermint/crypto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *KeeperTestSuite) Test_msgServer_Claim() {

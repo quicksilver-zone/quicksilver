@@ -6,19 +6,19 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/client/cli"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/spf13/cobra"
+	abci "github.com/tendermint/tendermint/abci/types"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/spf13/cobra"
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/client/cli"
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
 var (
@@ -157,7 +157,7 @@ func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
 
 // EndBlock executes all ABCI EndBlock logic respective to the claimsmanager module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
+func (AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
 	return []abci.ValidatorUpdate{}
 }
 
@@ -183,7 +183,7 @@ func (AppModule) RandomizedParams(_ *rand.Rand) []simtypes.ParamChange {
 }
 
 // RegisterStoreDecoder registers a decoder for mint module's types.
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
+func (AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {
 }
 
 // WeightedOperations doesn't return any mint module operation.

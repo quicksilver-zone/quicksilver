@@ -3,9 +3,9 @@ package types
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (pool Pool) GetReserveAddress() string {

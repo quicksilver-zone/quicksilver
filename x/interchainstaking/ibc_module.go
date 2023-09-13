@@ -5,17 +5,15 @@ import (
 	"errors"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
-
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
-
 	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 )
 
 var _ porttypes.IBCModule = IBCModule{}
@@ -47,7 +45,7 @@ func (im IBCModule) OnChanOpenInit(
 }
 
 // OnChanOpenTry implements the IBCModule interface.
-func (im IBCModule) OnChanOpenTry(
+func (IBCModule) OnChanOpenTry(
 	_ sdk.Context,
 	_ channeltypes.Order,
 	_ []string,
@@ -95,7 +93,7 @@ func (im IBCModule) OnChanCloseInit(
 }
 
 // OnChanCloseConfirm implements the IBCModule interface.
-func (im IBCModule) OnChanCloseConfirm(
+func (IBCModule) OnChanCloseConfirm(
 	_ sdk.Context,
 	_,
 	_ string,
@@ -146,7 +144,7 @@ func (im IBCModule) OnTimeoutPacket(
 }
 
 // NegotiateAppVersion implements the IBCModule interface.
-func (im IBCModule) NegotiateAppVersion(
+func (IBCModule) NegotiateAppVersion(
 	_ sdk.Context,
 	_ channeltypes.Order,
 	_ string,
