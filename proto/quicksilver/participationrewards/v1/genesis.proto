@@ -4,7 +4,7 @@ package quicksilver.participationrewards.v1;
 import "gogoproto/gogo.proto";
 import "quicksilver/participationrewards/v1/participationrewards.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/participationrewards/types";
 
 // GenesisState defines the participationrewards module's genesis state.
 message GenesisState {

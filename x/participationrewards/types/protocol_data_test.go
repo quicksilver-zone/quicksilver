@@ -4,16 +4,16 @@ import (
 	"encoding/json"
 	"testing"
 
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/stretchr/testify/require"
 )
 
 // tests that {} is an invalid string, and that an error is thrown when unmarshalled.
-// see: https://github.com/ingenuity-build/quicksilver/issues/214
+// see: https://github.com/quicksilver-zone/quicksilver/issues/214
 func TestUnmarshalProtocolDataRejectsZeroLengthJson(t *testing.T) {
 	_, err := types.UnmarshalProtocolData(types.ProtocolDataTypeOsmosisPool, []byte("{}"))
 	require.Error(t, err)

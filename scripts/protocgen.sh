@@ -16,7 +16,7 @@ done
 cd ..
 
 # move proto files to the right places
-cp -r github.com/ingenuity-build/quicksilver/* ./
+cp -r github.com/quicksilver-zone/quicksilver/* ./
 rm -rf github.com
 
 go mod tidy -compat=1.20

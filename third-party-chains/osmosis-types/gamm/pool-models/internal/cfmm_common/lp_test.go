@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/internal/cfmm_common"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
 
 	"github.com/stretchr/testify/require"
 

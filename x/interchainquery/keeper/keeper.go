@@ -12,7 +12,7 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 )
 
 // Keeper of this module maintains collections of registered zones.

@@ -6,7 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 
-	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
 // GetQueryCmd returns the cli query commands for the claimsmanager module.

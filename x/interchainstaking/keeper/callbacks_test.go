@@ -15,11 +15,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 // ValSetCallback
@@ -1118,7 +1118,7 @@ func (suite *KeeperTestSuite) TestAccountBalanceCallbackNil() {
 }
 
 // Ensures that a fuzz vector which resulted in a crash of ValidatorReq.Pagination crashing
-// doesn't creep back up. Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/82
+// doesn't creep back up. Please see https://github.com/quicksilver-zone/quicksilver-incognito/issues/82
 func TestValsetCallbackNilValidatorReqPagination(t *testing.T) {
 	suite := new(KeeperTestSuite)
 	suite.SetT(t)

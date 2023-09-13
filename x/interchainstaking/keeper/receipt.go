@@ -15,10 +15,10 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 const (
