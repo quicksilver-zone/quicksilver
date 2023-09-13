@@ -10,6 +10,8 @@ on:
     paths:
       - "**.go"
       - "go.sum"
+  pull_request:
+
 
 env:
   REGISTRY: quicksilverzone

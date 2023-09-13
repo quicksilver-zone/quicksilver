@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 
 	"cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/icza/dyno"
@@ -36,6 +38,9 @@ func TestRegisterZone(t *testing.T) {
 
 	t.Parallel()
 
+	// Create chain factory with Quicksilver
+	numVals := 3
+	numFullNodes := 3
 	client, network := interchaintest.DockerSetup(t)
 
 	rep := testreporter.NewNopReporter()
@@ -53,18 +58,22 @@ func TestRegisterZone(t *testing.T) {
 				Images:         []ibc.DockerImage{QuicksilverImage},
 				Bin:            "quicksilverd",
 				Bech32Prefix:   "quick",
-				Denom:          "stake",
-				GasPrices:      "0.00stake",
+				Denom:          "uqck",
+				GasPrices:      "0.00uqck",
 				GasAdjustment:  1.3,
 				TrustingPeriod: "504h",
 				EncodingConfig: quicksilverEncoding(),
 				NoHostMount:    true,
 				ModifyGenesis:  modifyGenesisShortProposals(votingPeriod, maxDepositPeriod),
 			},
+			NumValidators: &numVals,
+			NumFullNodes:  &numFullNodes,
 		},
 		{
-			Name:    "juno",
-			Version: "v14.1.0",
+			Name:          "juno",
+			Version:       "v14.1.0",
+			NumValidators: &numVals,
+			NumFullNodes:  &numFullNodes,
 		},
 	})
 
@@ -132,6 +141,11 @@ func TestRegisterZone(t *testing.T) {
 	err = r.CreateConnections(ctx, eRep, pathQuicksilverJuno)
 	require.NoError(t, err)
 
+	connections, err := r.GetConnections(ctx, eRep, quicksilverd.Config().ChainID)
+	require.NoError(t, err)
+	// require.Equal(t, 1, len(connections))
+	fmt.Println("Conn", connections)
+
 	// Create a new channel
 	err = r.CreateChannel(ctx, eRep, pathQuicksilverJuno, ibc.DefaultChannelOpts())
 	require.NoError(t, err)
@@ -163,9 +177,9 @@ func TestRegisterZone(t *testing.T) {
 		Title:            "register lstest-1 zone",
 		Description:      "register lstest-1 zone with multisend and lsm enabled",
 		ConnectionId:     "connection-0",
-		BaseDenom:        "uatom",
-		LocalDenom:       "uqatom",
-		AccountPrefix:    "cosmos",
+		BaseDenom:        "ujuno",
+		LocalDenom:       "uqjuno",
+		AccountPrefix:    "juno",
 		DepositsEnabled:  true,
 		UnbondingEnabled: true,
 		LiquidityModule:  false,
@@ -197,14 +211,76 @@ func TestRegisterZone(t *testing.T) {
 	_, err = cosmos.PollForProposalStatus(ctx, quicksilverd, height, height+heightDelta, proposalTx.ProposalID, cosmos.ProposalStatusPassed)
 	require.NoError(t, err, "proposal status did not change to passed in expected number of blocks")
 
-	err = testutil.WaitForBlocks(ctx, 2, quicksilverd)
+	err = testutil.WaitForBlocks(ctx, 20, quicksilverd)
 	require.NoError(t, err)
 
-	stdout, _, err := quicksilverd.Validators[0].ExecQuery(ctx, "interchainstaking", "zones", "--output=json")
-
+	stdout, _, err := quicksilverd.Validators[0].ExecQuery(ctx, "interchainstaking", "zones")
+	require.NoError(t, err)
+	require.NotEmpty(t, stdout)
 	t.Logf("zones: %s", stdout)
-	// TODO: Need address not nil
+
+	var zones istypes.QueryZonesResponse
+	err = codec.NewLegacyAmino().UnmarshalJSON(stdout, &zones)
 	require.NoError(t, err)
+
+	zone := zones.Zones
+	fmt.Println(zone)
+
+	//Deposit Address Check
+	depositAddress := zone[0].DepositAddress
+	queryICA := []string{
+		quicksilverd.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", depositAddress.Address, connections[0].ID,
+		"--chain-id", quicksilverd.Config().ChainID,
+		"--home", quicksilverd.HomeDir(),
+		"--node", quicksilverd.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilverd.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts := strings.SplitN(string(stdout), ":", 2)
+	icaAddr := strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
+
+	//Withdrawl Address Check
+	withdralAddress := zone[0].WithdrawalAddress
+	queryICA = []string{
+		quicksilverd.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", withdralAddress.Address, connections[0].ID,
+		"--chain-id", quicksilverd.Config().ChainID,
+		"--home", quicksilverd.HomeDir(),
+		"--node", quicksilverd.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilverd.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts = strings.SplitN(string(stdout), ":", 2)
+	icaAddr = strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
+
+	//Delegation Address Check
+	delegationAddress := zone[0].DelegationAddress
+	queryICA = []string{
+		quicksilverd.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", delegationAddress.Address, connections[0].ID,
+		"--chain-id", quicksilverd.Config().ChainID,
+		"--home", quicksilverd.HomeDir(),
+		"--node", quicksilverd.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilverd.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts = strings.SplitN(string(stdout), ":", 2)
+	icaAddr = strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
+
+	//Performance Address Check
+	performanceAddress := zone[0].DelegationAddress
+	queryICA = []string{
+		quicksilverd.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", performanceAddress.Address, connections[0].ID,
+		"--chain-id", quicksilverd.Config().ChainID,
+		"--home", quicksilverd.HomeDir(),
+		"--node", quicksilverd.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilverd.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts = strings.SplitN(string(stdout), ":", 2)
+	icaAddr = strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
 }
 
 func modifyGenesisShortProposals(votingPeriod, maxDepositPeriod string) func(ibc.ChainConfig, []byte) ([]byte, error) {
