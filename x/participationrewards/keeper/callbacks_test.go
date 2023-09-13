@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
-	leveragetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
-	icqkeeper "github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	leveragetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
+	icqkeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	sdk "github.com/cosmos/cosmos-sdk/types"

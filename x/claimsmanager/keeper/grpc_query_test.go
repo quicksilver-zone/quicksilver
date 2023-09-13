@@ -3,7 +3,7 @@ package keeper_test
 import (
 	"context"
 
-	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
 func (s *KeeperTestSuite) TestKeeper_Queries() {

@@ -6,8 +6,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func NewProposalHandler(k *keeper.Keeper) govv1beta1.Handler {

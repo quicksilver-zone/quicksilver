@@ -4,7 +4,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
 // GetClaim returns claim.

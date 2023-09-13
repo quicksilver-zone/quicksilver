@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
 var _ types.QueryServer = Keeper{}

@@ -39,10 +39,10 @@ import (
 	tmos "github.com/tendermint/tendermint/libs/os"
 	dbm "github.com/tendermint/tm-db"
 
-	"github.com/ingenuity-build/quicksilver/app/keepers"
-	"github.com/ingenuity-build/quicksilver/docs"
-	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
-	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/app/keepers"
+	"github.com/quicksilver-zone/quicksilver/docs"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func Init() {
