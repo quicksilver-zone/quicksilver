@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/spf13/cobra"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/version"
-	"github.com/spf13/cobra"
-
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 // GetQueryCmd returns the cli query commands for interchainstaking module.

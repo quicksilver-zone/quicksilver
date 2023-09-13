@@ -4,22 +4,22 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 type LiquidTokensModule struct{}
 
 var _ Submodule = &LiquidTokensModule{}
 
-func (m *LiquidTokensModule) Hooks(_ sdk.Context, _ *Keeper) {
+func (*LiquidTokensModule) Hooks(_ sdk.Context, _ *Keeper) {
 }
 
-func (m *LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (*LiquidTokensModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	// message
 	// check denom is valid vs allowed
 

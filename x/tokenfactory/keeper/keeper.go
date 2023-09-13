@@ -3,14 +3,14 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/tendermint/tendermint/libs/log"
-
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 type (
@@ -48,7 +48,7 @@ func NewKeeper(
 }
 
 // Logger returns a logger for the x/tokenfactory module.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 

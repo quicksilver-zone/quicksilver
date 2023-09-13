@@ -6,14 +6,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ingenuity-build/multierror"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/balancer"
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm/pool-models/stableswap"
+	"github.com/quicksilver-zone/quicksilver/utils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ingenuity-build/multierror"
-
-	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 const (
@@ -153,6 +152,6 @@ func (oppd *OsmosisParamsProtocolData) ValidateBasic() error {
 	return nil
 }
 
-func (oppd *OsmosisParamsProtocolData) GenerateKey() []byte {
+func (*OsmosisParamsProtocolData) GenerateKey() []byte {
 	return []byte("osmosisparams")
 }

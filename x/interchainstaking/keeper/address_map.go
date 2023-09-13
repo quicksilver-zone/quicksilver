@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetRemoteAddressMap retrieves a remote address using a local address.

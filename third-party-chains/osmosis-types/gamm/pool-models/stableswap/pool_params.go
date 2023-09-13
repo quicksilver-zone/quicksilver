@@ -1,9 +1,9 @@
 package stableswap
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (params PoolParams) Validate() error {

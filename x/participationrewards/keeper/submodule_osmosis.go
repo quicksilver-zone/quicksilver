@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
+	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
+	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
-	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 type OsmosisModule struct{}
@@ -71,7 +71,7 @@ func (m *OsmosisModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
-func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (*OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	var amount uint64
 	var lock osmolockup.PeriodLock
 	for _, proof := range msg.Proofs {
@@ -118,6 +118,6 @@ func (m *OsmosisModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.Msg
 	return amount, nil
 }
 
-func (m *OsmosisModule) GetKeyPrefixPools(poolID uint64) []byte {
+func (*OsmosisModule) GetKeyPrefixPools(poolID uint64) []byte {
 	return append([]byte{0x02}, sdk.Uint64ToBigEndian(poolID)...)
 }

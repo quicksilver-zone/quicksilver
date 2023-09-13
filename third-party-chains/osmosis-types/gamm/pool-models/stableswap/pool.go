@@ -11,6 +11,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 
 	sdkioerrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -70,7 +71,7 @@ func (p Pool) GetExitFee(ctx sdk.Context) sdk.Dec {
 	return p.PoolParams.ExitFee
 }
 
-func (p Pool) IsActive(ctx sdk.Context) bool {
+func (Pool) IsActive(ctx sdk.Context) bool {
 	return true
 }
 
@@ -79,7 +80,7 @@ func (p Pool) GetTotalPoolLiquidity(ctx sdk.Context) sdk.Coins {
 	return p.PoolLiquidity
 }
 
-func (p Pool) GetTotalShares() sdk.Int {
+func (p Pool) GetTotalShares() sdkmath.Int {
 	return p.TotalShares.Amount
 }
 
@@ -94,20 +95,6 @@ func (p Pool) GetScalingFactorByLiquidityIndex(liquidityIndex int) uint64 {
 
 func (p Pool) NumAssets() int {
 	return len(p.PoolLiquidity)
-}
-
-// returns pool liquidity of the provided denoms, in the same order the denoms were provided in
-func (p Pool) getPoolAmts(denoms ...string) ([]sdk.Int, error) {
-	result := make([]sdk.Int, len(denoms))
-	poolLiquidity := p.PoolLiquidity
-	for i, d := range denoms {
-		amt := poolLiquidity.AmountOf(d)
-		if amt.IsZero() {
-			return []sdk.Int{}, fmt.Errorf("denom %s does not exist in pool", d)
-		}
-		result[i] = amt
-	}
-	return result, nil
 }
 
 // getScaledPoolAmts returns scaled amount of pool liquidity based on each asset's precisions
@@ -169,7 +156,7 @@ func (p *Pool) updatePoolLiquidityForExit(tokensOut sdk.Coins) {
 	p.updatePoolLiquidityForSwap(sdk.Coins{}, tokensOut)
 }
 
-func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdk.Int) {
+func (p *Pool) updatePoolForJoin(tokensIn sdk.Coins, newShares sdkmath.Int) {
 	numTokens := p.NumAssets()
 	p.PoolLiquidity = p.PoolLiquidity.Add(tokensIn...)
 	if len(p.PoolLiquidity) != numTokens {
@@ -255,27 +242,27 @@ func (p Pool) Copy() Pool {
 	return p2
 }
 
-func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+func (p *Pool) CalcJoinPoolShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
 	pCopy := p.Copy()
 	return pCopy.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 }
 
 // TODO: implement this
-func (p *Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, newLiquidity sdk.Coins, err error) {
+func (*Pool) CalcJoinPoolNoSwapShares(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, newLiquidity sdk.Coins, err error) {
 	return sdk.ZeroInt(), nil, err
 }
 
-func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
+func (p *Pool) JoinPool(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, err error) {
 	numShares, _, err = p.joinPoolSharesInternal(ctx, tokensIn, swapFee)
 	return numShares, err
 }
 
 // TODO: implement this
-func (p *Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdk.Int, err error) {
+func (*Pool) JoinPoolNoSwap(ctx sdk.Context, tokensIn sdk.Coins, swapFee sdk.Dec) (numShares sdkmath.Int, err error) {
 	return sdk.ZeroInt(), err
 }
 
-func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdkmath.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
 	exitingCoins, err = p.CalcExitPoolCoinsFromShares(ctx, exitingShares, exitFee)
 	if err != nil {
 		return sdk.Coins{}, err
@@ -287,12 +274,12 @@ func (p *Pool) ExitPool(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec)
 	return exitingCoins, nil
 }
 
-func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdk.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
+func (p Pool) CalcExitPoolCoinsFromShares(ctx sdk.Context, exitingShares sdkmath.Int, exitFee sdk.Dec) (exitingCoins sdk.Coins, err error) {
 	return cfmm_common.CalcExitPool(ctx, &p, exitingShares, exitFee)
 }
 
 // no-op for stableswap
-func (p *Pool) PokePool(blockTime time.Time) {}
+func (*Pool) PokePool(blockTime time.Time) {}
 
 // SetStableSwapScalingFactors sets scaling factors for pool to the given amount
 // It should only be able to be successfully called by the pool's ScalingFactorGovernor

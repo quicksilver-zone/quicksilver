@@ -4,16 +4,17 @@ import (
 	"errors"
 	"fmt"
 
+	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
 	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
-
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 // GetDelegation returns a specific delegation.
@@ -181,7 +182,7 @@ func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Zone, 
 	}
 }
 
-func (k *Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations map[string]sdkmath.Int) []sdk.Msg {
+func (*Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations map[string]sdkmath.Int) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, valoper := range utils.Keys(allocations) {
 		if !allocations[valoper].IsZero() {
@@ -191,7 +192,7 @@ func (k *Keeper) PrepareDelegationMessagesForCoins(zone *types.Zone, allocations
 	return msgs
 }
 
-func (k *Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.Coins) []sdk.Msg {
+func (*Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.Coins) []sdk.Msg {
 	var msgs []sdk.Msg
 	for _, coin := range coins.Sort() {
 		if !coin.IsZero() {
