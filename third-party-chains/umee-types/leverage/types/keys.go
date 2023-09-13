@@ -1,10 +1,10 @@
 package types
 
 import (
+	"github.com/quicksilver-zone/quicksilver/utils"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
-
-	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 const (

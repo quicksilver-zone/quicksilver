@@ -426,7 +426,7 @@ type QueryClaimRecordResponse struct {
 
 ## Keepers
 
-<https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/airdrop/keeper>
+<https://pkg.go.dev/github.com/quicksilver-zone/quicksilver/x/airdrop/keeper>
 
 ## Parameters
 

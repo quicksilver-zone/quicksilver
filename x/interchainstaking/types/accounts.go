@@ -3,9 +3,9 @@ package types
 import (
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewICAAccount(addr, portID string) (*ICAAccount, error) {

@@ -3,11 +3,10 @@ package cli
 import (
 	"fmt"
 
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-
-	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
 )
 
 // GetQueryCmd returns the cli query commands for the claimsmanager module.

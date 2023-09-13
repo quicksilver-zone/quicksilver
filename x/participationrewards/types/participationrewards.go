@@ -5,12 +5,11 @@ import (
 	"fmt"
 
 	"github.com/ingenuity-build/multierror"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 const (

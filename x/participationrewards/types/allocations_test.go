@@ -3,13 +3,12 @@ package types_test
 import (
 	"testing"
 
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func TestGetRewardsAllocations(t *testing.T) {

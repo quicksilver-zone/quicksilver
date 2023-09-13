@@ -4,11 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

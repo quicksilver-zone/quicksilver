@@ -6,6 +6,14 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/host/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -22,15 +30,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
-	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
-	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
-	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 // TODO: We need to automate this, by bundling with a module struct...

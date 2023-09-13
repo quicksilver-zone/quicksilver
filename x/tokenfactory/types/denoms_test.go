@@ -3,12 +3,11 @@ package types_test
 import (
 	"testing"
 
+	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/config"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 func TestDeconstructDenom(t *testing.T) {

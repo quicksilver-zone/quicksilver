@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/armon/go-metrics"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 
 	sdkioerrors "cosmossdk.io/errors"
 
@@ -11,8 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
 )
 
 type msgServer struct {

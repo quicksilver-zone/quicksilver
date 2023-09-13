@@ -5,6 +5,11 @@ import (
 	"time"
 
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	"github.com/quicksilver-zone/quicksilver/app/upgrades"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 	"github.com/stretchr/testify/suite"
 
 	sdkmath "cosmossdk.io/math"
@@ -12,12 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	"github.com/ingenuity-build/quicksilver/app/upgrades"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 func init() {

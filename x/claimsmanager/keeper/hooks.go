@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 
-	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochNumber int64) error {

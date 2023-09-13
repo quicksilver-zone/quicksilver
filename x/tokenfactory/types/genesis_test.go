@@ -3,9 +3,8 @@ package types_test
 import (
 	"testing"
 
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
 )
 
 func TestGenesisState_Validate(t *testing.T) {

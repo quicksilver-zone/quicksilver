@@ -11,18 +11,17 @@ import (
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
+	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	testsuite "github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-
-	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	"github.com/ingenuity-build/quicksilver/utils/randomutils"
-	ics "github.com/ingenuity-build/quicksilver/x/interchainstaking"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 var testAddress = addressutils.GenerateAccAddressForTest().String()

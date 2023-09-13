@@ -10,6 +10,10 @@ import (
 
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/tendermint/tendermint/crypto/tmhash"
 	tmtypes "github.com/tendermint/tendermint/types"
 	"google.golang.org/protobuf/encoding/protowire"
@@ -24,11 +28,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/ingenuity-build/quicksilver/utils"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 // ___________________________________________________________________________________________________
@@ -489,7 +488,7 @@ func AccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, query icqty
 	}
 
 	// Ensure that the coin is valid.
-	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/80
+	// Please see https://github.com/quicksilver-zone/quicksilver-incognito/issues/80
 	if err := coin.Validate(); err != nil {
 		k.Logger(ctx).Error("invalid coin for zone", "zone", zone.ChainId, "err", err)
 		return err
@@ -532,7 +531,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 	}
 
 	// Ensure that the coin is valid.
-	// Please see https://github.com/ingenuity-build/quicksilver-incognito/issues/80
+	// Please see https://github.com/quicksilver-zone/quicksilver-incognito/issues/80
 	if err := coin.Validate(); err != nil {
 		k.Logger(ctx).Debug("invalid coin for zone", "zone", zone.ChainId, "err", err)
 		return err

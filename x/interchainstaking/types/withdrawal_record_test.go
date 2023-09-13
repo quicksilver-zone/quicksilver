@@ -4,11 +4,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func TestWithdrawalRecord_DelayCompletion(t *testing.T) {

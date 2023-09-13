@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (z Zone) SupportReturnToSender() bool { return z.ReturnToSender }

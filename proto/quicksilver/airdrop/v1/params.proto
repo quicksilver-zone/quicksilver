@@ -3,7 +3,7 @@ package quicksilver.airdrop.v1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/airdrop/types";
 
 // Params holds parameters for the airdrop module.
 message Params {

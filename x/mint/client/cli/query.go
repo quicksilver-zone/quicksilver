@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-
-	"github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
 // GetQueryCmd returns the cli query commands for the minting module.

@@ -3,13 +3,13 @@ package keeper_test
 import (
 	"strings"
 
+	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-
-	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 var (

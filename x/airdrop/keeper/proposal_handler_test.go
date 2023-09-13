@@ -3,11 +3,11 @@ package keeper_test
 import (
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {

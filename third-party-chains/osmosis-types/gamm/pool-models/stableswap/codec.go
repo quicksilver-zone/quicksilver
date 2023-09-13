@@ -1,12 +1,12 @@
 package stableswap
 
 import (
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/gamm"
 )
 
 // RegisterLegacyAminoCodec registers the necessary x/gamm interfaces and concrete types

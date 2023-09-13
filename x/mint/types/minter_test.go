@@ -4,11 +4,10 @@ import (
 	"math/rand"
 	"testing"
 
+	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/x/mint/types"
 )
 
 // Benchmarking :)

@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
+	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
+	osmolockup "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
-	osmolockup "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 type OsmosisModule struct{}

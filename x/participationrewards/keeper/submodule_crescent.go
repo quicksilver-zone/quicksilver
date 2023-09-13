@@ -5,17 +5,17 @@ import (
 	"errors"
 	"fmt"
 
+	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 type CrescentModule struct{}

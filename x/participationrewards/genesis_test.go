@@ -6,14 +6,13 @@ import (
 	"testing"
 	"time"
 
+	simapp "github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	simapp "github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 func TestParticipationRewardsExportGenesis(t *testing.T) {

@@ -8,6 +8,9 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/client/cli"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -17,10 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/client/cli"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 var (

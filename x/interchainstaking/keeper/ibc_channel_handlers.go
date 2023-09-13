@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func (k *Keeper) HandleChannelOpenAck(ctx sdk.Context, portID, connectionID string) error {

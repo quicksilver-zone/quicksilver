@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	"github.com/stretchr/testify/require"
-
-	"github.com/ingenuity-build/quicksilver/utils/randomutils"
 )
 
 func TestGenerateRandomHash(t *testing.T) {

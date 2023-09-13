@@ -6,6 +6,8 @@ import (
 	"os"
 	"strings"
 
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -14,9 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
 )
 
 // GetTxCmd returns a root CLI command handler for all x/bank transaction commands.

@@ -14,6 +14,10 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/quicksilver-zone/quicksilver/app/keepers"
+	"github.com/quicksilver-zone/quicksilver/docs"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/spf13/cast"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -39,11 +43,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	"github.com/ingenuity-build/quicksilver/app/keepers"
-	"github.com/ingenuity-build/quicksilver/docs"
-	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
-	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 func Init() {

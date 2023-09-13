@@ -1,10 +1,10 @@
 package keeper
 
 import (
+	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
+
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/x/epochs/types"
 )
 
 // GetEpochInfo returns epoch info by identifier.

@@ -1,11 +1,11 @@
 package keeper_test
 
 import (
+	"github.com/quicksilver-zone/quicksilver/app"
+
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/ingenuity-build/quicksilver/app"
 )
 
 func (suite *KeeperTestSuite) TestAllocateLockupRewards() {

@@ -1,10 +1,10 @@
 package keeper_test
 
 import (
+	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	icqtypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
 )
 
 func (s *KeeperTestSuite) TestQueries() {
