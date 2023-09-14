@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 )
 
 var _ types.QueryServer = Querier{}

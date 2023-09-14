@@ -1,12 +1,12 @@
 package upgrades
 
 import (
-	"github.com/quicksilver-zone/quicksilver/app/keepers"
-
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
+	"github.com/quicksilver-zone/quicksilver/app/keepers"
 )
 
 // upgrade name consts: vMMmmppUpgradeName (M=Major, m=minor, p=patch).

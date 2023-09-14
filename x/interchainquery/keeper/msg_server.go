@@ -7,10 +7,10 @@ import (
 	"sort"
 	"strings"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type msgServer struct {

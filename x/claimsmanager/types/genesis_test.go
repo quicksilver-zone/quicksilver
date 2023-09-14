@@ -3,9 +3,10 @@ package types_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestGenesisState(t *testing.T) {

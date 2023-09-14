@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 )
 
 type ClaimRecords []types.ClaimRecord

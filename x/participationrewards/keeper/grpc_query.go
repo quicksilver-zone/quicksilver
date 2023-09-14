@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 var _ types.QueryServer = &Keeper{}

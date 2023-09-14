@@ -6,14 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	testsuite "github.com/stretchr/testify/suite"
 
 	"cosmossdk.io/math"
@@ -26,6 +18,15 @@ import (
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
+
+	"github.com/quicksilver-zone/quicksilver/app"
+	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 var (

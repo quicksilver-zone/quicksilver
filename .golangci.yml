@@ -54,6 +54,7 @@ linters-settings:
       - prefix(github.com/cosmos/cosmos-sdk)
       - prefix(github.com/cometbft/cometbft)
       - prefix(github.com/cosmos/ibc-go)
+      - prefix(github.com/quicksilver-zone/quicksilver)
     custom-order: true
   revive:
     enable-all-rules: true

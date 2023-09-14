@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 func TestOsmosisParamsProtocolData_ValidateBasic(t *testing.T) {

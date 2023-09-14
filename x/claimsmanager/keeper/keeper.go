@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,6 +14,8 @@ import (
 	ibcclienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
 type Keeper struct {

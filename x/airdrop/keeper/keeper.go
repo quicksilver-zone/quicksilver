@@ -3,8 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -13,6 +11,9 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 )
 
 type Keeper struct {
