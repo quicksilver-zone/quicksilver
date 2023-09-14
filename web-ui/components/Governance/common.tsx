@@ -50,7 +50,7 @@ export const DisconnectedContent = () => (
     borderRadius="xl"
   >
     <Text fontSize="lg" color="white">
-      Please connect the wallet to see the proposals
+      Please connect your wallet to see the proposals
     </Text>
   </Center>
 );
