@@ -3,10 +3,10 @@ package keeper_test
 import (
 	"fmt"
 
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // TestMintDenomMsg tests TypeMsgMint message is emitted on a successful mint.

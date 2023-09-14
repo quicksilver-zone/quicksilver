@@ -4,10 +4,9 @@ import (
 	"fmt"
 
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 type ParticipationRewardsKeeper interface {

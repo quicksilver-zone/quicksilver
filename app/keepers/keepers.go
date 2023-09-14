@@ -2,6 +2,32 @@ package keepers
 
 import (
 	"github.com/CosmWasm/wasmd/x/wasm"
+	appconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/wasmbinding"
+	airdropkeeper "github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	claimsmanagerkeeper "github.com/quicksilver-zone/quicksilver/x/claimsmanager/keeper"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
+	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
+	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking"
+	interchainstakingkeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	mintkeeper "github.com/quicksilver-zone/quicksilver/x/mint/keeper"
+	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards"
+	participationrewardskeeper "github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	tokenfactorykeeper "github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
+	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v5/router"
+	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v5/router/keeper"
+	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
+	tmos "github.com/tendermint/tendermint/libs/os"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -38,6 +64,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+
 	ica "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts"
 	icacontroller "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
@@ -53,32 +80,6 @@ import (
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	ibchost "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	packetforward "github.com/strangelove-ventures/packet-forward-middleware/v5/router"
-	packetforwardkeeper "github.com/strangelove-ventures/packet-forward-middleware/v5/router/keeper"
-	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v5/router/types"
-	tmos "github.com/tendermint/tendermint/libs/os"
-
-	appconfig "github.com/quicksilver-zone/quicksilver/cmd/config"
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/wasmbinding"
-	airdropkeeper "github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	claimsmanagerkeeper "github.com/quicksilver-zone/quicksilver/x/claimsmanager/keeper"
-	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
-	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
-	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking"
-	interchainstakingkeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
-	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	mintkeeper "github.com/quicksilver-zone/quicksilver/x/mint/keeper"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards"
-	participationrewardskeeper "github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-	tokenfactorykeeper "github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 type AppKeepers struct {
@@ -553,7 +554,7 @@ func (appKeepers *AppKeepers) InitKeepers(
 }
 
 // initParamsKeeper init params keeper and its subspaces.
-func (appKeepers *AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) paramskeeper.Keeper {
+func (*AppKeepers) initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	// SDK subspaces

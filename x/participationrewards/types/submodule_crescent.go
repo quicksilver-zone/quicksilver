@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/ingenuity-build/multierror"
 	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type CrescentPoolProtocolData struct {
@@ -133,6 +133,6 @@ func (uppd CrescentParamsProtocolData) ValidateBasic() error {
 	return nil
 }
 
-func (uppd CrescentParamsProtocolData) GenerateKey() []byte {
+func (CrescentParamsProtocolData) GenerateKey() []byte {
 	return []byte(CrescentParamsKey)
 }

@@ -5,17 +5,16 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	porttypes "github.com/cosmos/ibc-go/v5/modules/core/05-port/types"
 	host "github.com/cosmos/ibc-go/v5/modules/core/24-host"
 	ibcexported "github.com/cosmos/ibc-go/v5/modules/core/exported"
-
-	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 var _ porttypes.IBCModule = IBCModule{}

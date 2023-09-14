@@ -4,15 +4,17 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/tendermint/tendermint/libs/log"
+
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	"github.com/tendermint/tendermint/libs/log"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 )
 
 // Keeper of this module maintains collections of registered zones.

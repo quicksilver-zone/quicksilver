@@ -5,10 +5,8 @@ import (
 	"testing"
 
 	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
-
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-
 	"github.com/stretchr/testify/require"
 )
 

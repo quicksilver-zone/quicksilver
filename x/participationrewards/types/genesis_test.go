@@ -3,10 +3,10 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGenesisState(t *testing.T) {

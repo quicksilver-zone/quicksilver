@@ -3,11 +3,11 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/bech32"
-
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/bech32"
 )
 
 // GetClaimRecord returns the ClaimRecord of the given address for the given zone.

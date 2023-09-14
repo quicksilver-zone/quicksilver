@@ -3,8 +3,9 @@ package types
 import (
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
+
+	sdkmath "cosmossdk.io/math"
 )
 
 func TestQuery_ValidateBasic(t *testing.T) {

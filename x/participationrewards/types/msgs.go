@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 	"github.com/ingenuity-build/multierror"
-
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 )
 
 // participationrewars message types.
@@ -48,10 +48,10 @@ func (msg MsgSubmitClaim) GetSignBytes() []byte {
 }
 
 // Route implements LegacyMsg.
-func (msg MsgSubmitClaim) Route() string { return RouterKey }
+func (MsgSubmitClaim) Route() string { return RouterKey }
 
 // Type Implements Msg.
-func (msg MsgSubmitClaim) Type() string { return TypeMsgSubmitClaim }
+func (MsgSubmitClaim) Type() string { return TypeMsgSubmitClaim }
 
 // GetSigners implements Msg.
 func (msg MsgSubmitClaim) GetSigners() []sdk.AccAddress {

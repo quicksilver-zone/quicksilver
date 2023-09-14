@@ -7,6 +7,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmomath"
 
 	sdkioerrors "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

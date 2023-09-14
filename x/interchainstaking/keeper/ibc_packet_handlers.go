@@ -8,7 +8,15 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	queryTypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,16 +25,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	queryTypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 type TypedMsg struct {
@@ -289,11 +292,11 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 	return nil
 }
 
-func (k *Keeper) HandleTimeout(_ sdk.Context, _ channeltypes.Packet) error {
+func (*Keeper) HandleTimeout(_ sdk.Context, _ channeltypes.Packet) error {
 	return nil
 }
 
-//----------------------------------------------------------------
+// ----------------------------------------------------------------
 
 func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 	k.Logger(ctx).Info("Received MsgTransfer acknowledgement")

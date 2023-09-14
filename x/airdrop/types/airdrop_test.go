@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestZoneDrop_ValidateBasic(t *testing.T) {

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/quicksilver-zone/quicksilver/app"
-
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"

@@ -4,14 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdkioerrors "cosmossdk.io/errors"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	"github.com/quicksilver-zone/quicksilver/wasmbinding/bindings"
+	abci "github.com/tendermint/tendermint/abci/types"
+
+	sdkioerrors "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/quicksilver-zone/quicksilver/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries.

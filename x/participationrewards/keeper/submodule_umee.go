@@ -6,26 +6,23 @@ import (
 
 	umee "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
 	leveragetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
-
+	"github.com/quicksilver-zone/quicksilver/utils"
 	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/quicksilver-zone/quicksilver/utils"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 type UmeeModule struct{}
 
 var _ Submodule = &UmeeModule{}
 
-func (u UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
+func (UmeeModule) Hooks(ctx sdk.Context, k *Keeper) {
 	// umee-types params
 	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeUmeeParams, types.UmeeParamsKey)
 	if !found {
@@ -180,7 +177,7 @@ func getDenomFromProof(proof *cmtypes.Proof, addr []byte) (string, error) {
 	return denom, err
 }
 
-func (u UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (UmeeModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	zone, ok := k.icsKeeper.GetZone(ctx, msg.Zone)
 	if !ok {
 		return 0, fmt.Errorf("unable to find registered zone for chain id: %s", msg.Zone)

@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/ingenuity-build/multierror"
+
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -20,8 +21,8 @@ func NewAddProtocolDataProposal(title, description, datatype, _, key string, dat
 
 func (m *AddProtocolDataProposal) GetDescription() string { return m.Description }
 func (m *AddProtocolDataProposal) GetTitle() string       { return m.Title }
-func (m *AddProtocolDataProposal) ProposalRoute() string  { return RouterKey }
-func (m *AddProtocolDataProposal) ProposalType() string   { return ProposalTypeAddProtocolData }
+func (*AddProtocolDataProposal) ProposalRoute() string    { return RouterKey }
+func (*AddProtocolDataProposal) ProposalType() string     { return ProposalTypeAddProtocolData }
 
 // ValidateBasic runs basic stateless validity checks.
 func (m *AddProtocolDataProposal) ValidateBasic() error {
