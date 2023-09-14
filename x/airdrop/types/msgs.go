@@ -30,10 +30,10 @@ func NewMsgClaim(chainID string, action int64, fromAddress sdk.Address) *MsgClai
 }
 
 // Route implements Msg.
-func (msg MsgClaim) Route() string { return RouterKey }
+func (MsgClaim) Route() string { return RouterKey }
 
 // Type implements Msg.
-func (msg MsgClaim) Type() string { return TypeMsgClaim }
+func (MsgClaim) Type() string { return TypeMsgClaim }
 
 // ValidateBasic implements Msg.
 func (msg MsgClaim) ValidateBasic() error {
@@ -101,10 +101,10 @@ func NewMsgIncentivePoolSpend(authority, toAddress sdk.Address, amt sdk.Coins) *
 }
 
 // Route implements Msg.
-func (msg MsgIncentivePoolSpend) Route() string { return RouterKey }
+func (MsgIncentivePoolSpend) Route() string { return RouterKey }
 
 // Type implements Msg.
-func (msg MsgIncentivePoolSpend) Type() string { return TypeMsgClaim }
+func (MsgIncentivePoolSpend) Type() string { return TypeMsgClaim }
 
 // ValidateBasic implements Msg.
 func (msg MsgIncentivePoolSpend) ValidateBasic() error {

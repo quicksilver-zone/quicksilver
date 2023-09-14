@@ -19,7 +19,7 @@ func GenerateQueryHash(connectionID, chainID, queryType string, request []byte, 
 
 // ----------------------------------------------------------------
 
-func (k Keeper) NewQuery(
+func (Keeper) NewQuery(
 	module,
 	connectionID,
 	chainID,

@@ -266,13 +266,13 @@ func (s *IntegrationTestSuite) TestGetDepositAccountCmd() {
 			&types.QueryDepositAccountForChainResponse{},
 			&types.QueryDepositAccountForChainResponse{},
 		},
-		/*{
+		/* {
 			"valid",
 			[]string{s.cfg.ChainID},
 			false,
 			&types.QueryDepositAccountForChainResponse{},
 			&types.QueryDepositAccountForChainResponse{},
-		},*/
+		}, */
 	}
 	for _, tt := range tests {
 		tt := tt
@@ -378,7 +378,7 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 			0,
 			&sdk.TxResponse{},
 		},
-		/*{
+		/* {
 			"valid",
 			[]string{
 				s.network.Config.ChainID,
@@ -388,7 +388,7 @@ func (s *IntegrationTestSuite) TestGetSignalIntentTxCmd() {
 			false,
 			0,
 			&sdk.TxResponse{},
-		},*/
+		}, */
 	}
 	for _, tt := range tests {
 		tt := tt

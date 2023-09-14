@@ -274,7 +274,7 @@ func (s *StargateTestSuite) TestDeterministicJsonMarshal() {
 				}
 			},
 		},
-		/**
+		/*
 		  // Origin proto
 		  message QueryAccountResponse {
 		    // account defines the account of the corresponding address.

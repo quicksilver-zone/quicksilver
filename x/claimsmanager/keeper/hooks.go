@@ -16,7 +16,7 @@ func (k Keeper) BeforeEpochStart(ctx sdk.Context, epochIdentifier string, epochN
 	return nil
 }
 
-func (k Keeper) AfterEpochEnd(_ sdk.Context, _ string, _ int64) error {
+func (Keeper) AfterEpochEnd(_ sdk.Context, _ string, _ int64) error {
 	return nil
 }
 

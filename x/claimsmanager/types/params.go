@@ -22,14 +22,14 @@ func DefaultParams() Params {
 }
 
 // ParamSetPairs implements params.ParamSet.
-func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
+func (*Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		// paramtypes.NewParamSetPair(Key, &p.Attribute, validateAttrib),
 	}
 }
 
 // Validate validates params.
-func (p *Params) Validate() error {
+func (*Params) Validate() error {
 	return nil
 }
 

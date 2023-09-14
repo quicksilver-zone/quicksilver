@@ -36,7 +36,7 @@ type KeeperTestSuite struct {
 	path   *ibctesting.Path
 }
 
-func (s *KeeperTestSuite) GetSimApp(chain *ibctesting.TestChain) *app.Quicksilver {
+func (*KeeperTestSuite) GetSimApp(chain *ibctesting.TestChain) *app.Quicksilver {
 	quicksilver, ok := chain.App.(*app.Quicksilver)
 	if !ok {
 		panic("not quicksilver app")
