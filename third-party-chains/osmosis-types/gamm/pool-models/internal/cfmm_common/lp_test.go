@@ -6,6 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
@@ -80,7 +82,7 @@ func TestCalcExitPool(t *testing.T) {
 	tests := []struct {
 		name          string
 		pool          gamm.PoolI
-		exitingShares sdk.Int
+		exitingShares sdkmath.Int
 		expError      bool
 	}{
 		{
@@ -149,7 +151,7 @@ func TestMaximalExactRatioJoin(t *testing.T) {
 		name        string
 		pool        func() gamm.PoolI
 		tokensIn    sdk.Coins
-		expNumShare sdk.Int
+		expNumShare sdkmath.Int
 		expRemCoin  sdk.Coins
 	}{
 		{

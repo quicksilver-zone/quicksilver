@@ -16,7 +16,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
-func (k *Keeper) getStoreKey(zone *types.Zone, snapshot bool) []byte {
+func (*Keeper) getStoreKey(zone *types.Zone, snapshot bool) []byte {
 	if snapshot {
 		return append(types.KeyPrefixSnapshotIntent, []byte(zone.ChainId)...)
 	}

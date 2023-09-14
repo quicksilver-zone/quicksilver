@@ -6,11 +6,11 @@ import (
 	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 )
 
-func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
+func (*Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 	return nil
 }
 
-func (k *Keeper) AfterEpochEnd(_ sdk.Context, _ string, _ int64) error {
+func (*Keeper) AfterEpochEnd(_ sdk.Context, _ string, _ int64) error {
 	return nil
 }
 

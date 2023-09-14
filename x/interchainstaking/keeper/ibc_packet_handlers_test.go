@@ -2278,7 +2278,7 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNonNilCompletion()
 	afterTarget, found := quicksilver.InterchainstakingKeeper.GetDelegation(ctx, &zone, zone.DelegationAddress.Address, validators[1].ValoperAddress)
 	suite.True(found)
 	suite.Equal(complete.Unix(), afterTarget.RedelegationEnd)
-	/// target did not exist before redelegation
+	// target did not exist before redelegation
 	suite.Equal(redelegate.Amount, afterTarget.Amount)
 }
 

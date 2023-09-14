@@ -76,7 +76,7 @@ func GetFirstValueInRange[T any](storeObj store.KVStore, keyStart []byte, keyEnd
 
 	if !iterator.Valid() {
 		var blankValue T
-		return blankValue, errors.New("No values in range")
+		return blankValue, errors.New("no values in range")
 	}
 
 	return parseValue(iterator.Value())

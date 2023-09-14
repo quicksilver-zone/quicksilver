@@ -14,7 +14,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
-func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
+func (*Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {
 	return nil
 }
 

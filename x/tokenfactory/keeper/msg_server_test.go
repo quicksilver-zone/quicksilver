@@ -254,6 +254,7 @@ func (s *KeeperTestSuite) TestSetDenomMetaDataMsg() {
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			tc := tc
 			ctx := s.Ctx.WithEventManager(sdk.NewEventManager())
 			s.Require().Equal(0, len(ctx.EventManager().Events()))
 			// Test set denom metadata message

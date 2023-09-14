@@ -79,7 +79,7 @@ func (msg MsgRequestRedemption) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{fromAddress}
 }
 
-//----------------------------------------------------------------
+// ----------------------------------------------------------------
 
 // IntentsFromString parses and validates the given string into a slice
 // containing pointers to ValidatorIntent.
