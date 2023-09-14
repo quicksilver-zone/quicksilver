@@ -6,11 +6,12 @@ import (
 	"fmt"
 
 	"github.com/ingenuity-build/multierror"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
+
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
 // participationrewars message types.

@@ -3,15 +3,15 @@ package keeper
 import (
 	"time"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func (*Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {

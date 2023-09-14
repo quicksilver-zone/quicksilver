@@ -5,10 +5,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 )
 
 func TestGetKeyZoneDrop(t *testing.T) {

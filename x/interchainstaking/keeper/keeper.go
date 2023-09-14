@@ -6,16 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
-	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
-	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdkmath "cosmossdk.io/math"
@@ -34,6 +24,18 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
+	interchainquerykeeper "github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
+	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 // Keeper of this module maintains collections of registered zones.

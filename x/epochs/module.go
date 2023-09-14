@@ -7,10 +7,6 @@ import (
 	"math/rand"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/quicksilver-zone/quicksilver/x/epochs/client/cli"
-	"github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/epochs/simulation"
-	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -20,6 +16,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
+	"github.com/quicksilver-zone/quicksilver/x/epochs/client/cli"
+	"github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/epochs/simulation"
+	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
 )
 
 var (

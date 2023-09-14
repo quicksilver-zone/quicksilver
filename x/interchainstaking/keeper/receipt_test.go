@@ -3,10 +3,6 @@ package keeper_test
 import (
 	"time"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-
 	"cosmossdk.io/math"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -14,6 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {

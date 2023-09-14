@@ -5,8 +5,6 @@ import (
 	"fmt"
 
 	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
-	"github.com/quicksilver-zone/quicksilver/utils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -15,6 +13,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrTypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingTypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 // GetDelegation returns a specific delegation.

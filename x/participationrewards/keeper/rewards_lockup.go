@@ -3,11 +3,11 @@ package keeper
 import (
 	"errors"
 
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 func (k Keeper) AllocateLockupRewards(ctx sdk.Context, allocation math.Int) error {

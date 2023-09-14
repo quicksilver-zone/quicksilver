@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"github.com/gogo/protobuf/proto"
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // GetAuthorityMetadata returns the authority metadata for a specific denom.

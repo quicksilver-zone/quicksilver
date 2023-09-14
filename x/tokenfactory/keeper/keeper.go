@@ -3,7 +3,6 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -11,6 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 type (
