@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"gopkg.in/yaml.v2"
 )
 
 // Default ics params.

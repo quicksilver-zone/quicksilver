@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (suite *KeeperTestSuite) TestCalcTokenValues() {

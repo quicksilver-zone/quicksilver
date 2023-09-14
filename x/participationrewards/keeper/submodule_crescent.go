@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
+
 	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
 	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
 	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
@@ -14,6 +14,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
@@ -21,7 +22,7 @@ type CrescentModule struct{}
 
 var _ Submodule = &CrescentModule{}
 
-func (c CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
+func (CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 	// crescent-types params
 	params, found := k.GetProtocolData(ctx, types.ProtocolDataTypeCrescentParams, types.CrescentParamsKey)
 	if !found {
@@ -118,7 +119,7 @@ func (c CrescentModule) Hooks(ctx sdk.Context, k *Keeper) {
 	})
 }
 
-func (c CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
+func (CrescentModule) ValidateClaim(ctx sdk.Context, k *Keeper, msg *types.MsgSubmitClaim) (uint64, error) {
 	var amount uint64
 	for _, proof := range msg.Proofs {
 		position := lpfarm.Position{}

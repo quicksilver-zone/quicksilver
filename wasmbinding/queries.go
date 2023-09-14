@@ -3,10 +3,10 @@ package wasmbinding
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/wasmbinding/bindings"
 	tokenfactorykeeper "github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type QueryPlugin struct {

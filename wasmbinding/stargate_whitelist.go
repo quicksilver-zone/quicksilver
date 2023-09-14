@@ -5,6 +5,10 @@ import (
 	"sync"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -12,10 +16,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
-	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
-	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // stargateWhitelist keeps whitelist and its deterministic

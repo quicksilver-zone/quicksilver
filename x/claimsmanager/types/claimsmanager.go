@@ -1,8 +1,9 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ingenuity-build/multierror"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewClaim(address, chainID string, module ClaimType, srcChainID string, amount uint64) Claim {

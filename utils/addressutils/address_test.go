@@ -3,10 +3,10 @@ package addressutils_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/stretchr/testify/require"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestAddressFromBech32(t *testing.T) {

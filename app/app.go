@@ -11,6 +11,19 @@ import (
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/quicksilver-zone/quicksilver/app/keepers"
+	"github.com/quicksilver-zone/quicksilver/docs"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/spf13/cast"
+	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/log"
+	tmos "github.com/tendermint/tendermint/libs/os"
+	dbm "github.com/tendermint/tm-db"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
@@ -30,19 +43,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	ibctestingtypes "github.com/cosmos/ibc-go/v5/testing/types"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/spf13/cast"
-	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	dbm "github.com/tendermint/tm-db"
-
-	"github.com/quicksilver-zone/quicksilver/app/keepers"
-	"github.com/quicksilver-zone/quicksilver/docs"
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func Init() {
@@ -162,7 +162,7 @@ func NewQuicksilver(
 		wasmOpts,
 	)
 
-	/****  Module Options ****/
+	// ****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
 	// we prefer to be more strict in what arguments the modules expect.
@@ -285,7 +285,7 @@ func (app *Quicksilver) LoadHeight(height int64) error {
 }
 
 // ModuleAccountAddrs returns all the app's module account addresses.
-func (app *Quicksilver) ModuleAccountAddrs() map[string]bool {
+func (*Quicksilver) ModuleAccountAddrs() map[string]bool {
 	modAccAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		modAccAddrs[authtypes.NewModuleAddress(acc).String()] = true
@@ -296,7 +296,7 @@ func (app *Quicksilver) ModuleAccountAddrs() map[string]bool {
 
 // BlockedAddrs returns all the app's module account addresses that are not
 // allowed to receive external tokens.
-func (app *Quicksilver) BlockedAddrs() map[string]bool {
+func (*Quicksilver) BlockedAddrs() map[string]bool {
 	blockedAddrs := make(map[string]bool)
 	for acc := range maccPerms {
 		blockedAddrs[authtypes.NewModuleAddress(acc).String()] = !allowedReceivingModAcc[acc]
@@ -341,7 +341,7 @@ func (app *Quicksilver) SimulationManager() *module.SimulationManager {
 
 // RegisterAPIRoutes registers all application module routes with the provided
 // API server.
-func (app *Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
+func (*Quicksilver) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 
 	// Register new tx routes from grpc-gateway.
@@ -395,7 +395,7 @@ func (app *Quicksilver) GetScopedIBCKeeper() capabilitykeeper.ScopedKeeper {
 }
 
 // GetTxConfig implements the TestingApp interface.
-func (app *Quicksilver) GetTxConfig() client.TxConfig {
+func (*Quicksilver) GetTxConfig() client.TxConfig {
 	cfg := MakeEncodingConfig()
 	return cfg.TxConfig
 }

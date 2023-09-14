@@ -1,10 +1,10 @@
 package keeper_test
 
 import (
+	"github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
 )
 
 func (s *KeeperTestSuite) TestEndBlocker() {

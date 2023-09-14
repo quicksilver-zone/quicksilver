@@ -3,6 +3,8 @@ package osmoutils
 import (
 	"errors"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -11,10 +13,10 @@ import (
 // ErrTolerance.Compare(a, b) returns true iff:
 // |a - b| <= AdditiveTolerance
 // |a - b| / min(a, b) <= MultiplicativeTolerance
-// Each check is respectively ignored if the entry is nil (sdk.Dec{}, sdk.Int{})
+// Each check is respectively ignored if the entry is nil (sdk.Dec{}, sdkmath.Int{})
 // Note that if AdditiveTolerance == 0, then this is equivalent to a standard compare.
 type ErrTolerance struct {
-	AdditiveTolerance       sdk.Int
+	AdditiveTolerance       sdkmath.Int
 	MultiplicativeTolerance sdk.Dec
 }
 
@@ -22,7 +24,7 @@ type ErrTolerance struct {
 // returns 0 if it is
 // returns 1 if not, and expected > actual.
 // returns -1 if not, and expected < actual
-func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
+func (e ErrTolerance) Compare(expected sdkmath.Int, actual sdkmath.Int) int {
 	diff := expected.Sub(actual).Abs()
 
 	comparisonSign := 0
@@ -59,18 +61,18 @@ func (e ErrTolerance) Compare(expected sdk.Int, actual sdk.Int) int {
 // Binary search inputs between [lowerbound, upperbound] to a monotonic increasing function f.
 // We stop once f(found_input) meets the ErrTolerance constraints.
 // If we perform more than maxIterations (or equivalently lowerbound = upperbound), we return an error.
-func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
-	lowerbound sdk.Int,
-	upperbound sdk.Int,
-	targetOutput sdk.Int,
+func BinarySearch(f func(input sdkmath.Int) (sdkmath.Int, error),
+	lowerbound sdkmath.Int,
+	upperbound sdkmath.Int,
+	targetOutput sdkmath.Int,
 	errTolerance ErrTolerance,
 	maxIterations int,
-) (sdk.Int, error) {
+) (sdkmath.Int, error) {
 	// Setup base case of loop
 	curEstimate := lowerbound.Add(upperbound).QuoRaw(2)
 	curOutput, err := f(curEstimate)
 	if err != nil {
-		return sdk.Int{}, err
+		return sdkmath.Int{}, err
 	}
 	curIteration := 0
 	for ; curIteration < maxIterations; curIteration += 1 {
@@ -85,11 +87,11 @@ func BinarySearch(f func(input sdk.Int) (sdk.Int, error),
 		curEstimate = lowerbound.Add(upperbound).QuoRaw(2)
 		curOutput, err = f(curEstimate)
 		if err != nil {
-			return sdk.Int{}, err
+			return sdkmath.Int{}, err
 		}
 	}
 	if curIteration == maxIterations {
-		return sdk.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
+		return sdkmath.Int{}, errors.New("hit maximum iterations, did not converge fast enough")
 	}
 	return curEstimate, nil
 }

@@ -4,24 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 
+	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
+	config "github.com/quicksilver-zone/quicksilver/cmd/config"
+	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
+	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
+	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
+	"github.com/quicksilver-zone/quicksilver/utils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/tendermint/tendermint/libs/log"
+
 	sdkmath "cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
-	"github.com/tendermint/tendermint/libs/log"
-
-	"github.com/quicksilver-zone/quicksilver/utils"
-
-	config "github.com/quicksilver-zone/quicksilver/cmd/config"
-	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
-	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
-	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 // UserAllocation is an internal keeper struct to track transient state for
@@ -128,7 +128,7 @@ func (k *Keeper) GetClaimsEnabled(ctx sdk.Context) bool {
 }
 
 // Logger returns a module-specific logger.
-func (k *Keeper) Logger(ctx sdk.Context) log.Logger {
+func (*Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 

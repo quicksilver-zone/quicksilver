@@ -1,17 +1,15 @@
 package keeper
 
 import (
-	"github.com/tendermint/tendermint/libs/log"
-
+	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	"github.com/quicksilver-zone/quicksilver/x/mint/types"
+	participationrewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-
-	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-	participationrewards "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 // Keeper of the mint store.
@@ -63,7 +61,7 @@ func NewKeeper(
 // _____________________________________________________________________
 
 // Logger returns a module-specific logger.
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
+func (Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
@@ -141,7 +139,7 @@ func (k Keeper) MintCoins(ctx sdk.Context, newCoins sdk.Coins) error {
 }
 
 // GetProportions gets the balance of the `MintedDenom` from minted coins and returns coins according to the `AllocationRatio`.
-func (k Keeper) GetProportions(mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
+func (Keeper) GetProportions(mintedCoin sdk.Coin, ratio sdk.Dec) sdk.Coin {
 	return sdk.NewCoin(mintedCoin.Denom, sdk.NewDecFromInt(mintedCoin.Amount).Mul(ratio).TruncateInt())
 }
 

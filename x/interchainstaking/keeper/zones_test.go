@@ -7,16 +7,16 @@ import (
 	"testing"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/libs/log"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
 	"golang.org/x/exp/maps"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func newQuicksilver(t *testing.T) *app.Quicksilver {

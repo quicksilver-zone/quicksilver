@@ -3,10 +3,10 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // CreateDenom converts a fee amount in a whitelisted fee token to the base fee token amount.

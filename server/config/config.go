@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"path"
 
+	"github.com/spf13/viper"
+
 	sdkioerrors "cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/server/config"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/spf13/viper"
 )
 
 const (

@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
-
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/quicksilver-zone/quicksilver/utils"
 	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type ParticipationRewardsKeeper interface {

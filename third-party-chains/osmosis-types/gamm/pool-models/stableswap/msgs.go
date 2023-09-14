@@ -1,11 +1,12 @@
 package stableswap
 
 import (
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+
 	sdkioerrors "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
 )
 
 const (
@@ -34,8 +35,8 @@ func NewMsgCreateStableswapPool(
 	}
 }
 
-func (msg MsgCreateStableswapPool) Route() string { return gamm.RouterKey }
-func (msg MsgCreateStableswapPool) Type() string  { return TypeMsgCreateStableswapPool }
+func (MsgCreateStableswapPool) Route() string { return gamm.RouterKey }
+func (MsgCreateStableswapPool) Type() string  { return TypeMsgCreateStableswapPool }
 func (msg MsgCreateStableswapPool) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Sender)
 	if err != nil {
@@ -119,11 +120,11 @@ func NewMsgStableSwapAdjustScalingFactors(
 	}
 }
 
-func (msg MsgStableSwapAdjustScalingFactors) Route() string {
+func (MsgStableSwapAdjustScalingFactors) Route() string {
 	return gamm.RouterKey
 }
 
-func (msg MsgStableSwapAdjustScalingFactors) Type() string { return TypeMsgCreateStableswapPool }
+func (MsgStableSwapAdjustScalingFactors) Type() string { return TypeMsgCreateStableswapPool }
 func (msg MsgStableSwapAdjustScalingFactors) ValidateBasic() error {
 	if msg.Sender == "" {
 		return nil

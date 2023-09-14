@@ -8,9 +8,9 @@ import (
 	"time"
 	"unsafe"
 
-	sdkmath "cosmossdk.io/math"
-
 	"golang.org/x/exp/constraints"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -44,7 +44,7 @@ func RandStringOfLength(r *rand.Rand, n int) string {
 	return *(*string)(unsafe.Pointer(&b))
 }
 
-// RandPositiveInt get a rand positive sdk.Int.
+// RandPositiveInt get a rand positive sdkmath.Int.
 func RandPositiveInt(r *rand.Rand, max sdkmath.Int) (sdkmath.Int, error) {
 	if !max.GTE(sdk.OneInt()) {
 		return sdkmath.Int{}, errors.New("max too small")

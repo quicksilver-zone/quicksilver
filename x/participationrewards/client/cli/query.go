@@ -3,10 +3,10 @@ package cli
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/spf13/cobra"
 
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 // GetQueryCmd returns the cli query commands for the minting module.
