@@ -1,24 +1,28 @@
-FROM golang:1.19-alpine3.17 as build
+FROM golang:alpine as BUILD
 
-WORKDIR /src/app
+WORKDIR /relayer
 
-RUN apk add --no-cache gcc musl-dev
-
-COPY go.mod go.mod
-COPY go.sum go.sum
-
-RUN go mod download
-
+# Copy the files from host
 COPY . .
 
-RUN go build
+# Update and install needed deps prioir to installing the binary.
+RUN apk update && \
+    apk --no-cache add make git && \
+    make install
 
-FROM alpine:edge
+FROM alpine:latest
 
-RUN apk add --no-cache ca-certificates
+ENV RELAYER /relayer
 
-COPY --from=build /src/app/interchain-queries /usr/local/bin/interchain-queries
+RUN addgroup rlyuser && \
+    adduser -S -G rlyuser rlyuser -h "$RELAYER"
 
-RUN adduser -S -h /icq -D icq -u 1000
+USER rlyuser
 
-USER icq
+# Define working directory
+WORKDIR $RELAYER
+
+# Copy binary from BUILD
+COPY --from=BUILD /go/bin/rly /usr/bin/rly
+
+ENTRYPOINT ["/usr/bin/rly"]

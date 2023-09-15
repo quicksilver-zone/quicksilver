@@ -1,36 +1,108 @@
+/*
+Package cmd includes relayer commands
+Copyright © 2020 Jack Zampolin jack.zampolin@gmail.com
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package cmd
 
 import (
+	"bufio"
 	"os"
+	"strings"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/ingenuity-build/interchain-queries/pkg/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var (
-	homePath       string
-	overridenChain string
-	debug          bool
-	cfg            *config.Config
-	defaultHome    = os.ExpandEnv("$HOME/.icq")
-	appName        = "lens"
+// MB is a megabyte
+const (
+	MB = 1048576 // in bytes
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "interchain-queries",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
+var (
+	homePath    string
+	debug       bool
+	config      *Config
+	defaultHome = os.ExpandEnv("$HOME/.relayer")
+	appName     = "rly"
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	// Default identifiers for dummy usage
+	dcli = "defaultclientid"
+	dcon = "defaultconnectionid"
+	dcha = "defaultchannelid"
+	dpor = "defaultportid"
+	dord = "ordered"
+)
+
+// NewRootCmd returns the root command for relayer.
+func NewRootCmd() *cobra.Command {
+	// RootCmd represents the base command when called without any subcommands
+	var rootCmd = &cobra.Command{
+		Use:   appName,
+		Short: "This application relays data between configured IBC enabled chains",
+		Long: strings.TrimSpace(`The relayer has commands for:
+  1. Configuration of the Chains and Paths that the relayer with transfer packets over
+  2. Management of keys and light clients on the local machine that will be used to sign and verify txs
+  3. Query and transaction functionality for IBC
+  4. A responsive relaying application that listens on a path
+  5. Commands to assist with development, testnets, and versioning.
+
+NOTE: Most of the commands have aliases that make typing them much quicker (i.e. 'rly tx', 'rly q', etc...)`),
+	}
+
+	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {
+		// reads `homeDir/config/config.yaml` into `var config *Config` before each command
+		return initConfig(rootCmd)
+	}
+
+	// Register top level flags --home and --debug
+	rootCmd.PersistentFlags().StringVar(&homePath, flags.FlagHome, defaultHome, "set home directory")
+	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "debug output")
+
+	if err := viper.BindPFlag(flags.FlagHome, rootCmd.Flags().Lookup(flags.FlagHome)); err != nil {
+		panic(err)
+	}
+	if err := viper.BindPFlag("debug", rootCmd.Flags().Lookup("debug")); err != nil {
+		panic(err)
+	}
+
+	// Register subcommands
+	rootCmd.AddCommand(
+		configCmd(),
+		chainsCmd(),
+		pathsCmd(),
+		flags.LineBreak,
+		keysCmd(),
+		lightCmd(),
+		flags.LineBreak,
+		transactionCmd(),
+		queryCmd(),
+		startCmd(),
+		flags.LineBreak,
+		getAPICmd(),
+		flags.LineBreak,
+		devCommand(),
+		testnetsCmd(),
+		getVersionCmd(),
+	)
+
+	// This is a bit of a cheat :shushing_face:
+	// cdc = codecstd.MakeCodec(simapp.ModuleBasics)
+	// appCodec = codecstd.NewAppCodec(cdc)
+
+	return rootCmd
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -38,53 +110,16 @@ to quickly create a Cobra application.`,
 func Execute() {
 	cobra.EnableCommandSorting = false
 
+	rootCmd := NewRootCmd()
 	rootCmd.SilenceUsage = true
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
-	err := rootCmd.Execute()
-	if err != nil {
+
+	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}
 }
 
-func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.claim-and-delegate.yaml)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	rootCmd.PersistentPreRunE = func(cmd *cobra.Command, _ []string) error {
-		// reads `homeDir/config.yaml` into `var config *Config` before each command
-		if err := initConfig(rootCmd); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	// --home flag
-	rootCmd.PersistentFlags().StringVar(&homePath, flags.FlagHome, defaultHome, "set home directory")
-	if err := viper.BindPFlag(flags.FlagHome, rootCmd.PersistentFlags().Lookup(flags.FlagHome)); err != nil {
-		panic(err)
-	}
-
-	// --debug flag
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "debug output")
-	if err := viper.BindPFlag("debug", rootCmd.PersistentFlags().Lookup("debug")); err != nil {
-		panic(err)
-	}
-
-	rootCmd.PersistentFlags().StringP("output", "o", "json", "output format (json, indent, yaml)")
-	if err := viper.BindPFlag("output", rootCmd.PersistentFlags().Lookup("output")); err != nil {
-		panic(err)
-	}
-
-	rootCmd.PersistentFlags().StringVar(&overridenChain, "chain", "", "override default chain")
-	if err := viper.BindPFlag("chain", rootCmd.PersistentFlags().Lookup("chain")); err != nil {
-		panic(err)
-	}
-
-	rootCmd.AddCommand(keysCmd())
+// readLineFromBuf reads one line from stdin.
+func readStdin() (string, error) {
+	str, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	return strings.TrimSpace(str), err
 }
