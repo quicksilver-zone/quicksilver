@@ -3,10 +3,11 @@ package types_test
 import (
 	"testing"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 // helper function for ICA tests.

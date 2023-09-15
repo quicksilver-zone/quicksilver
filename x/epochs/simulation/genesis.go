@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
-
 	"github.com/cosmos/cosmos-sdk/types/module"
+
+	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
 )
 
 // RandomizedGenState generates a random GenesisState for mint.

@@ -6,12 +6,13 @@ import (
 	"time"
 
 	"github.com/ingenuity-build/multierror"
-	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
 
 type CrescentPoolProtocolData struct {

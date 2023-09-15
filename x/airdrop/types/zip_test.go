@@ -5,8 +5,9 @@ import (
 	"compress/zlib"
 	"testing"
 
-	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 )
 
 // TODO test

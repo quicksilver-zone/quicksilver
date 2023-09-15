@@ -4,12 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/tendermint/tendermint/crypto"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/app"
 )
 
 func CreateTestInput(t *testing.T) (*app.Quicksilver, sdk.Context) {

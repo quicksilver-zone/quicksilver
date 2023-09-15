@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/quicksilver-zone/quicksilver/app"
-	"github.com/quicksilver-zone/quicksilver/x/mint/simulation"
-	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+
+	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/x/mint/simulation"
+	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 )
 
 func TestDecodeStore(t *testing.T) {

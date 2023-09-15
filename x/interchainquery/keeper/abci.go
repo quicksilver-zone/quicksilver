@@ -4,10 +4,10 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 )
 
 const (

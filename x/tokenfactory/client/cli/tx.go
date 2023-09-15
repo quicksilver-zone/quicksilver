@@ -3,13 +3,14 @@ package cli
 import (
 	"fmt"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // GetTxCmd returns the transaction commands for this module.
