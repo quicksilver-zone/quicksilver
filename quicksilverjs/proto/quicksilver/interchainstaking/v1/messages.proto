@@ -1,0 +1,77 @@
+syntax = "proto3";
+package quicksilver.interchainstaking.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "quicksilver/interchainstaking/v1/interchainstaking.proto";
+import "quicksilver/interchainstaking/v1/proposals.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
+
+// Msg defines the interchainstaking Msg service.
+service Msg {
+  // RequestRedemption defines a method for requesting burning of qAssets for
+  // native assets.
+  rpc RequestRedemption(MsgRequestRedemption)
+      returns (MsgRequestRedemptionResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/interchainstaking/redeem"
+      body : "*"
+    };
+  };
+  // SignalIntent defines a method for signalling voting intent for one or more
+  // validators.
+  rpc SignalIntent(MsgSignalIntent) returns (MsgSignalIntentResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/interchainstaking/intent"
+      body : "*"
+    };
+  };
+
+  rpc GovCloseChannel(MsgGovCloseChannel) returns (MsgGovCloseChannelResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/interchainstaking/close_channel"
+      body : "*"
+    };
+  };
+
+  rpc GovReopenChannel(MsgGovReopenChannel)
+      returns (MsgGovReopenChannelResponse) {
+    option (google.api.http) = {
+      post : "/quicksilver/tx/v1/interchainstaking/reopen_channel"
+      body : "*"
+    };
+  };
+}
+
+// MsgRequestRedemption represents a message type to request a burn of qAssets
+// for native assets.
+message MsgRequestRedemption {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  cosmos.base.v1beta1.Coin value = 1
+      [ (gogoproto.nullable) = false, (gogoproto.moretags) = "yaml:\"coin\"" ];
+  string destination_address = 2
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string from_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+// MsgSignalIntent represents a message type for signalling voting intent for
+// one or more validators.
+message MsgSignalIntent {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  string intents = 2 [ (gogoproto.moretags) = "yaml:\"intents\"" ];
+  string from_address = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+}
+
+// MsgRequestRedemptionResponse defines the MsgRequestRedemption response type.
+message MsgRequestRedemptionResponse {}
+
+// MsgSignalIntentResponse defines the MsgSignalIntent response type.
+message MsgSignalIntentResponse {}

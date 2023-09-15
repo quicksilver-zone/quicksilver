@@ -297,7 +297,7 @@ func (*Keeper) HandleTimeout(_ sdk.Context, _ channeltypes.Packet) error {
 	return nil
 }
 
-//----------------------------------------------------------------
+// ----------------------------------------------------------------
 
 func (k *Keeper) HandleMsgTransfer(ctx sdk.Context, msg sdk.Msg) error {
 	k.Logger(ctx).Info("Received MsgTransfer acknowledgement")
