@@ -1795,7 +1795,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@cosmos-kit/core@npm:^2.0.3, @cosmos-kit/core@npm:^2.5.3":
+"@cosmos-kit/core@npm:^2.5.3":
   version: 2.5.3
   resolution: "@cosmos-kit/core@npm:2.5.3"
   dependencies:
@@ -8049,7 +8049,7 @@ __metadata:
     "@cosmjs/cosmwasm-stargate": 0.29.5
     "@cosmjs/proto-signing": ^0.31.1
     "@cosmjs/stargate": 0.29.5
-    "@cosmos-kit/core": ^2.0.3
+    "@cosmos-kit/core": ^2.6.3
     "@cosmos-kit/cosmostation": ^2.0.3
     "@cosmos-kit/keplr": ^2.3.10
     "@cosmos-kit/leap": ^2.3.7
