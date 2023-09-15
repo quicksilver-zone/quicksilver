@@ -1,0 +1,52 @@
+syntax = "proto3";
+package quicksilver.claimsmanager.v1;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos_proto/cosmos.proto";
+import "quicksilver/claimsmanager/v1/claimsmanager.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/claimsmanager/types";
+
+// Query provides defines the gRPC querier service.
+service Query {
+  // Claims returns all zone claims from the current epoch.
+  rpc Claims(QueryClaimsRequest) returns (QueryClaimsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/claimsmanager/v1/claims/{chain_id}";
+  }
+
+  // LastEpochClaims returns all zone claims from the last epoch.
+  rpc LastEpochClaims(QueryClaimsRequest) returns (QueryClaimsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/claimsmanager/v1/previous_epoch_claims/{chain_id}";
+  }
+
+  // UserClaims returns all zone claims for a given address from the current
+  // epoch.
+  rpc UserClaims(QueryClaimsRequest) returns (QueryClaimsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/claimsmanager/v1/user/{address}/claims";
+  }
+
+  // UserLastEpochClaims returns all zone claims for a given address from the
+  // last epoch.
+  rpc UserLastEpochClaims(QueryClaimsRequest) returns (QueryClaimsResponse) {
+    option (google.api.http).get =
+        "/quicksilver/claimsmanager/v1/user/{address}/previous_epoch_claims";
+  }
+}
+
+// QueryClaimsRequest is the request type for the Query/Claims RPC method.
+message QueryClaimsRequest {
+  string chain_id = 1 [ (gogoproto.moretags) = "yaml:\"chain_id\"" ];
+  string address = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// QueryClaimsResponse is the response type for the Query/Claims RPC method.
+message QueryClaimsResponse {
+  repeated Claim claims = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
