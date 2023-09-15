@@ -1,0 +1,64 @@
+syntax = "proto3";
+package quicksilver.interchainstaking.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+import "quicksilver/interchainstaking/v1/interchainstaking.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
+
+message Params_v1 {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 deposit_interval = 1;
+  uint64 validatorset_interval = 2;
+  string commission_rate = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message Params {
+  option (gogoproto.equal) = true;
+  option (gogoproto.goproto_stringer) = false;
+
+  uint64 deposit_interval = 1;
+  uint64 validatorset_interval = 2;
+  string commission_rate = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  bool unbonding_enabled = 4;
+}
+
+message DelegationsForZone {
+  string chain_id = 1;
+  repeated Delegation delegations = 2;
+}
+
+message DelegatorIntentsForZone {
+  string chain_id = 1;
+  repeated DelegatorIntent delegation_intent = 2;
+  bool snapshot = 3;
+}
+
+// GenesisState defines the interchainstaking module's genesis state.
+message GenesisState {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated Zone zones = 2 [ (gogoproto.nullable) = false ];
+  repeated Receipt receipts = 3 [ (gogoproto.nullable) = false ];
+  repeated DelegationsForZone delegations = 4 [ (gogoproto.nullable) = false ];
+  repeated DelegationsForZone performance_delegations = 5
+      [ (gogoproto.nullable) = false ];
+  repeated DelegatorIntentsForZone delegator_intents = 6
+      [ (gogoproto.nullable) = false ];
+  repeated PortConnectionTuple port_connections = 7
+      [ (gogoproto.nullable) = false ];
+  repeated WithdrawalRecord withdrawal_records = 8
+      [ (gogoproto.nullable) = false ];
+}

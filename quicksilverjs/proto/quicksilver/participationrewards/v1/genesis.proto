@@ -1,0 +1,13 @@
+syntax = "proto3";
+package quicksilver.participationrewards.v1;
+
+import "gogoproto/gogo.proto";
+import "quicksilver/participationrewards/v1/participationrewards.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/participationrewards/types";
+
+// GenesisState defines the participationrewards module's genesis state.
+message GenesisState {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated KeyedProtocolData protocol_data = 2;
+}

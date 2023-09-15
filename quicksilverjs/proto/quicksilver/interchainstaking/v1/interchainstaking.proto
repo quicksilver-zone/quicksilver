@@ -1,0 +1,193 @@
+syntax = "proto3";
+package quicksilver.interchainstaking.v1;
+
+import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
+
+message Zone {
+  string connection_id = 1;
+  string chain_id = 2;
+  ICAAccount deposit_address = 3;
+  ICAAccount withdrawal_address = 4;
+  ICAAccount performance_address = 5;
+  ICAAccount delegation_address = 6;
+  string account_prefix = 7;
+  string local_denom = 8;
+  string base_denom = 9;
+  string redemption_rate = 10 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string last_redemption_rate = 11 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  repeated Validator validators = 12;
+  repeated ValidatorIntent aggregate_intent = 13
+      [ (gogoproto.castrepeated) = "ValidatorIntents" ];
+  bool multi_send = 14;
+  bool liquidity_module = 15;
+  uint32 withdrawal_waitgroup = 16;
+  bytes ibc_next_validators_hash = 17;
+  uint64 validator_selection_allocation = 18;
+  uint64 holdings_allocation = 19;
+  int64 last_epoch_height = 20; // deprecated remove me.
+  string tvl = 21 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  int64 unbonding_period = 22;
+  int64 messages_per_tx = 23;
+}
+
+message ICAAccount {
+  string address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  // balance defines the different coins this balance holds.
+  repeated cosmos.base.v1beta1.Coin balance = 2 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+  string port_name = 3;
+  string withdrawal_address = 4;
+  uint32 balance_waitgroup = 5;
+}
+
+message Distribution {
+  string valoper = 1;
+  uint64 amount = 2;
+}
+
+message WithdrawalRecord {
+  string chain_id = 1;
+  string delegator = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated Distribution distribution = 3;
+  string recipient = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated cosmos.base.v1beta1.Coin amount = 5 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.v1beta1.Coin burn_amount = 6 [
+    (cosmos_proto.scalar) = "cosmos.Coin",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable) = false
+  ];
+  string txhash = 7;
+  int32 status = 8;
+  google.protobuf.Timestamp completion_time = 9
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+}
+
+message UnbondingRecord {
+  string chain_id = 1;
+  int64 epoch_number = 2;
+  string validator = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated string related_txhash = 4;
+}
+
+message RedelegationRecord {
+  string chain_id = 1;
+  int64 epoch_number = 2;
+  string source = 3 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string destination = 4 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  int64 amount = 5;
+  google.protobuf.Timestamp completion_time = 6
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+}
+
+message TransferRecord {
+  string sender = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string recipient = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin amount = 3 [
+    (cosmos_proto.scalar) = "cosmos.Coin",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message Validator {
+  string valoper_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string commission_rate = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string delegator_shares = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string voting_power = 4 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable) = false
+  ];
+  string score = 5 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  string status = 6;
+  bool jailed = 7;
+  bool tombstoned = 8;
+  google.protobuf.Timestamp jailed_since = 9
+      [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+}
+
+message DelegatorIntent {
+  string delegator = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  repeated ValidatorIntent intents = 2
+      [ (gogoproto.castrepeated) = "ValidatorIntents" ];
+}
+
+message ValidatorIntent {
+  string valoper_address = 1 [
+    (cosmos_proto.scalar) = "cosmos.AddressString",
+    json_name = "valoper_address"
+  ];
+  string weight = 2 [
+    (gogoproto.moretags) = "yaml:\"weight\"",
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message Delegation {
+  string delegation_address = 1
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string validator_address = 2
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  cosmos.base.v1beta1.Coin amount = 3 [
+    (cosmos_proto.scalar) = "cosmos.Coin",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Coin",
+    (gogoproto.nullable) = false
+  ];
+  int64 height = 4;
+  int64 redelegation_end = 5;
+}
+
+message PortConnectionTuple {
+  string connection_id = 1;
+  string port_id = 2;
+}
+
+message Receipt {
+  string chain_id = 1;
+  string sender = 2 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string txhash = 3;
+  repeated cosmos.base.v1beta1.Coin amount = 4 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp first_seen = 5
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
+  google.protobuf.Timestamp completed = 6
+      [ (gogoproto.nullable) = true, (gogoproto.stdtime) = true ];
+}

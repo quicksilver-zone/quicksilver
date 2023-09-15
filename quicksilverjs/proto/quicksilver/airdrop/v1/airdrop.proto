@@ -1,0 +1,105 @@
+syntax = "proto3";
+package quicksilver.airdrop.v1;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/timestamp.proto";
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
+
+// Action is used as an enum to denote specific actions or tasks.
+enum Action {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  // Undefined action (per protobuf spec)
+  ActionUndefined = 0;
+  // Initial claim action
+  ActionInitialClaim = 1;
+  // Deposit tier 1 (e.g. > 5% of base_value)
+  ActionDepositT1 = 2;
+  // Deposit tier 2 (e.g. > 10% of base_value)
+  ActionDepositT2 = 3;
+  // Deposit tier 3 (e.g. > 15% of base_value)
+  ActionDepositT3 = 4;
+  // Deposit tier 4 (e.g. > 22% of base_value)
+  ActionDepositT4 = 5;
+  // Deposit tier 5 (e.g. > 30% of base_value)
+  ActionDepositT5 = 6;
+  // Active QCK delegation
+  ActionStakeQCK = 7;
+  // Intent is set
+  ActionSignalIntent = 8;
+  // Cast governance vote on QS
+  ActionQSGov = 9;
+  // Governance By Proxy (GbP): cast vote on remote zone
+  ActionGbP = 10;
+  // Provide liquidity on Osmosis
+  ActionOsmosis = 11;
+}
+
+// Status is used as an enum to denote zone status.
+enum Status {
+  option (gogoproto.goproto_enum_prefix) = false;
+
+  StatusUndefined = 0;
+  StatusActive = 1;
+  StatusFuture = 2;
+  StatusExpired = 3;
+}
+
+// ZoneDrop represents an airdrop for a specific zone.
+message ZoneDrop {
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1;
+  google.protobuf.Timestamp start_time = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"start_time\""
+  ];
+  google.protobuf.Duration duration = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "duration,omitempty",
+    (gogoproto.moretags) = "yaml:\"duration\""
+  ];
+  google.protobuf.Duration decay = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdduration) = true,
+    (gogoproto.jsontag) = "decay,omitempty",
+    (gogoproto.moretags) = "yaml:\"decay\""
+  ];
+  uint64 allocation = 5;
+  repeated string actions = 6 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
+  ];
+  bool is_concluded = 7;
+}
+
+// ClaimRecord represents a users' claim (including completed claims) for a
+// given zone.
+message ClaimRecord {
+  option (gogoproto.goproto_getters) = false;
+
+  string chain_id = 1;
+  string address = 2;
+  // Protobuf3 does not allow enum as map key
+  map<int32, CompletedAction> actions_completed = 3;
+  uint64 max_allocation = 4;
+  uint64 base_value = 5;
+}
+
+// CompletedAction represents a claim action completed by the user.
+message CompletedAction {
+  option (gogoproto.goproto_getters) = false;
+
+  google.protobuf.Timestamp complete_time = 1 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (gogoproto.moretags) = "yaml:\"complete_time\""
+  ];
+  uint64 claim_amount = 2;
+}
