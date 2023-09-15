@@ -4,12 +4,13 @@ import (
 	fmt "fmt"
 	"testing"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/crypto/ed25519"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // TestMsgCreateDenom tests if valid/invalid create denom messages are properly validated/invalidated.

@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
-	"github.com/quicksilver-zone/quicksilver/wasmbinding/bindings"
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdkioerrors "cosmossdk.io/errors"
@@ -13,6 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/wasmbinding/bindings"
 )
 
 // StargateQuerier dispatches whitelisted stargate queries.

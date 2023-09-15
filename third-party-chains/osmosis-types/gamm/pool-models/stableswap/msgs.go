@@ -1,12 +1,12 @@
 package stableswap
 
 import (
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-
 	sdkioerrors "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
 )
 
 const (

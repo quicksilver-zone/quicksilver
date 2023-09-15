@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"github.com/ingenuity-build/multierror"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type TokenValues map[string]sdk.Dec

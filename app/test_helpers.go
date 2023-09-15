@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
-	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto/secp256k1"
@@ -25,6 +24,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 )
 
 // EmptyAppOptions is a stub implementing AppOptions.

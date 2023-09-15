@@ -5,12 +5,13 @@ import (
 	"math"
 	"sort"
 
-	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/utils"
 )
 
 // CalculateAllocationDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
