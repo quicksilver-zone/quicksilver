@@ -227,7 +227,7 @@ func (s *StargateTestSuite) TestDeterministicJsonMarshal() {
 		responseProtoStruct interface{}
 		expectedProto       func() proto.Message
 	}{
-		/**
+		/*
 		   * Origin Response
 		   * balances:<denom:"bar" amount:"30" > pagination:<next_key:"foo" >
 		   * New Version Response
@@ -274,7 +274,7 @@ func (s *StargateTestSuite) TestDeterministicJsonMarshal() {
 				}
 			},
 		},
-		/**
+		/*
 		  // Origin proto
 		  message QueryAccountResponse {
 		    // account defines the account of the corresponding address.
