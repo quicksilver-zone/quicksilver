@@ -307,7 +307,8 @@ func (suite *KeeperTestSuite) TestCalcUserHoldingsAllocations() {
 			suite.True(tt.remainder.Equal(remainder))
 
 			// distribute assets to users; check remainder (to be distributed next time!)
-			appA.ParticipationRewardsKeeper.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address)
+			err := appA.ParticipationRewardsKeeper.DistributeToUsersFromAddress(ctx, icsRewardsAllocations, zone.WithdrawalAddress.Address)
+			suite.NoError(err)
 			icsAddress, _ := addressutils.AddressFromBech32(zone.WithdrawalAddress.Address, "")
 			icsBalance := appA.BankKeeper.GetAllBalances(ctx, icsAddress)
 			suite.ElementsMatch(tt.icsRemainder, icsBalance)

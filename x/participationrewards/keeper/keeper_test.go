@@ -316,7 +316,8 @@ func (suite *KeeperTestSuite) setupTestZones() {
 		},
 	}
 	for _, cosmosVal := range cosmosVals {
-		quicksilver.InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zoneCosmos.ChainId, cosmosVal)
+		err = quicksilver.InterchainstakingKeeper.SetValidator(suite.chainA.GetContext(), zoneCosmos.ChainId, cosmosVal)
+		suite.NoError(err)
 	}
 
 	withdrawalAddress := addressutils.GenerateAddressForTestWithPrefix("osmo")

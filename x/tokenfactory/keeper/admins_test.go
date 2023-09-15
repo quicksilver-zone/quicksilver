@@ -388,6 +388,7 @@ func (s *KeeperTestSuite) TestSetDenomMetaData() {
 		},
 	} {
 		s.Run(fmt.Sprintf("Case %s", tc.desc), func() {
+			tc := tc
 			bankKeeper := s.App.BankKeeper
 			res, err := s.msgServer.SetDenomMetadata(sdk.WrapSDKContext(s.Ctx), &tc.msgSetDenomMetadata)
 			if tc.expectedPass {
