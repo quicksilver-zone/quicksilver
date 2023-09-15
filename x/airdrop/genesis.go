@@ -3,10 +3,10 @@ package airdrop
 import (
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the airdrop module's state from a provided genesis

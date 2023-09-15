@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 var _ types.QueryServer = Keeper{}
