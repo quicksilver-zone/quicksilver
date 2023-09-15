@@ -3,12 +3,12 @@ package crescenttypes
 import (
 	"fmt"
 
-	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
-	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
-
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 type ParticipationRewardsKeeper interface {

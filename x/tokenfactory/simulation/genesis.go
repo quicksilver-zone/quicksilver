@@ -6,10 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // RandomizedGenState generates a random GenesisState for tokenfactory.

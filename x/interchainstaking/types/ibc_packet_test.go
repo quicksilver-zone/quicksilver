@@ -3,8 +3,9 @@ package types_test
 import (
 	"testing"
 
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func TestParseMsgMemo(t *testing.T) {

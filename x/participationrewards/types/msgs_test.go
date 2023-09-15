@@ -5,13 +5,14 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
-	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 func TestMsgSubmitClaim_ValidateBasic(t *testing.T) {

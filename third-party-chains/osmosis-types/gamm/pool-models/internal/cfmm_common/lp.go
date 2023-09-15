@@ -3,13 +3,13 @@ package cfmm_common
 import (
 	"errors"
 
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
-	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
-
 	sdkioerrors "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/gamm"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
 )
 
 const errMsgFormatSharesLargerThanMax = "%s resulted shares is larger than the max amount of %s"
