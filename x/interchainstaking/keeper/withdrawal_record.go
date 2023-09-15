@@ -32,7 +32,7 @@ func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string,
 	k.SetWithdrawalRecord(ctx, record)
 }
 
-///----------------------------------------------------------------
+// ----------------------------------------------------------------
 
 // GetWithdrawalRecord returns withdrawal record info by zone and delegator.
 func (k *Keeper) GetWithdrawalRecord(ctx sdk.Context, chainID, txhash string, status int32) (types.WithdrawalRecord, bool) {

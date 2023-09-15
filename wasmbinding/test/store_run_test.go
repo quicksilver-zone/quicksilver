@@ -90,7 +90,8 @@ func TestInstantiateContract(t *testing.T) {
 	quicksilverApp, ctx := CreateTestInput(t)
 	funder := RandomAccountAddress()
 	benefit, arb := RandomAccountAddress(), RandomAccountAddress()
-	FundAccount(quicksilverApp.BankKeeper, ctx, funder, sdk.NewCoins(coin))
+	err := FundAccount(quicksilverApp.BankKeeper, ctx, funder, sdk.NewCoins(coin))
+	require.NoError(t, err)
 
 	storeCodeViaProposal(t, ctx, quicksilverApp, funder)
 	contractKeeper := keeper.NewDefaultPermissionKeeper(quicksilverApp.WasmKeeper)
