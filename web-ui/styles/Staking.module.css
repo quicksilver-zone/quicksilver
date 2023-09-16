@@ -36,6 +36,15 @@
     border-bottom: 1px dashed #CDCDCD
 }
 
+.modal_stat_key {
+    color: var(--neutral-100, #CDCDCD);
+    font-size: 15px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%;
+    /* 21px */
+}
+
 .stat_info_value {
     color: var(--neutral-50, #FBFBFB);
     text-align: right;
@@ -95,7 +104,6 @@
 .in_color {
     font-weight: bold;
     color: #E77728;
-    font-size: 15px;
 }
 
 .switch_network_modal {
@@ -115,7 +123,7 @@
 
 .tableMainText {
     font-weight: bold;
-    font-size: 19px;
+    font-size: 15px;
 }
 
 .tableSubText {

@@ -30,10 +30,10 @@ const ValidatorCard = (props) => {
             <Box
                 padding={'1em 0'}
                 borderRight={'solid 2px #4D4D4D'}
-                w={'95%'}
+                w={'90%'}
             >
                 <Flex>
-                    <Center gap={'10px'}>
+                    <Center gap={'5px'} fontSize='15px'>
                         <Checkbox colorScheme='orange' borderColor={'#E77728'} />
                         <IconButton
                             variant='ghost'
@@ -76,14 +76,14 @@ const ValidatorCard = (props) => {
                 </Center>
             </Flex>
             <Flex justify={'start'} padding={'1em 0'}>
-                <Center borderRadius={'10px'} backgroundColor={'#9E9E9E'} w={'50%'} padding={'.5em'}>
+                <Center borderRadius={'10px'} backgroundColor={'#9E9E9E'} w={'70%'} padding={'.5em'}>
                     <Text className={`${stakingStyles.tableMainText}`}>
                         {props.record}
                     </Text>
                 </Center>
             </Flex>
             <Flex justify={'start'} padding={'1em 0'}>
-                <Center borderRadius={'10px'} backgroundColor={'#1E421E'} w={'50%'} padding={'.5em'}>
+                <Center borderRadius={'10px'} backgroundColor={'#1E421E'} w={'70%'} padding={'.5em'}>
                     <Text className={`${stakingStyles.tableMainText}`}>
                         {`Level 0${props.prScore}`}
                     </Text>
