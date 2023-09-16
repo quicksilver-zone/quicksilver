@@ -61,7 +61,7 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 		})
 	}
 	// add unallocated dust.
-	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding)
+	msgs[0].Amount = msgs[0].Amount.AddAmount(outstanding) //nolint:gosec
 	sdkMsgs := make([]sdk.Msg, 0)
 	for _, msg := range msgs {
 		sdkMsgs = append(sdkMsgs, sdk.Msg(msg))

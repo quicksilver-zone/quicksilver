@@ -363,21 +363,21 @@ func V010404beta7UpgradeHandler(
 		)
 
 		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation icstypes.RedelegationRecord) (stop bool) {
-			var UnbondingPeriod int64
+			var unbondingPeriod int64
 			switch redelegation.ChainId {
 			case "theta-testnet-001":
-				UnbondingPeriod = thetaUnbondingPeriod
+				unbondingPeriod = thetaUnbondingPeriod
 			case "uni-6":
-				UnbondingPeriod = uniUnbondingPeriod
+				unbondingPeriod = uniUnbondingPeriod
 			case "osmo-test-5":
-				UnbondingPeriod = osmoUnbondingPeriod
+				unbondingPeriod = osmoUnbondingPeriod
 			case "regen-redwood-1":
-				UnbondingPeriod = regenUnbondingPeriod
+				unbondingPeriod = regenUnbondingPeriod
 			}
 
 			epochInfo := appKeepers.EpochsKeeper.GetEpochInfo(ctx, epochtypes.EpochIdentifierEpoch)
 
-			if UnbondingPeriod < (epochInfo.CurrentEpoch-redelegation.EpochNumber)*epochDurations {
+			if unbondingPeriod < (epochInfo.CurrentEpoch-redelegation.EpochNumber)*epochDurations {
 				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("garbage collecting completed redelegations", "key", key, "completion", redelegation.CompletionTime)
 				appKeepers.InterchainstakingKeeper.DeleteRedelegationRecordByKey(ctx, append(icstypes.KeyPrefixRedelegationRecord, key...))
 			}
@@ -404,21 +404,21 @@ func V010404rc0UpgradeHandler(
 		)
 
 		appKeepers.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation icstypes.RedelegationRecord) (stop bool) {
-			var UnbondingPeriod int64
+			var unbondingPeriod int64
 			switch redelegation.ChainId {
 			case "theta-testnet-001":
-				UnbondingPeriod = thetaUnbondingPeriod
+				unbondingPeriod = thetaUnbondingPeriod
 			case "uni-6":
-				UnbondingPeriod = uniUnbondingPeriod
+				unbondingPeriod = uniUnbondingPeriod
 			case "osmo-test-5":
-				UnbondingPeriod = osmoUnbondingPeriod
+				unbondingPeriod = osmoUnbondingPeriod
 			case "regen-redwood-1":
-				UnbondingPeriod = regenUnbondingPeriod
+				unbondingPeriod = regenUnbondingPeriod
 			}
 
 			epochInfo := appKeepers.EpochsKeeper.GetEpochInfo(ctx, epochtypes.EpochIdentifierEpoch)
 
-			if UnbondingPeriod < (epochInfo.CurrentEpoch-redelegation.EpochNumber)*epochDurations {
+			if unbondingPeriod < (epochInfo.CurrentEpoch-redelegation.EpochNumber)*epochDurations {
 				appKeepers.InterchainstakingKeeper.Logger(ctx).Info("garbage collecting completed redelegations", "key", key, "completion", redelegation.CompletionTime)
 				appKeepers.InterchainstakingKeeper.DeleteRedelegationRecordByKey(ctx, append(icstypes.KeyPrefixRedelegationRecord, key...))
 			}
@@ -685,7 +685,7 @@ func V010404beta10UpgradeHandler(
 //		}
 //		return mm.RunMigrations(ctx, configurator, fromVM)
 //	}
-//}
+// }
 //
 // func V010400rc6UpgradeHandler(
 //	mm *module.Manager,

@@ -185,7 +185,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 
 // TODO: convert to keeper tests
 
-/*func TestZone_GetBondedValidatorAddressesAsSlice(t *testing.T) {
+/* func TestZone_GetBondedValidatorAddressesAsSlice(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom"}
 	zone.Validators = append(zone.Validators, &types.Validator{
 		ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
@@ -299,4 +299,4 @@ func TestZone_GetAggregateIntentOrDefault(t *testing.T) {
 	}
 	actual := zone.GetAggregateIntentOrDefault()
 	require.Equal(t, expected, actual)
-}*/
+} */
