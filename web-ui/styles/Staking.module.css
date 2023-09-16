@@ -1,0 +1,124 @@
+.staking_container {
+    box-shadow: 0px 0px 5px 0px rgba(255, 255, 255, 0.6);
+    color: rgba(251, 251, 251, 1);
+    padding: 2em;
+    border-radius: 10px;
+    background: rgb(42, 42, 42, 0.6);
+    backdrop-filter: blur(7px);
+
+}
+
+.pannel_mode_btn {
+    background-color: transparent;
+    border: none;
+    font-size: 1.25em;
+}
+
+.amount_btn {
+    color: var(--neutral-50, #FBFBFB);
+    font-size: 13px;
+    background-color: rgba(231, 119, 40, 0.20);
+    ;
+}
+
+.stat_info {
+    margin: 10px 0;
+    font-size: 15px
+}
+
+.stat_info_key {
+    color: var(--neutral-100, #CDCDCD);
+    font-size: 15px;
+    font-style: normal;
+    line-height: 150%;
+    /* 24px */
+    text-transform: capitalize;
+    border-bottom: 1px dashed #CDCDCD
+}
+
+.stat_info_value {
+    color: var(--neutral-50, #FBFBFB);
+    text-align: right;
+    font-size: 15px;
+    font-style: normal;
+    font-weight: bold;
+    line-height: 150%;
+    /* 24px */
+}
+
+.input_prefix {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.amount_input_balance {
+    color: rgba(158, 158, 158, 1);
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-top: 10px;
+}
+
+.verticalLine {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.00) 0%, #FFF 44.27%, rgba(255, 255, 255, 0.00) 100%);
+    width: 1px;
+    height: 100%;
+    opacity: 0.5;
+}
+
+.horizontalLine {
+    margin: 1em 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.00) 0%, #FFF 44.27%, rgba(255, 255, 255, 0.00) 100%);
+}
+
+.panel_container {
+    padding: 1em 2em;
+    width: 200%;
+    font-size: 18px;
+}
+
+#stake_btn {
+    padding: 0 1em 0 0;
+}
+
+#unstake_btn {
+    padding: 0 0 0 1em;
+}
+
+.chosen {
+    color: #E77728;
+}
+
+.in_color {
+    font-weight: bold;
+    color: #E77728;
+    font-size: 15px;
+}
+
+.switch_network_modal {
+    border-radius: 20px;
+    background: linear-gradient(207deg, rgba(255, 255, 255, 0.09) -46.03%, rgba(255, 255, 255, 0.00) 128.13%), #0E0E0E;
+}
+
+.modal_m_size {
+    font-size: 15px;
+    color: #CDCDCD;
+}
+
+.switch_network_modal_sub_text {
+    font-size: 14px;
+    color: rgba(151, 151, 151, 1);
+}
+
+.tableMainText {
+    font-weight: bold;
+    font-size: 19px;
+}
+
+.tableSubText {
+    font-size: 15px;
+    color: rgba(158, 158, 158, 1);
+}
