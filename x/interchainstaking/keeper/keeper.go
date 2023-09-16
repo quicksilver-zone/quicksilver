@@ -683,6 +683,9 @@ func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryVal
 // UnmarshalValidatorsRequest attempts to umarshal  a byte slice into a QueryValidatorsRequest.
 func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
 	validatorsReq := stakingtypes.QueryValidatorsRequest{}
+	if len(data) == 0 {
+		return validatorsRes, errors.New("attempted to unmarshal zero length byte slice (8)")
+	}
 	err := k.cdc.Unmarshal(data, &validatorsReq)
 	if err != nil {
 		return validatorsReq, err
