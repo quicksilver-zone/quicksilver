@@ -108,7 +108,7 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 	// unmarshal request payload
 	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	if len(query.Request) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (2)")
+		return errors.New("attempted to unmarshal zero length byte slice")
 	}
 	err := k.cdc.Unmarshal(query.Request, &rewardsQuery)
 	if err != nil {
@@ -132,7 +132,7 @@ func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 
 	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
 	if len(query.Request) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (3)")
+		return errors.New("attempted to unmarshal zero length byte slice")
 	}
 	err := k.cdc.Unmarshal(query.Request, &delegationQuery)
 	if err != nil {
@@ -231,7 +231,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 	txs := tx.GetTxsEventResponse{}
 
 	if len(args) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (4)")
+		return errors.New("attempted to unmarshal zero length byte slice")
 	}
 	err := k.cdc.Unmarshal(args, &txs)
 	if err != nil {
@@ -408,7 +408,7 @@ func (k *Keeper) CheckTMHeaderForZone(ctx sdk.Context, zone *types.Zone, res icq
 func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	// check validity
 	if len(args) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (6)")
+		return errors.New("attempted to unmarshal zero length byte slice")
 	}
 
 	zone, found := k.GetZone(ctx, query.GetChainId())
@@ -558,7 +558,7 @@ func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	// this shouldn't happen because query.Request comes from Quicksilver
 	if len(query.Request) == 0 {
-		return errors.New("attempted to unmarshal zero length byte slice (7)")
+		return errors.New("attempted to unmarshal zero length byte slice")
 	}
 	err := k.cdc.Unmarshal(query.Request, &balanceQuery)
 	if err != nil {

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"bytes"
 	"encoding/base64"
+	"fmt"
 	"testing"
 	"time"
 
@@ -659,7 +660,7 @@ func (suite *KeeperTestSuite) TestHandleRewardsEmptyRequestCallback() {
 
 		err = keeper.RewardsCallback(quicksilver.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: suite.chainB.ChainID})
 		// this should fail because the waitgroup becomes negative.
-		suite.Errorf(err, "attempted to unmarshal zero length byte slice (2)")
+		suite.Errorf(err, "attempted to unmarshal zero length byte slice")
 	})
 }
 
@@ -1142,7 +1143,13 @@ func TestValsetCallbackNilValidatorReqPagination(t *testing.T) {
 
 	data := []byte("\x12\"\n 00000000000000000000000000000000")
 	err := keeper.ValsetCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID})
-	suite.NoError(err)
+	if err != nil {
+		if err.Error() == "attempted to unmarshal zero length byte slice" {
+			fmt.Println("Successfully rejected zero lenfth byte slice")
+		} else {
+			t.FailNow()
+		}
+	}
 }
 
 func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {

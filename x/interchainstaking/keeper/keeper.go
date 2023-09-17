@@ -670,40 +670,31 @@ func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64)
 func (k *Keeper) UnmarshalValidatorsResponse(data []byte) (stakingtypes.QueryValidatorsResponse, error) {
 	validatorsRes := stakingtypes.QueryValidatorsResponse{}
 	if len(data) == 0 {
-		return validatorsRes, errors.New("attempted to unmarshal zero length byte slice (8)")
+		return validatorsRes, errors.New("attempted to unmarshal zero length byte slice")
 	}
 	err := k.cdc.Unmarshal(data, &validatorsRes)
-	if err != nil {
-		return validatorsRes, err
-	}
 
-	return validatorsRes, nil
+	return validatorsRes, err
 }
 
 // UnmarshalValidatorsRequest attempts to umarshal  a byte slice into a QueryValidatorsRequest.
 func (k *Keeper) UnmarshalValidatorsRequest(data []byte) (stakingtypes.QueryValidatorsRequest, error) {
 	validatorsReq := stakingtypes.QueryValidatorsRequest{}
 	if len(data) == 0 {
-		return validatorsReq, errors.New("attempted to unmarshal zero length byte slice (8)")
+		return validatorsReq, errors.New("attempted to unmarshal zero length byte slice")
 	}
 	err := k.cdc.Unmarshal(data, &validatorsReq)
-	if err != nil {
-		return validatorsReq, err
-	}
 
-	return validatorsReq, nil
+	return validatorsReq, err
 }
 
 // UnmarshalValidator attempts to umarshal  a byte slice into a Validator.
 func (k *Keeper) UnmarshalValidator(data []byte) (stakingtypes.Validator, error) {
 	validator := stakingtypes.Validator{}
 	if len(data) == 0 {
-		return validator, errors.New("attempted to unmarshal zero length byte slice (9)")
+		return validator, errors.New("attempted to unmarshal zero length byte slice")
 	}
 	err := k.cdc.Unmarshal(data, &validator)
-	if err != nil {
-		return validator, err
-	}
 
-	return validator, nil
+	return validator, err
 }
