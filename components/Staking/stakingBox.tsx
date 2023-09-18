@@ -21,6 +21,7 @@ import {
 import React, { useEffect } from 'react';
 
 import { MultiModal } from './modals/multiStakeModal';
+import StakingProcessModal from './modals/stakingProcessModal';
 
 type StakingBoxProps = {
   selectedOption: string;
@@ -192,12 +193,11 @@ export const StakingBox = ({
                 }}
                 onClick={() => setModalOpen(true)}
               >
-                Validator Selection
+                Liquid stake
               </Button>
-              <MultiModal
+              <StakingProcessModal
                 isOpen={isModalOpen}
                 onClose={() => setModalOpen(false)}
-                selectedChainName={selectedChainName}
               />
             </VStack>
           </TabPanel>
