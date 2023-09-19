@@ -291,7 +291,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 	} else {
 		if val.Tombstoned {
 			k.Logger(ctx).Error("Tombstoned validator found", "valoper", validator.OperatorAddress)
-			return fmt.Errorf("%q on chainID: %q was found to already have been tombstoned", validator.OperatorAddress, zone.ChainID)
+			return fmt.Errorf("%q on chainID: %q was found to already have been tombstoned", validator.OperatorAddress, zone.ChainId)
 		}
 
 		if !val.Jailed && validator.IsJailed() {
