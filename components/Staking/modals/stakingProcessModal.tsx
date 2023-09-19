@@ -14,8 +14,8 @@ import {
   StatLabel,
   StatNumber,
 } from '@chakra-ui/react';
-import React from 'react';
 import styled from '@emotion/styled';
+import React from 'react';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -50,6 +50,7 @@ interface StakingModalProps {
   isOpen: boolean;
   onClose: () => void;
   children?: React.ReactNode;
+  tokenAmount: string;
   selectedOption?: {
     name: string;
     value: string;
@@ -62,6 +63,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
   isOpen,
   onClose,
   selectedOption,
+  tokenAmount,
 }) => {
   const [step, setStep] = React.useState(1);
   const getProgressColor = (circleStep: number) => {
@@ -69,7 +71,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
     return 'rgba(255,255,255,0.2)';
   };
 
-  const labels = ['Aprrove staking', 'Staking Atom on QS', 'Atom -> qAtom'];
+  const labels = ['Aprrove staking', 'Staking Atom on QS', 'Atom > qAtom'];
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
@@ -93,7 +95,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
                     LIQUID STAKING
                   </StatLabel>
                   <StatNumber color="white">
-                    1 {selectedOption?.value}
+                    {tokenAmount} {selectedOption?.value}
                   </StatNumber>
                 </Stat>
                 {[1, 2, 3].map((circleStep, index) => (

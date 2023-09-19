@@ -17,8 +17,13 @@ import {
   Button,
   Spacer,
   Spinner,
+  Skeleton,
+  SkeletonText,
 } from '@chakra-ui/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+
+import { useInputBox } from '@/hooks/useInputBox';
+import { useStakingData } from '@/hooks/useStakingData';
 
 import { MultiModal } from './modals/multiStakeModal';
 import StakingProcessModal from './modals/stakingProcessModal';
@@ -39,6 +44,18 @@ export const StakingBox = ({
   isModalOpen,
   setModalOpen,
 }: StakingBoxProps): JSX.Element => {
+  const [tokenAmount, setTokenAmount] = useState<string>('0');
+  const { data, isLoading, refetch } = useStakingData(selectedOption.chainName);
+  const balance = data?.balance;
+  const { renderInputBox, amount, setAmount } = useInputBox(balance);
+  const maxStakingAmount = balance ? parseFloat(data.balance) - 0.00005 : 0;
+  const maxHalfStakingAmount = maxStakingAmount / 2;
+
+  useEffect(() => {
+    refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedOption]);
+
   return (
     <Box
       position="relative"
@@ -124,6 +141,13 @@ export const StakingBox = ({
                   color="complimentary.900"
                   textAlign={'right'}
                   placeholder="amount"
+                  value={tokenAmount}
+                  onChange={(e) => {
+                    const inputValue = parseFloat(e.target.value);
+                    if (inputValue <= maxStakingAmount) {
+                      setTokenAmount(e.target.value);
+                    }
+                  }}
                 />
                 <Flex
                   w="100%"
@@ -133,9 +157,16 @@ export const StakingBox = ({
                   justifyContent="space-between"
                   alignItems="center"
                 >
-                  <Text color="white" fontWeight="light">
-                    Tokens available: 0 {selectedOption.value.toUpperCase()}
-                  </Text>
+                  <Flex gap={4} flexDirection={'row'}>
+                    <Text color="white" fontWeight="light">
+                      Tokens available:{' '}
+                    </Text>
+                    <Text color="complimentary.900" fontWeight="light">
+                      {balance}
+                      {'0'}&nbsp;
+                      {selectedOption.value.toUpperCase()}
+                    </Text>
+                  </Flex>
                   <HStack spacing={2}>
                     <Button
                       _hover={{
@@ -150,6 +181,10 @@ export const StakingBox = ({
                       variant="ghost"
                       w="60px"
                       h="30px"
+                      onClick={() =>
+                        setTokenAmount(maxHalfStakingAmount.toString())
+                      }
+                      isDisabled={!balance}
                     >
                       half
                     </Button>
@@ -166,6 +201,10 @@ export const StakingBox = ({
                       variant="ghost"
                       w="60px"
                       h="30px"
+                      onClick={() =>
+                        setTokenAmount(maxStakingAmount.toString())
+                      }
+                      isDisabled={!balance}
                     >
                       max
                     </Button>
@@ -201,6 +240,7 @@ export const StakingBox = ({
                 Liquid stake
               </Button>
               <StakingProcessModal
+                tokenAmount={tokenAmount}
                 isOpen={isModalOpen}
                 onClose={() => setModalOpen(false)}
                 selectedOption={selectedOption}
@@ -237,6 +277,8 @@ export const StakingBox = ({
                   color="complimentary.900"
                   textAlign={'right'}
                   placeholder="amount"
+                  value={tokenAmount}
+                  onChange={(e) => setTokenAmount(e.target.value)}
                 />
                 <Flex
                   w="100%"
@@ -246,9 +288,14 @@ export const StakingBox = ({
                   justifyContent="space-between"
                   alignItems="center"
                 >
-                  <Text color="white" fontWeight="light">
-                    Tokens available: 0 q{selectedOption.value.toUpperCase()}
-                  </Text>
+                  <Skeleton isLoaded={!isLoading}>
+                    <SkeletonText>
+                      <Text color="white" fontWeight="light">
+                        Tokens available: 0 q
+                        {selectedOption.value.toUpperCase()}
+                      </Text>
+                    </SkeletonText>
+                  </Skeleton>
 
                   <Button
                     _hover={{
