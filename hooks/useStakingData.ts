@@ -2,11 +2,11 @@ import { useChain } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
 import {
   cosmos,
+  createRpcQueryHooks,
   useRpcClient,
   useRpcEndpoint,
-  createRpcQueryHooks,
 } from 'interchain-query';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   calcTotalDelegation,
@@ -18,6 +18,8 @@ import {
   parseValidators,
 } from '@/utils/staking';
 
+import { useQueryHooks } from './useQueryHooks';
+import { useRpcQueryClient } from './useRpcQueryClient';
 import { getCoin, getExponent } from '../config';
 import { shiftDigits } from '../utils';
 
@@ -26,32 +28,18 @@ import { shiftDigits } from '../utils';
 };
 
 export const useStakingData = (chainName: string) => {
-  const { address, getRpcEndpoint } = useChain(chainName);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { rpcQueryClient } = useRpcQueryClient(chainName);
+
+  const { cosmosQuery, isReady } = useQueryHooks(chainName);
+
+  const { address } = useChain(chainName);
 
   const coin = getCoin(chainName);
   const exp = getExponent(chainName);
 
-  const rpcEndpointQuery = useRpcEndpoint({
-    getter: getRpcEndpoint,
-    options: {
-      enabled: !!address,
-      staleTime: Infinity,
-    },
-  });
-
-  const rpcClientQuery = useRpcClient({
-    rpcEndpoint: rpcEndpointQuery.data || '',
-    options: {
-      enabled: !!address && !!rpcEndpointQuery.data,
-      staleTime: Infinity,
-    },
-  });
-
-  const { cosmos: cosmosQuery } = createRpcQueryHooks({
-    rpc: rpcClientQuery.data,
-  });
-
-  const isDataQueryEnabled = !!address && !!rpcClientQuery.data;
+  const isDataQueryEnabled = !!address;
 
   const balanceQuery = cosmosQuery.bank.v1beta1.useBalance({
     request: {
@@ -59,18 +47,37 @@ export const useStakingData = (chainName: string) => {
       denom: coin.base,
     },
     options: {
-      enabled: isDataQueryEnabled,
+      queryKey: ['balance', chainName],
+      enabled: !!rpcQueryClient,
       select: ({ balance }) => shiftDigits(balance?.amount || '0', -exp),
+      onError: (error) => {
+        console.error('Error fetching balanceQuery:', error);
+        balanceQuery.remove();
+        balanceQuery.refetch();
+      },
     },
   });
 
   const myValidatorsQuery = cosmosQuery.staking.v1beta1.useDelegatorValidators({
     request: {
+      pagination: {
+        key: new Uint8Array(),
+        offset: 0n,
+        limit: 200n,
+        countTotal: true,
+        reverse: false,
+      },
       delegatorAddr: address || '',
-      pagination: undefined,
     },
     options: {
+      queryKey: ['delegatorValidators', chainName],
       enabled: isDataQueryEnabled,
+
+      onError: (error) => {
+        console.error('Error fetching myValidatorsQuery:', error);
+        myValidatorsQuery.remove();
+        myValidatorsQuery.refetch();
+      },
       select: ({ validators }) => parseValidators(validators),
     },
   });
@@ -81,8 +88,14 @@ export const useStakingData = (chainName: string) => {
         delegatorAddress: address || '',
       },
       options: {
+        queryKey: ['delegationTotalRewards', chainName],
         enabled: isDataQueryEnabled,
         select: (data) => parseRewards(data, coin.base, -exp),
+        onError: (error) => {
+          console.error('Error fetching rewardsQuery:', error);
+          rewardsQuery.remove();
+          rewardsQuery.refetch();
+        },
       },
     });
 
@@ -100,12 +113,18 @@ export const useStakingData = (chainName: string) => {
       },
     },
     options: {
+      queryKey: ['validators', chainName],
       enabled: isDataQueryEnabled,
       select: ({ validators }) => {
         const sorted = validators.sort((a, b) =>
           new BigNumber(b.tokens).minus(a.tokens).toNumber(),
         );
         return parseValidators(sorted);
+      },
+      onError: (error) => {
+        console.error('Error fetching validatorsQuery:', error);
+        validatorsQuery.remove();
+        validatorsQuery.refetch();
       },
     },
   });
@@ -122,38 +141,41 @@ export const useStakingData = (chainName: string) => {
       },
     },
     options: {
+      queryKey: ['delegatorDelegations', chainName],
       enabled: isDataQueryEnabled,
       select: ({ delegationResponses }) =>
         parseDelegations(delegationResponses, -exp),
+      onError: (error) => {
+        console.error('Error fetching delegationsQuery:', error);
+        delegationsQuery.remove();
+        delegationsQuery.refetch();
+      },
     },
   });
 
   const unbondingDaysQuery = cosmosQuery.staking.v1beta1.useParams({
     options: {
+      queryKey: ['params', chainName],
       enabled: isDataQueryEnabled,
       select: ({ params }) => parseUnbondingDays(params),
-    },
-  });
-
-  const annualProvisionsQuery = cosmosQuery.mint.v1beta1.useAnnualProvisions({
-    options: {
-      enabled: isDataQueryEnabled,
-      select: parseAnnualProvisions,
-      retry: false,
-    },
-  });
-
-  const poolQuery = cosmosQuery.staking.v1beta1.usePool({
-    options: {
-      enabled: isDataQueryEnabled,
-      select: ({ pool }) => pool,
+      onError: (error) => {
+        console.error('Error fetching unbondingDaysQuery:', error);
+        unbondingDaysQuery.remove();
+        unbondingDaysQuery.refetch();
+      },
     },
   });
 
   const communityTaxQuery = cosmosQuery.distribution.v1beta1.useParams({
     options: {
+      queryKey: ['distributionParams', chainName],
       enabled: isDataQueryEnabled,
       select: ({ params }) => shiftDigits(params?.communityTax || '0', -18),
+      onError: (error) => {
+        console.error('Error fetching communityTaxQuery:', error);
+        communityTaxQuery.remove();
+        communityTaxQuery.refetch();
+      },
     },
   });
 
@@ -161,27 +183,21 @@ export const useStakingData = (chainName: string) => {
     balance: balanceQuery,
     myValidators: myValidatorsQuery,
     rewards: rewardsQuery,
-    allValidators: validatorsQuery,
     delegations: delegationsQuery,
     unbondingDays: unbondingDaysQuery,
-    annualProvisions: annualProvisionsQuery,
-    pool: poolQuery,
     communityTax: communityTaxQuery,
   };
 
   const queriesWithUnchangingKeys = [
     allQueries.unbondingDays,
-    allQueries.annualProvisions,
-    allQueries.pool,
     allQueries.communityTax,
-    allQueries.allValidators,
   ];
 
   const updatableQueriesAfterMutation = [
     allQueries.balance,
     allQueries.myValidators,
     allQueries.rewards,
-    allQueries.allValidators,
+
     allQueries.delegations,
   ];
 
@@ -190,15 +206,11 @@ export const useStakingData = (chainName: string) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chainName]);
 
-  const isInitialFetching = Object.values(allQueries).some(
-    ({ isLoading }) => isLoading,
-  );
+  const loading = balanceQuery.isFetching || !isReady;
 
-  const isRefetching = Object.values(allQueries).some(
-    ({ isRefetching }) => isRefetching,
-  );
-
-  const isLoading = isInitialFetching || isRefetching;
+  useEffect(() => {
+    setIsLoading(loading);
+  }, [loading]);
 
   type AllQueries = typeof allQueries;
 
@@ -213,46 +225,28 @@ export const useStakingData = (chainName: string) => {
       Object.entries(allQueries).map(([key, query]) => [key, query.data]),
     ) as QueriesData;
 
-    const {
-      allValidators,
-      delegations,
-      rewards,
-      myValidators,
-      annualProvisions,
-      communityTax,
-      pool,
-    } = queriesData;
+    const { delegations, rewards } = queriesData;
 
-    const chainMetadata = { annualProvisions, communityTax, pool };
-
-    const extendedAllValidators = extendValidators(
-      allValidators,
-      delegations,
-      rewards.byValidators,
-      chainMetadata,
-    );
-
-    const extendedMyValidators = extendValidators(
-      myValidators,
-      delegations,
-      rewards.byValidators,
-      chainMetadata,
-    );
+    if (!rewards || !rewards.byValidators) {
+      console.error('Rewards or byValidators is undefined:', rewards);
+      return; // Handle this case, perhaps by returning a default value or setting some error state
+    }
 
     const totalDelegated = calcTotalDelegation(delegations);
 
     return {
       ...queriesData,
-      allValidators: extendedAllValidators,
-      myValidators: extendedMyValidators,
+
       totalDelegated,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading]);
 
   const refetch = () => {
-    updatableQueriesAfterMutation.forEach((query) => query.refetch());
+    Object.values(allQueries).forEach((query) => {
+      query.remove();
+      query.refetch();
+    });
   };
-
   return { data, isLoading, refetch };
 };

@@ -32,7 +32,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
       flex="2"
       p={5}
     >
-      <Image
+      {/* <Image
         alt="embelish"
         src="/img/metalmisc3.png"
         zIndex={1}
@@ -41,7 +41,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
         right="-65px"
         boxSize="135px"
         transform="rotate(25deg)"
-      />
+      /> */}
       <Text fontSize="20px" color="white">
         {selectedOption.value.toUpperCase()}&nbsp;on Quicksilver
       </Text>

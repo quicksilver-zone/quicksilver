@@ -96,7 +96,7 @@ export default function Staking() {
           maxH="80vh"
           h="80vh"
         >
-          <Image
+          {/* <Image
             alt={''}
             src="/img/metalmisc2.png"
             zIndex={-10}
@@ -104,7 +104,7 @@ export default function Staking() {
             bottom="-10"
             left="-10"
             boxSize="120px"
-          />
+          /> */}
           <Flex zIndex={3} direction="column" h="100%">
             {/* Dropdown and Statistic */}
             <Box w="50%">

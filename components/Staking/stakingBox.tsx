@@ -20,6 +20,7 @@ import {
   Skeleton,
   SkeletonText,
 } from '@chakra-ui/react';
+import { useChain } from '@cosmos-kit/react';
 import React, { useEffect, useState } from 'react';
 
 import { useInputBox } from '@/hooks/useInputBox';
@@ -45,16 +46,28 @@ export const StakingBox = ({
   setModalOpen,
 }: StakingBoxProps): JSX.Element => {
   const [tokenAmount, setTokenAmount] = useState<string>('0');
-  const { data, isLoading, refetch } = useStakingData(selectedOption.chainName);
-  const balance = data?.balance;
-  const { renderInputBox, amount, setAmount } = useInputBox(balance);
-  const maxStakingAmount = balance ? parseFloat(data.balance) - 0.00005 : 0;
-  const maxHalfStakingAmount = maxStakingAmount / 2;
-
   useEffect(() => {
-    refetch();
+    setTokenAmount('0');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOption]);
+  }, [selectedOption.chainName]);
+
+  const { address } = useChain(selectedOption.chainName);
+
+  const { data, isLoading, refetch } = useStakingData(selectedOption.chainName);
+
+  const balance = data?.balance;
+
+  const truncatedBalance = Math.floor(Number(balance) * 100) / 100;
+
+  const maxStakingAmount = truncatedBalance
+    ? parseFloat(String(truncatedBalance)) - 0.005
+    : 0;
+
+  const maxHalfStakingAmount = maxStakingAmount / 2;
+  //this shows the wrong amount of tokens available
+  const qAssetAmount = Math.floor(Number(tokenAmount)) * 0.95;
+
+  const [inputError, setInputError] = useState(false);
 
   return (
     <Box
@@ -140,12 +153,24 @@ export const StakingBox = ({
                   }}
                   color="complimentary.900"
                   textAlign={'right'}
-                  placeholder="amount"
+                  placeholder={inputError ? 'Tokens available < 1' : 'amount'}
+                  _placeholder={{
+                    color: inputError ? 'red.500' : 'grey',
+                  }}
                   value={tokenAmount}
                   onChange={(e) => {
-                    const inputValue = parseFloat(e.target.value);
-                    if (inputValue <= maxStakingAmount) {
-                      setTokenAmount(e.target.value);
+                    const validNumberPattern = /^\d*\.?\d*$/;
+                    if (validNumberPattern.test(e.target.value)) {
+                      const inputValue = parseFloat(e.target.value);
+                      if (!isNaN(inputValue)) {
+                        if (inputValue < 1) {
+                          setInputError(true);
+                          setTokenAmount('');
+                        } else if (inputValue <= maxStakingAmount) {
+                          setInputError(false);
+                          setTokenAmount(e.target.value);
+                        }
+                      }
                     }
                   }}
                 />
@@ -157,17 +182,36 @@ export const StakingBox = ({
                   justifyContent="space-between"
                   alignItems="center"
                 >
-                  <Flex gap={4} flexDirection={'row'}>
+                  <Flex
+                    mb={-4}
+                    alignItems="center"
+                    justifyContent={'center'}
+                    gap={4}
+                    flexDirection={'row'}
+                  >
                     <Text color="white" fontWeight="light">
                       Tokens available:{' '}
                     </Text>
-                    <Text color="complimentary.900" fontWeight="light">
-                      {balance}
-                      {'0'}&nbsp;
-                      {selectedOption.value.toUpperCase()}
-                    </Text>
+                    {isLoading ? (
+                      <Skeleton
+                        startColor="complimentary.900"
+                        endColor="complimentary.400"
+                      >
+                        <SkeletonText
+                          w={'95px'}
+                          noOfLines={1}
+                          skeletonHeight={'18px'}
+                        />
+                      </Skeleton>
+                    ) : (
+                      <Text color="complimentary.900" fontWeight="light">
+                        {truncatedBalance}
+                        {'0'}&nbsp;
+                        {selectedOption.value.toUpperCase()}
+                      </Text>
+                    )}
                   </Flex>
-                  <HStack spacing={2}>
+                  <HStack mb={-4} spacing={2}>
                     <Button
                       _hover={{
                         bgColor: 'rgba(255,255,255,0.05)',
@@ -184,7 +228,7 @@ export const StakingBox = ({
                       onClick={() =>
                         setTokenAmount(maxHalfStakingAmount.toString())
                       }
-                      isDisabled={!balance}
+                      isDisabled={!balance || Number(balance) < 1}
                     >
                       half
                     </Button>
@@ -204,7 +248,7 @@ export const StakingBox = ({
                       onClick={() =>
                         setTokenAmount(maxStakingAmount.toString())
                       }
-                      isDisabled={!balance}
+                      isDisabled={!balance || Number(balance) < 1}
                     >
                       max
                     </Button>
@@ -227,7 +271,9 @@ export const StakingBox = ({
                 <Spacer />{' '}
                 {/* This pushes the next Stat component to the right */}
                 <Stat py={4} textAlign="right" color="white">
-                  <StatNumber textColor="complimentary.900">0</StatNumber>
+                  <StatNumber textColor="complimentary.900">
+                    {qAssetAmount}
+                  </StatNumber>
                 </Stat>
               </HStack>
               <Button
@@ -235,7 +281,12 @@ export const StakingBox = ({
                 _hover={{
                   bgColor: '#181818',
                 }}
+                _disabled={{
+                  bgColor: '#181818',
+                  cursor: 'not-allowed',
+                }}
                 onClick={() => setModalOpen(true)}
+                isDisabled={Number(tokenAmount) === 0 || !address}
               >
                 Liquid stake
               </Button>
@@ -329,7 +380,9 @@ export const StakingBox = ({
                 <Spacer />{' '}
                 {/* This pushes the next Stat component to the right */}
                 <Stat py={4} textAlign="right" color="white">
-                  <StatNumber textColor="complimentary.900">0</StatNumber>
+                  <StatNumber textColor="complimentary.900">
+                    {qAssetAmount}
+                  </StatNumber>
                 </Stat>
               </HStack>
               <Button
