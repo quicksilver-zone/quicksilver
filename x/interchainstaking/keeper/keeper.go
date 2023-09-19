@@ -226,8 +226,6 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		case !found:
 			k.Logger(ctx).Debug("Unable to find validator - fetching proof...", "valoper", validator.OperatorAddress)
 			toQuery = true
-		case val.Tombstoned:
-			k.Logger(ctx).Error("Tombstoned validator found", "valoper", validator.OperatorAddress)
 		case !val.CommissionRate.Equal(validator.GetCommission()):
 			k.Logger(ctx).Debug("Validator commission change; fetching proof", "valoper", validator.OperatorAddress, "from", val.CommissionRate, "to", validator.GetCommission())
 			toQuery = true
@@ -291,6 +289,11 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		}
 
 	} else {
+		if val.Tombstoned {
+			k.Logger(ctx).Error("Tombstoned validator found", "valoper", validator.OperatorAddress)
+			return fmt.Errorf("%q on chainID: %q was found to already have been tombstoned", validator.OperatorAddress, zone.ChainID)
+		}
+
 		if !val.Jailed && validator.IsJailed() {
 			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
 
