@@ -11,8 +11,8 @@ require (
 	github.com/client9/misspell v0.3.4
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
-	github.com/cosmos/cosmos-sdk v0.46.15
-	github.com/cosmos/gogoproto v1.4.3
+	github.com/cosmos/cosmos-sdk v0.47.5
+	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/ibc-go/v5 v5.3.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
@@ -51,6 +51,11 @@ require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	cloud.google.com/go/iam v1.1.2 // indirect
 	cloud.google.com/go/storage v1.32.0 // indirect
+	cosmossdk.io/api v0.3.1 // indirect
+	cosmossdk.io/core v0.5.1 // indirect
+	cosmossdk.io/depinject v1.0.0-alpha.4 // indirect
+	cosmossdk.io/log v1.2.1 // indirect
+	cosmossdk.io/tools/rosetta v0.2.1 // indirect
 	filippo.io/edwards25519 v1.0.0 // indirect
 	github.com/4meepo/tagalign v1.3.2 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
@@ -74,7 +79,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.324 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d // indirect
-	github.com/bgentry/speakeasy v0.1.0 // indirect
+	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
 	github.com/bkielbasa/cyclop v1.2.1 // indirect
 	github.com/blizzy78/varnamelen v0.8.0 // indirect
 	github.com/bombsimon/wsl/v3 v3.4.0 // indirect
@@ -88,19 +93,21 @@ require (
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.0.0-20230227094218-b8c73b2037b8 // indirect
-	github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e // indirect
+	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cockroachdb/apd/v2 v2.0.2 // indirect
 	github.com/cockroachdb/errors v1.10.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20230118201751-21c54148d20b // indirect
 	github.com/cockroachdb/pebble v0.0.0-20230213222125-5d8daed0ac88 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
-	github.com/coinbase/rosetta-sdk-go v0.8.3 // indirect
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
+	github.com/cometbft/cometbft v0.37.2 // indirect
 	github.com/confio/ics23/go v0.9.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
-	github.com/cosmos/iavl v0.19.6 // indirect
+	github.com/cosmos/gogogateway v1.2.0 // indirect
+	github.com/cosmos/iavl v0.20.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.12.2 // indirect
+	github.com/cosmos/rosetta-sdk-go v0.10.0 // indirect
 	github.com/creachadair/taskgroup v0.6.0 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/daixiang0/gci v0.11.0 // indirect
@@ -139,9 +146,10 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/godbus/dbus v0.0.0-20190726142602-4481cbc300e2 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
-	github.com/gogo/gateway v1.1.0 // indirect
+	github.com/gogo/googleapis v1.4.1 // indirect
 	github.com/golang/glog v1.1.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/golangci/check v0.0.0-20180506172741-cfe4005ccda2 // indirect
 	github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a // indirect
@@ -181,8 +189,9 @@ require (
 	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.5-0.20210104140557-80c98217689d // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/hdevalence/ed25519consensus v0.0.0-20220222234857-c00d1f31bab3 // indirect
+	github.com/hdevalence/ed25519consensus v0.1.0 // indirect
 	github.com/hexops/gotextdiff v1.0.3 // indirect
+	github.com/huandu/skiplist v1.2.0 // indirect
 	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
@@ -274,7 +283,7 @@ require (
 	github.com/tdakkota/asciicheck v0.2.0 // indirect
 	github.com/tendermint/go-amino v0.16.0 // indirect
 	github.com/tetafro/godot v1.4.11 // indirect
-	github.com/tidwall/btree v1.5.0 // indirect
+	github.com/tidwall/btree v1.6.0 // indirect
 	github.com/timakin/bodyclose v0.0.0-20230421092635-574207250966 // indirect
 	github.com/timonwong/loggercheck v0.9.4 // indirect
 	github.com/tomarrell/wrapcheck/v2 v2.8.1 // indirect
@@ -314,6 +323,7 @@ require (
 	mvdan.cc/lint v0.0.0-20170908181259-adc824a0674b // indirect
 	mvdan.cc/unparam v0.0.0-20221223090309-7455f1af531d // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
+	pgregory.net/rapid v0.5.5 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
