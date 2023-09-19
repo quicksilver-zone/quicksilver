@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/strangelove-ventures/interchaintest/v5"
-	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v5/ibc"
-	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v5/testutil"
+	"github.com/strangelove-ventures/interchaintest/v7"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -195,8 +195,6 @@ chains:
 	err = icq.StartContainer(ctx)
 	require.NoError(t, err)
 
-	err = icq.Running(ctx)
-	require.NoError(t, err)
 }
 
 func runXCC(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
@@ -228,8 +226,5 @@ chains:
 	require.NoError(t, err)
 
 	err = xcc.StartContainer(ctx)
-	require.NoError(t, err)
-
-	err = xcc.Running(ctx)
 	require.NoError(t, err)
 }

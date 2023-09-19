@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/strangelove-ventures/interchaintest/v5"
-	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v7"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -16,9 +16,7 @@ func TestBasicQuicksilverStart(t *testing.T) {
 	if testing.Short() {
 		t.Skip()
 	}
-
 	t.Parallel()
-
 	// Create chain factory with Quicksilver
 	numVals := 3
 	numFullNodes := 3
@@ -57,7 +55,7 @@ func TestBasicQuicksilverStart(t *testing.T) {
 		SkipPathCreation: true,
 
 		// This can be used to write to the block database which will index all block data e.g. txs, msgs, events, etc.
-		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
+		BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
 	})
 	require.NoError(t, err)
 

@@ -169,6 +169,12 @@ test-docker-multi:
 	./scripts/multi-test.sh
 test-docker-multi-regen:
 	./scripts/multi-test.sh -r
+test-docker-simple-lsm:
+	./scripts/simple-test-lsm.sh
+test-docker-simple-v2:
+	./scripts/simple-test-v2.sh -r
+test-docker-simple-lsm-regen:
+	./scripts/simple-test-lsm.sh -r
 build-docker-all:
 	$(DOCKERCOMPOSE) build
 
@@ -355,7 +361,7 @@ ictest-basic: ictest-deps
 	@cd test/interchaintest && go test -v -run TestBasicQuicksilverStart .
 
 # Executes register-zone tests via interchaintest
-ictest-rz: 
+ictest-rz:
 	@cd test/interchaintest && go test -v -run TestRegisterZone .
 
 # Executes a basic chain upgrade test via interchaintest
@@ -372,9 +378,13 @@ ictest-ibc: ictest-deps
 # Executes TestInterchainStaking tests via interchaintest
 ictest-interchainstaking: ictest-deps
 	@cd test/interchaintest && go test -v -run TestInterchainStaking .
+ictest-registerzone: ictest-deps
+	@cd test/interchaintest && go test -v -run TestQuicksilverE2E .
 
 # Executes all tests via interchaintest after compiling a local image as quicksilver:local
-ictest-all: ictest-setup ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
+ictest-all: ictest-setup ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking ictest-registerzone
+ictest-rz: ictest-setup   ictest-registerzone
+
 
 ictest-setup: ictest-build ictest-deps
 

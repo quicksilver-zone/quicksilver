@@ -1,16 +1,17 @@
 package interchaintest
 
 import (
+  "testing"
 	"context"
+	"cosmossdk.io/math"
 	"fmt"
-	"testing"
 
-	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
-	"github.com/strangelove-ventures/interchaintest/v5"
-	"github.com/strangelove-ventures/interchaintest/v5/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v5/ibc"
-	"github.com/strangelove-ventures/interchaintest/v5/testreporter"
-	"github.com/strangelove-ventures/interchaintest/v5/testutil"
+  transfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	"github.com/strangelove-ventures/interchaintest/v7"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
+	"github.com/strangelove-ventures/interchaintest/v7/testreporter"
+	"github.com/strangelove-ventures/interchaintest/v7/testutil"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 )
@@ -88,6 +89,29 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	// Generate a new IBC path
+	err = r.GeneratePath(ctx, eRep, quicksilver.Config().ChainID, juno.Config().ChainID, "test-path")
+	require.NoError(t, err)
+
+	// Create new clients
+	err = r.CreateClients(ctx, eRep, "test-path", ibc.CreateClientOptions{TrustingPeriod: "330h"})
+	require.NoError(t, err)
+
+	err = testutil.WaitForBlocks(ctx, 2, quicksilver, juno)
+	require.NoError(t, err)
+
+	// Create a new connection
+	err = r.CreateConnections(ctx, eRep, "test-path")
+	require.NoError(t, err)
+
+	err = testutil.WaitForBlocks(ctx, 2, quicksilver, juno)
+	require.NoError(t, err)
+
+	// Query for the newly created connection
+	connections, err := r.GetConnections(ctx, eRep, quicksilver.Config().ChainID)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(connections))
+
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
@@ -126,7 +150,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	require.Equal(t, genesisWalletAmount, junoOrigBal)
 
 	// Compose an IBC transfer and send from Quicksilver -> Juno
-	const transferAmount = int64(1_000)
+	transferAmount := math.NewInt(1_000)
 	transfer := ibc.WalletAmount{
 		Address: junoUserAddr,
 		Denom:   quicksilver.Config().Denom,
@@ -153,7 +177,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	// Assert that the funds are no longer present in user acc on Juno and are in the user acc on Juno
 	quicksilverUpdateBal, err := quicksilver.GetBalance(ctx, quickUserAddr, quicksilver.Config().Denom)
 	require.NoError(t, err)
-	require.Equal(t, quicksilverOrigBal-transferAmount, quicksilverUpdateBal)
+	require.Equal(t, quicksilverOrigBal.Sub(transferAmount), quicksilverUpdateBal)
 
 	junoUpdateBal, err := juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
