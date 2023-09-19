@@ -50,11 +50,18 @@ interface StakingModalProps {
   isOpen: boolean;
   onClose: () => void;
   children?: React.ReactNode;
+  selectedOption?: {
+    name: string;
+    value: string;
+    logo: string;
+    chainName: string;
+  };
 }
 
 export const StakingProcessModal: React.FC<StakingModalProps> = ({
   isOpen,
   onClose,
+  selectedOption,
 }) => {
   const [step, setStep] = React.useState(1);
   const getProgressColor = (circleStep: number) => {
@@ -85,7 +92,9 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
                   <StatLabel color="rgba(255,255,255,0.5)">
                     LIQUID STAKING
                   </StatLabel>
-                  <StatNumber color="white">1 Atom</StatNumber>
+                  <StatNumber color="white">
+                    1 {selectedOption?.value}
+                  </StatNumber>
                 </Stat>
                 {[1, 2, 3].map((circleStep, index) => (
                   <Flex

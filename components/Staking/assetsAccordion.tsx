@@ -14,7 +14,12 @@ import {
 import React from 'react';
 
 type AssetsAccordianProps = {
-  selectedOption: string;
+  selectedOption: {
+    name: string;
+    value: string;
+    logo: string;
+    qlogo: string;
+  };
 };
 
 export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({
@@ -51,7 +56,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({
               <Flex p={1} flexDirection="row" flex="1" alignItems="center">
                 <Image
                   alt="atom"
-                  src="/img/networks/atom.svg"
+                  src={selectedOption.logo}
                   boxSize="35px"
                   mr={2}
                 />
@@ -60,7 +65,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                0 {selectedOption.toUpperCase()}
+                0 {selectedOption.value.toUpperCase()}
               </Text>
               <AccordionIcon color="complimentary.900" />
             </AccordionButton>
@@ -74,10 +79,10 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({
             <VStack spacing={2} width="100%">
               <HStack justifyContent="space-between" width="100%">
                 <Text fontWeight="light" color="white">
-                  on {selectedOption.toUpperCase()}
+                  on {selectedOption.value.toUpperCase()}
                 </Text>
                 <Text color="complimentary.900">
-                  0 {selectedOption.toUpperCase()}
+                  0 {selectedOption.value.toUpperCase()}
                 </Text>
               </HStack>
               <HStack justifyContent="space-between" width="100%">
@@ -85,7 +90,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({
                   on Quicksilver
                 </Text>
                 <Text color="complimentary.900">
-                  0 {selectedOption.toUpperCase()}
+                  0 {selectedOption.value.toUpperCase()}
                 </Text>
               </HStack>
             </VStack>
@@ -109,7 +114,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({
               <Flex p={1} flexDirection="row" flex="1" alignItems="center">
                 <Image
                   alt="qAtom"
-                  src="/img/networks/q-atom.svg"
+                  src={selectedOption.qlogo}
                   boxSize="35px"
                   mr={2}
                 />
@@ -118,7 +123,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                0 q{selectedOption.toUpperCase()}
+                0 q{selectedOption.value.toUpperCase()}
               </Text>
               <AccordionIcon color="complimentary.900" />
             </AccordionButton>
@@ -132,10 +137,10 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({
             <VStack spacing={2} width="100%">
               <HStack justifyContent="space-between" width="100%">
                 <Text fontWeight="light" color="white">
-                  on {selectedOption.toUpperCase()}
+                  on {selectedOption.value.toUpperCase()}
                 </Text>
                 <Text color="complimentary.900">
-                  0 q{selectedOption.toUpperCase()}
+                  0 q{selectedOption.value.toUpperCase()}
                 </Text>
               </HStack>
               <HStack justifyContent="space-between" width="100%">
@@ -143,7 +148,7 @@ export const AssetsAccordian: React.FC<AssetsAccordianProps> = ({
                   on Quicksilver
                 </Text>
                 <Text color="complimentary.900">
-                  0 q{selectedOption.toUpperCase()}
+                  0 q{selectedOption.value.toUpperCase()}
                 </Text>
               </HStack>
             </VStack>

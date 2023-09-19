@@ -25,8 +25,45 @@ const DynamicStakingBox = dynamic(() => Promise.resolve(StakingBox), {
 });
 
 export default function Staking() {
-  const [selectedOption, setSelectedOption] = useState('Atom');
-  const [selectedChainName, setSelectedChainName] = useState('cosmoshub');
+  const networks = [
+    {
+      value: 'ATOM',
+      logo: '/img/networks/atom.svg',
+      qlogo: '/img/networks/q-atom.svg',
+      name: 'Cosmos Hub',
+      chainName: 'cosmoshub',
+    },
+    {
+      value: 'OSMO',
+      logo: '/img/networks/osmosis.svg',
+      qlogo: '/img/networks/qosmo.svg',
+      name: 'Osmosis',
+      chainName: 'osmosis',
+    },
+    {
+      value: 'STARS',
+      logo: '/img/networks/stargaze.svg',
+      qlogo: '/img/networks/stargaze-2.png',
+      name: 'Stargaze',
+      chainName: 'stargaze',
+    },
+    {
+      value: 'REGEN',
+      logo: '/img/networks/regen.svg',
+      qlogo: '/img/networks/regen.svg',
+      name: 'Regen',
+      chainName: 'regen',
+    },
+    {
+      value: 'SOMM',
+      logo: '/img/networks/sommelier.png',
+      qlogo: '/img/networks/sommelier.png',
+      name: 'Sommelier',
+      chainName: 'sommelier',
+    },
+  ];
+
+  const [selectedNetwork, setSelectedNetwork] = useState(networks[0]);
   const [isModalOpen, setModalOpen] = useState(false);
   useState(null);
   return (
@@ -49,7 +86,7 @@ export default function Staking() {
           />
           <link rel="icon" href="/img/favicon.png" />
         </Head>
-        <Header chainName={selectedChainName} />
+        <Header chainName={selectedNetwork.chainName} />
         <SideHeader />
         <Container
           zIndex={2}
@@ -73,10 +110,8 @@ export default function Staking() {
             <Box w="50%">
               <HStack justifyContent="space-between" w="100%">
                 <NetworkSelect
-                  selectedOption={selectedOption}
-                  setSelectedOption={setSelectedOption}
-                  selectedChainName={selectedChainName}
-                  setSelectedChainName={setSelectedChainName}
+                  selectedOption={selectedNetwork}
+                  setSelectedNetwork={setSelectedNetwork}
                 />
                 <VStack p={1} borderRadius="10px" alignItems="flex-end">
                   <Stat color="complimentary.900">
@@ -91,10 +126,9 @@ export default function Staking() {
             <Flex h="100%">
               {/* Staking Box*/}
               <DynamicStakingBox
-                selectedOption={selectedOption}
+                selectedOption={selectedNetwork}
                 isModalOpen={isModalOpen}
                 setModalOpen={setModalOpen}
-                selectedChainName={selectedChainName}
               />
 
               <Box w="10px" />
@@ -102,11 +136,11 @@ export default function Staking() {
               {/* Right Box */}
               <Flex flex="1" direction="column">
                 {/* Top Half (2/3) */}
-                <InfoBox selectedOption={selectedOption} />
+                <InfoBox selectedOption={selectedNetwork} />
 
                 <Box h="10px" />
                 {/* Bottom Half (1/3) */}
-                <AssetsAccordian selectedOption={selectedOption} />
+                <AssetsAccordian selectedOption={selectedNetwork} />
               </Flex>
             </Flex>
           </Flex>

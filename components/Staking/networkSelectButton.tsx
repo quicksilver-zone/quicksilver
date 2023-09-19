@@ -10,37 +10,42 @@ import {
   Image,
   Text,
 } from '@chakra-ui/react';
-import React, { Dispatch, SetStateAction } from 'react';
+import React, { Dispatch, SetStateAction, useState } from 'react';
 import { BsArrowDown } from 'react-icons/bs';
 
 const networks = [
   {
     value: 'ATOM',
     logo: '/img/networks/atom.svg',
+    qlogo: '/img/networks/q-atom.svg',
     name: 'Cosmos Hub',
     chainName: 'cosmoshub',
   },
   {
     value: 'OSMO',
     logo: '/img/networks/osmosis.svg',
+    qlogo: '/img/networks/qosmo.svg',
     name: 'Osmosis',
     chainName: 'osmosis',
   },
   {
     value: 'STARS',
     logo: '/img/networks/stargaze.svg',
+    qlogo: '/img/networks/stargaze-2.png',
     name: 'Stargaze',
     chainName: 'stargaze',
   },
   {
     value: 'REGEN',
     logo: '/img/networks/regen.svg',
+    qlogo: '/img/networks/regen.svg',
     name: 'Regen',
     chainName: 'regen',
   },
   {
     value: 'SOMM',
     logo: '/img/networks/sommelier.png',
+    qlogo: '/img/networks/sommelier.png',
     name: 'Sommelier',
     chainName: 'sommelier',
   },
@@ -48,25 +53,17 @@ const networks = [
 
 interface CustomMenuProps {
   buttonTextColor?: string;
-  selectedOption: string;
-  selectedChainName: string;
-  setSelectedOption: (value: string) => void;
-  setSelectedChainName: (value: string) => void;
+  selectedOption: (typeof networks)[0];
+  setSelectedNetwork: (network: (typeof networks)[0]) => void;
 }
 
 export const NetworkSelect: React.FC<CustomMenuProps> = ({
   buttonTextColor = 'white',
   selectedOption,
-  setSelectedOption,
-  setSelectedChainName,
-  selectedChainName,
+  setSelectedNetwork,
 }) => {
-  const handleOptionClick = (option: string) => {
-    setSelectedOption(option);
-    const selectedNetwork = networks.find((net) => net.value === option);
-    if (selectedNetwork) {
-      setSelectedChainName(selectedNetwork.chainName);
-    }
+  const handleOptionClick = (network: (typeof networks)[0]) => {
+    setSelectedNetwork(network);
   };
   return (
     <Menu>
@@ -90,7 +87,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({
         as={Button}
         rightIcon={<BsArrowDown />}
       >
-        {selectedOption.toUpperCase()}
+        {selectedOption.value.toUpperCase()}
       </MenuButton>
       <MenuList
         borderColor="rgba(35,35,35,1)"
@@ -107,7 +104,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({
             _hover={{
               bgColor: 'rgba(255,255,255,0.25)',
             }}
-            onClick={() => handleOptionClick(network.value)}
+            onClick={() => handleOptionClick(network)}
           >
             <Flex
               justifyContent="center"

@@ -23,6 +23,7 @@
     "@cosmos-kit/react": "^2.0.3",
     "@emotion/react": "11.10.6",
     "@emotion/styled": "11.10.6",
+    "@hoangdv2429/quicksilverjs": "^0.0.1",
     "@interchain-ui/react": "1.5.0",
     "@radix-ui/react-icons": "^1.3.0",
     "@tanstack/react-query": "^4.29.12",

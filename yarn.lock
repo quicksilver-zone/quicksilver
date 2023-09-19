@@ -1245,6 +1245,13 @@
   resolved "https://registry.yarnpkg.com/@cosmjs/utils/-/utils-0.29.5.tgz#3fed1b3528ae8c5f1eb5d29b68755bebfd3294ee"
   integrity sha512-m7h+RXDUxOzEOGt4P+3OVPX7PuakZT3GBmaM/Y2u+abN3xZkziykD/NvedYFvvCCdQo714XcGl33bwifS9FZPQ==
 
+"@cosmology/lcd@^0.13.0":
+  version "0.13.0"
+  resolved "https://registry.yarnpkg.com/@cosmology/lcd/-/lcd-0.13.0.tgz#c60633e44a01a3f5341ed0d3e2e5933f725e9ca3"
+  integrity sha512-GghifXtTH5eHY4qVP15uSDCSJk17mo18VpnaA3WvkXGtONXA/9qbyei1OQp46hiTHv4XoHGeqIU2eTqROD+now==
+  dependencies:
+    axios "0.27.2"
+
 "@cosmos-kit/core@^2.0.3", "@cosmos-kit/core@^2.5.3":
   version "2.5.3"
   resolved "https://registry.yarnpkg.com/@cosmos-kit/core/-/core-2.5.3.tgz#b394a50792b40a09d3642502d6ae6a32c26d9b24"
@@ -1591,6 +1598,17 @@
   version "1.0.0-beta.6"
   resolved "https://registry.yarnpkg.com/@formkit/auto-animate/-/auto-animate-1.0.0-beta.6.tgz#ed7f8bc47d774a7764756646e9e3432e8be51cb3"
   integrity sha512-PVDhLAlr+B4Xb7e+1wozBUWmXa6BFU8xUPR/W/E+TsQhPS1qkAdAsJ25keEnFrcePSnXHrOsh3tiFbEToOzV9w==
+
+"@hoangdv2429/quicksilverjs@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@hoangdv2429/quicksilverjs/-/quicksilverjs-0.0.1.tgz#0f3e4f0e09ca247f8a308217dda1a9d98cf91cc7"
+  integrity sha512-oTX9zuGwfbl6lGwigxyzLZYLyfRq0YZWSz/AYZ9QerjxtWOTG82mZFKrxFxUaOdn+NbZh/esMqdxJrHJg9+H2g==
+  dependencies:
+    "@cosmjs/amino" "0.29.4"
+    "@cosmjs/proto-signing" "0.29.4"
+    "@cosmjs/stargate" "0.29.4"
+    "@cosmjs/tendermint-rpc" "^0.29.4"
+    "@cosmology/lcd" "^0.13.0"
 
 "@humanwhocodes/config-array@^0.11.6":
   version "0.11.11"
@@ -3013,20 +3031,20 @@ axios@0.21.1:
   dependencies:
     follow-redirects "^1.10.0"
 
-axios@^0.21.2:
-  version "0.21.4"
-  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
-  integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
-  dependencies:
-    follow-redirects "^1.14.0"
-
-axios@^0.27.2:
+axios@0.27.2, axios@^0.27.2:
   version "0.27.2"
   resolved "https://registry.yarnpkg.com/axios/-/axios-0.27.2.tgz#207658cc8621606e586c85db4b41a750e756d972"
   integrity sha512-t+yRIyySRTp/wua5xEr+z1q60QmLq8ABsS5O9Me1AsE5dfKqgnCFzwiCZZ/cGNd1lq4/7akDWMxdhVlucjmnOQ==
   dependencies:
     follow-redirects "^1.14.9"
     form-data "^4.0.0"
+
+axios@^0.21.2:
+  version "0.21.4"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-0.21.4.tgz#c67b90dc0568e5c1cf2b0b858c43ba28e2eda575"
+  integrity sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==
+  dependencies:
+    follow-redirects "^1.14.0"
 
 axobject-query@^3.1.1:
   version "3.2.1"

@@ -24,17 +24,20 @@ import { MultiModal } from './modals/multiStakeModal';
 import StakingProcessModal from './modals/stakingProcessModal';
 
 type StakingBoxProps = {
-  selectedOption: string;
+  selectedOption: {
+    name: string;
+    value: string;
+    logo: string;
+    chainName: string;
+  };
   isModalOpen: boolean;
   setModalOpen: (isOpen: boolean) => void;
-  selectedChainName: string;
 };
 
 export const StakingBox = ({
   selectedOption,
   isModalOpen,
   setModalOpen,
-  selectedChainName,
 }: StakingBoxProps): JSX.Element => {
   return (
     <Box
@@ -94,15 +97,15 @@ export const StakingBox = ({
           <TabPanel>
             <VStack spacing={8} align="center">
               <Text fontWeight="light" textAlign="center" color="white">
-                Stake your {selectedOption.toUpperCase()} tokens in exchange for
-                q{selectedOption.toUpperCase()} which you can deploy around the
-                ecosystem. You can liquid stake half of your balance, if
-                you&apos;re going to LP.
+                Stake your {selectedOption.value.toUpperCase()} tokens in
+                exchange for q{selectedOption.value.toUpperCase()} which you can
+                deploy around the ecosystem. You can liquid stake half of your
+                balance, if you&apos;re going to LP.
               </Text>
               <Flex flexDirection="column" w="100%">
                 <Stat py={4} textAlign="left" color="white">
                   <StatLabel>Amount to stake:</StatLabel>
-                  <StatNumber>{selectedOption.toUpperCase()} </StatNumber>
+                  <StatNumber>{selectedOption.value.toUpperCase()} </StatNumber>
                 </Stat>
                 <Input
                   _active={{
@@ -131,7 +134,7 @@ export const StakingBox = ({
                   alignItems="center"
                 >
                   <Text color="white" fontWeight="light">
-                    Tokens available: 0 {selectedOption.toUpperCase()}
+                    Tokens available: 0 {selectedOption.value.toUpperCase()}
                   </Text>
                   <HStack spacing={2}>
                     <Button
@@ -178,7 +181,9 @@ export const StakingBox = ({
               >
                 <Stat textAlign="left" color="white">
                   <StatLabel>What you&apos;ll get</StatLabel>
-                  <StatNumber>q{selectedOption.toUpperCase()}:</StatNumber>
+                  <StatNumber>
+                    q{selectedOption.value.toUpperCase()}:
+                  </StatNumber>
                 </Stat>
                 <Spacer />{' '}
                 {/* This pushes the next Stat component to the right */}
@@ -198,19 +203,22 @@ export const StakingBox = ({
               <StakingProcessModal
                 isOpen={isModalOpen}
                 onClose={() => setModalOpen(false)}
+                selectedOption={selectedOption}
               />
             </VStack>
           </TabPanel>
           <TabPanel>
             <VStack spacing={8} align="center">
               <Text fontWeight="light" textAlign="center" color="white">
-                Unstake your q{selectedOption.toUpperCase()} tokens in exchange
-                for {selectedOption.toUpperCase()}.
+                Unstake your q{selectedOption.value.toUpperCase()} tokens in
+                exchange for {selectedOption.value.toUpperCase()}.
               </Text>
               <Flex flexDirection="column" w="100%">
                 <Stat py={4} textAlign="left" color="white">
                   <StatLabel>Amount tounstake:</StatLabel>
-                  <StatNumber>q{selectedOption.toUpperCase()} </StatNumber>
+                  <StatNumber>
+                    q{selectedOption.value.toUpperCase()}{' '}
+                  </StatNumber>
                 </Stat>
                 <Input
                   _active={{
@@ -239,7 +247,7 @@ export const StakingBox = ({
                   alignItems="center"
                 >
                   <Text color="white" fontWeight="light">
-                    Tokens available: 0 q{selectedOption.toUpperCase()}
+                    Tokens available: 0 q{selectedOption.value.toUpperCase()}
                   </Text>
 
                   <Button
@@ -269,7 +277,7 @@ export const StakingBox = ({
               >
                 <Stat textAlign="left" color="white">
                   <StatLabel>What you&apos;ll get</StatLabel>
-                  <StatNumber>{selectedOption.toUpperCase()}:</StatNumber>
+                  <StatNumber>{selectedOption.value.toUpperCase()}:</StatNumber>
                 </Stat>
                 <Spacer />{' '}
                 {/* This pushes the next Stat component to the right */}

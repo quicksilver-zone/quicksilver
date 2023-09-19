@@ -115,7 +115,7 @@ export const ValidatorsTable: React.FC<{
     <Box borderRadius={'6px'} maxH="xl" minH="lg">
       <Box
         borderRadius={'6px'}
-        maxH="120px" // Adjusted height
+        maxH="120px"
         minH="md"
         px={4}
         pb={0}
