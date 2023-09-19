@@ -1,7 +1,12 @@
 package interchaintest
 
 import (
-	"github.com/strangelove-ventures/interchaintest/v5/ibc"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v7/ibc"
+
+	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
 var (
@@ -68,4 +73,15 @@ func createConfig() (ibc.ChainConfig, error) {
 			},
 		},
 		nil
+}
+
+// quicksilverEncoding registers the Quicksilver specific module codecs so that the associated types and msgs
+// will be supported when writing to the blocksdb sqlite database.
+func quicksilverEncoding() *testutil.TestEncodingConfig {
+	cfg := cosmos.DefaultEncoding()
+
+	// register custom types
+	istypes.RegisterInterfaces(cfg.InterfaceRegistry)
+	govv1.RegisterInterfaces(cfg.InterfaceRegistry)
+	return &cfg
 }
