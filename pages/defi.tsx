@@ -3,19 +3,8 @@ import Head from 'next/head';
 
 import { Header } from '@/components';
 import { SideHeader } from '@/components';
-import { useBalanceQuery } from '@/hooks/useIntentData';
 
 export default function Home() {
-  const { balance, isLoading, isError } = useBalanceQuery();
-
-  if (isLoading) {
-    console.log('Loading...');
-  } else if (isError) {
-    console.log('An error occurred');
-  } else {
-    console.log('Balance:', balance);
-  }
-
   return (
     <>
       <Box
