@@ -15,7 +15,9 @@ import {
   StatNumber,
 } from '@chakra-ui/react';
 import styled from '@emotion/styled';
-import React from 'react';
+import React, { useState } from 'react';
+
+import { MultiModal } from './multiStakeModal';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;
@@ -71,8 +73,29 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
     return 'rgba(255,255,255,0.2)';
   };
 
-  const labels = ['Aprrove staking', 'Staking Atom on QS', 'Atom > qAtom'];
+  const labels = [
+    'Choose validators',
+    `Summary`,
+    `Receive q${selectedOption?.value}`,
+  ];
+  const [isModalOpen, setModalOpen] = useState(false);
 
+  const [selectedValidators, setSelectedValidators] = React.useState<string[]>(
+    [],
+  );
+
+  const advanceStep = () => {
+    if (selectedValidators.length > 0) {
+      setStep((prevStep) => prevStep + 1);
+    }
+  };
+
+  const retreatStep = () => {
+    setStep((prevStep) => Math.max(prevStep - 1, 1));
+  };
+
+  //placehoder for transaction status
+  const [transactionStatus, setTransactionStatus] = useState('Pending');
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
       <ModalOverlay />
@@ -161,22 +184,171 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
               alignItems="center"
             >
               {step === 1 && (
-                <Text color="white">This is the information for step 1.</Text>
+                <>
+                  <Flex
+                    maxW="300px"
+                    flexDirection={'column'}
+                    justifyContent={'left'}
+                    alignItems={'center'}
+                  >
+                    <Text
+                      textAlign={'left'}
+                      fontWeight={'bold'}
+                      fontSize="lg"
+                      color="white"
+                    >
+                      Choose Validators
+                    </Text>
+                    <Text
+                      mt={2}
+                      textAlign={'center'}
+                      fontWeight={'light'}
+                      fontSize="lg"
+                      color="white"
+                    >
+                      Select up to 8 validators to split your liquid delegation
+                      between.
+                    </Text>
+                  </Flex>
+                  {selectedValidators.length > 0 && (
+                    <Button
+                      mt={2}
+                      color="white"
+                      _hover={{
+                        bgColor: 'rgba(255, 128, 0, 0.25)',
+                      }}
+                      variant="ghost"
+                      width="35%"
+                      size="xs"
+                      onClick={() => setModalOpen(true)}
+                    >
+                      Reselect Validators
+                    </Button>
+                  )}
+                  <Button
+                    mt={4}
+                    width="55%"
+                    _hover={{
+                      bgColor: '#181818',
+                    }}
+                    onClick={() => {
+                      if (selectedValidators.length === 0) {
+                        setModalOpen(true);
+                      } else {
+                        advanceStep();
+                      }
+                    }}
+                  >
+                    {selectedValidators.length > 0
+                      ? 'Next'
+                      : 'Choose Validators'}
+                  </Button>
+                  <MultiModal
+                    isOpen={isModalOpen}
+                    onClose={() => setModalOpen(false)}
+                    selectedChainName={selectedOption?.chainName || ''}
+                    selectedValidators={selectedValidators}
+                    setSelectedValidators={setSelectedValidators}
+                  />
+                </>
               )}
               {step === 2 && (
-                <Text color="white">This is the information for step 2.</Text>
+                <>
+                  <Box justifyContent={'center'}>
+                    <Text
+                      fontWeight={'bold'}
+                      fontSize="lg"
+                      w="250px"
+                      textAlign={'left'}
+                      color="white"
+                    >
+                      You’re going to liquid stake {tokenAmount}{' '}
+                      {selectedOption?.value} on Quicksilver
+                    </Text>
+                    <HStack
+                      mt={2}
+                      textAlign={'left'}
+                      fontWeight={'light'}
+                      fontSize="lg"
+                      color="white"
+                    >
+                      <Text fontWeight={'bold'}>Receiving:</Text>
+                      <Text color="complimentary.900">
+                        {(Number(tokenAmount) * 0.95).toFixed(2)} q
+                        {selectedOption?.value}
+                      </Text>
+                    </HStack>
+                    <Text mt={2} textAlign={'left'} fontWeight={'hairline'}>
+                      Processing time: 1 minute
+                    </Text>
+                    <Button
+                      w="55%"
+                      _hover={{
+                        bgColor: '#181818',
+                      }}
+                      mt={4}
+                      onClick={() =>
+                        setStep((prevStep) => (prevStep < 3 ? prevStep + 1 : 3))
+                      }
+                    >
+                      Submit
+                    </Button>
+                  </Box>
+                  <Button
+                    position={'absolute'}
+                    bottom={3}
+                    left={'51%'}
+                    bgColor="none"
+                    _hover={{
+                      bgColor: 'none',
+                      color: 'complimentary.900',
+                    }}
+                    _selected={{
+                      bgColor: 'none',
+                    }}
+                    color="white"
+                    variant="none"
+                    onClick={retreatStep}
+                  >
+                    ←
+                  </Button>
+                </>
               )}
+
               {step === 3 && (
-                <Text color="white">This is the information for step 3.</Text>
+                <>
+                  <Box justifyContent={'center'}>
+                    <Text
+                      fontWeight={'bold'}
+                      fontSize="lg"
+                      w="250px"
+                      textAlign={'left'}
+                      color="white"
+                    >
+                      Transaction {transactionStatus}
+                    </Text>
+                    <HStack
+                      mt={2}
+                      textAlign={'left'}
+                      fontWeight={'light'}
+                      fontSize="lg"
+                      color="white"
+                    >
+                      <Text fontWeight={'bold'}>Explorer Link:</Text>
+                      <Text color="complimentary.900">Mintscan</Text>
+                    </HStack>
+                    <Button
+                      w="55%"
+                      _hover={{
+                        bgColor: '#181818',
+                      }}
+                      mt={4}
+                    >
+                      Stake Again
+                    </Button>
+                  </Box>
+                </>
               )}
-              <Button
-                mt={4}
-                onClick={() =>
-                  setStep((prevStep) => (prevStep < 3 ? prevStep + 1 : 3))
-                }
-              >
-                Next Step
-              </Button>
             </Flex>
           </HStack>
         </ModalBody>

@@ -189,25 +189,37 @@ export const StakingBox = ({
                     gap={4}
                     flexDirection={'row'}
                   >
-                    <Text color="white" fontWeight="light">
-                      Tokens available:{' '}
-                    </Text>
-                    {isLoading ? (
-                      <Skeleton
-                        startColor="complimentary.900"
-                        endColor="complimentary.400"
-                      >
-                        <SkeletonText
-                          w={'95px'}
-                          noOfLines={1}
-                          skeletonHeight={'18px'}
-                        />
-                      </Skeleton>
+                    {address ? (
+                      <>
+                        <Text color="white" fontWeight="light">
+                          Tokens available:{' '}
+                        </Text>
+                        {isLoading ? (
+                          <Skeleton
+                            startColor="complimentary.900"
+                            endColor="complimentary.400"
+                          >
+                            <SkeletonText
+                              w={'95px'}
+                              noOfLines={1}
+                              skeletonHeight={'18px'}
+                            />
+                          </Skeleton>
+                        ) : (
+                          <Text color="complimentary.900" fontWeight="light">
+                            {address
+                              ? balance && Number(balance) !== 0
+                                ? `${
+                                    truncatedBalance - 0.005
+                                  } ${selectedOption.value.toUpperCase()}`
+                                : `Get ${selectedOption.value.toUpperCase()} tokens here`
+                              : '0'}
+                          </Text>
+                        )}
+                      </>
                     ) : (
                       <Text color="complimentary.900" fontWeight="light">
-                        {truncatedBalance}
-                        {'0'}&nbsp;
-                        {selectedOption.value.toUpperCase()}
+                        Connect your wallet to stake
                       </Text>
                     )}
                   </Flex>
