@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankTypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/gogoproto/proto"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
@@ -34,6 +35,8 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 
 	senderAddress := Unset
 	assets := sdk.Coins{}
+	feeAssets := sdk.Coins{}
+	comissionRate := k.GetCommissionRate(ctx)
 
 	for _, msg := range txn.GetMsgs() {
 		msgSend, ok := msg.(*bankTypes.MsgSend)
@@ -57,10 +60,23 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 
 			k.Logger(ctx).Info("Deposit receipt", "deposit_address", zone.DepositAddress.GetAddress(), "sender", sender, "amount", amount)
 
+			for _, coin := range amount {
+				fee := sdk.NewDecFromInt(coin.Amount).Mul(comissionRate).TruncateInt()
+				if fee.IsPositive() {
+					feeAssets = feeAssets.Add(sdk.Coin{
+						Denom:  coin.Denom,
+						Amount: fee,
+					})
+				}
+			}
+
+			amount = amount.Sub(feeAssets...)
 			assets = assets.Add(amount...)
 		}
 
 	}
+
+	delegateAssets := assets.Add(feeAssets...)
 
 	if senderAddress == Unset {
 		k.Logger(ctx).Error("no sender found. Ignoring.")
@@ -74,7 +90,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		return nil
 	}
 
-	if err := zone.ValidateCoinsForZone(assets, k.GetValidatorAddresses(ctx, zone)); err != nil {
+	if err := zone.ValidateCoinsForZone(delegateAssets, k.GetValidatorAddresses(ctx, zone)); err != nil {
 		// we expect this to trigger if the validatorset has changed recently (i.e. we haven't seen the validator before.
 		// That is okay, we'll catch it next round!)
 		k.Logger(ctx).Error("unable to validate coins. Ignoring.", "senderAddress", senderAddress)
@@ -99,11 +115,11 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		}
 		memoRTS = memoFields.RTS()
 		mappedAddress, _ = memoFields.AccountMap()
-		memoIntent, _ = memoFields.Intent(assets, zone)
+		memoIntent, _ = memoFields.Intent(delegateAssets, zone)
 	}
 
 	// update state
-	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, zone, assets, memoIntent); err != nil {
+	if err := k.UpdateDelegatorIntent(ctx, senderAccAddress, zone, delegateAssets, memoIntent); err != nil {
 		k.Logger(ctx).Error("unable to update intent. Ignoring.", "senderAddress", senderAddress, "zone", zone.ZoneID(), "err", err.Error())
 		return fmt.Errorf("unable to update intent. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ZoneID(), err)
 	}
@@ -111,13 +127,17 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 		k.Logger(ctx).Error("unable to mint QAsset. Ignoring.", "senderAddress", senderAddress, "zone", zone.ZoneID(), "err", err)
 		return fmt.Errorf("unable to mint QAsset. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ZoneID(), err)
 	}
-	if err := k.TransferToDelegate(ctx, zone, assets, hash); err != nil {
+	if err := k.MintQAssetAndTransferToFeeModule(ctx, zone, feeAssets); err != nil && !feeAssets.Empty() {
+		k.Logger(ctx).Error("unable to mint QAsset and transfer to fee module. Ignoring", "zone", zone.ChainId, "err", err)
+		return fmt.Errorf("unable to mint QAssetand transfer to fee module. Ignoring zone=%q err: %w", zone.ChainId, err)
+	}
+	if err := k.TransferToDelegate(ctx, zone, delegateAssets, hash); err != nil {
 		k.Logger(ctx).Error("unable to transfer to delegate. Ignoring.", "senderAddress", senderAddress, "zone", zone.ZoneID(), "err", err)
 		return fmt.Errorf("unable to transfer to delegate. Ignoring. senderAddress=%q zone=%q err: %w", senderAddress, zone.ZoneID(), err)
 	}
 
 	// create receipt
-	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, assets)
+	receipt := k.NewReceipt(ctx, zone, senderAddress, hash, delegateAssets)
 	k.SetReceipt(ctx, *receipt)
 
 	return nil
@@ -233,6 +253,32 @@ func (k *Keeper) MintAndSendQAsset(ctx sdk.Context, sender sdk.AccAddress, sende
 			sdk.NewAttribute(sdk.AttributeKeyAmount, qAssets.String()),
 		),
 	)
+	return nil
+}
+
+func (k *Keeper) MintQAssetAndTransferToFeeModule(ctx sdk.Context, zone *types.Zone, assets sdk.Coins) error {
+	if zone.RedemptionRate.IsZero() {
+		return errors.New("zero redemption rate")
+	}
+
+	qAssets := sdk.Coins{}
+	for _, asset := range assets.Sort() {
+		amount := sdk.NewDecFromInt(asset.Amount).Quo(zone.RedemptionRate).TruncateInt()
+		qAssets = qAssets.Add(sdk.NewCoin(zone.LocalDenom, amount))
+	}
+
+	k.Logger(ctx).Info("Minting qAssets for receipt", "assets", qAssets)
+	err := k.BankKeeper.MintCoins(ctx, types.ModuleName, qAssets)
+	if err != nil {
+		return err
+	}
+
+	err = k.BankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, authtypes.FeeCollectorName, qAssets)
+	if err != nil {
+		return fmt.Errorf("unable to transfer coins: %w", err)
+	}
+
+	k.Logger(ctx).Info("Transferred qAssets to fee module", "assets", qAssets)
 	return nil
 }
 

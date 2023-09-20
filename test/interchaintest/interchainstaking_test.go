@@ -5,6 +5,19 @@ import (
 	"fmt"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/codec"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/cosmos/gogoproto/proto"
+
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
@@ -23,9 +36,16 @@ func TestInterchainStaking(t *testing.T) {
 
 	t.Parallel()
 
-	// Create chain factory with Quicksilver and Juno
+	// Create chain factory with Quicksilver and Gaia
 	numVals := 3
 	numFullNodes := 3
+
+	client, network := interchaintest.DockerSetup(t)
+
+	rep := testreporter.NewNopReporter()
+	eRep := rep.RelayerExecReporter(t)
+
+	ctx := context.Background()
 
 	config, err := createConfig()
 	require.NoError(t, err)
@@ -38,8 +58,8 @@ func TestInterchainStaking(t *testing.T) {
 			NumFullNodes:  &numFullNodes,
 		},
 		{
-			Name:          "juno",
-			Version:       "v14.1.0",
+			Name:          "gaia",
+			Version:       "v12.0.0",
 			NumValidators: &numVals,
 			NumFullNodes:  &numFullNodes,
 			//ChainConfig: ibc.ChainConfig{
@@ -49,33 +69,29 @@ func TestInterchainStaking(t *testing.T) {
 	})
 
 	// Get chains from the chain factory
+	t.Logf("Calling cf.Chains")
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
-	quicksilver, juno := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
+	quicksilver, gaia := chains[0].(*cosmos.CosmosChain), chains[1].(*cosmos.CosmosChain)
 
 	// Create relayer factory to utilize the go-relayer
-	client, network := interchaintest.DockerSetup(t)
-
 	r := interchaintest.NewBuiltinRelayerFactory(ibc.CosmosRly, zaptest.NewLogger(t), relayer.CustomDockerImage("ghcr.io/notional-labs/cosmos-relayer", "nguyen-v2.3.1", "1000:1000")).Build(t, client, network)
 
 	// Create a new Interchain object which describes the chains, relayers, and IBC connections we want to use
+	t.Logf("NewInterchain")
 	ic := interchaintest.NewInterchain().
 		AddChain(quicksilver).
-		AddChain(juno).
+		AddChain(gaia).
 		AddRelayer(r, "rly").
 		AddLink(interchaintest.InterchainLink{
 			Chain1:  quicksilver,
-			Chain2:  juno,
+			Chain2:  gaia,
 			Relayer: r,
-			Path:    pathQuicksilverJuno,
+			Path:    "quicksilver-gaia",
 		})
 
-	rep := testreporter.NewNopReporter()
-	eRep := rep.RelayerExecReporter(t)
-
-	ctx := context.Background()
-
+	t.Logf("Interchain build options")
 	err = ic.Build(ctx, eRep, interchaintest.InterchainBuildOptions{
 		TestName:         t.Name(),
 		Client:           client,
@@ -92,7 +108,7 @@ func TestInterchainStaking(t *testing.T) {
 	})
 
 	// Start the relayer
-	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverJuno))
+	require.NoError(t, r.StartRelayer(ctx, eRep, "quicksilver-gaia"))
 	t.Cleanup(
 		func() {
 			err := r.StopRelayer(ctx, eRep)
@@ -102,32 +118,171 @@ func TestInterchainStaking(t *testing.T) {
 		},
 	)
 
+	// Get all Validators
+	stdout, _, err := gaia.Validators[0].ExecQuery(ctx, "staking", "validators")
+	require.NoError(t, err)
+	require.NotEmpty(t, stdout)
+	t.Logf("Validators: %s", string(stdout))
+
+	var validatorsResp QueryValidatorsResponse
+	err = codec.NewLegacyAmino().UnmarshalJSON(stdout, &validatorsResp)
+	require.NoError(t, err)
+
+	gaiaValidators := validatorsResp.Validators
+	fmt.Println(gaiaValidators)
+
 	// Create some user accounts on both chains
-	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, juno)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, gaia)
 
 	// Wait a few blocks for relayer to start and for user accounts to be created
-	err = testutil.WaitForBlocks(ctx, 5, quicksilver, juno)
+	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
 	require.NoError(t, err)
 
 	// Get our Bech32 encoded user addresses
-	quickUser, junoUser := users[0], users[1]
+	quickUser, gaiaUser := users[0], users[1]
 
 	quickUserAddr := quickUser.FormattedAddress()
-	junoUserAddr := junoUser.FormattedAddress()
+	gaiaUserAddr := gaiaUser.FormattedAddress()
 	_ = quickUserAddr
-	_ = junoUserAddr
+	_ = gaiaUserAddr
 
-	runSidecars(t, ctx, quicksilver, juno)
+	runSidecars(t, ctx, quicksilver, gaia)
+
+	proposal := cosmos.TxProposalv1{
+		Metadata: "none",
+		Deposit:  "500000000" + quicksilver.Config().Denom, // greater than min deposit
+		Title:    "title",
+		Summary:  "summary",
+	}
+
+	content := istypes.RegisterZoneProposal{
+		Title:            "register lstest-1 zone",
+		Description:      "register lstest-1 zone with multisend and lsm enabled",
+		ConnectionId:     "connection-0",
+		BaseDenom:        "uatom",
+		LocalDenom:       "uqatom",
+		AccountPrefix:    "cosmos",
+		DepositsEnabled:  true,
+		UnbondingEnabled: true,
+		LiquidityModule:  false,
+		ReturnToSender:   true,
+		Decimals:         6,
+	}
+
+	check, err := cdctypes.NewAnyWithValue(&content)
+	require.NoError(t, err)
+
+	message := govv1.MsgExecLegacyContent{
+		Content:   check,
+		Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
+	}
+	msg, err := quicksilver.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
+	require.NoError(t, err)
+	fmt.Println("Msg: ", string(msg))
+	proposal.Messages = append(proposal.Messages, msg)
+
+	// Submit Proposal
+	proposalTx, err := quicksilver.SubmitProposal(ctx, quickUser.KeyName(), proposal)
+	require.NoError(t, err, "error submitting proposal tx")
+
+	height, err := quicksilver.Height(ctx)
+	require.NoError(t, err, "error fetching height before submit upgrade proposal")
+
+	err = quicksilver.VoteOnProposalAllValidators(ctx, proposalTx.ProposalID, cosmos.ProposalVoteYes)
+	require.NoError(t, err, "failed to submit votes")
+
+	_, err = cosmos.PollForProposalStatus(ctx, quicksilver, height, height+heightDelta, proposalTx.ProposalID, cosmos.ProposalStatusPassed)
+	require.NoError(t, err, "proposal status did not change to passed in expected number of blocks")
+
+	err = testutil.WaitForBlocks(ctx, 20, quicksilver)
+	require.NoError(t, err)
+
+	stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "interchainstaking", "zones")
+	require.NoError(t, err)
+	require.NotEmpty(t, stdout)
+	t.Logf("zones: %s", stdout)
+
+	var zones istypes.QueryZonesResponse
+	err = codec.NewLegacyAmino().UnmarshalJSON(stdout, &zones)
+	require.NoError(t, err)
+
+	zone := zones.Zones
+	fmt.Println(zone)
+
+	version := icatypes.NewDefaultMetadataString("connection-0", "connection-0")
+	_, err = quicksilver.FullNodes[0].ExecTx(
+		ctx, quickUser.KeyName(), "interchain-accounts", "controller", "register", "connection-0",
+		"--version", version,
+	)
+	require.NoError(t, err)
+
+	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
+	require.NoError(t, err)
+
+	stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "interchain-accounts", "controller", "interchain-account", quickUserAddr, "connection-0")
+	require.NoError(t, err)
+	require.NotEmpty(t, stdout)
+	t.Logf("Registered ICA: %s", string(stdout))
+
+	var icaQuickUser icacontrollertypes.QueryInterchainAccountResponse
+	err = codec.NewLegacyAmino().UnmarshalJSON(stdout, &icaQuickUser)
+	require.NoError(t, err)
+
+	icaQuickUserAddr := icaQuickUser.Address
+	fmt.Println(icaQuickUserAddr)
+
+	// Bank Send for delegation
+	msgSend := &banktypes.MsgSend{
+		FromAddress: gaiaUserAddr,
+		ToAddress:   icaQuickUserAddr,
+		Amount:      sdk.NewCoins(sdk.Coin{Denom: "uatom", Amount: sdkmath.NewInt(10_000_000)}),
+	}
+
+	cdc := config.EncodingConfig.Codec
+	bz, err := icatypes.SerializeCosmosTx(cdc, []proto.Message{msgSend}) //gfddrg
+	require.NoError(t, err)
+
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: bz,
+		Memo: EncodeValidators(
+			t,
+			[]ValidatorDelegation{
+				{
+					Address: gaiaValidators[0].OperatorAddress,
+					Percent: 50,
+				},
+				{
+					Address: gaiaValidators[1].OperatorAddress,
+					Percent: 25,
+				},
+				{
+					Address: gaiaValidators[2].OperatorAddress,
+					Percent: 25,
+				},
+			},
+		),
+	}
+	jsonPacketData, err := codec.NewLegacyAmino().MarshalJSON(packetData)
+	require.NoError(t, err)
+
+	fmt.Println("jsonPacketData: ", jsonPacketData)
+	_, err = quicksilver.FullNodes[0].ExecTx(
+		ctx, quickUser.KeyName(), "interchain-accounts", "controller", "send-tx", "connection-0", string(jsonPacketData),
+	)
+	require.NoError(t, err)
+	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
+	require.NoError(t, err)
 }
 
-func runSidecars(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
+func runSidecars(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
 	t.Helper()
 
-	runICQ(t, ctx, quicksilver, juno)
-	// runXCC(t, ctx, quicksilver, juno)
+	runICQ(t, ctx, quicksilver, gaia)
+	// runXCC(t, ctx, quicksilver, gaia)
 }
 
-func runICQ(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
+func runICQ(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
 	t.Helper()
 
 	var icq *cosmos.SidecarProcess
@@ -181,10 +336,10 @@ chains:
 		quicksilver.GetRPCAddress(),
 		quicksilver.GetGRPCAddress(),
 		icq.HomeDir(),
-		juno.Config().ChainID,
-		juno.Config().ChainID,
-		juno.GetRPCAddress(),
-		juno.GetGRPCAddress(),
+		gaia.Config().ChainID,
+		gaia.Config().ChainID,
+		gaia.GetRPCAddress(),
+		gaia.GetGRPCAddress(),
 		icq.HomeDir(),
 	)
 
@@ -197,7 +352,7 @@ chains:
 	require.NoError(t, err)
 }
 
-func runXCC(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosChain) {
+func runXCC(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
 	t.Helper()
 
 	var xcc *cosmos.SidecarProcess
@@ -213,11 +368,11 @@ func runXCC(t *testing.T, ctx context.Context, quicksilver, juno *cosmos.CosmosC
 	file := fmt.Sprintf(`source_chain: '%s'
 chains:
   quick-1: '%s'
-  juno-1: '%s'
+  gaia-1: '%s'
 `,
 		quicksilver.Config().ChainID,
 		quicksilver.GetRPCAddress(),
-		juno.GetRPCAddress(),
+		gaia.GetRPCAddress(),
 	)
 
 	err := xcc.WriteFile(ctx, []byte(file), containerCfg)

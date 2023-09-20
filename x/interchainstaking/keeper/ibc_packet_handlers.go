@@ -20,7 +20,6 @@ import (
 	cosmosproto "github.com/cosmos/gogoproto/proto"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	clienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -1179,49 +1178,11 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 		return err
 	}
 	baseDenomAmount := withdrawBalance.Balances.AmountOf(zone.BaseDenom)
-	// calculate fee (fee = amount * rate)
-
-	baseDenomFee := sdk.NewDecFromInt(baseDenomAmount).
-		Mul(k.GetCommissionRate(ctx)).
-		TruncateInt()
 
 	// prepare rewards distribution
-	rewards := sdk.NewCoin(zone.BaseDenom, baseDenomAmount.Sub(baseDenomFee))
+	rewards := sdk.NewCoin(zone.BaseDenom, baseDenomAmount)
 
 	msgs := []cosmosproto.Message{k.prepareRewardsDistributionMsgs(zone, rewards.Amount)}
-
-	// multiDenomFee is the balance of withdrawal account minus the redelegated rewards.
-	multiDenomFee := withdrawBalance.Balances.Sub(sdk.Coins{rewards}...)
-
-	var remotePort string
-	var remoteChannel string
-	k.IBCKeeper.ChannelKeeper.IterateChannels(ctx, func(channel channeltypes.IdentifiedChannel) bool {
-		if channel.ConnectionHops[0] == zone.ConnectionId && channel.PortId == types.TransferPort && channel.State == channeltypes.OPEN {
-			remoteChannel = channel.Counterparty.ChannelId
-			remotePort = channel.Counterparty.PortId
-			return true
-		}
-		return false
-	})
-
-	if remotePort == "" {
-		return errors.New("unable to find remote transfer connection")
-	}
-
-	for _, coin := range multiDenomFee.Sort() {
-		msgs = append(
-			msgs,
-			&ibctransfertypes.MsgTransfer{
-				SourcePort:       remotePort,
-				SourceChannel:    remoteChannel,
-				Token:            coin,
-				Sender:           zone.WithdrawalAddress.Address,
-				Receiver:         k.AccountKeeper.GetModuleAddress(types.ModuleName).String(),
-				TimeoutTimestamp: uint64(ctx.BlockTime().UnixNano() + 6*time.Hour.Nanoseconds()),
-				TimeoutHeight:    clienttypes.Height{RevisionNumber: 0, RevisionHeight: 0},
-			},
-		)
-	}
 
 	// update redemption rate
 	k.UpdateRedemptionRate(ctx, &zone, rewards.Amount)
