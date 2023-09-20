@@ -6,9 +6,7 @@ import (
 	"testing"
 	"time"
 
-	tmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -17,6 +15,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
+
+	"fmt"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -1526,6 +1527,7 @@ func TestDepositIntervalCallback(t *testing.T) {
 	txQueryCount := 0
 	for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
 		if query.QueryType == "tendermint.Tx" {
+			// fmt.Println(">>>", query)
 			txQueryCount++
 		}
 	}
@@ -1635,22 +1637,35 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 		var msg banktypes.MsgSend
 		_ = quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().UnpackAny(_res.TxResponses[0].Tx, msg)
 
-		// should not raise any err here
-		txInBytesRepresentation, _ := quicksilver.AppCodec().Marshal(_res.TxResponses[0])
+		// should not raise any err here, convert txRes to bytes
+		txInBytes, _ := quicksilver.AppCodec().Marshal(_res.TxResponses[0])
+
+		// protoProof := _res.TxResponses[0].Tx.
+		// quicksilver.InterchainQueryKeeper
+		// fmt.Println("@>", suite.chainB.CurrentTMClientHeader())
+		fmt.Println("@>", _res.TxResponses[0])
 
 		response := icqtypes.GetTxWithProofResponse{
 			TxResponse: _res.TxResponses[0],
-			Proof:      &types.TxProof{},
-			Header:     &tmtypes.Header{},
-			TxBytes:    txInBytesRepresentation,
+			Proof: &tmtypes.TxProof{
+				Data: []byte(_res.TxResponses[0].TxHash),
+			},
+			Header:  suite.chainB.CurrentTMClientHeader(),
+			TxBytes: txInBytes,
 		}
 		respInByte, err := quicksilver.AppCodec().Marshal(&response)
 		suite.NoError(err)
 
-		// delAddr := zone.DelegationAddress.Address
+		// txHash as request data
+		fmt.Println("txHash before", _res.TxResponses[0].TxHash)
+		requestData := tx.GetTxRequest{
+			Hash: _res.TxResponses[0].TxHash,
+		}
+		resDataBz, err := quicksilver.AppCodec().Marshal(&requestData)
+		suite.NoError(err)
 
 		// request need to contain the txHash of the deposit transaction, so we can check if it was successful
-		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, respInByte, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: []byte(_res.TxResponses[0].TxHash)})
+		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, respInByte, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
 
 		suite.NoError(err)
 	})
