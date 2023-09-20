@@ -323,7 +323,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                   Choose which validator(s) you would like to liquid stake to.
                   You can select from the list below or utilize the quick select
                   to pick the highest ranked validators. To learn more about
-                  raninkings click here.
+                  rainkings click here.
                 </Text>
               </AccordionPanel>
             </AccordionItem>
@@ -415,9 +415,9 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                         bgColor: '#181818',
                       }}
                       h="30px"
-                      onClick={() => handleQuickSelect(5)}
+                      onClick={() => handleQuickSelect(2)}
                     >
-                      Top 5
+                      Top 2
                     </Button>
                     <Button
                       w="60px"
@@ -425,9 +425,9 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                         bgColor: '#181818',
                       }}
                       h="30px"
-                      onClick={() => handleQuickSelect(10)}
+                      onClick={() => handleQuickSelect(4)}
                     >
-                      Top 10
+                      Top 4
                     </Button>
                     <Button
                       w="60px"
@@ -435,9 +435,9 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                         bgColor: '#181818',
                       }}
                       h="30px"
-                      onClick={() => handleQuickSelect(20)}
+                      onClick={() => handleQuickSelect(8)}
                     >
-                      Top 20
+                      Top 8
                     </Button>
                   </Flex>
                 </Box>

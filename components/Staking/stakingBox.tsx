@@ -51,21 +51,27 @@ export const StakingBox = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOption.chainName]);
 
+  const truncateToThreeDecimals = (num: number) => {
+    return Math.trunc(num * 1000) / 1000;
+  };
+
   const { address } = useChain(selectedOption.chainName);
 
   const { data, isLoading, refetch } = useStakingData(selectedOption.chainName);
 
   const balance = data?.balance;
 
-  const truncatedBalance = Math.floor(Number(balance) * 100) / 100;
+  const truncatedBalance = truncateToThreeDecimals(Number(balance));
 
-  const maxStakingAmount = truncatedBalance
-    ? parseFloat(String(truncatedBalance)) - 0.005
-    : 0;
+  const maxStakingAmount = truncateToThreeDecimals(
+    truncatedBalance ? truncatedBalance - 0.005 : 0,
+  );
 
   const maxHalfStakingAmount = maxStakingAmount / 2;
   //this shows the wrong amount of tokens available
-  const qAssetAmount = Math.floor(Number(tokenAmount)) * 0.95;
+  const qAssetAmount = truncateToThreeDecimals(
+    Math.floor(Number(tokenAmount)) * 0.95,
+  );
 
   const [inputError, setInputError] = useState(false);
 
@@ -209,9 +215,7 @@ export const StakingBox = ({
                           <Text color="complimentary.900" fontWeight="light">
                             {address
                               ? balance && Number(balance) !== 0
-                                ? `${
-                                    truncatedBalance - 0.005
-                                  } ${selectedOption.value.toUpperCase()}`
+                                ? `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
                                 : `Get ${selectedOption.value.toUpperCase()} tokens here`
                               : '0'}
                           </Text>
@@ -284,7 +288,7 @@ export const StakingBox = ({
                 {/* This pushes the next Stat component to the right */}
                 <Stat py={4} textAlign="right" color="white">
                   <StatNumber textColor="complimentary.900">
-                    {qAssetAmount}
+                    {(Number(tokenAmount) * 0.95).toFixed(2)}
                   </StatNumber>
                 </Stat>
               </HStack>
@@ -393,7 +397,7 @@ export const StakingBox = ({
                 {/* This pushes the next Stat component to the right */}
                 <Stat py={4} textAlign="right" color="white">
                   <StatNumber textColor="complimentary.900">
-                    {qAssetAmount}
+                    {(Number(tokenAmount) * 0.95).toFixed(2)}
                   </StatNumber>
                 </Stat>
               </HStack>

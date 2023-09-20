@@ -325,7 +325,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
                       textAlign={'left'}
                       color="white"
                     >
-                      Transaction {transactionStatus}
+                      Status: {transactionStatus}
                     </Text>
                     <HStack
                       mt={2}
@@ -334,7 +334,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
                       fontSize="lg"
                       color="white"
                     >
-                      <Text fontWeight={'bold'}>Explorer Link:</Text>
+                      <Text fontWeight={'bold'}>Transaction details:</Text>
                       <Text color="complimentary.900">Mintscan</Text>
                     </HStack>
                     <Button
