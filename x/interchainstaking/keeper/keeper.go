@@ -26,6 +26,7 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v5/modules/core/keeper"
 	ibctmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+	lsmstakingTypes "github.com/ingenuity-build/quicksilver/x/lsmtypes"
 	"github.com/tendermint/tendermint/libs/log"
 
 	config "github.com/ingenuity-build/quicksilver/cmd/config"
@@ -157,7 +158,7 @@ func (k Keeper) AllPortConnections(ctx sdk.Context) (pcs []types.PortConnectionT
 //   query type functions, dependent upon callback features / capabilities;
 
 func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte, request []byte) error {
-	validatorsRes := stakingTypes.QueryValidatorsResponse{}
+	validatorsRes := lsmstakingTypes.QueryValidatorsResponse{}
 	if len(data) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (8)")
 	}
@@ -205,14 +206,26 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 		case !found:
 			k.Logger(ctx).Info("Unable to find validator - fetching proof...", "valoper", validator.OperatorAddress)
 			toQuery = true
-		case !val.CommissionRate.Equal(validator.GetCommission()):
-			k.Logger(ctx).Info("Validator commission change; fetching proof", "valoper", validator.OperatorAddress, "from", val.CommissionRate, "to", validator.GetCommission())
+		case !val.CommissionRate.Equal(validator.Commission.Rate):
+			k.Logger(ctx).Info("Validator commission change; fetching proof", "valoper", validator.OperatorAddress, "from", val.CommissionRate, "to", validator.Commission.Rate)
 			toQuery = true
 		case !val.VotingPower.Equal(validator.Tokens):
 			k.Logger(ctx).Info("Validator voting power change; fetching proof", "valoper", validator.OperatorAddress, "from", val.VotingPower, "to", validator.Tokens)
 			toQuery = true
 		case !val.DelegatorShares.Equal(validator.DelegatorShares):
 			k.Logger(ctx).Info("Validator shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.DelegatorShares, "to", validator.DelegatorShares)
+			toQuery = true
+		case val.Jailed != validator.Jailed:
+			k.Logger(ctx).Info("jail status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Jailed, "to", validator.Jailed)
+			toQuery = true
+		case val.Status != validator.Status.String():
+			k.Logger(ctx).Info("jail status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Jailed, "to", validator.Jailed)
+			toQuery = true
+		case !val.LiquidShares.Equal(validator.LiquidShares):
+			k.Logger(ctx).Info("liquid shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.LiquidShares, "to", validator.LiquidShares)
+			toQuery = true
+		case !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
+			k.Logger(ctx).Info("Validator bond shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.ValidatorBondShares, "to", validator.ValidatorBondShares)
 			toQuery = true
 		}
 
@@ -239,7 +252,7 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 }
 
 func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data []byte) error {
-	validator := stakingTypes.Validator{}
+	validator := lsmstakingTypes.Validator{}
 	if len(data) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (9)")
 	}
@@ -254,18 +267,20 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
 		jailTime := time.Time{}
-		if validator.IsJailed() {
+		if validator.Jailed {
 			jailTime = ctx.BlockTime()
 		}
 		zoneInfo.Validators = append(zoneInfo.Validators, &types.Validator{
-			ValoperAddress:  validator.OperatorAddress,
-			CommissionRate:  validator.GetCommission(),
-			VotingPower:     validator.Tokens,
-			DelegatorShares: validator.DelegatorShares,
-			Score:           sdk.ZeroDec(),
-			Status:          validator.Status.String(),
-			Jailed:          validator.IsJailed(),
-			JailedSince:     jailTime,
+			ValoperAddress:      validator.OperatorAddress,
+			CommissionRate:      validator.Commission.Rate,
+			VotingPower:         validator.Tokens,
+			DelegatorShares:     validator.DelegatorShares,
+			Score:               sdk.ZeroDec(),
+			Status:              validator.Status.String(),
+			Jailed:              validator.Jailed,
+			JailedSince:         jailTime,
+			LiquidShares:        validator.LiquidShares,
+			ValidatorBondShares: validator.ValidatorBondShares,
 		})
 		zoneInfo.Validators = zoneInfo.GetValidatorsSorted()
 
@@ -275,9 +290,9 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 
 	} else {
 
-		if !val.CommissionRate.Equal(validator.GetCommission()) {
-			k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.GetCommission())
-			val.CommissionRate = validator.GetCommission()
+		if !val.CommissionRate.Equal(validator.Commission.Rate) {
+			k.Logger(ctx).Info("Validator commission rate change; updating...", "valoper", validator.OperatorAddress, "oldRate", val.CommissionRate, "newRate", validator.Commission.Rate)
+			val.CommissionRate = validator.Commission.Rate
 		}
 
 		if !val.VotingPower.Equal(validator.Tokens) {
@@ -290,12 +305,12 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 			val.DelegatorShares = validator.DelegatorShares
 		}
 
-		if !val.Jailed && validator.IsJailed() {
+		if !val.Jailed && validator.Jailed {
 			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress)
 
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
-		} else if val.Jailed && !validator.IsJailed() {
+		} else if val.Jailed && !validator.Jailed {
 			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
 
 			val.Jailed = false
@@ -304,8 +319,17 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 
 		if val.Status != validator.Status.String() {
 			k.Logger(ctx).Info("Transitioning validator status", "valoper", validator.OperatorAddress, "previous", val.Status, "current", validator.Status.String())
-
 			val.Status = validator.Status.String()
+		}
+
+		if !val.ValidatorBondShares.Equal(validator.ValidatorBondShares) {
+			k.Logger(ctx).Info("Validator bonded shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.ValidatorBondShares, "newShares", validator.ValidatorBondShares)
+			val.ValidatorBondShares = validator.ValidatorBondShares
+		}
+
+		if !val.LiquidShares.Equal(validator.LiquidShares) {
+			k.Logger(ctx).Info("Validator liquid shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.LiquidShares, "newShares", validator.LiquidShares)
+			val.LiquidShares = validator.LiquidShares
 		}
 
 		if _, found := k.GetPerformanceDelegation(ctx, &zoneInfo, validator.OperatorAddress); !found {

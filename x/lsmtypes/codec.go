@@ -3,6 +3,7 @@ package lsmtypes
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -48,4 +49,6 @@ var (
 
 func init() {
 	RegisterLegacyAminoCodec(amino)
+	cryptocodec.RegisterCrypto(amino)
+	sdk.RegisterLegacyAminoCodec(amino)
 }

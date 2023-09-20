@@ -413,9 +413,10 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	var pendingAmount sdk.Coins
 	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
 	var coinsToFlush sdk.Coins
+
 	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
 		// fmt.Println(receiptInfo)
-		if (receiptInfo.FirstSeen.After(exclusionTime) || receiptInfo.FirstSeen.Equal(exclusionTime)) && receiptInfo.Completed == nil {
+		if (receiptInfo.FirstSeen.After(exclusionTime) || receiptInfo.FirstSeen.Equal(exclusionTime)) && receiptInfo.Completed == nil && receiptInfo.Amount[0].Denom == delAddrBalance.Denom {
 			pendingAmount = pendingAmount.Add(receiptInfo.Amount...)
 		}
 		return false
@@ -425,14 +426,11 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	coinsToFlush, hasNeg = sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
 		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
-		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
+		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime(), delAddrBalance.Denom)
 		return nil
 	}
 
-	// set the zone amount to the coins to be flushed.
-	zone.DelegationAddress.Balance = coinsToFlush
 	k.Logger(ctx).Info("flush delegations ", "total", coinsToFlush)
-	k.SetZone(ctx, zone)
 
 	sendMsg := banktypes.MsgSend{
 		FromAddress: "",

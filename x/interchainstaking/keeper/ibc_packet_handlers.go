@@ -158,7 +158,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 			}
 			k.Logger(ctx).Info("Tokens redeemed for shares", "response", response)
 			// we should update delegation records here.
-			if err := k.HandleRedeemTokens(ctx, src, response.Amount); err != nil {
+			if err := k.HandleRedeemTokens(ctx, src, response.Amount, packetData.Memo); err != nil {
 				return err
 			}
 			continue
@@ -847,7 +847,7 @@ func (k *Keeper) HandleUndelegate(ctx sdk.Context, msg sdk.Msg, completion time.
 	return nil
 }
 
-func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin) error {
+func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coin, memo string) error {
 	k.Logger(ctx).Info("Received MsgRedeemTokensforShares acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgRedeemTokensforShares
 	redeemMsg, ok := msg.(*lsmstakingtypes.MsgRedeemTokensForShares)
@@ -861,6 +861,36 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 	}
 	zone := k.GetZoneForDelegateAccount(ctx, redeemMsg.DelegatorAddress)
 
+	switch {
+	//case memo == "rewards":
+	case strings.HasPrefix(memo, "batch"):
+		k.Logger(ctx).Debug("batch delegation", "memo", memo, "tx", redeemMsg)
+		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
+		if err != nil {
+			return err
+		}
+		k.Logger(ctx).Debug("outstanding delegations ack-received")
+		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), redeemMsg.Amount.Denom)
+		// fmt.Println(zone.DelegationAddress.Balance)
+		// fmt.Println(delegateMsg.Amount)
+		//zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(redeemMsg.Amount)
+		k.SetZone(ctx, zone)
+		if zone.DelegationAddress.Balance.IsZero() && zone.WithdrawalWaitgroup == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
+			if err = k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
+
+	default:
+		receipt, found := k.GetReceipt(ctx, GetReceiptKey(zone.ChainId, memo))
+		if !found {
+			return fmt.Errorf("unable to find receipt for hash %s", memo)
+		}
+		t := ctx.BlockTime()
+		receipt.Completed = &t
+		k.SetReceipt(ctx, receipt)
+	}
 	return k.UpdateDelegationRecordForAddress(ctx, redeemMsg.DelegatorAddress, validatorAddress, amount, zone, false)
 }
 
@@ -890,10 +920,10 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 			return err
 		}
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
-		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime())
+		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime(), delegateMsg.Amount.Denom)
 		// fmt.Println(zone.DelegationAddress.Balance)
 		// fmt.Println(delegateMsg.Amount)
-		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
+		//zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
 		k.SetZone(ctx, zone)
 		if zone.DelegationAddress.Balance.IsZero() && zone.WithdrawalWaitgroup == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")

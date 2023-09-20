@@ -1,6 +1,6 @@
 module github.com/ingenuity-build/quicksilver
 
-go 1.19
+go 1.20
 
 require (
 	cosmossdk.io/errors v1.0.0-beta.7
@@ -11,7 +11,7 @@ require (
 	github.com/cometbft/cometbft-db v0.8.0
 	github.com/cosmos/cosmos-proto v1.0.0-beta.3
 	github.com/cosmos/cosmos-sdk v0.46.13
-	github.com/cosmos/ibc-go/v5 v5.2.1
+	github.com/cosmos/ibc-go/v5 v5.3.1
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.3
 	github.com/golangci/golangci-lint v1.53.1

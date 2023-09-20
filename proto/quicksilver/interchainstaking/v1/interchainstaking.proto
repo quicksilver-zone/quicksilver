@@ -138,6 +138,18 @@ message Validator {
   bool tombstoned = 8;
   google.protobuf.Timestamp jailed_since = 9
       [ (gogoproto.nullable) = false, (gogoproto.stdtime) = true ];
+  // Number of shares self bonded from the validator
+  string validator_bond_shares = 10 [
+    (gogoproto.moretags)   = "yaml:\"validator_bond_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  // Number of shares either tokenized or owned by a liquid staking provider
+  string liquid_shares = 11 [
+    (gogoproto.moretags)   = "yaml:\"liquid_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ]; 
 }
 
 message DelegatorIntent {

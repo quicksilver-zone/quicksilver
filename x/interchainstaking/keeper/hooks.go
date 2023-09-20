@@ -7,7 +7,6 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
 	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
 	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
@@ -77,22 +76,18 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				0,
 			)
 
-			addressBytes, err := utils.AccAddressFromBech32(zoneInfo.DelegationAddress.Address, zoneInfo.AccountPrefix)
-			if err != nil {
-				k.Logger(ctx).Error("cannot decode bech32 delegation addr")
-				return false
-
-			}
+			balancesQuery := banktypes.QueryAllBalancesRequest{Address: zoneInfo.DelegationAddress.Address}
+			bz = k.cdc.MustMarshal(&balancesQuery)
 
 			k.ICQKeeper.MakeRequest(
 				ctx,
 				zoneInfo.ConnectionId,
 				zoneInfo.ChainId,
-				types.BankStoreKey,
-				append(banktypes.CreateAccountBalancesPrefix(addressBytes), []byte(zoneInfo.BaseDenom)...),
+				"cosmos.bank.v1beta1.Query/AllBalances",
+				bz,
 				sdk.NewInt(-1),
 				types.ModuleName,
-				"delegationaccountbalance",
+				"delegationaccountbalances",
 				0,
 			)
 
