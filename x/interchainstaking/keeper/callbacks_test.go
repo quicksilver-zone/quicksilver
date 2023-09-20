@@ -17,8 +17,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	tmtypes "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	"fmt"
-
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
@@ -1527,7 +1525,6 @@ func TestDepositIntervalCallback(t *testing.T) {
 	txQueryCount := 0
 	for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
 		if query.QueryType == "tendermint.Tx" {
-			// fmt.Println(">>>", query)
 			txQueryCount++
 		}
 	}
@@ -1640,11 +1637,6 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 		// should not raise any err here, convert txRes to bytes
 		txInBytes, _ := quicksilver.AppCodec().Marshal(_res.TxResponses[0])
 
-		// protoProof := _res.TxResponses[0].Tx.
-		// quicksilver.InterchainQueryKeeper
-		// fmt.Println("@>", suite.chainB.CurrentTMClientHeader())
-		fmt.Println("@>", _res.TxResponses[0])
-
 		response := icqtypes.GetTxWithProofResponse{
 			TxResponse: _res.TxResponses[0],
 			Proof: &tmtypes.TxProof{
@@ -1656,8 +1648,6 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 		respInByte, err := quicksilver.AppCodec().Marshal(&response)
 		suite.NoError(err)
 
-		// txHash as request data
-		fmt.Println("txHash before", _res.TxResponses[0].TxHash)
 		requestData := tx.GetTxRequest{
 			Hash: _res.TxResponses[0].TxHash,
 		}

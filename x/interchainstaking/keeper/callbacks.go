@@ -438,15 +438,12 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	if err != nil {
 		return err
 	}
-	fmt.Println("2", queryRequest.Hash)
 
-	fmt.Println("3")
 	// check hash matches query
 	if !strings.EqualFold(hashStr, queryRequest.Hash) {
 		return fmt.Errorf("invalid tx for query - expected %s, got %s", queryRequest.Hash, hashStr)
 	}
 
-	fmt.Println("4")
 	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hashStr))
 	if found {
 		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", hashStr)
