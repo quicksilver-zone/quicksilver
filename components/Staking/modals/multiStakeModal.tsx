@@ -115,7 +115,7 @@ export const ValidatorsTable: React.FC<{
     <Box borderRadius={'6px'} maxH="xl" minH="lg">
       <Box
         borderRadius={'6px'}
-        maxH="120px" // Adjusted height
+        maxH="120px"
         minH="md"
         px={4}
         pb={0}
@@ -226,17 +226,7 @@ export const ValidatorsTable: React.FC<{
         alignItems="center"
         mt={4}
         mb={2}
-      >
-        <Button
-          h="30px"
-          w="55%"
-          _hover={{
-            bgColor: '#181818',
-          }}
-        >
-          Liquid Stake
-        </Button>
-      </Flex>
+      ></Flex>
     </Box>
   );
 };
@@ -246,17 +236,17 @@ interface MultiModalProps {
   onClose: () => void;
   children?: React.ReactNode;
   selectedChainName: string;
+  selectedValidators: string[];
+  setSelectedValidators: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
 export const MultiModal: React.FC<MultiModalProps> = ({
   isOpen,
   onClose,
   selectedChainName,
+  selectedValidators,
+  setSelectedValidators,
 }) => {
-  const [selectedValidators, setSelectedValidators] = React.useState<string[]>(
-    [],
-  );
-
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
   const { data, isLoading, refetch } = useValidatorData(selectedChainName);
@@ -271,9 +261,9 @@ export const MultiModal: React.FC<MultiModalProps> = ({
 
   const handleValidatorClick = (validatorName: string) => {
     // If the validator is already selected, remove it, else add to the selected list
-    setSelectedValidators((prevState) =>
+    setSelectedValidators((prevState: string[]) =>
       prevState.includes(validatorName)
-        ? prevState.filter((v) => v !== validatorName)
+        ? prevState.filter((v: string) => v !== validatorName)
         : [...prevState, validatorName],
     );
   };
@@ -296,7 +286,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
       {/* Set the size here */}
-      <ModalOverlay />
+
       <ModalContent borderRadius={'10px'} maxHeight="70vh" bgColor="#1A1A1A">
         <ModalHeader borderRadius="10px" bgColor="#1A1A1A" p={0}>
           <Accordion allowToggle>
@@ -333,7 +323,7 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                   Choose which validator(s) you would like to liquid stake to.
                   You can select from the list below or utilize the quick select
                   to pick the highest ranked validators. To learn more about
-                  raninkings click here.
+                  rainkings click here.
                 </Text>
               </AccordionPanel>
             </AccordionItem>
@@ -425,9 +415,9 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                         bgColor: '#181818',
                       }}
                       h="30px"
-                      onClick={() => handleQuickSelect(5)}
+                      onClick={() => handleQuickSelect(2)}
                     >
-                      Top 5
+                      Top 2
                     </Button>
                     <Button
                       w="60px"
@@ -435,9 +425,9 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                         bgColor: '#181818',
                       }}
                       h="30px"
-                      onClick={() => handleQuickSelect(10)}
+                      onClick={() => handleQuickSelect(4)}
                     >
-                      Top 10
+                      Top 4
                     </Button>
                     <Button
                       w="60px"
@@ -445,9 +435,9 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                         bgColor: '#181818',
                       }}
                       h="30px"
-                      onClick={() => handleQuickSelect(20)}
+                      onClick={() => handleQuickSelect(8)}
                     >
-                      Top 20
+                      Top 8
                     </Button>
                   </Flex>
                 </Box>
@@ -458,6 +448,18 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                 selectedValidators={selectedValidators}
                 searchTerm={searchTerm}
               />
+              <Box w="100%" justifyContent={'center'} alignItems={'center'}>
+                <Button
+                  onClick={onClose}
+                  h="30px"
+                  w="25%"
+                  _hover={{
+                    bgColor: '#181818',
+                  }}
+                >
+                  Return
+                </Button>
+              </Box>
             </Box>
           )}
         </ModalBody>

@@ -1,7 +1,4 @@
-import {
-  Coin,
-  decodeCosmosSdkDecFromProto,
-} from '@cosmjs/stargate';
+import { Coin, decodeCosmosSdkDecFromProto } from '@cosmjs/stargate';
 import BigNumber from 'bignumber.js';
 import { QueryDelegationTotalRewardsResponse } from 'interchain-query/cosmos/distribution/v1beta1/query';
 import { QueryAnnualProvisionsResponse } from 'interchain-query/cosmos/mint/v1beta1/query';
@@ -14,12 +11,7 @@ import {
   Validator,
 } from 'interchain-query/cosmos/staking/v1beta1/staking';
 
-import {
-  decodeUint8Arr,
-  isGreaterThanZero,
-  shiftDigits,
-  toNumber,
-} from '.';
+import { decodeUint8Arr, isGreaterThanZero, shiftDigits, toNumber } from '.';
 
 const DAY_TO_SECONDS = 24 * 60 * 60;
 const ZERO = '0';
@@ -30,17 +22,15 @@ export const calcStakingApr = ({
   communityTax,
   annualProvisions,
 }: ChainMetaData & { commission: string }) => {
-  const totalSupply = new BigNumber(
-    pool?.bondedTokens || 0,
-  ).plus(pool?.notBondedTokens || 0);
+  const totalSupply = new BigNumber(pool?.bondedTokens || 0).plus(
+    pool?.notBondedTokens || 0,
+  );
 
-  const bondedTokensRatio = new BigNumber(
-    pool?.bondedTokens || 0,
-  ).div(totalSupply);
+  const bondedTokensRatio = new BigNumber(pool?.bondedTokens || 0).div(
+    totalSupply,
+  );
 
-  const inflation = new BigNumber(
-    annualProvisions || 0,
-  ).div(totalSupply);
+  const inflation = new BigNumber(annualProvisions || 0).div(totalSupply);
 
   const one = new BigNumber(1);
 
@@ -53,33 +43,20 @@ export const calcStakingApr = ({
     .toString();
 };
 
-export type ParsedValidator = ReturnType<
-  typeof parseValidators
->[0];
+export type ParsedValidator = ReturnType<typeof parseValidators>[0];
 
-export const parseValidators = (
-  validators: Validator[],
-) => {
+export const parseValidators = (validators: Validator[]) => {
   return validators.map((validator) => ({
-    description:
-      validator.description?.details || '',
+    description: validator.description?.details || '',
     name: validator.description?.moniker || '',
-    identity:
-      validator.description?.identity || '',
+    identity: validator.description?.identity || '',
     address: validator.operatorAddress,
-    commission:
-      validator.commission?.commissionRates
-        ?.rate || ZERO,
-    votingPower: toNumber(
-      shiftDigits(validator.tokens, -6, 0),
-      0,
-    ),
+    commission: validator.commission?.commissionRates?.rate || ZERO,
+    votingPower: toNumber(shiftDigits(validator.tokens, -6, 0), 0),
   }));
 };
 
-export type ExtendedValidator = ReturnType<
-  typeof extendValidators
->[0];
+export type ExtendedValidator = ReturnType<typeof extendValidators>[0];
 
 export type ChainMetaData = {
   annualProvisions: string;
@@ -91,8 +68,7 @@ export const extendValidators = (
   validators: ParsedValidator[] = [],
   chainMetadata: ChainMetaData,
 ) => {
-  const { annualProvisions, communityTax, pool } =
-    chainMetadata;
+  const { annualProvisions, communityTax, pool } = chainMetadata;
 
   return validators.map((validator) => {
     const apr = annualProvisions
@@ -116,44 +92,24 @@ const findAndDecodeReward = (
   denom: string,
   exponent: number,
 ) => {
-  const amount =
-    coins.find((coin) => coin.denom === denom)
-      ?.amount || ZERO;
-  const decodedAmount =
-    decodeCosmosSdkDecFromProto(
-      amount,
-    ).toString();
+  const amount = coins.find((coin) => coin.denom === denom)?.amount || ZERO;
+  const decodedAmount = decodeCosmosSdkDecFromProto(amount).toString();
   return shiftDigits(decodedAmount, exponent);
 };
 
-export type ParsedRewards = ReturnType<
-  typeof parseRewards
->;
+export type ParsedRewards = ReturnType<typeof parseRewards>;
 
 export const parseRewards = (
-  {
-    rewards,
-    total,
-  }: QueryDelegationTotalRewardsResponse,
+  { rewards, total }: QueryDelegationTotalRewardsResponse,
   denom: string,
   exponent: number,
 ) => {
-  const totalReward = findAndDecodeReward(
-    total,
-    denom,
-    exponent,
-  );
+  const totalReward = findAndDecodeReward(total, denom, exponent);
 
-  const rewardsParsed = rewards.map(
-    ({ reward, validatorAddress }) => ({
-      validatorAddress,
-      amount: findAndDecodeReward(
-        reward,
-        denom,
-        exponent,
-      ),
-    }),
-  );
+  const rewardsParsed = rewards.map(({ reward, validatorAddress }) => ({
+    validatorAddress,
+    amount: findAndDecodeReward(reward, denom, exponent),
+  }));
 
   return {
     byValidators: rewardsParsed,
@@ -161,54 +117,36 @@ export const parseRewards = (
   };
 };
 
-export type ParsedDelegations = ReturnType<
-  typeof parseDelegations
->;
+export type ParsedDelegations = ReturnType<typeof parseDelegations>;
 
 export const parseDelegations = (
   delegations: QueryDelegatorDelegationsResponse['delegationResponses'],
   exponent: number,
 ) => {
-  return delegations.map(
-    ({ balance, delegation }) => ({
-      validatorAddress:
-        delegation?.validatorAddress || '',
-      amount: shiftDigits(
-        balance?.amount || ZERO,
-        exponent,
-      ),
-    }),
-  );
+  return delegations.map(({ balance, delegation }) => ({
+    validatorAddress: delegation?.validatorAddress || '',
+    amount: shiftDigits(balance?.amount || ZERO, exponent),
+  }));
 };
 
-export const calcTotalDelegation = (
-  delegations: ParsedDelegations,
-) => {
+export const calcTotalDelegation = (delegations: ParsedDelegations) => {
+  if (!delegations) {
+    console.error('Delegations are undefined:', delegations);
+    return '0'; // Handle this case accordingly
+  }
+
   return delegations
-    .reduce(
-      (prev, cur) => prev.plus(cur.amount),
-      new BigNumber(0),
-    )
+    .reduce((prev, cur) => prev.plus(cur.amount), new BigNumber(0))
     .toString();
 };
-
-export const parseUnbondingDays = (
-  params: QueryParamsResponse['params'],
-) => {
-  return new BigNumber(
-    Number(params?.unbondingTime?.seconds || 0),
-  )
+export const parseUnbondingDays = (params: QueryParamsResponse['params']) => {
+  return new BigNumber(Number(params?.unbondingTime?.seconds || 0))
     .div(DAY_TO_SECONDS)
     .decimalPlaces(0)
     .toString();
 };
 
-export const parseAnnualProvisions = (
-  data: QueryAnnualProvisionsResponse,
-) => {
-  const res = shiftDigits(
-    decodeUint8Arr(data?.annualProvisions),
-    -18,
-  );
+export const parseAnnualProvisions = (data: QueryAnnualProvisionsResponse) => {
+  const res = shiftDigits(decodeUint8Arr(data?.annualProvisions), -18);
   return isGreaterThanZero(res) ? res : null;
 };

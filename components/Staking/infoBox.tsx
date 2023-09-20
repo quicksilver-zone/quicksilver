@@ -15,7 +15,10 @@ import { BsTrophy, BsCoin, BsClock } from 'react-icons/bs';
 import { RiStockLine } from 'react-icons/ri';
 
 type AssetsAccordianProps = {
-  selectedOption: string;
+  selectedOption: {
+    name: string;
+    value: string;
+  };
 };
 
 export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
@@ -29,7 +32,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
       flex="2"
       p={5}
     >
-      <Image
+      {/* <Image
         alt="embelish"
         src="/img/metalmisc3.png"
         zIndex={1}
@@ -38,9 +41,9 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
         right="-65px"
         boxSize="135px"
         transform="rotate(25deg)"
-      />
+      /> */}
       <Text fontSize="20px" color="white">
-        {selectedOption.toUpperCase()}&nbsp;on Quicksilver
+        {selectedOption.value.toUpperCase()}&nbsp;on Quicksilver
       </Text>
       <Accordion mt={6} allowToggle>
         <AccordionItem pt={2} mb={2} borderTop={'none'}>
@@ -124,15 +127,17 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
           >
             <VStack spacing={2} width="100%">
               <HStack justifyContent="space-between" width="100%">
-                <Text color="white">on {selectedOption.toUpperCase()}</Text>
+                <Text color="white">
+                  on {selectedOption.value.toUpperCase()}
+                </Text>
                 <Text color="complimentary.900">
-                  0 {selectedOption.toUpperCase()}
+                  0 {selectedOption.value.toUpperCase()}
                 </Text>
               </HStack>
               <HStack justifyContent="space-between" width="100%">
                 <Text color="white">on Quicksilver</Text>
                 <Text color="complimentary.900">
-                  0 {selectedOption.toUpperCase()}
+                  0 {selectedOption.value.toUpperCase()}
                 </Text>
               </HStack>
             </VStack>
@@ -154,12 +159,12 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
                   <RiStockLine color="#FF8000" size="24px" />
                 </Box>
                 <Text fontSize="16px" color={'white'}>
-                  Value of 1 q{selectedOption.toUpperCase()}
+                  Value of 1 q{selectedOption.value.toUpperCase()}
                 </Text>
               </Flex>
               <Text pr={2} color="complimentary.900">
-                1 q{selectedOption.toUpperCase()} = 1{' '}
-                {selectedOption.toUpperCase()}
+                1 q{selectedOption.value.toUpperCase()} = 1{' '}
+                {selectedOption.value.toUpperCase()}
               </Text>
             </Flex>
           </h2>
