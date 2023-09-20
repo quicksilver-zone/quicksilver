@@ -6,7 +6,9 @@ import (
 	"testing"
 	"time"
 
+	tmtypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	"github.com/stretchr/testify/require"
+	"github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -1608,7 +1610,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 }
 
 func (suite *KeeperTestSuite) TestDepositTxCallback() {
-	suite.Run("Deposit transaction failed", func() {
+	suite.Run("Deposit transaction successful", func() {
 		suite.SetupTest()
 		suite.setupTestZones()
 
@@ -1625,19 +1627,30 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		// response := sdk.NewCoin("qck", sdk.NewInt(10))
-		// respbz, err := quicksilver.AppCodec().Marshal(&response)
-		// suite.NoError(err)
+		// get first deposit transaction
+		_data, err := base64.StdEncoding.DecodeString(depositTxFixture)
+		_res := tx.GetTxsEventResponse{}
+		quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().MustUnmarshal(_data, &_res)
+		suite.NoError(err)
+		var msg banktypes.MsgSend
+		_ = quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().UnpackAny(_res.TxResponses[0].Tx, msg)
 
-		delAddr := zone.DelegationAddress.Address
+		// should not raise any err here
+		txInBytesRepresentation, _ := quicksilver.AppCodec().Marshal(_res.TxResponses[0])
 
-		accAddr, err := addressutils.AccAddressFromBech32(delAddr, "cosmos")
+		response := icqtypes.GetTxWithProofResponse{
+			TxResponse: _res.TxResponses[0],
+			Proof:      &types.TxProof{},
+			Header:     &tmtypes.Header{},
+			TxBytes:    txInBytesRepresentation,
+		}
+		respInByte, err := quicksilver.AppCodec().Marshal(&response)
 		suite.NoError(err)
 
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+		// delAddr := zone.DelegationAddress.Address
 
-		// data need to contain the txHash of the deposit transaction, so we can check if it was successful
-		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, nil, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		// request need to contain the txHash of the deposit transaction, so we can check if it was successful
+		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, respInByte, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: []byte(_res.TxResponses[0].TxHash)})
 
 		suite.NoError(err)
 	})
