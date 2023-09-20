@@ -89,8 +89,6 @@ func (msg MsgClaim) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{address}
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // NewMsgIncentivePoolSpend constructs a msg to claim from a zone airdrop.
 func NewMsgIncentivePoolSpend(authority, toAddress sdk.Address, amt sdk.Coins) *MsgIncentivePoolSpend {
 	return &MsgIncentivePoolSpend{

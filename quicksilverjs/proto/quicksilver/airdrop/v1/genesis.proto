@@ -1,0 +1,18 @@
+syntax = "proto3";
+package quicksilver.airdrop.v1;
+
+import "gogoproto/gogo.proto";
+
+import "quicksilver/airdrop/v1/params.proto";
+import "quicksilver/airdrop/v1/airdrop.proto";
+
+option go_package = "github.com/ingenuity-build/quicksilver/x/airdrop/types";
+
+// GenesisState defines the airdrop module's genesis state.
+message GenesisState {
+  option (gogoproto.goproto_getters) = false;
+
+  Params params = 1 [ (gogoproto.nullable) = false ];
+  repeated ZoneDrop zone_drops = 2;
+  repeated ClaimRecord claim_records = 3;
+}

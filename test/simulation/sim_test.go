@@ -22,7 +22,7 @@ import (
 )
 
 func init() {
-	simulation.GetSimulatorFlags()
+	simulation.SimulatorFlags()
 }
 
 // interBlockCacheOpt returns a BaseApp option function that sets the persistent

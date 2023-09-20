@@ -36,7 +36,8 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidator() {
 			Status:          stakingtypes.BondStatusBonded,
 			Score:           sdk.NewDec(0),
 		}
-		app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newValidator)
+		err = app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newValidator)
+		suite.NoError(err)
 
 		count2 := len(app.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId))
 

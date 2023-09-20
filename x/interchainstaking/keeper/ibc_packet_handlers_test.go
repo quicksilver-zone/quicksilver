@@ -597,6 +597,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUser() {
 
 	for _, test := range tests {
 		suite.Run(test.name, func() {
+			test := test
 			suite.SetupTest()
 			suite.setupTestZones()
 
@@ -1222,13 +1223,20 @@ func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	}
 
 	val0 := icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
+	err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
+	suite.NoError(err)
+
 	val1 := icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
+	suite.NoError(err)
+
 	val2 := icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
+	suite.NoError(err)
+
 	val3 := icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
+	suite.NoError(err)
 
 	vals = quicksilver.InterchainstakingKeeper.GetValidators(ctx, zone.ChainId)
 
@@ -1270,7 +1278,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToIntentChange() {
 	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
 	// trigger rebalance
-	err := quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
+	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
 	suite.NoError(err)
 
 	// change intents to trigger redelegations from val[3]
@@ -1352,13 +1360,21 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	}
 
 	val0 := icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
+	err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
+	suite.NoError(err)
+
 	val1 := icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
+	suite.NoError(err)
+
 	val2 := icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
+	suite.NoError(err)
+
 	val3 := icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
-	quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
+	suite.NoError(err)
+
 	delegations := []icstypes.Delegation{
 		{
 			DelegationAddress: zone.DelegationAddress.Address,
@@ -1399,7 +1415,7 @@ func (suite *KeeperTestSuite) TestRebalanceDueToDelegationChange() {
 	}
 
 	// trigger rebalance
-	err := quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
+	err = quicksilver.InterchainstakingKeeper.Rebalance(ctx, &zone, 1)
 	suite.NoError(err)
 
 	quicksilver.InterchainstakingKeeper.IterateAllDelegations(ctx, &zone, func(delegation icstypes.Delegation) bool {
