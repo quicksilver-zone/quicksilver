@@ -433,7 +433,6 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 	hashStr := hex.EncodeToString(hash)
 
 	queryRequest := tx.GetTxRequest{}
-
 	err = k.cdc.Unmarshal(query.Request, &queryRequest)
 	if err != nil {
 		return err
