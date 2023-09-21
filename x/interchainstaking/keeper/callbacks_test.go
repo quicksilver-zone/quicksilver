@@ -1624,14 +1624,15 @@ func (suite *KeeperTestSuite) TestPerfBalanceCallback() {
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.NoError(err)
 
-		for _, addr := range []string{zone.DepositAddress.Address, zone.WithdrawalAddress.Address} {
-			accAddr, err := sdk.AccAddressFromBech32(addr)
-			suite.NoError(err)
-			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+		addr := zone.PerformanceAddress.Address
+		accAddr, err := sdk.AccAddressFromBech32(addr)
+		suite.NoError(err)
 
-			err = keeper.PerfBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
-			suite.NoError(err)
-		}
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+
+		err = keeper.PerfBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+		suite.NoError(err)
+
 	})
 }
 
