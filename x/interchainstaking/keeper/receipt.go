@@ -34,7 +34,7 @@ func (k *Keeper) HandleReceiptTransaction(ctx sdk.Context, txn *tx.Tx, hash stri
 
 	senderAddress := Unset
 	assets := sdk.Coins{}
-	
+
 	for _, msg := range txn.GetMsgs() {
 		msgSend, ok := msg.(*bankTypes.MsgSend)
 		if !ok {
