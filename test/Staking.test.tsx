@@ -1,5 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { test, expect, mock } from 'bun:test';
+import { test, expect, mock } from 'bun';
 import { useState } from 'react';
 
 import { NetworkSelect } from '@/components';

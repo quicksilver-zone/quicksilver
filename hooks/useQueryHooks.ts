@@ -5,10 +5,7 @@ import {
   createRpcQueryHooks,
 } from 'interchain-query';
 
-export const useQueryHooks = (
-  chainName: string,
-  extraKey?: string,
-) => {
+export const useQueryHooks = (chainName: string, extraKey?: string) => {
   const { getRpcEndpoint } = useChain(chainName);
 
   const rpcEndpointQuery = useRpcEndpoint({
@@ -17,9 +14,7 @@ export const useQueryHooks = (
       staleTime: Infinity,
       queryKeyHashFn: (queryKey) => {
         const key = [...queryKey, chainName];
-        return JSON.stringify(
-          extraKey ? [...key, extraKey] : key,
-        );
+        return JSON.stringify(extraKey ? [...key, extraKey] : key);
       },
     },
   });
@@ -30,24 +25,17 @@ export const useQueryHooks = (
       enabled: !!rpcEndpointQuery.data,
       staleTime: Infinity,
       queryKeyHashFn: (queryKey) => {
-        return JSON.stringify(
-          extraKey
-            ? [...queryKey, extraKey]
-            : queryKey,
-        );
+        return JSON.stringify(extraKey ? [...queryKey, extraKey] : queryKey);
       },
     },
   });
 
-  const { cosmos: cosmosQuery } =
-    createRpcQueryHooks({
-      rpc: rpcClientQuery.data,
-    });
+  const { cosmos: cosmosQuery } = createRpcQueryHooks({
+    rpc: rpcClientQuery.data,
+  });
 
   const isReady = !!rpcClientQuery.data;
-  const isFetching =
-    rpcEndpointQuery.isFetching ||
-    rpcClientQuery.isFetching;
+  const isFetching = rpcEndpointQuery.isFetching || rpcClientQuery.isFetching;
 
   return {
     cosmosQuery,
