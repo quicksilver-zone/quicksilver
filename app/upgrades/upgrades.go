@@ -13,11 +13,11 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	ibctmmigrations "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint/migrations"
 
-	"github.com/ingenuity-build/quicksilver/app/keepers"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	prtypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/app/keepers"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	prtypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 func Upgrades() []Upgrade {

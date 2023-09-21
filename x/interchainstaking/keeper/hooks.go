@@ -9,9 +9,9 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func (k *Keeper) BeforeEpochStart(_ sdk.Context, _ string, _ int64) error {

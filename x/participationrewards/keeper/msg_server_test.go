@@ -11,15 +11,15 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/ingenuity-build/quicksilver/app"
-	lpfarm "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/lpfarm"
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
-	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types/leverage/types"
-	"github.com/ingenuity-build/quicksilver/utils"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/app"
+	lpfarm "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/lpfarm"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
+	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types/leverage/types"
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 func (suite *KeeperTestSuite) Test_msgServer_SubmitClaim() {

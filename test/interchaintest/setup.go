@@ -6,7 +6,7 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 
-	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	istypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 var (

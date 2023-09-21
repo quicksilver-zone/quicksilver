@@ -1,7 +1,7 @@
 syntax = "proto3";
 package quicksilver.claimsmanager.v1;
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/claimsmanager/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types";
 
 // Msg defines the claimsmanager Msg service.
 service Msg {}

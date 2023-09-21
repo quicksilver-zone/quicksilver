@@ -17,9 +17,9 @@ import (
 	"github.com/golang/protobuf/proto" //nolint:staticcheck // suppress deprecated package lint message
 	"github.com/stretchr/testify/suite"
 
-	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/wasmbinding"
-	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/wasmbinding"
+	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 )
 
 type StargateTestSuite struct {

@@ -5,7 +5,7 @@ import "gogoproto/gogo.proto";
 import "quicksilver/tokenfactory/v1beta1/authorityMetadata.proto";
 import "quicksilver/tokenfactory/v1beta1/params.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/tokenfactory/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types";
 
 // GenesisState defines the tokenfactory module's genesis state.
 message GenesisState {

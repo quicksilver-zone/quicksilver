@@ -16,12 +16,12 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v7/testing"
 	testsuite "github.com/stretchr/testify/suite"
 
-	"github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	"github.com/ingenuity-build/quicksilver/utils/randomutils"
-	ics "github.com/ingenuity-build/quicksilver/x/interchainstaking"
-	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
+	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
+	icskeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 var (

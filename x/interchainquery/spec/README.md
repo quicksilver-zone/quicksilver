@@ -152,7 +152,7 @@ type QueryRequestsResponse struct {
 
 ## Keepers
 
-<https://pkg.go.dev/github.com/ingenuity-build/quicksilver/x/interchainquery/keeper>
+<https://pkg.go.dev/github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper>
 
 ## Parameters
 

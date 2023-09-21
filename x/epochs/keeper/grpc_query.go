@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"github.com/ingenuity-build/quicksilver/x/epochs/types"
+	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
 )
 
 var _ types.QueryServer = &Keeper{}

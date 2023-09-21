@@ -13,8 +13,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	lsmstakingTypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/utils"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/utils"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 // GetDelegation returns a specific delegation.

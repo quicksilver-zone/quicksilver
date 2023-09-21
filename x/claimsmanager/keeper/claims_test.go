@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
 var testClaims = []types.Claim{

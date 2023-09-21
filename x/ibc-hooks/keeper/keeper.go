@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/types/address"
 
-	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/types"
+	"github.com/quicksilver-zone/quicksilver/x/ibc-hooks/types"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"

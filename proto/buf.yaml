@@ -1,5 +1,5 @@
 version: v1
-name: buf.build/ingenuity-build/quicksilver
+name: buf.build/quicksilver-zone/quicksilver
 deps:
   - buf.build/cosmos/cosmos-sdk
   - buf.build/cosmos/ibc

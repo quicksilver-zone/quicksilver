@@ -16,8 +16,8 @@ import (
 	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 
-	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/keeper"
-	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/types"
+	"github.com/quicksilver-zone/quicksilver/x/ibc-hooks/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/ibc-hooks/types"
 )
 
 type ContractAck struct {

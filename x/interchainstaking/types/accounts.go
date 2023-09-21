@@ -6,7 +6,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
 
 func NewICAAccount(addr, portID string) (*ICAAccount, error) {

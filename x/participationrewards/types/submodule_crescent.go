@@ -11,8 +11,8 @@ import (
 
 	"github.com/ingenuity-build/multierror"
 
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
 
 type CrescentPoolProtocolData struct {

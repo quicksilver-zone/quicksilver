@@ -13,14 +13,14 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
 
-	config "github.com/ingenuity-build/quicksilver/cmd/config"
-	crescenttypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types"
-	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
-	umeetypes "github.com/ingenuity-build/quicksilver/third-party-chains/umee-types"
-	"github.com/ingenuity-build/quicksilver/utils"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	epochskeeper "github.com/ingenuity-build/quicksilver/x/epochs/keeper"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	config "github.com/quicksilver-zone/quicksilver/cmd/config"
+	crescenttypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types"
+	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
+	umeetypes "github.com/quicksilver-zone/quicksilver/third-party-chains/umee-types"
+	"github.com/quicksilver-zone/quicksilver/utils"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	epochskeeper "github.com/quicksilver-zone/quicksilver/x/epochs/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 // UserAllocation is an internal keeper struct to track transient state for

@@ -1,8 +1,8 @@
 package mint
 
 import (
-	"github.com/ingenuity-build/quicksilver/x/mint/keeper"
-	"github.com/ingenuity-build/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/x/mint/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

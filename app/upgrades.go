@@ -22,7 +22,7 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/ingenuity-build/quicksilver/app/upgrades"
+	"github.com/quicksilver-zone/quicksilver/app/upgrades"
 )
 
 func (app *Quicksilver) setUpgradeHandlers() {
