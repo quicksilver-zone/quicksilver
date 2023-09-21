@@ -2,6 +2,7 @@
   "name": "bun-qs",
   "version": "0.15.3",
   "private": true,
+  "homepage": "https://chalabi2.github.io/quicksilver-app-v2/",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
