@@ -448,7 +448,13 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                 selectedValidators={selectedValidators}
                 searchTerm={searchTerm}
               />
-              <Box w="100%" justifyContent={'center'} alignItems={'center'}>
+              <Box
+                mt={-12}
+                w="100%"
+                display="flex" // Add this line to make it a flex container
+                justifyContent="center" // Horizontally center the button
+                alignItems="center" // Vertically center the button
+              >
                 <Button
                   onClick={onClose}
                   h="30px"

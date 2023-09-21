@@ -39,7 +39,7 @@ export const useStakingData = (chainName: string) => {
   const coin = getCoin(chainName);
   const exp = getExponent(chainName);
 
-  const isDataQueryEnabled = !!address;
+  const isDataQueryEnabled = !!rpcQueryClient?.cosmos?.staking?.v1beta1;
 
   const balanceQuery = cosmosQuery.bank.v1beta1.useBalance({
     request: {
