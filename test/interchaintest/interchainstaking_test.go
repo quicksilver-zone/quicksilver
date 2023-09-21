@@ -266,13 +266,18 @@ func TestInterchainStaking(t *testing.T) {
 	jsonPacketData, err := codec.NewLegacyAmino().MarshalJSON(packetData)
 	require.NoError(t, err)
 
-	fmt.Println("jsonPacketData: ", jsonPacketData)
-	_, err = quicksilver.FullNodes[0].ExecTx(
+	fmt.Println("jsonPacketData: ", string(jsonPacketData))
+	txhash, err := quicksilver.FullNodes[0].ExecTx(
 		ctx, quickUser.KeyName(), "interchain-accounts", "controller", "send-tx", "connection-0", string(jsonPacketData),
 	)
 	require.NoError(t, err)
-	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
+
+	err = testutil.WaitForBlocks(ctx, 20, quicksilver, gaia)
 	require.NoError(t, err)
+
+	stdout, _, err = quicksilver.FullNodes[0].ExecQuery(ctx, "tx", txhash)
+	require.NoError(t, err)
+	fmt.Println(string(stdout))
 }
 
 func runSidecars(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
