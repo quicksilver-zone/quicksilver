@@ -3,6 +3,6 @@
 module.exports = {
   reactStrictMode: true,
   swcMinify: true,
-  basePath: 'https://chalabi2.github.io/quicksilver-app-v2',
-  assetPrefix: 'https://chalabi2.github.io/quicksilver-app-v2',
+  basePath: '/quicksilver-app-v2',
+  assetPrefix: '/quicksilver-app-v2',
 };
