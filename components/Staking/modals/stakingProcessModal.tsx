@@ -17,7 +17,7 @@ import {
 import styled from '@emotion/styled';
 import React, { useState } from 'react';
 
-import { MultiModal } from './multiStakeModal';
+import { MultiModal } from './validatorSelectionModal';
 
 const ChakraModalContent = styled(ModalContent)`
   position: relative;

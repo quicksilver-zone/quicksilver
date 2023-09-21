@@ -26,8 +26,8 @@ import React, { useEffect, useState } from 'react';
 import { useInputBox } from '@/hooks/useInputBox';
 import { useStakingData } from '@/hooks/useStakingData';
 
-import { MultiModal } from './modals/multiStakeModal';
 import StakingProcessModal from './modals/stakingProcessModal';
+import { MultiModal } from './modals/validatorSelectionModal';
 
 type StakingBoxProps = {
   selectedOption: {
