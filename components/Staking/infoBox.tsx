@@ -34,7 +34,7 @@ export const InfoBox: React.FC<AssetsAccordianProps> = ({ selectedOption }) => {
     >
       {/* <Image
         alt="embelish"
-        src="/img/metalmisc3.png"
+        src="/quicksilver-app-v2/img/metalmisc3.png"
         zIndex={1}
         position="absolute"
         top="-40px"

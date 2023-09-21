@@ -28,36 +28,36 @@ export default function Staking() {
   const networks = [
     {
       value: 'ATOM',
-      logo: '/img/networks/atom.svg',
-      qlogo: '/img/networks/q-atom.svg',
+      logo: '/quicksilver-app-v2/img/networks/atom.svg',
+      qlogo: '/quicksilver-app-v2/img/networks/q-atom.svg',
       name: 'Cosmos Hub',
       chainName: 'cosmoshub',
     },
     {
       value: 'OSMO',
-      logo: '/img/networks/osmosis.svg',
-      qlogo: '/img/networks/qosmo.svg',
+      logo: '/quicksilver-app-v2/img/networks/osmosis.svg',
+      qlogo: '/quicksilver-app-v2/img/networks/qosmo.svg',
       name: 'Osmosis',
       chainName: 'osmosis',
     },
     {
       value: 'STARS',
-      logo: '/img/networks/stargaze.svg',
-      qlogo: '/img/networks/stargaze-2.png',
+      logo: '/quicksilver-app-v2/img/networks/stargaze.svg',
+      qlogo: '/quicksilver-app-v2/img/networks/stargaze-2.png',
       name: 'Stargaze',
       chainName: 'stargaze',
     },
     {
       value: 'REGEN',
-      logo: '/img/networks/regen.svg',
-      qlogo: '/img/networks/regen.svg',
+      logo: '/quicksilver-app-v2/img/networks/regen.svg',
+      qlogo: '/quicksilver-app-v2/img/networks/regen.svg',
       name: 'Regen',
       chainName: 'regen',
     },
     {
       value: 'SOMM',
-      logo: '/img/networks/sommelier.png',
-      qlogo: '/img/networks/sommelier.png',
+      logo: '/quicksilver-app-v2/img/networks/sommelier.png',
+      qlogo: '/quicksilver-app-v2/img/networks/sommelier.png',
       name: 'Sommelier',
       chainName: 'sommelier',
     },
@@ -71,7 +71,7 @@ export default function Staking() {
       <Box
         w="100vw"
         h="100vh"
-        bgImage="url('https://s3-alpha-sig.figma.com/img/555d/db64/f5bf65e93a15603069e8e865d5f6d60d?Expires=1694995200&Signature=fYfmbqDdOGRYtSeEsOkavPhhkaNQK1UFFfICaUaM1k9OVEpACsoWOcK2upjRW7Tfs-pPTJBuQuvcmF9gBjosh5-Al2xTWHYzDlR~CYJNzsXcseIEnVf7H8lCdJqhZY-T0r~lmbJK5-CmbulWfOaubc-wyY3C-oM3b1RanGV1TqmPZto5bbHwf56jDYqK86HedVMXbUCOlzkeBw2R93AkmNDMOdDbKa9rIKqxil64DuQQAfIFxWm1Rc69Jc1-4K-bunsS~kfz8bSET6TIGmR15nCo~ibfISG72YYKAa7zz6XqUY6GKmmG-Yhj9XyyYb7Jy02r5axNei3DRD78SBe~6w__&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4')"
+        bgImage="url('https://s3-alpha-sig.figma.com/quicksilver-app-v2/img/555d/db64/f5bf65e93a15603069e8e865d5f6d60d?Expires=1694995200&Signature=fYfmbqDdOGRYtSeEsOkavPhhkaNQK1UFFfICaUaM1k9OVEpACsoWOcK2upjRW7Tfs-pPTJBuQuvcmF9gBjosh5-Al2xTWHYzDlR~CYJNzsXcseIEnVf7H8lCdJqhZY-T0r~lmbJK5-CmbulWfOaubc-wyY3C-oM3b1RanGV1TqmPZto5bbHwf56jDYqK86HedVMXbUCOlzkeBw2R93AkmNDMOdDbKa9rIKqxil64DuQQAfIFxWm1Rc69Jc1-4K-bunsS~kfz8bSET6TIGmR15nCo~ibfISG72YYKAa7zz6XqUY6GKmmG-Yhj9XyyYb7Jy02r5axNei3DRD78SBe~6w__&Key-Pair-Id=APKAQ4GOSFWCVNEHN3O4')"
         bgSize="fit"
         bgPosition="right center"
         bgAttachment="fixed"
@@ -84,7 +84,7 @@ export default function Staking() {
             name="viewport"
             content="width=device-width, initial-scale=1.0"
           />
-          <link rel="icon" href="/img/favicon.png" />
+          <link rel="icon" href="/quicksilver-app-v2/img/favicon.png" />
         </Head>
         <Header chainName={selectedNetwork.chainName} />
         <SideHeader />
@@ -98,7 +98,7 @@ export default function Staking() {
         >
           {/* <Image
             alt={''}
-            src="/img/metalmisc2.png"
+            src="/quicksilver-app-v2/img/metalmisc2.png"
             zIndex={-10}
             position="absolute"
             bottom="-10"

@@ -13,32 +13,24 @@ import { useState, useEffect } from 'react';
 
 export const SideHeader = () => {
   const router = useRouter();
-  const [selectedPage, setSelectedPage] =
-    useState('');
+  const [selectedPage, setSelectedPage] = useState('');
   useEffect(() => {
     // Function to handle route changes
     const handleRouteChange = (url: string) => {
-      const path = url.split('/')[1]; 
+      const path = url.split('/')[1];
       setSelectedPage(path);
     };
 
     // Add the route change listener
-    router.events.on(
-      'routeChangeComplete',
-      handleRouteChange,
-    );
+    router.events.on('routeChangeComplete', handleRouteChange);
 
     // Cleanup the listener when the component is unmounted
     return () => {
-      router.events.off(
-        'routeChangeComplete',
-        handleRouteChange,
-      );
+      router.events.off('routeChangeComplete', handleRouteChange);
     };
   }, [router]);
 
-  const commonBoxShadowColor =
-    'rgba(255, 128, 0, 0.25)';
+  const commonBoxShadowColor = 'rgba(255, 128, 0, 0.25)';
 
   return (
     <Box
@@ -64,16 +56,12 @@ export const SideHeader = () => {
           alt="logo"
           mt="-10px"
           h="75px"
-          src="/img/networks/quicksilver.svg"
+          src="/quicksilver-app-v2/img/networks/quicksilver.svg"
           onClick={() => router.push('/')}
           cursor="pointer"
         />
         <Spacer />
-        <VStack
-          justifyContent="center"
-          alignItems="center"
-          spacing={16}
-        >
+        <VStack justifyContent="center" alignItems="center" spacing={16}>
           <Tooltip
             borderLeft="4px solid rgba(255, 128, 0, 0.9)"
             label="Staking"
@@ -82,9 +70,7 @@ export const SideHeader = () => {
             <Box
               w="55px"
               h="55px"
-              onClick={() =>
-                router.push('/staking')
-              }
+              onClick={() => router.push('/staking')}
               cursor="pointer"
               borderRadius="100px"
               boxShadow={
@@ -107,7 +93,7 @@ export const SideHeader = () => {
                 }}
                 alt="Staking"
                 h="55px"
-                src="/img/test.png"
+                src="/quicksilver-app-v2/img/test.png"
               />
             </Box>
           </Tooltip>
@@ -120,9 +106,7 @@ export const SideHeader = () => {
             <Box
               w="55px"
               h="55px"
-              onClick={() =>
-                router.push('/governance')
-              }
+              onClick={() => router.push('/governance')}
               cursor="pointer"
               borderRadius="100px"
               boxShadow={
@@ -145,7 +129,7 @@ export const SideHeader = () => {
                 }}
                 alt="Governance"
                 h="55px"
-                src="/img/test2.png"
+                src="/quicksilver-app-v2/img/test2.png"
               />
             </Box>
           </Tooltip>
@@ -158,9 +142,7 @@ export const SideHeader = () => {
             <Box
               w="55px"
               h="55px"
-              onClick={() =>
-                router.push('/assets')
-              }
+              onClick={() => router.push('/assets')}
               cursor="pointer"
               borderRadius="100px"
               boxShadow={
@@ -174,16 +156,14 @@ export const SideHeader = () => {
             >
               <Image
                 filter={
-                  selectedPage === 'assets'
-                    ? 'contrast(100%)'
-                    : 'contrast(50%)'
+                  selectedPage === 'assets' ? 'contrast(100%)' : 'contrast(50%)'
                 }
                 _hover={{
                   filter: 'contrast(100%)',
                 }}
                 alt="Assets"
                 h="55px"
-                src="/img/test3.png"
+                src="/quicksilver-app-v2/img/test3.png"
               />
             </Box>
           </Tooltip>
@@ -210,25 +190,20 @@ export const SideHeader = () => {
             >
               <Image
                 filter={
-                  selectedPage === 'defi'
-                    ? 'contrast(100%)'
-                    : 'contrast(50%)'
+                  selectedPage === 'defi' ? 'contrast(100%)' : 'contrast(50%)'
                 }
                 _hover={{
                   filter: 'contrast(100%)',
                 }}
                 alt="DeFi"
                 h="55px"
-                src="/img/test4.png"
+                src="/quicksilver-app-v2/img/test4.png"
               />
             </Box>
           </Tooltip>
         </VStack>
         <Spacer />
-        <IconButton
-          icon={<HamburgerIcon />}
-          aria-label="DeFi"
-        />
+        <IconButton icon={<HamburgerIcon />} aria-label="DeFi" />
       </Flex>
     </Box>
   );
