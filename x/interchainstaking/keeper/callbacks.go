@@ -455,6 +455,12 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return err
 	}
 
+	// check client state validity
+	err = k.CheckTMHeaderForZone(ctx, &zone, res)
+	if err != nil {
+		return err
+	}
+
 	txtx, ok := txn.(*tx.Tx)
 	if !ok {
 		return errors.New("cannot assert type of tx")
