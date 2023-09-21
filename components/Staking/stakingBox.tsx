@@ -23,11 +23,11 @@ import {
 import { useChain } from '@cosmos-kit/react';
 import React, { useEffect, useState } from 'react';
 
-import { useInputBox } from '@/hooks/useInputBox';
-import { useStakingData } from '@/hooks/useStakingData';
+import { useBalanceQuery } from '@/hooks/useIntentData';
+import { getExponent } from '@/utils';
+import { shiftDigits } from '@/utils';
 
 import StakingProcessModal from './modals/stakingProcessModal';
-import { MultiModal } from './modals/validatorSelectionModal';
 
 type StakingBoxProps = {
   selectedOption: {
@@ -46,6 +46,15 @@ export const StakingBox = ({
   setModalOpen,
 }: StakingBoxProps): JSX.Element => {
   const [tokenAmount, setTokenAmount] = useState<string>('0');
+  const { address } = useChain(selectedOption.chainName);
+  const exp = getExponent(selectedOption.chainName);
+  const { balance, isLoading, isError } = useBalanceQuery(
+    selectedOption.chainName,
+    address ?? '',
+  );
+
+  const baseBalance = shiftDigits(balance?.balance?.amount || '0', -exp);
+
   useEffect(() => {
     setTokenAmount('0');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -55,23 +64,13 @@ export const StakingBox = ({
     return Math.trunc(num * 1000) / 1000;
   };
 
-  const { address } = useChain(selectedOption.chainName);
-
-  const { data, isLoading, refetch } = useStakingData(selectedOption.chainName);
-
-  const balance = data?.balance;
-
-  const truncatedBalance = truncateToThreeDecimals(Number(balance));
+  const truncatedBalance = truncateToThreeDecimals(Number(baseBalance));
 
   const maxStakingAmount = truncateToThreeDecimals(
     truncatedBalance ? truncatedBalance - 0.005 : 0,
   );
 
   const maxHalfStakingAmount = maxStakingAmount / 2;
-  //this shows the wrong amount of tokens available
-  const qAssetAmount = truncateToThreeDecimals(
-    Math.floor(Number(tokenAmount)) * 0.95,
-  );
 
   const [inputError, setInputError] = useState(false);
 
@@ -214,7 +213,8 @@ export const StakingBox = ({
                         ) : (
                           <Text color="complimentary.900" fontWeight="light">
                             {address
-                              ? balance && Number(balance) !== 0
+                              ? balance?.balance?.amount &&
+                                Number(balance?.balance?.amount) !== 0
                                 ? `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
                                 : `Get ${selectedOption.value.toUpperCase()} tokens here`
                               : '0'}
