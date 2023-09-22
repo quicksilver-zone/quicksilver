@@ -90,6 +90,6 @@ func (k *Keeper) AllKeyedProtocolDatas(ctx sdk.Context) []*types.KeyedProtocolDa
 	return out
 }
 
-/*func GetProtocolDataKey(protocol string, key string) string {
+/* func GetProtocolDataKey(protocol string, key string) string {
 	return fmt.Sprintf("%s/%s", protocol, key)
-}*/
+} */
