@@ -4,7 +4,7 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/app"
 )
 
 func (suite *KeeperTestSuite) TestAllocateLockupRewards() {

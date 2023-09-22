@@ -4,7 +4,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 )
 
 // GetZoneDropAccountAddress returns the zone airdrop account address.

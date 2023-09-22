@@ -5,7 +5,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "tendermint/crypto/proof.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/claimsmanager/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types";
 
 enum ClaimType {
   option (gogoproto.goproto_enum_prefix) = false;

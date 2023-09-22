@@ -17,9 +17,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainquery/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/interchainquery/keeper"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainquery/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
 )
 
 var (

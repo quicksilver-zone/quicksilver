@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"testing"
 
-	liquiditytypes "github.com/ingenuity-build/quicksilver/third-party-chains/crescent-types/liquidity/types"
+	liquiditytypes "github.com/quicksilver-zone/quicksilver/third-party-chains/crescent-types/liquidity/types"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 func TestDistributionProportions_ValidateBasic(t *testing.T) {

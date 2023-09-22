@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ingenuity-build/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/app"
 
 	"github.com/cometbft/cometbft/crypto"
 	"github.com/cometbft/cometbft/crypto/ed25519"

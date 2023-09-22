@@ -9,7 +9,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	yaml "gopkg.in/yaml.v2"
 
-	epochtypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
+	epochtypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
 )
 
 // Parameter store keys.

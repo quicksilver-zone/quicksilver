@@ -3,7 +3,7 @@ package quicksilver.mint.v1beta1;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/mint/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/mint/types";
 
 // Minter represents the minting state.
 message Minter {

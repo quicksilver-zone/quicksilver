@@ -11,10 +11,10 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/ingenuity-build/quicksilver/app"
-	cmdcfg "github.com/ingenuity-build/quicksilver/cmd/config"
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/app"
+	cmdcfg "github.com/quicksilver-zone/quicksilver/cmd/config"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 var (

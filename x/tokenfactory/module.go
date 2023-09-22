@@ -23,10 +23,10 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/client/cli"
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/keeper"
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/simulation"
-	"github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/client/cli"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/simulation"
+	"github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 var (

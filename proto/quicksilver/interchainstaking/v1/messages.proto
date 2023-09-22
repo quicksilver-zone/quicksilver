@@ -8,7 +8,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "quicksilver/interchainstaking/v1/proposals.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/interchainstaking/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types";
 
 // Msg defines the interchainstaking Msg service.
 service Msg {

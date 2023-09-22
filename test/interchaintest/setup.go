@@ -1,12 +1,13 @@
 package interchaintest
 
 import (
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v7/ibc"
 
-	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	istypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 var (
@@ -34,7 +35,7 @@ var (
 	}
 
 	pathQuicksilverJuno = "quicksilver-juno"
-	genesisWalletAmount = int64(10_000_000)
+	genesisWalletAmount = math.NewInt(10_000_000)
 )
 
 func createConfig() (ibc.ChainConfig, error) {

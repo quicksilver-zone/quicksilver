@@ -6,13 +6,13 @@ import (
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
 
-	"github.com/ingenuity-build/quicksilver/utils/addressutils"
-	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func (s *KeeperTestSuite) Test_msgServer_Claim() {

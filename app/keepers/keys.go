@@ -23,14 +23,14 @@ import (
 	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	packetforwardtypes "github.com/strangelove-ventures/packet-forward-middleware/v7/router/types"
 
-	airdroptypes "github.com/ingenuity-build/quicksilver/x/airdrop/types"
-	claimsmanagertypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	epochstypes "github.com/ingenuity-build/quicksilver/x/epochs/types"
-	interchainquerytypes "github.com/ingenuity-build/quicksilver/x/interchainquery/types"
-	interchainstakingtypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
-	minttypes "github.com/ingenuity-build/quicksilver/x/mint/types"
-	participationrewardstypes "github.com/ingenuity-build/quicksilver/x/participationrewards/types"
-	tokenfactorytypes "github.com/ingenuity-build/quicksilver/x/tokenfactory/types"
+	airdroptypes "github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	claimsmanagertypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	epochstypes "github.com/quicksilver-zone/quicksilver/x/epochs/types"
+	interchainquerytypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
+	interchainstakingtypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	minttypes "github.com/quicksilver-zone/quicksilver/x/mint/types"
+	participationrewardstypes "github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
+	tokenfactorytypes "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types"
 )
 
 // TODO: We need to automate this, by bundling with a module struct...
