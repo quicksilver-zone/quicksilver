@@ -345,7 +345,7 @@ func runSidecars(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.Co
 	t.Helper()
 
 	runICQ(t, ctx, quicksilver, gaia)
-	// runXCC(t, ctx, quicksilver, gaia)
+	runXCC(t, ctx, quicksilver, gaia)
 }
 
 func runICQ(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {

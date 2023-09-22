@@ -39,7 +39,7 @@ var (
 	}
 
 	pathQuicksilverJuno = "quicksilver-juno"
-	genesisWalletAmount = math.NewInt(10_000_000)
+	genesisWalletAmount = math.NewInt(10_000_000_000)
 	votingPeriod     = "30s"
 	maxDepositPeriod = "10s"
 )
