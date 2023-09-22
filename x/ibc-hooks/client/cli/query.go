@@ -10,8 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
 
-	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/keeper"
-	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/types"
+	"github.com/quicksilver-zone/quicksilver/x/ibc-hooks/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/ibc-hooks/types"
 )
 
 func indexRunCmd(cmd *cobra.Command, _ []string) error {

@@ -15,10 +15,10 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/ingenuity-build/quicksilver/x/mint/client/cli"
-	"github.com/ingenuity-build/quicksilver/x/mint/keeper"
-	"github.com/ingenuity-build/quicksilver/x/mint/simulation"
-	"github.com/ingenuity-build/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/x/mint/client/cli"
+	"github.com/quicksilver-zone/quicksilver/x/mint/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/mint/simulation"
+	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 )
 
 var (

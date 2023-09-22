@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zaptest"
 
-	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	istypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	// simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 )
 
@@ -140,16 +140,14 @@ func TestRegisterZone(t *testing.T) {
 	connections, err := r.GetConnections(ctx, eRep, quicksilverd.Config().ChainID)
 	require.NoError(t, err)
 	// require.Equal(t, 1, len(connections))
-	fmt.Println("Conn", connections)
 
 	// Create a new channel
 	err = r.CreateChannel(ctx, eRep, pathQuicksilverJuno, ibc.DefaultChannelOpts())
 	require.NoError(t, err)
 
 	// Query for the newly created channel
-	quickChannels, err := r.GetChannels(ctx, eRep, quicksilverd.Config().ChainID)
+	_, err = r.GetChannels(ctx, eRep, quicksilverd.Config().ChainID)
 	require.NoError(t, err)
-	fmt.Println("Channel", quickChannels)
 
 	// Start the relayer and set the cleanup function.
 	require.NoError(t, r.StartRelayer(ctx, eRep, pathQuicksilverJuno))
@@ -191,7 +189,6 @@ func TestRegisterZone(t *testing.T) {
 		Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
 	}
 	msg, err := quicksilverd.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
-	fmt.Println("Msg: ", string(msg))
 	require.NoError(t, err)
 	proposal.Messages = append(proposal.Messages, msg)
 
@@ -214,16 +211,14 @@ func TestRegisterZone(t *testing.T) {
 	stdout, _, err := quicksilverd.Validators[0].ExecQuery(ctx, "interchainstaking", "zones")
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
-	t.Logf("zones: %s", stdout)
 
 	var zones istypes.QueryZonesResponse
 	err = codec.NewLegacyAmino().UnmarshalJSON(stdout, &zones)
 	require.NoError(t, err)
 
 	zone := zones.Zones
-	fmt.Println(zone)
 
-	//Deposit Address Check
+	// Deposit Address Check
 	depositAddress := zone[0].DepositAddress
 	queryICA := []string{
 		quicksilverd.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", depositAddress.Address, connections[0].ID,
@@ -237,7 +232,7 @@ func TestRegisterZone(t *testing.T) {
 	icaAddr := strings.TrimSpace(parts[1])
 	require.NotEmpty(t, icaAddr)
 
-	//Withdrawl Address Check
+	// Withdrawal Address Check
 	withdralAddress := zone[0].WithdrawalAddress
 	queryICA = []string{
 		quicksilverd.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", withdralAddress.Address, connections[0].ID,
@@ -251,7 +246,7 @@ func TestRegisterZone(t *testing.T) {
 	icaAddr = strings.TrimSpace(parts[1])
 	require.NotEmpty(t, icaAddr)
 
-	//Delegation Address Check
+	// Delegation Address Check
 	delegationAddress := zone[0].DelegationAddress
 	queryICA = []string{
 		quicksilverd.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", delegationAddress.Address, connections[0].ID,
@@ -265,7 +260,7 @@ func TestRegisterZone(t *testing.T) {
 	icaAddr = strings.TrimSpace(parts[1])
 	require.NotEmpty(t, icaAddr)
 
-	//Performance Address Check
+	// Performance Address Check
 	performanceAddress := zone[0].DelegationAddress
 	queryICA = []string{
 		quicksilverd.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", performanceAddress.Address, connections[0].ID,

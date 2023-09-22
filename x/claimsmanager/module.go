@@ -15,9 +15,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/ingenuity-build/quicksilver/x/claimsmanager/client/cli"
-	"github.com/ingenuity-build/quicksilver/x/claimsmanager/keeper"
-	"github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/client/cli"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
 )
 
 var (

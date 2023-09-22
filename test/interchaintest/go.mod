@@ -1,4 +1,4 @@
-module github.com/ingenuity-build/quicksilver/test/interchaintest
+module github.com/quicksilver-zone/quicksilver/test/interchaintest
 
 go 1.20
 
@@ -9,7 +9,7 @@ require (
 	github.com/cosmos/gogoproto v1.4.10
 	github.com/cosmos/ibc-go/v7 v7.2.0
 	github.com/icza/dyno v0.0.0-20220812133438-f0b6f8a18845
-	github.com/ingenuity-build/quicksilver v0.0.0-00010101000000-000000000000
+	github.com/quicksilver-zone/quicksilver v0.0.0-00010101000000-000000000000
 	github.com/strangelove-ventures/interchaintest/v7 v7.0.0-20230628163313-cedf87f4624d
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.25.0
@@ -248,8 +248,8 @@ replace (
 	github.com/CosmWasm/wasmd => github.com/notional-labs/wasmd v0.40.0
 	github.com/cosmos/iavl => github.com/cosmos/iavl v0.20.0
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-	github.com/ingenuity-build/quicksilver => ../../
 	github.com/iqlusioninc/liquidity-staking-module => github.com/ingenuity-build/liquidity-staking-module-v47 v0.0.3-0.20230701011038-73a81cee4189
+	github.com/quicksilver-zone/quicksilver => ../../
 	github.com/strangelove-ventures/interchaintest/v7 => github.com/notional-labs/interchaintest/v7 v7.0.0-20230808040749-159cc0cfefaa
 	// github.com/strangelove-ventures/interchaintest/v5 => github.com/aljo242/interchaintest/v5 v5.0.0-20230619200058-1d4823df8b75
 	github.com/tendermint/tendermint => github.com/cometbft/cometbft v0.34.27

@@ -4,16 +4,16 @@ import (
 	"errors"
 	"fmt"
 
-	osmosistypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types"
-	osmosislockuptypes "github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/lockup"
+	osmosistypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types"
+	osmosislockuptypes "github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/lockup"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
-	cmtypes "github.com/ingenuity-build/quicksilver/x/claimsmanager/types"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
+	cmtypes "github.com/quicksilver-zone/quicksilver/x/claimsmanager/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 var (

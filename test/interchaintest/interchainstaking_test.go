@@ -17,7 +17,7 @@ import (
 
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
@@ -132,7 +132,7 @@ func TestInterchainStaking(t *testing.T) {
 	gaiaValidators := validatorsResp.Validators
 
 	// Create some user accounts on both chains
-	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, gaia)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount.Int64(), quicksilver, gaia)
 
 	// Wait a few blocks for relayer to start and for user accounts to be created
 	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)

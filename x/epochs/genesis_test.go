@@ -7,9 +7,9 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	simapp "github.com/ingenuity-build/quicksilver/app"
-	"github.com/ingenuity-build/quicksilver/x/epochs"
-	"github.com/ingenuity-build/quicksilver/x/epochs/types"
+	simapp "github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/x/epochs"
+	"github.com/quicksilver-zone/quicksilver/x/epochs/types"
 )
 
 func TestEpochsExportGenesis(t *testing.T) {

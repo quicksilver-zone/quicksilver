@@ -6,7 +6,7 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/ingenuity-build/quicksilver/x/tokenfactory/types";
+option go_package = "github.com/quicksilver-zone/quicksilver/x/tokenfactory/types";
 
 // Msg defines the tokefactory module's gRPC message service.
 service Msg {

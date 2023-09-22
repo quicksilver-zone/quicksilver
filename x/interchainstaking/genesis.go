@@ -3,8 +3,8 @@ package interchainstaking
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 // InitGenesis initializes the interchainstaking module's state from a provided genesis

@@ -3,8 +3,8 @@ package airdrop
 import (
 	"fmt"
 
-	"github.com/ingenuity-build/quicksilver/x/airdrop/keeper"
-	"github.com/ingenuity-build/quicksilver/x/airdrop/types"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

@@ -15,9 +15,9 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/client/cli"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/keeper"
-	"github.com/ingenuity-build/quicksilver/x/participationrewards/types"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/client/cli"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/keeper"
+	"github.com/quicksilver-zone/quicksilver/x/participationrewards/types"
 )
 
 var (

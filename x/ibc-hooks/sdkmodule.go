@@ -15,10 +15,10 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
-	"github.com/ingenuity-build/quicksilver/third-party-chains/osmosis-types/osmoutils"
-	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/client/cli"
-	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/simulation"
-	"github.com/ingenuity-build/quicksilver/x/ibc-hooks/types"
+	"github.com/quicksilver-zone/quicksilver/third-party-chains/osmosis-types/osmoutils"
+	"github.com/quicksilver-zone/quicksilver/x/ibc-hooks/client/cli"
+	"github.com/quicksilver-zone/quicksilver/x/ibc-hooks/simulation"
+	"github.com/quicksilver-zone/quicksilver/x/ibc-hooks/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 )

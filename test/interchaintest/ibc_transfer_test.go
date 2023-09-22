@@ -106,7 +106,7 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 	)
 
 	// Create some user accounts on both chains
-	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, juno)
+	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount.Int64(), quicksilver, juno)
 
 	// Wait a few blocks for relayer to start and for user accounts to be created
 	err = testutil.WaitForBlocks(ctx, 5, quicksilver, juno)
@@ -185,5 +185,5 @@ func TestQuicksilverJunoIBCTransfer(t *testing.T) {
 
 	junoUpdateBal, err = juno.GetBalance(ctx, junoUserAddr, quicksilverIBCDenom)
 	require.NoError(t, err)
-	require.Equal(t, int64(0), junoUpdateBal)
+	require.Equal(t, math.NewInt(0), junoUpdateBal)
 }

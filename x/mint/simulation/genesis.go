@@ -10,7 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
-	"github.com/ingenuity-build/quicksilver/x/mint/types"
+	"github.com/quicksilver-zone/quicksilver/x/mint/types"
 )
 
 // Simulation parameter constants.
