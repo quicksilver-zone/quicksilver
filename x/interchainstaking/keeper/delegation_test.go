@@ -183,7 +183,7 @@ func TestDetermineAllocationsForDelegation(t *testing.T) {
 		for _, amount := range val.current {
 			sum = sum.Add(amount)
 		}
-		allocations := icskeeper.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount)
+		allocations := icskeeper.DetermineAllocationsForDelegation(val.current, sum, val.target, val.inAmount, make(map[string]sdkmath.Int))
 		require.Equal(t, len(val.expected), len(allocations))
 		for valoper := range val.expected {
 			ex, ok := val.expected[valoper]
@@ -443,7 +443,7 @@ func TestCalculateDeltas(t *testing.T) {
 		for _, amount := range val.current {
 			sum = sum.Add(amount)
 		}
-		deltas := icskeeper.CalculateDeltas(val.current, sum, val.target)
+		deltas := icskeeper.CalculateDeltas(val.current, sum, val.target, make(map[string]sdkmath.Int))
 		// fmt.Println("Deltas", deltas)
 		require.Equal(t, len(val.expected), len(deltas), fmt.Sprintf("expected %d RebalanceTargets in case %d, got %d", len(val.expected), caseNumber, len(deltas)))
 		for idx, expected := range val.expected {
@@ -680,7 +680,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 		for _, amount := range val.current {
 			sum = sum.Add(amount)
 		}
-		allocations := icskeeper.DetermineAllocationsForRebalancing(val.current, sum, val.target, val.redelegations)
+		allocations := icskeeper.DetermineAllocationsForRebalancing(val.current, sum, val.target, val.redelegations, make(map[string]sdkmath.Int))
 		require.Equal(t, len(val.expected), len(allocations), fmt.Sprintf("expected %d RebalanceTargets in '%s', got %d", len(val.expected), val.name, len(allocations)))
 		for idx, rebalance := range val.expected {
 			require.Equal(t, rebalance, allocations[idx], fmt.Sprintf("%s, idx %d: Expected %v, got %v", val.name, idx, rebalance, allocations[idx]))

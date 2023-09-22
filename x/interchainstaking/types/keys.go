@@ -51,7 +51,10 @@ var (
 	KeyPrefixDelegation            = []byte{0x07}
 	KeyPrefixPerformanceDelegation = []byte{0x08}
 	KeyPrefixSnapshotIntent        = []byte{0x09}
-	KeyPrefixRedelegationRecord    = []byte{0x10}
+	// 0a -> 0e are used in v1.4; lets not clobber them now.
+	KeyPrefixRedelegationRecord = []byte{0x10}
+
+	KeyPrefixLsmCaps = []byte{0x11}
 )
 
 func KeyPrefix(p string) []byte {

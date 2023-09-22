@@ -44,7 +44,7 @@ func (k Keeper) AfterEpochEnd(ctx sdk.Context, epochIdentifier string, epochNumb
 				// the unrelated tasks below.
 			}
 
-			err = k.Rebalance(ctx, zoneInfo, epochNumber)
+			err = k.Rebalance(ctx, &zoneInfo, epochNumber)
 			if err != nil {
 				// we can and need not panic here; logging the error is sufficient.
 				// an error here is not expected, but also not terminal.

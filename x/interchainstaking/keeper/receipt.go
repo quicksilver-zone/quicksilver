@@ -197,7 +197,6 @@ func (k *Keeper) SubmitTx(ctx sdk.Context, msgs []sdk.Msg, account *types.ICAAcc
 		if err != nil {
 			return err
 		}
-		fmt.Println(data)
 
 		// validate memo < 256 bytes
 		packetData := icatypes.InterchainAccountPacketData{

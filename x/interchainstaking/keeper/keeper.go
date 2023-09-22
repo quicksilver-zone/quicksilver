@@ -221,10 +221,10 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 		case val.Status != validator.Status.String():
 			k.Logger(ctx).Info("jail status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Jailed, "to", validator.Jailed)
 			toQuery = true
-		case !val.LiquidShares.Equal(validator.LiquidShares):
+		case !val.LiquidShares.IsNil() || !val.LiquidShares.Equal(validator.LiquidShares):
 			k.Logger(ctx).Info("liquid shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.LiquidShares, "to", validator.LiquidShares)
 			toQuery = true
-		case !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
+		case !val.ValidatorBondShares.IsNil() || !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
 			k.Logger(ctx).Info("Validator bond shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.ValidatorBondShares, "to", validator.ValidatorBondShares)
 			toQuery = true
 		}
@@ -322,12 +322,12 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 			val.Status = validator.Status.String()
 		}
 
-		if !val.ValidatorBondShares.Equal(validator.ValidatorBondShares) {
+		if !val.ValidatorBondShares.IsNil() || !val.ValidatorBondShares.Equal(validator.ValidatorBondShares) {
 			k.Logger(ctx).Info("Validator bonded shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.ValidatorBondShares, "newShares", validator.ValidatorBondShares)
 			val.ValidatorBondShares = validator.ValidatorBondShares
 		}
 
-		if !val.LiquidShares.Equal(validator.LiquidShares) {
+		if !val.LiquidShares.IsNil() || !val.LiquidShares.Equal(validator.LiquidShares) {
 			k.Logger(ctx).Info("Validator liquid shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.LiquidShares, "newShares", validator.LiquidShares)
 			val.LiquidShares = validator.LiquidShares
 		}
@@ -518,10 +518,11 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
 }
 
-func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
-	currentAllocations, currentSum := k.GetDelegationMap(ctx, &zone)
+func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64) error {
+	currentAllocations, currentSum := k.GetDelegationMap(ctx, zone)
 	targetAllocations := zone.GetAggregateIntentOrDefault()
-	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId)).RemoveDuplicates()
+	maxCanAllocate := k.DetermineMaximumValidatorAllocations(ctx, zone)
+	rebalances := DetermineAllocationsForRebalancing(currentAllocations, currentSum, targetAllocations, k.ZoneRedelegationRecords(ctx, zone.ChainId), maxCanAllocate).RemoveDuplicates()
 	msgs := make([]sdk.Msg, 0)
 	for _, rebalance := range rebalances {
 		msgs = append(msgs, &stakingTypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: rebalance.Source, ValidatorDstAddress: rebalance.Target, Amount: sdk.NewCoin(zone.BaseDenom, rebalance.Amount)})
@@ -554,6 +555,9 @@ func (rb RebalanceTargets) RemoveDuplicates() RebalanceTargets {
 	result := make(RebalanceTargets, 0)
 
 	for _, r := range rb {
+		if r.Amount.IsZero() {
+			continue
+		}
 		key := fmt.Sprintf("%v-%s-%s", r.Amount.String(), r.Source, r.Target)
 		if !encountered[key] {
 			encountered[key] = true
@@ -563,9 +567,9 @@ func (rb RebalanceTargets) RemoveDuplicates() RebalanceTargets {
 	return result
 }
 
-func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents, existingRedelegations []types.RedelegationRecord) RebalanceTargets {
+func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, currentSum math.Int, targetAllocations types.ValidatorIntents, existingRedelegations []types.RedelegationRecord, maxCanAllocate map[string]math.Int) RebalanceTargets {
 	out := make([]RebalanceTarget, 0)
-	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
+	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations, maxCanAllocate)
 
 	wantToRebalance := sdk.ZeroInt()
 	canRebalanceFrom := sdk.ZeroInt()

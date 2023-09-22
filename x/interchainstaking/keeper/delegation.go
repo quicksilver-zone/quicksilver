@@ -224,15 +224,36 @@ func (k *Keeper) PrepareDelegationMessagesForShares(_ sdk.Context, zone *types.Z
 	return msgs
 }
 
+func (k Keeper) DetermineMaximumValidatorAllocations(ctx sdk.Context, zone *types.Zone) map[string]sdkmath.Int {
+	out := make(map[string]sdkmath.Int)
+	cap, found := k.GetLsmCaps(ctx, zone)
+	if !found {
+		// No cap found, permit the transaction
+		return out
+	}
+
+	for _, val := range zone.Validators {
+		// validator bond max
+		maxBondShares := val.ValidatorBondShares.Mul(cap.ValidatorBondCap).Sub(val.LiquidShares)
+
+		// validator pc max
+		maxLiquidStakedShares := sdk.NewDecFromInt(val.VotingPower).Mul(cap.ValidatorCap).Sub(val.LiquidShares)
+		out[val.ValoperAddress] = sdkmath.MaxInt(maxBondShares.TruncateInt(), maxLiquidStakedShares.TruncateInt())
+	}
+
+	return out
+}
+
 func (k Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) map[string]sdkmath.Int {
 	currentAllocations, currentSum := k.GetDelegationMap(ctx, zone)
 	targetAllocations := zone.GetAggregateIntentOrDefault()
-	allocations := DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	maxCanAllocate := k.DetermineMaximumValidatorAllocations(ctx, zone)
+	allocations := DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount, maxCanAllocate)
 	return allocations
 }
 
 // CalculateDeltas determines, for the current delegations, in delta between actual allocations and the target intent.
-func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents) types.ValidatorIntents {
+func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents, maxCanAllocate map[string]sdkmath.Int) types.ValidatorIntents {
 	deltas := make(types.ValidatorIntents, 0)
 
 	targetValopers := func(in types.ValidatorIntents) []string {
@@ -260,6 +281,13 @@ func CalculateDeltas(currentAllocations map[string]sdkmath.Int, currentSum sdkma
 		// diff between target and current allocations
 		// positive == below target, negative == above target
 		delta := targetAmount.Sub(current)
+		max, ok := maxCanAllocate[valoper]
+		if !ok {
+			max = delta
+		}
+		if max.LT(delta) {
+			delta = max
+		}
 		deltas = append(deltas, &types.ValidatorIntent{Weight: sdk.NewDecFromInt(delta), ValoperAddress: valoper})
 	}
 
@@ -288,9 +316,9 @@ func minDeltas(deltas types.ValidatorIntents) sdkmath.Int {
 	return minValue
 }
 
-func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents, amount sdk.Coins) map[string]sdkmath.Int {
+func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations types.ValidatorIntents, amount sdk.Coins, maxCanAllocate map[string]sdkmath.Int) map[string]sdkmath.Int {
 	input := amount[0].Amount
-	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations)
+	deltas := CalculateDeltas(currentAllocations, currentSum, targetAllocations, maxCanAllocate)
 	minValue := minDeltas(deltas)
 	sum := sdk.ZeroInt()
 
