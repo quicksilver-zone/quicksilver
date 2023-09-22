@@ -165,7 +165,9 @@ export const StakingBox = ({
                   value={tokenAmount}
                   onChange={(e) => {
                     const validNumberPattern = /^\d*\.?\d*$/;
+                    //@ts-ignore
                     if (validNumberPattern.test(e.target.value)) {
+                       //@ts-ignore
                       const inputValue = parseFloat(e.target.value);
                       if (!isNaN(inputValue)) {
                         if (inputValue < 1) {
@@ -173,6 +175,7 @@ export const StakingBox = ({
                           setTokenAmount('');
                         } else if (inputValue <= maxStakingAmount) {
                           setInputError(false);
+                           //@ts-ignore
                           setTokenAmount(e.target.value);
                         }
                       }

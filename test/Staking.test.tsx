@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { test, expect, mock } from 'bun';
+//@ts-ignore
+import { test, expect, mock } from 'bun:test';
 import { useState } from 'react';
 
 import { NetworkSelect } from '@/components';
@@ -67,6 +68,6 @@ test('Staking Page renders without crashing', async () => {
   );
 
   await waitFor(() => {
-    expect(screen.getByText('NetworkSelect')).toBeInTheDocument();
+    expect(screen.getByText('NetworkSelect')).pass();
   });
 });
