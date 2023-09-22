@@ -1179,7 +1179,6 @@ func DistributeRewardsFromWithdrawAccount(k *Keeper, ctx sdk.Context, args []byt
 		return err
 	}
 	baseDenomAmount := withdrawBalance.Balances.AmountOf(zone.BaseDenom)
-
 	// calculate fee (fee = amount * rate)
 
 	baseDenomFee := sdk.NewDecFromInt(baseDenomAmount).
