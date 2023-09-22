@@ -33,14 +33,14 @@ const networks = [
   {
     value: 'STARS',
     logo: '/quicksilver-app-v2/img/networks/stargaze.svg',
-    qlogo: '/quicksilver-app-v2/img/networks/stargaze-2.png',
+    qlogo: '/quicksilver-app-v2/img/networks/qstars.svg',
     name: 'Stargaze',
     chainName: 'stargaze',
   },
   {
     value: 'REGEN',
     logo: '/quicksilver-app-v2/img/networks/regen.svg',
-    qlogo: '/quicksilver-app-v2/img/networks/regen.svg',
+    qlogo: '/quicksilver-app-v2/img/networks/q-regen.svg',
     name: 'Regen',
     chainName: 'regen',
   },
@@ -81,7 +81,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({
   }
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  
+
   return (
     <Menu>
       <MenuButton
@@ -128,11 +128,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({
                 h="40px"
                 src={network.logo}
               />
-              <Text
-                color="white"
-                fontSize="20px"
-                textAlign="center"
-              >
+              <Text color="white" fontSize="20px" textAlign="center">
                 {network.name}
               </Text>
             </Flex>

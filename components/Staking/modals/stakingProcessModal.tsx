@@ -13,9 +13,14 @@ import {
   Stat,
   StatLabel,
   StatNumber,
+  Toast,
+  useToast,
 } from '@chakra-ui/react';
 import styled from '@emotion/styled';
+import { getSigningQuicksilverClient } from 'quicksilverjs';
 import React, { useState } from 'react';
+
+import { liquidStakeTx } from '@/tx/liquidSteakTx';
 
 import { MultiModal } from './validatorSelectionModal';
 
@@ -84,6 +89,8 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
     [],
   );
 
+  const [resp, setResp] = useState('');
+
   const advanceStep = () => {
     if (selectedValidators.length > 0) {
       setStep((prevStep) => prevStep + 1);
@@ -93,6 +100,21 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
   const retreatStep = () => {
     setStep((prevStep) => Math.max(prevStep - 1, 1));
   };
+
+  const toast = useToast();
+
+  const intents = selectedValidators.map((validator) => ({
+    validatorAddress: validator,
+    weights: '1',
+  }));
+
+  const liquidStake = liquidStakeTx(
+    setResp,
+    selectedOption?.chainName || '',
+    selectedOption?.chainName || '',
+    intents,
+    toast,
+  );
 
   //placehoder for transaction status
   const [transactionStatus, setTransactionStatus] = useState('Pending');

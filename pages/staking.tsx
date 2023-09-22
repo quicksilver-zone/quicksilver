@@ -29,7 +29,7 @@ export default function Staking() {
     {
       value: 'ATOM',
       logo: '/quicksilver-app-v2/img/networks/atom.svg',
-      qlogo: '/quicksilver-app-v2/img/networks/q-atom.svg',
+      qlogo: '/quicksilver-app-v2/img/networks/qatom.svg',
       name: 'Cosmos Hub',
       chainName: 'cosmoshub',
     },
@@ -43,7 +43,7 @@ export default function Staking() {
     {
       value: 'STARS',
       logo: '/quicksilver-app-v2/img/networks/stargaze.svg',
-      qlogo: '/quicksilver-app-v2/img/networks/stargaze-2.png',
+      qlogo: '/quicksilver-app-v2/img/networks/qstars.svg',
       name: 'Stargaze',
       chainName: 'stargaze',
     },
