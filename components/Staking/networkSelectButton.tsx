@@ -1,5 +1,6 @@
 // CustomMenu.tsx
 
+import { ChevronDownIcon } from '@chakra-ui/icons';
 import {
   Menu,
   MenuButton,
@@ -9,6 +10,7 @@ import {
   Flex,
   Image,
   Text,
+  useDisclosure,
 } from '@chakra-ui/react';
 import React, { Dispatch, SetStateAction, useState } from 'react';
 import { BsArrowDown } from 'react-icons/bs';
@@ -65,6 +67,21 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({
   const handleOptionClick = (network: (typeof networks)[0]) => {
     setSelectedNetwork(network);
   };
+
+  function RotateIcon({ isOpen }: { isOpen: boolean }) {
+    return (
+      <ChevronDownIcon
+        color="complimentary.900"
+        transform={isOpen ? 'rotate(180deg)' : 'none'}
+        transition="transform 0.2s"
+        h="25px"
+        w="25px"
+      />
+    );
+  }
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  
   return (
     <Menu>
       <MenuButton
@@ -72,20 +89,14 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({
         zIndex={5}
         maxW="150px"
         minW="150px"
-        variant="ghost"
-        color="complimentary.900"
-        backgroundColor="rgba(255,255,255,0.1)"
         _hover={{
-          bgColor: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(10px)',
+          bgColor: 'rgba(255,128,0, 0.25)',
         }}
-        _active={{
-          bgColor: 'rgba(255,255,255,0.05)',
-          backdropFilter: 'blur(10px)',
-        }}
-        borderColor={buttonTextColor}
+        px={2}
+        color="white"
         as={Button}
-        rightIcon={<BsArrowDown />}
+        variant="outline"
+        rightIcon={<RotateIcon isOpen={isOpen} />}
       >
         {selectedOption.value.toUpperCase()}
       </MenuButton>
@@ -100,9 +111,9 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({
             py={4}
             bgColor="rgba(35,35,35,1)"
             borderRadius="4px"
-            color="complimentary.900"
+            color="white"
             _hover={{
-              bgColor: 'rgba(255,255,255,0.25)',
+              bgColor: 'rgba(255,128,0, 0.25)',
             }}
             onClick={() => handleOptionClick(network)}
           >
@@ -118,7 +129,7 @@ export const NetworkSelect: React.FC<CustomMenuProps> = ({
                 src={network.logo}
               />
               <Text
-                color="complimentary.900"
+                color="white"
                 fontSize="20px"
                 textAlign="center"
               >
