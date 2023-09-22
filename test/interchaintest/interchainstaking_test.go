@@ -3,6 +3,7 @@ package interchaintest
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -16,7 +17,7 @@ import (
 
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	istypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
+	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 
 	"github.com/strangelove-ventures/interchaintest/v7"
 	"github.com/strangelove-ventures/interchaintest/v7/chain/cosmos"
@@ -69,7 +70,6 @@ func TestInterchainStaking(t *testing.T) {
 	})
 
 	// Get chains from the chain factory
-	t.Logf("Calling cf.Chains")
 	chains, err := cf.Chains(t.Name())
 	require.NoError(t, err)
 
@@ -79,7 +79,6 @@ func TestInterchainStaking(t *testing.T) {
 	r := interchaintest.NewBuiltinRelayerFactory(ibc.CosmosRly, zaptest.NewLogger(t), relayer.CustomDockerImage("ghcr.io/notional-labs/cosmos-relayer", "nguyen-v2.3.1", "1000:1000")).Build(t, client, network)
 
 	// Create a new Interchain object which describes the chains, relayers, and IBC connections we want to use
-	t.Logf("NewInterchain")
 	ic := interchaintest.NewInterchain().
 		AddChain(quicksilver).
 		AddChain(gaia).
@@ -91,7 +90,6 @@ func TestInterchainStaking(t *testing.T) {
 			Path:    "quicksilver-gaia",
 		})
 
-	t.Logf("Interchain build options")
 	err = ic.Build(ctx, eRep, interchaintest.InterchainBuildOptions{
 		TestName:         t.Name(),
 		Client:           client,
@@ -118,18 +116,20 @@ func TestInterchainStaking(t *testing.T) {
 		},
 	)
 
+	// Get connections
+	connections, err := r.GetConnections(ctx, eRep, quicksilver.Config().ChainID)
+	require.NoError(t, err)
+
 	// Get all Validators
 	stdout, _, err := gaia.Validators[0].ExecQuery(ctx, "staking", "validators")
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
-	t.Logf("Validators: %s", string(stdout))
 
 	var validatorsResp QueryValidatorsResponse
 	err = codec.NewLegacyAmino().UnmarshalJSON(stdout, &validatorsResp)
 	require.NoError(t, err)
 
 	gaiaValidators := validatorsResp.Validators
-	fmt.Println(gaiaValidators)
 
 	// Create some user accounts on both chains
 	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), genesisWalletAmount, quicksilver, gaia)
@@ -155,7 +155,7 @@ func TestInterchainStaking(t *testing.T) {
 		Summary:  "summary",
 	}
 
-	content := istypes.RegisterZoneProposal{
+	content := icstypes.RegisterZoneProposal{
 		Title:            "register lstest-1 zone",
 		Description:      "register lstest-1 zone with multisend and lsm enabled",
 		ConnectionId:     "connection-0",
@@ -178,7 +178,6 @@ func TestInterchainStaking(t *testing.T) {
 	}
 	msg, err := quicksilver.Config().EncodingConfig.Codec.MarshalInterfaceJSON(&message)
 	require.NoError(t, err)
-	fmt.Println("Msg: ", string(msg))
 	proposal.Messages = append(proposal.Messages, msg)
 
 	// Submit Proposal
@@ -200,14 +199,68 @@ func TestInterchainStaking(t *testing.T) {
 	stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "interchainstaking", "zones")
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
-	t.Logf("zones: %s", stdout)
 
-	var zones istypes.QueryZonesResponse
+	var zones icstypes.QueryZonesResponse
 	err = codec.NewLegacyAmino().UnmarshalJSON(stdout, &zones)
 	require.NoError(t, err)
 
 	zone := zones.Zones
-	fmt.Println(zone)
+
+	//Deposit Address Check
+	depositAddress := zone[0].DepositAddress
+	queryICA := []string{
+		quicksilver.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", depositAddress.Address, connections[0].ID,
+		"--chain-id", quicksilver.Config().ChainID,
+		"--home", quicksilver.HomeDir(),
+		"--node", quicksilver.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilver.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts := strings.SplitN(string(stdout), ":", 2)
+	icaAddr := strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
+
+	//Withdrawl Address Check
+	withdralAddress := zone[0].WithdrawalAddress
+	queryICA = []string{
+		quicksilver.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", withdralAddress.Address, connections[0].ID,
+		"--chain-id", quicksilver.Config().ChainID,
+		"--home", quicksilver.HomeDir(),
+		"--node", quicksilver.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilver.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts = strings.SplitN(string(stdout), ":", 2)
+	icaAddr = strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
+
+	//Delegation Address Check
+	delegationAddress := zone[0].DelegationAddress
+	queryICA = []string{
+		quicksilver.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", delegationAddress.Address, connections[0].ID,
+		"--chain-id", quicksilver.Config().ChainID,
+		"--home", quicksilver.HomeDir(),
+		"--node", quicksilver.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilver.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts = strings.SplitN(string(stdout), ":", 2)
+	icaAddr = strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
+
+	//Performance Address Check
+	performanceAddress := zone[0].DelegationAddress
+	queryICA = []string{
+		quicksilver.Config().Bin, "query", "interchain-accounts", "controller", "interchain-accounts", performanceAddress.Address, connections[0].ID,
+		"--chain-id", quicksilver.Config().ChainID,
+		"--home", quicksilver.HomeDir(),
+		"--node", quicksilver.GetRPCAddress(),
+	}
+	stdout, _, err = quicksilver.Exec(ctx, queryICA, nil)
+	require.NoError(t, err)
+	parts = strings.SplitN(string(stdout), ":", 2)
+	icaAddr = strings.TrimSpace(parts[1])
+	require.NotEmpty(t, icaAddr)
 
 	version := icatypes.NewDefaultMetadataString("connection-0", "connection-0")
 	_, err = quicksilver.FullNodes[0].ExecTx(
@@ -222,14 +275,12 @@ func TestInterchainStaking(t *testing.T) {
 	stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "interchain-accounts", "controller", "interchain-account", quickUserAddr, "connection-0")
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
-	t.Logf("Registered ICA: %s", string(stdout))
 
 	var icaQuickUser icacontrollertypes.QueryInterchainAccountResponse
 	err = codec.NewLegacyAmino().UnmarshalJSON(stdout, &icaQuickUser)
 	require.NoError(t, err)
 
 	icaQuickUserAddr := icaQuickUser.Address
-	fmt.Println(icaQuickUserAddr)
 
 	// Bank Send for delegation
 	msgSend := &banktypes.MsgSend{
@@ -266,18 +317,28 @@ func TestInterchainStaking(t *testing.T) {
 	jsonPacketData, err := codec.NewLegacyAmino().MarshalJSON(packetData)
 	require.NoError(t, err)
 
-	fmt.Println("jsonPacketData: ", string(jsonPacketData))
-	txhash, err := quicksilver.FullNodes[0].ExecTx(
+	_, err = quicksilver.FullNodes[0].ExecTx(
 		ctx, quickUser.KeyName(), "interchain-accounts", "controller", "send-tx", "connection-0", string(jsonPacketData),
 	)
 	require.NoError(t, err)
 
-	err = testutil.WaitForBlocks(ctx, 20, quicksilver, gaia)
+	err = testutil.WaitForBlocks(ctx, 50, quicksilver, gaia)
 	require.NoError(t, err)
 
-	stdout, _, err = quicksilver.FullNodes[0].ExecQuery(ctx, "tx", txhash)
+	stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "interchainstaking", "intent", "gaia-2", quickUserAddr)
 	require.NoError(t, err)
-	fmt.Println(string(stdout))
+	require.NotEmpty(t, stdout)
+	t.Logf("Intent: %s", string(stdout))
+
+	stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "bank", "balances", quickUserAddr)
+	require.NoError(t, err)
+	require.NotEmpty(t, stdout)
+	t.Logf("User quick bank balances: %s", string(stdout))
+
+	stdout, _, err = gaia.Validators[0].ExecQuery(ctx, "bank", "balances", gaiaUserAddr)
+	require.NoError(t, err)
+	require.NotEmpty(t, stdout)
+	t.Logf("User gaia bank balances: %s", string(stdout))
 }
 
 func runSidecars(t *testing.T, ctx context.Context, quicksilver, gaia *cosmos.CosmosChain) {
