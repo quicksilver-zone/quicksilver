@@ -16,10 +16,14 @@ import {
   Toast,
   useToast,
 } from '@chakra-ui/react';
+import { isOfflineDirectSigner } from '@cosmjs/proto-signing';
+import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
-import { getSigningQuicksilverClient } from 'quicksilverjs';
+import { getSigningQuicksilverClient } from '@hoangdv2429/quicksilverjs';
+import { ValidatorIntent } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
 import React, { useState } from 'react';
 
+import { useQueryHooks } from '@/hooks';
 import { liquidStakeTx } from '@/tx/liquidSteakTx';
 
 import { MultiModal } from './validatorSelectionModal';
@@ -63,31 +67,23 @@ interface StakingModalProps {
     value: string;
     logo: string;
     chainName: string;
+    chainId: string;
   };
 }
 
-export const StakingProcessModal: React.FC<StakingModalProps> = ({
-  isOpen,
-  onClose,
-  selectedOption,
-  tokenAmount,
-}) => {
+export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClose, selectedOption, tokenAmount }) => {
   const [step, setStep] = React.useState(1);
   const getProgressColor = (circleStep: number) => {
     if (step >= circleStep) return 'complimentary.900';
     return 'rgba(255,255,255,0.2)';
   };
 
-  const labels = [
-    'Choose validators',
-    `Summary`,
-    `Receive q${selectedOption?.value}`,
-  ];
+  const { address, getSigningStargateClient } = useChain(selectedOption?.chainName || '');
+
+  const labels = ['Choose validators', `Summary`, `Receive q${selectedOption?.value}`];
   const [isModalOpen, setModalOpen] = useState(false);
 
-  const [selectedValidators, setSelectedValidators] = React.useState<string[]>(
-    [],
-  );
+  const [selectedValidators, setSelectedValidators] = React.useState<{ name: string; operatorAddress: string }[]>([]);
 
   const [resp, setResp] = useState('');
 
@@ -103,18 +99,36 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
 
   const toast = useToast();
 
-  const intents = selectedValidators.map((validator) => ({
-    validatorAddress: validator,
-    weights: '1',
+  const totalWeight = 1; // Assuming the total weight to be 1
+  const numberOfValidators = selectedValidators.length;
+
+  // Calculate the weight for each validator
+  const weightPerValidator = numberOfValidators ? (totalWeight / numberOfValidators).toFixed(4) : '0'; // Rounded to 4 decimal places
+
+  const intents: ValidatorIntent[] = selectedValidators.map((validator) => ({
+    valoperAddress: validator.operatorAddress,
+    weight: weightPerValidator,
   }));
 
-  const liquidStake = liquidStakeTx(
-    setResp,
-    selectedOption?.chainName || '',
-    selectedOption?.chainName || '',
-    intents,
-    toast,
-  );
+  const solution = useQueryHooks(selectedOption?.chainName || '');
+
+  const handleValidatorIntent = async (event: React.MouseEvent, intents: ValidatorIntent[]) => {
+    console.log('handleValidatorIntent called');
+    try {
+      await liquidStakeTx(
+        getSigningStargateClient,
+        setResp,
+        selectedOption?.chainName || '',
+        selectedOption?.chainId || '',
+        address,
+        intents,
+        toast,
+      )(event);
+      console.log('Transaction succeeded');
+    } catch (error) {
+      console.log('Transaction failed', error);
+    }
+  };
 
   //placehoder for transaction status
   const [transactionStatus, setTransactionStatus] = useState('Pending');
@@ -126,30 +140,16 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
           <ModalCloseButton color="white" />
           <HStack h="100%" spacing="48px" align="stretch">
             {/* Left Section */}
-            <Flex
-              flexDirection="column"
-              justifyContent="space-between"
-              width="40%"
-              p={4}
-              bg="#1E1C19"
-              height="100%"
-            >
+            <Flex flexDirection="column" justifyContent="space-between" width="40%" p={4} bg="#1E1C19" height="100%">
               <Box position="relative">
                 <Stat>
-                  <StatLabel color="rgba(255,255,255,0.5)">
-                    LIQUID STAKING
-                  </StatLabel>
+                  <StatLabel color="rgba(255,255,255,0.5)">LIQUID STAKING</StatLabel>
                   <StatNumber color="white">
                     {tokenAmount} {selectedOption?.value}
                   </StatNumber>
                 </Stat>
                 {[1, 2, 3].map((circleStep, index) => (
-                  <Flex
-                    key={circleStep}
-                    align="center"
-                    mt={10}
-                    mb={circleStep !== 3 ? '48px' : '0'}
-                  >
+                  <Flex key={circleStep} align="center" mt={10} mb={circleStep !== 3 ? '48px' : '0'}>
                     <Circle
                       size="36px"
                       bg={getProgressColor(circleStep)}
@@ -186,11 +186,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
                         </>
                       )}
                     </Circle>
-                    <Text
-                      fontWeight="hairline"
-                      ml={3}
-                      color="rgba(255,255,255,0.75)"
-                    >
+                    <Text fontWeight="hairline" ml={3} color="rgba(255,255,255,0.75)">
                       {labels[index]}
                     </Text>
                   </Flex>
@@ -199,37 +195,15 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
             </Flex>
 
             {/* Right Section */}
-            <Flex
-              width="67%"
-              flexDirection="column"
-              justifyContent="center"
-              alignItems="center"
-            >
+            <Flex width="67%" flexDirection="column" justifyContent="center" alignItems="center">
               {step === 1 && (
                 <>
-                  <Flex
-                    maxW="300px"
-                    flexDirection={'column'}
-                    justifyContent={'left'}
-                    alignItems={'center'}
-                  >
-                    <Text
-                      textAlign={'left'}
-                      fontWeight={'bold'}
-                      fontSize="lg"
-                      color="white"
-                    >
+                  <Flex maxW="300px" flexDirection={'column'} justifyContent={'left'} alignItems={'center'}>
+                    <Text textAlign={'left'} fontWeight={'bold'} fontSize="lg" color="white">
                       Choose Validators
                     </Text>
-                    <Text
-                      mt={2}
-                      textAlign={'center'}
-                      fontWeight={'light'}
-                      fontSize="lg"
-                      color="white"
-                    >
-                      Select up to 8 validators to split your liquid delegation
-                      between.
+                    <Text mt={2} textAlign={'center'} fontWeight={'light'} fontSize="lg" color="white">
+                      Select up to 8 validators to split your liquid delegation between.
                     </Text>
                   </Flex>
                   {selectedValidators.length > 0 && (
@@ -261,9 +235,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
                       }
                     }}
                   >
-                    {selectedValidators.length > 0
-                      ? 'Next'
-                      : 'Choose Validators'}
+                    {selectedValidators.length > 0 ? 'Next' : 'Choose Validators'}
                   </Button>
                   <MultiModal
                     isOpen={isModalOpen}
@@ -277,27 +249,13 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
               {step === 2 && (
                 <>
                   <Box justifyContent={'center'}>
-                    <Text
-                      fontWeight={'bold'}
-                      fontSize="lg"
-                      w="250px"
-                      textAlign={'left'}
-                      color="white"
-                    >
-                      You’re going to liquid stake {tokenAmount}{' '}
-                      {selectedOption?.value} on Quicksilver
+                    <Text fontWeight={'bold'} fontSize="lg" w="250px" textAlign={'left'} color="white">
+                      You’re going to liquid stake {tokenAmount} {selectedOption?.value} on Quicksilver
                     </Text>
-                    <HStack
-                      mt={2}
-                      textAlign={'left'}
-                      fontWeight={'light'}
-                      fontSize="lg"
-                      color="white"
-                    >
+                    <HStack mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
                       <Text fontWeight={'bold'}>Receiving:</Text>
                       <Text color="complimentary.900">
-                        {(Number(tokenAmount) * 0.95).toFixed(2)} q
-                        {selectedOption?.value}
+                        {(Number(tokenAmount) * 0.95).toFixed(2)} q{selectedOption?.value}
                       </Text>
                     </HStack>
                     <Text mt={2} textAlign={'left'} fontWeight={'hairline'}>
@@ -309,9 +267,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
                         bgColor: '#181818',
                       }}
                       mt={4}
-                      onClick={() =>
-                        setStep((prevStep) => (prevStep < 3 ? prevStep + 1 : 3))
-                      }
+                      onClick={(event) => handleValidatorIntent(event, intents)}
                     >
                       Submit
                     </Button>
@@ -340,22 +296,10 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({
               {step === 3 && (
                 <>
                   <Box justifyContent={'center'}>
-                    <Text
-                      fontWeight={'bold'}
-                      fontSize="lg"
-                      w="250px"
-                      textAlign={'left'}
-                      color="white"
-                    >
+                    <Text fontWeight={'bold'} fontSize="lg" w="250px" textAlign={'left'} color="white">
                       Status: {transactionStatus}
                     </Text>
-                    <HStack
-                      mt={2}
-                      textAlign={'left'}
-                      fontWeight={'light'}
-                      fontSize="lg"
-                      color="white"
-                    >
+                    <HStack mt={2} textAlign={'left'} fontWeight={'light'} fontSize="lg" color="white">
                       <Text fontWeight={'bold'}>Transaction details:</Text>
                       <Text color="complimentary.900">Mintscan</Text>
                     </HStack>

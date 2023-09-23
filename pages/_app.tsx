@@ -1,37 +1,27 @@
 import '../styles/globals.css';
+import { Chain } from '@chain-registry/types';
 import { Box, ChakraProvider } from '@chakra-ui/react';
+import { Registry } from '@cosmjs/proto-signing';
+import { SigningStargateClientOptions, AminoTypes } from '@cosmjs/stargate';
 import { SignerOptions, WalletViewProps } from '@cosmos-kit/core';
 import { wallets as cosmostationWallets } from '@cosmos-kit/cosmostation';
 import { wallets as keplrWallets } from '@cosmos-kit/keplr';
 import { wallets as leapWallets } from '@cosmos-kit/leap';
 import { ChainProvider } from '@cosmos-kit/react';
+import {
+  quicksilverProtoRegistry,
+  quicksilverAminoConverters,
+  getSigningQuicksilverClientOptions,
+  getSigningCosmosClientOptions,
+} from '@hoangdv2429/quicksilverjs';
 import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { chains, assets } from 'chain-registry';
 import type { AppProps } from 'next/app';
 
 import { defaultTheme } from '@/config';
+
 import '@interchain-ui/react/styles';
-
-const ConnectedView = ({ onClose, onReturn, wallet }: WalletViewProps) => {
-  const {
-    walletInfo: { prettyName },
-    username,
-    address,
-  } = wallet;
-
-  return <Box bgColor="complimentary.900"></Box>;
-};
-
-const ConnectingView = ({ onClose, onReturn, wallet }: WalletViewProps) => {
-  const {
-    walletInfo: { prettyName },
-    username,
-    address,
-  } = wallet;
-
-  return <div>{`${prettyName}/${username}/${address}`}</div>;
-};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,9 +34,14 @@ const queryClient = new QueryClient({
 
 function CreateCosmosApp({ Component, pageProps }: AppProps) {
   const signerOptions: SignerOptions = {
-    // signingStargate: () => {
-    //   return getSigningCosmosClientOptions();
-    // }
+    signingStargate: (chain: Chain): SigningStargateClientOptions | undefined => {
+      const registry = new Registry(quicksilverProtoRegistry);
+      const aminoTypes = new AminoTypes(quicksilverAminoConverters);
+      return {
+        aminoTypes: aminoTypes,
+        registry: registry,
+      };
+    },
   };
 
   return (

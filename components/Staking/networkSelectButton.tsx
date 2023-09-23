@@ -19,9 +19,10 @@ const networks = [
   {
     value: 'ATOM',
     logo: '/quicksilver-app-v2/img/networks/atom.svg',
-    qlogo: '/quicksilver-app-v2/img/networks/q-atom.svg',
+    qlogo: '/quicksilver-app-v2/img/networks/qatom.svg',
     name: 'Cosmos Hub',
     chainName: 'cosmoshub',
+    chainId: 'cosmoshub-4',
   },
   {
     value: 'OSMO',
@@ -29,6 +30,7 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/qosmo.svg',
     name: 'Osmosis',
     chainName: 'osmosis',
+    chainId: 'osmosis-1',
   },
   {
     value: 'STARS',
@@ -36,13 +38,15 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/qstars.svg',
     name: 'Stargaze',
     chainName: 'stargaze',
+    chainId: 'cosmoshub-4',
   },
   {
     value: 'REGEN',
     logo: '/quicksilver-app-v2/img/networks/regen.svg',
-    qlogo: '/quicksilver-app-v2/img/networks/q-regen.svg',
+    qlogo: '/quicksilver-app-v2/img/networks/regen.svg',
     name: 'Regen',
     chainName: 'regen',
+    chainId: 'cosmoshub-4',
   },
   {
     value: 'SOMM',
@@ -50,6 +54,7 @@ const networks = [
     qlogo: '/quicksilver-app-v2/img/networks/sommelier.png',
     name: 'Sommelier',
     chainName: 'sommelier',
+    chainId: 'cosmoshub-4',
   },
 ];
 

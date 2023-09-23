@@ -32,6 +32,7 @@ export default function Staking() {
       qlogo: '/quicksilver-app-v2/img/networks/qatom.svg',
       name: 'Cosmos Hub',
       chainName: 'cosmoshub',
+      chainId: 'cosmoshub-4',
     },
     {
       value: 'OSMO',
@@ -39,6 +40,7 @@ export default function Staking() {
       qlogo: '/quicksilver-app-v2/img/networks/qosmo.svg',
       name: 'Osmosis',
       chainName: 'osmosis',
+      chainId: 'osmosis-1',
     },
     {
       value: 'STARS',
@@ -46,6 +48,7 @@ export default function Staking() {
       qlogo: '/quicksilver-app-v2/img/networks/qstars.svg',
       name: 'Stargaze',
       chainName: 'stargaze',
+      chainId: 'cosmoshub-4',
     },
     {
       value: 'REGEN',
@@ -53,6 +56,7 @@ export default function Staking() {
       qlogo: '/quicksilver-app-v2/img/networks/regen.svg',
       name: 'Regen',
       chainName: 'regen',
+      chainId: 'cosmoshub-4',
     },
     {
       value: 'SOMM',
@@ -60,6 +64,7 @@ export default function Staking() {
       qlogo: '/quicksilver-app-v2/img/networks/sommelier.png',
       name: 'Sommelier',
       chainName: 'sommelier',
+      chainId: 'cosmoshub-4',
     },
   ];
 

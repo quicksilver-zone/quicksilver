@@ -1,15 +1,11 @@
 import { useChain } from '@cosmos-kit/react';
-import {
-  useRpcEndpoint,
-  useRpcClient,
-  createRpcQueryHooks,
-} from 'interchain-query';
+import { useRpcEndpoint, useRpcClient, createRpcQueryHooks } from 'interchain-query';
 
 export const useQueryHooks = (chainName: string, extraKey?: string) => {
-  const { getRpcEndpoint } = useChain(chainName);
+  const { getRestEndpoint } = useChain(chainName);
 
   const rpcEndpointQuery = useRpcEndpoint({
-    getter: getRpcEndpoint,
+    getter: getRestEndpoint,
     options: {
       staleTime: Infinity,
       queryKeyHashFn: (queryKey) => {

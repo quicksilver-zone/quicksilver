@@ -1,9 +1,12 @@
+import { useQuery } from '@chakra-ui/react';
+import { useChain } from '@cosmos-kit/react';
 import BigNumber from 'bignumber.js';
 import { cosmos } from 'interchain-query';
 import { useEffect, useMemo, useState } from 'react';
 
 import { parseValidators } from '@/utils/staking';
 
+import { useGrpcQueryClient } from './useGrpcQueryClient';
 import { useQueryHooks } from './useQueryHooks';
 import { useRpcQueryClient } from './useRpcQueryClient';
 
@@ -11,69 +14,33 @@ import { useRpcQueryClient } from './useRpcQueryClient';
   return this.toString();
 };
 
-export const useValidatorData = (chainName: string) => {
-  const [isLoading, setIsLoading] = useState(false);
+export const useValidatorData = (chainName: string, address: string) => {
+  const { grpcQueryClient } = useGrpcQueryClient(chainName);
+  const { chain } = useChain(chainName);
+  const chainId = chain.chain_id;
+  const intentQuery = useQuery(
+    ['intent', chainName],
+    async () => {
+      if (!grpcQueryClient) {
+        throw new Error('RPC Client not ready');
+      }
 
-  const { rpcQueryClient } = useRpcQueryClient(chainName);
+      const intent = await grpcQueryClient.quicksilver.interchainstaking.v1.delegatorIntent({
+        chainId: chainId,
+        delegatorAddress: address || '',
+      });
 
-  const { cosmosQuery, isReady } = useQueryHooks(chainName);
-
-  const validatorsQuery = cosmosQuery.staking.v1beta1.useValidators({
-    request: {
-      status: cosmos.staking.v1beta1.bondStatusToJSON(
-        cosmos.staking.v1beta1.BondStatus.BOND_STATUS_BONDED,
-      ),
-      pagination: {
-        key: new Uint8Array(),
-        offset: 0n,
-        limit: 200n,
-        countTotal: true,
-        reverse: false,
-      },
+      return intent;
     },
-    options: {
-      queryKey: ['validators', chainName],
-      enabled: !!rpcQueryClient?.cosmos?.staking?.v1beta1.validator,
-      select: ({ validators }) => {
-        const sorted = validators.sort((a, b) =>
-          new BigNumber(b.tokens).minus(a.tokens).toNumber(),
-        );
-        return parseValidators(sorted);
-      },
-      onError: (error) => {
-        console.error('Error fetching validators:', error);
-        validatorsQuery.remove();
-        validatorsQuery.refetch();
-      },
+    {
+      enabled: !!grpcQueryClient,
+      staleTime: Infinity,
     },
-  });
-
-  const loading = validatorsQuery.isFetching || !isReady;
-
-  useEffect(() => {
-    setIsLoading(loading);
-  }, [loading]);
-
-  type SingleQueriesData = {
-    validators: NonNullable<(typeof validatorsQuery)['data']>;
-  };
-
-  const singleQueriesData = useMemo(() => {
-    if (validatorsQuery.isFetching || !isReady) return;
-    return {
-      validators: validatorsQuery.data,
-    } as SingleQueriesData;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [validatorsQuery.isFetching, isReady]);
-
-  const refetch = () => {
-    validatorsQuery.remove();
-    validatorsQuery.refetch();
-  };
+  );
 
   return {
-    data: singleQueriesData,
-    isLoading,
-    refetch,
+    intent: intentQuery.data,
+    isLoading: intentQuery.isLoading,
+    isError: intentQuery.isError,
   };
 };

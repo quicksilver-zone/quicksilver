@@ -23,7 +23,7 @@ import {
 import { useChain } from '@cosmos-kit/react';
 import React, { useEffect, useState } from 'react';
 
-import { useBalanceQuery } from '@/hooks/useIntentData';
+import { useBalanceQuery } from '@/hooks/useQueries';
 import { getExponent } from '@/utils';
 import { shiftDigits } from '@/utils';
 
@@ -35,23 +35,17 @@ type StakingBoxProps = {
     value: string;
     logo: string;
     chainName: string;
+    chainId: string;
   };
   isModalOpen: boolean;
   setModalOpen: (isOpen: boolean) => void;
 };
 
-export const StakingBox = ({
-  selectedOption,
-  isModalOpen,
-  setModalOpen,
-}: StakingBoxProps): JSX.Element => {
+export const StakingBox = ({ selectedOption, isModalOpen, setModalOpen }: StakingBoxProps): JSX.Element => {
   const [tokenAmount, setTokenAmount] = useState<string>('0');
   const { address } = useChain(selectedOption.chainName);
   const exp = getExponent(selectedOption.chainName);
-  const { balance, isLoading, isError } = useBalanceQuery(
-    selectedOption.chainName,
-    address ?? '',
-  );
+  const { balance, isLoading, isError } = useBalanceQuery(selectedOption.chainName, address ?? '');
 
   const baseBalance = shiftDigits(balance?.balance?.amount || '0', -exp);
 
@@ -66,33 +60,16 @@ export const StakingBox = ({
 
   const truncatedBalance = truncateToThreeDecimals(Number(baseBalance));
 
-  const maxStakingAmount = truncateToThreeDecimals(
-    truncatedBalance ? truncatedBalance - 0.005 : 0,
-  );
+  const maxStakingAmount = truncateToThreeDecimals(truncatedBalance ? truncatedBalance - 0.005 : 0);
 
   const maxHalfStakingAmount = maxStakingAmount / 2;
 
   const [inputError, setInputError] = useState(false);
 
   return (
-    <Box
-      position="relative"
-      backdropFilter="blur(50px)"
-      bgColor="rgba(255,255,255,0.1)"
-      flex="1"
-      borderRadius="10px"
-      p={5}
-    >
+    <Box position="relative" backdropFilter="blur(50px)" bgColor="rgba(255,255,255,0.1)" flex="1" borderRadius="10px" p={5}>
       <Tabs isFitted variant="enclosed">
-        <TabList
-          mt={'4'}
-          mb="1em"
-          overflow="hidden"
-          borderBottomColor="transparent"
-          bg="rgba(255,255,255,0.1)"
-          p={2}
-          borderRadius="25px"
-        >
+        <TabList mt={'4'} mb="1em" overflow="hidden" borderBottomColor="transparent" bg="rgba(255,255,255,0.1)" p={2} borderRadius="25px">
           <Tab
             borderRadius="25px"
             flex="1"
@@ -132,10 +109,8 @@ export const StakingBox = ({
           <TabPanel>
             <VStack spacing={8} align="center">
               <Text fontWeight="light" textAlign="center" color="white">
-                Stake your {selectedOption.value.toUpperCase()} tokens in
-                exchange for q{selectedOption.value.toUpperCase()} which you can
-                deploy around the ecosystem. You can liquid stake half of your
-                balance, if you&apos;re going to LP.
+                Stake your {selectedOption.value.toUpperCase()} tokens in exchange for q{selectedOption.value.toUpperCase()} which you can
+                deploy around the ecosystem. You can liquid stake half of your balance, if you&apos;re going to LP.
               </Text>
               <Flex flexDirection="column" w="100%">
                 <Stat py={4} textAlign="left" color="white">
@@ -179,42 +154,21 @@ export const StakingBox = ({
                     }
                   }}
                 />
-                <Flex
-                  w="100%"
-                  flexDirection="row"
-                  py={4}
-                  mb={-4}
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
-                  <Flex
-                    mb={-4}
-                    alignItems="center"
-                    justifyContent={'center'}
-                    gap={4}
-                    flexDirection={'row'}
-                  >
+                <Flex w="100%" flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
+                  <Flex mb={-4} alignItems="center" justifyContent={'center'} gap={4} flexDirection={'row'}>
                     {address ? (
                       <>
                         <Text color="white" fontWeight="light">
                           Tokens available:{' '}
                         </Text>
                         {isLoading ? (
-                          <Skeleton
-                            startColor="complimentary.900"
-                            endColor="complimentary.400"
-                          >
-                            <SkeletonText
-                              w={'95px'}
-                              noOfLines={1}
-                              skeletonHeight={'18px'}
-                            />
+                          <Skeleton startColor="complimentary.900" endColor="complimentary.400">
+                            <SkeletonText w={'95px'} noOfLines={1} skeletonHeight={'18px'} />
                           </Skeleton>
                         ) : (
                           <Text color="complimentary.900" fontWeight="light">
                             {address
-                              ? balance?.balance?.amount &&
-                                Number(balance?.balance?.amount) !== 0
+                              ? balance?.balance?.amount && Number(balance?.balance?.amount) !== 0
                                 ? `${truncatedBalance} ${selectedOption.value.toUpperCase()}`
                                 : `Get ${selectedOption.value.toUpperCase()} tokens here`
                               : '0'}
@@ -241,9 +195,7 @@ export const StakingBox = ({
                       variant="ghost"
                       w="60px"
                       h="30px"
-                      onClick={() =>
-                        setTokenAmount(maxHalfStakingAmount.toString())
-                      }
+                      onClick={() => setTokenAmount(maxHalfStakingAmount.toString())}
                       isDisabled={!balance || Number(balance) < 1}
                     >
                       half
@@ -261,9 +213,7 @@ export const StakingBox = ({
                       variant="ghost"
                       w="60px"
                       h="30px"
-                      onClick={() =>
-                        setTokenAmount(maxStakingAmount.toString())
-                      }
+                      onClick={() => setTokenAmount(maxStakingAmount.toString())}
                       isDisabled={!balance || Number(balance) < 1}
                     >
                       max
@@ -272,24 +222,14 @@ export const StakingBox = ({
                 </Flex>
               </Flex>
               <Divider bgColor="complimentary.900" />
-              <HStack
-                justifyContent="space-between"
-                alignItems="left"
-                w="100%"
-                mt={-8}
-              >
+              <HStack justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                 <Stat textAlign="left" color="white">
                   <StatLabel>What you&apos;ll get</StatLabel>
-                  <StatNumber>
-                    q{selectedOption.value.toUpperCase()}:
-                  </StatNumber>
+                  <StatNumber>q{selectedOption.value.toUpperCase()}:</StatNumber>
                 </Stat>
-                <Spacer />{' '}
-                {/* This pushes the next Stat component to the right */}
+                <Spacer /> {/* This pushes the next Stat component to the right */}
                 <Stat py={4} textAlign="right" color="white">
-                  <StatNumber textColor="complimentary.900">
-                    {(Number(tokenAmount) * 0.95).toFixed(2)}
-                  </StatNumber>
+                  <StatNumber textColor="complimentary.900">{(Number(tokenAmount) * 0.95).toFixed(2)}</StatNumber>
                 </Stat>
               </HStack>
               <Button
@@ -317,15 +257,12 @@ export const StakingBox = ({
           <TabPanel>
             <VStack spacing={8} align="center">
               <Text fontWeight="light" textAlign="center" color="white">
-                Unstake your q{selectedOption.value.toUpperCase()} tokens in
-                exchange for {selectedOption.value.toUpperCase()}.
+                Unstake your q{selectedOption.value.toUpperCase()} tokens in exchange for {selectedOption.value.toUpperCase()}.
               </Text>
               <Flex flexDirection="column" w="100%">
                 <Stat py={4} textAlign="left" color="white">
                   <StatLabel>Amount tounstake:</StatLabel>
-                  <StatNumber>
-                    q{selectedOption.value.toUpperCase()}{' '}
-                  </StatNumber>
+                  <StatNumber>q{selectedOption.value.toUpperCase()} </StatNumber>
                 </Stat>
                 <Input
                   _active={{
@@ -347,19 +284,11 @@ export const StakingBox = ({
                   value={tokenAmount}
                   onChange={(e) => setTokenAmount(e.target.value)}
                 />
-                <Flex
-                  w="100%"
-                  flexDirection="row"
-                  py={4}
-                  mb={-4}
-                  justifyContent="space-between"
-                  alignItems="center"
-                >
+                <Flex w="100%" flexDirection="row" py={4} mb={-4} justifyContent="space-between" alignItems="center">
                   <Skeleton isLoaded={!isLoading}>
                     <SkeletonText>
                       <Text color="white" fontWeight="light">
-                        Tokens available: 0 q
-                        {selectedOption.value.toUpperCase()}
+                        Tokens available: 0 q{selectedOption.value.toUpperCase()}
                       </Text>
                     </SkeletonText>
                   </Skeleton>
@@ -383,22 +312,14 @@ export const StakingBox = ({
                 </Flex>
               </Flex>
               <Divider bgColor="complimentary.900" />
-              <HStack
-                justifyContent="space-between"
-                alignItems="left"
-                w="100%"
-                mt={-8}
-              >
+              <HStack justifyContent="space-between" alignItems="left" w="100%" mt={-8}>
                 <Stat textAlign="left" color="white">
                   <StatLabel>What you&apos;ll get</StatLabel>
                   <StatNumber>{selectedOption.value.toUpperCase()}:</StatNumber>
                 </Stat>
-                <Spacer />{' '}
-                {/* This pushes the next Stat component to the right */}
+                <Spacer /> {/* This pushes the next Stat component to the right */}
                 <Stat py={4} textAlign="right" color="white">
-                  <StatNumber textColor="complimentary.900">
-                    {(Number(tokenAmount) * 0.95).toFixed(2)}
-                  </StatNumber>
+                  <StatNumber textColor="complimentary.900">{(Number(tokenAmount) * 0.95).toFixed(2)}</StatNumber>
                 </Stat>
               </HStack>
               <Button

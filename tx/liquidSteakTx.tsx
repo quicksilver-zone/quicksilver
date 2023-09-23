@@ -3,19 +3,14 @@ import { StdFee } from '@cosmjs/amino';
 import { HttpEndpoint, SigningStargateClient } from '@cosmjs/stargate';
 import { ChainName } from '@cosmos-kit/core';
 import { useChain } from '@cosmos-kit/react';
+import { getSigningQuicksilverClient, quicksilver } from '@hoangdv2429/quicksilverjs';
+import { ValidatorIntent } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
+import { MsgSignalIntent } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/messages';
 import { assets, chains } from 'chain-registry';
-import { getSigningQuicksilverClient } from 'quicksilverjs';
-import { quicksilver } from 'quicksilverjs';
-import { ValidatorIntent } from 'quicksilverjs/types/codegen/quicksilver/interchainstaking/v1/interchainstaking';
-import { MsgSignalIntent } from 'quicksilverjs/types/codegen/quicksilver/interchainstaking/v1/messages';
 
 import { useQueryHooks } from '@/hooks';
 
-const showSuccessToast = (
-  toast: ReturnType<typeof useToast>,
-  txHash: string,
-  chainName: ChainName,
-) => {
+const showSuccessToast = (toast: ReturnType<typeof useToast>, txHash: string, chainName: ChainName) => {
   const mintscanUrl = `https://www.mintscan.io/${chainName}/txs/${txHash}`;
   toast({
     position: 'bottom-right',
@@ -34,10 +29,7 @@ const showSuccessToast = (
   });
 };
 
-const showErrorToast = (
-  toast: ReturnType<typeof useToast>,
-  errorMsg: string,
-) => {
+const showErrorToast = (toast: ReturnType<typeof useToast>, errorMsg: string) => {
   toast({
     title: 'Transaction Failed',
     description: `Error: ${errorMsg}`,
@@ -49,55 +41,32 @@ const showErrorToast = (
 };
 
 export const liquidStakeTx = (
+  getSigningStargateClient: (apiUrl: string) => Promise<SigningStargateClient>,
   setResp: (resp: string) => any,
   chainName: string,
   chainId: string,
+  address: string | undefined,
   intents: ValidatorIntent[],
   toast: ReturnType<typeof useToast>,
 ) => {
   return async (event: React.MouseEvent) => {
     event.preventDefault();
+    const apiUrl = 'https://rpc.test.quicksilver.zone';
+    const stargateClient = await getSigningStargateClient(apiUrl);
 
-    const { address } = useChain(chainName);
-
-    let rpcEndpoint: string | undefined;
-    const solution = useQueryHooks(chainName);
-
-    if (typeof solution.rpcEndpoint !== 'string') {
-      console.error('rpcEndpoint is not a string.');
-      return;
-    }
-
-    rpcEndpoint = solution.rpcEndpoint;
-
-    // Custom logic for setting rpcEndpoint based on the chain name
-    if (chainName === 'quicksilver') {
-      rpcEndpoint = 'https://rpc.test.quicksilver.zone';
-    } else if (chainName === 'cosmoshub') {
-      rpcEndpoint = 'https://rpc.sentry-01.theta-testnet.polypore.xyz';
-    } else {
-      rpcEndpoint = solution.rpcEndpoint;
-    }
-
-    const stargateClient = await getSigningQuicksilverClient(rpcEndpoint);
     if (!stargateClient || !address) {
       console.error('Stargate client undefined or address undefined.');
       return;
     }
 
-    const myMsgSignalIntent: MsgSignalIntent = {
+    const { signalIntent } = quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
+    const msgSignalIntent = signalIntent({
       chainId: chainId,
       intents: intents,
       fromAddress: address,
-    };
+    });
 
-    const { signalIntent } =
-      quicksilver.interchainstaking.v1.MessageComposer.withTypeUrl;
-    const msgSignalIntent = signalIntent(myMsgSignalIntent);
-
-    const mainTokens = assets.find(
-      ({ chain_name }) => chain_name === chainName,
-    );
+    const mainTokens = assets.find(({ chain_name }) => chain_name === chainName);
     const mainDenom = mainTokens?.assets[0].base ?? 'uqck';
 
     const fee: StdFee = {
@@ -111,12 +80,8 @@ export const liquidStakeTx = (
     };
 
     try {
-      console.log('Raw transaction message:', JSON.stringify(msgSignalIntent));
-      const response = await stargateClient.signAndBroadcast(
-        address,
-        [msgSignalIntent],
-        fee,
-      );
+      stargateClient.registry.register('/quicksilver.interchainstaking.v1.MsgSignalIntent', MsgSignalIntent);
+      const response = await stargateClient.signAndBroadcast(address, [msgSignalIntent], fee);
       setResp(JSON.stringify(response, null, 2));
       showSuccessToast(toast, response.transactionHash, chainName);
     } catch (error) {

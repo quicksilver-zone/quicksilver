@@ -23,7 +23,7 @@ import {
 import React, { useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
 
-import { useValidatorData } from '@/hooks/useValidatorData';
+import { useValidatorsQuery } from '@/hooks/useQueries';
 
 import { ValidatorsTable } from './validatorTable';
 
@@ -32,8 +32,8 @@ interface MultiModalProps {
   onClose: () => void;
   children?: React.ReactNode;
   selectedChainName: string;
-  selectedValidators: string[];
-  setSelectedValidators: React.Dispatch<React.SetStateAction<string[]>>;
+  selectedValidators: { name: string; operatorAddress: string }[];
+  setSelectedValidators: React.Dispatch<React.SetStateAction<{ name: string; operatorAddress: string }[]>>;
 }
 
 export const MultiModal: React.FC<MultiModalProps> = ({
@@ -45,38 +45,29 @@ export const MultiModal: React.FC<MultiModalProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = React.useState<string>('');
 
-  const { data, isLoading, refetch } = useValidatorData(selectedChainName);
+  const { validatorsData, isLoading, isError } = useValidatorsQuery(selectedChainName);
 
-  useEffect(() => {
-    if (isLoading) return;
-    refetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedChainName]);
+  const validators = validatorsData;
+  const handleValidatorClick = (validator: { name: string; operatorAddress: string }) => {
+    setSelectedValidators((prevState) => {
+      const alreadySelected = prevState.some((v) => v.name === validator.name);
 
-  const validators = data?.validators;
-  const handleValidatorClick = (validatorName: string) => {
-    setSelectedValidators((prevState: string[]) => {
-      // Check if selecting another validator would exceed the limit of 8
-      if (!prevState.includes(validatorName) && prevState.length >= 8) {
-        // Show a warning
+      if (!alreadySelected && prevState.length >= 8) {
         alert("You can't select more than 8 validators.");
         return prevState;
       }
 
-      // If the validator is already selected, remove it, else add to the selected list
-      return prevState.includes(validatorName)
-        ? prevState.filter((v: string) => v !== validatorName)
-        : [...prevState, validatorName];
+      return alreadySelected ? prevState.filter((v) => v.name !== validator.name) : [...prevState, validator];
     });
   };
 
   const handleQuickSelect = (count: number) => {
-    if (!data || !validators) return;
+    if (!validatorsData || !validators) return;
 
-    // Get the top N validators
-    const topValidators = validators
-      .slice(0, count)
-      .map((validator) => validator.name);
+    const topValidators = validators.slice(0, count).map((validator) => ({
+      name: validator.name,
+      operatorAddress: validator.address,
+    }));
 
     setSelectedValidators(topValidators);
   };
@@ -108,62 +99,25 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                   <AccordionIcon mb={-4} color="complimentary.900" />
                 </AccordionButton>
               </h2>
-              <AccordionPanel
-                textAlign="left"
-                alignContent="center"
-                justifyContent="center"
-                mt={-2}
-              >
-                <Text
-                  fontWeight="light"
-                  pl={6}
-                  maxW="95%"
-                  color="white"
-                  fontSize="16px"
-                  letterSpacing={'wider'}
-                >
-                  Choose which validator(s) you would like to liquid stake to.
-                  You can select from the list below or utilize the quick select
-                  to pick the highest ranked validators. To learn more about
-                  rainkings click here.
+              <AccordionPanel textAlign="left" alignContent="center" justifyContent="center" mt={-2}>
+                <Text fontWeight="light" pl={6} maxW="95%" color="white" fontSize="16px" letterSpacing={'wider'}>
+                  Choose which validator(s) you would like to liquid stake to. You can select from the list below or utilize the quick
+                  select to pick the highest ranked validators. To learn more about rainkings click here.
                 </Text>
               </AccordionPanel>
             </AccordionItem>
           </Accordion>
         </ModalHeader>
-        <ModalCloseButton color="white" />{' '}
-        {/* Positioning by default should be top right */}
-        <Divider
-          bgColor="complimentary.900"
-          alignSelf="center"
-          w="88%"
-          m="auto"
-        />
-        <ModalBody
-          bgColor="#1A1A1A"
-          borderRadius={'6px'}
-          justifyContent="center"
-        >
+        <ModalCloseButton color="white" /> {/* Positioning by default should be top right */}
+        <Divider bgColor="complimentary.900" alignSelf="center" w="88%" m="auto" />
+        <ModalBody bgColor="#1A1A1A" borderRadius={'6px'} justifyContent="center">
           {isLoading ? (
-            <Box
-              display="flex"
-              justifyContent="center"
-              alignItems="center"
-              height="200px"
-            >
+            <Box display="flex" justifyContent="center" alignItems="center" height="200px">
               <Spinner h="50px" w="50px" color="complimentary.900" />
             </Box>
           ) : (
             <Box mt={-1}>
-              <Flex
-                py={2}
-                px={4}
-                alignContent="center"
-                alignItems="center"
-                justifyContent={'space-between'}
-                w="100%"
-                flexDirection={'row'}
-              >
+              <Flex py={2} px={4} alignContent="center" alignItems="center" justifyContent={'space-between'} w="100%" flexDirection={'row'}>
                 <InputGroup>
                   <InputLeftElement pointerEvents="none">
                     <FaSearch color="orange" />
@@ -192,23 +146,8 @@ export const MultiModal: React.FC<MultiModalProps> = ({
                     }}
                   />
                 </InputGroup>
-                <Box
-                  borderRadius="10px"
-                  w="300px"
-                  h="50px"
-                  mr={2}
-                  display="flex"
-                  flexDirection="column"
-                  justifyContent="space-between"
-                >
-                  <Flex
-                    w="100%"
-                    h="50%"
-                    pt={6}
-                    justifyContent="space-between"
-                    alignItems="center"
-                    flexDir={'row'}
-                  >
+                <Box borderRadius="10px" w="300px" h="50px" mr={2} display="flex" flexDirection="column" justifyContent="space-between">
+                  <Flex w="100%" h="50%" pt={6} justifyContent="space-between" alignItems="center" flexDir={'row'}>
                     <Button
                       w="60px"
                       _hover={{
@@ -244,24 +183,16 @@ export const MultiModal: React.FC<MultiModalProps> = ({
               </Flex>
               <ValidatorsTable
                 validators={validators || []}
-                onValidatorClick={(validatorName) => {
-                  if (
-                    selectedValidators.length < 9 ||
-                    selectedValidators.includes(validatorName)
-                  ) {
-                    handleValidatorClick(validatorName);
+                onValidatorClick={(validator) => {
+                  const isSelected = selectedValidators.some((v) => v.name === validator.name);
+                  if (selectedValidators.length < 9 || isSelected) {
+                    handleValidatorClick(validator);
                   }
                 }}
                 selectedValidators={selectedValidators}
                 searchTerm={searchTerm}
               />
-              <Box
-                mt={-12}
-                w="100%"
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-              >
+              <Box mt={-12} w="100%" display="flex" justifyContent="center" alignItems="center">
                 <Button
                   onClick={onClose}
                   h="30px"
