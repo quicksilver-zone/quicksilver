@@ -24,6 +24,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
@@ -275,6 +276,10 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 	if !found {
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
+		jailTime := time.Time{}
+		if validator.IsJailed() {
+			jailTime = ctx.BlockTime()
+		}
 		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
@@ -282,8 +287,8 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			DelegatorShares: validator.DelegatorShares,
 			Score:           sdk.ZeroDec(),
 			Status:          validator.Status.String(),
-			Jailed:          false,
-			JailedSince:     time.Time{},
+			Jailed:          validator.IsJailed(),
+			JailedSince:     jailTime,
 		}); err != nil {
 			return err
 		}
@@ -293,7 +298,26 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		}
 
 	} else {
-		if val.Jailed && !validator.IsJailed() {
+		if !val.Jailed && validator.IsJailed() {
+			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
+
+			val.Jailed = true
+			val.JailedSince = ctx.BlockTime()
+			if !val.VotingPower.IsPositive() {
+				return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
+			}
+			if !validator.Tokens.IsPositive() {
+				return fmt.Errorf("incoming voting power must be greater than zero, received %s", validator.Tokens)
+			}
+			// determine difference between previous vp/shares ratio and new ratio.
+			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
+			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+			delta := newRatio.Quo(prevRatio)
+			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
+			if err != nil {
+				return err
+			}
+		} else if val.Jailed && !validator.IsJailed() {
 			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
 
 			val.Jailed = false
@@ -523,21 +547,19 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 }
 
 func (k *Keeper) QueryValidatorSigningInfo(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) error {
-	queryType := fmt.Sprintf("/cosmos/slashing/v1beta1/signing_infos/%s", validator.GetOperator().String())
-
-	bz, err := k.cdc.Marshal(&validator)
-	if err != nil {
-		return errors.New("failed to marshal validator")
+	req := slashingtypes.QuerySigningInfoRequest{
+		ConsAddress: validator.OperatorAddress,
 	}
+
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		connectionID,
 		chainID,
-		queryType,
-		bz,
+		"cosmos.slashing.v1beta1.Query/SigningInfo",
+		k.cdc.MustMarshal(&req),
 		sdk.NewInt(-1),
 		types.ModuleName,
-		"validatorigninginfo",
+		"validatorsigninginfo",
 		0,
 	)
 
