@@ -272,7 +272,7 @@ func ValidatorSigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query
 	if err != nil {
 		return err
 	}
-    
+
 	if signingInfoRes.ValSigningInfo.Tombstoned {
 		k.Logger(ctx).Error("Tombstoned validator found", "valoper", signingInfoRes.ValSigningInfo.Address)
 		return fmt.Errorf("%q on chainID: %q was found to already have been tombstoned", signingInfoRes.ValSigningInfo.Address, zone.ChainId)
