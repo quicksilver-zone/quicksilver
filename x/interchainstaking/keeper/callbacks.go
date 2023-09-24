@@ -21,6 +21,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
@@ -76,7 +77,8 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("perfbalance", Callback(PerfBalanceCallback)).
 		AddCallback("accountbalance", Callback(AccountBalanceCallback)).
 		AddCallback("allbalances", Callback(AllBalancesCallback)).
-		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback))
+		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback)).
+		AddCallback("validatorsigninginfos", Callback(ValidatorSigningInfosCallback))
 
 	return a.(Callbacks)
 }
@@ -250,6 +252,101 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 		k.Logger(ctx).Info("Found previously unhandled tx. Processing.", "txhash", txn.TxHash)
 		k.ICQKeeper.MakeRequest(ctx, query.ConnectionId, query.ChainId, "tendermint.Tx", hashBytes, sdk.NewInt(-1), types.ModuleName, "deposittx", 0)
 	}
+	return nil
+}
+
+func ValidatorSigningInfosCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+	zone, found := k.GetZone(ctx, query.GetChainId())
+	if !found {
+		return fmt.Errorf("no registered zone for chain id: %s", zone.ChainId)
+	}
+
+	k.Logger(ctx).Debug("Validator signing info callback", "zone", zone.ChainId)
+
+	signingInfoRes := slashingtypes.QuerySigningInfoResponse{}
+	err := k.cdc.Unmarshal(args, &signingInfoRes)
+	if err != nil {
+		return err
+	}
+
+	validator := stakingtypes.Validator{}
+	err = k.cdc.Unmarshal(query.Request, &validator)
+	if err != nil {
+		return err
+	}
+
+	valAddrBytes, err := addressutils.ValAddressFromBech32(validator.OperatorAddress, zone.GetValoperPrefix())
+	if err != nil {
+		return err
+	}
+
+	// check if validator was tombstoned
+	if signingInfoRes.ValSigningInfo.Tombstoned {
+		k.Logger(ctx).Error("Tombstoned validator found", "valoper", validator.OperatorAddress)
+
+		_, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+		if !found {
+			return fmt.Errorf("new validator %s was Tombstoned, do not add it to list validators on chainId %s", validator.OperatorAddress, zone.ChainId)
+		}
+		// TODO: should we update info of this validator and then make another progress of delete it here?
+		k.DeleteValidator(ctx, zone.ChainId, valAddrBytes)
+		return fmt.Errorf("%q on chainID: %q was found to already have been tombstoned", validator.OperatorAddress, zone.ChainId)
+	}
+
+	val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+	if !found {
+		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
+		jailTime := ctx.BlockTime()
+
+		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
+			ValoperAddress:  validator.OperatorAddress,
+			CommissionRate:  validator.GetCommission(),
+			VotingPower:     validator.Tokens,
+			DelegatorShares: validator.DelegatorShares,
+			Score:           sdk.ZeroDec(),
+			Status:          validator.Status.String(),
+			Jailed:          validator.IsJailed(),
+			JailedSince:     jailTime,
+		}); err != nil {
+			return err
+		}
+
+		if err := k.MakePerformanceDelegation(ctx, &zone, validator.OperatorAddress); err != nil {
+			return err
+		}
+	} else {
+		if !val.Jailed && validator.IsJailed() {
+			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
+
+			val.Jailed = true
+			val.JailedSince = ctx.BlockTime()
+			if !val.VotingPower.IsPositive() {
+				return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
+			}
+			if !validator.Tokens.IsPositive() {
+				return fmt.Errorf("incoming voting power must be greater than zero, received %s", validator.Tokens)
+			}
+			// determine difference between previous vp/shares ratio and new ratio.
+			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
+			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
+			delta := newRatio.Quo(prevRatio)
+			err = k.UpdateWithdrawalRecordsForSlash(ctx, &zone, val.ValoperAddress, delta)
+			if err != nil {
+				return err
+			}
+		}
+
+		if err := k.SetValidator(ctx, zone.ChainId, val); err != nil {
+			return err
+		}
+
+		if _, found := k.GetPerformanceDelegation(ctx, &zone, validator.OperatorAddress); !found {
+			if err := k.MakePerformanceDelegation(ctx, &zone, validator.OperatorAddress); err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

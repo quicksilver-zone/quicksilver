@@ -259,6 +259,14 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		return err
 	}
 
+	// In case validator is jailed
+	if validator.IsJailed() {
+		err := k.QueryValidatorSigningInfo(ctx, zone.ConnectionId, zone.ChainId, validator)
+		if err != nil {
+			return nil
+		}
+	}
+
 	valAddrBytes, err := addressutils.ValAddressFromBech32(validator.OperatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
@@ -267,10 +275,6 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 	if !found {
 		k.Logger(ctx).Info("Unable to find validator - adding...", "valoper", validator.OperatorAddress)
 
-		jailTime := time.Time{}
-		if validator.IsJailed() {
-			jailTime = ctx.BlockTime()
-		}
 		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
 			CommissionRate:  validator.GetCommission(),
@@ -278,8 +282,8 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			DelegatorShares: validator.DelegatorShares,
 			Score:           sdk.ZeroDec(),
 			Status:          validator.Status.String(),
-			Jailed:          validator.IsJailed(),
-			JailedSince:     jailTime,
+			Jailed:          false,
+			JailedSince:     time.Time{},
 		}); err != nil {
 			return err
 		}
@@ -289,26 +293,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		}
 
 	} else {
-		if !val.Jailed && validator.IsJailed() {
-			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
-
-			val.Jailed = true
-			val.JailedSince = ctx.BlockTime()
-			if !val.VotingPower.IsPositive() {
-				return fmt.Errorf("existing voting power must be greater than zero, received %s", val.VotingPower)
-			}
-			if !validator.Tokens.IsPositive() {
-				return fmt.Errorf("incoming voting power must be greater than zero, received %s", validator.Tokens)
-			}
-			// determine difference between previous vp/shares ratio and new ratio.
-			prevRatio := val.DelegatorShares.Quo(sdk.NewDecFromInt(val.VotingPower))
-			newRatio := validator.DelegatorShares.Quo(sdk.NewDecFromInt(validator.Tokens))
-			delta := newRatio.Quo(prevRatio)
-			err = k.UpdateWithdrawalRecordsForSlash(ctx, zone, val.ValoperAddress, delta)
-			if err != nil {
-				return err
-			}
-		} else if val.Jailed && !validator.IsJailed() {
+		if val.Jailed && !validator.IsJailed() {
 			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
 
 			val.Jailed = false
@@ -535,6 +520,28 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 		"depositinterval",
 		0,
 	)
+}
+
+func (k *Keeper) QueryValidatorSigningInfo(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) error {
+	queryType := fmt.Sprintf("/cosmos/slashing/v1beta1/signing_infos/%s", validator.GetOperator().String())
+
+	bz, err := k.cdc.Marshal(&validator)
+	if err != nil {
+		return errors.New("failed to marshal validator")
+	}
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		connectionID,
+		chainID,
+		queryType,
+		bz,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"validatorigninginfo",
+		0,
+	)
+
+	return nil
 }
 
 func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkmath.Int {
