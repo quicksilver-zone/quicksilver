@@ -16,6 +16,8 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	lightclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -1628,6 +1630,12 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
+		// setup ClientConsensusState for checking Header validation
+		clientConsensusStateHeight := clienttypes.NewHeight(1, 10076458)
+		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(
+			ctx, suite.chainB.ChainID, clientConsensusStateHeight, nil,
+		)
+
 		// get first deposit transaction
 		_data, err := base64.StdEncoding.DecodeString(depositTxFixture)
 		_res := tx.GetTxsEventResponse{}
@@ -1657,7 +1665,10 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 				Data: proofBz,
 			},
 			Header: &lightclienttypes.Header{
-				// TODO: add this template, modify tendermint client to match this block header
+				TrustedHeight: types.Height{
+					RevisionNumber: 1,
+					RevisionHeight: 10076458,
+				},
 			},
 			TxBytes: txInBytes,
 		}
