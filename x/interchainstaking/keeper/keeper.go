@@ -561,7 +561,7 @@ func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID str
 		data,
 		sdk.NewInt(-1),
 		types.ModuleName,
-		"validatorsigninginfo",
+		"signinginfo",
 		0,
 	)
 
