@@ -14,6 +14,7 @@ import {
   StatLabel,
   StatNumber,
   Toast,
+  Spinner,
   useToast,
 } from '@chakra-ui/react';
 import { isOfflineDirectSigner } from '@cosmjs/proto-signing';
@@ -21,10 +22,10 @@ import { useChain } from '@cosmos-kit/react';
 import styled from '@emotion/styled';
 import { getSigningQuicksilverClient } from '@hoangdv2429/quicksilverjs';
 import { ValidatorIntent } from '@hoangdv2429/quicksilverjs/dist/codegen/quicksilver/interchainstaking/v1/interchainstaking';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useQueryHooks } from '@/hooks';
-import { liquidStakeTx } from '@/tx/liquidSteakTx';
+import { intentTx } from '@/tx/intentTx';
 
 import { MultiModal } from './validatorSelectionModal';
 
@@ -78,6 +79,9 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
     return 'rgba(255,255,255,0.2)';
   };
 
+  const [isSigning, setIsSigning] = useState<boolean>(false);
+  const [isError, setIsError] = useState<boolean>(false);
+
   const { address, getSigningStargateClient } = useChain(selectedOption?.chainName || '');
 
   const labels = ['Choose validators', `Summary`, `Receive q${selectedOption?.value}`];
@@ -103,7 +107,7 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
   const numberOfValidators = selectedValidators.length;
 
   // Calculate the weight for each validator
-  const weightPerValidator = numberOfValidators ? (totalWeight / numberOfValidators).toFixed(4) : '0'; // Rounded to 4 decimal places
+  const weightPerValidator = numberOfValidators ? (totalWeight / numberOfValidators).toFixed(4) : '0';
 
   const intents: ValidatorIntent[] = selectedValidators.map((validator) => ({
     valoperAddress: validator.operatorAddress,
@@ -112,10 +116,11 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   const solution = useQueryHooks(selectedOption?.chainName || '');
 
-  const handleValidatorIntent = async (event: React.MouseEvent, intents: ValidatorIntent[]) => {
+  const handleValidatorIntent = async (event: React.MouseEvent) => {
     console.log('handleValidatorIntent called');
     try {
-      await liquidStakeTx(
+      setIsSigning(true);
+      await intentTx(
         getSigningStargateClient,
         setResp,
         selectedOption?.chainName || '',
@@ -123,8 +128,9 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
         address,
         intents,
         toast,
+        setIsError,
+        setIsSigning,
       )(event);
-      console.log('Transaction succeeded');
     } catch (error) {
       console.log('Transaction failed', error);
     }
@@ -132,6 +138,13 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
 
   //placehoder for transaction status
   const [transactionStatus, setTransactionStatus] = useState('Pending');
+
+  useEffect(() => {
+    setSelectedValidators([]);
+    setStep(1);
+    setIsError(false);
+    setIsSigning(false);
+  }, [selectedOption?.chainName]);
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl">
       <ModalOverlay />
@@ -267,9 +280,9 @@ export const StakingProcessModal: React.FC<StakingModalProps> = ({ isOpen, onClo
                         bgColor: '#181818',
                       }}
                       mt={4}
-                      onClick={(event) => handleValidatorIntent(event, intents)}
+                      onClick={(event) => handleValidatorIntent(event)}
                     >
-                      Submit
+                      {isError ? 'Try Again' : isSigning ? <Spinner /> : 'Confirm'}
                     </Button>
                   </Box>
                   <Button

@@ -62,11 +62,11 @@ export const ValidatorsTable: React.FC<{
   }, [validators, searchTerm, sortBy, sortOrder]);
 
   return (
-    <Box borderRadius={'6px'} maxH="xl" minH="sm">
+    <Box borderRadius={'6px'} maxH="xl" minH="lg">
       <Box
         borderRadius={'6px'}
         maxH="120px"
-        minH="sm"
+        minH="md"
         px={4}
         pb={0}
         overflowY="scroll"
@@ -132,7 +132,7 @@ export const ValidatorsTable: React.FC<{
                   onClick={() =>
                     onValidatorClick({
                       name: validator.name || '',
-                      operatorAddress: validator.address || '',
+                      operatorAddress: validator.operatorAddress || '',
                     })
                   }
                   backgroundColor={selectedValidators.some((v) => v.name === validator.name) ? 'rgba(255, 128, 0, 0.25)' : 'transparent'}

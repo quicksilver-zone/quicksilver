@@ -14,7 +14,7 @@ export const useGrpcQueryClient = (chainName: string) => {
   if (chainName === 'quicksilver') {
     grpcEndpoint = 'https://lcd.test.quicksilver.zone';
   } else if (chainName === 'cosmoshub') {
-    grpcEndpoint = 'https://lcd.sentry-01.theta-testnet.polypore.xyz';
+    grpcEndpoint = 'https://rest.sentry-01.theta-testnet.polypore.xyz';
   } else {
     grpcEndpoint = solution.rpcEndpoint;
   }
