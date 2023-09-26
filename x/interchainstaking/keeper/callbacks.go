@@ -78,7 +78,7 @@ func (c Callbacks) RegisterCallbacks() icqtypes.QueryCallbacks {
 		AddCallback("accountbalance", Callback(AccountBalanceCallback)).
 		AddCallback("allbalances", Callback(AllBalancesCallback)).
 		AddCallback("delegationaccountbalance", Callback(DelegationAccountBalanceCallback)).
-		AddCallback("validatorsigninginfo", Callback(ValidatorSigningInfoCallback))
+		AddCallback("signinginfo", Callback(SigningInfoCallback))
 
 	return a.(Callbacks)
 }
@@ -255,7 +255,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 	return nil
 }
 
-func ValidatorSigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
+func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
 	zone, found := k.GetZone(ctx, query.GetChainId())
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", zone.ChainId)
@@ -263,32 +263,18 @@ func ValidatorSigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query
 
 	k.Logger(ctx).Debug("Validator signing info callback", "zone", zone.ChainId)
 
-	signingInfoRes := slashingtypes.QuerySigningInfoResponse{}
-
+	valSigningInfo := slashingtypes.ValidatorSigningInfo{}
 	if len(args) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (10)")
 	}
-	err := k.cdc.Unmarshal(args, &signingInfoRes)
+	err := k.cdc.Unmarshal(args, &valSigningInfo)
 	if err != nil {
 		return err
 	}
-
-	if signingInfoRes.ValSigningInfo.Tombstoned {
-		k.Logger(ctx).Error("Tombstoned validator found", "valoper", signingInfoRes.ValSigningInfo.Address)
-		return fmt.Errorf("%q on chainID: %q was found to already have been tombstoned", signingInfoRes.ValSigningInfo.Address, zone.ChainId)
+	if valSigningInfo.Tombstoned {
+		k.Logger(ctx).Error("Tombstoned validator found", "valoper", valSigningInfo.Address)
+		return fmt.Errorf("%q on chainID: %q was found to already have been tombstoned", valSigningInfo.Address, zone.ChainId)
 	}
-
-	queryReq := slashingtypes.QuerySigningInfoRequest{}
-	err = k.cdc.Unmarshal(query.Request, &queryReq)
-	if err != nil {
-		return err
-	}
-
-	validator := stakingtypes.Validator{
-		OperatorAddress: queryReq.ConsAddress,
-	}
-
-	k.EmitValidatorQuery(ctx, query.ConnectionId, query.ChainId, validator)
 
 	return nil
 }

@@ -23,8 +23,8 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
 	ibctransferkeeper "github.com/cosmos/ibc-go/v5/modules/apps/transfer/keeper"
@@ -260,14 +260,6 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		return err
 	}
 
-	// In case validator is jailed
-	if validator.IsJailed() {
-		err := k.QueryValidatorSigningInfo(ctx, zone.ConnectionId, zone.ChainId, validator)
-		if err != nil {
-			return nil
-		}
-	}
-
 	valAddrBytes, err := addressutils.ValAddressFromBech32(validator.OperatorAddress, zone.GetValoperPrefix())
 	if err != nil {
 		return err
@@ -278,6 +270,10 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 
 		jailTime := time.Time{}
 		if validator.IsJailed() {
+			if err := k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator); err != nil {
+				k.Logger(ctx).Error("Can not add tombstoned validator: %s", validator.OperatorAddress)
+				return err
+			}
 			jailTime = ctx.BlockTime()
 		}
 		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
@@ -299,6 +295,11 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 
 	} else {
 		if !val.Jailed && validator.IsJailed() {
+			// checking in case validator was tombstoned
+			if err := k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator); err != nil {
+				return err
+			}
+
 			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
 
 			val.Jailed = true
@@ -546,17 +547,18 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 	)
 }
 
-func (k *Keeper) QueryValidatorSigningInfo(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) error {
-	req := slashingtypes.QuerySigningInfoRequest{
-		ConsAddress: validator.OperatorAddress,
+func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) error {
+	_, addr, err := bech32.DecodeAndConvert(validator.OperatorAddress)
+	if err != nil {
+		return err
 	}
-
+	data := slashingtypes.ValidatorSigningInfoKey(addr)
 	k.ICQKeeper.MakeRequest(
 		ctx,
 		connectionID,
 		chainID,
-		"cosmos.slashing.v1beta1.Query/SigningInfo",
-		k.cdc.MustMarshal(&req),
+		"store/slashing/key",
+		data,
 		sdk.NewInt(-1),
 		types.ModuleName,
 		"validatorsigninginfo",
