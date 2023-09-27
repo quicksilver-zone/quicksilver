@@ -104,4 +104,7 @@ func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
 
 	records = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
 	suite.Equal(2, len(records))
+
+	_, found := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, "cosmoshub-4", testValidatorOne, testValidatorThree, 1)
+	suite.False(found)
 }
