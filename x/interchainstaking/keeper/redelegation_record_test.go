@@ -51,3 +51,57 @@ func (suite *KeeperTestSuite) TestRedelegationRecordSetGetIterate() {
 	allCosmosRecords = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
 	suite.Equal(0, len(allCosmosRecords))
 }
+
+func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	testValidatorOne := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+	testValidatorTwo := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+	testValidatorThree := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+	
+	suite.SetupTest()
+
+	records := quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
+	suite.Equal(0, len(records))
+
+	currentTime := ctx.BlockTime()
+	
+	record := types.RedelegationRecord{
+		ChainId:        "cosmoshub-4",
+		EpochNumber:    1,
+		Source:         testValidatorOne,
+		Destination:    testValidatorTwo,
+		Amount:         3000,
+		CompletionTime: currentTime.Add(time.Hour).UTC(),
+	}
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+	
+	record = types.RedelegationRecord{
+		ChainId:        "cosmoshub-4",
+		EpochNumber:    1,
+		Source:         testValidatorOne,
+		Destination:    testValidatorThree,
+		Amount:         3000,
+		CompletionTime: currentTime.Add(-time.Hour).UTC(),
+	}
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+	record = types.RedelegationRecord{
+		ChainId:        "cosmoshub-4",
+		EpochNumber:    1,
+		Source:         testValidatorThree,
+		Destination:    testValidatorTwo,
+		Amount:         3000,
+		CompletionTime: time.Time{},
+	}
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+
+	records = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
+	suite.Equal(3, len(records))
+
+	err := quicksilver.InterchainstakingKeeper.GCCompletedRedelegations(ctx)
+	suite.NoError(err)
+
+	records = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
+	suite.Equal(2, len(records))
+}	
