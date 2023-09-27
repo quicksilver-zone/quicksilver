@@ -841,7 +841,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 			pass: true,
 		},
 		{
-			name: "valid case with no rewards",
+			name:      "valid case with no rewards",
 			zoneSetup: func() {},
 			connectionSetup: func() string {
 				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
