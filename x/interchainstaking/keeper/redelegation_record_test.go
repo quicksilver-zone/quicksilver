@@ -59,14 +59,14 @@ func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
 	testValidatorOne := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
 	testValidatorTwo := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
 	testValidatorThree := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
-	
+
 	suite.SetupTest()
 
 	records := quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
 	suite.Equal(0, len(records))
 
 	currentTime := ctx.BlockTime()
-	
+
 	record := types.RedelegationRecord{
 		ChainId:        "cosmoshub-4",
 		EpochNumber:    1,
@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
 		CompletionTime: currentTime.Add(time.Hour).UTC(),
 	}
 	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
-	
+
 	record = types.RedelegationRecord{
 		ChainId:        "cosmoshub-4",
 		EpochNumber:    1,
@@ -104,4 +104,4 @@ func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
 
 	records = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
 	suite.Equal(2, len(records))
-}	
+}
