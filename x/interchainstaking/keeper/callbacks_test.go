@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,7 +15,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -758,6 +761,52 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 		suite.NoError(err)
 		err = keeper.RewardsCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: reqbz})
 		//
+		suite.NoError(err)
+	})
+}
+
+func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
+	suite.Run("distribute rewards", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		quicksilver := suite.GetQuicksilverApp(suite.chainA)
+		gaia := suite.GetQuicksilverApp(suite.chainB)
+		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctxA := suite.chainA.GetContext()
+		ctxB := suite.chainB.GetContext()
+
+		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
+
+		// Send coin to withdrawal address
+		balances := sdk.NewCoins(
+			sdk.NewCoin(
+				zone.BaseDenom,
+				math.NewInt(10_000_000),
+			),
+		)
+		err := gaia.MintKeeper.MintCoins(ctxB, balances)
+		suite.NoError(err)
+		addr, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
+		suite.NoError(err)
+		err = gaia.BankKeeper.SendCoinsFromModuleToAccount(ctxB, minttypes.ModuleName, addr, balances)
+		suite.NoError(err)
+
+		newBalances := gaia.BankKeeper.GetAllBalances(ctxB, addr)
+		suite.Equal(balances, newBalances)
+
+		response := banktypes.QueryAllBalancesResponse{
+			Balances: balances,
+		}
+		respbz, err := quicksilver.AppCodec().Marshal(&response)
+		suite.NoError(err)
+		
+		// Setup transfer channel
+		channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
+		quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icstypes.TransferPort, ChannelId: channelID}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+		quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, icstypes.TransferPort, channelID, 1)
+
+		err = keeper.DistributeRewardsFromWithdrawAccount(quicksilver.InterchainstakingKeeper, ctxA, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID})
 		suite.NoError(err)
 	})
 }
