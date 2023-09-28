@@ -2782,6 +2782,6 @@ func (suite *KeeperTestSuite) TestTriggerRedemptionRate() {
 			}
 		}
 
-		suite.Equal(prevAllBalancesQueryCnt + 1, allBalancesQueryCnt)	
+		suite.Equal(prevAllBalancesQueryCnt+1, allBalancesQueryCnt)
 	})
 }
