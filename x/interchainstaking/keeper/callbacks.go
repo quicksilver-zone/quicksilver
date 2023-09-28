@@ -280,7 +280,10 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		}
 		val, _ := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 		val.Tombstoned = true
-		k.SetValidator(ctx, zone.ChainId, val)
+		if err = k.SetValidator(ctx, zone.ChainId, val); err != nil {
+
+			return err
+		}
 
 		return nil
 	}
