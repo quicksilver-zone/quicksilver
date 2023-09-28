@@ -270,10 +270,6 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 
 		jailTime := time.Time{}
 		if validator.IsJailed() {
-			if err := k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator); err != nil {
-				k.Logger(ctx).Error("Can not add tombstoned validator: %s", validator.OperatorAddress)
-				return err
-			}
 			jailTime = ctx.BlockTime()
 		}
 		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
@@ -294,12 +290,12 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		}
 
 	} else {
-		if !val.Jailed && validator.IsJailed() {
-			// checking in case validator was tombstoned
-			if err := k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator); err != nil {
-				return err
-			}
+		if val.Tombstoned {
+			k.Logger(ctx).Error("Tombstoned validator found", "valoper", validator.OperatorAddress)
+			return fmt.Errorf("%q on chainID: %q was found to already have been tombstoned", validator.OperatorAddress, zone.ChainId)
+		}
 
+		if !val.Jailed && validator.IsJailed() {
 			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
 
 			val.Jailed = true
@@ -355,6 +351,13 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 				return err
 			}
 		}
+	}
+
+	// we set the validator in the steps above so dont need to check found here
+	val, _ = k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+	// checking whether validator was tombstoned or not
+	if val.Jailed {
+		k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
 	}
 
 	return nil
