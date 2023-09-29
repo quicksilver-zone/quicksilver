@@ -778,7 +778,8 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 	ctxB := suite.chainB.GetContext()
 	vals := gaia.StakingKeeper.GetAllValidators(ctxB)
 
-	zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
+	suite.True(found)
 	params := quicksilver.InterchainstakingKeeper.GetParams(ctxA)
 	commisionRate := sdk.MustNewDecFromStr("0.2")
 	params.CommissionRate = commisionRate
@@ -795,7 +796,10 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 		pass            bool
 	}{
 		{
-			name: "valid case with positive rewards and -5% < delta < 2%",
+			// delta = ratio / redemption_rate
+			// The original redemption rate is 1 so if ratio exceed (-0.95, 1.02) range, 
+			// it would be kept in the boundary
+			name: "valid case with positive rewards and -95% < delta < 102%",
 			zoneSetup: func() {
 				balances := sdk.NewCoins(
 					sdk.NewCoin(
@@ -836,6 +840,13 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 			check: func() {
 				zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
 				redemptionRate := zone.RedemptionRate
+
+				// The ratio is calculated as: 
+				// ratio = (total_delegate + total_unbonding + epoch_rewards) / total_q_asset
+				// total_delegate = total_q_asset = 100_000_000
+				// total_unbonding = 0
+				// epoch_rewards = balances * (1 - commision_rate) = 1_000_000 * 0.8
+				// Therefore, ratio should be 1.008
 				ratio := sdk.MustNewDecFromStr("1.008")
 				suite.Equal(ratio.Mul(prevRedemptionRate), redemptionRate)
 			},
@@ -868,7 +879,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 			pass: true,
 		},
 		{
-			name:      "invalid host zone",
+			name:      "invalid chainId query",
 			zoneSetup: func() {},
 			connectionSetup: func() string {
 				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
