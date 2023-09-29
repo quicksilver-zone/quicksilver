@@ -545,7 +545,7 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 
 	for _, dist := range withdrawalRecord.Distribution {
 		if equalLsmCoin(dist.Valoper, dist.Amount, sharesAmount) {
-			withdrawalRecord.Amount.Add(sharesAmount)
+			withdrawalRecord.Amount = withdrawalRecord.Amount.Add(sharesAmount)
 			// matched amount
 			if len(withdrawalRecord.Distribution) == len(withdrawalRecord.Amount) {
 				// we just added the last tokens
