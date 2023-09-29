@@ -797,7 +797,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 	}{
 		{
 			// delta = ratio / redemption_rate
-			// The original redemption rate is 1 so if ratio exceed (-0.95, 1.02) range, 
+			// The original redemption rate is 1 so if ratio exceed (-0.95, 1.02) range,
 			// it would be kept in the boundary
 			name: "valid case with positive rewards and -95% < delta < 102%",
 			zoneSetup: func() {
@@ -841,11 +841,11 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 				zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
 				redemptionRate := zone.RedemptionRate
 
-				// The ratio is calculated as: 
+				// The ratio is calculated as:
 				// ratio = (total_delegate + total_unbonding + epoch_rewards) / total_q_asset
 				// total_delegate = total_q_asset = 100_000_000
 				// total_unbonding = 0
-				// epoch_rewards = balances * (1 - commision_rate) = 1_000_000 * 0.8
+				// epoch_rewards = balances * (1 - commission_rate) = 1_000_000 * 0.8
 				// Therefore, ratio should be 1.008
 				ratio := sdk.MustNewDecFromStr("1.008")
 				suite.Equal(ratio.Mul(prevRedemptionRate), redemptionRate)
