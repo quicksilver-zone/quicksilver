@@ -15,6 +15,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	icatypes "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
@@ -24,6 +25,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
+	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -2741,6 +2743,463 @@ func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 			suite.NoError(err)
 
 			for idx, ewdr := range test.expectedWithdrawalRecords(ctx, quicksilver, zone) {
+				wdr, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, ewdr.Txhash, ewdr.Status)
+				suite.True(found)
+				suite.Equal(ewdr.Amount, wdr.Amount)
+				suite.Equal(ewdr.BurnAmount, wdr.BurnAmount)
+				suite.Equal(ewdr.Delegator, wdr.Delegator)
+				suite.Equal(ewdr.Distribution, wdr.Distribution, idx)
+				suite.Equal(ewdr.Status, wdr.Status)
+				suite.Equal(ewdr.CompletionTime, wdr.CompletionTime)
+				suite.Equal(ewdr.Acknowledged, wdr.Acknowledged)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestHandleTokenizedShares() {
+	txHash := randomutils.GenerateRandomHashAsHex(32)
+	txHash1 := randomutils.GenerateRandomHashAsHex(32)
+	delegator := addressutils.GenerateAddressForTestWithPrefix("quick")
+
+	tests := []struct {
+		name                      string
+		epoch                     int64
+		txHash                    string
+		withdrawalRecords         func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord
+		msgs                      func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg
+		sharesAmount              func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coins
+		expectedWithdrawalRecords func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord
+	}{
+		{
+			name:   "1 wdr, 2 distributions, 2 msgs, withdraw success",
+			epoch:  1,
+			txHash: txHash,
+			withdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   suite.chainB.ChainID,
+						Delegator: delegator,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: vals[0],
+								Amount:  1000,
+							},
+							{
+								Valoper: vals[1],
+								Amount:  1000,
+							},
+						},
+						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+						Amount:        	sdk.Coins{},
+						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:         txHash,
+						Status:         icstypes.WithdrawStatusTokenize,
+						CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+						Acknowledged:   true,
+					},
+				}
+			},
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Msg{
+					&lsmstakingtypes.MsgTokenizeShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						ValidatorAddress:    vals[0],
+						Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(500)),
+						TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+					},
+					&lsmstakingtypes.MsgTokenizeShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						ValidatorAddress:    vals[1],
+						Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(500)),
+						TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+					},
+				}
+			},
+			sharesAmount: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coins {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+
+				return sdk.NewCoins(
+					sdk.NewCoin(vals[0]+"1", sdk.NewInt(1000)),
+					sdk.NewCoin(vals[1]+"1", sdk.NewInt(1000)),
+				)
+			},
+			expectedWithdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				return []icstypes.WithdrawalRecord{}
+			},
+		},
+		{
+			name:   "1 wdr, 2 distributions, 1 msgs, withdraw half",
+			epoch:  1,
+			txHash: txHash,
+			withdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   suite.chainB.ChainID,
+						Delegator: delegator,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: vals[0],
+								Amount:  1000,
+							},
+							{
+								Valoper: vals[1],
+								Amount:  1000,
+							},
+						},
+						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+						Amount:        	sdk.Coins{},
+						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:         txHash,
+						Status:         icstypes.WithdrawStatusTokenize,
+						CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+						Acknowledged:   true,
+					},
+				}
+			},
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Msg{
+					&lsmstakingtypes.MsgTokenizeShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						ValidatorAddress:    vals[0],
+						Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+						TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+					},
+				}
+			},
+			sharesAmount: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coins {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+
+				return sdk.NewCoins(
+					sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000)),
+				)
+			},
+			expectedWithdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   suite.chainB.ChainID,
+						Delegator: delegator,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: vals[0],
+								Amount:  1000,
+							},
+							{
+								Valoper: vals[1],
+								Amount:  1000,
+							},
+						},
+						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+						Amount:        	sdk.Coins{sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000))},
+						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:         txHash,
+						Status:         icstypes.WithdrawStatusTokenize,
+						CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+						Acknowledged:   true,
+					},
+				}
+			},
+		},
+		{
+			name:   "1 wdr, 2 distributions, 1 msgs, not match amount",
+			epoch:  1,
+			txHash: txHash,
+			withdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   suite.chainB.ChainID,
+						Delegator: delegator,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: vals[0],
+								Amount:  1000,
+							},
+							{
+								Valoper: vals[1],
+								Amount:  1000,
+							},
+						},
+						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+						Amount:        	sdk.Coins{},
+						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:         txHash,
+						Status:         icstypes.WithdrawStatusTokenize,
+						CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+						Acknowledged:   true,
+					},
+				}
+			},
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Msg{
+					&lsmstakingtypes.MsgTokenizeShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						ValidatorAddress:    vals[0],
+						Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(500)),
+						TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+					},
+				}
+			},
+			sharesAmount: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coins {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+
+				return sdk.NewCoins(
+					sdk.NewCoin(vals[0]+"0x", sdk.NewInt(500)),
+				)
+			},
+			expectedWithdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   suite.chainB.ChainID,
+						Delegator: delegator,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: vals[0],
+								Amount:  1000,
+							},
+							{
+								Valoper: vals[1],
+								Amount:  1000,
+							},
+						},
+						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+						Amount:        	nil,
+						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:         txHash,
+						Status:         icstypes.WithdrawStatusTokenize,
+						CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+						Acknowledged:   true,
+					},
+				}
+			},
+		},
+		{
+			name:   "1 wdr, 2 distributions, 2 msgs, not match denom",
+			epoch:  1,
+			txHash: txHash,
+			withdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   suite.chainB.ChainID,
+						Delegator: delegator,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: vals[0],
+								Amount:  1000,
+							},
+							{
+								Valoper: vals[1],
+								Amount:  1000,
+							},
+						},
+						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+						Amount:        	sdk.Coins{},
+						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:         txHash,
+						Status:         icstypes.WithdrawStatusTokenize,
+						CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+						Acknowledged:   true,
+					},
+				}
+			},
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Msg{
+					&lsmstakingtypes.MsgTokenizeShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						ValidatorAddress:    vals[0],
+						Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(500)),
+						TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+					},
+					&lsmstakingtypes.MsgTokenizeShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						ValidatorAddress:    vals[0],
+						Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(500)),
+						TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+					},
+				}
+			},
+			sharesAmount: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coins {
+				return sdk.NewCoins(
+					sdk.NewCoin("not_match_denom_0x", sdk.NewInt(1000)),
+					sdk.NewCoin("not_match_denom_1x", sdk.NewInt(1000)),
+				)
+			},
+			expectedWithdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   suite.chainB.ChainID,
+						Delegator: delegator,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: vals[0],
+								Amount:  1000,
+							},
+							{
+								Valoper: vals[1],
+								Amount:  1000,
+							},
+						},
+						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+						Amount:        	nil,
+						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:         txHash,
+						Status:         icstypes.WithdrawStatusTokenize,
+						CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+						Acknowledged:   true,
+					},
+				}
+			},
+		},
+		{
+			name:   "2 wdr, 2 distributions, 2 msgs, not match denom",
+			epoch:  1,
+			txHash: txHash,
+			withdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   suite.chainB.ChainID,
+						Delegator: delegator,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: vals[0],
+								Amount:  1000,
+							},
+							{
+								Valoper: vals[1],
+								Amount:  1000,
+							},
+						},
+						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+						Amount:        	sdk.Coins{},
+						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:         txHash,
+						Status:         icstypes.WithdrawStatusTokenize,
+						CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+						Acknowledged:   true,
+					},
+					{
+						ChainId:   suite.chainB.ChainID,
+						Delegator: delegator,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: vals[0],
+								Amount:  1000,
+							},
+							{
+								Valoper: vals[1],
+								Amount:  1000,
+							},
+						},
+						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+						Amount:        	sdk.Coins{},
+						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:         txHash1,
+						Status:         icstypes.WithdrawStatusTokenize,
+						CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+						Acknowledged:   true,
+					},
+				}
+			},
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Msg{
+					&lsmstakingtypes.MsgTokenizeShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						ValidatorAddress:    vals[0],
+						Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+						TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+					},
+					&lsmstakingtypes.MsgTokenizeShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						ValidatorAddress:    vals[0],
+						Amount:              sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+						TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+					},
+				}
+			},
+			sharesAmount: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coins {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return sdk.NewCoins(
+					sdk.NewCoin(vals[0] + "0x", sdk.NewInt(1000)),
+					sdk.NewCoin(vals[1] + "1x", sdk.NewInt(1000)),
+				)
+			},
+			expectedWithdrawalRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.WithdrawalRecord {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+
+				return []icstypes.WithdrawalRecord{
+					{
+						ChainId:   suite.chainB.ChainID,
+						Delegator: delegator,
+						Distribution: []*icstypes.Distribution{
+							{
+								Valoper: vals[0],
+								Amount:  1000,
+							},
+							{
+								Valoper: vals[1],
+								Amount:  1000,
+							},
+						},
+						Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+						Amount:        	nil,
+						BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+						Txhash:         txHash1,
+						Status:         icstypes.WithdrawStatusTokenize,
+						CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+						Acknowledged:   true,
+					},
+				}
+			},
+		},
+	}
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+
+			if !found {
+				suite.Fail("unable to retrieve zone for test")
+			}
+
+			shareAmount := test.sharesAmount(ctx, quicksilver, zone)
+			wdrs := test.withdrawalRecords(ctx, quicksilver, zone)
+			for _, wdr := range wdrs {
+				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, wdr)
+			}
+
+			for index, msg := range test.msgs(ctx, quicksilver, zone) {
+				err := quicksilver.InterchainstakingKeeper.HandleTokenizedShares(ctx, msg, shareAmount[index], test.txHash)
+				suite.NoError(err)
+			}
+
+			ewdrs := test.expectedWithdrawalRecords(ctx, quicksilver, zone)
+
+			if len(ewdrs) == 0 {
+				_, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, test.txHash, types.WithdrawStatusTokenize)
+				suite.False(found)
+			}
+
+			for idx, ewdr := range ewdrs {
 				wdr, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, ewdr.Txhash, ewdr.Status)
 				suite.True(found)
 				suite.Equal(ewdr.Amount, wdr.Amount)
