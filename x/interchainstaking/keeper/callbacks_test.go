@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"bytes"
 	"encoding/base64"
-	"fmt"
 	"testing"
 	"time"
 
@@ -944,8 +943,6 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 	}
 	for _, test := range tests {
 		suite.Run(test.name, func() {
-			fmt.Println("redemption rate: ", zone.RedemptionRate)
-
 			// Send coin to withdrawal address
 			balances := sdk.NewCoins(
 				sdk.NewCoin(
@@ -965,7 +962,6 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 
 			respbz := test.responseMsg()
 			err = keeper.DistributeRewardsFromWithdrawAccount(quicksilver.InterchainstakingKeeper, ctxA, respbz, test.queryMsg)
-
 			if test.pass {
 				suite.NoError(err)
 			} else {
@@ -973,12 +969,6 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 			}
 
 			test.check()
-			zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
-			fmt.Println("redemption rate: ", zone.RedemptionRate)
-
-			commitments := quicksilver.IBCKeeper.ChannelKeeper.GetAllPacketCommitments(ctxA)
-			fmt.Println("commitments: ", commitments[0])
-
 			channel, found := quicksilver.IBCKeeper.ChannelKeeper.GetChannel(ctxA, icstypes.TransferPort, channelID)
 			if found {
 				channel.State = channeltypes.CLOSED
