@@ -35,6 +35,8 @@ var TestChannel = channeltypes.Channel{
 	ConnectionHops: []string{"connection-0"},
 }
 
+const queryAllBalancesPath = "cosmos.bank.v1beta1.Query/AllBalances"
+
 func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 	nineDec := sdk.NewDecWithPrec(9, 2)
 
@@ -871,7 +873,6 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 			err:       false,
 		},
 		{
-
 			name: "valid case trigger redemption rate and without set zone",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {
 				zone.WithdrawalWaitgroup = 0
@@ -904,7 +905,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 			test.setup(ctx, quicksilver, &zone)
 			prevAllBalancesQueryCnt := 0
 			for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-				if query.QueryType == "cosmos.bank.v1beta1.Query/AllBalances" {
+				if query.QueryType == queryAllBalancesPath {
 					prevAllBalancesQueryCnt++
 				}
 			}
@@ -919,7 +920,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 
 			allBalancesQueryCnt := 0
 			for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-				if query.QueryType == "cosmos.bank.v1beta1.Query/AllBalances" {
+				if query.QueryType == queryAllBalancesPath {
 					allBalancesQueryCnt++
 				}
 			}
