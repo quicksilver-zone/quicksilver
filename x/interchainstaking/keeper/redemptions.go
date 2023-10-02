@@ -71,11 +71,11 @@ func (k *Keeper) processRedemptionForLsm(ctx sdk.Context, zone *types.Zone, send
 	for valoper, amount := range distribution {
 		newDistribution := types.Distribution{
 			Valoper: valoper,
-			Amount: amount,
+			Amount:  amount,
 		}
 		distributions = append(distributions, &newDistribution)
 	}
-	
+
 	k.AddWithdrawalRecord(ctx, zone.ChainId, sender.String(), distributions, destination, sdk.Coins{}, burnAmount, hash, types.WithdrawStatusTokenize, time.Unix(0, 0), k.EpochsKeeper.GetEpochInfo(ctx, epochstypes.EpochIdentifierEpoch).CurrentEpoch)
 
 	return k.SubmitTx(ctx, sdkMsgs, zone.DelegationAddress, hash, zone.MessagesPerTx)
