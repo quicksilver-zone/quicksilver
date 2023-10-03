@@ -25,7 +25,6 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -3195,7 +3194,7 @@ func (suite *KeeperTestSuite) TestHandleTokenizedShares() {
 			ewdrs := test.expectedWithdrawalRecords(ctx, quicksilver, zone)
 
 			if len(ewdrs) == 0 {
-				_, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, test.txHash, types.WithdrawStatusTokenize)
+				_, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, test.txHash, icstypes.WithdrawStatusTokenize)
 				suite.False(found)
 			}
 
