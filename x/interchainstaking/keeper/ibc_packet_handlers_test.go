@@ -3213,3 +3213,34 @@ func (suite *KeeperTestSuite) TestHandleTokenizedShares() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestTriggerRedemptionRate() {
+	suite.Run("trigger redemption rate", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		quicksilver := suite.GetQuicksilverApp(suite.chainA)
+		ctx := suite.chainA.GetContext()
+
+		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+
+		prevAllBalancesQueryCnt := 0
+		for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
+			if query.QueryType == "cosmos.bank.v1beta1.Query/AllBalances" {
+				prevAllBalancesQueryCnt++
+			}
+		}
+
+		err := quicksilver.InterchainstakingKeeper.TriggerRedemptionRate(ctx, &zone)
+		suite.NoError(err)
+
+		allBalancesQueryCnt := 0
+		for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
+			if query.QueryType == "cosmos.bank.v1beta1.Query/AllBalances" {
+				allBalancesQueryCnt++
+			}
+		}
+
+		suite.Equal(prevAllBalancesQueryCnt+1, allBalancesQueryCnt)
+	})
+}
