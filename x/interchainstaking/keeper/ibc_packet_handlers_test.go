@@ -1,10 +1,12 @@
 package keeper_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
+	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/math"
@@ -2784,4 +2786,221 @@ func (suite *KeeperTestSuite) TestTriggerRedemptionRate() {
 
 		suite.Equal(prevAllBalancesQueryCnt+1, allBalancesQueryCnt)
 	})
+}
+
+func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
+	tests := []struct {
+		name                      string
+		errs                      []bool
+		tokens        			  func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Coin
+		msgs                      func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg
+		delegationRecords         func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation
+		expectedDelegationRecords func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation
+	}{
+		{
+			name: "1 record, 1 msgs, redeem success",
+			errs: []bool{false},
+			delegationRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.Delegation{
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[0],
+						Amount:            sdk.NewCoin(vals[0] + "0x", sdk.NewInt(1000)),
+						Height:            1,
+						RedelegationEnd:   1,
+					},
+				}
+			},
+			tokens: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Coin {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Coin{
+					sdk.NewCoin(vals[0] + "0x", sdk.NewInt(200)),
+				}
+			},
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Msg{
+					&lsmstakingtypes.MsgRedeemTokensforShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						Amount:              sdk.NewCoin(vals[0] + "0x", sdk.NewInt(500)),
+					},
+				}
+			},
+			expectedDelegationRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.Delegation{
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[0],
+						Amount:            sdk.NewCoin(vals[0] + "0x", sdk.NewInt(1200)),
+						Height:            1,
+						RedelegationEnd:   1,
+					},
+				}
+			},
+		},
+		{
+			name: "2 record, 2 msgs, redeem success",
+			errs: []bool{false, false},
+			delegationRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.Delegation{
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[0],
+						Amount:            sdk.NewCoin(vals[0] + "0x", sdk.NewInt(1000)),
+						Height:            1,
+						RedelegationEnd:   1,
+					},
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[1],
+						Amount:            sdk.NewCoin(vals[1] + "1x", sdk.NewInt(1000)),
+						Height:            1,
+						RedelegationEnd:   1,
+					},
+				}
+			},
+			tokens: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Coin {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Coin{
+					sdk.NewCoin(vals[0] + "0x", sdk.NewInt(100)),
+					sdk.NewCoin(vals[1] + "1x", sdk.NewInt(200)),
+				}
+			},
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Msg{
+					&lsmstakingtypes.MsgRedeemTokensforShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						Amount:              sdk.NewCoin(vals[0] + "0x", sdk.NewInt(100)),
+					},
+					&lsmstakingtypes.MsgRedeemTokensforShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						Amount:              sdk.NewCoin(vals[1] + "1x", sdk.NewInt(200)),
+					},
+				}
+			},
+			expectedDelegationRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.Delegation{
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[0],
+						Amount:            sdk.NewCoin(vals[0] + "0x", sdk.NewInt(1100)),
+						Height:            1,
+						RedelegationEnd:   1,
+					},
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[1],
+						Amount:            sdk.NewCoin(vals[1] + "1x", sdk.NewInt(1200)),
+						Height:            1,
+						RedelegationEnd:   1,
+					},
+				}
+			},
+		},
+		{
+			name: "2 record, 2 msgs, redeem failed first msg",
+			errs: []bool{true, false},
+			delegationRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.Delegation{
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[0],
+						Amount:            sdk.NewCoin(vals[0] + "0x", sdk.NewInt(1000)),
+						Height:            1,
+						RedelegationEnd:   1,
+					},
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[1],
+						Amount:            sdk.NewCoin(vals[1] + "1x", sdk.NewInt(1000)),
+						Height:            1,
+						RedelegationEnd:   1,
+					},
+				}
+			},
+			tokens: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Coin {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Coin{
+					sdk.NewCoin(vals[0] + "3x", sdk.NewInt(100)),
+					sdk.NewCoin(vals[1] + "1x", sdk.NewInt(200)),
+				}
+			},
+			msgs: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []sdk.Msg {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []sdk.Msg{
+					&lsmstakingtypes.MsgRedeemTokensforShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						Amount:              sdk.NewCoin("hello", sdk.NewInt(100)),
+					},
+					&lsmstakingtypes.MsgRedeemTokensforShares{
+						DelegatorAddress:    zone.DelegationAddress.Address,
+						Amount:              sdk.NewCoin(vals[1] + "1x", sdk.NewInt(200)),
+					},
+				}
+			},
+			expectedDelegationRecords: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) []icstypes.Delegation {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return []icstypes.Delegation{
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[0],
+						Amount:            sdk.NewCoin(vals[0] + "0x", sdk.NewInt(1000)),
+						Height:            1,
+						RedelegationEnd:   1,
+					},
+					{
+						DelegationAddress: zone.DelegationAddress.Address,
+						ValidatorAddress:  vals[1],
+						Amount:            sdk.NewCoin(vals[1] + "1x", sdk.NewInt(1200)),
+						Height:            1,
+						RedelegationEnd:   1,
+					},
+				}
+			},
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+
+			tokens := test.tokens(ctx, quicksilver, zone)
+			if !found {
+				suite.Fail("unable to retrieve zone for test")
+			}
+
+			for _, dr := range test.delegationRecords(ctx, quicksilver, zone) {
+				quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, dr)
+			}
+			for idx, msg := range test.msgs(ctx, quicksilver, zone) {
+				err := quicksilver.InterchainstakingKeeper.HandleRedeemTokens(ctx, msg, tokens[idx])
+				if test.errs[idx] {
+					suite.Error(err)
+				} else {
+					suite.NoError(err)
+				}
+			}
+
+			for _, edr := range test.expectedDelegationRecords(ctx, quicksilver, zone) {
+				dr, found := quicksilver.InterchainstakingKeeper.GetDelegation(ctx, &zone, edr.DelegationAddress, edr.ValidatorAddress)
+				suite.True(found)
+				suite.Equal(dr.Amount, edr.Amount)
+				suite.Equal(dr.Height, edr.Height)
+				suite.Equal(dr.RedelegationEnd, edr.RedelegationEnd)
+			}
+		})
+	}
 }
