@@ -449,6 +449,12 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return nil
 	}
 
+	// check client state validity
+	err = k.CheckTMHeaderForZone(ctx, &zone, res)
+	if err != nil {
+		return err
+	}
+
 	txn, err := txDecoder(k.cdc)(res.Proof.Data)
 	if err != nil {
 		return err
