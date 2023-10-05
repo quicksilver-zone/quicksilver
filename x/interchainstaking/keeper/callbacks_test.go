@@ -1606,7 +1606,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 		suite.NoError(err)
 	})
 }
-func (suite *KeeperTestSuite) TestPerfBalanceCallback() {
+func (suite *KeeperTestSuite) TestPerfBalanceCallbackUpdate() {
 	suite.Run("perf balance", func() {
 		suite.SetupTest()
 		suite.setupTestZones()
@@ -1616,23 +1616,23 @@ func (suite *KeeperTestSuite) TestPerfBalanceCallback() {
 		ctx := suite.chainA.GetContext()
 
 		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.DepositAddress.IncrementBalanceWaitgroup()
-		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
+		zone.PerformanceAddress.IncrementBalanceWaitgroup()
 		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
-		response := sdk.NewCoin("qck", sdk.NewInt(10))
+		response := sdk.NewCoin("uatom", sdk.NewInt(101))
 		respbz, err := quicksilver.AppCodec().Marshal(&response)
 		suite.NoError(err)
 
-		addr := zone.PerformanceAddress.Address
-		accAddr, err := sdk.AccAddressFromBech32(addr)
+		address := zone.PerformanceAddress.Address
+		accAddr, err := sdk.AccAddressFromBech32(address)
 		suite.NoError(err)
-
-		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("qck")...)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
 
 		err = keeper.PerfBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
 		suite.NoError(err)
-
+		// check performance account balance been updated
+		zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.Equal(response.Amount, zone.PerformanceAddress.Balance.AmountOf(response.Denom))
 	})
 }
 
