@@ -168,6 +168,15 @@ func (k *Keeper) RemoveDelegation(ctx sdk.Context, zone *types.Zone, delegation 
 	return nil
 }
 
+// RemovePerformanceDelegation removes a performance delegation.
+func (k *Keeper) RemovePerformanceDelegation(ctx sdk.Context, zone *types.Zone, delegation types.Delegation) error {
+	delegatorAddress := delegation.GetDelegatorAddr()
+
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetPerformanceDelegationKey(zone, delegatorAddress, delegation.GetValidatorAddr()))
+	return nil
+}
+
 // IterateDelegatorDelegations iterates through one delegator's delegations.
 func (k *Keeper) IterateDelegatorDelegations(ctx sdk.Context, zone *types.Zone, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)

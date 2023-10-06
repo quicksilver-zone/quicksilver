@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -1634,6 +1635,69 @@ func (suite *KeeperTestSuite) TestPerfBalanceCallbackUpdate() {
 		zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 		suite.Equal(response.Amount, zone.PerformanceAddress.Balance.AmountOf(response.Denom))
 	})
+}
+func (suite *KeeperTestSuite) TestPerfBalanceCallbackWhenValidatorsNotAlreadyExist() {
+	testCase := []struct {
+		name     string
+		response sdk.Coin
+	}{
+		{
+			name:     "performance account has an insufficient balance",
+			response: sdk.NewCoin("uatom", sdk.NewInt(100)), //<40000
+		},
+		{
+			name:     "send delegations to validators",
+			response: sdk.NewCoin("uatom", sdk.NewInt(80000)),
+		},
+	}
+	for _, tc := range testCase {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := suite.chainA.GetContext()
+
+			zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			zone.PerformanceAddress.IncrementBalanceWaitgroup()
+			quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+			// remove performance delegation current
+			perfDelegationsCurrent := quicksilver.InterchainstakingKeeper.GetAllPerformanceDelegations(ctx, &zone)
+			for _, perfDelegation := range perfDelegationsCurrent {
+				err := quicksilver.InterchainstakingKeeper.RemovePerformanceDelegation(ctx, &zone, perfDelegation)
+				suite.NoError(err)
+			}
+
+			// create new validator
+			delPk1 := ed25519.GenPrivKey().PubKey()
+			valAddr1 := sdk.ValAddress(delPk1.Address())
+			val, err := stakingtypes.NewValidator(valAddr1, delPk1, stakingtypes.NewDescription("test", "test", "test", "test", "test"))
+			suite.NoError(err)
+			quicksilver.StakingKeeper.SetValidator(ctx, val)
+
+			// create Performance delegations
+			err = quicksilver.InterchainstakingKeeper.MakePerformanceDelegation(ctx, &zone, val.OperatorAddress)
+			suite.NoError(err)
+
+			respbz, err := quicksilver.AppCodec().Marshal(&tc.response)
+			suite.NoError(err)
+
+			address := zone.PerformanceAddress.Address
+			accAddr, err := sdk.AccAddressFromBech32(address)
+			suite.NoError(err)
+			data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
+
+			err = keeper.PerfBalanceCallback(quicksilver.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: data})
+			suite.NoError(err)
+
+			// check performance account balance been updated
+			zone, _ = quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			suite.Equal(tc.response.Amount, zone.PerformanceAddress.Balance.AmountOf(tc.response.Denom))
+		})
+	}
+
 }
 
 // keep depositTxFixture at the foot of the file, so it's not in the way!
