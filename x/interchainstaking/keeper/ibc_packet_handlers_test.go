@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 	"time"
+	"errors"
+	"context"
 
 	"github.com/stretchr/testify/require"
 
@@ -2783,5 +2785,77 @@ func (suite *KeeperTestSuite) TestTriggerRedemptionRate() {
 		}
 
 		suite.Equal(prevAllBalancesQueryCnt+1, allBalancesQueryCnt)
+	})
+}
+func (suite *KeeperTestSuite) TestHandleCompleteSend() {
+	suite.Run("TestHandleCompleteSend", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		quicksilver := suite.GetQuicksilverApp(suite.chainA)
+		ctx := suite.chainA.GetContext()
+		ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+		zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		if !found {
+			suite.Fail("unable to retrieve zone for test")
+		}
+		quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", TestChannel)
+		complete := time.Now().UTC()
+
+		// trigger handler with testcases
+		testCases := []struct {
+			name          string
+			msg           banktypes.MsgSend
+			memo          string
+			expectedError error
+		}{
+			{
+				name: "unexpected completed send",
+				msg: banktypes.MsgSend{
+					FromAddress: "",
+					ToAddress:   "",
+					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+				},
+				expectedError: errors.New("unexpected completed send (2) from  to  (amount: 1000000uatom)"),
+			},
+			{
+				name: "is withdrawal address",
+				msg: banktypes.MsgSend{
+					FromAddress: zone.WithdrawalAddress.Address,
+					ToAddress:   "",
+					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+				},
+				expectedError: nil,
+			},
+			{
+				name: "is to delegation address",
+				msg: banktypes.MsgSend{
+					FromAddress: zone.DepositAddress.Address,
+					ToAddress:   zone.DelegationAddress.Address,
+					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+				},
+				memo:          fmt.Sprintf("unbondSend/%d", complete.Unix()),
+				expectedError: nil,
+			},
+			{
+				name: "is from delegation address", // There is a separate test for handles withdraw for user
+				msg: banktypes.MsgSend{
+					FromAddress: zone.DelegationAddress.Address,
+					ToAddress:   "",
+					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+				},
+				memo:          fmt.Sprintf("unbondSend/%d", complete.Unix()),
+				expectedError: errors.New("no matching withdrawal record found"),
+			},
+		}
+
+		for _, tc := range testCases {
+			err := quicksilver.InterchainstakingKeeper.HandleCompleteSend(ctx, &tc.msg, tc.memo)
+			if tc.expectedError != nil {
+				suite.Equal(tc.expectedError, err)
+			} else {
+				suite.NoError(err)
+			}
+		}
 	})
 }
