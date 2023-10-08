@@ -2834,7 +2834,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 					ToAddress:   zone.DelegationAddress.Address,
 					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
 				},
-				memo:          fmt.Sprintf("unbondSend/%d", complete.Unix()),
+				memo:          "",
 				expectedError: nil,
 			},
 			{
