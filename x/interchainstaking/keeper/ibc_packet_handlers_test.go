@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -2787,6 +2788,7 @@ func (suite *KeeperTestSuite) TestTriggerRedemptionRate() {
 		suite.Equal(prevAllBalancesQueryCnt+1, allBalancesQueryCnt)
 	})
 }
+
 func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 	suite.Run("TestHandleCompleteSend", func() {
 		suite.SetupTest()
@@ -2858,4 +2860,210 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			}
 		}
 	})
+}
+
+
+func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
+	v1 := addressutils.GenerateValAddressForTest().String()
+	v2 := addressutils.GenerateValAddressForTest().String()
+	user := addressutils.GenerateAddressForTestWithPrefix("quick")
+	tests := []struct {
+		name            string
+		record          func(zone *icstypes.Zone) icstypes.WithdrawalRecord
+		setupConnection bool
+		message         func(zone *icstypes.Zone) sdk.Msg
+		memo            string
+		err             bool
+		check           bool
+	}{
+		{
+			name:            "invalid - can not cast to MsgSend",
+			setupConnection: false,
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &icstypes.MsgRequestRedemption{}
+			},
+			memo:  "withdrawal/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:   true,
+			check: false,
+		},
+		{
+			name:            "invalid - not has connection",
+			setupConnection: false,
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.DelegationAddress.Address,
+					Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
+				}
+			},
+			memo:  "withdrawal/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:   true,
+			check: false,
+		},
+		{
+			name:            "Send from DelegateAddress then HandleFailedUnbondSend, invalid - unable to parse tx hash",
+			setupConnection: true,
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.DelegationAddress.Address,
+					Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
+				}
+			},
+			memo:  "withdrawal/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:   true,
+			check: false,
+		},
+		{
+			name:            "Send from DelegateAddress then HandleFailedUnbondSend, invalid - no matching record",
+			setupConnection: true,
+			record: func(zone *icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   zone.ChainId,
+					Delegator: addressutils.GenerateAccAddressForTest().String(),
+					Distribution: []*icstypes.Distribution{
+						{Valoper: v1, Amount: 1000000},
+						{Valoper: v2, Amount: 1000000},
+					},
+					Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+					Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
+					BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+					Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+					Status:     icstypes.WithdrawStatusQueued,
+				}
+			},
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.DelegationAddress.Address,
+					Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
+				}
+			},
+			memo:  "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:   true,
+			check: false,
+		},
+		{
+			name:            "Send from DelegateAddress then HandleFailedUnbondSend, invalid - try msg send 2 times with one txHash",
+			setupConnection: true,
+			record: func(zone *icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   zone.ChainId,
+					Delegator: addressutils.GenerateAccAddressForTest().String(),
+					Distribution: []*icstypes.Distribution{
+						{Valoper: v1, Amount: 1000000},
+						{Valoper: v2, Amount: 1000000},
+					},
+					Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+					Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+					BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2000000)),
+					Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+					Status:     icstypes.WithdrawStatusSend,
+				}
+			},
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.DelegationAddress.Address,
+					Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
+				}
+			},
+			memo:  "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:   false,
+			check: true,
+		},
+		{
+			name:            "Send from DelegateAddress then HandleFailedUnbondSend, valid",
+			setupConnection: true,
+			record: func(zone *icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   zone.ChainId,
+					Delegator: addressutils.GenerateAccAddressForTest().String(),
+					Distribution: []*icstypes.Distribution{
+						{Valoper: v1, Amount: 1000000},
+						{Valoper: v2, Amount: 1000000},
+					},
+					Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+					Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+					BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2000000)),
+					Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+					Status:     icstypes.WithdrawStatusSend,
+				}
+			},
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.DelegationAddress.Address,
+					Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
+				}
+			},
+			memo:  "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:   false,
+			check: true,
+		},
+		{
+			name:            "Send from WithdrawlAddress, valid - but nothing change",
+			setupConnection: true,
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.WithdrawalAddress.WithdrawalAddress,
+					Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
+				}
+			},
+			memo:  "withdrawal/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:   false,
+			check: false,
+		},
+		{
+			name:            "Send from DepositAddress to DelegationAddress, valid - but nothing change",
+			setupConnection: true,
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.DepositAddress.Address,
+					ToAddress:   zone.DelegationAddress.Address,
+					Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
+				}
+			},
+			memo:  "withdrawal/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:   false,
+			check: false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			if test.setupConnection {
+				ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+			}
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			if !found {
+				suite.Fail("unable to retrieve zone for test")
+			}
+
+			var record icstypes.WithdrawalRecord
+			if test.record != nil {
+				record = test.record(&zone)
+				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+			}
+
+			// set address for zone mapping
+			quicksilver.InterchainstakingKeeper.SetAddressZoneMapping(ctx, user, zone.ChainId)
+			msg := test.message(&zone)
+			err := quicksilver.InterchainstakingKeeper.HandleFailedBankSend(ctx, msg, test.memo)
+
+			if test.err {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+			}
+
+			if test.check {
+				newRecord, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icstypes.WithdrawStatusUnbond)
+				if !found {
+					suite.Fail("unable to retrieve new withdrawal record for test")
+				}
+				suite.Equal(ctx.BlockTime().Add(icstypes.DefaultWithdrawalRequeueDelay), newRecord.CompletionTime)
+			}
+		})
+	}
 }
