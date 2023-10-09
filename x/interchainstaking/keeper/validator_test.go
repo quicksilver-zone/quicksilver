@@ -85,7 +85,7 @@ func (suite *KeeperTestSuite) TestGetActiveValidators() {
 		newValidator2 := newValidator1
 		newValidator2.ValoperAddress = validator2.String()
 		newValidator2.Status = stakingtypes.BondStatusUnbonded
-		
+
 		err := app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newValidator1)
 		suite.NoError(err)
 
@@ -95,6 +95,6 @@ func (suite *KeeperTestSuite) TestGetActiveValidators() {
 		validators = app.InterchainstakingKeeper.GetActiveValidators(ctx, zone.ChainId)
 		count2 := len(validators)
 
-		suite.Equal(count +1, count2)
+		suite.Equal(count+1, count2)
 	})
 }
