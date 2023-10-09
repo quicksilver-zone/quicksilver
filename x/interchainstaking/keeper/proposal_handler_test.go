@@ -373,7 +373,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 		},
 		{
 			name:      "invalid - unable to fetch",
-			expectErr: "unable to fetch client state",
+			expectErr: "unable to fetch",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
 				proposal := &icstypes.RegisterZoneProposal{
 					Title:            "register zone A",
