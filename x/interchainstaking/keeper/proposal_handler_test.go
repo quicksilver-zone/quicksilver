@@ -1,8 +1,16 @@
 package keeper_test
 
 import (
+	"time"
+
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
+	tmclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
+
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
@@ -42,31 +50,59 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 								Key:   "liquidity_module",
 								Value: "true",
 							},
+							{
+								Key:   "return_to_sender",
+								Value: "F",
+							},
+							{
+								Key:   "messages_per_tx",
+								Value: "2",
+							},
+							{
+								Key:   "account_prefix",
+								Value: "osmo",
+							},
 						},
 					},
 				}
 			},
 		},
-		// {
-		// 	name:      "valid - connection",
-		// 	expectErr: "",
-		// 	setup: func() {
-		// 		suite.setupTestZones()
-		// 	},
-		// 	proposals: func(zone icstypes.Zone) []icstypes.UpdateZoneProposal {
-		// 		return []icstypes.UpdateZoneProposal{
-		// 			{
-		// 				ChainId: zone.ChainId,
-		// 				Changes: []*icstypes.UpdateZoneValue{
-		// 					{
-		// 						Key:   "connection_id",
-		// 						Value: "connection-1",
-		// 					},
-		// 				},
-		// 			},
-		// 		}
-		// 	},
-		// },
+		{
+			name:      "valid - connection",
+			expectErr: "",
+			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
+				proposal := &icstypes.RegisterZoneProposal{
+					Title:            "register zone A",
+					Description:      "register zone A",
+					ConnectionId:     suite.path.EndpointB.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+				}
+
+				err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
+				suite.NoError(err)
+			},
+			proposals: func(zone icstypes.Zone) []icstypes.UpdateZoneProposal {
+				return []icstypes.UpdateZoneProposal{
+					{
+						ChainId: zone.ChainId,
+						Changes: []*icstypes.UpdateZoneValue{
+							{
+								Key:   "connection_id",
+								Value: suite.path.EndpointA.ConnectionID,
+							},
+						},
+					},
+				}
+			},
+		},
 		{
 			name:      "valid - no changes",
 			expectErr: "",
@@ -161,7 +197,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 					Decimals:         6,
 					Is_118:           true,
 				}
-			
+
 				err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
 				suite.NoError(err)
 
@@ -308,15 +344,17 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 					Decimals:         6,
 					Is_118:           true,
 				}
-			
+
 				err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
 				suite.NoError(err)
 
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
 
-				zone.DepositAddress = &icstypes.ICAAccount{}
-				quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+				quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", &tmclienttypes.ClientState{ChainId: suite.chainB.ChainID, TrustingPeriod: time.Hour, LatestHeight: clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}})
+				quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", clienttypes.Height{RevisionNumber: 1, RevisionHeight: 100}, &tmclienttypes.ConsensusState{Timestamp: ctx.BlockTime()})
+				quicksilver.IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0"})
+				suite.NoError(suite.setupChannelForICA(ctx, suite.chainB.ChainID, suite.path.EndpointA.ConnectionID, "deposit", zone.AccountPrefix))
 			},
 			expectErr: "zone already intialised, cannot update connection_id",
 			proposals: func(zone icstypes.Zone) []icstypes.UpdateZoneProposal {
@@ -333,23 +371,42 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 				}
 			},
 		},
-		// {
-		// 	name:      "invalid - unable to fetch",
-		// 	expectErr: "unable to fetch",
-		// 	proposals: func(zone icstypes.Zone) []icstypes.UpdateZoneProposal {
-		// 		return []icstypes.UpdateZoneProposal{
-		// 			{
-		// 				ChainId: zone.ChainId,
-		// 				Changes: []*icstypes.UpdateZoneValue{
-		// 					{
-		// 						Key:   "connection_id",
-		// 						Value: "connection-1",
-		// 					},
-		// 				},
-		// 			},
-		// 		}
-		// 	},
-		// },
+		{
+			name:      "invalid - unable to fetch",
+			expectErr: "unable to fetch client state",
+			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
+				proposal := &icstypes.RegisterZoneProposal{
+					Title:            "register zone A",
+					Description:      "register zone A",
+					ConnectionId:     suite.path.EndpointA.ConnectionID,
+					LocalDenom:       "uqatom",
+					BaseDenom:        "uatom",
+					AccountPrefix:    "cosmos",
+					ReturnToSender:   false,
+					UnbondingEnabled: false,
+					LiquidityModule:  true,
+					DepositsEnabled:  true,
+					Decimals:         6,
+					Is_118:           true,
+				}
+
+				err := quicksilver.InterchainstakingKeeper.HandleRegisterZoneProposal(ctx, proposal)
+				suite.NoError(err)
+			},
+			proposals: func(zone icstypes.Zone) []icstypes.UpdateZoneProposal {
+				return []icstypes.UpdateZoneProposal{
+					{
+						ChainId: zone.ChainId,
+						Changes: []*icstypes.UpdateZoneValue{
+							{
+								Key:   "connection_id",
+								Value: "connection-10",
+							},
+						},
+					},
+				}
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -368,8 +425,8 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 			}
 
 			proposals := tc.proposals(zone)
-			for _, proposal := range proposals {
-				err := quicksilver.InterchainstakingKeeper.HandleUpdateZoneProposal(ctx, &proposal)
+			for i := range proposals {
+				err := quicksilver.InterchainstakingKeeper.HandleUpdateZoneProposal(ctx, &proposals[i])
 				if tc.expectErr != "" {
 					suite.ErrorContains(err, tc.expectErr)
 					suite.T().Logf("Error: %v", err)
