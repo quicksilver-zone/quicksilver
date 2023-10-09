@@ -108,3 +108,60 @@ func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
 	_, found := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, "cosmoshub-4", testValidatorOne, testValidatorThree, 1)
 	suite.False(found)
 }
+func (suite *KeeperTestSuite) TestDeleteRedelegationRecordByKey() {
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	testValidatorOne := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+	testValidatorTwo := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+	testValidatorThree := addressutils.GenerateAddressForTestWithPrefix("cosmosvaloper")
+
+	suite.SetupTest()
+
+	// Currently there are 0 records
+	records := quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
+	suite.Equal(0, len(records))
+
+	// Set 3 records
+	currentTime := ctx.BlockTime()
+
+	record := types.RedelegationRecord{
+		ChainId:        "cosmoshub-4",
+		EpochNumber:    1,
+		Source:         testValidatorOne,
+		Destination:    testValidatorTwo,
+		Amount:         3000,
+		CompletionTime: currentTime.Add(time.Hour).UTC(),
+	}
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+
+	record = types.RedelegationRecord{
+		ChainId:        "cosmoshub-4",
+		EpochNumber:    1,
+		Source:         testValidatorOne,
+		Destination:    testValidatorThree,
+		Amount:         3000,
+		CompletionTime: currentTime.Add(-time.Hour).UTC(),
+	}
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+	record = types.RedelegationRecord{
+		ChainId:        "cosmoshub-4",
+		EpochNumber:    1,
+		Source:         testValidatorThree,
+		Destination:    testValidatorTwo,
+		Amount:         3000,
+		CompletionTime: time.Time{},
+	}
+	quicksilver.InterchainstakingKeeper.SetRedelegationRecord(ctx, record)
+	// Check set 3 records
+	records = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
+	suite.Equal(3, len(records))
+	// Handle DeleteRedelegationRecordByKey for 3 records
+	quicksilver.InterchainstakingKeeper.IterateRedelegationRecords(ctx, func(idx int64, key []byte, redelegation types.RedelegationRecord) bool {
+		quicksilver.InterchainstakingKeeper.DeleteRedelegationRecordByKey(ctx, append(types.KeyPrefixRedelegationRecord, key...))
+		return false
+	})
+	// Check DeleteRedelegationRecordByKey 3 records to 0 records
+	records = quicksilver.InterchainstakingKeeper.AllRedelegationRecords(ctx)
+	suite.Equal(0, len(records))
+}
