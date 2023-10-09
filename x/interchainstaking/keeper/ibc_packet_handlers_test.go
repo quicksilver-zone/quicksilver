@@ -2,11 +2,10 @@ package keeper_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
-	"errors"
-	"context"
 
 	"github.com/stretchr/testify/require"
 
@@ -2802,7 +2801,6 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			suite.Fail("unable to retrieve zone for test")
 		}
 		quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", TestChannel)
-		complete := time.Now().UTC()
 
 		// trigger handler with testcases
 		testCases := []struct {
@@ -2836,7 +2834,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 					ToAddress:   zone.DelegationAddress.Address,
 					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
 				},
-				memo:          "",
+				memo:          "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 				expectedError: nil,
 			},
 			{
@@ -2846,7 +2844,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 					ToAddress:   "",
 					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
 				},
-				memo:          fmt.Sprintf("unbondSend/%d", complete.Unix()),
+				memo:          "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
 				expectedError: errors.New("no matching withdrawal record found"),
 			},
 		}
@@ -2861,7 +2859,6 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 		}
 	})
 }
-
 
 func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
 	v1 := addressutils.GenerateValAddressForTest().String()
