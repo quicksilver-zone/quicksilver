@@ -52,7 +52,7 @@ func DetermineAllocationsForUndelegation(currentAllocations map[string]math.Int,
 	// negate all values in underallocated.
 	underAllocated.Negate()
 	// append the two slices
-	//nolint:gocritic
+	// nolint:gocritic
 	deltas := append(overAllocated, underAllocated...)
 	deltas.Sort()
 
