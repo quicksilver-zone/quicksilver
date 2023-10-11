@@ -22,6 +22,6 @@ func Handler(title, specURL string) http.HandlerFunc {
 		}{
 			title,
 			specURL,
-		}) //nolint:errcheck non-critical for docs
+		}) // nolint:errcheck non-critical for docs
 	}
 }
