@@ -59,6 +59,7 @@ var (
 	KeyPrefixValidatorsInfo              = []byte{0x0c}
 	KeyPrefixRemoteAddress               = []byte{0x0d}
 	KeyPrefixLocalAddress                = []byte{0x0e}
+	KeyPrefixValidatorsInfoByConsAddr    = []byte{0x0f}
 
 	// fill in missing 0d - 0f before adding 0x11!
 	KeyPrefixRedelegationRecord = []byte{0x10}
@@ -158,4 +159,9 @@ func GetZoneValidatorsKey(chainID string) []byte {
 // GetRemoteAddressPrefix gets the prefix for a remote address mapping.
 func GetRemoteAddressPrefix(locaAddress []byte) []byte {
 	return append(KeyPrefixRemoteAddress, locaAddress...)
+}
+
+// GetZoneValidatorsByConsAddrKey gets the validators key prefix for a given chain.
+func GetZoneValidatorsByConsAddrKey(chainID string) []byte {
+	return append(KeyPrefixValidatorsInfoByConsAddr, []byte(chainID)...)
 }
