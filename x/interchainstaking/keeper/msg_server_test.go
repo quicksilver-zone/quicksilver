@@ -7,6 +7,9 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icskeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
@@ -490,6 +493,87 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 
 				suite.Equal(weight, valIntent.Weight)
 			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestGovCloseChannel() {
+	testCase := []struct {
+		name     string
+		malleate func(suite *KeeperTestSuite) *icstypes.MsgGovCloseChannel
+		expecErr error
+	}{
+		{
+			name: "invalid authority",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCloseChannel {
+				return &icstypes.MsgGovCloseChannel{
+					ChannelId: "",
+					PortId:    "",
+					Authority: testAddress,
+				}
+			},
+			expecErr: govtypes.ErrInvalidSigner,
+		},
+		{
+			name: "capability not found",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCloseChannel {
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+
+				return &icstypes.MsgGovCloseChannel{
+					ChannelId: "",
+					PortId:    "",
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expecErr: capabilitytypes.ErrCapabilityNotFound,
+		},
+		{
+			name: "invalid connection state",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCloseChannel {
+				ctx := suite.chainA.GetContext()
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				chanals := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
+
+				return &icstypes.MsgGovCloseChannel{
+					ChannelId: chanals[0].ChannelId,
+					PortId:    chanals[0].PortId,
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expecErr: connectiontypes.ErrInvalidConnectionState,
+		},
+		{
+			name: "closes an ICA channel success",
+			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCloseChannel {
+				ctx := suite.chainA.GetContext()
+				suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0", State: connectiontypes.OPEN})
+				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+				chanals := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
+
+				return &icstypes.MsgGovCloseChannel{
+					ChannelId: chanals[0].ChannelId,
+					PortId:    chanals[0].PortId,
+					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
+				}
+			},
+			expecErr: nil,
+		},
+	}
+	for _, tc := range testCase {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			msg := tc.malleate(suite)
+			msgSrv := icskeeper.NewMsgServerImpl(*suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper)
+			ctx := suite.chainA.GetContext()
+
+			_, err := msgSrv.GovCloseChannel(ctx, msg)
+			if tc.expecErr != nil {
+				suite.ErrorIs(tc.expecErr, err)
+				return
+			}
+			suite.NoError(err)
 		})
 	}
 }
