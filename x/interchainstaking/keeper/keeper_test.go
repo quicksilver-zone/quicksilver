@@ -668,6 +668,7 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 
 	suite.Equal(sdk.NewDecWithPrec(676666666666666667, 18), zone.RedemptionRate)
 }
+
 func (suite *KeeperTestSuite) TestGetChainIDFromContext() {
 	testCase := []struct {
 		name            string

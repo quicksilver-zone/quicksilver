@@ -79,7 +79,7 @@ func (app *Quicksilver) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAdd
 	// withdraw all validator commission
 	// withdraw all validator commission
 	app.StakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator()) //nolint
+		_, _ = app.DistrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator()) // nolint
 		return false
 	})
 	// withdraw all delegator rewards
