@@ -853,7 +853,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 			err:       false,
 		},
 		{
-			name: "valid case trigger redemption rate and set zone",
+			name: "valid case trigger redemption rate and check if delegatorAddress == performanceAddress",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {
 				zone.WithdrawalWaitgroup = 1
 				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
@@ -873,7 +873,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 			err:       false,
 		},
 		{
-			name: "valid case trigger redemption rate and without set zone",
+			name: "valid case trigger redemption rate and without checking if delegatorAddress == performanceAddress",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {
 				zone.WithdrawalWaitgroup = 0
 				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
