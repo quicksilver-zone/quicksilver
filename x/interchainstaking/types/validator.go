@@ -1,11 +1,12 @@
 package types
 
 import (
-	sdkmath "cosmossdk.io/math"
 	sdkioerrors "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
