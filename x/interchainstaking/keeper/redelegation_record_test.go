@@ -110,6 +110,7 @@ func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
 	_, found := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, "cosmoshub-4", testValidatorOne, testValidatorThree, 1)
 	suite.False(found)
 }
+
 func (suite *KeeperTestSuite) TestGCCompletedUnbondings() {
 	suite.SetupTest()
 	suite.setupTestZones()

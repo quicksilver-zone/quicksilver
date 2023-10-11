@@ -1578,7 +1578,7 @@ func (suite *KeeperTestSuite) Test_v045Callback() {
 
 			txMsgData := &sdk.TxMsgData{
 				// we need to support this older deprecated type
-				Data:         []*sdk.MsgData{{MsgType: "/bob", Data: msgResponseBytes}}, //nolint:staticcheck
+				Data:         []*sdk.MsgData{{MsgType: "/bob", Data: msgResponseBytes}}, // nolint:staticcheck
 				MsgResponses: []*codectypes.Any{},
 			}
 
@@ -1709,7 +1709,7 @@ func (suite *KeeperTestSuite) Test_v046Callback() {
 			msg, anyResp := test.setStatements(ctx, quicksilver)
 
 			txMsgData := &sdk.TxMsgData{
-				Data:         []*sdk.MsgData{}, //nolint:staticcheck
+				Data:         []*sdk.MsgData{}, // nolint:staticcheck
 				MsgResponses: []*codectypes.Any{anyResp},
 			}
 
