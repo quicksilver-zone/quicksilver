@@ -1659,6 +1659,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 		name          string
 		txHash        string
 		txWithProofbz []byte
+		chainID       string
 		expectErr     bool
 	}{
 		{
@@ -1666,6 +1667,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 			// txHash that come from DepositTxFixture
 			"b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
 			decodeBase64NoErr(localDepositTxFixture),
+			suite.chainB.ChainID,
 			false,
 		},
 		{
@@ -1673,18 +1675,28 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 			// txHash that come from DepositTxFixture
 			"2CC0F0C5106F30F5D26ABE8CB93F1EF0CCCE10754207C38B129D76ED3B7C75B2",
 			decodeBase64NoErr(localDepositTxFixture),
+			suite.chainB.ChainID,
 			true,
 		},
 		{
 			"Deposit transaction failed: nil bytes",
 			"b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
 			nil,
+			suite.chainB.ChainID,
 			true,
 		},
 		{
 			"Deposit transaction failed: wrong bytes",
 			"b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
-			[]byte{},
+			[]byte("testing"),
+			suite.chainB.ChainID,
+			true,
+		},
+		{
+			"Deposit transaction failed: zone not registered",
+			"b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
+			decodeBase64NoErr(localDepositTxFixture),
+			"superNova",
 			true,
 		},
 	}
@@ -1701,7 +1713,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 			resDataBz, _ := qckApp.AppCodec().Marshal(&requestData)
 
 			// initialize the callback
-			err := keeper.DepositTxCallback(qckApp.InterchainstakingKeeper, ctx, tc.txWithProofbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
+			err := keeper.DepositTxCallback(qckApp.InterchainstakingKeeper, ctx, tc.txWithProofbz, icqtypes.Query{ChainId: tc.chainID, Request: resDataBz})
 			if tc.expectErr {
 				suite.Error(err)
 			} else {
