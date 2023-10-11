@@ -108,6 +108,7 @@ func (suite *KeeperTestSuite) TestGCCompletedRedelegations() {
 	_, found := quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, "cosmoshub-4", testValidatorOne, testValidatorThree, 1)
 	suite.False(found)
 }
+
 func (suite *KeeperTestSuite) TestDeleteRedelegationRecordByKey() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
