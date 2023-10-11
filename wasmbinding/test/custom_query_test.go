@@ -21,9 +21,9 @@ import (
 )
 
 // we must pay this many uosmo for every pool we create.
-var poolFee int64 = 1000000000 //nolint:unused
+var poolFee int64 = 1000000000 // nolint:unused
 
-var defaultFunds = sdk.NewCoins( //nolint:unused
+var defaultFunds = sdk.NewCoins( // nolint:unused
 	sdk.NewInt64Coin("qck", 333000000),
 	sdk.NewInt64Coin("umai", 555000000+2*poolFee),
 	sdk.NewInt64Coin("uck", 999000000),
@@ -139,7 +139,7 @@ func instantiateReflectContract(t *testing.T, ctx sdk.Context, quicksilverApp *a
 	return addr
 }
 
-func fundAccount(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, addr sdk.AccAddress, coins sdk.Coins) { //nolint:unused
+func fundAccount(t *testing.T, ctx sdk.Context, quicksilver *app.Quicksilver, addr sdk.AccAddress, coins sdk.Coins) { // nolint:unused
 	t.Helper()
 
 	err := FundAccount(
