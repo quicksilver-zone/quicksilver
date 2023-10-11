@@ -1620,197 +1620,93 @@ func decodeBase64NoErr(str string) []byte {
 	return decoded
 }
 
-func (suite *KeeperTestSuite) _TestDepositTxCallback() {
-	suite.Run("Deposit transaction successful", func() {
-		suite.SetupTest()
-		suite.setupTestZones()
-
-		// setup quicksilver test app
-		quicksilver := suite.GetQuicksilverApp(suite.chainA)
-		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-
-		// get chainA context
-		ctx := suite.chainA.GetContext()
-
-		// get zone chainB context
-		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.DepositAddress.IncrementBalanceWaitgroup()
-		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
-		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
-
-		// get the tx from fixture
-		txWithProofBz := decodeBase64NoErr(localDepositTxFixture)
-		txRes := icqtypes.GetTxWithProofResponse{}
-		err := quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
-		suite.NoError(err)
-
-		// update payload header to ensure we can validate it.
-		txRes.Header.Header.Time = ctx.BlockTime()
-		// setup ClientConsensusState for checking Header validation
-		// Cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
-		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", txRes.Header.TrustedHeight, txRes.Header.ConsensusState())
-
-		// construct request data using txHash
-		requestData := tx.GetTxRequest{
-			// hash of tx in `txFixture`
-			Hash: "b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
-		}
-		resDataBz, err := quicksilver.AppCodec().Marshal(&requestData)
-		suite.NoError(err)
-
-		// initialize the callback
-		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, txWithProofBz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
-
-		suite.NoError(err)
-	})
-	suite.Run("Deposit transaction failed: txHash mismatch", func() {
-		suite.SetupTest()
-		suite.setupTestZones()
-
-		// setup quicksilver test app
-		quicksilver := suite.GetQuicksilverApp(suite.chainA)
-		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-
-		// get chainA context
-		ctx := suite.chainA.GetContext()
-
-		// get zone chainB context
-		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.DepositAddress.IncrementBalanceWaitgroup()
-		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
-		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
-
-		// get the tx from fixture
-		txWithProofBz := decodeBase64NoErr(localDepositTxFixture)
-		txRes := icqtypes.GetTxWithProofResponse{}
-		err := quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
-		suite.NoError(err)
-
-		// update payload header to ensure we can validate it.
-		txRes.Header.Header.Time = ctx.BlockTime()
-		// setup ClientConsensusState for checking Header validation
-		// Cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
-		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", txRes.Header.TrustedHeight, txRes.Header.ConsensusState())
-
-		// construct request data using txHash
-		requestData := tx.GetTxRequest{
-			// hash of another tx that different from the one in `txFixture`
-			Hash: "2CC0F0C5106F30F5D26ABE8CB93F1EF0CCCE10754207C38B129D76ED3B7C75B2",
-		}
-		resDataBz, err := quicksilver.AppCodec().Marshal(&requestData)
-		suite.NoError(err)
-
-		// initialize the callback
-		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, txWithProofBz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
-
-		// fail because of txHash mismatch with hash from tx Proof
-		suite.Error(err)
-	})
-	suite.Run("Deposit transaction failed: nil or wrong bytes", func() {
-		suite.SetupTest()
-		suite.setupTestZones()
-
-		// setup quicksilver test app
-		quicksilver := suite.GetQuicksilverApp(suite.chainA)
-		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-
-		// get chainA context
-		ctx := suite.chainA.GetContext()
-
-		// get zone chainB context
-		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.DepositAddress.IncrementBalanceWaitgroup()
-		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
-		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
-
-		// construct request data using txHash
-		requestData := tx.GetTxRequest{
-			// hash of tx in `txFixture`
-			Hash: "b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
-		}
-		resDataBz, err := quicksilver.AppCodec().Marshal(&requestData)
-		suite.NoError(err)
-
-		// initialize the callback
-		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, []byte("testing"), icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
-		suite.Error(err)
-	})
-	suite.Run("Deposit transaction failed: failed on query state", func() {
-		suite.SetupTest()
-		suite.setupTestZones()
-
-		// setup quicksilver test app
-		quicksilver := suite.GetQuicksilverApp(suite.chainA)
-		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-
-		// get chainA context
-		ctx := suite.chainA.GetContext()
-
-		// get zone chainB context
-		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.DepositAddress.IncrementBalanceWaitgroup()
-		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
-		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
-
-		// get the tx from fixture
-		txWithProofBz := decodeBase64NoErr(localDepositTxFixture)
-		txRes := icqtypes.GetTxWithProofResponse{}
-		err := quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
-		suite.NoError(err)
-
-		// construct request data using txHash
-		requestData := tx.GetTxRequest{
-			// hash of tx in `txFixture`
-			Hash: "b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
-		}
-		resDataBz, err := quicksilver.AppCodec().Marshal(&requestData)
-		suite.NoError(err)
-
-		// initialize the callback
-		err = keeper.DepositTxCallback(quicksilver.InterchainstakingKeeper, ctx, txWithProofBz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
-		// fail on query state
-		suite.Error(err)
-	})
-}
-
 func (suite *KeeperTestSuite) TestDepositTxCallback() {
+	setupIbc := func() (*app.Quicksilver, sdk.Context) {
+		// reset test suite
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		// setup quicksilver test app
+		quicksilver := suite.GetQuicksilverApp(suite.chainA)
+		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+
+		// get chainA context
+		ctx := suite.chainA.GetContext()
+
+		// get zone chainB context
+		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		zone.DepositAddress.IncrementBalanceWaitgroup()
+		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
+		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		// get the tx from fixture
+		txWithProofBz := decodeBase64NoErr(localDepositTxFixture)
+		txRes := icqtypes.GetTxWithProofResponse{}
+		err := quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
+		suite.NoError(err)
+
+		// update payload header to ensure we can validate it.
+		txRes.Header.Header.Time = ctx.BlockTime()
+		// setup ClientConsensusState for checking Header validation
+		// Cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
+		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", txRes.Header.TrustedHeight, txRes.Header.ConsensusState())
+
+		return quicksilver, ctx
+	}
+
 	testCases := []struct {
-		name   string
-		txHash string
-		setup  func()
+		name          string
+		txHash        string
+		txWithProofbz []byte
+		expectErr     bool
 	}{
 		{
 			"Deposit transaction successful",
+			// txHash that come from DepositTxFixture
 			"b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
-			func() {
-				// setup quicksilver test app
-				quicksilver := suite.GetQuicksilverApp(suite.chainA)
-				quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-
-				// get chainA context
-				ctx := suite.chainA.GetContext()
-
-				// get zone chainB context
-				zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-				zone.DepositAddress.IncrementBalanceWaitgroup()
-				zone.WithdrawalAddress.IncrementBalanceWaitgroup()
-				quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
-
-				// get the tx from fixture
-				txWithProofBz := decodeBase64NoErr(localDepositTxFixture)
-				txRes := icqtypes.GetTxWithProofResponse{}
-				err := quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
-				suite.NoError(err)
-			},
+			decodeBase64NoErr(localDepositTxFixture),
+			false,
+		},
+		{
+			"Deposit transaction failed: txHash mismatch",
+			// txHash that come from DepositTxFixture
+			"2CC0F0C5106F30F5D26ABE8CB93F1EF0CCCE10754207C38B129D76ED3B7C75B2",
+			decodeBase64NoErr(localDepositTxFixture),
+			true,
+		},
+		{
+			"Deposit transaction failed: nil bytes",
+			"b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
+			nil,
+			true,
+		},
+		{
+			"Deposit transaction failed: wrong bytes",
+			"b1f1852d322328f6b8d8cacd180df2b1cbbd3dd64536c9ecbf1c896a15f6217a",
+			[]byte{},
+			true,
 		},
 	}
 
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
-			suite.SetupTest() // reset
-			tc.setup()
+			// setup quicksilver and counter chain context
+			qckApp, ctx := setupIbc()
+
+			// construct request data using txHash
+			requestData := tx.GetTxRequest{
+				Hash: tc.txHash,
+			}
+			resDataBz, _ := qckApp.AppCodec().Marshal(&requestData)
+
+			// initialize the callback
+			err := keeper.DepositTxCallback(qckApp.InterchainstakingKeeper, ctx, tc.txWithProofbz, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: resDataBz})
+			if tc.expectErr {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+			}
 		})
 	}
 }
