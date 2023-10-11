@@ -664,6 +664,7 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 
 	suite.Equal(sdk.NewDecWithPrec(676666666666666667, 18), zone.RedemptionRate)
 }
+
 func (suite *KeeperTestSuite) TestIteratePortConnection() {
 	suite.SetupTest()
 	suite.setupTestZones()
