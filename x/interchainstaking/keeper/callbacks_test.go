@@ -1607,6 +1607,7 @@ func (suite *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
 		suite.NoError(err)
 	})
 }
+
 func (suite *KeeperTestSuite) TestPerfBalanceCallbackUpdate() {
 	suite.Run("perf balance", func() {
 		suite.SetupTest()
@@ -1636,6 +1637,7 @@ func (suite *KeeperTestSuite) TestPerfBalanceCallbackUpdate() {
 		suite.Equal(response.Amount, zone.PerformanceAddress.Balance.AmountOf(response.Denom))
 	})
 }
+
 func (suite *KeeperTestSuite) TestPerfBalanceCallbackWhenValidatorsNotAlreadyExist() {
 	testCase := []struct {
 		name     string
@@ -1643,7 +1645,7 @@ func (suite *KeeperTestSuite) TestPerfBalanceCallbackWhenValidatorsNotAlreadyExi
 	}{
 		{
 			name:     "performance account has an insufficient balance",
-			response: sdk.NewCoin("uatom", sdk.NewInt(100)), //<40000
+			response: sdk.NewCoin("uatom", sdk.NewInt(100)), // <40000
 		},
 		{
 			name:     "send delegations to validators",
@@ -1697,7 +1699,6 @@ func (suite *KeeperTestSuite) TestPerfBalanceCallbackWhenValidatorsNotAlreadyExi
 			suite.Equal(tc.response.Amount, zone.PerformanceAddress.Balance.AmountOf(tc.response.Denom))
 		})
 	}
-
 }
 
 // keep depositTxFixture at the foot of the file, so it's not in the way!
