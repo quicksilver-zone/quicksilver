@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"cosmossdk.io/math"
@@ -10,10 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {
@@ -313,4 +316,59 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 	suite.True(found)
 
 	suite.Equal(&now, receipt.Completed)
+}
+
+func (suite *KeeperTestSuite) TestSendTokenIBC() {
+	suite.Run("test", func() {
+		suite.SetupTest()
+
+		// setup transfer channel
+		suite.path.EndpointA.ChannelConfig.Version = transfertypes.Version
+		suite.path.EndpointB.ChannelConfig.Version = transfertypes.Version
+		suite.coordinator.CreateTransferChannels(suite.path)
+
+		suite.setupTestZones()
+
+		quicksilver := suite.GetQuicksilverApp(suite.chainA)
+		ctx := suite.chainA.GetContext()
+
+		zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.True(found)
+
+		sender := suite.chainA.SenderAccount.GetAddress()
+		receiver := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+
+		amount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
+		err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(amount))
+		suite.NoError(err)
+		err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, sender, sdk.NewCoins(amount))
+		suite.NoError(err)
+
+		// Try to send the native token
+		err = quicksilver.InterchainstakingKeeper.SendTokenIBC(ctx, sender, receiver, &zone, amount)
+		suite.NoError(err)
+
+		portID := icstypes.TransferPort
+		channelID := suite.path.EndpointA.ChannelID
+		// channelBID := suite.path.EndpointB.ChannelID
+
+		ibcAmount := transfertypes.GetTransferCoin(portID, channelID, sdk.DefaultBondDenom, sdk.NewInt(100))
+
+		err = quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(ibcAmount))
+		suite.NoError(err)
+		err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, sender, sdk.NewCoins(ibcAmount))
+		suite.NoError(err)
+
+		quicksilver.TransferKeeper.SetDenomTrace(
+			ctx,
+			transfertypes.DenomTrace{
+				Path:      fmt.Sprintf("%s/%s", portID, channelID),
+				BaseDenom: sdk.DefaultBondDenom,
+			},
+		)
+
+		// Try to send the ibc token
+		err = quicksilver.InterchainstakingKeeper.SendTokenIBC(ctx, sender, receiver, &zone, ibcAmount)
+		suite.NoError(err)
+	})
 }
