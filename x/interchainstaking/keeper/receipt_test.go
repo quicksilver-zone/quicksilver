@@ -11,12 +11,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
-	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
 func (suite *KeeperTestSuite) TestHandleReceiptTransactionGood() {
@@ -339,24 +339,24 @@ func (suite *KeeperTestSuite) TestSendTokenIBC() {
 		receiver := addressutils.GenerateAddressForTestWithPrefix("cosmos")
 
 		amount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
-		err := quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(amount))
+		err := quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
 		suite.NoError(err)
-		err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, sender, sdk.NewCoins(amount))
+		err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(amount))
 		suite.NoError(err)
 
 		// Try to send the native token
 		err = quicksilver.InterchainstakingKeeper.SendTokenIBC(ctx, sender, receiver, &zone, amount)
 		suite.NoError(err)
 
-		portID := icstypes.TransferPort
+		portID := types.TransferPort
 		channelID := suite.path.EndpointA.ChannelID
 		// channelBID := suite.path.EndpointB.ChannelID
 
 		ibcAmount := transfertypes.GetTransferCoin(portID, channelID, sdk.DefaultBondDenom, sdk.NewInt(100))
 
-		err = quicksilver.BankKeeper.MintCoins(ctx, icstypes.ModuleName, sdk.NewCoins(ibcAmount))
+		err = quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(ibcAmount))
 		suite.NoError(err)
-		err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, icstypes.ModuleName, sender, sdk.NewCoins(ibcAmount))
+		err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(ibcAmount))
 		suite.NoError(err)
 
 		quicksilver.TransferKeeper.SetDenomTrace(
