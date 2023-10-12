@@ -2,7 +2,7 @@ package types
 
 // event types
 
-//nolint:gosec
+// nolint:gosec
 const (
 	AttributeAmount              = "amount"
 	AttributeCreator             = "creator"
