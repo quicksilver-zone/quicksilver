@@ -5,6 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
@@ -70,7 +71,7 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidatorByConsAddr() {
 
 		validator := addressutils.GenerateValAddressForTest()
 
-		_, found = app.InterchainstakingKeeper.GetValidatorByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))
+		_, found = app.InterchainstakingKeeper.GetValidatorAddrByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))
 		suite.False(found)
 
 		pkAny, err := codectypes.NewAnyWithValue(PKs[0])
@@ -86,14 +87,14 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidatorByConsAddr() {
 			ConsensusPubkey: pkAny,
 		}
 
-		err = app.InterchainstakingKeeper.SetValidatorByConsAddr(ctx, zone.ChainId, newValidator)
+		err = app.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator)
 		suite.NoError(err)
 
-		_, found = app.InterchainstakingKeeper.GetValidatorByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))
+		_, found = app.InterchainstakingKeeper.GetValidatorAddrByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))
 		suite.True(found)
 
-		app.InterchainstakingKeeper.DeleteValidatorByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))
-		_, found = app.InterchainstakingKeeper.GetValidatorByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))
+		app.InterchainstakingKeeper.DeleteValidatorAddrByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))
+		_, found = app.InterchainstakingKeeper.GetValidatorAddrByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))
 		suite.False(found)
 	})
 }

@@ -93,33 +93,30 @@ func (k Keeper) IterateValidators(ctx sdk.Context, chainID string, fn func(index
 	}
 }
 
-// GetValidatorByConsAddr returns validator by Consensus address.
-func (k Keeper) GetValidatorByConsAddr(ctx sdk.Context, chainID string, consAddr []byte) (types.Validator, bool) {
-	val := types.Validator{}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsByConsAddrKey(chainID))
+// GetValidatorAddrByConsAddr returns validator address by Consensus address.
+func (k Keeper) GetValidatorAddrByConsAddr(ctx sdk.Context, chainID string, consAddr []byte) (string, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorAddrsByConsAddrKey(chainID))
 	bz := store.Get(consAddr)
 	if len(bz) == 0 {
-		return val, false
+		return "", false
 	}
 
-	k.cdc.MustUnmarshal(bz, &val)
-	return val, true
+	return string(bz), true
 }
 
-// SetValidatorByConsAddr set validator by Consensus address.
-func (k Keeper) SetValidatorByConsAddr(ctx sdk.Context, chainID string, val types.Validator) error {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsByConsAddrKey(chainID))
-	bz := k.cdc.MustMarshal(&val)
+// SetValidatorAddrByConsAddr set validator address by Consensus address.
+func (k Keeper) SetValidatorAddrByConsAddr(ctx sdk.Context, chainID string, val types.Validator) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorAddrsByConsAddrKey(chainID))
 	consPk, err := val.GetConsAddr()
 	if err != nil {
 		return err
 	}
-	store.Set(consPk, bz)
+	store.Set(consPk, []byte(val.ValoperAddress))
 	return nil
 }
 
-// DeleteValidatorByConsAddr delete validator by Consensus address.
-func (k Keeper) DeleteValidatorByConsAddr(ctx sdk.Context, chainID string, consAddr []byte) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsByConsAddrKey(chainID))
+// DeleteValidatorAddrByConsAddr delete validator address by Consensus address.
+func (k Keeper) DeleteValidatorAddrByConsAddr(ctx sdk.Context, chainID string, consAddr []byte) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorAddrsByConsAddrKey(chainID))
 	store.Delete(consAddr)
 }
