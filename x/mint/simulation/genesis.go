@@ -15,7 +15,7 @@ import (
 
 // Simulation parameter constants.
 const (
-	epochProvisionsKey         = "genesis_epoch_provisions" //nolint:gosec // these are not hard coded credentials
+	epochProvisionsKey         = "genesis_epoch_provisions" // nolint:gosec // these are not hard coded credentials
 	reductionFactorKey         = "reduction_factor"
 	reductionPeriodInEpochsKey = "reduction_period_in_epochs"
 	distributionProportionsKey = "distribution_proportions"
