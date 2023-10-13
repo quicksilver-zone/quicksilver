@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -20,9 +22,11 @@ import (
 	ibctesting "github.com/cosmos/ibc-go/v5/testing"
 
 	"github.com/quicksilver-zone/quicksilver/app"
+	"github.com/quicksilver-zone/quicksilver/utils"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	ics "github.com/quicksilver-zone/quicksilver/x/interchainstaking"
+	interchainstakingkeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -663,4 +667,79 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	suite.True(found)
 
 	suite.Equal(sdk.NewDecWithPrec(676666666666666667, 18), zone.RedemptionRate)
+}
+
+func (suite *KeeperTestSuite) TestGetChainIDFromContext() {
+	testCase := []struct {
+		name            string
+		setup           func() (*interchainstakingkeeper.Keeper, sdk.Context)
+		wantErr         bool
+		expectedErr     error
+		expectedChainID string
+	}{
+		{
+			name: "connectionID not in context",
+			setup: func() (*interchainstakingkeeper.Keeper, sdk.Context) {
+				suite.SetupTest()
+				suite.setupTestZones()
+				return suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper, suite.chainA.GetContext()
+			},
+			wantErr:     true,
+			expectedErr: errors.New("connectionID not in context"),
+		},
+		{
+			name: "get chainID success",
+			setup: func() (*interchainstakingkeeper.Keeper, sdk.Context) {
+				suite.SetupTest()
+				suite.setupTestZones()
+				ctx := suite.chainA.GetContext()
+
+				ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+				return suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper, ctx
+			},
+			wantErr:         false,
+			expectedErr:     nil,
+			expectedChainID: "testchain2",
+		},
+	}
+	for _, tc := range testCase {
+		suite.Run(tc.name, func() {
+			keeper, ctx := tc.setup()
+
+			chainID, err := keeper.GetChainIDFromContext(ctx)
+			if tc.wantErr {
+				suite.Equal(tc.expectedErr, err)
+				return
+			}
+			suite.NoError(err)
+			suite.Equal(tc.expectedChainID, chainID)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestIteratePortConnection() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+	icsKeeper := quicksilver.InterchainstakingKeeper
+	zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+	// After setup, there are 4 port connections available
+	pcs := icsKeeper.AllPortConnections(ctx)
+	suite.Equal(4, len(pcs))
+	// set add 4 port connections
+	icsKeeper.SetConnectionForPort(ctx, "connection-1", zone.ChainId+"."+"deposit")
+	icsKeeper.SetConnectionForPort(ctx, "connection-2", zone.ChainId+"."+"withdrawal")
+	icsKeeper.SetConnectionForPort(ctx, "connection-3", zone.ChainId+"."+"performance")
+	icsKeeper.SetConnectionForPort(ctx, "connection-4", zone.ChainId+"."+"delegate")
+
+	// iterate
+	var portConnection []icstypes.PortConnectionTuple
+	icsKeeper.IteratePortConnections(ctx, func(pc icstypes.PortConnectionTuple) (stop bool) {
+		portConnection = append(portConnection, pc)
+		return false
+	})
+	suite.Equal(8, len(portConnection))
 }

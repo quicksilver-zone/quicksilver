@@ -39,7 +39,7 @@ func (app *Quicksilver) setUpgradeStoreLoaders() {
 
 	var storeUpgrades *storetypes.StoreUpgrades
 
-	switch upgradeInfo.Name { //nolint:gocritic
+	switch upgradeInfo.Name { // nolint:gocritic
 	// case v001000UpgradeName:
 
 	// 	storeUpgrades = &storetypes.StoreUpgrades{
