@@ -1302,6 +1302,7 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 		})
 	}
 }
+
 func (suite *KeeperTestSuite) TestKeeper_Zone() {
 	testCases := []struct {
 		name         string
