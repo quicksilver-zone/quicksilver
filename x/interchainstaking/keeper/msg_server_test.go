@@ -532,11 +532,11 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 			malleate: func(suite *KeeperTestSuite) *icstypes.MsgGovCloseChannel {
 				ctx := suite.chainA.GetContext()
 				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
-				chanals := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
+				channels := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
 
 				return &icstypes.MsgGovCloseChannel{
-					ChannelId: chanals[0].ChannelId,
-					PortId:    chanals[0].PortId,
+					ChannelId: channels[0].ChannelId,
+					PortId:    channels[0].PortId,
 					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 				}
 			},
@@ -548,11 +548,11 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 				ctx := suite.chainA.GetContext()
 				suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ConnectionKeeper.SetConnection(ctx, suite.path.EndpointA.ConnectionID, connectiontypes.ConnectionEnd{ClientId: "07-tendermint-0", State: connectiontypes.OPEN})
 				k := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
-				chanals := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
+				channels := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetAllChannels(ctx)
 
 				return &icstypes.MsgGovCloseChannel{
-					ChannelId: chanals[0].ChannelId,
-					PortId:    chanals[0].PortId,
+					ChannelId: channels[0].ChannelId,
+					PortId:    channels[0].PortId,
 					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 				}
 			},
