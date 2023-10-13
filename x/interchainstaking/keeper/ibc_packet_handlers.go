@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
+	"github.com/golang/protobuf/proto" // nolint:staticcheck
 	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 
 	sdkmath "cosmossdk.io/math"
@@ -108,7 +108,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 	for msgIndex, msg := range msgs {
 		// use msgData for v0.45 and below and msgResponse for v0.46+
-		//nolint:staticcheck // SA1019 ignore this!
+		// nolint:staticcheck // SA1019 ignore this!
 		var msgResponse []byte
 
 		// check that the msgResponses slice is at least the length of the current index.
