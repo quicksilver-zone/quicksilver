@@ -1305,11 +1305,10 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 
 func (suite *KeeperTestSuite) TestKeeper_Zone() {
 	testCases := []struct {
-		name         string
-		malleate     func()
-		req          *types.QueryZoneRequest
-		wantErr      bool
-		expectLength int
+		name     string
+		malleate func()
+		req      *types.QueryZoneRequest
+		wantErr  bool
 	}{
 		{
 			name:     "empty request",
