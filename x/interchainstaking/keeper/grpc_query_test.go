@@ -1342,10 +1342,10 @@ func (suite *KeeperTestSuite) TestKeeper_Zone() {
 			if tc.wantErr {
 				suite.T().Logf("Error:\n%v\n", err)
 				suite.Error(err)
-				return
+			} else {
+				suite.NoError(err)
+				suite.NotNil(resp)
 			}
-			suite.NoError(err)
-			suite.NotNil(resp)
 		})
 	}
 }
