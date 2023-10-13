@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
 	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
