@@ -11,6 +11,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
 	connectiontypes "github.com/cosmos/ibc-go/v5/modules/core/03-connection/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icskeeper "github.com/quicksilver-zone/quicksilver/x/interchainstaking/keeper"
@@ -575,6 +576,11 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 				return
 			}
 			suite.NoError(err)
+
+			// check state channel is CLOSED
+			channel, found := suite.GetQuicksilverApp(suite.chainA).IBCKeeper.ChannelKeeper.GetChannel(ctx, msg.PortId, msg.ChannelId)
+			suite.True(found)
+			suite.True(channel.State == channeltypes.CLOSED)
 		})
 	}
 }
