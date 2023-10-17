@@ -115,13 +115,13 @@ func (p ParamsV1) ParamSetPairs() paramtypes.ParamSetPairs {
 }
 
 func (p Params) String() string {
-	out, _ := yaml.Marshal(p) //nolint:errcheck not needed
+	out, _ := yaml.Marshal(p) // nolint:errcheck not needed
 	return string(out)
 }
 
 // String implements the Stringer interface.
 func (p ParamsV1) String() string {
-	out, _ := yaml.Marshal(p) //nolint:errcheck not needed
+	out, _ := yaml.Marshal(p) // nolint:errcheck not needed
 	return string(out)
 }
 
