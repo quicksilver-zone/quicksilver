@@ -20,9 +20,7 @@ import (
 
 	lightclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
-	// The above code is importing the "ibctypes" package from the
-	// "github.com/cosmos/ibc-go/v5/modules/core/02-client/types" module in the Go programming language.
-	// ibctypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	ibctypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
@@ -1731,20 +1729,20 @@ func (suite *KeeperTestSuite) TestCheckTMHeaderForZone() {
 	testCases := []struct {
 		name        string
 		expectedErr bool
-		HeaderCtx   func(qckApp *app.Quicksilver, ctx sdk.Context, trustedHeight ibctypes.Height)
+		changeCtx   func(qck *app.Quicksilver, ctx sdk.Context, trustedHeight ibctypes.Height, zoneB *icstypes.Zone)
 	}{
 		{
 			name:        "Check TM Header for Zone successful",
 			expectedErr: false,
-			HeaderCtx:   nil,
+			changeCtx:   nil,
 		},
-		// {
-		// 	name:        "Check TM Header for Zone failed: unable to fetch client state",
-		// 	expectedErr: true,
-		// 	HeaderCtx: func(quicksilver *app.Quicksilver, ctx sdk.Context, trustedHeight ibctypes.Height) {
-		// 		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-12", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, trustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
-		// 	},
-		// },
+		{
+			name:        "Check TM Header for Zone failed: unable to fetch client state",
+			expectedErr: true,
+			changeCtx: func(qck *app.Quicksilver, ctx sdk.Context, trustedHeight ibctypes.Height, zone *icstypes.Zone) {
+				zone.ConnectionId = "connection-1"
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1760,8 +1758,10 @@ func (suite *KeeperTestSuite) TestCheckTMHeaderForZone() {
 			txRes := icqtypes.GetTxWithProofResponse{}
 			_ = qckApp.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
 
-			// // setup ctx for testcase
-			// tc.HeaderCtx(qckApp, ctx, txRes.Header.TrustedHeight)
+			// setup ctx for testcase
+			if tc.expectedErr {
+				tc.changeCtx(qckApp, ctx, txRes.Header.TrustedHeight, &zone)
+			}
 
 			err := qckApp.InterchainstakingKeeper.CheckTMHeaderForZone(ctx, &zone, txRes)
 			if tc.expectedErr {
