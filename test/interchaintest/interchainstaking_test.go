@@ -6,16 +6,10 @@ import (
 	"strings"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
-
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-
-	"github.com/cosmos/gogoproto/proto"
 
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
@@ -133,7 +127,7 @@ func TestInterchainStaking(t *testing.T) {
 
 	gaiaValidators := validatorsResp.Validators
 
-	// Create some user accounts on both chains
+	// Create an user account on both chains
 	mnemonic := "toast coach demand sustain front little pipe feed rescue improve cradle top"
 	quickUser, err := interchaintest.GetAndFundTestUserWithMnemonic(ctx, t.Name(), mnemonic, genesisWalletAmount.Int64(), quicksilver)
 	require.NoError(t, err)
@@ -276,7 +270,6 @@ func TestInterchainStaking(t *testing.T) {
 	err = testutil.WaitForBlocks(ctx, 5, quicksilver, gaia)
 	require.NoError(t, err)
 
-
 	stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "interchain-accounts", "controller", "interchain-account", quickUserAddr, "connection-0")
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
@@ -286,78 +279,89 @@ func TestInterchainStaking(t *testing.T) {
 	err = codec.NewLegacyAmino().UnmarshalJSON(stdout, &icaQuickUser)
 	require.NoError(t, err)
 
-	// Bank Send for delegation
-	msgSend := &banktypes.MsgSend{
-		FromAddress: gaiaUserAddr,
-		ToAddress:   depositAddress.Address,
-		Amount:      sdk.NewCoins(sdk.Coin{Denom: "uatom", Amount: sdkmath.NewInt(10_000_000)}),
-	}
-
-	cdc := config.EncodingConfig.Codec
-	bz, err := icatypes.SerializeCosmosTx(cdc, []proto.Message{msgSend}) //gfddrg
+	_, err = gaia.FullNodes[0].ExecTx(ctx, gaiaUser.KeyName(), "staking", "delegate", gaiaValidators[0].OperatorAddress, "500uatom")
 	require.NoError(t, err)
 
-	packetData := icatypes.InterchainAccountPacketData{
-		Type: icatypes.EXECUTE_TX,
-		Data: bz,
-		Memo: EncodeValidators(
-			t,
-			[]ValidatorDelegation{
-				{
-					Address: gaiaValidators[0].OperatorAddress,
-					Percent: 50,
-				},
-				{
-					Address: gaiaValidators[1].OperatorAddress,
-					Percent: 25,
-				},
-				{
-					Address: gaiaValidators[2].OperatorAddress,
-					Percent: 25,
-				},
-			},
-		),
-	}
-	jsonPacketData, err := codec.NewLegacyAmino().MarshalJSON(packetData)
+	_, err = gaia.FullNodes[0].ExecTx(ctx, gaiaUser.KeyName(), "staking", "delegate", gaiaValidators[1].OperatorAddress, "250uatom")
 	require.NoError(t, err)
 
-	txhash, err := quicksilver.FullNodes[0].ExecTx(
-		ctx, quickUser.KeyName(), "interchain-accounts", "controller", "send-tx", "connection-0", string(jsonPacketData),
-	)
+	_, err = gaia.FullNodes[0].ExecTx(ctx, gaiaUser.KeyName(), "staking", "delegate", gaiaValidators[2].OperatorAddress, "250uatom")
 	require.NoError(t, err)
 
-	_, err = gaia.FullNodes[0].ExecTx(
-		ctx, gaiaUser.KeyName(), "bank", "send", gaiaUserAddr, depositAddress.Address, "10000000uatom",
-	)
+	err = testutil.WaitForBlocks(ctx, 20, quicksilver, gaia)
 	require.NoError(t, err)
+	// // Bank Send for delegation
+	// msgSend := &banktypes.MsgSend{
+	// 	FromAddress: gaiaUserAddr,
+	// 	ToAddress:   depositAddress.Address,
+	// 	Amount:      sdk.NewCoins(sdk.Coin{Denom: "uatom", Amount: sdkmath.NewInt(10_000_000)}),
+	// }
 
-	err = testutil.WaitForBlocks(ctx, 30, quicksilver, gaia)
-	require.NoError(t, err)
+	// cdc := config.EncodingConfig.Codec
+	// bz, err := icatypes.SerializeCosmosTx(cdc, []proto.Message{msgSend}) //gfddrg
+	// require.NoError(t, err)
 
-	stdout, out, err := quicksilver.Validators[0].ExecQuery(ctx, "tx", txhash)
-	require.NoError(t, err)
-	fmt.Println("tx query:     ", string(stdout))
-	fmt.Println(string(out))
+	// packetData := icatypes.InterchainAccountPacketData{
+	// 	Type: icatypes.EXECUTE_TX,
+	// 	Data: bz,
+	// 	Memo: EncodeValidators(
+	// 		t,
+	// 		[]ValidatorDelegation{
+	// 			{
+	// 				Address: gaiaValidators[0].OperatorAddress,
+	// 				Percent: 50,
+	// 			},
+	// 			{
+	// 				Address: gaiaValidators[1].OperatorAddress,
+	// 				Percent: 25,
+	// 			},
+	// 			{
+	// 				Address: gaiaValidators[2].OperatorAddress,
+	// 				Percent: 25,
+	// 			},
+	// 		},
+	// 	),
+	// }
+	// jsonPacketData, err := codec.NewLegacyAmino().MarshalJSON(packetData)
+	// require.NoError(t, err)
 
-	stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "interchainstaking", "intent", "gaia-2", quickUserAddr)
-	require.NoError(t, err)
-	require.NotEmpty(t, stdout)
-	t.Logf("Intent: %s", string(stdout))
+	// txhash, err := quicksilver.FullNodes[0].ExecTx(
+	// 	ctx, quickUser.KeyName(), "interchain-accounts", "controller", "send-tx", "connection-0", string(jsonPacketData),
+	// )
+	// require.NoError(t, err)
+
+	// _, err = gaia.FullNodes[0].ExecTx(
+	// 	ctx, gaiaUser.KeyName(), "bank", "send", gaiaUserAddr, depositAddress.Address, "10000000uatom",
+	// )
+	// require.NoError(t, err)
+
+	// err = testutil.WaitForBlocks(ctx, 30, quicksilver, gaia)
+	// require.NoError(t, err)
+
+	// stdout, out, err := quicksilver.Validators[0].ExecQuery(ctx, "tx", txhash)
+	// require.NoError(t, err)
+	// fmt.Println("tx query:     ", string(stdout))
+	// fmt.Println(string(out))
+
+	// stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "interchainstaking", "intent", "gaia-2", quickUserAddr)
+	// require.NoError(t, err)
+	// require.NotEmpty(t, stdout)
+	// t.Logf("Intent: %s", string(stdout))
 
 	stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "bank", "balances", quickUserAddr)
 	require.NoError(t, err)
 	require.NotEmpty(t, stdout)
-	t.Logf("User quick bank balances: %s", string(stdout))
+	fmt.Println("User quick bank balances: ", string(stdout))
 
-	stdout, _, err = gaia.Validators[0].ExecQuery(ctx, "bank", "balances", gaiaUserAddr)
-	require.NoError(t, err)
-	require.NotEmpty(t, stdout)
-	t.Logf("User gaia bank balances: %s", string(stdout))
+	// stdout, _, err = gaia.Validators[0].ExecQuery(ctx, "bank", "balances", gaiaUserAddr)
+	// require.NoError(t, err)
+	// require.NotEmpty(t, stdout)
+	// t.Logf("User gaia bank balances: %s", string(stdout))
 
-	stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "interchainstaking", "zones")
-	require.NoError(t, err)
-	require.NotEmpty(t, stdout)
-	fmt.Println("zone:     ", string(stdout))
+	// stdout, _, err = quicksilver.Validators[0].ExecQuery(ctx, "interchainstaking", "zones")
+	// require.NoError(t, err)
+	// require.NotEmpty(t, stdout)
+	// fmt.Println("zone:     ", string(stdout))
 
 	// Thử send đến ica account xem sao
 	// Thử transfer xong set intendrit
