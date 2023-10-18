@@ -2,6 +2,7 @@ package types
 
 import (
 	"errors"
+	fmt "fmt"
 	"sort"
 
 	sdkmath "cosmossdk.io/math"
@@ -118,9 +119,15 @@ func (vi ValidatorIntents) Normalize() ValidatorIntents {
 	return out.Sort()
 }
 
-func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations ValidatorIntents, amount sdk.Coins) map[string]sdkmath.Int {
+func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int, currentSum sdkmath.Int, targetAllocations ValidatorIntents, amount sdk.Coins) (map[string]sdkmath.Int, error) {
+	if amount.IsZero() {
+		return make(map[string]sdkmath.Int, 0), fmt.Errorf("unable to delegate zero amount")
+	}
+	if len(targetAllocations) == 0 {
+		return make(map[string]sdkmath.Int, 0), fmt.Errorf("unable to process nil delegation targets")
+	}
 	input := amount[0].Amount
-	deltas, _ := CalculateAllocationDeltas(currentAllocations, map[string]bool{}, currentSum, targetAllocations)
+	deltas, _ := CalculateAllocationDeltas(currentAllocations, map[string]bool{}, currentSum.Add(amount[0].Amount), targetAllocations)
 	sum := deltas.Sum()
 
 	// unequalSplit is the portion of input that should be distributed in attempt to make targets == 0
@@ -160,7 +167,9 @@ func DetermineAllocationsForDelegation(currentAllocations map[string]sdkmath.Int
 		}
 	}
 	dust := input.Sub(outSum)
-	outWeights[deltas[0].ValoperAddress] = outWeights[deltas[0].ValoperAddress].Add(dust)
+	if !dust.IsZero() {
+		outWeights[deltas[0].ValoperAddress] = outWeights[deltas[0].ValoperAddress].Add(dust)
+	}
 
-	return outWeights
+	return outWeights, nil
 }
