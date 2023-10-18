@@ -344,6 +344,12 @@ func (suite *KeeperTestSuite) TestSendTokenIBC() {
 		err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(amount))
 		suite.NoError(err)
 
+		// Try to send native token but wrong connection id on zone
+		wrongZone := zone
+		wrongZone.ConnectionId = "connection-10"
+		err = quicksilver.InterchainstakingKeeper.SendTokenIBC(ctx, sender, receiver, &wrongZone, amount)
+		suite.ErrorContains(err, "unable to find remote transfer connection")
+
 		// Try to send the native token
 		err = quicksilver.InterchainstakingKeeper.SendTokenIBC(ctx, sender, receiver, &zone, amount)
 		suite.NoError(err)
