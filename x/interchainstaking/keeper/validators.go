@@ -105,10 +105,9 @@ func (k Keeper) GetValidatorAddrByConsAddr(ctx sdk.Context, chainID string, cons
 }
 
 // SetValidatorAddrByConsAddr set validator address by Consensus address.
-func (k Keeper) SetValidatorAddrByConsAddr(ctx sdk.Context, chainID string, valAddr string, consAddr sdk.ConsAddress) error {
+func (k Keeper) SetValidatorAddrByConsAddr(ctx sdk.Context, chainID string, valAddr string, consAddr sdk.ConsAddress) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorAddrsByConsAddrKey(chainID))
 	store.Set(consAddr, []byte(valAddr))
-	return nil
 }
 
 // DeleteValidatorAddrByConsAddr delete validator address by Consensus address.

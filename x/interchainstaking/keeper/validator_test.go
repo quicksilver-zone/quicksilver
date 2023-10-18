@@ -78,13 +78,13 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidatorByConsAddr() {
 		suite.Require().NoError(err)
 
 		newValidator := stakingtypes.Validator{
-			OperatorAddress:  validator.String(),
+			OperatorAddress: validator.String(),
 			ConsensusPubkey: pkAny,
 		}
 		consAddr, err := newValidator.GetConsAddr()
 		suite.NoError(err)
 
-		err = app.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator.OperatorAddress, consAddr)
+		app.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator.OperatorAddress, consAddr)
 		suite.NoError(err)
 
 		_, found = app.InterchainstakingKeeper.GetValidatorAddrByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))

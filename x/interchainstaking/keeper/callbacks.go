@@ -278,7 +278,7 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		}
 		valAddr, found := k.GetValidatorAddrByConsAddr(ctx, zone.ChainId, consAddr)
 		if !found {
-			
+			return fmt.Errorf("can not get validator address from consensus address: %s", valSigningInfo.Address)
 		}
 
 		k.Logger(ctx).Error("Tombstoned validator found", "valoper", valAddr)
@@ -290,7 +290,6 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		val, _ := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 		val.Tombstoned = true
 		if err = k.SetValidator(ctx, zone.ChainId, val); err != nil {
-
 			return err
 		}
 
