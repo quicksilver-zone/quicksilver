@@ -1302,3 +1302,50 @@ func (suite *KeeperTestSuite) TestKeeper_MappedAccounts() {
 		})
 	}
 }
+
+func (suite *KeeperTestSuite) TestKeeper_Zone() {
+	testCases := []struct {
+		name     string
+		malleate func()
+		req      *types.QueryZoneRequest
+		wantErr  bool
+	}{
+		{
+			name:     "empty request",
+			malleate: func() {},
+			req:      nil,
+			wantErr:  true,
+		},
+		{
+			name:     "zone not found",
+			malleate: func() {},
+			req:      &types.QueryZoneRequest{ChainId: suite.chainB.ChainID},
+			wantErr:  true,
+		},
+		{
+			name: "zone valid request",
+			malleate: func() {
+				suite.SetupTest()
+				suite.setupTestZones()
+			},
+			req:     &types.QueryZoneRequest{ChainId: suite.chainB.ChainID},
+			wantErr: false,
+		},
+	}
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			tc.malleate()
+			icsKeeper := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper
+			ctx := suite.chainA.GetContext()
+
+			resp, err := icsKeeper.Zone(ctx, tc.req)
+			if tc.wantErr {
+				suite.T().Logf("Error:\n%v\n", err)
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+				suite.NotNil(resp)
+			}
+		})
+	}
+}

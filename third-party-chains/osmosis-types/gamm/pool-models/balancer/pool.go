@@ -17,7 +17,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 )
 
-//nolint:deadcode
+// nolint:deadcode
 const (
 	nonPostiveSharesAmountErrFormat = "shares amount must be positive, was %d"
 	nonPostiveTokenAmountErrFormat  = "token amount must be positive, was %d"
