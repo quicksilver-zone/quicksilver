@@ -270,7 +270,17 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 
 		jailTime := time.Time{}
 		if validator.IsJailed() {
+			consAddr, err := validator.GetConsAddr()
+			if err != nil {
+				return err
+			}
+			k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
 			jailTime = ctx.BlockTime()
+
+			err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
+			if err != nil {
+				return err
+			}
 		}
 		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
@@ -297,7 +307,17 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 
 		if !val.Jailed && validator.IsJailed() {
 			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
+			
+			consAddr, err := validator.GetConsAddr()
+			if err != nil {
+				return err
+			}
+			k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
 
+			err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
+			if err != nil {
+				return err
+			}
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
 			if !val.VotingPower.IsPositive() {
@@ -315,6 +335,12 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 				return err
 			}
 		} else if val.Jailed && !validator.IsJailed() {
+			consAddr, err := validator.GetConsAddr()
+			if err != nil {
+				return err
+			}
+			k.DeleteValidatorAddrByConsAddr(ctx, zone.ChainId, consAddr)
+
 			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
 
 			val.Jailed = false
@@ -350,14 +376,6 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 				return err
 			}
-		}
-	}
-
-	// checking whether validator was tombstoned or not
-	if val.Jailed {
-		err := k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
-		if err != nil {
-			return err
 		}
 	}
 
