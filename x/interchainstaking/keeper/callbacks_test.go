@@ -34,6 +34,40 @@ const (
 	storeStakingKey           = "store/staking/key"
 )
 
+func (suite *KeeperTestSuite) setupIbc() (*app.Quicksilver, sdk.Context) {
+	// reset test suite
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	// setup quicksilver test app
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+
+	// get chainA context
+	ctx := suite.chainA.GetContext()
+
+	// get zone chainB context
+	zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	zone.DepositAddress.IncrementBalanceWaitgroup()
+	zone.WithdrawalAddress.IncrementBalanceWaitgroup()
+	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	// get the tx from fixture
+	txWithProofBz := decodeBase64NoErr(localDepositTxFixture)
+	txRes := icqtypes.GetTxWithProofResponse{}
+	err := quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
+	suite.NoError(err)
+
+	// update payload header to ensure we can validate it.
+	txRes.Header.Header.Time = ctx.BlockTime()
+	// setup ClientConsensusState for checking Header validation
+	// Cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
+	quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+	quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", txRes.Header.TrustedHeight, txRes.Header.ConsensusState())
+
+	return quicksilver, ctx
+}
+
 func (suite *KeeperTestSuite) TestHandleValsetCallback() {
 	newVal := addressutils.GenerateValAddressForTest()
 
@@ -1621,40 +1655,7 @@ func decodeBase64NoErr(str string) []byte {
 }
 
 func (suite *KeeperTestSuite) TestDepositTxCallback() {
-	setupIbc := func() (*app.Quicksilver, sdk.Context) {
-		// reset test suite
-		suite.SetupTest()
-		suite.setupTestZones()
-
-		// setup quicksilver test app
-		quicksilver := suite.GetQuicksilverApp(suite.chainA)
-		quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-
-		// get chainA context
-		ctx := suite.chainA.GetContext()
-
-		// get zone chainB context
-		zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
-		zone.DepositAddress.IncrementBalanceWaitgroup()
-		zone.WithdrawalAddress.IncrementBalanceWaitgroup()
-		quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
-
-		// get the tx from fixture
-		txWithProofBz := decodeBase64NoErr(localDepositTxFixture)
-		txRes := icqtypes.GetTxWithProofResponse{}
-		err := quicksilver.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
-		suite.NoError(err)
-
-		// update payload header to ensure we can validate it.
-		txRes.Header.Header.Time = ctx.BlockTime()
-		// setup ClientConsensusState for checking Header validation
-		// Cheat, and set the client state and consensus state for 07-tendermint-0 to match the incoming header.
-		quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
-		quicksilver.IBCKeeper.ClientKeeper.SetClientConsensusState(ctx, "07-tendermint-0", txRes.Header.TrustedHeight, txRes.Header.ConsensusState())
-
-		return quicksilver, ctx
-	}
-
+	// testcases
 	testCases := []struct {
 		name          string
 		txHash        string
@@ -1704,7 +1705,7 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
 			// setup quicksilver and counter chain context
-			qckApp, ctx := setupIbc()
+			qckApp, ctx := suite.setupIbc()
 
 			// construct request data using txHash
 			requestData := tx.GetTxRequest{
@@ -1715,6 +1716,49 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 			// initialize the callback
 			err := keeper.DepositTxCallback(qckApp.InterchainstakingKeeper, ctx, tc.txWithProofbz, icqtypes.Query{ChainId: tc.chainID, Request: resDataBz})
 			if tc.expectErr {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestCheckTMHeaderForZone() {
+	testCases := []struct {
+		name        string
+		expectedErr bool
+		HeaderCtx   func()
+	}{
+		{
+			name:        "Check TM Header for Zone successful",
+			expectedErr: false,
+			HeaderCtx:   nil,
+		},
+		{
+			name:        "Check TM Header for Zone failed: unable to fetch client state",
+			expectedErr: false,
+			HeaderCtx: func(quicksilver *app.QuicksilverApp, ctx sdk.Context) {
+				quicksilver.IBCKeeper.ClientKeeper.SetClientState(ctx, "07-tendermint-0", lightclienttypes.NewClientState("gaiatest-1", lightclienttypes.DefaultTrustLevel, time.Hour, time.Hour, time.Second*50, txRes.Header.TrustedHeight, []*ics23.ProofSpec{}, []string{}, false, false))
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			// setup app and counter chain ctx
+			qckApp, ctx := suite.setupIbc()
+
+			// get chain B
+			zone, _ := qckApp.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+
+			// get the tx from fixture
+			txWithProofBz := decodeBase64NoErr(localDepositTxFixture)
+			txRes := icqtypes.GetTxWithProofResponse{}
+			_ = qckApp.InterchainQueryKeeper.IBCKeeper.Codec().Unmarshal(txWithProofBz, &txRes)
+
+			err := qckApp.InterchainstakingKeeper.CheckTMHeaderForZone(ctx, &zone, txRes)
+			if tc.expectedErr {
 				suite.Error(err)
 			} else {
 				suite.NoError(err)
