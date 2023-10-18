@@ -356,7 +356,6 @@ func (suite *KeeperTestSuite) TestSendTokenIBC() {
 
 		portID := types.TransferPort
 		channelID := suite.path.EndpointA.ChannelID
-		// channelBID := suite.path.EndpointB.ChannelID
 
 		ibcAmount := transfertypes.GetTransferCoin(portID, channelID, sdk.DefaultBondDenom, sdk.NewInt(100))
 
