@@ -501,8 +501,8 @@ func (suite *KeeperTestSuite) TestSignalIntent() {
 
 func (suite *KeeperTestSuite) TestGovCloseChannel() {
 	testCase := []struct {
-		name     string
-		malleate func(suite *KeeperTestSuite) *icstypes.MsgGovCloseChannel
+		name      string
+		malleate  func(suite *KeeperTestSuite) *icstypes.MsgGovCloseChannel
 		expectErr error
 	}{
 		{
