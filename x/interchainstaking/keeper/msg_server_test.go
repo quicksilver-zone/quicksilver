@@ -503,7 +503,7 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 	testCase := []struct {
 		name     string
 		malleate func(suite *KeeperTestSuite) *icstypes.MsgGovCloseChannel
-		expecErr error
+		expectErr error
 	}{
 		{
 			name: "invalid authority",
@@ -514,7 +514,7 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 					Authority: testAddress,
 				}
 			},
-			expecErr: govtypes.ErrInvalidSigner,
+			expectErr: govtypes.ErrInvalidSigner,
 		},
 		{
 			name: "capability not found",
@@ -527,7 +527,7 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 				}
 			},
-			expecErr: capabilitytypes.ErrCapabilityNotFound,
+			expectErr: capabilitytypes.ErrCapabilityNotFound,
 		},
 		{
 			name: "invalid connection state",
@@ -542,7 +542,7 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 				}
 			},
-			expecErr: connectiontypes.ErrInvalidConnectionState,
+			expectErr: connectiontypes.ErrInvalidConnectionState,
 		},
 		{
 			name: "closes an ICA channel success",
@@ -558,7 +558,7 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 					Authority: sdk.MustBech32ifyAddressBytes(sdk.GetConfig().GetBech32AccountAddrPrefix(), k.AccountKeeper.GetModuleAddress(govtypes.ModuleName)),
 				}
 			},
-			expecErr: nil,
+			expectErr: nil,
 		},
 	}
 	for _, tc := range testCase {
@@ -571,8 +571,8 @@ func (suite *KeeperTestSuite) TestGovCloseChannel() {
 			ctx := suite.chainA.GetContext()
 
 			_, err := msgSrv.GovCloseChannel(ctx, msg)
-			if tc.expecErr != nil {
-				suite.ErrorIs(tc.expecErr, err)
+			if tc.expectErr != nil {
+				suite.ErrorIs(tc.expectErr, err)
 				return
 			}
 			suite.NoError(err)
