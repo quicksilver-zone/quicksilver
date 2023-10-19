@@ -612,6 +612,9 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 	} else {
 		intents = z.AggregateIntent
 	}
+
+	jailedThreshold := k.EpochsKeeper.GetEpochInfo(ctx, "epoch").Duration * 2
+
 	// filter intents here...
 	// check validators for tombstoned
 	for _, v := range intents {
@@ -627,6 +630,10 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 		}
 		// we should never let tombstoned validators into the list, even if they are explicitly selected
 		if val.Tombstoned {
+			continue
+		}
+
+		if val.Jailed && val.JailedSince.Add(jailedThreshold).Before(ctx.BlockTime()) {
 			continue
 		}
 
