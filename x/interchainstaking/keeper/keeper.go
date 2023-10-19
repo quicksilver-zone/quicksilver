@@ -287,23 +287,22 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		if found {
 			k.Logger(ctx).Info("%q on chainID: %q have been tombstoned", validator.OperatorAddress, zone.ChainId)
 			return nil
-		} else {
-			if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
-				ValoperAddress:  validator.OperatorAddress,
-				CommissionRate:  validator.GetCommission(),
-				VotingPower:     validator.Tokens,
-				DelegatorShares: validator.DelegatorShares,
-				Score:           sdk.ZeroDec(),
-				Status:          validator.Status.String(),
-				Jailed:          validator.IsJailed(),
-				JailedSince:     jailTime,
-			}); err != nil {
-				return err
-			}
+		}
+		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
+			ValoperAddress:  validator.OperatorAddress,
+			CommissionRate:  validator.GetCommission(),
+			VotingPower:     validator.Tokens,
+			DelegatorShares: validator.DelegatorShares,
+			Score:           sdk.ZeroDec(),
+			Status:          validator.Status.String(),
+			Jailed:          validator.IsJailed(),
+			JailedSince:     jailTime,
+		}); err != nil {
+			return err
+		}
 
-			if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
-				return err
-			}
+		if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
+			return err
 		}
 	} else {
 		if val.Tombstoned {
