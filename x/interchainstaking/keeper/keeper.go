@@ -282,26 +282,32 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 				return err
 			}
 		}
-		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
-			ValoperAddress:  validator.OperatorAddress,
-			CommissionRate:  validator.GetCommission(),
-			VotingPower:     validator.Tokens,
-			DelegatorShares: validator.DelegatorShares,
-			Score:           sdk.ZeroDec(),
-			Status:          validator.Status.String(),
-			Jailed:          validator.IsJailed(),
-			JailedSince:     jailTime,
-		}); err != nil {
-			return err
-		}
+		_, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+		// if found is true, it means that validator was tombstoned because we set it's information in SigningInfoCallback func
+		if found {
+			k.Logger(ctx).Info("%q on chainID: %q have been tombstoned", validator.OperatorAddress, zone.ChainId)
+			return nil
+		} else {
+			if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
+				ValoperAddress:  validator.OperatorAddress,
+				CommissionRate:  validator.GetCommission(),
+				VotingPower:     validator.Tokens,
+				DelegatorShares: validator.DelegatorShares,
+				Score:           sdk.ZeroDec(),
+				Status:          validator.Status.String(),
+				Jailed:          validator.IsJailed(),
+				JailedSince:     jailTime,
+			}); err != nil {
+				return err
+			}
 
-		if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
-			return err
+			if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
+				return err
+			}
 		}
-
 	} else {
 		if val.Tombstoned {
-			k.Logger(ctx).Error("%q on chainID: %q was found to already have been tombstoned", validator.OperatorAddress, zone.ChainId)
+			k.Logger(ctx).Info("%q on chainID: %q was found to already have been tombstoned", validator.OperatorAddress, zone.ChainId)
 			return nil
 		}
 
@@ -318,6 +324,11 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			if err != nil {
 				return err
 			}
+			val, _ := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+			if val.Tombstoned {
+				return nil
+			}
+
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
 			if !val.VotingPower.IsPositive() {

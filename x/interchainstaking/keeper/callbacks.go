@@ -287,11 +287,23 @@ func SigningInfoCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		if err != nil {
 			return err
 		}
-		val, _ := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
-		val.Tombstoned = true
-		if err = k.SetValidator(ctx, zone.ChainId, val); err != nil {
-			return err
+		val, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+		if !found {
+			err := k.SetValidator(ctx, zone.ChainId, types.Validator{
+				ValoperAddress: val.ValoperAddress,
+				Jailed:         true,
+				Tombstoned:     true,
+			})
+			if err != nil {
+				return err
+			}
+		} else {
+			val.Tombstoned = true
+			if err = k.SetValidator(ctx, zone.ChainId, val); err != nil {
+				return err
+			}
 		}
+		k.Logger(ctx).Info("%q on chainID: %q was found to already have been tombstoned, added information", val.ValoperAddress, zone.ChainId)
 
 		return nil
 	}
