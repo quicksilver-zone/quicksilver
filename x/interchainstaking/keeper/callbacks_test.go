@@ -18,9 +18,9 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
+	ibctypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	lightclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
-	ibctypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	icqtypes "github.com/quicksilver-zone/quicksilver/x/interchainquery/types"
@@ -1729,7 +1729,7 @@ func (suite *KeeperTestSuite) TestCheckTMHeaderForZone() {
 	testCases := []struct {
 		name        string
 		expectedErr bool
-		changeCtx   func(qck *app.Quicksilver, ctx sdk.Context, trustedHeight ibctypes.Height, zoneB *icstypes.Zone)
+		changeCtx   func(qck *app.Quicksilver, ctx sdk.Context, trustedHeight *ibctypes.Height, zoneB *icstypes.Zone)
 	}{
 		{
 			name:        "Check TM Header for Zone successful",
@@ -1739,8 +1739,15 @@ func (suite *KeeperTestSuite) TestCheckTMHeaderForZone() {
 		{
 			name:        "Check TM Header for Zone failed: unable to fetch client state",
 			expectedErr: true,
-			changeCtx: func(qck *app.Quicksilver, ctx sdk.Context, trustedHeight ibctypes.Height, zone *icstypes.Zone) {
+			changeCtx: func(qck *app.Quicksilver, ctx sdk.Context, trustedHeight *ibctypes.Height, zone *icstypes.Zone) {
 				zone.ConnectionId = "connection-1"
+			},
+		},
+		{
+			name:        "Check TM Header for Zone failed: unable to fetch consensus state on trusted height",
+			expectedErr: true,
+			changeCtx: func(qck *app.Quicksilver, ctx sdk.Context, trustedHeight *ibctypes.Height, zone *icstypes.Zone) {
+				*trustedHeight = ibctypes.Height{RevisionNumber: 1, RevisionHeight: 24072000}
 			},
 		},
 	}
@@ -1760,11 +1767,12 @@ func (suite *KeeperTestSuite) TestCheckTMHeaderForZone() {
 
 			// setup ctx for testcase
 			if tc.expectedErr {
-				tc.changeCtx(qckApp, ctx, txRes.Header.TrustedHeight, &zone)
+				tc.changeCtx(qckApp, ctx, &txRes.Header.TrustedHeight, &zone)
 			}
 
 			err := qckApp.InterchainstakingKeeper.CheckTMHeaderForZone(ctx, &zone, txRes)
 			if tc.expectedErr {
+
 				suite.Error(err)
 			} else {
 				suite.NoError(err)
