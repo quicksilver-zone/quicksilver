@@ -631,10 +631,10 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 	}
 }
 
-func (s *KeeperTestSuite) TestDelegationPlan() {
+func (suite *KeeperTestSuite) TestDelegationPlan() {
 	jsonDelegations, _ := base64.RawStdEncoding.DecodeString(delegationFixture)
-	quicksilver := s.GetQuicksilverApp(s.chainA)
-	ctx := s.chainA.GetContext()
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
 	var delegations icstypes.QueryDelegationsResponse
 	quicksilver.InterchainstakingKeeper.GetCodec().MustUnmarshalJSON(jsonDelegations, &delegations)
 
@@ -651,7 +651,7 @@ func (s *KeeperTestSuite) TestDelegationPlan() {
 	vals := make([]icstypes.Validator, 0)
 
 	err := json.Unmarshal(jsonVals, &vals)
-	s.NoError(err)
+	suite.NoError(err)
 
 	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
 
@@ -664,9 +664,9 @@ func (s *KeeperTestSuite) TestDelegationPlan() {
 		quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
 	}
 
-	ctx = s.chainA.GetContext()
+	ctx = suite.chainA.GetContext()
 	zone, f := quicksilver.InterchainstakingKeeper.GetZone(ctx, "cosmoshub-4")
-	s.True(f)
+	suite.True(f)
 
 	targetAllocations, _ := quicksilver.InterchainstakingKeeper.GetAggregateIntentOrDefault(ctx, &zone)
 
@@ -675,18 +675,18 @@ func (s *KeeperTestSuite) TestDelegationPlan() {
 	currentAllocations, currentSum, _, _ := quicksilver.InterchainstakingKeeper.GetDelegationMap(ctx, &zone)
 
 	allocations, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
-	s.NoError(err)
+	suite.NoError(err)
 
 	for valoper, alloc := range allocations {
 		v, f := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, addressutils.MustAccAddressFromBech32(valoper, ""))
 		if !f {
-			s.Fail(fmt.Sprintf("%s is not found, but assigned %d!\n", valoper, alloc.Int64()))
+			suite.Fail(fmt.Sprintf("%s is not found, but assigned %d!\n", valoper, alloc.Int64()))
 			continue
 		}
 		if v.Jailed {
-			s.Fail(fmt.Sprintf("%s is jailed since %v, but assigned %d!\n", valoper, v.JailedSince, alloc.Int64()))
+			suite.Fail(fmt.Sprintf("%s is jailed since %v, but assigned %d!\n", valoper, v.JailedSince, alloc.Int64()))
 		} else if v.Status != "BOND_STATUS_BONDED" {
-			s.Fail(fmt.Sprintf("%s is unbonded, but assigned %d!\n", valoper, alloc.Int64()))
+			suite.Fail(fmt.Sprintf("%s is unbonded, but assigned %d!\n", valoper, alloc.Int64()))
 		}
 	}
 }

@@ -44,7 +44,7 @@ type KeeperTestSuite struct {
 	path *ibctesting.Path
 }
 
-func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
+func (suite *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Quicksilver {
 	quicksilver, ok := chain.App.(*app.Quicksilver)
 	if !ok {
 		panic("not quicksilver app")
@@ -54,25 +54,25 @@ func (s *KeeperTestSuite) GetQuicksilverApp(chain *ibctesting.TestChain) *app.Qu
 }
 
 // SetupTest creates a coordinator with 2 test chains.
-func (s *KeeperTestSuite) SetupTest() {
-	s.coordinator = ibctesting.NewCoordinator(s.T(), 2)         // initializes 2 test chains
-	s.chainA = s.coordinator.GetChain(ibctesting.GetChainID(1)) // convenience and readability
-	s.chainB = s.coordinator.GetChain(ibctesting.GetChainID(2)) // convenience and readability
+func (suite *KeeperTestSuite) SetupTest() {
+	suite.coordinator = ibctesting.NewCoordinator(suite.T(), 2)         // initializes 2 test chains
+	suite.chainA = suite.coordinator.GetChain(ibctesting.GetChainID(1)) // convenience and readability
+	suite.chainB = suite.coordinator.GetChain(ibctesting.GetChainID(2)) // convenience and readability
 
-	s.path = newQuicksilverPath(s.chainA, s.chainB)
-	s.coordinator.SetupConnections(s.path)
+	suite.path = newQuicksilverPath(suite.chainA, suite.chainB)
+	suite.coordinator.SetupConnections(suite.path)
 
-	s.coordinator.CurrentTime = time.Now().UTC()
-	s.coordinator.UpdateTime()
+	suite.coordinator.CurrentTime = time.Now().UTC()
+	suite.coordinator.UpdateTime()
 
-	s.initTestZone()
+	suite.initTestZone()
 }
 
-func (s *KeeperTestSuite) initTestZone() {
+func (suite *KeeperTestSuite) initTestZone() {
 	// test zone
 	zone := icstypes.Zone{
-		ConnectionId:     s.path.EndpointA.ConnectionID,
-		ChainId:          s.chainB.ChainID,
+		ConnectionId:     suite.path.EndpointA.ConnectionID,
+		ChainId:          suite.chainB.ChainID,
 		AccountPrefix:    "bcosmos",
 		LocalDenom:       "uqatom",
 		BaseDenom:        "uatom",
@@ -82,7 +82,7 @@ func (s *KeeperTestSuite) initTestZone() {
 		Decimals:         6,
 		Is_118:           true,
 	}
-	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
 	// cosmos zone
 	zone = icstypes.Zone{
@@ -97,7 +97,7 @@ func (s *KeeperTestSuite) initTestZone() {
 		Decimals:         6,
 		Is_118:           true,
 	}
-	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 
 	// osmosis zone
 	zone = icstypes.Zone{
@@ -112,5 +112,5 @@ func (s *KeeperTestSuite) initTestZone() {
 		Decimals:         6,
 		Is_118:           true,
 	}
-	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetZone(suite.chainA.GetContext(), &zone)
 }
