@@ -656,7 +656,8 @@ func (suite *KeeperTestSuite) TestDelegationPlan() {
 
 	for _, val := range vals {
 		v := val
-		quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, v)
+		err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, v)
+		suite.NoError(err)
 	}
 
 	for _, delegation := range delegations.Delegations {
