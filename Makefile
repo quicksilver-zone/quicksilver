@@ -373,6 +373,10 @@ ictest-ibc: ictest-deps
 ictest-interchainstaking: ictest-deps
 	@cd test/interchaintest && go test -v -run TestInterchainStaking .
 
+ictest-ewa:
+	@cd test/interchaintest && go test -v -run TestEnsureWithdrawlAddress .
+
+
 # Executes all tests via interchaintest after compiling a local image as quicksilver:local
 ictest-all: ictest-setup ictest-basic ictest-upgrade ictest-ibc ictest-interchainstaking
 
