@@ -467,12 +467,10 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 		if len(dlist) > 0 {
 			newDist := make([]*types.Distribution, 0)
-			i := 0
 			for idx := range withdrawalRecord.Distribution {
 				if _, remove := dlist[idx]; !remove {
 					newDist = append(newDist, withdrawalRecord.Distribution[idx])
 				}
-				i++
 			}
 			k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
 			withdrawalRecord.Distribution = newDist
