@@ -12,7 +12,6 @@ import (
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
-	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
@@ -56,7 +55,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	icsKeeper.SetDelegation(
 		ctx,
 		&zone,
-		types.NewDelegation(
+		icstypes.NewDelegation(
 			zone.DelegationAddress.Address,
 			zoneValidatorAddresses[0],
 			sdk.NewCoin(zone.BaseDenom, sdk.NewInt(3000000)),
@@ -65,7 +64,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	icsKeeper.SetDelegation(
 		ctx,
 		&zone,
-		types.NewDelegation(
+		icstypes.NewDelegation(
 			zone.DelegationAddress.Address,
 			zoneValidatorAddresses[1],
 			sdk.NewCoin(zone.BaseDenom, sdk.NewInt(17000000)),
@@ -74,7 +73,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	icsKeeper.SetDelegation(
 		ctx,
 		&zone,
-		types.NewDelegation(
+		icstypes.NewDelegation(
 			zone.DelegationAddress.Address,
 			zoneValidatorAddresses[2],
 			sdk.NewCoin(zone.BaseDenom, sdk.NewInt(20000000)),
@@ -100,7 +99,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 }
 
 type delegationUpdate struct {
-	delegation types.Delegation
+	delegation icstypes.Delegation
 	absolute   bool
 }
 
@@ -116,83 +115,83 @@ func (suite *KeeperTestSuite) TestUpdateDelegation() {
 
 	tests := []struct {
 		name       string
-		delegation *types.Delegation
+		delegation *icstypes.Delegation
 		updates    []delegationUpdate
-		expected   types.Delegation
+		expected   icstypes.Delegation
 	}{
 		{
 			"single update, relative increase +3000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 					absolute:   false,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(6000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val1.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(6000))},
 		},
 		{
 			"single update, relative increase +3000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 					absolute:   true,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val2.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 		},
 		{
 			"multi update, relative increase +3000, +2000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 					absolute:   false,
 				},
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
 					absolute:   false,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(8000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val3.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(8000))},
 		},
 		{
 			"multi update, relative +3000, absolute +2000",
-			&types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+			&icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(3000))},
 					absolute:   false,
 				},
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
 					absolute:   true,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val4.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(2000))},
 		},
 		{
 			"new delegation, relative increase +10000",
 			nil,
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(10000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(10000))},
 					absolute:   false,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(10000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val5.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(10000))},
 		},
 		{
 			"new delegation, absolute increase +15000",
 			nil,
 			[]delegationUpdate{
 				{
-					delegation: types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(15000))},
+					delegation: icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(15000))},
 					absolute:   true,
 				},
 			},
-			types.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(15000))},
+			icstypes.Delegation{DelegationAddress: del1.String(), ValidatorAddress: val6.String(), Amount: sdk.NewCoin("denom", sdk.NewInt(15000))},
 		},
 	}
 
@@ -241,7 +240,7 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 		_, found = qApp.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegator.String(), validator.String())
 		suite.False(found)
 
-		newDelegation := types.NewDelegation(delegator.String(), validator.String(), sdk.NewCoin("uatom", sdk.NewInt(5000)))
+		newDelegation := icstypes.NewDelegation(delegator.String(), validator.String(), sdk.NewCoin("uatom", sdk.NewInt(5000)))
 		qApp.InterchainstakingKeeper.SetDelegation(ctx, &zone, newDelegation)
 
 		fetchedDelegation, found := qApp.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegator.String(), validator.String())
@@ -285,7 +284,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
 				receiptTwoTime := cutOffTime.Add(-3 * time.Hour)
 
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -299,7 +298,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -320,7 +319,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -339,7 +338,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
 				receiptTwoTime := cutOffTime.Add(2 * time.Hour)
 
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -353,7 +352,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -373,7 +372,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -390,7 +389,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour) // -26h
 				receiptTwoTime := cutOffTime.Add(2 * time.Hour)  // -22h
 
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -404,7 +403,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -425,7 +424,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -444,7 +443,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
 				receiptTwoTime := cutOffTime.Add(-3 * time.Hour)
 
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -458,7 +457,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -479,7 +478,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -498,7 +497,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
 				receiptTwoTime := cutOffTime.Add(2 * time.Hour)
 
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -512,7 +511,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -533,7 +532,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -550,7 +549,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
 				cutOffTime := ctx.BlockTime().AddDate(0, 0, -1)
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -564,7 +563,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: suite.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -585,7 +584,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -674,7 +673,7 @@ func (suite *KeeperTestSuite) TestDelegationPlan() {
 
 	currentAllocations, currentSum, _, _ := quicksilver.InterchainstakingKeeper.GetDelegationMap(ctx, &zone)
 
-	allocations, err := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
+	allocations, err := icstypes.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
 	suite.NoError(err)
 
 	for valoper, alloc := range allocations {
