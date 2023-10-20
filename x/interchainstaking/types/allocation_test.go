@@ -13,7 +13,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
-//// Delegation Allocation Tests
+// Delegation Allocation Tests
 
 // Test with valid inputs and expected outputs
 func TestValidInputs(t *testing.T) {
