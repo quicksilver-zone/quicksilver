@@ -1794,7 +1794,6 @@ func (suite *KeeperTestSuite) TestCheckTMHeaderForZone() {
 
 			err := qckApp.InterchainstakingKeeper.CheckTMHeaderForZone(ctx, &zone, txRes)
 			if tc.expectedErr {
-				fmt.Println(err)
 				suite.Error(err)
 			} else {
 				suite.NoError(err)
