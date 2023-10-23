@@ -27,10 +27,11 @@ func (k Keeper) IterateUserMappedAccounts(ctx sdk.Context, localAddress []byte, 
 	defer iterator.Close()
 
 	i := int64(0)
+	remoteAddrPrefixLen := len(types.GetRemoteAddressPrefix(localAddress))
 	for ; iterator.Valid(); iterator.Next() {
 		value := iterator.Value()
 		key := iterator.Key()
-		chainIDBytes := key[len(types.GetRemoteAddressPrefix(localAddress)):]
+		chainIDBytes := key[remoteAddrPrefixLen:]
 		stop := fn(i, string(chainIDBytes), value)
 		if stop {
 			break
