@@ -66,7 +66,6 @@ func (k *Keeper) SetWithdrawalRecord(ctx sdk.Context, record types.WithdrawalRec
 func (k *Keeper) UpdateWithdrawalRecordStatus(ctx sdk.Context, withdrawal *types.WithdrawalRecord, newStatus int32) {
 	k.DeleteWithdrawalRecord(ctx, withdrawal.ChainId, withdrawal.Txhash, withdrawal.Status)
 	withdrawal.Status = newStatus
-	fmt.Println("new completion time: ", withdrawal.CompletionTime)
 	k.SetWithdrawalRecord(ctx, *withdrawal)
 }
 
