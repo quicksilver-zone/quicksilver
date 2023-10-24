@@ -2880,13 +2880,13 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 		// trigger handler with testcases
 		testCases := []struct {
 			name          string
-			msg           banktypes.MsgSend
+			msg           sdk.Msg
 			memo          string
 			expectedError error
 		}{
 			{
 				name: "unexpected completed send",
-				msg: banktypes.MsgSend{
+				msg: &banktypes.MsgSend{
 					FromAddress: "",
 					ToAddress:   "",
 					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
@@ -2895,7 +2895,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			},
 			{
 				name: "is withdrawal address",
-				msg: banktypes.MsgSend{
+				msg: &banktypes.MsgSend{
 					FromAddress: zone.WithdrawalAddress.Address,
 					ToAddress:   "",
 					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
@@ -2904,7 +2904,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			},
 			{
 				name: "is to delegation address",
-				msg: banktypes.MsgSend{
+				msg: &banktypes.MsgSend{
 					FromAddress: zone.DepositAddress.Address,
 					ToAddress:   zone.DelegationAddress.Address,
 					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
@@ -2914,7 +2914,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			},
 			{
 				name: "is from delegation address", // There is a separate test for handles withdraw for user
-				msg: banktypes.MsgSend{
+				msg: &banktypes.MsgSend{
 					FromAddress: zone.DelegationAddress.Address,
 					ToAddress:   "",
 					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
@@ -2925,7 +2925,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 		}
 
 		for _, tc := range testCases {
-			err := quicksilver.InterchainstakingKeeper.HandleCompleteSend(ctx, &tc.msg, tc.memo)
+			err := quicksilver.InterchainstakingKeeper.HandleCompleteSend(ctx, tc.msg, tc.memo)
 			if tc.expectedError != nil {
 				suite.Equal(tc.expectedError, err)
 			} else {
