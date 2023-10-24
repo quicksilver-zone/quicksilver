@@ -2787,6 +2787,81 @@ func (suite *KeeperTestSuite) TestTriggerRedemptionRate() {
 	})
 }
 
+func (suite *KeeperTestSuite) TestGetValidatorForToken() {
+	tests := []struct {
+		name            string
+		err             bool
+		setupConnection bool
+		amount          func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coin
+		expectVal       func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) string
+	}{
+		{
+			name:            "Found validator",
+			err:             false,
+			setupConnection: true,
+			amount: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coin {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return sdk.NewCoin(vals[0]+"0x", sdk.NewInt(100))
+			},
+			expectVal: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) string {
+				vals := qs.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+				return vals[0]
+			},
+		},
+		{
+			name:            "Not found validator",
+			err:             true,
+			setupConnection: true,
+			amount: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coin {
+				return sdk.NewCoin("hello", sdk.NewInt(100))
+			},
+			expectVal: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) string {
+				return ""
+			},
+		},
+		{
+			name:            "Not setup connection",
+			err:             true,
+			setupConnection: false,
+			amount: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) sdk.Coin {
+				return sdk.NewCoin("hello", sdk.NewInt(100))
+			},
+			expectVal: func(ctx sdk.Context, qs *app.Quicksilver, zone icstypes.Zone) string {
+				return ""
+			},
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			if test.setupConnection {
+				ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+			}
+
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+
+			if !found {
+				suite.Fail("unable to retrieve zone for test")
+			}
+			amount := test.amount(ctx, quicksilver, zone)
+			resVal, err := quicksilver.InterchainstakingKeeper.GetValidatorForToken(ctx, amount)
+
+			if test.err {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+				expVal := test.expectVal(ctx, quicksilver, zone)
+				suite.Equal(expVal, resVal)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
 	v1 := addressutils.GenerateValAddressForTest().String()
 	v2 := addressutils.GenerateValAddressForTest().String()
