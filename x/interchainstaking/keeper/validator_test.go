@@ -85,7 +85,6 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidatorByConsAddr() {
 		suite.NoError(err)
 
 		app.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator.OperatorAddress, consAddr)
-		suite.NoError(err)
 
 		_, found = app.InterchainstakingKeeper.GetValidatorAddrByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))
 		suite.True(found)
