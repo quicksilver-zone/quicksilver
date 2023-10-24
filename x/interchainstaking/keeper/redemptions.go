@@ -91,14 +91,14 @@ func (k *Keeper) queueRedemption(
 	burnAmount sdk.Coin,
 	hash string,
 ) error { //nolint:unparam // we know that the error is always nil
-	distribution := make([]*types.Distribution, 0)
+	distributions := make([]*types.Distribution, 0)
 	amount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, nativeTokens))
 
 	k.AddWithdrawalRecord(
 		ctx,
 		zone.ChainId,
 		sender.String(),
-		distribution,
+		distributions,
 		destination,
 		amount,
 		burnAmount,
