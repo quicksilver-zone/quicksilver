@@ -229,7 +229,7 @@ func NewQuicksilver(
 	go func() {
 		// Unfortunately golangci-lint is so pedantic
 		// so we have to ignore this error explicitly.
-		_ = app.tpsCounter.start(context.Background()) //nolint:errcheck
+		_ = app.tpsCounter.start(context.Background()) // nolint:errcheck
 	}()
 
 	return app
