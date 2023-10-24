@@ -345,12 +345,6 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 				return err
 			}
 		} else if val.Jailed && !validator.IsJailed() {
-			consAddr, err := validator.GetConsAddr()
-			if err != nil {
-				return err
-			}
-			k.DeleteValidatorAddrByConsAddr(ctx, zone.ChainId, consAddr)
-
 			k.Logger(ctx).Info("Transitioning validator to unjailed state", "valoper", validator.OperatorAddress)
 
 			val.Jailed = false
