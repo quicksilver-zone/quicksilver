@@ -3068,8 +3068,6 @@ func (suite *KeeperTestSuite) TestHandleFailedBankSend() {
 	}
 }
 
-
-
 func (suite *KeeperTestSuite) TestHandleRedeemTokens() {
 	tests := []struct {
 		name                      string
