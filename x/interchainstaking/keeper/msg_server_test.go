@@ -595,6 +595,11 @@ func (suite *KeeperTestSuite) TestGovReopenChannel() {
 				return
 			}
 			suite.NoError(err)
+
+			// Check connection for port has been set
+			conn, err := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetConnectionForPort(ctx, msg.PortId)
+			suite.NoError(err)
+			suite.Equal(conn, msg.ConnectionId)
 		})
 	}
 }
