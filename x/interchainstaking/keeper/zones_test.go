@@ -243,20 +243,21 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 			Destination: vals[0].ValoperAddress,
 			Amount:      10000000,
 		})
-	// create related
+	// create delegation
 	delegation := types.Delegation{
 		DelegationAddress: zone.DelegationAddress.Address,
 		ValidatorAddress:  vals[1].ValoperAddress,
 		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 	}
 	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
-
+	// create pert delegation
 	perfDelegation := types.Delegation{
 		DelegationAddress: zone.PerformanceAddress.Address,
 		ValidatorAddress:  vals[1].ValoperAddress,
 		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 	}
 	quicksilver.InterchainstakingKeeper.SetPerformanceDelegation(ctx, &zone, perfDelegation)
+	// create receipt
 	cutOffTime := ctx.BlockTime().AddDate(0, 0, -1).Add(-2 * time.Hour)
 	rcpt := types.Receipt{
 		ChainId: chainID,
@@ -271,7 +272,7 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 		FirstSeen: &cutOffTime,
 	}
 	quicksilver.InterchainstakingKeeper.SetReceipt(ctx, rcpt)
-
+	// create withdrawal record
 	record := types.WithdrawalRecord{
 		ChainId:   chainID,
 		Delegator: zone.DelegationAddress.Address,
@@ -297,9 +298,25 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 	// Handle
 	quicksilver.InterchainstakingKeeper.RemoveZoneAndAssociatedRecords(ctx, chainID)
 
+	// check unbondings
+	_, found := quicksilver.InterchainstakingKeeper.GetUnbondingRecord(ctx, chainID, vals[0].ValoperAddress, 1)
+	suite.False(found, "Not found unbonding record stored in the keeper")
+
+	// check redelegations
+	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, chainID, vals[1].ValoperAddress, vals[0].ValoperAddress, 1)
+	suite.False(found, "Not found redelegation record stored in the keeper")
+
+	// check receipts
+	_, found = quicksilver.InterchainstakingKeeper.GetReceipt(ctx, types.GetReceiptKey(chainID, rcpt.Txhash))
+	suite.False(found, "Not found delegation stored in the keeper")
+
+	// check withdrawal records
+	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, chainID, record.Txhash, record.Status)
+	suite.False(found, "Not found delegation stored in the keeper")
+
 	// check zone
-	zone, ok = quicksilver.InterchainstakingKeeper.GetZone(ctx, chainID)
-	suite.False(ok, "No zone stored in the keeper")
+	zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, chainID)
+	suite.False(found, "No zone stored in the keeper")
 	suite.Equal(types.Zone{}, zone, "Expecting the blank zone")
 }
 
