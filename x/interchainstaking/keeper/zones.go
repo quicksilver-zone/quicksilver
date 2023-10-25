@@ -468,7 +468,7 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 			})
 			// remove receipts
 			k.IterateZoneReceipts(ctx, zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
-				k.DeleteReceipt(ctx, types.GetReceiptKey(receiptInfo.ChainId, receiptInfo.Txhash))
+				k.DeleteReceipt(ctx, receiptInfo.ChainId, receiptInfo.Txhash)
 				return false
 			})
 
