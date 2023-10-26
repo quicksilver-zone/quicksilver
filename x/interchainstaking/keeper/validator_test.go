@@ -94,3 +94,48 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidatorByConsAddr() {
 		suite.False(found)
 	})
 }
+
+func (suite *KeeperTestSuite) TestGetActiveValidators() {
+	suite.Run("active validators", func() {
+		suite.SetupTest()
+		suite.setupTestZones()
+
+		app := suite.GetQuicksilverApp(suite.chainA)
+		ctx := suite.chainA.GetContext()
+
+		zone, found := app.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.True(found)
+
+		validators := app.InterchainstakingKeeper.GetActiveValidators(ctx, "not a chain id")
+		suite.Len(validators, 0)
+
+		validators = app.InterchainstakingKeeper.GetActiveValidators(ctx, zone.ChainId)
+		count := len(validators)
+
+		validator1 := addressutils.GenerateValAddressForTest()
+		validator2 := addressutils.GenerateValAddressForTest()
+
+		newValidator1 := types.Validator{
+			ValoperAddress:  validator1.String(),
+			CommissionRate:  sdk.NewDec(5.0),
+			DelegatorShares: sdk.NewDec(1000.0),
+			VotingPower:     sdk.NewInt(1000),
+			Status:          stakingtypes.BondStatusBonded,
+			Score:           sdk.NewDec(0),
+		}
+		newValidator2 := newValidator1
+		newValidator2.ValoperAddress = validator2.String()
+		newValidator2.Status = stakingtypes.BondStatusUnbonded
+
+		err := app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newValidator1)
+		suite.NoError(err)
+
+		err = app.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, newValidator2)
+		suite.NoError(err)
+
+		validators = app.InterchainstakingKeeper.GetActiveValidators(ctx, zone.ChainId)
+		count2 := len(validators)
+
+		suite.Equal(count+1, count2)
+	})
+}
