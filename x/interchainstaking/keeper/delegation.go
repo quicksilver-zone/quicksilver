@@ -61,10 +61,10 @@ func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, val
 }
 
 // IterateAllDelegations iterates through all of the delegations.
-func (k *Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
+func (k *Keeper) IterateAllDelegations(ctx sdk.Context, chainID string, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(zone.ChainId)...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixDelegation, []byte(chainID)...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -76,8 +76,8 @@ func (k *Keeper) IterateAllDelegations(ctx sdk.Context, zone *types.Zone, cb fun
 }
 
 // GetAllDelegations returns all delegations used during genesis dump.
-func (k *Keeper) GetAllDelegations(ctx sdk.Context, zone *types.Zone) (delegations []types.Delegation) {
-	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
+func (k *Keeper) GetAllDelegations(ctx sdk.Context, chainID string) (delegations []types.Delegation) {
+	k.IterateAllDelegations(ctx, chainID, func(delegation types.Delegation) bool {
 		delegations = append(delegations, delegation)
 		return false
 	})
@@ -86,10 +86,10 @@ func (k *Keeper) GetAllDelegations(ctx sdk.Context, zone *types.Zone) (delegatio
 }
 
 // IterateAllPerformanceDelegations iterates through all of the delegations.
-func (k *Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone, cb func(delegation types.Delegation) (stop bool)) {
+func (k *Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, chainID string, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
 
-	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(zone.ChainId)...))
+	iterator := sdk.KVStorePrefixIterator(store, append(types.KeyPrefixPerformanceDelegation, []byte(chainID)...))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -101,8 +101,8 @@ func (k *Keeper) IterateAllPerformanceDelegations(ctx sdk.Context, zone *types.Z
 }
 
 // GetAllDelegations returns all delegations used during genesis dump.
-func (k *Keeper) GetAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone) (delegations []types.Delegation) {
-	k.IterateAllPerformanceDelegations(ctx, zone, func(delegation types.Delegation) bool {
+func (k *Keeper) GetAllPerformanceDelegations(ctx sdk.Context, chainID string) (delegations []types.Delegation) {
+	k.IterateAllPerformanceDelegations(ctx, chainID, func(delegation types.Delegation) bool {
 		delegations = append(delegations, delegation)
 		return false
 	})
@@ -111,8 +111,8 @@ func (k *Keeper) GetAllPerformanceDelegations(ctx sdk.Context, zone *types.Zone)
 }
 
 // GetAllDelegations returns all delegations used during genesis dump.
-func (k *Keeper) GetAllDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (delegations []*types.Delegation) {
-	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
+func (k *Keeper) GetAllDelegationsAsPointer(ctx sdk.Context, chainID string) (delegations []*types.Delegation) {
+	k.IterateAllDelegations(ctx, chainID, func(delegation types.Delegation) bool {
 		delegations = append(delegations, &delegation)
 		return false
 	})
@@ -121,8 +121,8 @@ func (k *Keeper) GetAllDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (
 }
 
 // GetAllDelegations returns all delegations used during genesis dump.
-func (k *Keeper) GetAllPerformanceDelegationsAsPointer(ctx sdk.Context, zone *types.Zone) (delegations []*types.Delegation) {
-	k.IterateAllPerformanceDelegations(ctx, zone, func(delegation types.Delegation) bool {
+func (k *Keeper) GetAllPerformanceDelegationsAsPointer(ctx sdk.Context, chainID string) (delegations []*types.Delegation) {
+	k.IterateAllPerformanceDelegations(ctx, chainID, func(delegation types.Delegation) bool {
 		delegations = append(delegations, &delegation)
 		return false
 	})
@@ -204,7 +204,7 @@ func (*Keeper) PrepareDelegationMessagesForShares(zone *types.Zone, coins sdk.Co
 }
 
 func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]sdkmath.Int, error) {
-	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone.ChainId)
 	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
 	if err != nil {
 		return nil, err
@@ -250,13 +250,13 @@ func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *typ
 	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, "", zone.MessagesPerTx)
 }
 
-func (k *Keeper) GetDelegationMap(ctx sdk.Context, zone *types.Zone) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool, lockedSum sdkmath.Int) {
+func (k *Keeper) GetDelegationMap(ctx sdk.Context, chainID string) (out map[string]sdkmath.Int, sum sdkmath.Int, locked map[string]bool, lockedSum sdkmath.Int) {
 	out = make(map[string]sdkmath.Int)
 	locked = make(map[string]bool)
 	sum = sdk.ZeroInt()
 	lockedSum = sdk.ZeroInt()
 
-	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) bool {
+	k.IterateAllDelegations(ctx, chainID, func(delegation types.Delegation) bool {
 		out[delegation.ValidatorAddress] = delegation.Amount.Amount
 		if delegation.RedelegationEnd >= ctx.BlockTime().Unix() {
 			locked[delegation.ValidatorAddress] = true
@@ -282,7 +282,7 @@ func (k *Keeper) MakePerformanceDelegation(ctx sdk.Context, zone *types.Zone, va
 func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, delAddrBalance sdk.Coin) error {
 	var pendingAmount sdk.Coins
 	exclusionTime := ctx.BlockTime().AddDate(0, 0, -1)
-	k.IterateZoneReceipts(ctx, zone, func(_ int64, receiptInfo types.Receipt) (stop bool) {
+	k.IterateZoneReceipts(ctx, zone.ChainId, func(_ int64, receiptInfo types.Receipt) (stop bool) {
 		if (receiptInfo.FirstSeen.After(exclusionTime) || receiptInfo.FirstSeen.Equal(exclusionTime)) && receiptInfo.Completed == nil {
 			pendingAmount = pendingAmount.Add(receiptInfo.Amount...)
 		}
@@ -292,7 +292,7 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	coinsToFlush, hasNeg := sdk.NewCoins(delAddrBalance).SafeSub(pendingAmount...)
 	if hasNeg || coinsToFlush.IsZero() {
 		k.Logger(ctx).Debug("delegate account balance negative, setting outdated reciepts")
-		k.SetReceiptsCompleted(ctx, zone, exclusionTime, ctx.BlockTime())
+		k.SetReceiptsCompleted(ctx, zone.ChainId, exclusionTime, ctx.BlockTime())
 		return nil
 	}
 

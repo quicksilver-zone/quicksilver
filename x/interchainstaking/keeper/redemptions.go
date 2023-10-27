@@ -108,7 +108,7 @@ func (k *Keeper) queueRedemption(
 func (k *Keeper) GetUnlockedTokensForZone(ctx sdk.Context, zone *types.Zone) (map[string]math.Int, math.Int, error) {
 	availablePerValidator := make(map[string]math.Int, len(zone.Validators))
 	total := sdk.ZeroInt()
-	for _, delegation := range k.GetAllDelegations(ctx, zone) {
+	for _, delegation := range k.GetAllDelegations(ctx, zone.ChainId) {
 		thisAvailable, found := availablePerValidator[delegation.ValidatorAddress]
 		if !found {
 			thisAvailable = sdk.ZeroInt()
@@ -277,7 +277,7 @@ func (k *Keeper) GCCompletedUnbondings(ctx sdk.Context, zone *types.Zone) error 
 }
 
 func (k *Keeper) DeterminePlanForUndelegation(ctx sdk.Context, zone *types.Zone, amount sdk.Coins) (map[string]math.Int, error) {
-	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, _, _ := k.GetDelegationMap(ctx, zone.ChainId)
 	availablePerValidator, _, err := k.GetUnlockedTokensForZone(ctx, zone)
 	if err != nil {
 		return nil, err

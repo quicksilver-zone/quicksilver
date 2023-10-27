@@ -273,7 +273,7 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 
 	count = 0
 	sum := 0
-	icsKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+	icsKeeper.IterateZoneReceipts(ctx, zone.ChainId, func(index int64, receiptInfo types.Receipt) (stop bool) {
 		count++
 		sum += int(receiptInfo.Amount.AmountOf("uatom").Int64())
 		return false
@@ -284,7 +284,7 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 
 	count = 0
 	sum = 0
-	icsKeeper.IterateZoneReceipts(ctx, &zone2, func(index int64, receiptInfo types.Receipt) (stop bool) {
+	icsKeeper.IterateZoneReceipts(ctx, zone2.ChainId, func(index int64, receiptInfo types.Receipt) (stop bool) {
 		count++
 		sum += int(receiptInfo.Amount.AmountOf("uosmo").Int64())
 		return false
@@ -310,7 +310,7 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 	suite.Equal(1, len(out))
 	suite.Equal(&now, out[0].Completed)
 
-	icsKeeper.SetReceiptsCompleted(ctx, &zone, now, now)
+	icsKeeper.SetReceiptsCompleted(ctx, zone.ChainId, now, now)
 
 	receipt, found = icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash3))
 	suite.True(found)

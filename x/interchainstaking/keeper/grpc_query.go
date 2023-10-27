@@ -183,7 +183,7 @@ func (k *Keeper) Delegations(c context.Context, req *types.QueryDelegationsReque
 	delegations := make([]types.Delegation, 0)
 	var sum int64
 
-	k.IterateAllDelegations(ctx, &zone, func(delegation types.Delegation) (stop bool) {
+	k.IterateAllDelegations(ctx, zone.ChainId, func(delegation types.Delegation) (stop bool) {
 		delegations = append(delegations, delegation)
 		sum += delegation.Amount.Amount.Int64()
 		return false
@@ -207,7 +207,7 @@ func (k *Keeper) Receipts(c context.Context, req *types.QueryReceiptsRequest) (*
 
 	receipts := make([]types.Receipt, 0)
 
-	k.IterateZoneReceipts(ctx, &zone, func(_ int64, receipt types.Receipt) (stop bool) {
+	k.IterateZoneReceipts(ctx, zone.ChainId, func(_ int64, receipt types.Receipt) (stop bool) {
 		receipts = append(receipts, receipt)
 		return false
 	})

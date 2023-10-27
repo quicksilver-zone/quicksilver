@@ -24,10 +24,10 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	suite.True(found)
 	zoneValidatorAddresses := suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
 
-	performanceDelegations := icsKeeper.GetAllPerformanceDelegations(ctx, &zone)
+	performanceDelegations := icsKeeper.GetAllPerformanceDelegations(ctx, zone.ChainId)
 	suite.Len(performanceDelegations, 4)
 
-	performanceDelegationPointers := icsKeeper.GetAllPerformanceDelegationsAsPointer(ctx, &zone)
+	performanceDelegationPointers := icsKeeper.GetAllPerformanceDelegationsAsPointer(ctx, zone.ChainId)
 	for i, pdp := range performanceDelegationPointers {
 		suite.Equal(performanceDelegations[i], *pdp)
 	}
@@ -45,7 +45,7 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	suite.Equal(updateDelegation, updatedDelegation)
 
 	// check that there are no delegations
-	delegations := icsKeeper.GetAllDelegations(ctx, &zone)
+	delegations := icsKeeper.GetAllDelegations(ctx, zone.ChainId)
 	suite.Len(delegations, 0)
 
 	// set delegations
@@ -78,11 +78,11 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	)
 
 	// check for delegations set above
-	delegations = icsKeeper.GetAllDelegations(ctx, &zone)
+	delegations = icsKeeper.GetAllDelegations(ctx, zone.ChainId)
 	suite.Len(delegations, 3)
 
 	// load and match pointers
-	delegationPointers := icsKeeper.GetAllDelegationsAsPointer(ctx, &zone)
+	delegationPointers := icsKeeper.GetAllDelegationsAsPointer(ctx, zone.ChainId)
 	for i, dp := range delegationPointers {
 		suite.Equal(delegations[i], *dp)
 	}
@@ -244,13 +244,13 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteDelegation() {
 		suite.True(found)
 		suite.Equal(newDelegation, fetchedDelegation)
 
-		allDelegations := qApp.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)
+		allDelegations := qApp.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)
 		suite.Len(allDelegations, 1)
 
 		err := qApp.InterchainstakingKeeper.RemoveDelegation(ctx, &zone, newDelegation)
 		suite.NoError(err)
 
-		allDelegations2 := qApp.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)
+		allDelegations2 := qApp.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)
 		suite.Len(allDelegations2, 0)
 	})
 }
@@ -316,7 +316,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, zone.ChainId, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -369,7 +369,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, zone.ChainId, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -421,7 +421,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, zone.ChainId, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -475,7 +475,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, zone.ChainId, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -529,7 +529,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, zone.ChainId, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -581,7 +581,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, zone.ChainId, func(index int64, receiptInfo types.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}

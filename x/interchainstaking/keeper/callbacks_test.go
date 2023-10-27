@@ -1459,7 +1459,7 @@ func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
 	}
 
 	suite.Equal(0, delegationRequests)
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
@@ -1508,7 +1508,7 @@ func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
 	}
 
 	suite.Equal(1, delegationRequests)
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDelegationsCallbackOneMissing(t *testing.T) {
@@ -1555,8 +1555,8 @@ func TestDelegationsCallbackOneMissing(t *testing.T) {
 		}
 	}
 
-	suite.Equal(1, delegationRequests)                                                     // callback for 'missing' delegation.
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))) // new delegation doesn't get removed until the callback.
+	suite.Equal(1, delegationRequests)                                                            // callback for 'missing' delegation.
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId))) // new delegation doesn't get removed until the callback.
 }
 
 func TestDelegationsCallbackOneAdditional(t *testing.T) {
@@ -1606,7 +1606,7 @@ func TestDelegationsCallbackOneAdditional(t *testing.T) {
 	}
 
 	suite.Equal(1, delegationRequests)
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))) // new delegation doesn't get added until the end
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId))) // new delegation doesn't get added until the end
 }
 
 func TestDelegationCallbackNew(t *testing.T) {
@@ -1645,7 +1645,7 @@ func TestDelegationCallbackNew(t *testing.T) {
 	err = keeper.DelegationCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 	suite.NoError(err)
 
-	suite.Equal(4, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(4, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDelegationCallbackUpdate(t *testing.T) {
@@ -1684,7 +1684,7 @@ func TestDelegationCallbackUpdate(t *testing.T) {
 	err = keeper.DelegationCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 	suite.NoError(err)
 
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDelegationCallbackNoOp(t *testing.T) {
@@ -1723,7 +1723,7 @@ func TestDelegationCallbackNoOp(t *testing.T) {
 	err = keeper.DelegationCallback(quicksilver.InterchainstakingKeeper, ctx, data, icqtypes.Query{ChainId: suite.chainB.ChainID, Request: bz})
 	suite.NoError(err)
 
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDelegationCallbackRemove(t *testing.T) {
@@ -1769,7 +1769,7 @@ func TestDelegationCallbackRemove(t *testing.T) {
 		}
 	}
 
-	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, &zone)))
+	suite.Equal(3, len(quicksilver.InterchainstakingKeeper.GetAllDelegations(ctx, zone.ChainId)))
 }
 
 func TestDepositIntervalCallback(t *testing.T) {

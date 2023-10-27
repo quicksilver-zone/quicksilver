@@ -537,9 +537,9 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 	)
 }
 
-func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkmath.Int {
+func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, chainID string) sdkmath.Int {
 	delegationsInProcess := sdkmath.ZeroInt()
-	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
+	k.IterateZoneReceipts(ctx, chainID, func(_ int64, receipt types.Receipt) (stop bool) {
 		if receipt.Completed == nil {
 			for _, coin := range receipt.Amount {
 				delegationsInProcess = delegationsInProcess.Add(coin.Amount) // we cannot simply choose
@@ -553,7 +553,7 @@ func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkm
 // redemption rate
 
 func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
-	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone)
+	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone.ChainId)
 	ratio, isZero := k.GetRatio(ctx, zone, epochRewards.Add(delegationsInProcess))
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
@@ -641,7 +641,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64) error {
-	currentAllocations, currentSum, currentLocked, lockedSum := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, currentLocked, lockedSum := k.GetDelegationMap(ctx, zone.ChainId)
 	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
 	if err != nil {
 		return err
