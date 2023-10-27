@@ -451,7 +451,7 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 		if zone.ChainId == chainID {
 			// remove uni-5 delegation records
 			k.IterateAllDelegations(ctx, chainID, func(delegation types.Delegation) (stop bool) {
-				err := k.RemoveDelegation(ctx, zone, delegation)
+				err := k.RemoveDelegation(ctx, chainID, delegation)
 				if err != nil {
 					panic(err)
 				}
@@ -460,7 +460,7 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 
 			// remove performance delegation records
 			k.IterateAllPerformanceDelegations(ctx, chainID, func(delegation types.Delegation) (stop bool) {
-				err := k.RemoveDelegation(ctx, zone, delegation)
+				err := k.RemoveDelegation(ctx, chainID, delegation)
 				if err != nil {
 					panic(err)
 				}

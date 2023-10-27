@@ -498,7 +498,7 @@ func (suite *KeeperTestSuite) TestKeeper_Delegations() {
 					ValidatorAddress:  icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 					Amount:            sdk.NewCoin("denom", sdk.NewInt(15000)),
 				}
-				icsKeeper.SetDelegation(ctx, &zone, delegation)
+				icsKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 			},
 			&types.QueryDelegationsRequest{
 				ChainId: suite.chainB.ChainID,

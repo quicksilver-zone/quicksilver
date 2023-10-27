@@ -29,7 +29,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 			panic("unable to find zone for delegation")
 		}
 		for _, delegation := range delegationForZone.Delegations {
-			k.SetDelegation(ctx, &zone, *delegation)
+			k.SetDelegation(ctx, zone.ChainId, *delegation)
 		}
 	}
 
@@ -39,7 +39,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 			panic("unable to find zone for delegation")
 		}
 		for _, delegation := range perfDelegationForZone.Delegations {
-			k.SetPerformanceDelegation(ctx, &zone, *delegation)
+			k.SetPerformanceDelegation(ctx, zone.ChainId, *delegation)
 		}
 	}
 

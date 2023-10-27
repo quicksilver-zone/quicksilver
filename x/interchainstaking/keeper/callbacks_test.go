@@ -852,7 +852,7 @@ func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
 				suite.Equal(balances[0], qAssetAmount)
 
 				delegation := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(100_000_000))}
-				quicksilver.InterchainstakingKeeper.SetDelegation(ctxA, &zone, delegation)
+				quicksilver.InterchainstakingKeeper.SetDelegation(ctxA, zone.ChainId, delegation)
 			},
 			connectionSetup: func() string {
 				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
@@ -1432,9 +1432,9 @@ func TestDelegationsCallbackAllPresentNoChange(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
 		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
@@ -1481,9 +1481,9 @@ func TestDelegationsCallbackAllPresentOneChange(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
 		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
@@ -1530,9 +1530,9 @@ func TestDelegationsCallbackOneMissing(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
 		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
@@ -1578,9 +1578,9 @@ func TestDelegationsCallbackOneAdditional(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.QueryDelegatorDelegationsResponse{DelegationResponses: []stakingtypes.DelegationResponse{
 		{Delegation: stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Shares: sdk.NewDec(1000)}, Balance: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))},
@@ -1628,9 +1628,9 @@ func TestDelegationCallbackNew(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[3].OperatorAddress, Shares: sdk.NewDec(1000)}
 
@@ -1667,9 +1667,9 @@ func TestDelegationCallbackUpdate(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Shares: sdk.NewDec(2000)}
 
@@ -1706,9 +1706,9 @@ func TestDelegationCallbackNoOp(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.Delegation{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Shares: sdk.NewDec(1000)}
 
@@ -1745,9 +1745,9 @@ func TestDelegationCallbackRemove(t *testing.T) {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationA)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationB)
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegationC)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	response := stakingtypes.Delegation{}
 
