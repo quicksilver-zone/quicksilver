@@ -322,7 +322,7 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, chainID, record.Txhash, record.Status)
 	suite.False(found, "Not found withdrawal records stored in the keeper")
 
-	// check validator
+	// check validators
 	vals = quicksilver.InterchainstakingKeeper.GetValidators(ctx, chainID)
 	suite.Equal(len(vals), 0)
 
