@@ -306,13 +306,21 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, chainID, vals[1].ValoperAddress, vals[0].ValoperAddress, 1)
 	suite.False(found, "Not found redelegation record stored in the keeper")
 
+	// // check delegation
+	// _, found = quicksilver.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegation.DelegationAddress, delegation.ValidatorAddress)
+	// suite.False(found, "Not found delegation stored in the keeper")
+
+	// // check pert delegation
+	// _, found = quicksilver.InterchainstakingKeeper.GetPerformanceDelegation(ctx, &zone, perfDelegation.ValidatorAddress)
+	// suite.False(found, "Not found pert delegation stored in the keeper")
+
 	// check receipts
 	_, found = quicksilver.InterchainstakingKeeper.GetReceipt(ctx, types.GetReceiptKey(chainID, rcpt.Txhash))
-	suite.False(found, "Not found delegation stored in the keeper")
+	suite.False(found, "Not found receipts stored in the keeper")
 
 	// check withdrawal records
 	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, chainID, record.Txhash, record.Status)
-	suite.False(found, "Not found delegation stored in the keeper")
+	suite.False(found, "Not found withdrawal records stored in the keeper")
 
 	// check zone
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, chainID)
