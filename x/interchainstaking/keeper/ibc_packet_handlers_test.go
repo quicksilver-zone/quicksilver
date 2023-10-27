@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -2858,6 +2859,87 @@ func (suite *KeeperTestSuite) TestGetValidatorForToken() {
 				suite.NoError(err)
 				expVal := test.expectVal(ctx, quicksilver, zone)
 				suite.Equal(expVal, resVal)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestHandleCompleteSend() {
+	testCases := []struct {
+		name          string
+		message       func(zone *icstypes.Zone) sdk.Msg
+		memo          string
+		expectedError error
+	}{
+		{
+			name: "unexpected completed send",
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: "",
+					ToAddress:   "",
+					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+				}
+			},
+			expectedError: errors.New("unexpected completed send (2) from  to  (amount: 1000000uatom)"),
+		},
+		{
+			name: "From WithdrawalAddress",
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.WithdrawalAddress.Address,
+					ToAddress:   "",
+					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+				}
+			},
+			expectedError: nil,
+		},
+		{
+			name: "From DepositAddress to DelegateAddress",
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.DepositAddress.Address,
+					ToAddress:   zone.DelegationAddress.Address,
+					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+				}
+			},
+			memo:          "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			expectedError: nil,
+		},
+		{
+			name: "From DepositAddress",
+			message: func(zone *icstypes.Zone) sdk.Msg {
+				return &banktypes.MsgSend{
+					FromAddress: zone.DelegationAddress.Address,
+					ToAddress:   "",
+					Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+				}
+			},
+			memo:          "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			expectedError: errors.New("no matching withdrawal record found"),
+		},
+	}
+
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+			ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			if !found {
+				suite.Fail("unable to retrieve zone for test")
+			}
+			quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", TestChannel)
+
+			msg := tc.message(&zone)
+
+			err := quicksilver.InterchainstakingKeeper.HandleCompleteSend(ctx, msg, tc.memo)
+			if tc.expectedError != nil {
+				suite.Equal(tc.expectedError, err)
+			} else {
+				suite.NoError(err)
 			}
 		})
 	}
