@@ -2906,7 +2906,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			expectedError: nil,
 		},
 		{
-			name: "From DepositAddress"
+			name: "From DepositAddress",
 			message: func(zone *icstypes.Zone) sdk.Msg {
 				return &banktypes.MsgSend{
 					FromAddress: zone.DelegationAddress.Address,
