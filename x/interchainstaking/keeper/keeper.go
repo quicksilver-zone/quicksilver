@@ -340,7 +340,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			return err
 		}
 
-		if _, found := k.GetPerformanceDelegation(ctx, zone, validator.OperatorAddress); !found {
+		if _, found := k.GetPerformanceDelegation(ctx, zone.ChainId, zone.PerformanceAddress, validator.OperatorAddress); !found {
 			if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 				return err
 			}

@@ -38,17 +38,17 @@ func (k *Keeper) GetDelegation(ctx sdk.Context, chainID string, delegatorAddress
 }
 
 // GetPerformanceDelegation returns a specific delegation.
-func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, zone *types.Zone, validatorAddress string) (delegation types.Delegation, found bool) {
-	if zone.PerformanceAddress == nil {
+func (k *Keeper) GetPerformanceDelegation(ctx sdk.Context, chainID string, performanceAddress *types.ICAAccount, validatorAddress string) (delegation types.Delegation, found bool) {
+	if performanceAddress == nil {
 		return types.Delegation{}, false
 	}
 
 	store := ctx.KVStore(k.storeKey)
 
-	_, delAddr, _ := bech32.DecodeAndConvert(zone.PerformanceAddress.Address)
+	_, delAddr, _ := bech32.DecodeAndConvert(performanceAddress.Address)
 	_, valAddr, _ := bech32.DecodeAndConvert(validatorAddress)
 
-	key := types.GetPerformanceDelegationKey(zone.ChainId, delAddr, valAddr)
+	key := types.GetPerformanceDelegationKey(chainID, delAddr, valAddr)
 
 	value := store.Get(key)
 	if value == nil {

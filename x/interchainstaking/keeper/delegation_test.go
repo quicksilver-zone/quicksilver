@@ -33,14 +33,14 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	}
 
 	// update performance delegation
-	updateDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
+	updateDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, zone.ChainId, zone.PerformanceAddress, zoneValidatorAddresses[0])
 	suite.True(found)
 	suite.Equal(uint64(0), updateDelegation.Amount.Amount.Uint64())
 
 	updateDelegation.Amount.Amount = sdkmath.NewInt(10000)
 	icsKeeper.SetPerformanceDelegation(ctx, zone.ChainId, updateDelegation)
 
-	updatedDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, &zone, zoneValidatorAddresses[0])
+	updatedDelegation, found := icsKeeper.GetPerformanceDelegation(ctx, zone.ChainId, zone.PerformanceAddress, zoneValidatorAddresses[0])
 	suite.True(found)
 	suite.Equal(updateDelegation, updatedDelegation)
 
