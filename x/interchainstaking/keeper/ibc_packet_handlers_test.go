@@ -2906,7 +2906,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			expectedError: nil,
 		},
 		{
-			name: "is from delegation address", // There is a separate test for handles withdraw for user
+			name: "From DepositAddress"
 			message: func(zone *icstypes.Zone) sdk.Msg {
 				return &banktypes.MsgSend{
 					FromAddress: zone.DelegationAddress.Address,
