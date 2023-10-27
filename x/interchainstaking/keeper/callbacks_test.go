@@ -11,15 +11,19 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	ibctypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
+	channeltypes "github.com/cosmos/ibc-go/v5/modules/core/04-channel/types"
 	lightclienttypes "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
@@ -800,6 +804,230 @@ func (suite *KeeperTestSuite) TestHandleValideRewardsCallback() {
 		//
 		suite.NoError(err)
 	})
+}
+
+func (suite *KeeperTestSuite) TestHandleDistributeRewardsCallback() {
+	suite.SetupTest()
+	suite.setupTestZones()
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	gaia := suite.GetQuicksilverApp(suite.chainB)
+	quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+
+	ctxA := suite.chainA.GetContext()
+	ctxB := suite.chainB.GetContext()
+	vals := gaia.StakingKeeper.GetAllValidators(ctxB)
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
+	suite.True(found)
+	params := quicksilver.InterchainstakingKeeper.GetParams(ctxA)
+	commisionRate := sdk.MustNewDecFromStr("0.2")
+	params.CommissionRate = commisionRate
+	quicksilver.InterchainstakingKeeper.SetParams(ctxA, params)
+
+	prevRedemptionRate := zone.RedemptionRate
+	tests := []struct {
+		name            string
+		zoneSetup       func()
+		connectionSetup func() string
+		responseMsg     func() []byte
+		queryMsg        icqtypes.Query
+		check           func()
+		pass            bool
+	}{
+		{
+			// delta = ratio / redemption_rate
+			// The original redemption rate is 1 so if ratio exceed (-0.95, 1.02) range,
+			// it would be kept in the boundary
+			name: "valid case with positive rewards and -95% < delta < 102%",
+			zoneSetup: func() {
+				balances := sdk.NewCoins(
+					sdk.NewCoin(
+						zone.LocalDenom,
+						math.NewInt(100_000_000),
+					),
+				)
+				err := quicksilver.MintKeeper.MintCoins(ctxA, balances)
+				suite.NoError(err)
+				qAssetAmount := quicksilver.BankKeeper.GetSupply(ctxA, zone.LocalDenom)
+				suite.Equal(balances[0], qAssetAmount)
+
+				delegation := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[0].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(100_000_000))}
+				quicksilver.InterchainstakingKeeper.SetDelegation(ctxA, &zone, delegation)
+			},
+			connectionSetup: func() string {
+				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icstypes.TransferPort, ChannelId: channelID}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+				quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, icstypes.TransferPort, channelID, 1)
+				return channelID
+			},
+			responseMsg: func() []byte {
+				balances := sdk.NewCoins(
+					sdk.NewCoin(
+						zone.BaseDenom,
+						math.NewInt(1_000_000),
+					),
+				)
+
+				response := banktypes.QueryAllBalancesResponse{
+					Balances: balances,
+				}
+				respbz, err := quicksilver.AppCodec().Marshal(&response)
+				suite.NoError(err)
+				return respbz
+			},
+			queryMsg: icqtypes.Query{ChainId: suite.chainB.ChainID},
+			check: func() {
+				zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
+				redemptionRate := zone.RedemptionRate
+
+				// The ratio is calculated as:
+				// ratio = (total_delegate + total_unbonding + epoch_rewards) / total_q_asset
+				// total_delegate = total_q_asset = 100_000_000
+				// total_unbonding = 0
+				// epoch_rewards = balances * (1 - commission_rate) = 1_000_000 * 0.8
+				// Therefore, ratio should be 1.008
+				ratio := sdk.MustNewDecFromStr("1.008")
+				suite.Equal(ratio.Mul(prevRedemptionRate), redemptionRate)
+			},
+			pass: true,
+		},
+		{
+			name:      "valid case with no rewards",
+			zoneSetup: func() {},
+			connectionSetup: func() string {
+				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icstypes.TransferPort, ChannelId: channelID}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+				quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, icstypes.TransferPort, channelID, 1)
+				return channelID
+			},
+			responseMsg: func() []byte {
+				response := banktypes.QueryAllBalancesResponse{
+					Balances: sdk.Coins{},
+				}
+				respbz, err := quicksilver.AppCodec().Marshal(&response)
+				suite.NoError(err)
+				return respbz
+			},
+			queryMsg: icqtypes.Query{ChainId: suite.chainB.ChainID},
+			check: func() {
+				zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctxA, suite.chainB.ChainID)
+				redemptionRate := zone.RedemptionRate
+
+				suite.Equal(prevRedemptionRate, redemptionRate)
+			},
+			pass: true,
+		},
+		{
+			name:      "invalid chainId query",
+			zoneSetup: func() {},
+			connectionSetup: func() string {
+				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icstypes.TransferPort, ChannelId: channelID}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+				quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, icstypes.TransferPort, channelID, 1)
+				return channelID
+			},
+			responseMsg: func() []byte {
+				balances := sdk.NewCoins(
+					sdk.NewCoin(
+						zone.BaseDenom,
+						math.NewInt(10_000_000),
+					),
+				)
+
+				response := banktypes.QueryAllBalancesResponse{
+					Balances: balances,
+				}
+				respbz, err := quicksilver.AppCodec().Marshal(&response)
+				suite.NoError(err)
+				return respbz
+			},
+			queryMsg: icqtypes.Query{ChainId: ""},
+			check:    func() {},
+			pass:     false,
+		},
+		{
+			name:      "invalid response",
+			zoneSetup: func() {},
+			connectionSetup: func() string {
+				channelID := quicksilver.IBCKeeper.ChannelKeeper.GenerateChannelIdentifier(ctxA)
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channeltypes.Channel{State: channeltypes.OPEN, Ordering: channeltypes.ORDERED, Counterparty: channeltypes.Counterparty{PortId: icstypes.TransferPort, ChannelId: channelID}, ConnectionHops: []string{suite.path.EndpointA.ConnectionID}})
+				quicksilver.IBCKeeper.ChannelKeeper.SetNextSequenceSend(ctxA, icstypes.TransferPort, channelID, 1)
+				return channelID
+			},
+			responseMsg: func() []byte {
+				balance := sdk.NewCoin(
+					zone.BaseDenom,
+					math.NewInt(10_000_000),
+				)
+				respbz, err := quicksilver.AppCodec().Marshal(&balance)
+				suite.NoError(err)
+				return respbz
+			},
+			queryMsg: icqtypes.Query{ChainId: suite.chainB.ChainID},
+			check:    func() {},
+			pass:     false,
+		},
+		{
+			name:      "no connection setup",
+			zoneSetup: func() {},
+			connectionSetup: func() string {
+				return ""
+			},
+			responseMsg: func() []byte {
+				balances := sdk.NewCoins(
+					sdk.NewCoin(
+						zone.BaseDenom,
+						math.NewInt(10_000_000),
+					),
+				)
+
+				response := banktypes.QueryAllBalancesResponse{
+					Balances: balances,
+				}
+				respbz, err := quicksilver.AppCodec().Marshal(&response)
+				suite.NoError(err)
+				return respbz
+			},
+			queryMsg: icqtypes.Query{ChainId: suite.chainB.ChainID},
+			check:    func() {},
+			pass:     false,
+		},
+	}
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			// Send coin to withdrawal address
+			balances := sdk.NewCoins(
+				sdk.NewCoin(
+					zone.BaseDenom,
+					math.NewInt(10_000_000),
+				),
+			)
+			err := gaia.MintKeeper.MintCoins(ctxB, balances)
+			suite.NoError(err)
+			addr, err := addressutils.AccAddressFromBech32(zone.WithdrawalAddress.Address, "")
+			suite.NoError(err)
+			err = gaia.BankKeeper.SendCoinsFromModuleToAccount(ctxB, minttypes.ModuleName, addr, balances)
+			suite.NoError(err)
+
+			test.zoneSetup()
+			channelID := test.connectionSetup()
+
+			respbz := test.responseMsg()
+			err = keeper.DistributeRewardsFromWithdrawAccount(quicksilver.InterchainstakingKeeper, ctxA, respbz, test.queryMsg)
+			if test.pass {
+				suite.NoError(err)
+			} else {
+				suite.Error(err)
+			}
+
+			test.check()
+			channel, found := quicksilver.IBCKeeper.ChannelKeeper.GetChannel(ctxA, icstypes.TransferPort, channelID)
+			if found {
+				channel.State = channeltypes.CLOSED
+				quicksilver.IBCKeeper.ChannelKeeper.SetChannel(ctxA, icstypes.TransferPort, channelID, channel)
+			}
+		})
+	}
 }
 
 func (suite *KeeperTestSuite) TestAllBalancesCallback() {
