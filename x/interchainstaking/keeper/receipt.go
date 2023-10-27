@@ -317,7 +317,8 @@ func (Keeper) NewReceipt(ctx sdk.Context, zone *types.Zone, sender, txhash strin
 }
 
 // GetReceipt returns receipt for the given key.
-func (k *Keeper) GetReceipt(ctx sdk.Context, key string) (types.Receipt, bool) {
+func (k *Keeper) GetReceipt(ctx sdk.Context, chainID, txHash string) (types.Receipt, bool) {
+	key := types.GetReceiptKey(chainID, txHash)
 	receipt := types.Receipt{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
 	bz := store.Get([]byte(key))
@@ -337,7 +338,8 @@ func (k *Keeper) SetReceipt(ctx sdk.Context, receipt types.Receipt) {
 }
 
 // DeleteReceipt delete receipt info.
-func (k *Keeper) DeleteReceipt(ctx sdk.Context, key string) {
+func (k *Keeper) DeleteReceipt(ctx sdk.Context, chainID, txHash string) {
+	key := types.GetReceiptKey(chainID, txHash)
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixReceipt)
 	store.Delete([]byte(key))
 }

@@ -937,7 +937,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 			}
 		}
 	default:
-		receipt, found := k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, memo))
+		receipt, found := k.GetReceipt(ctx, zone.ChainId, memo)
 		if !found {
 			return fmt.Errorf("unable to find receipt for hash %s", memo)
 		}
