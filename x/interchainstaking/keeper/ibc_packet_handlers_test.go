@@ -911,6 +911,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUnbondSend() {
 					suite.Fail("unable to retrieve new withdrawal record for test")
 				}
 				suite.Equal(ctx.BlockTime().Add(icstypes.DefaultWithdrawalRequeueDelay), newRecord.CompletionTime)
+				suite.Equal(newRecord.Status, icstypes.WithdrawStatusUnbond)
 			}
 		})
 	}
