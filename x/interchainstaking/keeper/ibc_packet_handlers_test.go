@@ -2883,7 +2883,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			expectedError: errors.New("unexpected completed send (2) from  to  (amount: 1000000uatom)"),
 		},
 		{
-			name: "is withdrawal address",
+			name: "From WithdrawalAddress",
 			message: func(zone *icstypes.Zone) sdk.Msg {
 				return &banktypes.MsgSend{
 					FromAddress: zone.WithdrawalAddress.Address,
