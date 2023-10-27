@@ -2894,7 +2894,7 @@ func (suite *KeeperTestSuite) TestHandleCompleteSend() {
 			expectedError: nil,
 		},
 		{
-			name: "is to delegation address",
+			name: "From DepositAddress to DelegateAddress",
 			message: func(zone *icstypes.Zone) sdk.Msg {
 				return &banktypes.MsgSend{
 					FromAddress: zone.DepositAddress.Address,
