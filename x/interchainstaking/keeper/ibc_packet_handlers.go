@@ -467,12 +467,10 @@ func (k *Keeper) HandleWithdrawForUser(ctx sdk.Context, zone *types.Zone, msg *b
 
 		if len(dlist) > 0 {
 			newDist := make([]*types.Distribution, 0)
-			i := 0
 			for idx := range withdrawalRecord.Distribution {
 				if _, remove := dlist[idx]; !remove {
 					newDist = append(newDist, withdrawalRecord.Distribution[idx])
 				}
-				i++
 			}
 			k.Logger(ctx).Info("found matching withdrawal; awaiting additional messages")
 			withdrawalRecord.Distribution = newDist
@@ -939,7 +937,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 			}
 		}
 	default:
-		receipt, found := k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, memo))
+		receipt, found := k.GetReceipt(ctx, zone.ChainId, memo)
 		if !found {
 			return fmt.Errorf("unable to find receipt for hash %s", memo)
 		}

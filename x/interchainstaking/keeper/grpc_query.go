@@ -226,7 +226,7 @@ func (k *Keeper) TxStatus(c context.Context, req *types.QueryTxStatusRequest) (*
 
 	ctx := sdk.UnwrapSDKContext(c)
 
-	txReceipt, found := k.GetReceipt(ctx, types.GetReceiptKey(req.GetChainId(), req.GetTxHash()))
+	txReceipt, found := k.GetReceipt(ctx, req.GetChainId(), req.GetTxHash())
 	if !found {
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("no receipt found matching %s", req.TxHash))
 	}
