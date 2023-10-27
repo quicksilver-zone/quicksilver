@@ -65,7 +65,7 @@ func (k Keeper) SetValidator(ctx sdk.Context, chainID string, val types.Validato
 	return nil
 }
 
-// DeleteValidators delete validators.
+// DeleteValidator delete validator by chainID and address.
 func (k Keeper) DeleteValidator(ctx sdk.Context, chainID string, address []byte) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(chainID))
 	store.Delete(address)
