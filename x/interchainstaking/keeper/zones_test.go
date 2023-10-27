@@ -315,12 +315,16 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 	// suite.False(found, "Not found pert delegation stored in the keeper")
 
 	// check receipts
-	_, found = quicksilver.InterchainstakingKeeper.GetReceipt(ctx, types.GetReceiptKey(chainID, rcpt.Txhash))
+	_, found = quicksilver.InterchainstakingKeeper.GetReceipt(ctx, chainID, rcpt.Txhash)
 	suite.False(found, "Not found receipts stored in the keeper")
 
 	// check withdrawal records
 	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, chainID, record.Txhash, record.Status)
 	suite.False(found, "Not found withdrawal records stored in the keeper")
+
+	// check validator
+	vals = quicksilver.InterchainstakingKeeper.GetValidators(ctx, chainID)
+	suite.Equal(len(vals), 0)
 
 	// check zone
 	zone, found = quicksilver.InterchainstakingKeeper.GetZone(ctx, chainID)
