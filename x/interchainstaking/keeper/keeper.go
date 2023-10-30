@@ -480,6 +480,7 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 	// native asset amount
 	nativeAssetAmount := k.GetDelegatedAmount(ctx, &zone).Amount
 	nativeAssetUnbondingAmount := k.GetUnbondingAmount(ctx, &zone).Amount
+	nativeAssetUnbonded := zone.DelegationAddress.Balance.AmountOf(zone.BaseDenom)
 
 	// qAsset amount
 	qAssetAmount := k.BankKeeper.GetSupply(ctx, zone.LocalDenom).Amount
@@ -491,7 +492,7 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone types.Zone, epochRewards math.In
 		return sdk.OneDec(), true
 	}
 
-	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
+	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount).Add(nativeAssetUnbonded)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone types.Zone, epochNumber int64) error {
