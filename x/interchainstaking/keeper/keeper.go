@@ -430,15 +430,15 @@ func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
 	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 	if !found {
-		return "", fmt.Errorf("invalid connection id, \"%s\" not found", connectionID)
+		return "", fmt.Errorf("invalid connection id, %q not found", connectionID)
 	}
 	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, conn.ClientId)
 	if !found {
-		return "", fmt.Errorf("client id \"%s\" not found for connection \"%s\"", conn.ClientId, connectionID)
+		return "", fmt.Errorf("client id %q not found for connection %q", conn.ClientId, connectionID)
 	}
 	client, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {
-		return "", fmt.Errorf("invalid client state for client \"%s\" on connection \"%s\"", conn.ClientId, connectionID)
+		return "", fmt.Errorf("invalid client state for client %q on connection %q", conn.ClientId, connectionID)
 	}
 
 	return client.ChainId, nil
