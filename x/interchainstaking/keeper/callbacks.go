@@ -105,11 +105,12 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	k.Logger(ctx).Debug("rewards callback", "zone", query.ChainId)
 
-	// unmarshal request payload
-	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (2)")
 	}
+
+	// unmarshal request payload
+	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	err := k.cdc.Unmarshal(query.Request, &rewardsQuery)
 	if err != nil {
 		return err
@@ -130,10 +131,11 @@ func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
 	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (3)")
 	}
+
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
 	err := k.cdc.Unmarshal(query.Request, &delegationQuery)
 	if err != nil {
 		return err
@@ -228,11 +230,11 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 
 	k.Logger(ctx).Debug("Deposit interval callback", "zone", zone.ChainId)
 
-	txs := tx.GetTxsEventResponse{}
-
 	if len(args) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (4)")
 	}
+
+	txs := tx.GetTxsEventResponse{}
 	err := k.cdc.Unmarshal(args, &txs)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal txs for deposit account", "deposit_address", zone.DepositAddress.GetAddress(), "err", err)
