@@ -1,8 +1,6 @@
 module github.com/quicksilver-zone/quicksilver
 
-go 1.21
-
-toolchain go1.21.1
+go 1.20
 
 require (
 	cosmossdk.io/errors v1.0.0
