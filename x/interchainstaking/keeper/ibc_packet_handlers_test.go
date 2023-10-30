@@ -7,10 +7,8 @@ import (
 	"testing"
 	"time"
 
-	lsmstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
-	"github.com/stretchr/testify/require"
-
 	"cosmossdk.io/math"
+	"github.com/stretchr/testify/require"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
