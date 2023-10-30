@@ -921,7 +921,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 }
 
 func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
-	k.Logger(ctx).Info("Received MsgDelegate acknowledgement")
+	k.Logger(ctx).Info("Received MsgDelegate failure acknowledgement")
 	// first, type assertion. we should have stakingtypes.MsgDelegate
 	delegateMsg, ok := msg.(*stakingtypes.MsgDelegate)
 	if !ok {
