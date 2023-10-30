@@ -372,11 +372,12 @@ func SetEpochBlockCallback(ctx sdk.Context, k *Keeper, args []byte, query icqtyp
 		return err
 	}
 
-	blockResponse := tmservice.GetLatestBlockResponse{}
 	// block response is never expected to be nil
 	if len(args) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (1)")
 	}
+
+	blockResponse := tmservice.GetLatestBlockResponse{}
 	err = k.cdc.Unmarshal(args, &blockResponse)
 	if err != nil {
 		return err
