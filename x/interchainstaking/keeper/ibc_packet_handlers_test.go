@@ -871,7 +871,6 @@ func (s *KeeperTestSuite) TestReceiveAckForBeginRedelegate() {
 			s.True(found)
 
 			s.NotEqual(record.CompletionTime, got.CompletionTime)
-
 		})
 	}
 }

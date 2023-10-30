@@ -446,5 +446,4 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 	zone.WithdrawalWaitgroup += uint32(numMsgs)
 	k.SetZone(ctx, zone)
 	return nil
-
 }
