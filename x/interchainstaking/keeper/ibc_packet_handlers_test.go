@@ -2,13 +2,11 @@ package keeper_test
 
 import (
 	"context"
+	"cosmossdk.io/math"
 	"errors"
 	"fmt"
 	"testing"
 	"time"
-
-	"cosmossdk.io/math"
-	"github.com/stretchr/testify/require"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,6 +25,7 @@ import (
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
+	"github.com/stretchr/testify/require"
 )
 
 var TestChannel = channeltypes.Channel{
