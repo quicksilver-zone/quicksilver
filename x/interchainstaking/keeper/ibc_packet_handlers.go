@@ -189,7 +189,10 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 		case "/cosmos.staking.v1beta1.MsgDelegate":
 			// TODO: can we safely ignore this?
 			if !success {
-				return nil
+				if err := k.HandleFailedDelegate(ctx, src, packetData.Memo); err != nil {
+					return err
+				}
+				continue
 			}
 			response := stakingtypes.MsgDelegateResponse{}
 			if msgResponseType != "" {
@@ -915,6 +918,41 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		k.SetReceipt(ctx, receipt)
 	}
 	return k.UpdateDelegationRecordForAddress(ctx, delegateMsg.DelegatorAddress, delegateMsg.ValidatorAddress, delegateMsg.Amount, zone, false)
+}
+
+func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error {
+	k.Logger(ctx).Info("Received MsgDelegate acknowledgement")
+	// first, type assertion. we should have stakingtypes.MsgDelegate
+	delegateMsg, ok := msg.(*stakingtypes.MsgDelegate)
+	if !ok {
+		k.Logger(ctx).Error("unable to cast source message to MsgDelegate")
+		return errors.New("unable to cast source message to MsgDelegate")
+	}
+	zone := k.GetZoneForDelegateAccount(ctx, delegateMsg.DelegatorAddress)
+	if zone == nil {
+		// most likely a performance account...
+		if zone := k.GetZoneForPerformanceAccount(ctx, delegateMsg.DelegatorAddress); zone != nil {
+			return nil
+		}
+		return fmt.Errorf("unable to find zone for address %s", delegateMsg.DelegatorAddress)
+	}
+
+	switch {
+	case strings.HasPrefix(memo, "batch"):
+		k.Logger(ctx).Debug("batch delegation failed", "memo", memo, "tx", delegateMsg)
+		zone.WithdrawalWaitgroup--
+		k.SetZone(ctx, zone)
+		if zone.WithdrawalWaitgroup == 0 {
+			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
+			if err := k.TriggerRedemptionRate(ctx, zone); err != nil {
+				return err
+			}
+		}
+
+	default:
+		// no-op
+	}
+	return nil
 }
 
 func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) error {
