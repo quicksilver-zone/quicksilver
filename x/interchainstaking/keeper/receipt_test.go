@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"cosmossdk.io/math"
@@ -10,6 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+
+	transfertypes "github.com/cosmos/ibc-go/v5/modules/apps/transfer/types"
 
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
 	"github.com/quicksilver-zone/quicksilver/utils/randomutils"
@@ -79,7 +82,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	// suite.ErrorContains(err, "no sender found. Ignoring")
-	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash))
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, zone.ChainId, hash)
 	suite.True(found)                  // check nilReceipt is found for hash
 	suite.Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
 	suite.Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
@@ -111,7 +114,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	// suite.ErrorContains(err, "no sender found. Ignoring")
-	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash))
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, zone.ChainId, hash)
 	suite.True(found)                  // check nilReceipt is found for hash
 	suite.Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
 	suite.Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
@@ -181,7 +184,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMixedSender() { // 
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	// suite.ErrorContains(err, "sender mismatch: expected")
-	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash))
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, zone.ChainId, hash)
 	suite.True(found)                  // check nilReceipt is found for hash
 	suite.Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
 	suite.Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
@@ -294,13 +297,13 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 	suite.NoError(err)
 	suite.Equal(2, len(out))
 
-	receipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash1))
+	receipt, found := icsKeeper.GetReceipt(ctx, zone.ChainId, hash1)
 	suite.True(found)
 	suite.Equal(receipt1, &receipt)
 	now := ctx.BlockTime().Add(time.Second)
 	receipt.Completed = &now
 	icsKeeper.SetReceipt(ctx, receipt)
-	icsKeeper.DeleteReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash2))
+	icsKeeper.DeleteReceipt(ctx, zone.ChainId, hash2)
 
 	out, err = icsKeeper.UserZoneReceipts(ctx, &zone, account1)
 	suite.NoError(err)
@@ -309,8 +312,68 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 
 	icsKeeper.SetReceiptsCompleted(ctx, &zone, now, now)
 
-	receipt, found = icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash3))
+	receipt, found = icsKeeper.GetReceipt(ctx, zone.ChainId, hash3)
 	suite.True(found)
 
 	suite.Equal(&now, receipt.Completed)
+}
+
+func (suite *KeeperTestSuite) TestSendTokenIBC() {
+	suite.Run("test", func() {
+		suite.SetupTest()
+
+		// setup transfer channel
+		suite.path.EndpointA.ChannelConfig.Version = transfertypes.Version
+		suite.path.EndpointB.ChannelConfig.Version = transfertypes.Version
+		suite.coordinator.CreateTransferChannels(suite.path)
+
+		suite.setupTestZones()
+
+		quicksilver := suite.GetQuicksilverApp(suite.chainA)
+		ctx := suite.chainA.GetContext()
+
+		zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+		suite.True(found)
+
+		sender := suite.chainA.SenderAccount.GetAddress()
+		receiver := addressutils.GenerateAddressForTestWithPrefix("cosmos")
+
+		amount := sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100))
+		err := quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(amount))
+		suite.NoError(err)
+		err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(amount))
+		suite.NoError(err)
+
+		// Try to send native token but wrong connection id on zone
+		wrongZone := zone
+		wrongZone.ConnectionId = "connection-10"
+		err = quicksilver.InterchainstakingKeeper.SendTokenIBC(ctx, sender, receiver, &wrongZone, amount)
+		suite.ErrorContains(err, "unable to find remote transfer connection")
+
+		// Try to send the native token
+		err = quicksilver.InterchainstakingKeeper.SendTokenIBC(ctx, sender, receiver, &zone, amount)
+		suite.NoError(err)
+
+		portID := types.TransferPort
+		channelID := suite.path.EndpointA.ChannelID
+
+		ibcAmount := transfertypes.GetTransferCoin(portID, channelID, sdk.DefaultBondDenom, sdk.NewInt(100))
+
+		err = quicksilver.BankKeeper.MintCoins(ctx, types.ModuleName, sdk.NewCoins(ibcAmount))
+		suite.NoError(err)
+		err = quicksilver.BankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, sender, sdk.NewCoins(ibcAmount))
+		suite.NoError(err)
+
+		quicksilver.TransferKeeper.SetDenomTrace(
+			ctx,
+			transfertypes.DenomTrace{
+				Path:      fmt.Sprintf("%s/%s", portID, channelID),
+				BaseDenom: sdk.DefaultBondDenom,
+			},
+		)
+
+		// Try to send the ibc token
+		err = quicksilver.InterchainstakingKeeper.SendTokenIBC(ctx, sender, receiver, &zone, ibcAmount)
+		suite.NoError(err)
+	})
 }
