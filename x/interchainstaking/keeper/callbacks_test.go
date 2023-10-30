@@ -12,12 +12,14 @@ import (
 	"github.com/tendermint/tendermint/proto/tendermint/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	ibctypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
@@ -1721,6 +1723,156 @@ func (suite *KeeperTestSuite) TestDepositTxCallback() {
 			// initialize the callback
 			err := keeper.DepositTxCallback(qckApp.InterchainstakingKeeper, ctx, tc.txWithProofbz, icqtypes.Query{ChainId: tc.chainID, Request: resDataBz})
 			if tc.expectErr {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+			}
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestSigningInfoCallback() {
+	validator := addressutils.GenerateValAddressForTest()
+	pubKey := simapp.CreateTestPubKeys(1)[0]
+
+	pkAny, err := codectypes.NewAnyWithValue(pubKey)
+	suite.Require().NoError(err)
+
+	newValidator := stakingtypes.Validator{
+		OperatorAddress: validator.String(),
+		ConsensusPubkey: pkAny,
+	}
+	consAddr, err := newValidator.GetConsAddr()
+	suite.NoError(err)
+
+	bech32ConsAddress := addressutils.MustEncodeAddressToBech32(sdk.Bech32PrefixConsAddr, consAddr)
+	testCases := []struct {
+		name      string
+		malleate  func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte
+		query     icqtypes.Query
+		expectErr bool
+	}{
+		// successfull callback tombstoned validator
+		{
+			name: "successfull callback not tombstoned validator ",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := slashingtypes.ValidatorSigningInfo{
+					Tombstoned: false,
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: false,
+		},
+		// wrong chain id
+		{
+			name: "wrong chain id",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := slashingtypes.ValidatorSigningInfo{}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: "wrong-chain-id",
+			},
+			expectErr: true,
+		},
+		// args has no len
+		{
+			name: "args has no len",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				return []byte{}
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// wrong type args
+		{
+			name: "wrong type args",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				return []byte("wrong type")
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// consaddress decoding err
+		{
+			name: "consaddress decoding err",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := slashingtypes.ValidatorSigningInfo{
+					Address:    "wrong bech32 address",
+					Tombstoned: true,
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// can't get validator address from consensus address
+		{
+			name: "can't get validator address from consensus address",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				info := slashingtypes.ValidatorSigningInfo{
+					Address:    bech32ConsAddress,
+					Tombstoned: true,
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// can't find validator
+		{
+			name: "can't find validator",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				quicksilver.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator.OperatorAddress, consAddr)
+				info := slashingtypes.ValidatorSigningInfo{
+					Address:    bech32ConsAddress,
+					Tombstoned: true,
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: true,
+		},
+		// can't set validator
+	}
+
+	for _, tc := range testCases {
+		suite.Run(fmt.Sprintf("Case %s", tc.name), func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			quicksilver.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := suite.chainA.GetContext()
+
+			data := tc.malleate(quicksilver, ctx)
+			err := keeper.SigningInfoCallback(quicksilver.InterchainstakingKeeper, ctx, data, tc.query)
+			if tc.expectErr {
+				fmt.Println(err)
 				suite.Error(err)
 			} else {
 				suite.NoError(err)
