@@ -439,5 +439,12 @@ func (k *Keeper) FlushOutstandingDelegations(ctx sdk.Context, zone *types.Zone, 
 		ToAddress:   "",
 		Amount:      coinsToFlush,
 	}
-	return k.handleSendToDelegate(ctx, zone, &sendMsg, fmt.Sprintf("batch/%d", exclusionTime.Unix()))
+	numMsgs, err := k.handleSendToDelegate(ctx, zone, &sendMsg, fmt.Sprintf("batch/%d", exclusionTime.Unix()))
+	if err != nil {
+		return err
+	}
+	zone.WithdrawalWaitgroup += uint32(numMsgs)
+	k.SetZone(ctx, zone)
+	return nil
+
 }

@@ -400,7 +400,7 @@ func (k *Keeper) HandleCompleteMultiSend(ctx sdk.Context, msg sdk.Msg, memo stri
 			ToAddress:   out.Address,
 			Amount:      out.Coins,
 		}
-		if err := k.handleSendToDelegate(ctx, zone, &msg, memo); err != nil {
+		if _, err := k.handleSendToDelegate(ctx, zone, &msg, memo); err != nil {
 			return err
 		}
 	}
@@ -435,7 +435,8 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 	case zone.IsDelegateAddress(sMsg.FromAddress):
 		return k.HandleWithdrawForUser(ctx, zone, sMsg, memo)
 	case zone.IsDelegateAddress(sMsg.ToAddress) && zone.DepositAddress.Address == sMsg.FromAddress:
-		return k.handleSendToDelegate(ctx, zone, sMsg, memo)
+		_, err := k.handleSendToDelegate(ctx, zone, sMsg, memo)
+		return err
 	default:
 		err = errors.New("unexpected completed send")
 		k.Logger(ctx).Error(err.Error())
@@ -444,10 +445,11 @@ func (k *Keeper) HandleCompleteSend(ctx sdk.Context, msg sdk.Msg, memo string) e
 }
 
 func (k *Keeper) handleRewardsDelegation(ctx sdk.Context, zone types.Zone, msg *banktypes.MsgSend) error {
-	return k.handleSendToDelegate(ctx, &zone, msg, "rewards")
+	_, err := k.handleSendToDelegate(ctx, &zone, msg, "rewards")
+	return err
 }
 
-func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) error {
+func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *banktypes.MsgSend, memo string) (int, error) {
 	var msgs []sdk.Msg
 	for _, coin := range msg.Amount {
 		if coin.Denom == zone.BaseDenom {
@@ -460,7 +462,7 @@ func (k *Keeper) handleSendToDelegate(ctx sdk.Context, zone *types.Zone, msg *ba
 
 	k.Logger(ctx).Info("messages to send", "messages", msgs)
 
-	return k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo, zone.MessagesPerTx)
+	return len(msgs), k.SubmitTx(ctx, msgs, zone.DelegationAddress, memo, zone.MessagesPerTx)
 }
 
 // withdraw for user will check that the msgSend we have successfully executed matches an existing withdrawal record.
@@ -894,8 +896,9 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 		// fmt.Println(zone.DelegationAddress.Balance)
 		// fmt.Println(delegateMsg.Amount)
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
+		zone.WithdrawalWaitgroup--
 		k.SetZone(ctx, zone)
-		if zone.DelegationAddress.Balance.IsZero() && zone.WithdrawalWaitgroup == 0 {
+		if zone.WithdrawalWaitgroup == 0 {
 			k.Logger(ctx).Info("Triggering redemption rate calc after delegation flush")
 			if err = k.TriggerRedemptionRate(ctx, zone); err != nil {
 				return err
@@ -926,10 +929,6 @@ func (k *Keeper) HandleUpdatedWithdrawAddress(ctx sdk.Context, msg sdk.Msg) erro
 	if zone == nil {
 		zone = k.GetZoneForPerformanceAccount(ctx, original.DelegatorAddress)
 		if zone == nil {
-			if ctx.ChainID() == "quicksilver-2" && ctx.BlockHeight() < 248000 {
-				return errors.New("unable to find zone") // mirror existing behaviour before 248000
-			}
-			// after 248000 correctly handle SetWithdrawalAddress callback.
 			zone = k.GetZoneForDepositAccount(ctx, original.DelegatorAddress)
 			if zone == nil {
 				return errors.New("unable to find zone")
