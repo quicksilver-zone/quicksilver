@@ -244,7 +244,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 	for _, txn := range txs.TxResponses {
 		req := tx.GetTxRequest{Hash: txn.TxHash}
 		hashBytes := k.cdc.MustMarshal(&req)
-		_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, txn.TxHash))
+		_, found = k.GetReceipt(ctx, zone.ChainId, txn.TxHash)
 		if found {
 			k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
 			continue
@@ -445,7 +445,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return fmt.Errorf("invalid tx for query - expected %s, got %s", queryRequest.Hash, hashStr)
 	}
 
-	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hashStr))
+	_, found = k.GetReceipt(ctx, zone.ChainId, hashStr)
 	if found {
 		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", hashStr)
 		return nil

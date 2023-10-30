@@ -772,7 +772,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
 
-				distribution := []*types.Distribution{
+				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 						Amount:  10000000,
@@ -788,7 +788,7 @@ func (suite *KeeperTestSuite) TestKeeper_ZoneWithdrawalRecords() {
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
-					distribution,
+					distributions,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
@@ -877,7 +877,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
 
-				distribution := []*types.Distribution{
+				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 						Amount:  10000000,
@@ -893,7 +893,7 @@ func (suite *KeeperTestSuite) TestKeeper_UserWithdrawalRecords() {
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
-					distribution,
+					distributions,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
@@ -970,7 +970,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 				zone, found := icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
 
-				distribution := []*types.Distribution{
+				distributions := []*types.Distribution{
 					{
 						Valoper: icsKeeper.GetValidators(ctx, suite.chainB.ChainID)[0].ValoperAddress,
 						Amount:  10000000,
@@ -986,7 +986,7 @@ func (suite *KeeperTestSuite) TestKeeper_WithdrawalRecords() {
 					ctx,
 					zone.ChainId,
 					delegatorAddress,
-					distribution,
+					distributions,
 					testAddress,
 					sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, math.NewInt(15000000))),
 					sdk.NewCoin(zone.LocalDenom, math.NewInt(15000000)),
