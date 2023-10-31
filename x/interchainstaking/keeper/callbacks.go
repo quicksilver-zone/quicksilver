@@ -176,8 +176,8 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 			return err
 		}
 
-		if delegation, ok := k.GetDelegation(ctx, &zone, delegatorAddress, validatorAddress); ok {
-			err := k.RemoveDelegation(ctx, &zone, delegation)
+		if delegation, ok := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress); ok {
+			err := k.RemoveDelegation(ctx, zone.ChainId, delegation)
 			if err != nil {
 				return err
 			}

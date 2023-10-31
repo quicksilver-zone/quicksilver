@@ -599,7 +599,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		k.SetRedelegationRecord(ctx, record)
 	}
 
-	tgtDelegation, found := k.GetDelegation(ctx, zone, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress)
+	tgtDelegation, found := k.GetDelegation(ctx, zone.ChainId, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress)
 	if !found {
 		tgtDelegation = types.NewDelegation(redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorDstAddress, redelegateMsg.Amount)
 	} else {
@@ -607,7 +607,7 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 	}
 	// RedelegationEnd is used to determine whether the delegation is 'locked' for transient redelegations.
 	tgtDelegation.RedelegationEnd = completion.Unix() // this field should be a timestamp, but let's avoid unnecessary state changes.
-	k.SetDelegation(ctx, zone, tgtDelegation)
+	k.SetDelegation(ctx, zone.ChainId, tgtDelegation)
 
 	delAddr, err := addressutils.AccAddressFromBech32(redelegateMsg.DelegatorAddress, zone.AccountPrefix)
 	if err != nil {
@@ -632,14 +632,14 @@ func (k *Keeper) HandleBeginRedelegate(ctx sdk.Context, msg sdk.Msg, completion 
 		0,
 	)
 
-	srcDelegation, found := k.GetDelegation(ctx, zone, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorSrcAddress)
+	srcDelegation, found := k.GetDelegation(ctx, zone.ChainId, redelegateMsg.DelegatorAddress, redelegateMsg.ValidatorSrcAddress)
 	if !found {
 		k.Logger(ctx).Error("unable to find delegation record", "chain", zone.ChainId, "source", redelegateMsg.ValidatorSrcAddress, "dst", redelegateMsg.ValidatorDstAddress, "epoch_number", epochNumber)
 		return fmt.Errorf("unable to find delegation record for chain %s, src: %s, dst: %s, at epoch %d", zone.ChainId, redelegateMsg.ValidatorSrcAddress, redelegateMsg.ValidatorDstAddress, epochNumber)
 	}
 	srcDelegation.Amount = srcDelegation.Amount.Sub(redelegateMsg.Amount)
 
-	k.SetDelegation(ctx, zone, srcDelegation)
+	k.SetDelegation(ctx, zone.ChainId, srcDelegation)
 
 	valAddr, err = addressutils.ValAddressFromBech32(redelegateMsg.ValidatorDstAddress, zone.AccountPrefix+"valoper")
 	if err != nil {
@@ -927,7 +927,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 			return err
 		}
 		k.Logger(ctx).Debug("outstanding delegations ack-received")
-		k.SetReceiptsCompleted(ctx, zone, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime())
+		k.SetReceiptsCompleted(ctx, zone.ChainId, time.Unix(exclusionTimestampUnix, 0), ctx.BlockTime())
 		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Sub(delegateMsg.Amount)
 		k.SetZone(ctx, zone)
 		if zone.DelegationAddress.Balance.IsZero() && zone.WithdrawalWaitgroup == 0 {
@@ -1012,7 +1012,7 @@ func (k *Keeper) UpdateDelegationRecordsForAddress(ctx sdk.Context, zone types.Z
 	if err != nil {
 		return err
 	}
-	delegatorDelegations := k.GetDelegatorDelegations(ctx, &zone, delAddr)
+	delegatorDelegations := k.GetDelegatorDelegations(ctx, zone.ChainId, delAddr)
 
 	delMap := make(map[string]types.Delegation, len(delegatorDelegations))
 	for _, del := range delegatorDelegations {
@@ -1082,7 +1082,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 	zone *types.Zone,
 	absolute bool,
 ) error {
-	delegation, found := k.GetDelegation(ctx, zone, delegatorAddress, validatorAddress)
+	delegation, found := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress)
 
 	if !found {
 		k.Logger(ctx).Info("Adding delegation tuple", "delegator", delegatorAddress, "validator", validatorAddress, "amount", amount.Amount)
@@ -1096,7 +1096,7 @@ func (k *Keeper) UpdateDelegationRecordForAddress(
 		}
 		k.Logger(ctx).Info("Updating delegation tuple amount", "delegator", delegatorAddress, "validator", validatorAddress, "old_amount", oldAmount, "inbound_amount", amount.Amount, "new_amount", delegation.Amount, "abs", absolute)
 	}
-	k.SetDelegation(ctx, zone, delegation)
+	k.SetDelegation(ctx, zone.ChainId, delegation)
 
 	period := int64(k.GetParam(ctx, types.KeyValidatorSetInterval))
 	query := stakingtypes.QueryValidatorsRequest{}
