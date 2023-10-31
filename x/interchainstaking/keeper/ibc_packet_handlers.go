@@ -542,8 +542,8 @@ func (k *Keeper) HandleTokenizedShares(ctx sdk.Context, msg sdk.Msg, sharesAmoun
 	}
 
 	for _, dist := range withdrawalRecord.Distribution {
-		if sharesAmount.Equal(dist.Amount) {
-			withdrawalRecord.Amount.Add(sharesAmount)
+		if equalLsmCoin(dist.Valoper, dist.Amount, sharesAmount) {
+			withdrawalRecord.Amount = withdrawalRecord.Amount.Add(sharesAmount)
 			// matched amount
 			if len(withdrawalRecord.Distribution) == len(withdrawalRecord.Amount) {
 				// we just added the last tokens
@@ -1239,4 +1239,11 @@ func (*Keeper) prepareRewardsDistributionMsgs(zone types.Zone, rewards sdkmath.I
 		ToAddress:   zone.DelegationAddress.GetAddress(),
 		Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, rewards)),
 	}
+}
+
+func equalLsmCoin(valoper string, amount uint64, lsmAmount sdk.Coin) bool {
+	if strings.Contains(lsmAmount.Denom, valoper) {
+		return lsmAmount.Amount.Equal(sdk.NewIntFromUint64(amount))
+	}
+	return false
 }
