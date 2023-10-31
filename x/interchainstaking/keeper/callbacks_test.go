@@ -1751,6 +1751,7 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 		malleate  func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte
 		query     icqtypes.Query
 		expectErr bool
+		check     func(quicksilver *app.Quicksilver, ctx sdk.Context)
 	}{
 		// successfull callback tombstoned validator
 		{
@@ -1767,6 +1768,15 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 				ChainId: suite.chainB.ChainID,
 			},
 			expectErr: false,
+			check: func(quicksilver *app.Quicksilver, ctx sdk.Context) {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				valAddrBytes, err := addressutils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
+				suite.NoError(err)
+				_, found = quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+				suite.False(found)
+			},
 		},
 		// wrong chain id
 		{
@@ -1838,11 +1848,12 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 			},
 			expectErr: true,
 		},
-		// can't find validator
+		// success case not found validator
 		{
-			name: "can't find validator",
+			name: "success case not found validator",
 			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
-				zone, _ := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
 				quicksilver.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator.OperatorAddress, consAddr)
 				info := slashingtypes.ValidatorSigningInfo{
 					Address:    bech32ConsAddress,
@@ -1855,9 +1866,57 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 			query: icqtypes.Query{
 				ChainId: suite.chainB.ChainID,
 			},
-			expectErr: true,
+			expectErr: false,
+			check: func(quicksilver *app.Quicksilver, ctx sdk.Context) {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				valAddrBytes, err := addressutils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
+				suite.NoError(err)
+				newVal, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+				suite.True(found)
+				suite.True(newVal.Jailed)
+				suite.True(newVal.Tombstoned)
+			},
 		},
-		// can't set validator
+		// success case found validator
+		{
+			name: "success case found validator",
+			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+				quicksilver.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator.OperatorAddress, consAddr)
+				err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
+					ValoperAddress: validator.String(),
+					Jailed: false,
+					Tombstoned: false,
+				})
+				suite.NoError(err)
+
+				info := slashingtypes.ValidatorSigningInfo{
+					Address:    bech32ConsAddress,
+					Tombstoned: true,
+				}
+				cdc := quicksilver.InterchainstakingKeeper.GetCodec()
+				bz := cdc.MustMarshal(&info)
+				return bz
+			},
+			query: icqtypes.Query{
+				ChainId: suite.chainB.ChainID,
+			},
+			expectErr: false,
+			check: func(quicksilver *app.Quicksilver, ctx sdk.Context) {
+				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				valAddrBytes, err := addressutils.ValAddressFromBech32(validator.String(), zone.GetValoperPrefix())
+				suite.NoError(err)
+				newVal, found := quicksilver.InterchainstakingKeeper.GetValidator(ctx, zone.ChainId, valAddrBytes)
+				suite.True(found)
+				suite.False(newVal.Jailed)
+				suite.True(newVal.Tombstoned)
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -1872,10 +1931,10 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 			data := tc.malleate(quicksilver, ctx)
 			err := keeper.SigningInfoCallback(quicksilver.InterchainstakingKeeper, ctx, data, tc.query)
 			if tc.expectErr {
-				fmt.Println(err)
 				suite.Error(err)
 			} else {
 				suite.NoError(err)
+				tc.check(quicksilver, ctx)
 			}
 		})
 	}
