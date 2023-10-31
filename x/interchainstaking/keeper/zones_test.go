@@ -249,14 +249,15 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 		ValidatorAddress:  vals[1].ValoperAddress,
 		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 	}
-	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 	// create pert delegation
+	performanceAddress := zone.PerformanceAddress
 	perfDelegation := types.Delegation{
-		DelegationAddress: zone.PerformanceAddress.Address,
+		DelegationAddress: performanceAddress.Address,
 		ValidatorAddress:  vals[1].ValoperAddress,
 		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 	}
-	quicksilver.InterchainstakingKeeper.SetPerformanceDelegation(ctx, &zone, perfDelegation)
+	quicksilver.InterchainstakingKeeper.SetPerformanceDelegation(ctx, zone.ChainId, perfDelegation)
 	// create receipt
 	cutOffTime := ctx.BlockTime().AddDate(0, 0, -1).Add(-2 * time.Hour)
 	rcpt := types.Receipt{
@@ -306,13 +307,13 @@ func (suite *KeeperTestSuite) TestRemoveZoneAndAssociatedRecords() {
 	_, found = quicksilver.InterchainstakingKeeper.GetRedelegationRecord(ctx, chainID, vals[1].ValoperAddress, vals[0].ValoperAddress, 1)
 	suite.False(found, "Not found redelegation record stored in the keeper")
 
-	// // check delegation
-	// _, found = quicksilver.InterchainstakingKeeper.GetDelegation(ctx, &zone, delegation.DelegationAddress, delegation.ValidatorAddress)
-	// suite.False(found, "Not found delegation stored in the keeper")
+	// check delegation
+	_, found = quicksilver.InterchainstakingKeeper.GetDelegation(ctx, chainID, delegation.DelegationAddress, delegation.ValidatorAddress)
+	suite.False(found, "Not found delegation stored in the keeper")
 
-	// // check pert delegation
-	// _, found = quicksilver.InterchainstakingKeeper.GetPerformanceDelegation(ctx, &zone, perfDelegation.ValidatorAddress)
-	// suite.False(found, "Not found pert delegation stored in the keeper")
+	// check pert delegation
+	_, found = quicksilver.InterchainstakingKeeper.GetPerformanceDelegation(ctx, chainID, performanceAddress, perfDelegation.ValidatorAddress)
+	suite.False(found, "Not found pert delegation stored in the keeper")
 
 	// check receipts
 	_, found = quicksilver.InterchainstakingKeeper.GetReceipt(ctx, chainID, rcpt.Txhash)
