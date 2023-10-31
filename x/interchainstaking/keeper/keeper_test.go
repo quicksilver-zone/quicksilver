@@ -251,7 +251,7 @@ func (suite *KeeperTestSuite) TestGetDelegatedAmount() {
 			suite.True(found)
 
 			for _, delegation := range tt.delegations(ctx, quicksilver, zone) {
-				icsKeeper.SetDelegation(ctx, &zone, delegation)
+				icsKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 			}
 
 			actual := icsKeeper.GetDelegatedAmount(ctx, &zone)
@@ -502,7 +502,7 @@ func (suite *KeeperTestSuite) TestGetRatio() {
 			}
 
 			for _, delegation := range tt.delegations(ctx, quicksilver, zone) {
-				icsKeeper.SetDelegation(ctx, &zone, delegation)
+				icsKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 			}
 
 			err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, tt.supply)))
@@ -530,9 +530,9 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
 	suite.NoError(err)
@@ -551,9 +551,9 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(10)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(10)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(10)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
@@ -564,9 +564,9 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(166)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(167)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(167)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)
 	// should be capped at 2% increase. (1.01*1.02 == 1.0302)
@@ -582,9 +582,9 @@ func (suite *KeeperTestSuite) TestUpdateRedemptionRate() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.SubRaw(500)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.SubRaw(500)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.SubRaw(500)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	// remove > 5%, cap at -5%
 	icsKeeper.UpdateRedemptionRate(ctx, &zone, sdk.ZeroInt())
@@ -609,9 +609,9 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	delegationB := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[1].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 	delegationC := icstypes.Delegation{DelegationAddress: zone.DelegationAddress.Address, ValidatorAddress: vals[2].OperatorAddress, Amount: sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000))}
 
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 
 	err := quicksilver.MintKeeper.MintCoins(ctx, sdk.NewCoins(sdk.NewCoin(zone.LocalDenom, sdk.NewInt(3000))))
 	suite.NoError(err)
@@ -628,9 +628,9 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(10)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(10)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(10)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -641,9 +641,9 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.AddRaw(166)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.AddRaw(167)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.AddRaw(167)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
@@ -659,9 +659,9 @@ func (suite *KeeperTestSuite) TestOverrideRedemptionRateNoCap() {
 	delegationA.Amount.Amount = delegationA.Amount.Amount.SubRaw(500)
 	delegationB.Amount.Amount = delegationB.Amount.Amount.SubRaw(500)
 	delegationC.Amount.Amount = delegationC.Amount.Amount.SubRaw(500)
-	icsKeeper.SetDelegation(ctx, &zone, delegationA)
-	icsKeeper.SetDelegation(ctx, &zone, delegationB)
-	icsKeeper.SetDelegation(ctx, &zone, delegationC)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationA)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationB)
+	icsKeeper.SetDelegation(ctx, zone.ChainId, delegationC)
 	icsKeeper.OverrideRedemptionRateNoCap(ctx, &zone)
 	zone, found = icsKeeper.GetZone(ctx, suite.chainB.ChainID)
 	suite.True(found)

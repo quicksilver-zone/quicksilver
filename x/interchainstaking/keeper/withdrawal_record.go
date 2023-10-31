@@ -26,8 +26,8 @@ func (k *Keeper) GetNextWithdrawalRecordSequence(ctx sdk.Context) (sequence uint
 	return sequence
 }
 
-func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distribution []*types.Distribution, recipient string, amount sdk.Coins, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time, epochNumber int64) {
-	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distribution, Recipient: recipient, Amount: amount, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime, EpochNumber: epochNumber}
+func (k *Keeper) AddWithdrawalRecord(ctx sdk.Context, chainID, delegator string, distributions []*types.Distribution, recipient string, amount sdk.Coins, burnAmount sdk.Coin, hash string, status int32, completionTime time.Time, epochNumber int64) {
+	record := types.WithdrawalRecord{ChainId: chainID, Delegator: delegator, Distribution: distributions, Recipient: recipient, Amount: amount, Status: status, BurnAmount: burnAmount, Txhash: hash, CompletionTime: completionTime, EpochNumber: epochNumber}
 	k.Logger(ctx).Error("addWithdrawalRecord", "record", record)
 	k.SetWithdrawalRecord(ctx, record)
 }

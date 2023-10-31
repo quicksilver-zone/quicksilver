@@ -601,7 +601,7 @@ func (suite *KeeperTestSuite) addReceipt(zone *icstypes.Zone, sender, hash strin
 		Height:            1,
 		RedelegationEnd:   101,
 	}
-	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(suite.chainA.GetContext(), zone, delegation)
+	suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(suite.chainA.GetContext(), zone.ChainId, delegation)
 }
 
 func (suite *KeeperTestSuite) setupTestIntents() {
