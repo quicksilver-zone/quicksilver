@@ -170,7 +170,7 @@ func TestKeeperWithZonesRoundTrip(t *testing.T) {
 		ValidatorAddress:  "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0",
 	}
 
-	kpr.SetDelegation(ctx, &firstZone, del1)
+	kpr.SetDelegation(ctx, firstZone.ChainId, del1)
 
 	// 7.3. Retrieve the delegation now, it should be set.
 	gotDelAmt = kpr.GetDelegatedAmount(ctx, &firstZone)
