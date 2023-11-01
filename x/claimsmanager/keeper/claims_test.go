@@ -56,7 +56,7 @@ var testClaims = []types.Claim{
 	},
 }
 
-func (s *KeeperTestSuite) TestKeeper_NewClaim() {
+func (suite *KeeperTestSuite) TestKeeper_NewClaim() {
 	type args struct {
 		address    string
 		chainID    string
@@ -78,14 +78,14 @@ func (s *KeeperTestSuite) TestKeeper_NewClaim() {
 			"valid",
 			args{
 				testAddress,
-				s.chainB.ChainID,
+				suite.chainB.ChainID,
 				types.ClaimTypeLiquidToken,
 				"",
 				5000000,
 			},
 			types.Claim{
 				UserAddress:   testAddress,
-				ChainId:       s.chainB.ChainID,
+				ChainId:       suite.chainB.ChainID,
 				Module:        types.ClaimTypeLiquidToken,
 				SourceChainId: "",
 				Amount:        5000000,
@@ -94,105 +94,105 @@ func (s *KeeperTestSuite) TestKeeper_NewClaim() {
 	}
 
 	for _, tt := range tests {
-		s.Run(tt.name, func() {
+		suite.Run(tt.name, func() {
 			got := types.NewClaim(tt.args.address, tt.args.chainID, tt.args.module, tt.args.srcChainID, tt.args.amount)
-			s.Require().Equal(tt.want, got)
+			suite.Require().Equal(tt.want, got)
 		})
 	}
 }
 
-func (s *KeeperTestSuite) TestKeeper_ClaimStore() {
-	k := s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper
+func (suite *KeeperTestSuite) TestKeeper_ClaimStore() {
+	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
 
-	testClaims[0].ChainId = s.chainB.ChainID
-	testClaims[1].ChainId = s.chainB.ChainID
-	testClaims[2].ChainId = s.chainB.ChainID
-	testClaims[3].ChainId = s.chainB.ChainID
+	testClaims[0].ChainId = suite.chainB.ChainID
+	testClaims[1].ChainId = suite.chainB.ChainID
+	testClaims[2].ChainId = suite.chainB.ChainID
+	testClaims[3].ChainId = suite.chainB.ChainID
 
 	// no claim set
 	var getClaim types.Claim
-	_, found := k.GetClaim(s.chainA.GetContext(), s.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
-	s.Require().False(found)
+	_, found := k.GetClaim(suite.chainA.GetContext(), suite.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
+	suite.Require().False(found)
 
 	// set claim
-	k.SetClaim(s.chainA.GetContext(), &testClaims[0])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[0])
 
-	getClaim, found = k.GetClaim(s.chainA.GetContext(), s.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
-	s.Require().True(found)
-	s.Require().Equal(testClaims[0], getClaim)
+	getClaim, found = k.GetClaim(suite.chainA.GetContext(), suite.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
+	suite.Require().True(found)
+	suite.Require().Equal(testClaims[0], getClaim)
 
 	// delete claim
-	k.DeleteClaim(s.chainA.GetContext(), &getClaim)
-	getClaim, found = k.GetClaim(s.chainA.GetContext(), s.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
-	s.Require().False(found)
+	k.DeleteClaim(suite.chainA.GetContext(), &getClaim)
+	getClaim, found = k.GetClaim(suite.chainA.GetContext(), suite.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
+	suite.Require().False(found)
 
 	// iterators
 	var claims []*types.Claim
 
-	k.SetClaim(s.chainA.GetContext(), &testClaims[0])
-	k.SetClaim(s.chainA.GetContext(), &testClaims[1])
-	k.SetClaim(s.chainA.GetContext(), &testClaims[2])
-	k.SetClaim(s.chainA.GetContext(), &testClaims[3])
-	k.SetClaim(s.chainA.GetContext(), &testClaims[4])
-	k.SetClaim(s.chainA.GetContext(), &testClaims[5])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[0])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[1])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[2])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[3])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[4])
+	k.SetClaim(suite.chainA.GetContext(), &testClaims[5])
 
-	claims = k.AllClaims(s.chainA.GetContext())
-	s.Require().Equal(6, len(claims))
+	claims = k.AllClaims(suite.chainA.GetContext())
+	suite.Require().Equal(6, len(claims))
 
-	claims = k.AllZoneClaims(s.chainA.GetContext(), s.chainB.ChainID)
-	s.Require().Equal(4, len(claims))
+	claims = k.AllZoneClaims(suite.chainA.GetContext(), suite.chainB.ChainID)
+	suite.Require().Equal(4, len(claims))
 
-	claims = k.AllZoneClaims(s.chainA.GetContext(), "cosmoshub-4")
-	s.Require().Equal(2, len(claims))
+	claims = k.AllZoneClaims(suite.chainA.GetContext(), "cosmoshub-4")
+	suite.Require().Equal(2, len(claims))
 
 	// archive (last epoch)
-	k.ArchiveAndGarbageCollectClaims(s.chainA.GetContext(), s.chainB.ChainID)
+	k.ArchiveAndGarbageCollectClaims(suite.chainA.GetContext(), suite.chainB.ChainID)
 
-	getClaim, found = k.GetLastEpochClaim(s.chainA.GetContext(), s.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
-	s.Require().True(found)
-	s.Require().Equal(testClaims[0], getClaim)
+	getClaim, found = k.GetLastEpochClaim(suite.chainA.GetContext(), suite.chainB.ChainID, testAddress, types.ClaimTypeOsmosisPool, "osmosis-1")
+	suite.Require().True(found)
+	suite.Require().Equal(testClaims[0], getClaim)
 
 	// "cosmoshub-4 was not archived so this should not be found"
-	getClaim, found = k.GetLastEpochClaim(s.chainA.GetContext(), "cosmoshub-4", testAddress, types.ClaimTypeLiquidToken, "")
-	s.Require().False(found)
+	getClaim, found = k.GetLastEpochClaim(suite.chainA.GetContext(), "cosmoshub-4", testAddress, types.ClaimTypeLiquidToken, "")
+	suite.Require().False(found)
 
 	// set archive claim
-	k.SetLastEpochClaim(s.chainA.GetContext(), &testClaims[4])
+	k.SetLastEpochClaim(suite.chainA.GetContext(), &testClaims[4])
 
-	getClaim, found = k.GetLastEpochClaim(s.chainA.GetContext(), "cosmoshub-4", testAddress, types.ClaimTypeLiquidToken, "")
-	s.Require().True(found)
-	s.Require().Equal(testClaims[4], getClaim)
+	getClaim, found = k.GetLastEpochClaim(suite.chainA.GetContext(), "cosmoshub-4", testAddress, types.ClaimTypeLiquidToken, "")
+	suite.Require().True(found)
+	suite.Require().Equal(testClaims[4], getClaim)
 
 	// delete archive claim
-	k.DeleteLastEpochClaim(s.chainA.GetContext(), &getClaim)
-	getClaim, found = k.GetLastEpochClaim(s.chainA.GetContext(), "cosmoshub-4", testAddress, types.ClaimTypeLiquidToken, "")
-	s.Require().False(found)
+	k.DeleteLastEpochClaim(suite.chainA.GetContext(), &getClaim)
+	getClaim, found = k.GetLastEpochClaim(suite.chainA.GetContext(), "cosmoshub-4", testAddress, types.ClaimTypeLiquidToken, "")
+	suite.Require().False(found)
 
 	// iterators
 	// we expect none as claims have been archived
-	claims = k.AllZoneClaims(s.chainA.GetContext(), s.chainB.ChainID)
-	s.Require().Equal(0, len(claims))
+	claims = k.AllZoneClaims(suite.chainA.GetContext(), suite.chainB.ChainID)
+	suite.Require().Equal(0, len(claims))
 
 	// we expect the archived claims for chainB
-	claims = k.AllZoneLastEpochClaims(s.chainA.GetContext(), s.chainB.ChainID)
-	s.Require().Equal(4, len(claims))
+	claims = k.AllZoneLastEpochClaims(suite.chainA.GetContext(), suite.chainB.ChainID)
+	suite.Require().Equal(4, len(claims))
 
 	// clear
-	k.ClearClaims(s.chainA.GetContext(), "cosmoshub-4")
+	k.ClearClaims(suite.chainA.GetContext(), "cosmoshub-4")
 	// we expect none as claims have been cleared
-	claims = k.AllZoneClaims(s.chainA.GetContext(), "cosmoshub-4")
-	s.Require().Equal(0, len(claims))
+	claims = k.AllZoneClaims(suite.chainA.GetContext(), "cosmoshub-4")
+	suite.Require().Equal(0, len(claims))
 
 	// we archive current claims (none) to ensure the last epoch claims are correctly set
-	k.ArchiveAndGarbageCollectClaims(s.chainA.GetContext(), s.chainB.ChainID)
+	k.ArchiveAndGarbageCollectClaims(suite.chainA.GetContext(), suite.chainB.ChainID)
 
 	// we expect none as claims have been archived
-	claims = k.AllZoneClaims(s.chainA.GetContext(), s.chainB.ChainID)
-	s.Require().Equal(0, len(claims))
+	claims = k.AllZoneClaims(suite.chainA.GetContext(), suite.chainB.ChainID)
+	suite.Require().Equal(0, len(claims))
 
 	// we expect none as no current claims existed when we archived
-	claims = k.AllZoneLastEpochClaims(s.chainA.GetContext(), s.chainB.ChainID)
-	s.Require().Equal(0, len(claims))
+	claims = k.AllZoneLastEpochClaims(suite.chainA.GetContext(), suite.chainB.ChainID)
+	suite.Require().Equal(0, len(claims))
 }
 
 // func (suite *KeeperTestSuite) TestKeeper_IterateLastEpochUserClaims() {
