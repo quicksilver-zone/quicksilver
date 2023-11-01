@@ -218,8 +218,7 @@ func (k *Keeper) DeterminePlanForDelegation(ctx sdk.Context, zone *types.Zone, a
 	if err != nil {
 		return nil, err
 	}
-	allocations := types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
-	return allocations, nil
+	return types.DetermineAllocationsForDelegation(currentAllocations, currentSum, targetAllocations, amount)
 }
 
 func (k *Keeper) WithdrawDelegationRewardsForResponse(ctx sdk.Context, zone *types.Zone, delegator string, response []byte) error {
