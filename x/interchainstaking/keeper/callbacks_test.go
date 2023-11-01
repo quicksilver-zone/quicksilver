@@ -11,18 +11,18 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tendermint/tendermint/proto/tendermint/types"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"cosmossdk.io/math"
 
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	ibctypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
@@ -1981,9 +1981,9 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 		expectErr bool
 		check     func(quicksilver *app.Quicksilver, ctx sdk.Context)
 	}{
-		// successfull callback tombstoned validator
+		// successful callback tombstoned validator
 		{
-			name: "successfull callback not tombstoned validator ",
+			name: "successful callback not tombstoned validator ",
 			malleate: func(quicksilver *app.Quicksilver, ctx sdk.Context) []byte {
 				info := slashingtypes.ValidatorSigningInfo{
 					Tombstoned: false,
@@ -2116,8 +2116,8 @@ func (suite *KeeperTestSuite) TestSigningInfoCallback() {
 				quicksilver.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator.OperatorAddress, consAddr)
 				err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, icstypes.Validator{
 					ValoperAddress: validator.String(),
-					Jailed: false,
-					Tombstoned: false,
+					Jailed:         false,
+					Tombstoned:     false,
 				})
 				suite.NoError(err)
 
