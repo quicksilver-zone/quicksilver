@@ -176,7 +176,7 @@ func (s *AppTestSuite) initTestZone() {
 		RedelegationEnd:   -62135596800,
 	}
 
-	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetDelegation(s.chainA.GetContext(), &zone, delRecord)
+	s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetDelegation(s.chainA.GetContext(), zone.ChainId, delRecord)
 
 	wRecord := icstypes.WithdrawalRecord{
 		ChainId:   "uni-5",
