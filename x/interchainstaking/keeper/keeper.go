@@ -603,30 +603,38 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmat
 	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
 }
 
-func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (types.ValidatorIntents, error) {
+func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) (types.ValidatorIntents, error) {
 	var intents types.ValidatorIntents
 	var filteredIntents types.ValidatorIntents
 
-	if len(z.AggregateIntent) == 0 {
-		intents = k.DefaultAggregateIntents(ctx, z.ChainId)
+	if len(zone.AggregateIntent) == 0 {
+		intents = k.DefaultAggregateIntents(ctx, zone.ChainId)
 	} else {
-		intents = z.AggregateIntent
+		intents = zone.AggregateIntent
 	}
+
+	jailedThreshold := k.EpochsKeeper.GetEpochInfo(ctx, "epoch").Duration * 2
+
 	// filter intents here...
 	// check validators for tombstoned
-	for _, v := range intents {
-		valAddrBytes, err := addressutils.ValAddressFromBech32(v.ValoperAddress, z.GetValoperPrefix())
+	for _, validatorIntent := range intents {
+		valAddrBytes, err := addressutils.ValAddressFromBech32(validatorIntent.ValoperAddress, zone.GetValoperPrefix())
 		if err != nil {
 			return nil, err
 		}
-		val, found := k.GetValidator(ctx, z.ChainId, valAddrBytes)
+		validator, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 
 		// this case should not happen as we check the validity of a validator entry when intent is set.
 		if !found {
 			continue
 		}
 		// we should never let tombstoned validators into the list, even if they are explicitly selected
-		if val.Tombstoned {
+		if validator.Tombstoned {
+			continue
+		}
+
+		// if the validator has been jailed for > two epochs, remove them.
+		if validator.Jailed && validator.JailedSince.Add(jailedThreshold).Before(ctx.BlockTime()) {
 			continue
 		}
 
@@ -634,7 +642,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 		// if in deny list {
 		// continue
 		// }
-		filteredIntents = append(filteredIntents, v)
+		filteredIntents = append(filteredIntents, validatorIntent)
 	}
 
 	return filteredIntents, nil

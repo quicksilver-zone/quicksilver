@@ -1,20 +1,20 @@
 package keeper_test
 
-func (s *KeeperTestSuite) TestGetSetDelete() {
-	k := s.GetQuicksilverApp(s.chainA).ClaimsManagerKeeper
-	ctx := s.chainA.GetContext()
+func (suite *KeeperTestSuite) TestGetSetDelete() {
+	k := suite.GetQuicksilverApp(suite.chainA).ClaimsManagerKeeper
+	ctx := suite.chainA.GetContext()
 
 	_, found := k.GetSelfConsensusState(ctx, "test")
-	s.Require().False(found)
+	suite.Require().False(found)
 
 	err := k.StoreSelfConsensusState(ctx, "test")
-	s.Require().NoError(err)
+	suite.Require().NoError(err)
 
 	_, found = k.GetSelfConsensusState(ctx, "test")
-	s.Require().True(found)
+	suite.Require().True(found)
 
 	k.DeleteSelfConsensusState(ctx, "test")
 
 	_, found = k.GetSelfConsensusState(ctx, "test")
-	s.Require().False(found)
+	suite.Require().False(found)
 }
