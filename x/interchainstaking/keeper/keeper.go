@@ -340,7 +340,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			return err
 		}
 
-		if _, found := k.GetPerformanceDelegation(ctx, zone, validator.OperatorAddress); !found {
+		if _, found := k.GetPerformanceDelegation(ctx, zone.ChainId, zone.PerformanceAddress, validator.OperatorAddress); !found {
 			if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 				return err
 			}
@@ -542,9 +542,9 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 	)
 }
 
-func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkmath.Int {
+func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, chainID string) sdkmath.Int {
 	delegationsInProcess := sdkmath.ZeroInt()
-	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
+	k.IterateZoneReceipts(ctx, chainID, func(_ int64, receipt types.Receipt) (stop bool) {
 		if receipt.Completed == nil {
 			for _, coin := range receipt.Amount {
 				delegationsInProcess = delegationsInProcess.Add(coin.Amount) // we cannot simply choose
@@ -558,7 +558,7 @@ func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkm
 // redemption rate
 
 func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
-	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone)
+	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone.ChainId)
 	ratio, isZero := k.GetRatio(ctx, zone, epochRewards.Add(delegationsInProcess))
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
@@ -608,30 +608,38 @@ func (k *Keeper) GetRatio(ctx sdk.Context, zone *types.Zone, epochRewards sdkmat
 	return sdk.NewDecFromInt(nativeAssetAmount.Add(epochRewards).Add(nativeAssetUnbondingAmount)).Quo(sdk.NewDecFromInt(qAssetAmount)), false
 }
 
-func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (types.ValidatorIntents, error) {
+func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, zone *types.Zone) (types.ValidatorIntents, error) {
 	var intents types.ValidatorIntents
 	var filteredIntents types.ValidatorIntents
 
-	if len(z.AggregateIntent) == 0 {
-		intents = k.DefaultAggregateIntents(ctx, z.ChainId)
+	if len(zone.AggregateIntent) == 0 {
+		intents = k.DefaultAggregateIntents(ctx, zone.ChainId)
 	} else {
-		intents = z.AggregateIntent
+		intents = zone.AggregateIntent
 	}
+
+	jailedThreshold := k.EpochsKeeper.GetEpochInfo(ctx, "epoch").Duration * 2
+
 	// filter intents here...
 	// check validators for tombstoned
-	for _, v := range intents {
-		valAddrBytes, err := addressutils.ValAddressFromBech32(v.ValoperAddress, z.GetValoperPrefix())
+	for _, validatorIntent := range intents {
+		valAddrBytes, err := addressutils.ValAddressFromBech32(validatorIntent.ValoperAddress, zone.GetValoperPrefix())
 		if err != nil {
 			return nil, err
 		}
-		val, found := k.GetValidator(ctx, z.ChainId, valAddrBytes)
+		validator, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
 
 		// this case should not happen as we check the validity of a validator entry when intent is set.
 		if !found {
 			continue
 		}
 		// we should never let tombstoned validators into the list, even if they are explicitly selected
-		if val.Tombstoned {
+		if validator.Tombstoned {
+			continue
+		}
+
+		// if the validator has been jailed for > two epochs, remove them.
+		if validator.Jailed && validator.JailedSince.Add(jailedThreshold).Before(ctx.BlockTime()) {
 			continue
 		}
 
@@ -639,14 +647,14 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 		// if in deny list {
 		// continue
 		// }
-		filteredIntents = append(filteredIntents, v)
+		filteredIntents = append(filteredIntents, validatorIntent)
 	}
 
 	return filteredIntents, nil
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64) error {
-	currentAllocations, currentSum, currentLocked, lockedSum := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, currentLocked, lockedSum := k.GetDelegationMap(ctx, zone.ChainId)
 	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
 	if err != nil {
 		return err

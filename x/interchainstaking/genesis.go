@@ -29,7 +29,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 			panic("unable to find zone for delegation")
 		}
 		for _, delegation := range delegationForZone.Delegations {
-			k.SetDelegation(ctx, &zone, *delegation)
+			k.SetDelegation(ctx, zone.ChainId, *delegation)
 		}
 	}
 
@@ -39,7 +39,7 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 			panic("unable to find zone for delegation")
 		}
 		for _, delegation := range perfDelegationForZone.Delegations {
-			k.SetPerformanceDelegation(ctx, &zone, *delegation)
+			k.SetPerformanceDelegation(ctx, zone.ChainId, *delegation)
 		}
 	}
 
@@ -79,7 +79,7 @@ func ExportGenesis(ctx sdk.Context, k *keeper.Keeper) *types.GenesisState {
 func ExportDelegationsPerZone(ctx sdk.Context, k *keeper.Keeper) []types.DelegationsForZone {
 	delegationsForZones := make([]types.DelegationsForZone, 0)
 	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
-		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainId, Delegations: k.GetAllDelegationsAsPointer(ctx, zone)})
+		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainId, Delegations: k.GetAllDelegationsAsPointer(ctx, zone.ChainId)})
 		return false
 	})
 	return delegationsForZones
@@ -88,7 +88,7 @@ func ExportDelegationsPerZone(ctx sdk.Context, k *keeper.Keeper) []types.Delegat
 func ExportPerformanceDelegationsPerZone(ctx sdk.Context, k *keeper.Keeper) []types.DelegationsForZone {
 	delegationsForZones := make([]types.DelegationsForZone, 0)
 	k.IterateZones(ctx, func(_ int64, zone *types.Zone) (stop bool) {
-		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainId, Delegations: k.GetAllPerformanceDelegationsAsPointer(ctx, zone)})
+		delegationsForZones = append(delegationsForZones, types.DelegationsForZone{ChainId: zone.ChainId, Delegations: k.GetAllPerformanceDelegationsAsPointer(ctx, zone.ChainId)})
 		return false
 	})
 	return delegationsForZones
