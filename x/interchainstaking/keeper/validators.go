@@ -40,7 +40,7 @@ func (k Keeper) GetActiveValidators(ctx sdk.Context, chainID string) []types.Val
 	return validators
 }
 
-// GetValidators returns validators by chainID.
+// GetValidator returns validator by chainID and address.
 func (k Keeper) GetValidator(ctx sdk.Context, chainID string, address []byte) (types.Validator, bool) {
 	val := types.Validator{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(chainID))

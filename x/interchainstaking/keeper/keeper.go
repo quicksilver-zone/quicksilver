@@ -376,7 +376,7 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 			return err
 		}
 
-		if _, found := k.GetPerformanceDelegation(ctx, zone, validator.OperatorAddress); !found {
+		if _, found := k.GetPerformanceDelegation(ctx, zone.ChainId, zone.PerformanceAddress, validator.OperatorAddress); !found {
 			if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 				return err
 			}
@@ -466,15 +466,15 @@ func (k *Keeper) SetParams(ctx sdk.Context, params types.Params) {
 func (k *Keeper) GetChainID(ctx sdk.Context, connectionID string) (string, error) {
 	conn, found := k.IBCKeeper.ConnectionKeeper.GetConnection(ctx, connectionID)
 	if !found {
-		return "", fmt.Errorf("invalid connection id, \"%s\" not found", connectionID)
+		return "", fmt.Errorf("invalid connection id, %q not found", connectionID)
 	}
 	clientState, found := k.IBCKeeper.ClientKeeper.GetClientState(ctx, conn.ClientId)
 	if !found {
-		return "", fmt.Errorf("client id \"%s\" not found for connection \"%s\"", conn.ClientId, connectionID)
+		return "", fmt.Errorf("client id %q not found for connection %q", conn.ClientId, connectionID)
 	}
 	client, ok := clientState.(*ibctmtypes.ClientState)
 	if !ok {
-		return "", fmt.Errorf("invalid client state for client \"%s\" on connection \"%s\"", conn.ClientId, connectionID)
+		return "", fmt.Errorf("invalid client state for client %q on connection %q", conn.ClientId, connectionID)
 	}
 
 	return client.ChainId, nil
@@ -594,9 +594,9 @@ func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID str
 	return nil
 }
 
-func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkmath.Int {
+func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, chainID string) sdkmath.Int {
 	delegationsInProcess := sdkmath.ZeroInt()
-	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) (stop bool) {
+	k.IterateZoneReceipts(ctx, chainID, func(_ int64, receipt types.Receipt) (stop bool) {
 		if receipt.Completed == nil {
 			for _, coin := range receipt.Amount {
 				delegationsInProcess = delegationsInProcess.Add(coin.Amount) // we cannot simply choose
@@ -610,7 +610,7 @@ func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, zone *types.Zone) sdkm
 // redemption rate
 
 func (k *Keeper) UpdateRedemptionRate(ctx sdk.Context, zone *types.Zone, epochRewards sdkmath.Int) {
-	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone)
+	delegationsInProcess := k.GetDelegationsInProcess(ctx, zone.ChainId)
 	ratio, isZero := k.GetRatio(ctx, zone, epochRewards.Add(delegationsInProcess))
 	k.Logger(ctx).Info("Epochly rewards", "coins", epochRewards)
 	k.Logger(ctx).Info("Last redemption rate", "rate", zone.LastRedemptionRate)
@@ -698,7 +698,7 @@ func (k *Keeper) GetAggregateIntentOrDefault(ctx sdk.Context, z *types.Zone) (ty
 }
 
 func (k *Keeper) Rebalance(ctx sdk.Context, zone *types.Zone, epochNumber int64) error {
-	currentAllocations, currentSum, currentLocked, lockedSum := k.GetDelegationMap(ctx, zone)
+	currentAllocations, currentSum, currentLocked, lockedSum := k.GetDelegationMap(ctx, zone.ChainId)
 	targetAllocations, err := k.GetAggregateIntentOrDefault(ctx, zone)
 	if err != nil {
 		return err

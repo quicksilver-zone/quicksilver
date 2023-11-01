@@ -82,7 +82,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	// suite.ErrorContains(err, "no sender found. Ignoring")
-	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash))
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, zone.ChainId, hash)
 	suite.True(found)                  // check nilReceipt is found for hash
 	suite.Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
 	suite.Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
@@ -114,7 +114,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	// suite.ErrorContains(err, "no sender found. Ignoring")
-	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash))
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, zone.ChainId, hash)
 	suite.True(found)                  // check nilReceipt is found for hash
 	suite.Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
 	suite.Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
@@ -184,7 +184,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMixedSender() { // 
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, transaction, hash, zone)
 	// suite.ErrorContains(err, "sender mismatch: expected")
-	nilReceipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash))
+	nilReceipt, found := icsKeeper.GetReceipt(ctx, zone.ChainId, hash)
 	suite.True(found)                  // check nilReceipt is found for hash
 	suite.Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
 	suite.Nil(nilReceipt.Amount)       // check nilReceipt has nil amount
@@ -273,7 +273,7 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 
 	count = 0
 	sum := 0
-	icsKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+	icsKeeper.IterateZoneReceipts(ctx, zone.ChainId, func(index int64, receiptInfo types.Receipt) (stop bool) {
 		count++
 		sum += int(receiptInfo.Amount.AmountOf("uatom").Int64())
 		return false
@@ -284,7 +284,7 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 
 	count = 0
 	sum = 0
-	icsKeeper.IterateZoneReceipts(ctx, &zone2, func(index int64, receiptInfo types.Receipt) (stop bool) {
+	icsKeeper.IterateZoneReceipts(ctx, zone2.ChainId, func(index int64, receiptInfo types.Receipt) (stop bool) {
 		count++
 		sum += int(receiptInfo.Amount.AmountOf("uosmo").Int64())
 		return false
@@ -297,22 +297,22 @@ func (suite *KeeperTestSuite) TestReceiptStore() {
 	suite.NoError(err)
 	suite.Equal(2, len(out))
 
-	receipt, found := icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash1))
+	receipt, found := icsKeeper.GetReceipt(ctx, zone.ChainId, hash1)
 	suite.True(found)
 	suite.Equal(receipt1, &receipt)
 	now := ctx.BlockTime().Add(time.Second)
 	receipt.Completed = &now
 	icsKeeper.SetReceipt(ctx, receipt)
-	icsKeeper.DeleteReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash2))
+	icsKeeper.DeleteReceipt(ctx, zone.ChainId, hash2)
 
 	out, err = icsKeeper.UserZoneReceipts(ctx, &zone, account1)
 	suite.NoError(err)
 	suite.Equal(1, len(out))
 	suite.Equal(&now, out[0].Completed)
 
-	icsKeeper.SetReceiptsCompleted(ctx, &zone, now, now)
+	icsKeeper.SetReceiptsCompleted(ctx, zone.ChainId, now, now)
 
-	receipt, found = icsKeeper.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hash3))
+	receipt, found = icsKeeper.GetReceipt(ctx, zone.ChainId, hash3)
 	suite.True(found)
 
 	suite.Equal(&now, receipt.Completed)
