@@ -631,7 +631,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 	}
 }
 
-func (suite *KeeperTestSuite) TestRemovePerformanceDelegation() {
+func (suite *KeeperTestSuite) TestPerformanceDelegation() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
 	chainID := "quicksilver-1"
@@ -673,22 +673,25 @@ func (suite *KeeperTestSuite) TestRemovePerformanceDelegation() {
 
 	vals := quicksilver.InterchainstakingKeeper.GetValidators(ctx, chainID)
 
-	// create pert delegation
+	// create perf delegation
 	performanceAddress := zone.PerformanceAddress
 	perfDelegation := icstypes.Delegation{
 		DelegationAddress: performanceAddress.Address,
 		ValidatorAddress:  vals[1].ValoperAddress,
 		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
 	}
-	// set
-	quicksilver.InterchainstakingKeeper.SetPerformanceDelegation(ctx, zone.ChainId, perfDelegation)
 
-	// Handle remove
+	// set and check get perf delegation
+	quicksilver.InterchainstakingKeeper.SetPerformanceDelegation(ctx, zone.ChainId, perfDelegation)
+	_, found := quicksilver.InterchainstakingKeeper.GetPerformanceDelegation(ctx, chainID, performanceAddress, perfDelegation.ValidatorAddress)
+	suite.True(found)
+
+	// Handle remove perf delegation
 	err = quicksilver.InterchainstakingKeeper.RemovePerformanceDelegation(ctx, chainID, perfDelegation)
 	suite.NoError(err)
 
-	// check pert delegation
-	_, found := quicksilver.InterchainstakingKeeper.GetPerformanceDelegation(ctx, chainID, performanceAddress, perfDelegation.ValidatorAddress)
+	// check perf delegation
+	_, found = quicksilver.InterchainstakingKeeper.GetPerformanceDelegation(ctx, chainID, performanceAddress, perfDelegation.ValidatorAddress)
 	suite.False(found, "Not found pert delegation stored in the keeper")
 }
 
