@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	"github.com/quicksilver-zone/quicksilver/app"
 	"github.com/quicksilver-zone/quicksilver/utils/addressutils"
@@ -628,6 +629,67 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			suite.True(isCorrect)
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestRemovePerformanceDelegation() {
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+	chainID := "quicksilver-1"
+
+	// Set zone
+	quicksilver.InterchainstakingKeeper.SetZone(ctx, &icstypes.Zone{
+		ConnectionId: "connection-test",
+		ChainId:      chainID,
+		LocalDenom:   "uqck",
+		BaseDenom:    "qck",
+		DelegationAddress: &icstypes.ICAAccount{
+			Address: addressutils.GenerateAddressForTestWithPrefix("quicksilver"),
+		},
+		PerformanceAddress: &icstypes.ICAAccount{
+			Address: addressutils.GenerateAddressForTestWithPrefix("quicksilver"),
+		},
+	})
+	// Check set zone
+	zone, ok := quicksilver.InterchainstakingKeeper.GetZone(ctx, chainID)
+	suite.True(ok, "expected to retrieve a zone")
+	suite.NotEqual(icstypes.Zone{}, zone, "Expecting a non-blank zone")
+
+	// set val
+	val0 := icstypes.Validator{ValoperAddress: "cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	err := quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val0)
+	suite.NoError(err)
+
+	val1 := icstypes.Validator{ValoperAddress: "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val1)
+	suite.NoError(err)
+
+	val2 := icstypes.Validator{ValoperAddress: "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val2)
+	suite.NoError(err)
+
+	val3 := icstypes.Validator{ValoperAddress: "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7", CommissionRate: sdk.MustNewDecFromStr("1"), VotingPower: sdk.NewInt(2000), Status: stakingtypes.BondStatusBonded}
+	err = quicksilver.InterchainstakingKeeper.SetValidator(ctx, zone.ChainId, val3)
+	suite.NoError(err)
+
+	vals := quicksilver.InterchainstakingKeeper.GetValidators(ctx, chainID)
+
+	// create pert delegation
+	performanceAddress := zone.PerformanceAddress
+	perfDelegation := icstypes.Delegation{
+		DelegationAddress: performanceAddress.Address,
+		ValidatorAddress:  vals[1].ValoperAddress,
+		Amount:            sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1000)),
+	}
+	// set
+	quicksilver.InterchainstakingKeeper.SetPerformanceDelegation(ctx, zone.ChainId, perfDelegation)
+
+	// Handle remove
+	err = quicksilver.InterchainstakingKeeper.RemovePerformanceDelegation(ctx, chainID, perfDelegation)
+	suite.NoError(err)
+
+	// check pert delegation
+	_, found := quicksilver.InterchainstakingKeeper.GetPerformanceDelegation(ctx, chainID, performanceAddress, perfDelegation.ValidatorAddress)
+	suite.False(found, "Not found pert delegation stored in the keeper")
 }
 
 func (suite *KeeperTestSuite) TestDelegationPlan() {
