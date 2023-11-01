@@ -460,7 +460,7 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 
 			// remove performance delegation records
 			k.IterateAllPerformanceDelegations(ctx, chainID, func(delegation types.Delegation) (stop bool) {
-				err := k.RemoveDelegation(ctx, chainID, delegation)
+				err := k.RemovePerformanceDelegation(ctx, chainID, delegation)
 				if err != nil {
 					panic(err)
 				}
