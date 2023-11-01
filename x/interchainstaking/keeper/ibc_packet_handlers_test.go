@@ -773,6 +773,152 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 	}
 }
 
+func (suite *KeeperTestSuite) TestHandleFailedUnbondSend() {
+	v1 := addressutils.GenerateValAddressForTest().String()
+	v2 := addressutils.GenerateValAddressForTest().String()
+	user := addressutils.GenerateAddressForTestWithPrefix("quick")
+	tests := []struct {
+		name    string
+		record  func(zone *icstypes.Zone) icstypes.WithdrawalRecord
+		message []banktypes.MsgSend
+		memo    string
+		err     []bool
+		check   bool
+	}{
+		{
+			name:    "invalid - unable to parse tx hash",
+			message: []banktypes.MsgSend{},
+			memo:    "withdrawal/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:     []bool{true},
+			check:   false,
+		},
+		{
+			name: "invalid - no matching record",
+			record: func(zone *icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   zone.ChainId,
+					Delegator: addressutils.GenerateAccAddressForTest().String(),
+					Distribution: []*icstypes.Distribution{
+						{Valoper: v1, Amount: 1000000},
+						{Valoper: v2, Amount: 1000000},
+					},
+					Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+					Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(4000000))),
+					BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(4000000)),
+					Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+					Status:     icstypes.WithdrawStatusQueued,
+				}
+			},
+			message: []banktypes.MsgSend{},
+			memo:    "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:     []bool{true},
+			check:   false,
+		},
+		{
+			name: "invalid - try msg send 2 times with one txHash",
+			record: func(zone *icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   zone.ChainId,
+					Delegator: addressutils.GenerateAccAddressForTest().String(),
+					Distribution: []*icstypes.Distribution{
+						{Valoper: v1, Amount: 1000000},
+						{Valoper: v2, Amount: 1000000},
+					},
+					Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+					Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+					BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2000000)),
+					Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+					Status:     icstypes.WithdrawStatusSend,
+				}
+			},
+			message: []banktypes.MsgSend{
+				{
+					FromAddress: user,
+					Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
+				},
+				{
+					FromAddress: user,
+					Amount:      sdk.NewCoins(sdk.NewCoin(v2+"2", sdk.NewInt(1000000))),
+				},
+			},
+			memo:  "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:   []bool{false, true},
+			check: true,
+		},
+		{
+			name: "valid",
+			record: func(zone *icstypes.Zone) icstypes.WithdrawalRecord {
+				return icstypes.WithdrawalRecord{
+					ChainId:   zone.ChainId,
+					Delegator: addressutils.GenerateAccAddressForTest().String(),
+					Distribution: []*icstypes.Distribution{
+						{Valoper: v1, Amount: 1000000},
+						{Valoper: v2, Amount: 1000000},
+					},
+					Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+					Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+					BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2000000)),
+					Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+					Status:     icstypes.WithdrawStatusSend,
+				}
+			},
+			message: []banktypes.MsgSend{
+				{
+					FromAddress: user,
+					Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
+				},
+			},
+			memo:  "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+			err:   []bool{false},
+			check: true,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			if !found {
+				suite.Fail("unable to retrieve zone for test")
+			}
+
+			var record icstypes.WithdrawalRecord
+			if test.record != nil {
+				// set up zones
+				record = test.record(&zone)
+				quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, record)
+			}
+
+			// set address for zone mapping
+			quicksilver.InterchainstakingKeeper.SetAddressZoneMapping(ctx, user, zone.ChainId)
+
+			// trigger handler
+			for i := range test.message {
+				err := quicksilver.InterchainstakingKeeper.HandleFailedUnbondSend(ctx, &test.message[i], test.memo)
+				if test.err[i] {
+					suite.Error(err)
+				} else {
+					suite.NoError(err)
+				}
+			}
+
+			if test.check {
+				newRecord, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, record.Txhash, icstypes.WithdrawStatusUnbond)
+				if !found {
+					suite.Fail("unable to retrieve new withdrawal record for test")
+				}
+				suite.Equal(ctx.BlockTime().Add(icstypes.DefaultWithdrawalRequeueDelay), newRecord.CompletionTime)
+				suite.Equal(newRecord.Status, icstypes.WithdrawStatusUnbond)
+			}
+		})
+	}
+}
+
 func (suite *KeeperTestSuite) TestReceiveAckErrForBeginRedelegate() {
 	suite.SetupTest()
 	suite.setupTestZones()
