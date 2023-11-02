@@ -937,6 +937,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 		})
 	}
 }
+
 func (suite *KeeperTestSuite) TestHandleFailedUnbondSend() {
 	v1 := addressutils.GenerateValAddressForTest().String()
 	v2 := addressutils.GenerateValAddressForTest().String()
@@ -1050,7 +1051,7 @@ func (suite *KeeperTestSuite) TestHandleFailedUnbondSend() {
 			if !found {
 				suite.Fail("unable to retrieve zone for test")
 			}
-			
+
 			var record icstypes.WithdrawalRecord
 			if test.record != nil {
 				// set up zones
