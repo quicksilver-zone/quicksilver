@@ -70,8 +70,8 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 				newZone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
 				suite.True(found)
 
-				suite.Equal(newZone.BaseDenom,"uosmo")
-				suite.Equal(newZone.LocalDenom,"uqosmo")
+				suite.Equal(newZone.BaseDenom, "uosmo")
+				suite.Equal(newZone.LocalDenom, "uqosmo")
 				suite.True(newZone.LiquidityModule)
 				suite.False(newZone.ReturnToSender)
 				suite.Equal(newZone.MessagesPerTx, int64(2))
