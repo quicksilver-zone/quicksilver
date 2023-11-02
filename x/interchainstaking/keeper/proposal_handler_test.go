@@ -25,7 +25,7 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 		setup     func(ctx sdk.Context, quicksilver *app.Quicksilver)
 		proposals func(zone icstypes.Zone) []icstypes.UpdateZoneProposal
 		expectErr string
-		check     func()
+		check     func(ctx sdk.Context, quicksilver *app.Quicksilver, prevZone icstypes.Zone)
 	}{
 		{
 			name:      "valid - all changes except connection",
@@ -66,6 +66,17 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 					},
 				}
 			},
+			check: func(ctx sdk.Context, quicksilver *app.Quicksilver, prevZone icstypes.Zone) {
+				newZone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				suite.Equal(newZone.BaseDenom,"uosmo")
+				suite.Equal(newZone.LocalDenom,"uqosmo")
+				suite.True(newZone.LiquidityModule)
+				suite.False(newZone.ReturnToSender)
+				suite.Equal(newZone.MessagesPerTx, int64(2))
+				suite.Equal(newZone.AccountPrefix, "osmo")
+			},
 		},
 		{
 			name:      "valid - connection",
@@ -102,6 +113,12 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 					},
 				}
 			},
+			check: func(ctx sdk.Context, quicksilver *app.Quicksilver, prevZone icstypes.Zone) {
+				newZone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				suite.Equal(newZone.ConnectionId, suite.path.EndpointA.ConnectionID)
+			},
 		},
 		{
 			name:      "valid - no changes",
@@ -116,6 +133,12 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 						Changes: []*icstypes.UpdateZoneValue{},
 					},
 				}
+			},
+			check: func(ctx sdk.Context, quicksilver *app.Quicksilver, prevZone icstypes.Zone) {
+				newZone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+				suite.True(found)
+
+				suite.Equal(prevZone, newZone)
 			},
 		},
 		{
@@ -433,6 +456,10 @@ func (suite *KeeperTestSuite) TestHandleUpdateZoneProposal() {
 				} else {
 					suite.NoError(err)
 				}
+			}
+
+			if tc.expectErr == "" {
+				tc.check(ctx, quicksilver, zone)
 			}
 		})
 	}
