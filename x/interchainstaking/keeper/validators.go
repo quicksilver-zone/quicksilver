@@ -40,7 +40,7 @@ func (k Keeper) GetActiveValidators(ctx sdk.Context, chainID string) []types.Val
 	return validators
 }
 
-// GetValidators returns validators by chainID.
+// GetValidator returns validator by chainID and address.
 func (k Keeper) GetValidator(ctx sdk.Context, chainID string, address []byte) (types.Validator, bool) {
 	val := types.Validator{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorsKey(chainID))
@@ -91,4 +91,32 @@ func (k Keeper) IterateValidators(ctx sdk.Context, chainID string, fn func(index
 		}
 		i++
 	}
+}
+
+// GetValidatorAddrByConsAddr returns validator address by Consensus address.
+func (k Keeper) GetValidatorAddrByConsAddr(ctx sdk.Context, chainID string, consAddr []byte) (string, bool) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorAddrsByConsAddrKey(chainID))
+	bz := store.Get(consAddr)
+	if len(bz) == 0 {
+		return "", false
+	}
+
+	return string(bz), true
+}
+
+// SetValidatorAddrByConsAddr set validator address by Consensus address.
+func (k Keeper) SetValidatorAddrByConsAddr(ctx sdk.Context, chainID string, val types.Validator) error {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorAddrsByConsAddrKey(chainID))
+	consPk, err := val.GetConsAddr()
+	if err != nil {
+		return err
+	}
+	store.Set(consPk, []byte(val.ValoperAddress))
+	return nil
+}
+
+// DeleteValidatorAddrByConsAddr delete validator address by Consensus address.
+func (k Keeper) DeleteValidatorAddrByConsAddr(ctx sdk.Context, chainID string, consAddr []byte) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.GetZoneValidatorAddrsByConsAddrKey(chainID))
+	store.Delete(consAddr)
 }
