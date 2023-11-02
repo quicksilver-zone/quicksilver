@@ -889,7 +889,7 @@ func (k *Keeper) HandleDelegate(ctx sdk.Context, msg sdk.Msg, memo string) error
 	switch {
 	case memo == "rewards":
 	case strings.HasPrefix(memo, "batch"):
-		k.Logger(ctx).Debug("batch delegation", "memo", memo, "tx", delegateMsg)
+		k.Logger(ctx).Error("batch delegation", "memo", memo, "tx", delegateMsg)
 		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)
 		if err != nil {
 			return err
@@ -939,7 +939,7 @@ func (k *Keeper) HandleFailedDelegate(ctx sdk.Context, msg sdk.Msg, memo string)
 
 	switch {
 	case strings.HasPrefix(memo, "batch"):
-		k.Logger(ctx).Debug("batch delegation failed", "memo", memo, "tx", delegateMsg)
+		k.Logger(ctx).Error("batch delegation failed", "memo", memo, "tx", delegateMsg)
 		zone.WithdrawalWaitgroup--
 		k.SetZone(ctx, zone)
 		if zone.WithdrawalWaitgroup == 0 {
@@ -1124,7 +1124,7 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 		k.SetZone(ctx, zone)
 	}
 	k.Logger(ctx).Info("Received MsgWithdrawDelegatorReward acknowledgement", "wg", zone.WithdrawalWaitgroup, "delegator", withdrawalMsg.DelegatorAddress)
-	switch zone.WithdrawalWaitgroup == 0 && zone.DelegationAddress.Balance.IsZero() {
+	switch zone.WithdrawalWaitgroup == 0 {
 	case true:
 		k.Logger(ctx).Info("triggering redemption rate calc after rewards withdrawal")
 		return k.TriggerRedemptionRate(ctx, zone)

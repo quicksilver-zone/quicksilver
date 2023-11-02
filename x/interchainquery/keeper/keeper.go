@@ -114,7 +114,7 @@ func (k *Keeper) GetDatapointOrRequest(ctx sdk.Context, module string, connectio
 }
 
 func (k *Keeper) MakeRequest(ctx sdk.Context, connectionID string, chainID string, queryType string, request []byte, period math.Int, module string, callbackID string, ttl uint64) {
-	k.Logger(ctx).Info(
+	k.Logger(ctx).Debug(
 		"MakeRequest",
 		"connection_id", connectionID,
 		"chain_id", chainID,
@@ -144,7 +144,7 @@ func (k *Keeper) MakeRequest(ctx sdk.Context, connectionID string, chainID strin
 		k.SetQuery(ctx, *newQuery)
 	} else {
 		// a re-request of an existing query triggers resetting of height to trigger immediately.
-		k.Logger(ctx).Info("re-request", "LastHeight", existingQuery.LastHeight)
+		k.Logger(ctx).Debug("re-request", "LastHeight", existingQuery.LastHeight)
 		existingQuery.LastHeight = sdk.ZeroInt()
 		k.SetQuery(ctx, existingQuery)
 	}
