@@ -1127,7 +1127,10 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	// operates outside the delegator set, its purpose is to track validator
 	// performance only.
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
-		zone.WithdrawalWaitgroup--
+		err = zone.DecrementWithdrawalWaitgroup()
+		if err != nil {
+			return err
+		}
 		k.Logger(ctx).Info("Decremented waitgroup", "wg", zone.WithdrawalWaitgroup)
 		k.SetZone(ctx, zone)
 	}
