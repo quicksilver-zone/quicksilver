@@ -814,9 +814,9 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 			triggered: false,
 			err:       true,
 		},
-		// at this time, the waitgroup will be uint32_max so it's not gonna trigger redemption rate
+		// try to decrement when waitgroup = 0
 		{
-			name: "negative waitgroup",
+			name: "try to decrement when waitgroup = 0",
 			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {
 				zone.WithdrawalWaitgroup = 0
 				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
@@ -829,7 +829,7 @@ func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
 				}
 			},
 			triggered: false,
-			err:       false,
+			err:       true,
 		},
 		{
 			name: "valid case with balances != 0",
