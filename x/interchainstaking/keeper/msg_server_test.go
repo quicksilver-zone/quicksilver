@@ -334,7 +334,7 @@ func (suite *KeeperTestSuite) TestRequestRedemption() {
 				}
 				return out
 			}(zone) {
-				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(ctx, &zone, delegation)
+				suite.GetQuicksilverApp(suite.chainA).InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegation)
 			}
 
 			tt.malleate()
