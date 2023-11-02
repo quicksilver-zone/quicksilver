@@ -1106,3 +1106,159 @@ func (s *KeeperTestSuite) Test_v046Callback() {
 		})
 	}
 }
+
+func (s *KeeperTestSuite) TestHandleFailedDelegate_Batch_OK() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.True(found)
+
+	zone.WithdrawalWaitgroup = 100
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: zone.Validators[0].ValoperAddress, Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, "batch/12345678")
+	s.NoError(err)
+
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.True(found)
+	s.Equal(uint32(99), zone.WithdrawalWaitgroup)
+}
+
+func (s *KeeperTestSuite) TestHandleFailedDelegate_PerfAddress_OK() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.True(found)
+
+	zone.WithdrawalWaitgroup = 100
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.PerformanceAddress.Address, ValidatorAddress: zone.Validators[0].ValoperAddress, Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, "batch/12345678")
+	s.NoError(err)
+
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.True(found)
+	// delegator was perf address, no change in waitgroup
+	s.Equal(uint32(100), zone.WithdrawalWaitgroup)
+}
+
+func (s *KeeperTestSuite) TestHandleFailedDelegate_NotBatch_OK() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.True(found)
+
+	zone.WithdrawalWaitgroup = 100
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: zone.Validators[0].ValoperAddress, Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, utils.GenerateRandomHashAsHex())
+	s.NoError(err)
+
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.True(found)
+	// memo was not a batch id, so don't decrement withdrawal wg
+	s.Equal(uint32(100), zone.WithdrawalWaitgroup)
+}
+
+func (s *KeeperTestSuite) TestHandleFailedDelegate_BatchTriggerRR_OK() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.True(found)
+
+	zone.WithdrawalWaitgroup = 1
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+	preQueries := app.InterchainQueryKeeper.AllQueries(ctx)
+
+	msg := stakingtypes.MsgDelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorAddress: zone.Validators[0].ValoperAddress, Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, "batch/12345678")
+	s.NoError(err)
+
+	zone, found = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.True(found)
+	// memo was not a batch id, so don't decrement withdrawal wg
+	s.Equal(uint32(0), zone.WithdrawalWaitgroup)
+
+	postQueries := app.InterchainQueryKeeper.AllQueries(ctx)
+
+	// we should have exactly one additional query
+	s.Equal(len(postQueries), len(preQueries)+1)
+
+	distributeRewardsPreQueryCount := 0
+	distributeRewardsPostQueryCount := 0
+	for _, q := range preQueries {
+		if q.CallbackId == "distributerewards" {
+			distributeRewardsPreQueryCount++
+		}
+	}
+
+	for _, q := range postQueries {
+		if q.CallbackId == "distributerewards" {
+			distributeRewardsPostQueryCount++
+		}
+	}
+
+	s.Equal(distributeRewardsPostQueryCount, distributeRewardsPreQueryCount+1)
+
+}
+
+func (s *KeeperTestSuite) TestHandleFailedDelegate_BadAddr_Fail() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.True(found)
+
+	zone.WithdrawalWaitgroup = 100
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	msg := stakingtypes.MsgDelegate{DelegatorAddress: utils.GenerateAccAddressForTestWithPrefix("cosmos"), ValidatorAddress: zone.Validators[0].ValoperAddress, Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, utils.GenerateRandomHashAsHex())
+	s.ErrorContains(err, "unable to find zone for address")
+}
+
+func (s *KeeperTestSuite) TestHandleFailedDelegate_BadMsg_Fail() {
+	s.SetupTest()
+	s.setupTestZones()
+
+	app := s.GetQuicksilverApp(s.chainA)
+	ctx := s.chainA.GetContext()
+
+	zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+	s.True(found)
+
+	zone.WithdrawalWaitgroup = 100
+	app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	msg := stakingtypes.MsgBeginRedelegate{DelegatorAddress: zone.DelegationAddress.Address, ValidatorSrcAddress: zone.Validators[0].ValoperAddress, ValidatorDstAddress: zone.Validators[1].ValoperAddress, Amount: sdk.NewCoin("uatom", sdk.NewInt(100))}
+	var msgMsg sdk.Msg = &msg
+	err := app.InterchainstakingKeeper.HandleFailedDelegate(ctx, msgMsg, "batch/12345678")
+	s.ErrorContains(err, "unable to cast source message to MsgDelegate")
+}
