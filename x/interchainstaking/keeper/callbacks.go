@@ -118,7 +118,7 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	// decrement waitgroup as we have received back the query
 	// (initially incremented in AfterEpochEnd)
-	zone.WithdrawalWaitgroup--
+	zone.DecrementWithdrawalWaitgroup()
 
 	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
 
@@ -556,7 +556,7 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 		return err
 	}
 
-	zone.WithdrawalWaitgroup--
+	zone.DecrementWithdrawalWaitgroup()
 	k.SetZone(ctx, &zone)
 
 	return k.FlushOutstandingDelegations(ctx, &zone, coin)
