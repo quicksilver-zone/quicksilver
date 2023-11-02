@@ -215,7 +215,6 @@ type Query struct {
 }
 
 func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logger log.Logger, metrics prommetrics.Metrics) {
-
 	metrics.HistoricQueries.WithLabelValues("historic-queries").Set(float64(len(queries)))
 
 	if len(queries) == 0 {
@@ -363,7 +362,6 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 }
 
 func RunGRPCQuery(ctx context.Context, client *lensclient.ChainClient, method string, reqBz []byte, md metadata.MD, metrics prommetrics.Metrics) (abcitypes.ResponseQuery, metadata.MD, error) {
-
 	// parse height header
 	height, err := lensclient.GetHeightFromMetadata(md)
 	if err != nil {
@@ -420,6 +418,7 @@ func retryLightblock(ctx context.Context, client *lensclient.ChainClient, height
 	}
 	return lightBlock.(*tmtypes.LightBlock), err
 }
+
 func doRequestWithMetrics(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 	startTime := time.Now()
 	metrics.Requests.WithLabelValues("requests", query.Type).Inc()
@@ -609,7 +608,6 @@ func getHeader(ctx context.Context, client, submitClient *lensclient.ChainClient
 	clientHeight, ok := trustedHeight.(clienttypes.Height)
 	if !ok {
 		return nil, fmt.Errorf("error: Could coerce trusted height")
-
 	}
 
 	if !historicOk && clientHeight.RevisionHeight >= uint64(requestHeight+1) {
@@ -649,7 +647,6 @@ func getHeader(ctx context.Context, client, submitClient *lensclient.ChainClient
 }
 
 func getBlocksForTxResults(node rpcclient.Client, resTxs []*coretypes.ResultTx) (map[int64]*coretypes.ResultBlock, error) {
-
 	resBlocks := make(map[int64]*coretypes.ResultBlock)
 
 	for _, resTx := range resTxs {
@@ -721,26 +718,26 @@ func flush(chainId string, toSend []sdk.Msg, logger log.Logger, metrics prommetr
 			resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
 			if err != nil {
 				if resp != nil && resp.Code == 19 && resp.Codespace == "sdk" {
-					//if err.Error() == "transaction failed with code: 19" {
+					// if err.Error() == "transaction failed with code: 19" {
 					_ = logger.Log("msg", "Tx already in mempool")
 				} else if resp != nil && resp.Code == 12 && resp.Codespace == "sdk" {
-					//if err.Error() == "transaction failed with code: 19" {
+					// if err.Error() == "transaction failed with code: 19" {
 					_ = logger.Log("msg", "Not enough gas")
 				} else if err.Error() == "context deadline exceeded" {
 					_ = logger.Log("msg", "Failed to submit in time, retrying")
 					resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
 					if err != nil {
 						if resp != nil && resp.Code == 19 && resp.Codespace == "sdk" {
-							//if err.Error() == "transaction failed with code: 19" {
+							// if err.Error() == "transaction failed with code: 19" {
 							_ = logger.Log("msg", "Tx already in mempool")
 						} else if resp != nil && resp.Code == 12 && resp.Codespace == "sdk" {
-							//if err.Error() == "transaction failed with code: 19" {
+							// if err.Error() == "transaction failed with code: 19" {
 							_ = logger.Log("msg", "Not enough gas")
 						} else if err.Error() == "context deadline exceeded" {
 							_ = logger.Log("msg", "Failed to submit in time, bailing")
 							return
 						} else {
-							//panic(fmt.Sprintf("panic(1): %v", err))
+							// panic(fmt.Sprintf("panic(1): %v", err))
 							_ = logger.Log("msg", "Failed to submit after retry; nevermind, we'll try again!", "err", err)
 							metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
 						}
@@ -789,7 +786,6 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 }
 
 func Close() error {
-
 	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
 
 	for _, chainClient := range globalCfg.Cl {

@@ -105,11 +105,12 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	k.Logger(ctx).Debug("rewards callback", "zone", query.ChainId)
 
-	// unmarshal request payload
-	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (2)")
 	}
+
+	// unmarshal request payload
+	rewardsQuery := distrtypes.QueryDelegationTotalRewardsRequest{}
 	err := k.cdc.Unmarshal(query.Request, &rewardsQuery)
 	if err != nil {
 		return err
@@ -117,7 +118,10 @@ func RewardsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Que
 
 	// decrement waitgroup as we have received back the query
 	// (initially incremented in AfterEpochEnd)
-	zone.WithdrawalWaitgroup--
+	err = zone.DecrementWithdrawalWaitgroup()
+	if err != nil {
+		return err
+	}
 
 	k.Logger(ctx).Debug("QueryDelegationRewards callback", "wg", zone.WithdrawalWaitgroup, "delegatorAddress", rewardsQuery.DelegatorAddress, "zone", query.ChainId)
 
@@ -130,10 +134,11 @@ func DelegationsCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
 
-	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
 	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (3)")
 	}
+
+	delegationQuery := stakingtypes.QueryDelegatorDelegationsRequest{}
 	err := k.cdc.Unmarshal(query.Request, &delegationQuery)
 	if err != nil {
 		return err
@@ -174,8 +179,8 @@ func DelegationCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.
 			return err
 		}
 
-		if delegation, ok := k.GetDelegation(ctx, &zone, delegatorAddress, validatorAddress); ok {
-			err := k.RemoveDelegation(ctx, &zone, delegation)
+		if delegation, ok := k.GetDelegation(ctx, zone.ChainId, delegatorAddress, validatorAddress); ok {
+			err := k.RemoveDelegation(ctx, zone.ChainId, delegation)
 			if err != nil {
 				return err
 			}
@@ -228,11 +233,11 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 
 	k.Logger(ctx).Debug("Deposit interval callback", "zone", zone.ChainId)
 
-	txs := tx.GetTxsEventResponse{}
-
 	if len(args) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (4)")
 	}
+
+	txs := tx.GetTxsEventResponse{}
 	err := k.cdc.Unmarshal(args, &txs)
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal txs for deposit account", "deposit_address", zone.DepositAddress.GetAddress(), "err", err)
@@ -242,7 +247,7 @@ func DepositIntervalCallback(k *Keeper, ctx sdk.Context, args []byte, query icqt
 	for _, txn := range txs.TxResponses {
 		req := tx.GetTxRequest{Hash: txn.TxHash}
 		hashBytes := k.cdc.MustMarshal(&req)
-		_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, txn.TxHash))
+		_, found = k.GetReceipt(ctx, zone.ChainId, txn.TxHash)
 		if found {
 			k.Logger(ctx).Debug("Found previously handled tx. Ignoring.", "txhash", txn.TxHash)
 			continue
@@ -443,7 +448,7 @@ func DepositTxCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Q
 		return fmt.Errorf("invalid tx for query - expected %s, got %s", queryRequest.Hash, hashStr)
 	}
 
-	_, found = k.GetReceipt(ctx, types.GetReceiptKey(zone.ChainId, hashStr))
+	_, found = k.GetReceipt(ctx, zone.ChainId, hashStr)
 	if found {
 		k.Logger(ctx).Info("Found previously handled tx. Ignoring.", "txhash", hashStr)
 		return nil
@@ -554,18 +559,22 @@ func DelegationAccountBalanceCallback(k *Keeper, ctx sdk.Context, args []byte, q
 		return err
 	}
 
-	zone.WithdrawalWaitgroup--
+	err = zone.DecrementWithdrawalWaitgroup()
+	if err != nil {
+		return err
+	}
 	k.SetZone(ctx, &zone)
 
 	return k.FlushOutstandingDelegations(ctx, &zone, coin)
 }
 
 func AllBalancesCallback(k *Keeper, ctx sdk.Context, args []byte, query icqtypes.Query) error {
-	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	// this shouldn't happen because query.Request comes from Quicksilver
 	if len(query.Request) == 0 {
 		return errors.New("attempted to unmarshal zero length byte slice (7)")
 	}
+
+	balanceQuery := banktypes.QueryAllBalancesRequest{}
 	err := k.cdc.Unmarshal(query.Request, &balanceQuery)
 	if err != nil {
 		return err
