@@ -1,9 +1,12 @@
 package runner
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
 	stdlog "log"
 	"math"
 	"math/rand"
@@ -15,14 +18,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ingenuity-build/interchain-queries/pkg/config"
-	"github.com/ingenuity-build/interchain-queries/prommetrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/config"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/prommetrics"
 
 	"github.com/go-kit/log"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	querytypes "github.com/cosmos/cosmos-sdk/types/query"
 	txtypes "github.com/cosmos/cosmos-sdk/types/tx"
@@ -32,20 +34,21 @@ import (
 	abcitypes "github.com/tendermint/tendermint/abci/types"
 	tmquery "github.com/tendermint/tendermint/libs/pubsub/query"
 	"github.com/tendermint/tendermint/proto/tendermint/crypto"
-	rpcclient "github.com/tendermint/tendermint/rpc/client"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	"google.golang.org/grpc/metadata"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	clienttypes "github.com/cosmos/ibc-go/v5/modules/core/02-client/types"
 	tmclient "github.com/cosmos/ibc-go/v5/modules/light-clients/07-tendermint/types"
 	"github.com/dgraph-io/ristretto"
+	cmtjson "github.com/tendermint/tendermint/libs/json"
+	jsonrpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
+	jsonrpctypes "github.com/tendermint/tendermint/rpc/jsonrpc/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
 type Clients []*lensclient.ChainClient
 
-const VERSION = "icq/v0.9.1"
+const VERSION = "icq/v0.10.0"
 
 var (
 	WaitInterval          = time.Second * 6
@@ -141,7 +144,7 @@ func Run(cfg *config.Config, home string) error {
 		for v := range ch {
 			v.Events["source"] = []string{chainId}
 			// why does this always trigger twice? messages are deduped later, but this causes 2x queries to trigger.
-			time.Sleep(50 * time.Millisecond) // try to avoid thundering herd.
+			time.Sleep(75 * time.Millisecond) // try to avoid thundering herd.
 			go handleEvent(v, log.With(logger, "worker", "chainClient", "chain", defaultClient.Config.ChainID), metrics)
 		}
 	}(defaultClient.Config.ChainID, ch)
@@ -215,6 +218,7 @@ type Query struct {
 }
 
 func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logger log.Logger, metrics prommetrics.Metrics) {
+
 	metrics.HistoricQueries.WithLabelValues("historic-queries").Set(float64(len(queries)))
 
 	if len(queries) == 0 {
@@ -225,7 +229,7 @@ func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logge
 	rand.Shuffle(len(queries), func(i, j int) { queries[i], queries[j] = queries[j], queries[i] })
 
 	sort.SliceStable(queries, func(i, j int) bool {
-		return queries[i].CallbackId == "allbalances" || queries[i].CallbackId == "depositinterval" || queries[i].CallbackId == "deposittx" // || queries[i].LastEmission.GT(queries[j].LastEmission)
+		return queries[i].CallbackId == "allbalances" || queries[i].CallbackId == "depositinterval" || queries[i].CallbackId == "deposittx" || queries[i].LastEmission.GT(queries[j].LastEmission)
 	})
 
 	for _, query := range queries[0:int(math.Min(float64(len(queries)), float64(MaxHistoricQueries)))] {
@@ -244,7 +248,6 @@ func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logge
 
 		if _, found := cache.Get("query/" + q.QueryId); found {
 			// break if this is in the cache
-			fmt.Println("avoiding duplicate")
 			continue
 		}
 
@@ -280,7 +283,7 @@ func handleHistoricRequests(queries []qstypes.Query, sourceChainId string, logge
 		}
 		_ = logger.Log("msg", "Handling existing query", "id", query.Id)
 
-		time.Sleep(50 * time.Millisecond) // try to avoid thundering herd.
+		time.Sleep(75 * time.Millisecond) // try to avoid thundering herd.
 
 		go doRequestWithMetrics(q, logger, metrics)
 	}
@@ -362,6 +365,7 @@ func handleEvent(event coretypes.ResultEvent, logger log.Logger, metrics prommet
 }
 
 func RunGRPCQuery(ctx context.Context, client *lensclient.ChainClient, method string, reqBz []byte, md metadata.MD, metrics prommetrics.Metrics) (abcitypes.ResponseQuery, metadata.MD, error) {
+
 	// parse height header
 	height, err := lensclient.GetHeightFromMetadata(md)
 	if err != nil {
@@ -418,7 +422,6 @@ func retryLightblock(ctx context.Context, client *lensclient.ChainClient, height
 	}
 	return lightBlock.(*tmtypes.LightBlock), err
 }
-
 func doRequestWithMetrics(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 	startTime := time.Now()
 	metrics.Requests.WithLabelValues("requests", query.Type).Inc()
@@ -478,39 +481,18 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 	case "tendermint.Tx":
 		req := txtypes.GetTxRequest{}
 		client.Codec.Marshaler.MustUnmarshal(query.Request, &req)
-		txhash, err := hex.DecodeString(req.GetHash())
+		hashBytes, err := hex.DecodeString(req.GetHash())
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not decode txhash %s", err))
+			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get decode hash %s", err))
 			return
 		}
-		resTx, err := client.RPCClient.Tx(ctx, txhash, true)
+		txRes, height, err := Tx(client, hashBytes)
 		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get tx query %s", err))
-			return
-		}
-		if resTx == nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Unable to find tx %s", req.GetHash()))
-			return
-		}
-		resBlocks, err := getBlocksForTxResults(client.RPCClient, []*coretypes.ResultTx{resTx})
-		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get blocks for txs %s", err))
+			_ = logger.Log("msg", fmt.Sprintf("Error: Could not fetch proof %s", err))
 			return
 		}
 
-		out, err := mkTxResult(client.Codec.TxConfig, resTx, resBlocks[resTx.Height])
-		if err != nil {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Could not make txresult for txs %s", err))
-			return
-		}
-
-		_, ok := out.Tx.GetCachedValue().(*txtypes.Tx)
-		if !ok {
-			_ = logger.Log("msg", fmt.Sprintf("Error: Unexpected type, expect %T, got %T", txtypes.Tx{}, out.Tx.GetCachedValue()))
-			return
-		}
-
-		protoProof := resTx.Proof.ToProto()
+		protoProof := txRes.ToProto()
 
 		submitQuerier := lensquery.Query{Client: submitClient, Options: lensquery.DefaultOptions()}
 		clientId, found := cache.Get("clientId/" + query.ConnectionId)
@@ -524,7 +506,7 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 			cache.Set("clientId/"+query.ConnectionId, clientId, 1)
 		}
 
-		header, err := getHeader(ctx, client, submitClient, clientId.(string), out.Height-1, logger, true, metrics)
+		header, err := getHeader(ctx, client, submitClient, clientId.(string), height-1, logger, true, metrics)
 		if err != nil {
 			_ = logger.Log("msg", fmt.Sprintf("Error: Could not get header %s", err))
 			return
@@ -556,6 +538,86 @@ func doRequest(query Query, logger log.Logger, metrics prommetrics.Metrics) {
 
 	msg := &qstypes.MsgSubmitQueryResponse{ChainId: query.ChainId, QueryId: query.QueryId, Result: res.Value, Height: res.Height, ProofOps: res.ProofOps, FromAddress: submitClient.MustEncodeAccAddr(from)}
 	sendQueue[query.SourceChainId] <- msg
+}
+
+// tm0.37 has a breaking change whereby tx events are no longer base64 encoded, so are represented as string and not bytes.
+// As a result, we cannot use the RPCClient.Tx() method which attempts to unmarshal the Result, including the underlying Tx object.
+// As such, we want to query the result directly, and unmarshal the json ourselves, to a representation of the result that conveniently
+// does not contain the Tx object (that we don't use, because the TxProof already contains a byte representation of tx anyway!)
+// Note: this function is compatible with 0.34 and 0.37 representations of transactions.
+func Tx(client *lensclient.ChainClient, hash []byte) (tmtypes.TxProof, int64, error) {
+
+	params := map[string]interface{}{
+		"hash":  hash,
+		"prove": true,
+	}
+
+	id := jsonrpctypes.JSONRPCIntID(0)
+
+	request, err := jsonrpctypes.MapToRequest(id, "tx", params)
+	if err != nil {
+		return tmtypes.TxProof{}, 0, fmt.Errorf("failed to encode params: %w", err)
+	}
+
+	requestBytes, err := json.Marshal(request)
+	if err != nil {
+		return tmtypes.TxProof{}, 0, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	requestBuf := bytes.NewBuffer(requestBytes)
+	httpRequest, err := http.NewRequestWithContext(ctx, http.MethodPost, client.Config.RPCAddr, requestBuf)
+	if err != nil {
+		return tmtypes.TxProof{}, 0, fmt.Errorf("request failed: %w", err)
+	}
+
+	httpRequest.Header.Set("Content-Type", "application/json")
+
+	httpClient, err := jsonrpcclient.DefaultHTTPClient(client.Config.RPCAddr)
+	if err != nil {
+		return tmtypes.TxProof{}, 0, fmt.Errorf("create client failed: %w", err)
+	}
+
+	httpResponse, err := httpClient.Do(httpRequest)
+	if err != nil {
+		return tmtypes.TxProof{}, 0, fmt.Errorf("post failed: %w", err)
+	}
+
+	defer httpResponse.Body.Close()
+	defer httpClient.CloseIdleConnections()
+
+	responseBytes, err := io.ReadAll(httpResponse.Body)
+	if err != nil {
+		return tmtypes.TxProof{}, 0, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	response := &jsonrpctypes.RPCResponse{}
+	if err := json.Unmarshal(responseBytes, response); err != nil {
+		return tmtypes.TxProof{}, 0, fmt.Errorf("error unmarshalling: %w", err)
+	}
+
+	if response.Error != nil {
+		return tmtypes.TxProof{}, 0, response.Error
+	}
+
+	// Unmarshal the RawMessage into the result.
+	result := TxResultMinimal{}
+	if err := cmtjson.Unmarshal(response.Result, &result); err != nil {
+		return tmtypes.TxProof{}, 0, fmt.Errorf("error unmarshalling result: %w", err)
+	}
+
+	height, err := strconv.Atoi(result.Height)
+	if err != nil {
+		return tmtypes.TxProof{}, 0, fmt.Errorf("failed to unmarshal tx height: %w", err)
+	}
+
+	return result.Proof, int64(height), nil
+
+}
+
+// a minimised representation of the Tx emitted by a Tx query, only containing Height and Proof and thus compatbiel with tm0.34 and tm0.37.
+type TxResultMinimal struct {
+	Height string          `json:"height"`
+	Proof  tmtypes.TxProof `json:"proof"`
 }
 
 func submitClientUpdate(client, submitClient *lensclient.ChainClient, query Query, height int64, logger log.Logger, metrics prommetrics.Metrics) {
@@ -608,6 +670,7 @@ func getHeader(ctx context.Context, client, submitClient *lensclient.ChainClient
 	clientHeight, ok := trustedHeight.(clienttypes.Height)
 	if !ok {
 		return nil, fmt.Errorf("error: Could coerce trusted height")
+
 	}
 
 	if !historicOk && clientHeight.RevisionHeight >= uint64(requestHeight+1) {
@@ -644,40 +707,6 @@ func getHeader(ctx context.Context, client, submitClient *lensclient.ChainClient
 	}
 
 	return header, nil
-}
-
-func getBlocksForTxResults(node rpcclient.Client, resTxs []*coretypes.ResultTx) (map[int64]*coretypes.ResultBlock, error) {
-	resBlocks := make(map[int64]*coretypes.ResultBlock)
-
-	for _, resTx := range resTxs {
-		if _, ok := resBlocks[resTx.Height]; !ok {
-			resBlock, err := node.Block(context.Background(), &resTx.Height)
-			if err != nil {
-				return nil, err
-			}
-
-			resBlocks[resTx.Height] = resBlock
-		}
-	}
-
-	return resBlocks, nil
-}
-
-func mkTxResult(txConfig client.TxConfig, resTx *coretypes.ResultTx, resBlock *coretypes.ResultBlock) (*sdk.TxResponse, error) {
-	txb, err := txConfig.TxDecoder()(resTx.Tx)
-	if err != nil {
-		return nil, err
-	}
-	p, ok := txb.(intoAny)
-	if !ok {
-		return nil, fmt.Errorf("expecting a type implementing intoAny, got: %T", txb)
-	}
-	any := p.AsAny()
-	return sdk.NewResponseResultTx(resTx, any, resBlock.Block.Time.Format(time.RFC3339)), nil
-}
-
-type intoAny interface {
-	AsAny() *codectypes.Any
 }
 
 func FlushSendQueue(chainId string, logger log.Logger, metrics prommetrics.Metrics) error {
@@ -717,35 +746,28 @@ func flush(chainId string, toSend []sdk.Msg, logger log.Logger, metrics prommetr
 			defer cancel()
 			resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
 			if err != nil {
-				if resp != nil && resp.Code == 19 && resp.Codespace == "sdk" {
-					// if err.Error() == "transaction failed with code: 19" {
+				switch {
+				case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
 					_ = logger.Log("msg", "Tx already in mempool")
-				} else if resp != nil && resp.Code == 12 && resp.Codespace == "sdk" {
-					// if err.Error() == "transaction failed with code: 19" {
+				case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
 					_ = logger.Log("msg", "Not enough gas")
-				} else if err.Error() == "context deadline exceeded" {
+				case err.Error() == "context deadline exceeded":
 					_ = logger.Log("msg", "Failed to submit in time, retrying")
 					resp, err := chainClient.SendMsgs(ctx, msgs, VERSION)
 					if err != nil {
-						if resp != nil && resp.Code == 19 && resp.Codespace == "sdk" {
-							// if err.Error() == "transaction failed with code: 19" {
+						switch {
+						case resp != nil && resp.Code == 19 && resp.Codespace == "sdk":
 							_ = logger.Log("msg", "Tx already in mempool")
-						} else if resp != nil && resp.Code == 12 && resp.Codespace == "sdk" {
-							// if err.Error() == "transaction failed with code: 19" {
+						case resp != nil && resp.Code == 12 && resp.Codespace == "sdk":
 							_ = logger.Log("msg", "Not enough gas")
-						} else if err.Error() == "context deadline exceeded" {
+						case err.Error() == "context deadline exceeded":
 							_ = logger.Log("msg", "Failed to submit in time, bailing")
-							return
-						} else {
-							// panic(fmt.Sprintf("panic(1): %v", err))
+						default:
 							_ = logger.Log("msg", "Failed to submit after retry; nevermind, we'll try again!", "err", err)
 							metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
 						}
 					}
-
-				} else {
-					// for some reason the submission failed; but we should be able to continue here.
-					// panic(fmt.Sprintf("panic(2): %v", err))
+				default:
 					_ = logger.Log("msg", "Failed to submit; nevermind, we'll try again!", "err", err)
 					metrics.FailedTxs.WithLabelValues("failed_txs").Inc()
 				}
@@ -786,6 +808,7 @@ func unique(msgSlice []sdk.Msg, logger log.Logger) []sdk.Msg {
 }
 
 func Close() error {
+
 	query := tmquery.MustParse(fmt.Sprintf("message.module='%s'", "interchainquery"))
 
 	for _, chainClient := range globalCfg.Cl {

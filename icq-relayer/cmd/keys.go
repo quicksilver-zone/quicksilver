@@ -19,8 +19,10 @@ const (
 	defaultCoinType uint32 = sdk.CoinType
 )
 
-// FlagAccountPrefix allows the user to override the prefix for a given account
-var FlagAccountPrefix = ""
+var (
+	// FlagAccountPrefix allows the user to override the prefix for a given account
+	FlagAccountPrefix = ""
+)
 
 // keysCmd represents the keys command
 func keysCmd() *cobra.Command {

@@ -1,6 +1,6 @@
 package main
 
-import "github.com/ingenuity-build/interchain-queries/cmd"
+import "github.com/quicksilver-zone/quicksilver/icq-relayer/cmd"
 
 func main() {
 	cmd.Execute()
