@@ -2609,6 +2609,71 @@ func (suite *KeeperTestSuite) TestReceiveAckForWithdrawReward() {
 	suite.Equal(prevAllBalancesQueryCnt+1, allBalancesQueryCnt)
 }
 
+func (suite *KeeperTestSuite) TestReceiveAckForRedeemTokens() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	if !found {
+		suite.Fail("unable to retrieve zone for test")
+	}
+
+	vals := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+	delegationRecord := icstypes.Delegation{
+		DelegationAddress: zone.DelegationAddress.Address,
+		ValidatorAddress:  vals[0],
+		Amount:            sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1000)),
+		Height:            1,
+		RedelegationEnd:   1,
+	}
+	quicksilver.InterchainstakingKeeper.SetDelegation(ctx, zone.ChainId, delegationRecord)
+
+	redeemTokens := &lsmstakingtypes.MsgRedeemTokensforShares{
+		DelegatorAddress: zone.DelegationAddress.Address,
+		Amount:           sdk.NewCoin(vals[0]+"0x", sdk.NewInt(100)),
+	}
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{redeemTokens})
+	suite.NoError(err)
+
+	// validate memo < 256 bytes
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+	}
+
+	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+
+	response := lsmstakingtypes.MsgRedeemTokensforSharesResponse{
+		Amount: sdk.NewCoin(vals[0]+"0x", sdk.NewInt(100)),
+	}
+
+	anyResponse, err := codectypes.NewAnyWithValue(&response)
+	suite.NoError(err)
+
+	txMsgData := &sdk.TxMsgData{
+		MsgResponses: []*codectypes.Any{anyResponse},
+	}
+
+	ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+
+	acknowledgement := channeltypes.NewResultAcknowledgement(ackData)
+	ackBytes, err := icatypes.ModuleCdc.MarshalJSON(&acknowledgement)
+	suite.NoError(err)
+
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	suite.NoError(err)
+
+	delegationRecord, found = quicksilver.InterchainstakingKeeper.GetDelegation(ctx, zone.ChainId, zone.DelegationAddress.Address, vals[0])
+	suite.True(found)
+	suite.Equal(delegationRecord.Amount, sdk.NewCoin(vals[0]+"0x", sdk.NewInt(1100)))
+	suite.Equal(delegationRecord.Height, int64(1))
+	suite.Equal(delegationRecord.RedelegationEnd, int64(1))
+}
+
 func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 	hash1 := randomutils.GenerateRandomHashAsHex(32)
 	hash2 := randomutils.GenerateRandomHashAsHex(32)
