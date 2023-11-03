@@ -38,6 +38,8 @@ var TestChannel = channeltypes.Channel{
 	ConnectionHops: []string{"connection-0"},
 }
 
+const queryAllBalancesPath = "cosmos.bank.v1beta1.Query/AllBalances"
+
 func (suite *KeeperTestSuite) TestHandleMsgTransferGood() {
 	nineDec := sdk.NewDecWithPrec(9, 2)
 
@@ -770,6 +772,169 @@ func (suite *KeeperTestSuite) TestHandleWithdrawForUserLSM() {
 
 			postBurnBalance := quicksilver.BankKeeper.GetAllBalances(ctx, quicksilver.AccountKeeper.GetModuleAddress(icstypes.ModuleName))
 			suite.Equal(startBalance, postBurnBalance)
+		})
+	}
+}
+
+func (suite *KeeperTestSuite) TestHandleWithdrawRewards() {
+	val := addressutils.GenerateValAddressForTest().String()
+	user := addressutils.GenerateAddressForTestWithPrefix("quick")
+	tests := []struct {
+		name      string
+		setup     func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone)
+		msg       func(zone *icstypes.Zone) sdk.Msg
+		checks    func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone)
+		triggered bool
+		err       bool
+	}{
+		{
+			name:   "wrong msg",
+			setup:  func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {},
+			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {},
+			msg: func(zone *icstypes.Zone) sdk.Msg {
+				return &distrtypes.MsgWithdrawValidatorCommission{
+					ValidatorAddress: val,
+				}
+			},
+			triggered: false,
+			err:       true,
+		},
+		{
+			name: "wrong context",
+			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {
+				zone.ConnectionId = ""
+				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
+			},
+			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {},
+			msg: func(zone *icstypes.Zone) sdk.Msg {
+				return &distrtypes.MsgWithdrawDelegatorReward{
+					DelegatorAddress: user,
+					ValidatorAddress: val,
+				}
+			},
+			triggered: false,
+			err:       true,
+		},
+		// try to decrement when waitgroup = 0
+		{
+			name: "try to decrement when waitgroup = 0",
+			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {
+				zone.WithdrawalWaitgroup = 0
+				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
+			},
+			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {},
+			msg: func(zone *icstypes.Zone) sdk.Msg {
+				return &distrtypes.MsgWithdrawDelegatorReward{
+					DelegatorAddress: user,
+					ValidatorAddress: val,
+				}
+			},
+			triggered: false,
+			err:       true,
+		},
+		{
+			name: "valid case with balances != 0",
+			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {
+				zone.WithdrawalWaitgroup = 1
+				balances := sdk.NewCoins(
+					sdk.NewCoin(
+						zone.BaseDenom,
+						math.NewInt(10_000_000),
+					),
+				)
+				zone.DelegationAddress.Balance = balances
+				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
+			},
+			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {},
+			msg: func(zone *icstypes.Zone) sdk.Msg {
+				return &distrtypes.MsgWithdrawDelegatorReward{
+					DelegatorAddress: user,
+					ValidatorAddress: val,
+				}
+			},
+			triggered: false,
+			err:       false,
+		},
+		{
+			name: "valid case trigger redemption rate and check if delegatorAddress == performanceAddress",
+			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {
+				zone.WithdrawalWaitgroup = 1
+				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
+			},
+			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {
+				newZone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, zone.ChainId)
+				suite.True(found)
+				suite.Zero(newZone.WithdrawalWaitgroup)
+			},
+			msg: func(zone *icstypes.Zone) sdk.Msg {
+				return &distrtypes.MsgWithdrawDelegatorReward{
+					DelegatorAddress: user,
+					ValidatorAddress: val,
+				}
+			},
+			triggered: true,
+			err:       false,
+		},
+		{
+			name: "valid case trigger redemption rate and without checking if delegatorAddress == performanceAddress",
+			setup: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {
+				zone.WithdrawalWaitgroup = 0
+				quicksilver.InterchainstakingKeeper.SetZone(ctx, zone)
+			},
+			checks: func(ctx sdk.Context, quicksilver *app.Quicksilver, zone *icstypes.Zone) {},
+			msg: func(zone *icstypes.Zone) sdk.Msg {
+				return &distrtypes.MsgWithdrawDelegatorReward{
+					DelegatorAddress: zone.PerformanceAddress.Address,
+					ValidatorAddress: val,
+				}
+			},
+			triggered: true,
+			err:       false,
+		},
+	}
+
+	for _, test := range tests {
+		suite.Run(test.name, func() {
+			suite.SetupTest()
+			suite.setupTestZones()
+
+			quicksilver := suite.GetQuicksilverApp(suite.chainA)
+			ctx := suite.chainA.GetContext()
+
+			zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+			if !found {
+				suite.Fail("unable to retrieve zone for test")
+			}
+
+			test.setup(ctx, quicksilver, &zone)
+			prevAllBalancesQueryCnt := 0
+			for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
+				if query.QueryType == queryAllBalancesPath {
+					prevAllBalancesQueryCnt++
+				}
+			}
+
+			ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), zone.ConnectionId))
+			err := quicksilver.InterchainstakingKeeper.HandleWithdrawRewards(ctx, test.msg(&zone))
+			if test.err {
+				suite.Error(err)
+			} else {
+				suite.NoError(err)
+			}
+
+			allBalancesQueryCnt := 0
+			for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
+				if query.QueryType == queryAllBalancesPath {
+					allBalancesQueryCnt++
+				}
+			}
+			if test.triggered {
+				suite.Equal(prevAllBalancesQueryCnt+1, allBalancesQueryCnt)
+			} else {
+				suite.Equal(prevAllBalancesQueryCnt, allBalancesQueryCnt)
+			}
+
+			test.checks(ctx, quicksilver, &zone)
 		})
 	}
 }

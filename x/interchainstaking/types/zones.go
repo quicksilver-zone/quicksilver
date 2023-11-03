@@ -37,6 +37,14 @@ func (z *Zone) GetDelegationAccount() (*ICAAccount, error) {
 	return z.DelegationAddress, nil
 }
 
+func (z *Zone) DecrementWithdrawalWaitgroup() error {
+	if z.WithdrawalWaitgroup == 0 {
+		return errors.New("unable to decrement the withdrawal waitgroup below 0")
+	}
+	z.WithdrawalWaitgroup--
+	return nil
+}
+
 func (z *Zone) ValidateCoinsForZone(coins sdk.Coins, zoneVals []string) error {
 COINS:
 	for _, coin := range coins.Sort() {
