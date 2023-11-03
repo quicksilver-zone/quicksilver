@@ -30,7 +30,6 @@ import (
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
-const queryAllBalancesPath = "cosmos.bank.v1beta1.Query/AllBalances"
 var TestChannel = channeltypes.Channel{
 	State:          channeltypes.OPEN,
 	Ordering:       channeltypes.UNORDERED,
