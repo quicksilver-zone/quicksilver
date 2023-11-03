@@ -2674,6 +2674,84 @@ func (suite *KeeperTestSuite) TestReceiveAckForRedeemTokens() {
 	suite.Equal(delegationRecord.RedelegationEnd, int64(1))
 }
 
+func (suite *KeeperTestSuite) TestReceiveAckForTokenizedShares() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	if !found {
+		suite.Fail("unable to retrieve zone for test")
+	}
+
+	vals := quicksilver.InterchainstakingKeeper.GetValidatorAddresses(ctx, zone.ChainId)
+	user := addressutils.GenerateAddressForTestWithPrefix("quick")
+	txHash := randomutils.GenerateRandomHashAsHex(32)
+
+	withdrawalRecord := icstypes.WithdrawalRecord{
+		ChainId:   suite.chainB.ChainID,
+		Delegator: user,
+		Distribution: []*icstypes.Distribution{
+			{
+				Valoper: vals[0],
+				Amount:  1000,
+			},
+		},
+		Recipient:      addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+		Amount:         sdk.Coins{},
+		BurnAmount:     sdk.NewCoin(zone.LocalDenom, sdk.NewInt(1800)),
+		Txhash:         txHash,
+		Status:         icstypes.WithdrawStatusTokenize,
+		CompletionTime: ctx.BlockTime().Add(-1 * time.Hour),
+		Acknowledged:   true,
+	}
+	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, withdrawalRecord)
+	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, txHash, icstypes.WithdrawStatusTokenize)
+	suite.True(found)
+
+	tokenizeShares := &lsmstakingtypes.MsgTokenizeShares{
+		DelegatorAddress:    zone.DelegationAddress.Address,
+		ValidatorAddress:    vals[0],
+		Amount:              sdk.NewCoin(vals[0]+"1", sdk.NewInt(1000)),
+		TokenizedShareOwner: addressutils.GenerateAddressForTestWithPrefix(zone.GetAccountPrefix()),
+	}
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{tokenizeShares})
+	suite.NoError(err)
+
+	// validate memo < 256 bytes
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+		Memo: txHash,
+	}
+
+	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+
+	response := lsmstakingtypes.MsgTokenizeSharesResponse{
+		Amount: sdk.NewCoin(vals[0]+"1", sdk.NewInt(1000)),
+	}
+
+	anyResponse, err := codectypes.NewAnyWithValue(&response)
+	suite.NoError(err)
+
+	txMsgData := &sdk.TxMsgData{
+		MsgResponses: []*codectypes.Any{anyResponse},
+	}
+
+	ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+	acknowledgement := channeltypes.NewResultAcknowledgement(ackData)
+	ackBytes, err := icatypes.ModuleCdc.MarshalJSON(&acknowledgement)
+	suite.NoError(err)
+
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	suite.NoError(err)
+
+	_, found = quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, txHash, icstypes.WithdrawStatusTokenize)
+	suite.False(found)
+}
+
 func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 	hash1 := randomutils.GenerateRandomHashAsHex(32)
 	hash2 := randomutils.GenerateRandomHashAsHex(32)
