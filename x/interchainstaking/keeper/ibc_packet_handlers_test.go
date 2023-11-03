@@ -30,6 +30,7 @@ import (
 	icstypes "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types"
 )
 
+const queryAllBalancesPath = "cosmos.bank.v1beta1.Query/AllBalances"
 var TestChannel = channeltypes.Channel{
 	State:          channeltypes.OPEN,
 	Ordering:       channeltypes.UNORDERED,
@@ -2587,7 +2588,6 @@ func (suite *KeeperTestSuite) TestReceiveAckForWithdrawReward() {
 	suite.NoError(err)
 
 	// Success case
-	queryAllBalancesPath := "cosmos.bank.v1beta1.Query/AllBalances"
 	prevAllBalancesQueryCnt := 0
 	for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
 		if query.QueryType == queryAllBalancesPath {
@@ -3319,7 +3319,7 @@ func (suite *KeeperTestSuite) TestTriggerRedemptionRate() {
 
 		prevAllBalancesQueryCnt := 0
 		for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-			if query.QueryType == "cosmos.bank.v1beta1.Query/AllBalances" {
+			if query.QueryType == queryAllBalancesPath {
 				prevAllBalancesQueryCnt++
 			}
 		}
@@ -3329,7 +3329,7 @@ func (suite *KeeperTestSuite) TestTriggerRedemptionRate() {
 
 		allBalancesQueryCnt := 0
 		for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
-			if query.QueryType == "cosmos.bank.v1beta1.Query/AllBalances" {
+			if query.QueryType == queryAllBalancesPath {
 				allBalancesQueryCnt++
 			}
 		}
