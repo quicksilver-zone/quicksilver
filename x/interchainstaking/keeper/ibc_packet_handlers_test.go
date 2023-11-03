@@ -2539,6 +2539,76 @@ func (suite *KeeperTestSuite) TestReceiveAckForBeginRedelegateNilCompletion() {
 	suite.Equal(beforeTarget.Amount.Add(redelegate.Amount), afterTarget.Amount)
 }
 
+func (suite *KeeperTestSuite) TestReceiveAckForWithdrawReward() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	val := addressutils.GenerateValAddressForTest().String()
+	user := addressutils.GenerateAddressForTestWithPrefix("quick")
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	if !found {
+		suite.Fail("unable to retrieve zone for test")
+	}
+	zone.WithdrawalWaitgroup = 1
+	quicksilver.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+	withdrawReward := &distrtypes.MsgWithdrawDelegatorReward{
+		DelegatorAddress: user,
+		ValidatorAddress: val,
+	}
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward})
+	suite.NoError(err)
+
+	// validate memo < 256 bytes
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+	}
+
+	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+
+	response := distrtypes.MsgWithdrawDelegatorRewardResponse{}
+
+	anyResponse, err := codectypes.NewAnyWithValue(&response)
+	suite.NoError(err)
+
+	txMsgData := &sdk.TxMsgData{
+		MsgResponses: []*codectypes.Any{anyResponse},
+	}
+
+	ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+
+	acknowledgement := channeltypes.NewResultAcknowledgement(ackData)
+	ackBytes, err := icatypes.ModuleCdc.MarshalJSON(&acknowledgement)
+	suite.NoError(err)
+
+	// Success case
+	queryAllBalancesPath := "cosmos.bank.v1beta1.Query/AllBalances"
+	prevAllBalancesQueryCnt := 0
+	for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
+		if query.QueryType == queryAllBalancesPath {
+			prevAllBalancesQueryCnt++
+		}
+	}
+
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), zone.ConnectionId))
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	suite.NoError(err)
+
+	allBalancesQueryCnt := 0
+	for _, query := range quicksilver.InterchainQueryKeeper.AllQueries(ctx) {
+		if query.QueryType == queryAllBalancesPath {
+			allBalancesQueryCnt++
+		}
+	}
+
+	suite.Equal(prevAllBalancesQueryCnt+1, allBalancesQueryCnt)
+}
+
 func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 	hash1 := randomutils.GenerateRandomHashAsHex(32)
 	hash2 := randomutils.GenerateRandomHashAsHex(32)
