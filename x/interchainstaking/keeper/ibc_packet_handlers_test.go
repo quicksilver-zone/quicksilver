@@ -2829,6 +2829,119 @@ func (suite *KeeperTestSuite) TestReceiveAckForDelegate() {
 	suite.Equal(delegation.Amount, sdk.NewCoin("uatom", sdk.NewInt(1000)))
 }
 
+func (suite *KeeperTestSuite) TestReceiveAckForBankSend() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	if !found {
+		suite.Fail("unable to retrieve zone for test")
+	}
+
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+	quicksilver.InterchainstakingKeeper.IBCKeeper.ChannelKeeper.SetChannel(ctx, "transfer", "channel-0", TestChannel)
+
+	withdrawReward := &banktypes.MsgSend{
+		FromAddress: zone.DepositAddress.Address,
+		ToAddress:   zone.DelegationAddress.Address,
+		Amount:      sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, sdk.NewInt(1_000_000))),
+	}
+
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{withdrawReward})
+	suite.NoError(err)
+
+	// validate memo < 256 bytes
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+		Memo: "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+	}
+
+	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+
+	response := banktypes.MsgSendResponse{}
+
+	anyResponse, err := codectypes.NewAnyWithValue(&response)
+	suite.NoError(err)
+
+	txMsgData := &sdk.TxMsgData{
+		MsgResponses: []*codectypes.Any{anyResponse},
+	}
+
+	ackData := icatypes.ModuleCdc.MustMarshal(txMsgData)
+	acknowledgement := channeltypes.NewResultAcknowledgement(ackData)
+	ackBytes, err := icatypes.ModuleCdc.MarshalJSON(&acknowledgement)
+	suite.NoError(err)
+
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	suite.NoError(err)
+}
+
+func (suite *KeeperTestSuite) TestReceiveAckErrForBankSend() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	if !found {
+		suite.Fail("unable to retrieve zone for test")
+	}
+
+	v1 := addressutils.GenerateValAddressForTest().String()
+	v2 := addressutils.GenerateValAddressForTest().String()
+	user := addressutils.GenerateAddressForTestWithPrefix("quick")
+
+	withdrawalRecord := icstypes.WithdrawalRecord{
+		ChainId:   zone.ChainId,
+		Delegator: addressutils.GenerateAccAddressForTest().String(),
+		Distribution: []*icstypes.Distribution{
+			{Valoper: v1, Amount: 1000000},
+			{Valoper: v2, Amount: 1000000},
+		},
+		Recipient:  addressutils.GenerateAddressForTestWithPrefix(zone.AccountPrefix),
+		Amount:     sdk.NewCoins(sdk.NewCoin("uatom", sdk.NewInt(2000000))),
+		BurnAmount: sdk.NewCoin("uqatom", sdk.NewInt(2000000)),
+		Txhash:     "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+		Status:     icstypes.WithdrawStatusSend,
+	}
+	quicksilver.InterchainstakingKeeper.SetWithdrawalRecord(ctx, withdrawalRecord)
+	quicksilver.InterchainstakingKeeper.SetAddressZoneMapping(ctx, user, zone.ChainId)
+
+	send := &banktypes.MsgSend{
+		FromAddress: zone.DelegationAddress.Address,
+		Amount:      sdk.NewCoins(sdk.NewCoin(v1+"1", sdk.NewInt(1000000))),
+	}
+
+	data, err := icatypes.SerializeCosmosTx(quicksilver.InterchainstakingKeeper.GetCodec(), []sdk.Msg{send})
+	suite.NoError(err)
+
+	// validate memo < 256 bytes
+	packetData := icatypes.InterchainAccountPacketData{
+		Type: icatypes.EXECUTE_TX,
+		Data: data,
+		Memo: "unbondSend/7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D",
+	}
+
+	packet := channeltypes.Packet{Data: quicksilver.InterchainstakingKeeper.GetCodec().MustMarshalJSON(&packetData)}
+
+	ackBytes := []byte("{\"error\":\"ABCI code: 32: error handling packet on host chain: see events for details\"}")
+
+	ctx = ctx.WithContext(context.WithValue(ctx.Context(), utils.ContextKey("connectionID"), suite.path.EndpointA.ConnectionID))
+	err = quicksilver.InterchainstakingKeeper.HandleAcknowledgement(ctx, packet, ackBytes)
+	suite.NoError(err)
+
+	newRecord, found := quicksilver.InterchainstakingKeeper.GetWithdrawalRecord(ctx, zone.ChainId, "7C8B95EEE82CB63771E02EBEB05E6A80076D70B2E0A1C457F1FD1A0EF2EA961D", icstypes.WithdrawStatusUnbond)
+	if !found {
+		suite.Fail("unable to retrieve new withdrawal record for test")
+	}
+	suite.Equal(ctx.BlockTime().Add(icstypes.DefaultWithdrawalRequeueDelay), newRecord.CompletionTime)
+}
+
 func (suite *KeeperTestSuite) TestHandleMaturedUbondings() {
 	hash1 := randomutils.GenerateRandomHashAsHex(32)
 	hash2 := randomutils.GenerateRandomHashAsHex(32)
