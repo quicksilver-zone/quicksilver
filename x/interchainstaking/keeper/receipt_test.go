@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadRecipient() {
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, tx, hash, zone)
-	//suite.Require().ErrorContains(err, "no sender found. Ignoring")
+	// suite.Require().ErrorContains(err, "no sender found. Ignoring")
 	nilReceipt, found := icsKeeper.GetReceipt(ctx, keeper.GetReceiptKey(zone.ChainId, hash))
 	suite.Require().True(found)                  // check nilReceipt is found for hash
 	suite.Require().Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
@@ -108,7 +108,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMessageType() {
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, tx, hash, zone)
-	//suite.Require().ErrorContains(err, "no sender found. Ignoring")
+	// suite.Require().ErrorContains(err, "no sender found. Ignoring")
 	nilReceipt, found := icsKeeper.GetReceipt(ctx, keeper.GetReceiptKey(zone.ChainId, hash))
 	suite.Require().True(found)                  // check nilReceipt is found for hash
 	suite.Require().Equal("", nilReceipt.Sender) // check nilReceipt has empty sender
@@ -178,7 +178,7 @@ func (suite *KeeperTestSuite) TestHandleReceiptTransactionBadMixedSender() { // 
 	suite.Require().Equal(sdk.NewCoin(zone.LocalDenom, sdk.ZeroInt()), before)
 
 	err = icsKeeper.HandleReceiptTransaction(ctx, tx, hash, zone)
-	//suite.Require().ErrorContains(err, "sender mismatch: expected")
+	// suite.Require().ErrorContains(err, "sender mismatch: expected")
 	nilReceipt, found := icsKeeper.GetReceipt(ctx, keeper.GetReceiptKey(zone.ChainId, hash))
 	suite.Require().True(found)                  // check nilReceipt is found for hash
 	suite.Require().Equal("", nilReceipt.Sender) // check nilReceipt has empty sender

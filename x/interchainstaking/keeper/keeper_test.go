@@ -707,7 +707,6 @@ func (s *KeeperTestSuite) TestRemoveDuplicates() {
 
 		if !reflect.DeepEqual(got, tc.expected) {
 			s.Fail("got: %v\nexpected: %v", got, tc.expected)
-
 		}
 	}
 }
