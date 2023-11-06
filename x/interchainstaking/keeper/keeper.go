@@ -23,6 +23,7 @@ import (
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v5/modules/apps/27-interchain-accounts/controller/keeper"
@@ -269,7 +270,23 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 
 		jailTime := time.Time{}
 		if validator.IsJailed() {
+			consAddr, err := validator.GetConsAddr()
+			if err != nil {
+				return err
+			}
+			k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
 			jailTime = ctx.BlockTime()
+
+			err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
+			if err != nil {
+				return err
+			}
+		}
+		_, found := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+		// if found is true, it means that validator was tombstoned because we set it's information in SigningInfoCallback func
+		if found {
+			k.Logger(ctx).Info("%q on chainID: %q have been tombstoned", validator.OperatorAddress, zone.ChainId)
+			return nil
 		}
 		if err := k.SetValidator(ctx, zone.ChainId, types.Validator{
 			ValoperAddress:  validator.OperatorAddress,
@@ -287,10 +304,29 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 		if err := k.MakePerformanceDelegation(ctx, zone, validator.OperatorAddress); err != nil {
 			return err
 		}
-
 	} else {
+		if val.Tombstoned {
+			k.Logger(ctx).Info("%q on chainID: %q was found to already have been tombstoned", validator.OperatorAddress, zone.ChainId)
+			return nil
+		}
+
 		if !val.Jailed && validator.IsJailed() {
 			k.Logger(ctx).Info("Transitioning validator to jailed state", "valoper", validator.OperatorAddress, "old_vp", val.VotingPower, "new_vp", validator.Tokens, "new_shares", validator.DelegatorShares, "old_shares", val.DelegatorShares)
+
+			consAddr, err := validator.GetConsAddr()
+			if err != nil {
+				return err
+			}
+			k.SetValidatorAddrByConsAddr(ctx, zone.ChainId, validator.OperatorAddress, consAddr)
+
+			err = k.EmitSigningInfoQuery(ctx, zone.ConnectionId, zone.ChainId, validator)
+			if err != nil {
+				return err
+			}
+			val, _ := k.GetValidator(ctx, zone.ChainId, valAddrBytes)
+			if val.Tombstoned {
+				return nil
+			}
 
 			val.Jailed = true
 			val.JailedSince = ctx.BlockTime()
@@ -535,6 +571,27 @@ func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
 		"depositinterval",
 		0,
 	)
+}
+
+func (k *Keeper) EmitSigningInfoQuery(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) error {
+	_, addr, err := bech32.DecodeAndConvert(validator.OperatorAddress)
+	if err != nil {
+		return err
+	}
+	data := slashingtypes.ValidatorSigningInfoKey(addr)
+	k.ICQKeeper.MakeRequest(
+		ctx,
+		connectionID,
+		chainID,
+		"store/slashing/key",
+		data,
+		sdk.NewInt(-1),
+		types.ModuleName,
+		"signinginfo",
+		0,
+	)
+
+	return nil
 }
 
 func (k *Keeper) GetDelegationsInProcess(ctx sdk.Context, chainID string) sdkmath.Int {

@@ -4,7 +4,6 @@ package quicksilver.interchainstaking.v1;
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/quicksilver-zone/quicksilver/x/interchainstaking/types";
@@ -158,8 +157,6 @@ message Validator {
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];
-  // consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
-  google.protobuf.Any consensus_pubkey = 10 [(cosmos_proto.accepts_interface) = "cosmos.crypto.PubKey"];
 }
 
 message DelegatorIntent {
