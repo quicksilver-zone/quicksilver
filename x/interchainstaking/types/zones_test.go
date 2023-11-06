@@ -37,6 +37,18 @@ func TestGetDelegationAccount(t *testing.T) {
 	require.Nil(t, acc2)
 }
 
+func TestDecrementWithdrawalWg(t *testing.T) {
+	zone := types.Zone{WithdrawalWaitgroup: 0}
+	oldWg := zone.WithdrawalWaitgroup
+	zone.WithdrawalWaitgroup++
+	firstWg := zone.WithdrawalWaitgroup
+	require.Equal(t, oldWg+1, firstWg)
+	require.NoError(t, zone.DecrementWithdrawalWaitgroup())
+	secondWg := zone.WithdrawalWaitgroup
+	require.Equal(t, firstWg-1, secondWg)
+	require.Error(t, zone.DecrementWithdrawalWaitgroup())
+}
+
 func TestValidateCoinsForZone(t *testing.T) {
 	zone := types.Zone{ConnectionId: "connection-0", ChainId: "cosmoshub-4", AccountPrefix: "cosmos", LocalDenom: "uqatom", BaseDenom: "uatom", Is_118: true}
 	valAddresses := []string{"cosmosvaloper1sjllsnramtg3ewxqwwrwjxfgc4n4ef9u2lcnj0", "cosmosvaloper156gqf9837u7d4c4678yt3rl4ls9c5vuursrrzf", "cosmosvaloper14lultfckehtszvzw4ehu0apvsr77afvyju5zzy", "cosmosvaloper1a3yjj7d3qnx4spgvjcwjq9cw9snrrrhu5h6jll", "cosmosvaloper1z8zjv3lntpwxua0rtpvgrcwl0nm0tltgpgs6l7"}

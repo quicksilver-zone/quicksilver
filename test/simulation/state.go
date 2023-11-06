@@ -59,12 +59,12 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			simAccs = accounts
 
 		case config.ParamsFile != "":
-			appParams := make(simtypes.AppParams)
 			bz, err := os.ReadFile(config.ParamsFile)
 			if err != nil {
 				panic(err)
 			}
 
+			appParams := make(simtypes.AppParams)
 			err = json.Unmarshal(bz, &appParams)
 			if err != nil {
 				panic(err)

@@ -88,7 +88,7 @@ func (k *Keeper) DeleteAddressZoneMapping(ctx sdk.Context, address string) {
 
 func (k *Keeper) GetDelegatedAmount(ctx sdk.Context, zone *types.Zone) sdk.Coin {
 	out := sdk.NewCoin(zone.BaseDenom, sdk.ZeroInt())
-	k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
+	k.IterateAllDelegations(ctx, zone.ChainId, func(delegation types.Delegation) (stop bool) {
 		out = out.Add(delegation.Amount)
 		return false
 	})
@@ -358,7 +358,7 @@ func (k *Keeper) SetAccountBalance(ctx sdk.Context, zone types.Zone, address str
 func (k *Keeper) UpdatePerformanceDelegations(ctx sdk.Context, zone types.Zone) error {
 	k.Logger(ctx).Info("Initialize performance delegations")
 
-	delegations := k.GetAllPerformanceDelegations(ctx, &zone)
+	delegations := k.GetAllPerformanceDelegations(ctx, zone.ChainId)
 	validatorsToDelegate := []string{}
 OUTER:
 	for _, v := range k.GetActiveValidators(ctx, zone.ChainId) {
@@ -413,7 +413,7 @@ func (k *Keeper) CollectStatsForZone(ctx sdk.Context, zone *types.Zone) (*types.
 	out.ChainId = zone.ChainId
 	out.Delegated = k.GetDelegatedAmount(ctx, zone).Amount.Int64()
 	userMap := map[string]bool{}
-	k.IterateZoneReceipts(ctx, zone, func(_ int64, receipt types.Receipt) bool {
+	k.IterateZoneReceipts(ctx, zone.ChainId, func(_ int64, receipt types.Receipt) bool {
 		for _, coin := range receipt.Amount {
 			out.Deposited += coin.Amount.Int64()
 			if _, found := userMap[receipt.Sender]; !found {
@@ -450,8 +450,8 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 	k.IterateZones(ctx, func(index int64, zone *types.Zone) (stop bool) {
 		if zone.ChainId == chainID {
 			// remove uni-5 delegation records
-			k.IterateAllDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
-				err := k.RemoveDelegation(ctx, zone, delegation)
+			k.IterateAllDelegations(ctx, chainID, func(delegation types.Delegation) (stop bool) {
+				err := k.RemoveDelegation(ctx, chainID, delegation)
 				if err != nil {
 					panic(err)
 				}
@@ -459,21 +459,21 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 			})
 
 			// remove performance delegation records
-			k.IterateAllPerformanceDelegations(ctx, zone, func(delegation types.Delegation) (stop bool) {
-				err := k.RemoveDelegation(ctx, zone, delegation)
+			k.IterateAllPerformanceDelegations(ctx, chainID, func(delegation types.Delegation) (stop bool) {
+				err := k.RemovePerformanceDelegation(ctx, chainID, delegation)
 				if err != nil {
 					panic(err)
 				}
 				return false
 			})
 			// remove receipts
-			k.IterateZoneReceipts(ctx, zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+			k.IterateZoneReceipts(ctx, chainID, func(index int64, receiptInfo types.Receipt) (stop bool) {
 				k.DeleteReceipt(ctx, receiptInfo.ChainId, receiptInfo.Txhash)
 				return false
 			})
 
 			// remove withdrawal records
-			k.IterateZoneWithdrawalRecords(ctx, zone.ChainId, func(index int64, record types.WithdrawalRecord) (stop bool) {
+			k.IterateZoneWithdrawalRecords(ctx, chainID, func(index int64, record types.WithdrawalRecord) (stop bool) {
 				k.DeleteWithdrawalRecord(ctx, zone.ChainId, record.Txhash, record.Status)
 				return false
 			})
@@ -494,7 +494,7 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 }
 
 func (k *Keeper) CurrentDelegationsAsIntent(ctx sdk.Context, zone *types.Zone) types.ValidatorIntents {
-	currentDelegations := k.GetAllDelegations(ctx, zone)
+	currentDelegations := k.GetAllDelegations(ctx, zone.ChainId)
 	intents := make(types.ValidatorIntents, 0)
 	for _, d := range currentDelegations {
 		intents = append(intents, &types.ValidatorIntent{ValoperAddress: d.ValidatorAddress, Weight: sdk.NewDecFromInt(d.Amount.Amount)})
