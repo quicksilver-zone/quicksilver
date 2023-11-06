@@ -239,7 +239,8 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		}
 
 		if toQuery {
-			k.EmitValidatorQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validator)
+			err := k.EmitValidatorQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validator)
+			k.Logger(ctx).Error("EmitValidatorQuery error", "valoper", validator.OperatorAddress, "err", err)
 		}
 	}
 
@@ -533,8 +534,12 @@ func (k *Keeper) EmitValSetQuery(ctx sdk.Context, connectionID, chainID string, 
 	return nil
 }
 
-func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) {
-	_, addr, _ := bech32.DecodeAndConvert(validator.OperatorAddress)
+func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID string, validator stakingtypes.Validator) error {
+	_, addr, err := bech32.DecodeAndConvert(validator.OperatorAddress)
+	if err != nil {
+		return fmt.Errorf("EmitValidatorQuery failed to decode validator.OperatorAddress: %q got error: %w",
+			validator.OperatorAddress, err)
+	}
 	data := stakingtypes.GetValidatorKey(addr)
 	k.ICQKeeper.MakeRequest(
 		ctx,
@@ -547,6 +552,7 @@ func (k *Keeper) EmitValidatorQuery(ctx sdk.Context, connectionID, chainID strin
 		"validator",
 		0,
 	)
+	return nil
 }
 
 func (k *Keeper) EmitDepositIntervalQuery(ctx sdk.Context, zone *types.Zone) {
