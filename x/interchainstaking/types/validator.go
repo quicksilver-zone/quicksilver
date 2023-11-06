@@ -1,13 +1,10 @@
 package types
 
 import (
-	sdkioerrors "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
-	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 func (v Validator) GetAddressBytes() ([]byte, error) {
@@ -41,16 +38,6 @@ func (v Validator) SharesToTokens(shares sdk.Dec) sdkmath.Int {
 	}
 
 	return sdk.NewDecFromInt(v.VotingPower).Quo(v.DelegatorShares).Mul(shares).TruncateInt()
-}
-
-// GetConsAddr extracts Consensus key address
-func (v Validator) GetConsAddr() (sdk.ConsAddress, error) {
-	pk, ok := v.ConsensusPubkey.GetCachedValue().(cryptotypes.PubKey)
-	if !ok {
-		return nil, sdkioerrors.Wrapf(sdkerrors.ErrInvalidType, "expecting cryptotypes.PubKey, got %T", pk)
-	}
-
-	return sdk.ConsAddress(pk.Address()), nil
 }
 
 func (di DelegatorIntent) AddOrdinal(multiplier sdk.Dec, intents ValidatorIntents) DelegatorIntent {
