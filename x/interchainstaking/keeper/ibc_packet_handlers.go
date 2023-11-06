@@ -138,7 +138,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
+		case "/liquidstaking.staking.v1beta1.MsgRedeemTokensforShares":
 			// TODO: handle this before LSM
 			if !success {
 				return nil
@@ -157,7 +157,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
+		case "/liquidstaking.staking.v1beta1.MsgTokenizeShares":
 			// TODO: handle this before LSM
 			if !success {
 				return nil
