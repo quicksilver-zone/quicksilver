@@ -238,7 +238,8 @@ func (k *Keeper) SetValidatorsForZone(ctx sdk.Context, data []byte, icqQuery icq
 		}
 
 		if toQuery {
-			_ = k.EmitValidatorQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validator)
+			err := k.EmitValidatorQuery(ctx, icqQuery.ConnectionId, icqQuery.ChainId, validator)
+			k.Logger(ctx).Error("EmitValidatorQuery error", "valoper", validator.OperatorAddress, "err", err)
 		}
 	}
 
