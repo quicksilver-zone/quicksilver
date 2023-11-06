@@ -13,7 +13,6 @@ import (
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -482,7 +481,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 		target        icstypes.ValidatorIntents
 		expected      []icskeeper.RebalanceTarget
 		dust          sdkmath.Int
-		redelegations []types.RedelegationRecord
+		redelegations []icstypes.RedelegationRecord
 	}{
 		{
 			name: "case 1",
@@ -519,7 +518,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				{Amount: sdkmath.NewInt(4), Source: val1.String(), Target: val4.String()},
 				{Amount: sdkmath.NewInt(3), Source: val1.String(), Target: val2.String()},
 			},
-			redelegations: []types.RedelegationRecord{},
+			redelegations: []icstypes.RedelegationRecord{},
 		},
 		{
 			name: "case 3",
@@ -540,7 +539,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				// below values _would_ applied, if we weren't limited by a max of total/7
 				//{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val2.String()},
 			},
-			redelegations: []types.RedelegationRecord{},
+			redelegations: []icstypes.RedelegationRecord{},
 		},
 		// default intent -- all equal
 		{
@@ -558,7 +557,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				//{Amount: sdkmath.NewInt(10), Source: val4.String(), Target: val1.String()},
 				//{Amount: sdkmath.NewInt(5), Source: val4.String(), Target: val3.String()},
 			},
-			redelegations: []types.RedelegationRecord{},
+			redelegations: []icstypes.RedelegationRecord{},
 		},
 		//
 		{
@@ -576,7 +575,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
 				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
-			redelegations: []types.RedelegationRecord{},
+			redelegations: []icstypes.RedelegationRecord{},
 		},
 		{
 			name: "case 6 - includes redelegation, no impact",
@@ -593,7 +592,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
 				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
-			redelegations: []types.RedelegationRecord{
+			redelegations: []icstypes.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 30, CompletionTime: time.Now().Add(time.Hour)},
 			},
 		},
@@ -612,7 +611,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
 				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
-			redelegations: []types.RedelegationRecord{
+			redelegations: []icstypes.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
 			},
 		},
@@ -631,7 +630,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
 				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
-			redelegations: []types.RedelegationRecord{
+			redelegations: []icstypes.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
 			},
 		},
@@ -650,7 +649,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				//{Amount: sdkmath.NewInt(4), Source: val3.String(), Target: val1.String()},  // joe: I would expect this to be included...
 				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
-			redelegations: []types.RedelegationRecord{
+			redelegations: []icstypes.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 50, CompletionTime: time.Now().Add(time.Hour)},
 			},
 		},
@@ -669,7 +668,7 @@ func TestDetermineAllocationsForRebalance(t *testing.T) {
 				//{Amount: sdkmath.NewInt(21), Source: val4.String(), Target: val2.String()},
 				//{Amount: sdkmath.NewInt(4), Source: val4.String(), Target: val3.String()},
 			},
-			redelegations: []types.RedelegationRecord{
+			redelegations: []icstypes.RedelegationRecord{
 				{ChainId: "test-1", EpochNumber: 1, Source: val2.String(), Destination: val4.String(), Amount: 60, CompletionTime: time.Now().Add(time.Hour)},
 			},
 		},
@@ -749,7 +748,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
 				receiptTwoTime := cutOffTime.Add(-3 * time.Hour)
 
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -763,7 +762,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -784,7 +783,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				s.Require().True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -803,7 +802,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
 				receiptTwoTime := cutOffTime.Add(2 * time.Hour)
 
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -817,7 +816,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -837,7 +836,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				s.Require().True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -854,7 +853,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour) // -26h
 				receiptTwoTime := cutOffTime.Add(2 * time.Hour)  // -22h
 
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -868,7 +867,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -889,7 +888,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				s.Require().True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -908,7 +907,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
 				receiptTwoTime := cutOffTime.Add(-3 * time.Hour)
 
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -922,7 +921,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -943,7 +942,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				s.Require().True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -962,7 +961,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
 				receiptTwoTime := cutOffTime.Add(2 * time.Hour)
 
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -976,7 +975,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -997,7 +996,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				s.Require().True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}
@@ -1014,7 +1013,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			setStatements: func(ctx sdk.Context, quicksilver *app.Quicksilver) {
 				cutOffTime := ctx.BlockTime().AddDate(0, 0, -1)
 				receiptOneTime := cutOffTime.Add(-2 * time.Hour)
-				rcpt1 := types.Receipt{
+				rcpt1 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit01",
@@ -1028,7 +1027,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 					Completed: nil,
 				}
 
-				rcpt2 := types.Receipt{
+				rcpt2 := icstypes.Receipt{
 					ChainId: s.chainB.ChainID,
 					Sender:  userAddress,
 					Txhash:  "TestDeposit02",
@@ -1049,7 +1048,7 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 				count := 0
 				zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
 				s.Require().True(found)
-				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo types.Receipt) (stop bool) {
+				quicksilver.InterchainstakingKeeper.IterateZoneReceipts(ctx, &zone, func(index int64, receiptInfo icstypes.Receipt) (stop bool) {
 					if receiptInfo.Completed == nil {
 						count++
 					}

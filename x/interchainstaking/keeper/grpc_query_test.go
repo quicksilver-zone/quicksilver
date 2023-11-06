@@ -8,7 +8,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
-	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -733,7 +732,7 @@ func (suite *KeeperTestSuite) TestKeeper_RedelegationRecords() {
 
 				icsKeeper.SetRedelegationRecord(
 					ctx,
-					types.RedelegationRecord{
+					icstypes.RedelegationRecord{
 						ChainId:     zone.ChainId,
 						EpochNumber: 1,
 						Source:      zone.GetValidatorsAddressesAsSlice()[1],
