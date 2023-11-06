@@ -72,7 +72,7 @@ type InterchainStakingKeeper interface {
 	AllDelegatorIntents(ctx sdk.Context, zone *interchainstakingtypes.Zone, snapshot bool) []interchainstakingtypes.DelegatorIntent
 	SetDelegatorIntent(ctx sdk.Context, zone *interchainstakingtypes.Zone, intent interchainstakingtypes.DelegatorIntent, snapshot bool)
 	GetDelegatedAmount(ctx sdk.Context, zone *interchainstakingtypes.Zone) sdk.Coin
-	GetDelegationsInProcess(ctx sdk.Context, zone *interchainstakingtypes.Zone) sdkmath.Int
+	GetDelegationsInProcess(ctx sdk.Context, chainID string) sdkmath.Int
 	IterateDelegatorIntents(ctx sdk.Context, zone *interchainstakingtypes.Zone, snapshot bool, fn func(index int64, intent interchainstakingtypes.DelegatorIntent) (stop bool))
 	GetValidators(ctx sdk.Context, chainID string) []interchainstakingtypes.Validator
 	SetValidator(ctx sdk.Context, chainID string, val interchainstakingtypes.Validator) error

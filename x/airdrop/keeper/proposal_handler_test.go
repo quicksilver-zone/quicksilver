@@ -10,11 +10,11 @@ import (
 	"github.com/quicksilver-zone/quicksilver/x/airdrop/types"
 )
 
-func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
-	appA := s.GetQuicksilverApp(s.chainA)
+func (suite *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
+	appA := suite.GetQuicksilverApp(suite.chainA)
 
 	validZoneDrop := types.ZoneDrop{
-		ChainId:    s.chainB.ChainID,
+		ChainId:    suite.chainB.ChainID,
 		StartTime:  time.Now().Add(time.Hour),
 		Duration:   time.Hour,
 		Decay:      30 * time.Minute,
@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 				crs := make([]types.ClaimRecord, len(userAddresses))
 				for i := range crs {
 					crs[i] = types.ClaimRecord{
-						ChainId:          s.chainB.ChainID,
+						ChainId:          suite.chainB.ChainID,
 						Address:          userAddresses[i],
 						ActionsCompleted: nil,
 						MaxAllocation:    100000000,
@@ -89,7 +89,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 					Title:        "Test Zone Airdrop Proposal",
 					Description:  "Adding this zone drop allows for automated testing",
 					ZoneDrop:     &zd,
-					ClaimRecords: s.compressClaimRecords(crs),
+					ClaimRecords: suite.compressClaimRecords(crs),
 				}
 			},
 			true,
@@ -98,7 +98,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 			"invalid-zd-started",
 			func() {
 				zd := types.ZoneDrop{
-					ChainId:    s.chainB.ChainID,
+					ChainId:    suite.chainB.ChainID,
 					StartTime:  time.Now().Add(-5 * time.Minute),
 					Duration:   time.Hour,
 					Decay:      30 * time.Minute,
@@ -122,7 +122,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 				crs := make([]types.ClaimRecord, len(userAddresses))
 				for i := range crs {
 					crs[i] = types.ClaimRecord{
-						ChainId:          s.chainB.ChainID,
+						ChainId:          suite.chainB.ChainID,
 						Address:          userAddresses[i],
 						ActionsCompleted: nil,
 						MaxAllocation:    100000000,
@@ -134,7 +134,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 					Title:        "Test Zone Airdrop Proposal",
 					Description:  "Adding this zone drop allows for automated testing",
 					ZoneDrop:     &zd,
-					ClaimRecords: s.compressClaimRecords(crs),
+					ClaimRecords: suite.compressClaimRecords(crs),
 				}
 			},
 			true,
@@ -158,7 +158,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 					Title:        "Test Zone Airdrop Proposal",
 					Description:  "Adding this zone drop allows for automated testing",
 					ZoneDrop:     &zd,
-					ClaimRecords: s.compressClaimRecords(crs),
+					ClaimRecords: suite.compressClaimRecords(crs),
 				}
 			},
 			true,
@@ -171,7 +171,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 				crs := make([]types.ClaimRecord, len(userAddresses))
 				for i := range crs {
 					crs[i] = types.ClaimRecord{
-						ChainId: s.chainB.ChainID,
+						ChainId: suite.chainB.ChainID,
 						Address: userAddresses[i],
 						ActionsCompleted: map[int32]*types.CompletedAction{
 							1: {},
@@ -185,7 +185,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 					Title:        "Test Zone Airdrop Proposal",
 					Description:  "Adding this zone drop allows for automated testing",
 					ZoneDrop:     &zd,
-					ClaimRecords: s.compressClaimRecords(crs),
+					ClaimRecords: suite.compressClaimRecords(crs),
 				}
 			},
 			true,
@@ -198,7 +198,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 				crs := make([]types.ClaimRecord, len(userAddresses))
 				for i := range crs {
 					crs[i] = types.ClaimRecord{
-						ChainId:          s.chainB.ChainID,
+						ChainId:          suite.chainB.ChainID,
 						Address:          userAddresses[i],
 						ActionsCompleted: nil,
 						MaxAllocation:    1000000001,
@@ -210,7 +210,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 					Title:        "Test Zone Airdrop Proposal",
 					Description:  "Adding this zone drop allows for automated testing",
 					ZoneDrop:     &zd,
-					ClaimRecords: s.compressClaimRecords(crs),
+					ClaimRecords: suite.compressClaimRecords(crs),
 				}
 			},
 			true,
@@ -223,7 +223,7 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 				crs := make([]types.ClaimRecord, len(userAddresses))
 				for i := range crs {
 					crs[i] = types.ClaimRecord{
-						ChainId:          s.chainB.ChainID,
+						ChainId:          suite.chainB.ChainID,
 						Address:          userAddresses[i],
 						ActionsCompleted: nil,
 						MaxAllocation:    100000000,
@@ -235,25 +235,25 @@ func (s *KeeperTestSuite) TestHandleRegisterZoneDropProposal() {
 					Title:        "Test Zone Airdrop Proposal",
 					Description:  "Adding this zone drop allows for automated testing",
 					ZoneDrop:     &zd,
-					ClaimRecords: s.compressClaimRecords(crs),
+					ClaimRecords: suite.compressClaimRecords(crs),
 				}
 			},
 			false,
 		},
 	}
 	for _, tt := range tests {
-		s.Run(tt.name, func() {
+		suite.Run(tt.name, func() {
 			tt.malleate()
 
 			k := appA.AirdropKeeper
-			err := keeper.HandleRegisterZoneDropProposal(s.chainA.GetContext(), k, &prop)
+			err := keeper.HandleRegisterZoneDropProposal(suite.chainA.GetContext(), k, &prop)
 			if tt.wantErr {
-				s.Require().Error(err)
-				s.T().Logf("Error: %v", err)
+				suite.Require().Error(err)
+				suite.T().Logf("Error: %v", err)
 				return
 			}
 
-			s.Require().NoError(err)
+			suite.Require().NoError(err)
 		})
 	}
 }
