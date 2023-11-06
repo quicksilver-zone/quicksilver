@@ -77,18 +77,14 @@ func (suite *KeeperTestSuite) TestStoreGetDeleteValidatorByConsAddr() {
 		pkAny, err := codectypes.NewAnyWithValue(PKs[0])
 		suite.Require().NoError(err)
 
-		newValidator := types.Validator{
-			ValoperAddress:  validator.String(),
-			CommissionRate:  sdk.NewDec(5.0),
-			DelegatorShares: sdk.NewDec(1000.0),
-			VotingPower:     sdk.NewInt(1000),
-			Status:          stakingtypes.BondStatusBonded,
-			Score:           sdk.NewDec(0),
+		newValidator := stakingtypes.Validator{
+			OperatorAddress: validator.String(),
 			ConsensusPubkey: pkAny,
 		}
-
-		err = app.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator)
+		consAddr, err := newValidator.GetConsAddr()
 		suite.NoError(err)
+
+		app.InterchainstakingKeeper.SetValidatorAddrByConsAddr(ctx, zone.ChainId, newValidator.OperatorAddress, consAddr)
 
 		_, found = app.InterchainstakingKeeper.GetValidatorAddrByConsAddr(ctx, zone.ChainId, sdk.ConsAddress(PKs[0].Address()))
 		suite.True(found)

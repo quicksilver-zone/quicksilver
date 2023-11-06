@@ -138,7 +138,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgRedeemTokensforShares":
+		case "/liquidstaking.staking.v1beta1.MsgRedeemTokensforShares":
 			// TODO: handle this before LSM
 			if !success {
 				return nil
@@ -157,7 +157,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 				return err
 			}
 			continue
-		case "/cosmos.staking.v1beta1.MsgTokenizeShares":
+		case "/liquidstaking.staking.v1beta1.MsgTokenizeShares":
 			// TODO: handle this before LSM
 			if !success {
 				return nil
@@ -1127,7 +1127,10 @@ func (k *Keeper) HandleWithdrawRewards(ctx sdk.Context, msg sdk.Msg) error {
 	// operates outside the delegator set, its purpose is to track validator
 	// performance only.
 	if withdrawalMsg.DelegatorAddress != zone.PerformanceAddress.Address {
-		zone.WithdrawalWaitgroup--
+		err = zone.DecrementWithdrawalWaitgroup()
+		if err != nil {
+			return err
+		}
 		k.Logger(ctx).Info("Decremented waitgroup", "wg", zone.WithdrawalWaitgroup)
 		k.SetZone(ctx, zone)
 	}
