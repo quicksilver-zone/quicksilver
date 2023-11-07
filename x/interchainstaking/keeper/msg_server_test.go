@@ -545,6 +545,40 @@ func (s *KeeperTestSuite) TestSetLsmCaps() {
 			true,
 		},
 		{
+			"invalid zone",
+			func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps {
+				return &icstypes.MsgGovSetLsmCaps{
+					ChainId: "unknownzone-1",
+					Caps: &icstypes.LsmCaps{
+						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
+						ValidatorBondCap: sdk.NewDec(250),
+						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+					},
+					Authority: testAddress,
+				}
+			},
+			true,
+		},
+		{
+			"non lsm zone",
+			func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps {
+				zone, _ := s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
+				zone.LiquidityModule = false
+				s.GetQuicksilverApp(s.chainA).InterchainstakingKeeper.SetZone(s.chainA.GetContext(), &zone)
+
+				return &icstypes.MsgGovSetLsmCaps{
+					ChainId: s.chainB.ChainID,
+					Caps: &icstypes.LsmCaps{
+						ValidatorCap:     sdk.NewDecWithPrec(50, 2),
+						ValidatorBondCap: sdk.NewDec(250),
+						GlobalCap:        sdk.NewDecWithPrec(25, 2),
+					},
+					Authority: testAddress,
+				}
+			},
+			true,
+		},
+		{
 			"valid",
 			func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps {
 				return &icstypes.MsgGovSetLsmCaps{
