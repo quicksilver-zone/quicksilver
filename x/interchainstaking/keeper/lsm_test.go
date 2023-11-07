@@ -99,7 +99,6 @@ func (suite *KeeperTestSuite) TestGetTotalStakedSupply() {
 			suite.True(found)
 			suite.Equal(icsKeeper.GetTotalStakedSupply(&zone), t.Expect)
 		})
-
 	}
 }
 
@@ -161,12 +160,10 @@ func (suite *KeeperTestSuite) TestGetLiquidStakedSupply() {
 			suite.True(found)
 			suite.Equal(icsKeeper.GetLiquidStakedSupply(&zone), t.Expect)
 		})
-
 	}
 }
 
 func (suite *KeeperTestSuite) TestCheckExceedsGlobalCap() {
-
 	tcs := []struct {
 		Name     string
 		Malleate func(icsKeeper *keeper.Keeper)
@@ -249,12 +246,10 @@ func (suite *KeeperTestSuite) TestCheckExceedsGlobalCap() {
 			suite.True(found)
 			suite.Equal(t.Expect, icsKeeper.CheckExceedsGlobalCap(ctx, &zone, sdk.NewInt(1)))
 		})
-
 	}
 }
 
 func (suite *KeeperTestSuite) TestCheckExceedsValidatorCap() {
-
 	tcs := []struct {
 		Name      string
 		Malleate  func(icsKeeper *keeper.Keeper)
@@ -341,7 +336,6 @@ func (suite *KeeperTestSuite) TestCheckExceedsValidatorCap() {
 				suite.NoError(icsKeeper.CheckExceedsValidatorCap(ctx, &zone, zone.Validators[1].ValoperAddress, sdk.NewInt(1)))
 			}
 		})
-
 	}
 }
 
@@ -417,6 +411,5 @@ func (suite *KeeperTestSuite) TestCheckExceedsValidatorBondCap() {
 				suite.NoError(icsKeeper.CheckExceedsValidatorBondCap(ctx, &zone, zone.Validators[0].ValoperAddress, math.NewInt(1)))
 			}
 		})
-
 	}
 }
