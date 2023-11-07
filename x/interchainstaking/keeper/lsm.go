@@ -144,7 +144,7 @@ func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, zone *types.Zone, 
 	if val != nil {
 		maxShares = val.ValidatorBondShares.Mul(cap.ValidatorBondCap)
 	} else {
-		// handle case where validator is not found
+		return errors.New("validator is nil")
 	}
 
 	amountDec := sdk.NewDecFromInt(amount)

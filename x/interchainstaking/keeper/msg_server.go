@@ -396,3 +396,51 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 
 	return &types.MsgGovCloseChannelResponse{}, nil
 }
+
+// GovSetLsmCaps set the liquid staking caps for a given chain.
+func (k msgServer) GovSetLsmCaps(goCtx context.Context, msg *types.MsgGovSetLsmCaps) (*types.MsgGovSetLsmCapsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// checking msg authority is the gov module address
+	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
+		return &types.MsgGovSetLsmCapsResponse{},
+			govtypes.ErrInvalidSigner.Wrapf(
+				"invalid authority: expected %s, got %s",
+				k.Keeper.GetGovAuthority(ctx), msg.Authority,
+			)
+	}
+
+	zone, found := k.Keeper.GetZone(ctx, msg.ChainId)
+	if !found {
+		return &types.MsgGovSetLsmCapsResponse{},
+			fmt.Errorf(
+				"no zone found for: %s",
+				msg.ChainId,
+			)
+	}
+
+	if !zone.SupportLsm() {
+		return &types.MsgGovSetLsmCapsResponse{},
+			fmt.Errorf(
+				"zone %s does not have LSM support enabled",
+				msg.ChainId,
+			)
+	}
+
+	k.SetLsmCaps(ctx, &zone, *msg.Caps)
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+		),
+		sdk.NewEvent(
+			types.EventTypeSetLsmCaps,
+			sdk.NewAttribute(types.AttributeLsmValidatorCap, msg.Caps.ValidatorCap.String()),
+			sdk.NewAttribute(types.AttributeLsmValidatorBondCap, msg.Caps.ValidatorBondCap.String()),
+			sdk.NewAttribute(types.AttributeLsmGlobalCap, msg.Caps.GlobalCap.String()),
+		),
+	})
+
+	return &types.MsgGovSetLsmCapsResponse{}, nil
+}

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/migrations/legacytx"
 
 	"github.com/ingenuity-build/quicksilver/internal/multierror"
+	"github.com/ingenuity-build/quicksilver/utils"
 )
 
 // interchainstaking message types
@@ -22,6 +24,9 @@ const (
 var (
 	_ sdk.Msg            = &MsgRequestRedemption{}
 	_ sdk.Msg            = &MsgSignalIntent{}
+	_ sdk.Msg            = &MsgGovCloseChannel{}
+	_ sdk.Msg            = &MsgGovReopenChannel{}
+	_ sdk.Msg            = &MsgGovSetLsmCaps{}
 	_ legacytx.LegacyMsg = &MsgRequestRedemption{}
 	_ legacytx.LegacyMsg = &MsgSignalIntent{}
 )
@@ -199,12 +204,23 @@ func (msg MsgGovCloseChannel) GetSignBytes() []byte {
 
 // GetSigners Implements Msg.
 func (msg MsgGovCloseChannel) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
+	fromAddress, _ := utils.AccAddressFromBech32(msg.Authority, "")
 	return []sdk.AccAddress{fromAddress}
 }
 
 // ValidateBasic check channel id is correct format. validate port name?
-func (msg MsgGovCloseChannel) ValidateBasic() error { return nil }
+func (msg MsgGovCloseChannel) ValidateBasic() error {
+	_, err := utils.AccAddressFromBech32(msg.Authority, "")
+	if err != nil {
+		return err
+	}
+
+	if err := ValidatePort(msg.PortId); err != nil {
+		return err
+	}
+
+	return ValidateChannel(msg.ChannelId)
+}
 
 // NewMsgGovReopenChannel - construct a msg to update signalled intent.
 func NewMsgGovReopenChannel(connectionID string, portName string, fromAddress sdk.Address) *MsgGovReopenChannel {
@@ -218,9 +234,105 @@ func (msg MsgGovReopenChannel) GetSignBytes() []byte {
 
 // GetSigners Implements Msg.
 func (msg MsgGovReopenChannel) GetSigners() []sdk.AccAddress {
-	fromAddress, _ := sdk.AccAddressFromBech32(msg.Authority)
+	fromAddress, _ := utils.AccAddressFromBech32(msg.Authority, "")
 	return []sdk.AccAddress{fromAddress}
 }
 
-// ValidateBasic check channel id is correct format. validate port name?
-func (msg MsgGovReopenChannel) ValidateBasic() error { return nil }
+// ValidateBasic
+func (msg MsgGovReopenChannel) ValidateBasic() error {
+	_, err := utils.AccAddressFromBech32(msg.Authority, "")
+	if err != nil {
+		return err
+	}
+
+	if err := ValidatePort(msg.PortId); err != nil {
+		return err
+	}
+
+	return ValidateConnection(msg.ConnectionId)
+}
+
+// NewMsgGovSetLsmCaps - construct a msg to Set Lsm Caps.
+func NewMsgGovSetLsmCaps(connectionID string, portName string, fromAddress sdk.Address) *MsgGovSetLsmCaps {
+	return &MsgGovSetLsmCaps{Authority: fromAddress.String()}
+}
+
+// GetSignBytes Implements Msg.
+func (msg MsgGovSetLsmCaps) GetSignBytes() []byte {
+	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(&msg))
+}
+
+// GetSigners Implements Msg.
+func (msg MsgGovSetLsmCaps) GetSigners() []sdk.AccAddress {
+	fromAddress, _ := utils.AccAddressFromBech32(msg.Authority, "")
+	return []sdk.AccAddress{fromAddress}
+}
+
+// ValidateBasic
+func (msg MsgGovSetLsmCaps) ValidateBasic() error {
+	_, err := utils.AccAddressFromBech32(msg.Authority, "")
+	if err != nil {
+		return err
+	}
+
+	if len(msg.ChainId) == 0 || len(msg.ChainId) > 100 {
+		return errors.New("invalid chain id")
+	}
+
+	return msg.Caps.Validate()
+}
+
+// Helpers
+func ValidateConnection(connectionID string) error {
+	if !strings.HasPrefix(connectionID, "connection-") {
+		return errors.New("invalid connection")
+	}
+
+	_, err := strconv.ParseInt(connectionID[11:], 0, 64)
+
+	return err
+}
+
+func ValidateChannel(channelID string) error {
+	if !strings.HasPrefix(channelID, "channel-") {
+		return errors.New("invalid channel")
+	}
+
+	_, err := strconv.ParseInt(channelID[8:], 0, 64)
+
+	return err
+}
+
+func ValidatePort(portID string) error {
+	// remove leading prefix icacontroller- if passed in msg
+	portID = strings.ReplaceAll(portID, "icacontroller-", "")
+
+	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
+	parts := strings.Split(portID, ".")
+
+	if len(parts) != 2 {
+		return errors.New("invalid port format")
+	}
+
+	if parts[1] != "delegate" && parts[1] != "deposit" && parts[1] != "performance" && parts[1] != "withdrawal" {
+		return errors.New("invalid port format; unexpected account")
+	}
+
+	return nil
+}
+
+func (caps LsmCaps) Validate() error {
+	if caps.GlobalCap.GT(sdk.OneDec()) || caps.GlobalCap.LT(sdk.ZeroDec()) {
+		return errors.New("global cap must be between 0 and 1")
+	}
+
+	if caps.ValidatorCap.GT(sdk.OneDec()) || caps.ValidatorCap.LT(sdk.ZeroDec()) {
+		return errors.New("validator cap must be between 0 and 1")
+	}
+
+	if caps.ValidatorBondCap.LTE(sdk.ZeroDec()) {
+		return errors.New("validator bond cap must be greater than 0")
+	}
+
+	return nil
+}
