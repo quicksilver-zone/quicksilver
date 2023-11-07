@@ -868,7 +868,6 @@ func (k *Keeper) HandleRedeemTokens(ctx sdk.Context, msg sdk.Msg, amount sdk.Coi
 	zone := k.GetZoneForDelegateAccount(ctx, redeemMsg.DelegatorAddress)
 
 	switch {
-	//case memo == "rewards":
 	case strings.HasPrefix(memo, "batch"):
 		k.Logger(ctx).Debug("batch delegation", "memo", memo, "tx", redeemMsg)
 		exclusionTimestampUnix, err := strconv.ParseInt(strings.Split(memo, "/")[1], 10, 64)

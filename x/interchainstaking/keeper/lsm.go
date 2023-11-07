@@ -12,20 +12,20 @@ import (
 
 // GetCap returns Cap info by zone and delegator
 func (k Keeper) GetLsmCaps(ctx sdk.Context, chainID string) (*types.LsmCaps, bool) {
-	cap := types.LsmCaps{}
+	caps := types.LsmCaps{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLsmCaps)
 	bz := store.Get([]byte(chainID))
 	if len(bz) == 0 {
 		return nil, false
 	}
-	k.cdc.MustUnmarshal(bz, &cap)
-	return &cap, true
+	k.cdc.MustUnmarshal(bz, &caps)
+	return &caps, true
 }
 
 // SetCap store the delegator Cap
-func (k Keeper) SetLsmCaps(ctx sdk.Context, chainID string, cap types.LsmCaps) {
+func (k Keeper) SetLsmCaps(ctx sdk.Context, chainID string, caps types.LsmCaps) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLsmCaps)
-	bz := k.cdc.MustMarshal(&cap)
+	bz := k.cdc.MustMarshal(&caps)
 	store.Set([]byte(chainID), bz)
 }
 
@@ -45,10 +45,10 @@ func (k Keeper) IterateLsmCaps(ctx sdk.Context, fn func(index int64, chainID str
 	i := int64(0)
 
 	for ; iterator.Valid(); iterator.Next() {
-		cap := types.LsmCaps{}
-		k.cdc.MustUnmarshal(iterator.Value(), &cap)
+		caps := types.LsmCaps{}
+		k.cdc.MustUnmarshal(iterator.Value(), &caps)
 
-		stop := fn(i, string(iterator.Key()), cap)
+		stop := fn(i, string(iterator.Key()), caps)
 
 		if stop {
 			break
@@ -59,12 +59,12 @@ func (k Keeper) IterateLsmCaps(ctx sdk.Context, fn func(index int64, chainID str
 
 // AllCaps returns every Cap in the store for the specified zone
 func (k Keeper) AllLsmCaps(ctx sdk.Context) map[string]types.LsmCaps {
-	caps := map[string]types.LsmCaps{}
-	k.IterateLsmCaps(ctx, func(_ int64, chainID string, cap types.LsmCaps) (stop bool) {
-		caps[chainID] = cap
+	allCaps := map[string]types.LsmCaps{}
+	k.IterateLsmCaps(ctx, func(_ int64, chainID string, caps types.LsmCaps) (stop bool) {
+		allCaps[chainID] = caps
 		return false
 	})
-	return caps
+	return allCaps
 }
 
 func (k Keeper) GetLiquidStakedSupply(zone *types.Zone) sdk.Dec {
@@ -88,7 +88,7 @@ func (k Keeper) GetTotalStakedSupply(zone *types.Zone) math.Int {
 }
 
 func (k Keeper) CheckExceedsGlobalCap(ctx sdk.Context, zone *types.Zone, amount math.Int) bool {
-	cap, found := k.GetLsmCaps(ctx, zone.ChainId)
+	caps, found := k.GetLsmCaps(ctx, zone.ChainId)
 	if !found {
 		// no caps found, permit
 		return false
@@ -97,12 +97,12 @@ func (k Keeper) CheckExceedsGlobalCap(ctx sdk.Context, zone *types.Zone, amount 
 	liquidSupply := k.GetLiquidStakedSupply(zone)
 	totalSupply := sdk.NewDecFromInt(k.GetTotalStakedSupply(zone))
 	amountDec := sdk.NewDecFromInt(amount)
-	return liquidSupply.Add(amountDec).Quo(totalSupply).GT(cap.GlobalCap)
+	return liquidSupply.Add(amountDec).Quo(totalSupply).GT(caps.GlobalCap)
 }
 
 func (k Keeper) CheckExceedsValidatorCap(ctx sdk.Context, zone *types.Zone, validator string, amount math.Int) error {
-	// Retrieve the cap for the given zone
-	cap, found := k.GetLsmCaps(ctx, zone.ChainId)
+	// Retrieve the caps for the given zone
+	caps, found := k.GetLsmCaps(ctx, zone.ChainId)
 	if !found {
 		// No cap found, permit the transaction
 		return nil
@@ -120,7 +120,7 @@ func (k Keeper) CheckExceedsValidatorCap(ctx sdk.Context, zone *types.Zone, vali
 	liquidShares := val.LiquidShares.Add(amountDec)
 	tokens := sdk.NewDecFromInt(val.VotingPower).Add(amountDec)
 
-	if liquidShares.Quo(tokens).GT(cap.ValidatorCap) {
+	if liquidShares.Quo(tokens).GT(caps.ValidatorCap) {
 		return errors.New("exceeds validator cap")
 	}
 
@@ -128,7 +128,7 @@ func (k Keeper) CheckExceedsValidatorCap(ctx sdk.Context, zone *types.Zone, vali
 }
 
 func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, zone *types.Zone, validator string, amount math.Int) error {
-	cap, found := k.GetLsmCaps(ctx, zone.ChainId)
+	caps, found := k.GetLsmCaps(ctx, zone.ChainId)
 	if !found {
 		// no caps found, permit
 		return nil
@@ -142,7 +142,7 @@ func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, zone *types.Zone, 
 
 	var maxShares sdk.Dec
 	if val != nil {
-		maxShares = val.ValidatorBondShares.Mul(cap.ValidatorBondCap)
+		maxShares = val.ValidatorBondShares.Mul(caps.ValidatorBondCap)
 	} else {
 		return errors.New("validator is nil")
 	}

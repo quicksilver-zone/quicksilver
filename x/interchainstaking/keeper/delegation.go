@@ -226,7 +226,7 @@ func (k *Keeper) PrepareDelegationMessagesForShares(_ sdk.Context, zone *types.Z
 
 func (k Keeper) DetermineMaximumValidatorAllocations(ctx sdk.Context, zone *types.Zone) map[string]sdkmath.Int {
 	out := make(map[string]sdkmath.Int)
-	cap, found := k.GetLsmCaps(ctx, zone.ChainId)
+	caps, found := k.GetLsmCaps(ctx, zone.ChainId)
 	if !found {
 		// No cap found, permit the transaction
 		return out
@@ -234,10 +234,10 @@ func (k Keeper) DetermineMaximumValidatorAllocations(ctx sdk.Context, zone *type
 
 	for _, val := range zone.Validators {
 		// validator bond max
-		maxBondShares := val.ValidatorBondShares.Mul(cap.ValidatorBondCap).Sub(val.LiquidShares)
+		maxBondShares := val.ValidatorBondShares.Mul(caps.ValidatorBondCap).Sub(val.LiquidShares)
 
 		// validator pc max
-		maxLiquidStakedShares := sdk.NewDecFromInt(val.VotingPower).Mul(cap.ValidatorCap).Sub(val.LiquidShares)
+		maxLiquidStakedShares := sdk.NewDecFromInt(val.VotingPower).Mul(caps.ValidatorCap).Sub(val.LiquidShares)
 		out[val.ValoperAddress] = sdkmath.MaxInt(maxBondShares.TruncateInt(), maxLiquidStakedShares.TruncateInt())
 	}
 

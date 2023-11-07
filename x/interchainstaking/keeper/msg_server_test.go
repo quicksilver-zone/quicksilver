@@ -529,7 +529,6 @@ func (s *KeeperTestSuite) TestSetLsmCaps() {
 		malleate  func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps
 		expectErr bool
 	}{
-
 		{
 			"invalid authority",
 			func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps {

@@ -1222,7 +1222,6 @@ func (s *KeeperTestSuite) TestHandleFailedDelegate_BatchTriggerRR_OK() {
 	}
 
 	s.Equal(distributeRewardsPostQueryCount, distributeRewardsPreQueryCount+1)
-
 }
 
 func (s *KeeperTestSuite) TestHandleFailedDelegate_BadAddr_Fail() {
