@@ -112,7 +112,7 @@ func (k *Keeper) HandleAcknowledgement(ctx sdk.Context, packet channeltypes.Pack
 
 	for msgIndex, msg := range msgs {
 		// use msgData for v0.45 and below and msgResponse for v0.46+
-		//nolint:staticcheck
+		//nolint:staticcheck // SA1019 ignore this!
 		var msgData *sdk.MsgData
 		var msgResponse []byte
 		var msgResponseType string
