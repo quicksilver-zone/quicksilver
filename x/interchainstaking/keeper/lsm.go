@@ -11,10 +11,10 @@ import (
 )
 
 // GetCap returns Cap info by zone and delegator
-func (k Keeper) GetLsmCaps(ctx sdk.Context, zone *types.Zone) (*types.LsmCaps, bool) {
+func (k Keeper) GetLsmCaps(ctx sdk.Context, chainID string) (*types.LsmCaps, bool) {
 	cap := types.LsmCaps{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLsmCaps)
-	bz := store.Get([]byte(zone.ChainId))
+	bz := store.Get([]byte(chainID))
 	if len(bz) == 0 {
 		return nil, false
 	}
@@ -23,20 +23,20 @@ func (k Keeper) GetLsmCaps(ctx sdk.Context, zone *types.Zone) (*types.LsmCaps, b
 }
 
 // SetCap store the delegator Cap
-func (k Keeper) SetLsmCaps(ctx sdk.Context, zone *types.Zone, cap types.LsmCaps) {
+func (k Keeper) SetLsmCaps(ctx sdk.Context, chainID string, cap types.LsmCaps) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLsmCaps)
 	bz := k.cdc.MustMarshal(&cap)
-	store.Set([]byte(zone.ChainId), bz)
+	store.Set([]byte(chainID), bz)
 }
 
 // DeleteCap deletes delegator Cap
-func (k Keeper) DeleteLsmCaps(ctx sdk.Context, zone *types.Zone, delegator string, snapshot bool) {
+func (k Keeper) DeleteLsmCaps(ctx sdk.Context, chainID string) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLsmCaps)
-	store.Delete([]byte(delegator))
+	store.Delete([]byte(chainID))
 }
 
 // IterateCaps iterate through Caps for a given zone
-func (k Keeper) IterateLsmCaps(ctx sdk.Context, fn func(index int64, chainId string, cap types.LsmCaps) (stop bool)) {
+func (k Keeper) IterateLsmCaps(ctx sdk.Context, fn func(index int64, chainID string, cap types.LsmCaps) (stop bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLsmCaps)
 
 	iterator := sdk.KVStorePrefixIterator(store, nil)
@@ -58,10 +58,10 @@ func (k Keeper) IterateLsmCaps(ctx sdk.Context, fn func(index int64, chainId str
 }
 
 // AllCaps returns every Cap in the store for the specified zone
-func (k Keeper) AllLsmCaps(ctx sdk.Context, snapshot bool) map[string]types.LsmCaps {
+func (k Keeper) AllLsmCaps(ctx sdk.Context) map[string]types.LsmCaps {
 	caps := map[string]types.LsmCaps{}
-	k.IterateLsmCaps(ctx, func(_ int64, chainId string, cap types.LsmCaps) (stop bool) {
-		caps[chainId] = cap
+	k.IterateLsmCaps(ctx, func(_ int64, chainID string, cap types.LsmCaps) (stop bool) {
+		caps[chainID] = cap
 		return false
 	})
 	return caps
@@ -88,7 +88,7 @@ func (k Keeper) GetTotalStakedSupply(zone *types.Zone) math.Int {
 }
 
 func (k Keeper) CheckExceedsGlobalCap(ctx sdk.Context, zone *types.Zone, amount math.Int) bool {
-	cap, found := k.GetLsmCaps(ctx, zone)
+	cap, found := k.GetLsmCaps(ctx, zone.ChainId)
 	if !found {
 		// no caps found, permit
 		return false
@@ -102,7 +102,7 @@ func (k Keeper) CheckExceedsGlobalCap(ctx sdk.Context, zone *types.Zone, amount 
 
 func (k Keeper) CheckExceedsValidatorCap(ctx sdk.Context, zone *types.Zone, validator string, amount math.Int) error {
 	// Retrieve the cap for the given zone
-	cap, found := k.GetLsmCaps(ctx, zone)
+	cap, found := k.GetLsmCaps(ctx, zone.ChainId)
 	if !found {
 		// No cap found, permit the transaction
 		return nil
@@ -128,7 +128,7 @@ func (k Keeper) CheckExceedsValidatorCap(ctx sdk.Context, zone *types.Zone, vali
 }
 
 func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, zone *types.Zone, validator string, amount math.Int) error {
-	cap, found := k.GetLsmCaps(ctx, zone)
+	cap, found := k.GetLsmCaps(ctx, zone.ChainId)
 	if !found {
 		// no caps found, permit
 		return nil

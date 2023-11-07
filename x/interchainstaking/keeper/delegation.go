@@ -226,7 +226,7 @@ func (k *Keeper) PrepareDelegationMessagesForShares(_ sdk.Context, zone *types.Z
 
 func (k Keeper) DetermineMaximumValidatorAllocations(ctx sdk.Context, zone *types.Zone) map[string]sdkmath.Int {
 	out := make(map[string]sdkmath.Int)
-	cap, found := k.GetLsmCaps(ctx, zone)
+	cap, found := k.GetLsmCaps(ctx, zone.ChainId)
 	if !found {
 		// No cap found, permit the transaction
 		return out

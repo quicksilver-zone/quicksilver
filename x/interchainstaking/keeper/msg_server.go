@@ -427,7 +427,7 @@ func (k msgServer) GovSetLsmCaps(goCtx context.Context, msg *types.MsgGovSetLsmC
 			)
 	}
 
-	k.SetLsmCaps(ctx, &zone, *msg.Caps)
+	k.SetLsmCaps(ctx, zone.ChainId, *msg.Caps)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

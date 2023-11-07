@@ -586,7 +586,7 @@ func (s *KeeperTestSuite) TestSetLsmCaps() {
 			zone, found := icsKeeper.GetZone(s.chainA.GetContext(), s.chainB.ChainID)
 			s.True(found)
 
-			caps, found := icsKeeper.GetLsmCaps(s.chainA.GetContext(), &zone)
+			caps, found := icsKeeper.GetLsmCaps(s.chainA.GetContext(), zone.ChainId)
 			if tt.expectErr {
 				s.False(found)
 				s.Nil(caps)
