@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -13,6 +14,7 @@ import (
 	"github.com/ingenuity-build/quicksilver/app"
 	"github.com/ingenuity-build/quicksilver/utils"
 	icskeeper "github.com/ingenuity-build/quicksilver/x/interchainstaking/keeper"
+	"github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 	icstypes "github.com/ingenuity-build/quicksilver/x/interchainstaking/types"
 )
 
@@ -1095,4 +1097,55 @@ func (s *KeeperTestSuite) TestFlushOutstandingDelegations() {
 			s.Require().True(isCorrect)
 		})
 	}
+}
+
+func (suite *KeeperTestSuite) TestDetermineMaximumValidatorAllocationsNoCaps() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	suite.True(found)
+
+	suite.Equal(make(map[string]math.Int, 0), quicksilver.InterchainstakingKeeper.DetermineMaximumValidatorAllocations(ctx, &zone))
+}
+
+func (suite *KeeperTestSuite) TestDetermineMaximumValidatorAllocations() {
+	suite.SetupTest()
+	suite.setupTestZones()
+
+	quicksilver := suite.GetQuicksilverApp(suite.chainA)
+	ctx := suite.chainA.GetContext()
+
+	quicksilver.InterchainstakingKeeper.SetLsmCaps(ctx, suite.chainB.ChainID, types.LsmCaps{GlobalCap: sdk.NewDecWithPrec(50, 2), ValidatorBondCap: sdk.NewDec(50), ValidatorCap: sdk.NewDecWithPrec(50, 2)})
+
+	zone, found := quicksilver.InterchainstakingKeeper.GetZone(ctx, suite.chainB.ChainID)
+	// val 0: constraint by validator cap - 50% of 1000 = 500 - 450 = 50.
+	zone.Validators[0].VotingPower = math.NewInt(1000)
+	zone.Validators[0].ValidatorBondShares = sdk.NewDec(200)
+	zone.Validators[0].LiquidShares = sdk.NewDec(450)
+
+	// val 1: constraint by validator cap, with zero liquid shares - 50% of 1000 = 500 - 0 = 500.
+	zone.Validators[1].VotingPower = math.NewInt(1000)
+	zone.Validators[1].ValidatorBondShares = sdk.NewDec(200)
+	zone.Validators[1].LiquidShares = sdk.NewDec(0)
+
+	// val 2: constraint by valbond cap - 50 * 2 = 100 - 50 = 50.
+	zone.Validators[2].VotingPower = math.NewInt(1000)
+	zone.Validators[2].ValidatorBondShares = sdk.NewDec(2)
+	zone.Validators[2].LiquidShares = sdk.NewDec(50)
+
+	// val 3: constraint by valbond cap, zero ls - 50 * 2 = 100 - 0 = 100.
+	zone.Validators[3].VotingPower = math.NewInt(1000)
+	zone.Validators[3].ValidatorBondShares = sdk.NewDec(2)
+	zone.Validators[3].LiquidShares = sdk.NewDec(0)
+
+	suite.True(found)
+
+	suite.Equal(quicksilver.InterchainstakingKeeper.DetermineMaximumValidatorAllocations(ctx, &zone)[zone.Validators[0].ValoperAddress], math.NewInt(50))
+	suite.Equal(quicksilver.InterchainstakingKeeper.DetermineMaximumValidatorAllocations(ctx, &zone)[zone.Validators[1].ValoperAddress], math.NewInt(500))
+	suite.Equal(quicksilver.InterchainstakingKeeper.DetermineMaximumValidatorAllocations(ctx, &zone)[zone.Validators[2].ValoperAddress], math.NewInt(50))
+	suite.Equal(quicksilver.InterchainstakingKeeper.DetermineMaximumValidatorAllocations(ctx, &zone)[zone.Validators[3].ValoperAddress], math.NewInt(100))
 }
