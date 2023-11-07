@@ -11,15 +11,15 @@ import (
 )
 
 // GetCap returns Cap info by zone and delegator
-func (k Keeper) GetLsmCaps(ctx sdk.Context, zone *types.Zone) (types.LsmCaps, bool) {
+func (k Keeper) GetLsmCaps(ctx sdk.Context, zone *types.Zone) (*types.LsmCaps, bool) {
 	cap := types.LsmCaps{}
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefixLsmCaps)
 	bz := store.Get([]byte(zone.ChainId))
 	if len(bz) == 0 {
-		return cap, false
+		return nil, false
 	}
 	k.cdc.MustUnmarshal(bz, &cap)
-	return cap, true
+	return &cap, true
 }
 
 // SetCap store the delegator Cap

@@ -323,26 +323,26 @@ func (k Keeper) EmitValsetRequery(ctx sdk.Context, connectionID string, chainID 
 // GovReopenChannel reopens an ICA channel.
 func (k msgServer) GovReopenChannel(goCtx context.Context, msg *types.MsgGovReopenChannel) (*types.MsgGovReopenChannelResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// remove leanding prefix icacontroller- if passed in msg
+	// remove leading prefix icacontroller- if passed in msg
 	portID := strings.ReplaceAll(msg.PortId, "icacontroller-", "")
 
 	// validate the zone exists, and the format is valid (e.g. quickgaia-1.delegate)
 	parts := strings.Split(portID, ".")
 
 	if len(parts) != 2 {
-		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format")
+		return nil, errors.New("invalid port format")
 	}
 
 	if _, found := k.GetZone(ctx, parts[0]); !found {
-		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; zone not found")
+		return nil, errors.New("invalid port format; zone not found")
 	}
 
 	if parts[1] != "delegate" && parts[1] != "deposit" && parts[1] != "performance" && parts[1] != "withdrawal" {
-		return &types.MsgGovReopenChannelResponse{}, errors.New("invalid port format; unexpected account")
+		return nil, errors.New("invalid port format; unexpected account")
 	}
 
 	if err := k.Keeper.registerInterchainAccount(ctx, msg.ConnectionId, portID); err != nil {
-		return &types.MsgGovReopenChannelResponse{}, err
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -366,7 +366,7 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 
 	// checking msg authority is the gov module address
 	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
-		return &types.MsgGovCloseChannelResponse{},
+		return nil,
 			govtypes.ErrInvalidSigner.Wrapf(
 				"invalid authority: expected %s, got %s",
 				k.Keeper.GetGovAuthority(ctx), msg.Authority,
@@ -375,11 +375,11 @@ func (k msgServer) GovCloseChannel(goCtx context.Context, msg *types.MsgGovClose
 
 	_, capability, err := k.Keeper.IBCKeeper.ChannelKeeper.LookupModuleByChannel(ctx, msg.PortId, msg.ChannelId)
 	if err != nil {
-		return &types.MsgGovCloseChannelResponse{}, err
+		return nil, err
 	}
 
 	if err := k.IBCKeeper.ChannelKeeper.ChanCloseInit(ctx, msg.PortId, msg.ChannelId, capability); err != nil {
-		return &types.MsgGovCloseChannelResponse{}, err
+		return nil, err
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -403,7 +403,7 @@ func (k msgServer) GovSetLsmCaps(goCtx context.Context, msg *types.MsgGovSetLsmC
 
 	// checking msg authority is the gov module address
 	if k.Keeper.GetGovAuthority(ctx) != msg.Authority {
-		return &types.MsgGovSetLsmCapsResponse{},
+		return nil,
 			govtypes.ErrInvalidSigner.Wrapf(
 				"invalid authority: expected %s, got %s",
 				k.Keeper.GetGovAuthority(ctx), msg.Authority,
@@ -412,7 +412,7 @@ func (k msgServer) GovSetLsmCaps(goCtx context.Context, msg *types.MsgGovSetLsmC
 
 	zone, found := k.Keeper.GetZone(ctx, msg.ChainId)
 	if !found {
-		return &types.MsgGovSetLsmCapsResponse{},
+		return nil,
 			fmt.Errorf(
 				"no zone found for: %s",
 				msg.ChainId,
@@ -420,7 +420,7 @@ func (k msgServer) GovSetLsmCaps(goCtx context.Context, msg *types.MsgGovSetLsmC
 	}
 
 	if !zone.SupportLsm() {
-		return &types.MsgGovSetLsmCapsResponse{},
+		return nil,
 			fmt.Errorf(
 				"zone %s does not have LSM support enabled",
 				msg.ChainId,
