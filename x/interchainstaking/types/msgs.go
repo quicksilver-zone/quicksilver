@@ -192,10 +192,7 @@ func (msg MsgSignalIntent) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{fromAddress}
 }
 
-// NewMsgGovCloseChannel - construct a msg to update signalled intent.
-func NewMsgGovCloseChannel(channelID string, portName string, fromAddress sdk.Address) *MsgGovCloseChannel {
-	return &MsgGovCloseChannel{ChannelId: channelID, PortId: portName, Authority: fromAddress.String()}
-}
+// MsgGovCloseChannel
 
 // GetSignBytes Implements Msg.
 func (msg MsgGovCloseChannel) GetSignBytes() []byte {
@@ -252,10 +249,7 @@ func (msg MsgGovReopenChannel) ValidateBasic() error {
 	return ValidateConnection(msg.ConnectionId)
 }
 
-// NewMsgGovSetLsmCaps - construct a msg to Set Lsm Caps.
-func NewMsgGovSetLsmCaps(connectionID string, portName string, fromAddress sdk.Address) *MsgGovSetLsmCaps {
-	return &MsgGovSetLsmCaps{Authority: fromAddress.String()}
-}
+// MsgGovSetLsmCaps
 
 // GetSignBytes Implements Msg.
 func (msg MsgGovSetLsmCaps) GetSignBytes() []byte {
