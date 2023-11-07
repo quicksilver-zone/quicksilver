@@ -97,6 +97,10 @@ func (suite *KeeperTestSuite) TestKeeper_DelegationStore() {
 	dds := icsKeeper.GetDelegatorDelegations(ctx, &zone, addr)
 	suite.Require().Len(dds, 3)
 	suite.Require().Equal(delegations, dds)
+
+	suite.NoError(icsKeeper.RemoveDelegation(ctx, &zone, delegations[0]))
+	dds = icsKeeper.GetDelegatorDelegations(ctx, &zone, addr)
+	suite.Require().Len(dds, 2)
 }
 
 func TestDetermineAllocationsForDelegation(t *testing.T) {
