@@ -527,7 +527,6 @@ func (s *KeeperTestSuite) TestSetLsmCaps() {
 	tests := []struct {
 		name      string
 		malleate  func(s *KeeperTestSuite) *icstypes.MsgGovSetLsmCaps
-		expected  []sdk.Dec
 		expectErr bool
 	}{
 
@@ -544,7 +543,6 @@ func (s *KeeperTestSuite) TestSetLsmCaps() {
 					Authority: testAddress,
 				}
 			},
-			[]sdk.Dec{sdk.NewDecWithPrec(1, 0)},
 			true,
 		},
 		{
@@ -560,7 +558,6 @@ func (s *KeeperTestSuite) TestSetLsmCaps() {
 					Authority: "quick10d07y265gmmuvt4z0w9aw880jnsr700j3xrh0p",
 				}
 			},
-			[]sdk.Dec{sdk.NewDecWithPrec(1, 0)},
 			false,
 		},
 	}
