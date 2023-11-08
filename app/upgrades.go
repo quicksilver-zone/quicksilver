@@ -23,6 +23,7 @@ const (
 	v010300UpgradeName  = "v1.3.0" // retained for testy
 	v0102015UpgradeName = "v1.2.15"
 	v0102017UpgradeName = "v1.2.17"
+	v0102018UpgradeName = "v1.2.18"
 )
 
 func setUpgradeHandlers(app *Quicksilver) {
@@ -33,6 +34,7 @@ func setUpgradeHandlers(app *Quicksilver) {
 	app.UpgradeKeeper.SetUpgradeHandler(v0102010UpgradeName, noOpUpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v0102015UpgradeName, noOpUpgradeHandler(app))
 	app.UpgradeKeeper.SetUpgradeHandler(v0102017UpgradeName, noOpUpgradeHandler(app))
+	app.UpgradeKeeper.SetUpgradeHandler(v0102018UpgradeName, noOpUpgradeHandler(app))
 
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
