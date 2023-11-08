@@ -1815,7 +1815,6 @@ func (s *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
 		s.Equal(uint32(2), zone.WithdrawalWaitgroup) // initial 2 is reduced to 1, but incremented by 1 (1x redeem token messages) == 2
 		s.Equal(sdk.NewInt(500), zone.DelegationAddress.Balance.AmountOf("uatom"))
 		s.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf(denom))
-
 	})
 }
 
