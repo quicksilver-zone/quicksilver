@@ -538,6 +538,7 @@ func DelegationAccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, qu
 	if !found {
 		return fmt.Errorf("no registered zone for chain id: %s", query.GetChainId())
 	}
+
 	// strip the BalancesPrefix from the request key, as AddressFromBalancesStore expects this to be removed
 	// by the prefixIterator. query.Request is a value that Quicksilver always sets, and is not user generated,
 	// but lets us be safe here :)
@@ -583,7 +584,7 @@ func DelegationAccountBalanceCallback(k Keeper, ctx sdk.Context, args []byte, qu
 	// set the zone amount.
 	balance := zone.DelegationAddress.Balance
 	if ok, _ := zone.DelegationAddress.Balance.Find(coin.Denom); !ok {
-		zone.DelegationAddress.Balance.Add(coin)
+		zone.DelegationAddress.Balance = zone.DelegationAddress.Balance.Add(coin)
 	} else {
 		for idx, i := range balance {
 			if coin.Denom == i.Denom {

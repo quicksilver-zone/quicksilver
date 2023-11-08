@@ -1639,7 +1639,7 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallbackFailOnNonMatchingValidator
 	})
 }
 
-func (s *KeeperTestSuite) TestDelegationAccountBalancesCallbackJustUqckNoPreviousBalance() {
+func (s *KeeperTestSuite) TestDelegationAccountBalancesCallback() {
 	tcs := []struct {
 		Name               string
 		PreviousBalance    sdk.Coins
@@ -1750,6 +1750,73 @@ func (s *KeeperTestSuite) TestDelegationAccountBalancesCallbackJustUqckNoPreviou
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestDelegationAccountBalanceCallback() {
+	s.Run("delegation account balance", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		zone.WithdrawalWaitgroup = 2
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500)))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewCoin("uatom", sdk.NewInt(10))
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
+		s.Require().NoError(err)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte("uatom")...)
+
+		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+		s.Require().NoError(err)
+
+		ctx = s.chainA.GetContext()
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Equal(uint32(5), zone.WithdrawalWaitgroup) // initial 2 is reduced to 1, but incremented by 4 (4x delegation messages) == 5
+		s.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf("uatom"))
+	})
+}
+
+func (s *KeeperTestSuite) TestDelegationAccountBalanceCallbackLSM() {
+	s.Run("delegation account balance", func() {
+		s.SetupTest()
+		s.setupTestZones()
+
+		app := s.GetQuicksilverApp(s.chainA)
+		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+		ctx := s.chainA.GetContext()
+
+		zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		denom := zone.Validators[0].ValoperAddress + "/1"
+		zone.WithdrawalWaitgroup = 2
+		zone.DelegationAddress.Balance = sdk.NewCoins(sdk.NewCoin("uatom", math.NewInt(500)))
+		app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+		response := sdk.NewCoin(denom, sdk.NewInt(10))
+		respbz, err := app.AppCodec().Marshal(&response)
+		s.Require().NoError(err)
+
+		accAddr, err := sdk.AccAddressFromBech32(zone.DelegationAddress.Address)
+		s.Require().NoError(err)
+		data := append(banktypes.CreateAccountBalancesPrefix(accAddr), []byte(denom)...)
+
+		err = keeper.DelegationAccountBalanceCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: data})
+		s.Require().NoError(err)
+
+		ctx = s.chainA.GetContext()
+		zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+		s.Equal(uint32(2), zone.WithdrawalWaitgroup) // initial 2 is reduced to 1, but incremented by 1 (1x redeem token messages) == 2
+		s.Equal(sdk.NewInt(500), zone.DelegationAddress.Balance.AmountOf("uatom"))
+		s.Equal(sdk.NewInt(10), zone.DelegationAddress.Balance.AmountOf(denom))
+
+	})
 }
 
 const (
