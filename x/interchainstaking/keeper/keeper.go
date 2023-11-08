@@ -219,12 +219,12 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 			k.Logger(ctx).Debug("jail status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Jailed, "to", validator.Jailed)
 			toQuery = true
 		case val.Status != validator.Status.String():
-			k.Logger(ctx).Debug("jail status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Jailed, "to", validator.Jailed)
+			k.Logger(ctx).Debug("bond status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Status, "to", validator.Status.String())
 			toQuery = true
-		case !val.LiquidShares.IsNil() || !val.LiquidShares.Equal(validator.LiquidShares):
+		case !val.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares):
 			k.Logger(ctx).Debug("liquid shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.LiquidShares, "to", validator.LiquidShares)
 			toQuery = true
-		case !val.ValidatorBondShares.IsNil() || !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
+		case !val.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
 			k.Logger(ctx).Debug("Validator bond shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.ValidatorBondShares, "to", validator.ValidatorBondShares)
 			toQuery = true
 		}
