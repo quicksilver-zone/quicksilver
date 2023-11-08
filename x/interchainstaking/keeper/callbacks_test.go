@@ -1639,6 +1639,119 @@ func (suite *KeeperTestSuite) TestDepositLsmTxCallbackFailOnNonMatchingValidator
 	})
 }
 
+func (s *KeeperTestSuite) TestDelegationAccountBalancesCallbackJustUqckNoPreviousBalance() {
+	tcs := []struct {
+		Name               string
+		PreviousBalance    sdk.Coins
+		IncomingBalance    sdk.Coins
+		ExpectedQueryCount int
+		ExpectedWaitgroup  uint32
+	}{
+		{
+			Name:               "initial nil, incoming uqck",
+			PreviousBalance:    sdk.NewCoins(),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedQueryCount: 1, // uqck
+			ExpectedWaitgroup:  1,
+		},
+		{
+			Name:               "initial uqck, incoming uqck",
+			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedQueryCount: 1, // uqck
+			ExpectedWaitgroup:  1,
+		},
+		{
+			Name:               "initial uqck, incoming lsm",
+			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin(utils.GenerateValAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1))),
+			ExpectedQueryCount: 2, // uqck
+			ExpectedWaitgroup:  2,
+		},
+		{
+			Name:               "initial uqck, incoming lsm + qck",
+			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin(utils.GenerateValAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1)), sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedQueryCount: 2, // uqck
+			ExpectedWaitgroup:  2,
+		},
+		{
+			Name:               "initial lsm, incoming uqck",
+			PreviousBalance:    sdk.NewCoins(sdk.NewCoin(utils.GenerateValAddressForTestWithPrefix("cosmosvaloper")+"/1", sdk.NewInt(1))),
+			IncomingBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			ExpectedQueryCount: 2, // uqck
+			ExpectedWaitgroup:  2,
+		},
+		{
+			Name:               "initial uqck, incoming nil",
+			PreviousBalance:    sdk.NewCoins(sdk.NewCoin("uqck", sdk.NewInt(1))),
+			IncomingBalance:    sdk.NewCoins(),
+			ExpectedQueryCount: 1, // uqck
+			ExpectedWaitgroup:  1,
+		},
+		{
+			Name:               "initial nil, incoming nil",
+			PreviousBalance:    sdk.NewCoins(),
+			IncomingBalance:    sdk.NewCoins(),
+			ExpectedQueryCount: 0, // uqck
+			ExpectedWaitgroup:  0,
+		},
+	}
+
+	for _, t := range tcs {
+		s.Run(t.Name, func() {
+			s.SetupTest()
+			s.setupTestZones()
+
+			app := s.GetQuicksilverApp(s.chainA)
+			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
+			ctx := s.chainA.GetContext()
+
+			zone, _ := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			zone.WithdrawalWaitgroup = 1
+			zone.DelegationAddress.Balance = t.PreviousBalance
+			app.InterchainstakingKeeper.SetZone(ctx, &zone)
+
+			query := banktypes.QueryAllBalancesRequest{
+				Address: zone.DelegationAddress.Address,
+			}
+			reqbz, err := app.AppCodec().Marshal(&query)
+			s.Require().NoError(err)
+
+			response := banktypes.QueryAllBalancesResponse{Balances: t.IncomingBalance}
+			respbz, err := app.AppCodec().Marshal(&response)
+			s.Require().NoError(err)
+
+			err = keeper.DelegationAccountBalancesCallback(app.InterchainstakingKeeper, ctx, respbz, icqtypes.Query{ChainId: s.chainB.ChainID, Request: reqbz})
+			s.Require().NoError(err)
+
+			// refetch zone
+			zone, _ = app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
+			s.Require().Equal(t.ExpectedWaitgroup, zone.WithdrawalWaitgroup)
+
+			_, addr, err := bech32.DecodeAndConvert(zone.DelegationAddress.Address)
+			s.Require().NoError(err)
+			data := banktypes.CreateAccountBalancesPrefix(addr)
+
+			// check a ICQ request was made
+			for _, b := range t.IncomingBalance {
+				found := false
+				app.InterchainQueryKeeper.IterateQueries(ctx, func(index int64, queryInfo icqtypes.Query) (stop bool) {
+					if queryInfo.ChainId == zone.ChainId &&
+						queryInfo.ConnectionId == zone.ConnectionId &&
+						queryInfo.QueryType == icstypes.BankStoreKey &&
+						bytes.Equal(queryInfo.Request, append(data, []byte(b.GetDenom())...)) {
+						found = true
+						return true
+					}
+					return false
+				})
+				s.Require().True(found)
+			}
+		})
+	}
+}
+
 const (
 	txFixtureLsm = "GsEDCiCFDDobCzFK2Vf0BXcgdEycLSdJL8IP7PEVWKelDQeJ3xL2AgrXAQrUAQocL2Nvc21vcy5iYW5rLnYxYmV0YTEuTXNnU2VuZBKzAQotY29zbW9zMWEyemh0OHgyajBkcXZ1ZWpyOHB4cHU3ZHVlM3FtazQwbGdkeTNoEkFjb3Ntb3MxYXZ2ZWhmM25wdm42d2V5eHR2eXU3bWh3d3Zqcnl6dzY5ZzQzdHEwbmw4MHdxamdscjZoc2U1bWN6NBo/Cjdjb3Ntb3N2YWxvcGVyMWdnN3c4dzJ5OWpmdjc2YTJ5eWFoZTQyeTA5ZzlyeTJyYWE1cnFmLzE0EgQ1MDAwElgKUApGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQLaGco86x6BgxaGOBf/rgbHMEyZzECi+5in9DJ31ln/0BIECgIIARgoEgQQwJoMGkAtbKm5mTCs2SJzFZL5UKaFbKascEfSLtLFX4w9H/iLKXVqia/1REtynG8yLW374PPGFRplDo62C3SrhSBSLETgGiQIARoghQw6GwsxStlX9AV3IHRMnC0nSS/CD+zxFVinpQ0Hid8i2wYK0AQKkgMKAggLEgpnYWlhdGVzdC0xGJjdDiIMCPHf2agGEODypL8CKkgKIFvrRJTTqdEJ0eh/bm+bNFIMSX7ad1Uz9FX2u8acwNOAEiQIARIgqdknqwXY2NKl/r0A/JEd6hFCVr+E+xoDP5xqjTdMzkkyIFTqmUpOcyiALxE9GyyJ8B0qHyYAXdEyebrP+zlYCVe/OiCFDDobCzFK2Vf0BXcgdEycLSdJL8IP7PEVWKelDQeJ30IgLdUPCAh3Ii0/aGdGLRM24PsOqJJsvS6jPy3hstJUQ0RKIC3VDwgIdyItP2hnRi0TNuD7DqiSbL0uoz8t4bLSVENEUiAEgJG8fdwoP3e/v5HXPETaWMPfipy8hnQF2Lfz2q2iL1ogxyvS5b5sdsYoCMUEDDELSqvtajtVi8Tix+aShLESfBdiIOOwxEKY/BwUmvv0yJlvuSQnrkHkZJuTTKSVmRt4UrhVaiDjsMRCmPwcFJr79MiZb7kkJ65B5GSbk0yklZkbeFK4VXIUeQRs3t3nFppZq/OiJ+/f0AsW+twSuAEImN0OGkgKIOEOuKl3gvM4+gGbzlmy63IKY27HPnTJ6rszQyUuZAwPEiQIARIgiO0gt0gzcxTIEfFhpxf+XrKDoSnwZ9/HXl9XavCfS7UiaAgCEhR5BGze3ecWmlmr86In79/QCxb63BoMCPbf2agGEJiC0c0CIkBUNOaucBUZko0uikQApp2uWUJQ/zAtwTr5PRWlVS5/wFJYMGBSDNh5EEWY4FTclhTHLV2aMyyH5pfH6L0fr50CEn4KPQoUeQRs3t3nFppZq/OiJ+/f0AsW+twSIgogx4ew5LC25gOeUAdpun5LhBSfIBHUbK7Zjyzn8VRr1ZwYhCESPQoUeQRs3t3nFppZq/OiJ+/f0AsW+twSIgogx4ew5LC25gOeUAdpun5LhBSfIBHUbK7Zjyzn8VRr1ZwYhCEaBggBEKvdDiJ+Cj0KFHkEbN7d5xaaWavzoifv39ALFvrcEiIKIMeHsOSwtuYDnlAHabp+S4QUnyAR1Gyu2Y8s5/FUa9WcGIQhEj0KFHkEbN7d5xaaWavzoifv39ALFvrcEiIKIMeHsOSwtuYDnlAHabp+S4QUnyAR1Gyu2Y8s5/FUa9WcGIQh"
 	txFixture    = "GpEDCiCLUGKqmJoWFGAjKS1WTXAEkU48Kmq7MiB5rsPW08bLqhLGAgqnAQqkAQocL2Nvc21vcy5iYW5rLnYxYmV0YTEuTXNnU2VuZBKDAQotY29zbW9zMWEyemh0OHgyajBkcXZ1ZWpyOHB4cHU3ZHVlM3FtazQwbGdkeTNoEkFjb3Ntb3MxZDJqcmg0Z2o2NnNteG5zNnhmdjhtZGQ0a2VlZjVlazk3a25sOWd3OXNra3pyeWp5aHhqc3l3bGZobRoPCgV1YXRvbRIGNTAwMDAwElgKUApGCh8vY29zbW9zLmNyeXB0by5zZWNwMjU2azEuUHViS2V5EiMKIQLaGco86x6BgxaGOBf/rgbHMEyZzECi+5in9DJ31ln/0BIECgIIARgrEgQQwJoMGkD0/1DW4n4Fp1JZyWDtlWBmi9+ulHrLioDyvQ/4NNLiVSUAj9x4ljCUNwlSzpPtykfjjnGT7IyByWnKB0bGayDWGiQIARogi1BiqpiaFhRgIyktVk1wBJFOPCpquzIgea7D1tPGy6oi2wYK0AQKkgMKAggLEgpnYWlhdGVzdC0xGKrnECIMCNq7+6gGELjv0fEBKkgKICeLs3J8bIJCpWaee12QDGfgsDqmwpDoxQStliWR9bFSEiQIARIgXQsgwP+G56ZGtMeQE1n+8KuZOODcJC75Q6dui0ARvYAyIBu01YZQurtiiOsKiKE/e5CGuD1ioTthG76thsmL10SeOiCLUGKqmJoWFGAjKS1WTXAEkU48Kmq7MiB5rsPW08bLqkIgr8VHiDIZrvPjyaybOEWM23OI1PkRdC+9XJhIjJRBNK1KIK/FR4gyGa7z48msmzhFjNtziNT5EXQvvVyYSIyUQTStUiAEgJG8fdwoP3e/v5HXPETaWMPfipy8hnQF2Lfz2q2iL1ogm6BBj4GRVW4wgJp9qZfWiClAzSc8nzvFbVjT3LGc1PBiIOOwxEKY/BwUmvv0yJlvuSQnrkHkZJuTTKSVmRt4UrhVaiDjsMRCmPwcFJr79MiZb7kkJ65B5GSbk0yklZkbeFK4VXIUeQRs3t3nFppZq/OiJ+/f0AsW+twSuAEIqucQGkgKIB5737NG8FYvnQW6/urw4FNMaM+9CzIhy1MLzQk1/p6WEiQIARIgNltfvzoTATg0D0mHHtrROQIgWFM0QqVxA88cst3U28IiaAgCEhR5BGze3ecWmlmr86In79/QCxb63BoMCN+7+6gGEPjly/sBIkDpPn0WzYyqh6Xx8Bru5+EaA4XFsEsfO6mrXMrZABOgmbrRqHyGcd5wNj2ddC7mj52Ls03KuAsxvWItEYeJLvQGEn4KPQoUeQRs3t3nFppZq/OiJ+/f0AsW+twSIgogx4ew5LC25gOeUAdpun5LhBSfIBHUbK7Zjyzn8VRr1ZwYqyESPQoUeQRs3t3nFppZq/OiJ+/f0AsW+twSIgogx4ew5LC25gOeUAdpun5LhBSfIBHUbK7Zjyzn8VRr1ZwYqyEaBggBEMnnECJ+Cj0KFHkEbN7d5xaaWavzoifv39ALFvrcEiIKIMeHsOSwtuYDnlAHabp+S4QUnyAR1Gyu2Y8s5/FUa9WcGKshEj0KFHkEbN7d5xaaWavzoifv39ALFvrcEiIKIMeHsOSwtuYDnlAHabp+S4QUnyAR1Gyu2Y8s5/FUa9WcGKsh"
