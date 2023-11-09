@@ -3282,12 +3282,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:18.0.9":
-  version: 18.0.9
-  resolution: "@types/react-dom@npm:18.0.9"
+"@types/react-dom@npm:18.2.15":
+  version: 18.2.15
+  resolution: "@types/react-dom@npm:18.2.15"
   dependencies:
     "@types/react": "*"
-  checksum: e744e3feba25fc43733289d4df4d9c0e59fcca7f34e8c89d75f81a339accb2bd70236d69382d47d2c0ad06a1529b2e56aa6171fe175854d60e07156ddceedfcb
+  checksum: 8e9631600c21ff561328e38a951d1991b3b3b20f538af4c0efbd1327c883a5573a63f50e1b945c34fa51b114b30e1ca5e62317bd54f21e063d6697b4be843a03
   languageName: node
   linkType: hard
 
@@ -8038,7 +8038,7 @@ __metadata:
     "@tanstack/react-query-devtools": ^4.35.0
     "@types/node": 18.11.9
     "@types/react": 18.0.25
-    "@types/react-dom": 18.0.9
+    "@types/react-dom": 18.2.15
     "@types/three": ^0.155.1
     chain-registry: 1.19.0
     cosmjs-types: 0.5.0
