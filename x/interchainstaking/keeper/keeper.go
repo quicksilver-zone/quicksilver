@@ -221,10 +221,10 @@ func SetValidatorsForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data 
 		case val.Status != validator.Status.String():
 			k.Logger(ctx).Debug("bond status change; fetching proof", "valoper", validator.OperatorAddress, "from", val.Status, "to", validator.Status.String())
 			toQuery = true
-		case !val.LiquidShares.Equal(validator.LiquidShares):
+		case !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares):
 			k.Logger(ctx).Debug("liquid shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.LiquidShares, "to", validator.LiquidShares)
 			toQuery = true
-		case !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
+		case !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares):
 			k.Logger(ctx).Debug("Validator bond shares amount change; fetching proof", "valoper", validator.OperatorAddress, "from", val.ValidatorBondShares, "to", validator.ValidatorBondShares)
 			toQuery = true
 		}
@@ -260,6 +260,10 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 	if err != nil {
 		k.Logger(ctx).Error("unable to unmarshal validator info for zone", "zone", zoneInfo.ChainId, "err", err)
 		return err
+	}
+
+	if _, err := utils.AccAddressFromBech32(validator.OperatorAddress, ""); err != nil {
+		return errors.New("attempted to unmarshal invalid payload")
 	}
 
 	val, found := zoneInfo.GetValidatorByValoper(validator.OperatorAddress)
@@ -322,12 +326,12 @@ func SetValidatorForZone(k *Keeper, ctx sdk.Context, zoneInfo types.Zone, data [
 			val.Status = validator.Status.String()
 		}
 
-		if !val.ValidatorBondShares.IsNil() || !val.ValidatorBondShares.Equal(validator.ValidatorBondShares) {
+		if !validator.ValidatorBondShares.IsNil() && !val.ValidatorBondShares.Equal(validator.ValidatorBondShares) {
 			k.Logger(ctx).Info("Validator bonded shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.ValidatorBondShares, "newShares", validator.ValidatorBondShares)
 			val.ValidatorBondShares = validator.ValidatorBondShares
 		}
 
-		if !val.LiquidShares.IsNil() || !val.LiquidShares.Equal(validator.LiquidShares) {
+		if !validator.LiquidShares.IsNil() && !val.LiquidShares.Equal(validator.LiquidShares) {
 			k.Logger(ctx).Info("Validator liquid shares change; updating", "valoper", validator.OperatorAddress, "oldShares", val.LiquidShares, "newShares", validator.LiquidShares)
 			val.LiquidShares = validator.LiquidShares
 		}
@@ -582,15 +586,11 @@ func DetermineAllocationsForRebalancing(currentAllocations map[string]math.Int, 
 		lockedPerValidator[redelegation.Destination] = thisLocked + redelegation.Amount
 	}
 
-	// fmt.Println("Total locked (per-validator)", totalLocked, lockedPerValidator)
-
 	// TODO: make this a param
 	maxCanRebalance := currentSum.Sub(math.NewInt(totalLocked)).Quo(sdk.NewInt(2))
-	// fmt.Println("Can rebalance with current locking", maxCanRebalance)
 
 	// TODO: make this a param
 	maxCanRebalance = math.MinInt(maxCanRebalance, currentSum.Quo(sdk.NewInt(7)))
-	// fmt.Println("Can rebalance with locking this epoch", maxCanRebalance)
 
 	// sort keys by relative value of delta
 	sort.SliceStable(deltas, func(i, j int) bool {

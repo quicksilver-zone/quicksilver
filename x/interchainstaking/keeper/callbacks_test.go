@@ -216,25 +216,24 @@ func (s *KeeperTestSuite) TestHandleValsetCallback() {
 				require.True(foundQuery)
 			},
 		},
-		// TODO: trigger callback on status change.
-		// {
-		// 	name: "valid - status unbonding val[0]",
-		// 	valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
-		// 		in[0].Status = stakingtypes.Unbonding
-		// 		return stakingtypes.QueryValidatorsResponse{Validators: in}
-		// 	},
-		// 	checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in stakingtypes.Validators) {
-		// 		foundQuery := false
-		// 		_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
-		// 		data := stakingtypes.GetValidatorKey(addr)
-		// 		for _, i := range app.InterchainQueryKeeper.AllQueries(ctx) {
-		// 			if i.QueryType == "store/staking/key" && bytes.Equal(i.Request, data) {
-		// 				foundQuery = true
-		// 			}
-		// 		}
-		// 		require.True(foundQuery)
-		// 	},
-		// },
+		{
+			name: "valid - status unbonding val[0]",
+			valset: func(in stakingtypes.Validators) stakingtypes.QueryValidatorsResponse {
+				in[0].Status = stakingtypes.Unbonding
+				return stakingtypes.QueryValidatorsResponse{Validators: in}
+			},
+			checks: func(require *require.Assertions, ctx sdk.Context, app *app.Quicksilver, in stakingtypes.Validators) {
+				foundQuery := false
+				_, addr, _ := bech32.DecodeAndConvert(in[0].OperatorAddress)
+				data := stakingtypes.GetValidatorKey(addr)
+				for _, i := range app.InterchainQueryKeeper.AllQueries(ctx) {
+					if i.QueryType == "store/staking/key" && bytes.Equal(i.Request, data) {
+						foundQuery = true
+					}
+				}
+				require.True(foundQuery)
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -298,7 +297,9 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackNilValset() {
 	})
 }
 
-func (s *KeeperTestSuite) TestHandleValsetCallbackInvalidResponse() {
+// ValidatorCallback
+
+func (s *KeeperTestSuite) TestHandleValidatorCallbackInvalidResponse() {
 	s.Run("bad payload type", func() {
 		s.SetupTest()
 		s.setupTestZones()
@@ -311,32 +312,10 @@ func (s *KeeperTestSuite) TestHandleValsetCallbackInvalidResponse() {
 		bz, err := app.AppCodec().Marshal(&query)
 		s.Require().NoError(err)
 
-		err = keeper.ValsetCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
-		// this should error on unmarshalling an empty slice, which is not a valid response here.
+		err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
 		s.Require().Error(err)
 	})
 }
-
-// ValidatorCallback
-
-// func (s *KeeperTestSuite) TestHandleValidatorCallbackInvalidResponse() {
-// 	s.Run("bad payload type", func() {
-// 		s.SetupTest()
-// 		s.SetupZones()
-
-// 		app := s.GetQuicksilverApp(s.chainA)
-// 		app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-// 		ctx := s.chainA.GetContext()
-
-// 		query := stakingtypes.QueryValidatorsRequest{Status: stakingtypes.BondStatusBonded}
-// 		bz, err := app.AppCodec().Marshal(&query)
-// 		s.Require().NoError(err)
-
-// 		err = keeper.ValidatorCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
-// 		// this should error on unmarshalling an empty slice, which is not a valid response here.
-// 		s.Require().Error(err)
-// 	})
-// }
 
 func (s *KeeperTestSuite) TestHandleValidatorCallbackBadChain() {
 	s.Run("bad chain", func() {
@@ -438,66 +417,6 @@ func (s *KeeperTestSuite) TestHandleValidatorCallback() {
 		})
 	}
 }
-
-// func (s *KeeperTestSuite) TestHandleDelegationCallback() {
-// 	type TestCase struct {
-// 		name     string
-// 		setup    func(vals []*types.Validator) []types.Delegation
-// 		callback func(vals []*types.Validator) stakingtypes.Delegation
-// 		expected func(vals []*types.Validator) types.Delegation
-// 	}
-
-// 	tests := []TestCase{
-// 		func() TestCase {
-// 			d1 := utils.GenerateValAddressForTest()
-// 			return TestCase{
-// 				name: "valid - no-op",
-// 				setup: func(vals []*types.Validator) []types.Delegation {
-// 					return []types.Delegation{
-// 						{DelegationAddress: d1.String(), ValidatorAddress: vals[0].ValoperAddress, Amount: sdk.NewCoin("uatom", sdk.NewInt(5000000))},
-// 						{DelegationAddress: d1.String(), ValidatorAddress: vals[1].ValoperAddress, Amount: sdk.NewCoin("raa", sdk.NewInt(2000000))},
-// 					}
-// 				},
-// 				callback: func(vals []*types.Validator) stakingtypes.Delegation {
-// 					return stakingtypes.Delegation{DelegatorAddress: d1.String(), ValidatorAddress: vals[0].ValoperAddress, Shares: sdk.NewDec(1000)}
-// 				},
-// 				expected: func(vals []*types.Validator) types.Delegation {
-// 					return types.Delegation{DelegationAddress: d1.String(), ValidatorAddress: vals[0].ValoperAddress}
-// 				},
-// 			}
-// 		}(),
-// 	}
-
-// 	for _, test := range tests {
-// 		s.Run(test.name, func() {
-// 			s.SetupTest()
-// 			s.SetupZones()
-
-// 			app := s.GetQuicksilverApp(s.chainA)
-// 			app.InterchainstakingKeeper.CallbackHandler().RegisterCallbacks()
-// 			ctx := s.chainA.GetContext()
-
-// 			zone, found := app.InterchainstakingKeeper.GetZone(ctx, s.chainB.ChainID)
-// 			s.Require().True(found)
-
-// 			for _, dg := range test.setup(zone.Validators) {
-// 				app.InterchainstakingKeeper.SetDelegation(ctx, &zone, dg)
-// 			}
-
-// 			payload := test.callback(zone.Validators)
-// 			bz, err := app.AppCodec().Marshal(&payload)
-// 			s.Require().NoError(err)
-
-// 			err = keeper.DelegationCallback(app.InterchainstakingKeeper, ctx, bz, icqtypes.Query{ChainId: s.chainB.ChainID})
-// 			s.Require().NoError(err)
-
-// 			expected := test.expected(zone.Validators)
-// 			fmt.Println(app.InterchainstakingKeeper.GetAllDelegations(ctx, &zone))
-// 			_, found = app.InterchainstakingKeeper.GetDelegation(ctx, &zone, expected.DelegationAddress, expected.ValidatorAddress)
-// 			s.Require().True(found)
-// 		})
-// 	}
-// }
 
 func (s *KeeperTestSuite) TestHandleRewardsCallbackBadChain() {
 	s.Run("bad chain", func() {
