@@ -204,13 +204,13 @@ func UmeeReservesUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, que
 }
 
 func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
+	if g, w := query.Request[0], umeetypes.KeyPrefixAdjustedTotalBorrow[0]; g != w {
+		return fmt.Errorf("unexpected query request prefix %q, want %q", g, w)
+	}
+
 	totalBorrows := sdk.ZeroDec()
 	if err := totalBorrows.Unmarshal(response); err != nil {
 		return err
-	}
-
-	if query.Request[0] != umeetypes.KeyPrefixAdjustedTotalBorrow[0] {
-		return errors.New("query request has unexpected prefix")
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixAdjustedTotalBorrow)
@@ -241,13 +241,13 @@ func UmeeTotalBorrowsUpdateCallback(ctx sdk.Context, k *Keeper, response []byte,
 }
 
 func UmeeInterestScalarUpdateCallback(ctx sdk.Context, k *Keeper, response []byte, query icqtypes.Query) error {
+	if g, w := query.Request[0], umeetypes.KeyPrefixInterestScalar[0]; g != w {
+		return fmt.Errorf("unexpected query request prefix %q, want %q", g, w)
+	}
+
 	interestScalar := sdk.ZeroDec()
 	if err := interestScalar.Unmarshal(response); err != nil {
 		return err
-	}
-
-	if query.Request[0] != umeetypes.KeyPrefixInterestScalar[0] {
-		return errors.New("query request has unexpected prefix")
 	}
 
 	denom := umeetypes.DenomFromKey(query.Request, umeetypes.KeyPrefixInterestScalar)

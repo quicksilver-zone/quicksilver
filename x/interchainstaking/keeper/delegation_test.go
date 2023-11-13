@@ -634,7 +634,7 @@ func (suite *KeeperTestSuite) TestFlushOutstandingDelegations() {
 func (suite *KeeperTestSuite) TestPerformanceDelegation() {
 	quicksilver := suite.GetQuicksilverApp(suite.chainA)
 	ctx := suite.chainA.GetContext()
-	chainID := "quicksilver-1"
+	const chainID = "quicksilver-1"
 
 	// Set zone
 	quicksilver.InterchainstakingKeeper.SetZone(ctx, &icstypes.Zone{

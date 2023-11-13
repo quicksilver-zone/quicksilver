@@ -466,6 +466,7 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 				}
 				return false
 			})
+
 			// remove receipts
 			k.IterateZoneReceipts(ctx, chainID, func(index int64, receiptInfo types.Receipt) (stop bool) {
 				k.DeleteReceipt(ctx, receiptInfo.ChainId, receiptInfo.Txhash)
@@ -475,6 +476,16 @@ func (k *Keeper) RemoveZoneAndAssociatedRecords(ctx sdk.Context, chainID string)
 			// remove withdrawal records
 			k.IterateZoneWithdrawalRecords(ctx, chainID, func(index int64, record types.WithdrawalRecord) (stop bool) {
 				k.DeleteWithdrawalRecord(ctx, zone.ChainId, record.Txhash, record.Status)
+				return false
+			})
+
+			// remove validators
+			k.IterateValidators(ctx, zone.ChainId, func(index int64, validator types.Validator) (stop bool) {
+				valAddr, err := validator.GetAddressBytes()
+				if err != nil {
+					panic(err)
+				}
+				k.DeleteValidator(ctx, chainID, valAddr)
 				return false
 			})
 
