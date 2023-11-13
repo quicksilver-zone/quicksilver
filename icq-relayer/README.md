@@ -45,6 +45,13 @@ chains:
 ```
 
 ## Changelog
+
+### v0.10.0
+- Add CometBFT v0.37 compatibility.
+
+### v0.9.0
+- Add caching for significant performance improvment.
+
 ### v0.8.2
 - Improved efficiency
 - More detailed metrics

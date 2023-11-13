@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine3.17 as build
+FROM golang:1.20-alpine3.18 as build
 
 WORKDIR /src/app
 
@@ -17,7 +17,7 @@ FROM alpine:edge
 
 RUN apk add --no-cache ca-certificates
 
-COPY --from=build /src/app/interchain-queries /usr/local/bin/interchain-queries
+COPY --from=build /src/app/icq-relayer /usr/local/bin/icq-relayer
 
 RUN adduser -S -h /icq -D icq -u 1000
 

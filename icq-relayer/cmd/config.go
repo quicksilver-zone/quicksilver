@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/ingenuity-build/interchain-queries/pkg/config"
+	"github.com/quicksilver-zone/quicksilver/icq-relayer/pkg/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/strangelove-ventures/lens/client"
