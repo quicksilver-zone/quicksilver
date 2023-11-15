@@ -1,10 +1,9 @@
 # Quicksilver
 
-
-|                                                                                                                                                   |                                                                                                                                                                    |                                                                                                                                                       |                                                                                                                                                      |                                                                                                                | 
 |---------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
 | [![codecov](https://codecov.io/gh/ingenuity-build/quicksilver/branch/develop/graph/badge.svg)](https://codecov.io/gh/ingenuity-build/quicksilver) | [![Go Report Card](https://goreportcard.com/badge/github.com/quicksilver-zone/quicksilver)](https://goreportcard.com/report/github.com/quicksilver-zone/quicksilver) | [![license](https://img.shields.io/github/license/ingenuity-build/quicksilver.svg)](https://github.com/quicksilver-zone/quicksilver/blob/main/LICENSE) | [![GolangCI](https://golangci.com/badges/github.com/quicksilver-zone/quicksilver.svg)](https://golangci.com/r/github.com/quicksilver-zone/quicksilver) | [![Discord](https://badgen.net/badge/icon/discord?icon=discord&label)](https://discord.gg/quicksilverprotocol) |  
 
+## Introduction
 Quicksilver is the Cosmos Liquid Staking Zone.
 
 Many existing Liquid Staking providers take power and agency _away_ from delegators, permitting only a small whitelist
@@ -13,6 +12,8 @@ active measures to reward and incentivise decentralisation and governance partic
 
 ## Table of Contents
 
+- [Quicksilver App](https://app.quicksilver.zone)
+- [Project Documentation](https://docs.quicksilver.zone)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security/Bug Reporting](SECURITY.md)
