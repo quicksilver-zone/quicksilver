@@ -11,6 +11,12 @@ Many existing Liquid Staking providers take power and agency _away_ from delegat
 of validators to delegate to, and stripping away users voting rights. Quicksilver aims to right these wrongs, with
 active measures to reward and incentivise decentralisation and governance participation.
 
+## Table of Contents
+
+- [Code of Conduct](CODE_OF_CONDUCT.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security/Bug Reporting](SECURITY.md)
+- [Changelog](CHANGELOG.md)
 
 ## System Requirements
 This system spec has been found to be optimal:
@@ -30,17 +36,14 @@ Make sure that the above software is installed on your system. Follow the instru
 
 In addition, install `jq` (a command line JSON processor):
 
- - Debian based systems:  
+ - Debian based systems:
 `apt-get install jq`
 
- - Arch based systems:  
+ - Arch based systems:
 `pacman -S jq`
 
- - Mac based systems:  
+ - Mac based systems:
 `brew install jq`
-
- - Windows based systems (using [Chocolatey NuGet](https://chocolatey.org/)):  
-`chocolatey install jq`
 
 ## Clone & Run Quicksilver (dev)
 
