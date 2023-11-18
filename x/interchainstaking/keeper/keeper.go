@@ -387,29 +387,6 @@ func (k *Keeper) SetValidatorForZone(ctx sdk.Context, zone *types.Zone, data []b
 	return nil
 }
 
-func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zone, valoper string, delta sdk.Dec) error {
-	var err error
-	k.IterateZoneStatusWithdrawalRecords(ctx, zone.ChainId, types.WithdrawStatusUnbond, func(_ int64, record types.WithdrawalRecord) bool {
-		recordSubAmount := sdkmath.ZeroInt()
-		distr := record.Distribution
-		for _, d := range distr {
-			if d.Valoper != valoper {
-				continue
-			}
-			newAmount := sdk.NewDec(int64(d.Amount)).Quo(delta).TruncateInt()
-			thisSubAmount := sdkmath.NewInt(int64(d.Amount)).Sub(newAmount)
-			recordSubAmount = recordSubAmount.Add(thisSubAmount)
-			d.Amount = newAmount.Uint64()
-			k.Logger(ctx).Info("Updated withdrawal record due to slashing", "valoper", valoper, "old_amount", d.Amount, "new_amount", newAmount.Int64(), "sub_amount", thisSubAmount.Int64())
-		}
-		record.Distribution = distr
-		record.Amount = record.Amount.Sub(sdk.NewCoin(zone.BaseDenom, recordSubAmount))
-		k.SetWithdrawalRecord(ctx, record)
-		return false
-	})
-	return err
-}
-
 func (k *Keeper) depositInterval(ctx sdk.Context) zoneItrFn {
 	return func(index int64, zone *types.Zone) (stop bool) {
 		if zone.DepositAddress != nil {
