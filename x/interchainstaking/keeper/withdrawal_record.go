@@ -248,8 +248,6 @@ func (k *Keeper) UpdateWithdrawalRecordsForSlash(ctx sdk.Context, zone *types.Zo
 		}
 		record.Distribution = distr
 		subAmount := sdk.NewCoins(sdk.NewCoin(zone.BaseDenom, recordSubAmount))
-		fmt.Println(subAmount)
-		fmt.Println(record.Amount)
 		if !record.Amount.IsAllGT(subAmount) {
 			err = fmt.Errorf("deductedTotal cannot contain negative coins; suspected overflow")
 			return true
